@@ -1479,11 +1479,7 @@ where
             })))
             .padding(settings.code_size),
         )
-        .direction(scrollable::Direction::Horizontal(
-            scrollable::Scrollbar::default()
-                .width(settings.code_size / 2)
-                .scroller_width(settings.code_size / 2),
-        )),
+        .direction(scrollable::Direction::Horizontal(scrollbar())),
     )
     .width(Fill)
     .padding(settings.code_size / 4)
@@ -1565,9 +1561,7 @@ where
     .separator_x(0);
 
     scrollable(table)
-        .direction(scrollable::Direction::Horizontal(
-            scrollable::Scrollbar::default(),
-        ))
+        .direction(scrollable::Direction::Horizontal(scrollbar()))
         .spacing(settings.spacing.0 / 2.0)
         .boxed()
 }
@@ -1779,4 +1773,12 @@ impl Catalog for Theme {
     fn code_block<'a>() -> <Self as container::Catalog>::Class<'a> {
         Box::new(container::dark)
     }
+}
+
+/// The thin scrollbar for the iced scrollables markdown builds; matches
+/// [`crate::scrollable::scrollbar`].
+fn scrollbar() -> scrollable::Scrollbar {
+    scrollable::Scrollbar::default()
+        .width(crate::scrollable::RAIL_WIDTH)
+        .scroller_width(crate::scrollable::SCROLLER_WIDTH)
 }

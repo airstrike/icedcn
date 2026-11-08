@@ -26,7 +26,7 @@ use icedxdy::theme;
 use icedxdy::theme::container::Style;
 use icedxdy::widget::Size;
 use icedxdy::widget::qr_code;
-use icedxdy::widget::scrollable::{Direction, thin_scrollbar};
+use icedxdy::widget::scrollable::{Direction, scrollbar};
 use icedxdy::widget::{button, column, container, row, scrollable};
 
 pub mod chrome;
@@ -272,8 +272,8 @@ impl State {
             scrollable(dashboard::view(self))
                 .id(Id::new("create-preview-scroll-v2"))
                 .direction(Direction::Both {
-                    vertical: thin_scrollbar(),
-                    horizontal: thin_scrollbar(),
+                    vertical: scrollbar(),
+                    horizontal: scrollbar(),
                 })
                 .width(Fill)
                 .height(Fill),

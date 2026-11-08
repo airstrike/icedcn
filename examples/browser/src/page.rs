@@ -771,19 +771,7 @@ impl<'a> markdown::Viewer<'a, markdown::Uri, Theme, iced::Renderer> for SnippetV
                 .boxed()
         }));
 
-        // Code-size-relative horizontal scrollbar — explicitly chunkier
-        // than the project-wide thin default (1px/2px). The bigger bar
-        // reads as a deliberate "scroll right for more code" affordance
-        // for long single lines, where the thin invisible default would
-        // be hard to spot.
-        let scroll = scrollable::scrollable(body)
-            .direction(scrollable::Direction::Horizontal(
-                scrollable::Scrollbar::default()
-                    .width(settings.code_size / 2)
-                    .scroller_width(settings.code_size / 2),
-            ))
-            .spacing(2)
-            .class(theme::scrollable::Hidden);
+        let scroll = scrollable::scrollable(body).horizontal().spacing(2);
 
         container(scroll)
             .padding([12, 16])

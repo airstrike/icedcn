@@ -13,23 +13,25 @@ use iced_core::widget::Id;
 use iced_widget::Renderer;
 use icedxdy_core::Theme;
 
-/// The project-wide thin scrollbar shape: 1px-wide rail, 2px scroller.
-/// Used as the default for both `Scrollable::new` and `.horizontal()`.
-/// Pair with the catalog default in `core::theme::scrollable` for the
-/// faint-hairline effect that fades up under hover/drag.
-pub fn thin_scrollbar() -> Scrollbar {
-    Scrollbar::default().width(1).scroller_width(2)
+/// Width of the scrollbar's rail: 1px, invisible.
+pub const RAIL_WIDTH: f32 = 1.0;
+
+/// Width of the scroller drawn over the rail.
+pub const SCROLLER_WIDTH: f32 = 2.0;
+
+/// The thin scrollbar every icedxdy scrollable uses: a 1px invisible
+/// rail with a 2px scroller, like the overlay scrollbar the shadcn docs
+/// get from the browser. Its colors come from `core::theme::scrollable`.
+pub fn scrollbar() -> Scrollbar {
+    Scrollbar::default()
+        .width(RAIL_WIDTH)
+        .scroller_width(SCROLLER_WIDTH)
 }
 
 /// Create a [`Scrollable`] wrapping the given content. Mirrors
 /// [`iced_widget::scrollable`] but flows through our [`Compose`](crate::Compose) system
-/// so size/weight propagation and the project-wide thin invisible-rail
-/// default are picked up automatically.
-///
-/// Default scrollbar style: 1px rail (transparent), 2px scroller drawn at
-/// `palette.muted.foreground` alpha 0.4 (rises to 0.7 on hover, 0.9 when
-/// dragged). See the `default` fn in icedxdy_core's `theme/scrollable.rs`
-/// for the exact spec.
+/// so size/weight propagation and the thin [`scrollbar`] shape are
+/// picked up automatically.
 pub fn scrollable<'a, Message: 'a>(
     content: impl Into<Slot<'a, Message>>,
 ) -> Scrollable<'a, Message> {
@@ -54,18 +56,15 @@ pub struct Scrollable<'a, Message> {
 }
 
 impl<'a, Message: 'a> Scrollable<'a, Message> {
-    /// Create a new scrollable wrapping the given content. Default
-    /// direction is vertical with a 1px-wide rail and 2px scroller —
-    /// the project's thin invisible-rail spec, replacing iced's stock
-    /// 10px default. Pair with the default theme style and the result
-    /// is a faint hairline that fades up under hover/drag.
+    /// Create a new scrollable wrapping the given content, scrolling
+    /// vertically with the thin [`scrollbar`].
     pub fn new(content: impl Into<Slot<'a, Message>>) -> Self {
         Self {
             content: content.into(),
             id: None,
             width: Length::Shrink,
             height: Length::Shrink,
-            direction: Direction::Vertical(thin_scrollbar()),
+            direction: Direction::Vertical(scrollbar()),
             auto_scroll: false,
             on_scroll: None,
             style: None,
@@ -98,9 +97,9 @@ impl<'a, Message: 'a> Scrollable<'a, Message> {
     }
 
     /// Shorthand for switching to a horizontal direction with the
-    /// project-wide thin scrollbar shape (1px rail, 2px scroller).
+    /// thin [`scrollbar`].
     pub fn horizontal(self) -> Self {
-        self.direction(Direction::Horizontal(thin_scrollbar()))
+        self.direction(Direction::Horizontal(scrollbar()))
     }
 
     /// Set a callback fired whenever the scrollable scrolls; receives the
