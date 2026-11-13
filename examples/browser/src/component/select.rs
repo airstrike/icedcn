@@ -3,13 +3,13 @@
 //
 // Intentional skips:
 // - select-rtl: RTL is not in scope (per CLAUDE.md).
-// - select-align-item: Radix's `item-aligned` position (the chosen item
-//   laid over the trigger) is not ported; every select opens as `popper`.
 
-use iced::{Fill, Task};
+use iced::widget::component::{Component, component};
+use iced::{Element, Fill, Task, Widget};
 
 use icedxdy::Theme;
-use icedxdy::widget::{field, select};
+use icedxdy::widget::field::Orientation::Horizontal;
+use icedxdy::widget::{column, field, select, switch};
 
 use crate::Message;
 use crate::icon;
@@ -31,6 +31,14 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Group {
         title: "Examples",
         children: &[
+            page::Block::Example {
+                id: "align-item",
+                title: "Align Item With Trigger",
+                description: Some(
+                    "Toggle between aligning the selected item with the trigger and placing the popup below it.",
+                ),
+                snippet: "examples/browser/snippets/select-align-item.md",
+            },
             page::Block::Example {
                 id: "groups",
                 title: "Groups",
@@ -95,6 +103,48 @@ fn zone(label: &str, items: &[(&str, &str)]) -> select::Entry {
     )
 }
 
+struct Alignment;
+impl<'a> Component<'a, Message, Theme> for Alignment {
+    type State = Option<bool>;
+    type Event = bool;
+    fn update(
+        &self,
+        state: &mut Option<bool>,
+        aligned: bool,
+        _: &iced::Renderer,
+    ) -> Option<Message> {
+        *state = Some(aligned);
+        None
+    }
+    fn view(&self, state: &Option<bool>) -> impl Widget<bool, Theme> + 'a {
+        let aligned = state.unwrap_or(true);
+        Element::from(
+            column![
+                field(switch().checked(aligned).on_checked_change(|value| value))
+                    .orientation(Horizontal)
+                    .control_last()
+                    .label("Align Item")
+                    .description("Toggle to align the item with the trigger."),
+                select([select::group([
+                    select::item("apple", "Apple"),
+                    select::item("banana", "Banana"),
+                    select::item("blueberry", "Blueberry"),
+                    select::item("grapes", "Grapes"),
+                    select::item("pineapple", "Pineapple")
+                ])])
+                .default_value("banana")
+                .icon(icon::chevron_down)
+                .position(if aligned {
+                    select::Position::ItemAligned
+                } else {
+                    select::Position::Popper
+                }),
+            ]
+            .width(Fill.max(320.0))
+            .spacing(16),
+        )
+    }
+}
 impl page::Page for SelectPage {
     fn page_index(&self) -> usize {
         self.state.page_index
@@ -247,6 +297,7 @@ impl page::Page for SelectPage {
             .width(192)
             .into(),
 
+            "align-item" => component(Alignment).boxed(),
             _ => unreachable!("unknown select preview id: {id}"),
         }
     }

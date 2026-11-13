@@ -2,10 +2,11 @@
 
 ### `select(entries)`
 
-An iced `Component` that owns its open state and, uncontrolled, its value. The trigger shows the chosen item's label or the placeholder; pressing it opens a modal list 4px below (flipping above when there is no room), at least as wide as the trigger and 144px, scrolling when taller than the window.
+An iced `Component` that owns its open state and, uncontrolled, its value. The trigger shows the chosen item's label or the placeholder; pressing it opens a modal list aligned with the selected option, at least as wide as the trigger and 144px, scrolling when taller than the window.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
+| `.position(position)` | `select::Position` | `ItemAligned` | Align the selected row with the trigger, or use `Popper` for an edge-anchored list. |
 | `.placeholder(text)` | `String` | `""` | Shown while nothing is chosen. |
 | `.default_value(value)` | `String` | `None` | The value an uncontrolled select starts with. |
 | `.value(value)` | `String` | uncontrolled | Control the select. |
@@ -19,5 +20,3 @@ An iced `Component` that owns its open state and, uncontrolled, its value. The t
 ### Entries
 
 `select::item(value, label)` (with `.disabled(bool)`), `select::label(text)`, `select::separator()` and `select::group(entries)`.
-
-Radix's default `position="item-aligned"` (the chosen item laid over the trigger) is not ported: every select opens as `popper`. No keyboard navigation or typeahead yet.

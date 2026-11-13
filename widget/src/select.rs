@@ -18,10 +18,8 @@
 //! // Controlled: .value(self.fruit.clone()).on_value_change(Message::Fruit)
 //! ```
 //!
-//! The list uses Radix's `position="popper"`: it opens 4px below the
-//! trigger, flips above it when there is no room and scrolls when taller
-//! than the window. Radix's default `item-aligned` placement (the chosen
-//! item over the trigger) is not ported.
+//! The selected row aligns with the trigger. Choose [`Position::Popper`] for
+//! an edge-anchored panel with a four-pixel gap.
 
 use iced_core::Length::Fill;
 use iced_core::{Alignment, Element, Length, Padding};
@@ -106,9 +104,18 @@ impl Entry {
     }
 }
 
+/// Placement of the list relative to its trigger.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum Position {
+    #[default]
+    ItemAligned,
+    Popper,
+}
+
 /// A field choosing one value from a list.
 pub struct Select<'a, Message> {
     entries: Vec<Entry>,
+    position: Position,
     placeholder: String,
     value: Option<String>,
     default_value: Option<String>,
@@ -144,6 +151,7 @@ pub struct State {
 pub fn select<'a, Message>(entries: impl IntoIterator<Item = Entry>) -> Select<'a, Message> {
     Select {
         entries: entries.into_iter().collect(),
+        position: Position::ItemAligned,
         placeholder: String::new(),
         value: None,
         default_value: None,
@@ -158,6 +166,12 @@ pub fn select<'a, Message>(entries: impl IntoIterator<Item = Entry>) -> Select<'
 }
 
 impl<'a, Message> Select<'a, Message> {
+    /// Use selected-row alignment or popper placement.
+    pub fn position(mut self, position: Position) -> Self {
+        self.position = position;
+        self
+    }
+
     /// Set the text shown while nothing is chosen (`SelectValue
     /// placeholder`).
     pub fn placeholder(mut self, placeholder: impl Into<String>) -> Self {
@@ -248,6 +262,25 @@ impl<'a, Message> Select<'a, Message> {
             })
             .collect()
     }
+}
+
+// Options use 14px text at 20px line height plus 4px vertical padding.
+// Headings use 12px text at 16px line height, separators 1px with 4px margins.
+fn row_center(entries: &[Entry], selected: &str, y: &mut f32) -> Option<f32> {
+    for entry in entries {
+        match entry {
+            Entry::Item { value, .. } if value == selected => return Some(*y + 14.0),
+            Entry::Item { .. } => *y += 28.0,
+            Entry::Label(_) => *y += 24.0,
+            Entry::Separator => *y += 9.0,
+            Entry::Group(group) => {
+                if let Some(center) = row_center(group, selected, y) {
+                    return Some(center);
+                }
+            }
+        }
+    }
+    None
 }
 
 impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a, Message> {
@@ -342,9 +375,26 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
             Space::new().boxed()
         };
 
-        anchored(button.boxed(), list)
-            .side(anchored::Side::Bottom)
-            .offset(4)
+        // Use the horizontal side for item alignment. This makes the vertical
+        // placement the anchored cross axis, which clamps to the window even
+        // when the selected item is near the top or bottom of the screen.
+        let trigger = button.boxed();
+        let anchored = anchored(trigger, list);
+        let anchored = if self.position == Position::ItemAligned && current.is_some() {
+            let mut y = 4.0;
+            let row = current
+                .and_then(|value| row_center(&self.entries, value, &mut y))
+                .unwrap_or(14.0);
+            anchored
+                .side(anchored::Side::Right)
+                .at([0.0, height / 2.0])
+                .align(anchored::Align::Start)
+                .align_offset(-row)
+                .flip(false)
+        } else {
+            anchored.side(anchored::Side::Bottom).offset(4)
+        };
+        anchored
             .width(anchored::Width::AtLeastAnchor)
             .min_width(144)
             .modal(true)

@@ -1,7 +1,3 @@
-// Intentional skips: native-select-groups (iced's pick_list has no option
-// groups) and native-select-rtl (RTL). The open list is iced's menu
-// overlay, standing in for the platform's `<select>` popup.
-
 use iced::Task;
 
 use icedxdy::Theme;
@@ -26,6 +22,14 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Group {
         title: "Examples",
         children: &[
+            page::Block::Example {
+                id: "groups",
+                title: "Groups",
+                description: Some(
+                    "Use `NativeSelectOptGroup` to organize options into categories.",
+                ),
+                snippet: "examples/browser/snippets/native-select-groups.md",
+            },
             page::Block::Example {
                 id: "disabled",
                 title: "Disabled",
@@ -103,6 +107,35 @@ impl page::Page for NativeSelectPage {
                 native_select::item("in-progress", "In Progress"),
                 native_select::item("done", "Done"),
                 native_select::item("cancelled", "Cancelled"),
+            ])
+            .into(),
+
+            "groups" => native_select([
+                native_select::item("", "Select department"),
+                native_select::group(
+                    "Engineering",
+                    [
+                        native_select::item("frontend", "Frontend"),
+                        native_select::item("backend", "Backend"),
+                        native_select::item("devops", "DevOps"),
+                    ],
+                ),
+                native_select::group(
+                    "Sales",
+                    [
+                        native_select::item("sales-rep", "Sales Rep"),
+                        native_select::item("account-manager", "Account Manager"),
+                        native_select::item("sales-director", "Sales Director"),
+                    ],
+                ),
+                native_select::group(
+                    "Operations",
+                    [
+                        native_select::item("support", "Customer Support"),
+                        native_select::item("product-manager", "Product Manager"),
+                        native_select::item("ops-manager", "Operations Manager"),
+                    ],
+                ),
             ])
             .into(),
 

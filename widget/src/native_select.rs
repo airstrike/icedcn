@@ -29,29 +29,65 @@ use iced_widget::pick_list::{Status, Style, StyleFn};
 use iced_widget::{Renderer, Widget};
 use icedxdy_core::Theme;
 
-use crate::Size;
 use crate::compose::{Compose, Inherited, Slot};
+use crate::select::Position;
+use crate::{Size, select};
 
 pub use icedxdy_core::theme::native_select::{Default, Invalid};
 
 /// One choice of a [`NativeSelect`] (`NativeSelectOption`).
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Item {
-    value: String,
-    label: String,
+pub enum Item {
+    /// A selectable option, identified by its value.
+    Option { value: String, label: String },
+    /// A labeled group whose heading cannot be selected.
+    Group { label: String, options: Vec<Item> },
 }
 
-/// Create an [`Item`] for `value`, shown as `label`.
+/// Create a selectable option.
 pub fn item(value: impl Into<String>, label: impl Into<String>) -> Item {
-    Item {
+    Item::Option {
         value: value.into(),
         label: label.into(),
     }
 }
 
+/// Group related options under a noninteractive heading.
+pub fn group(label: impl Into<String>, options: impl IntoIterator<Item = Item>) -> Item {
+    Item::Group {
+        label: label.into(),
+        options: options.into_iter().collect(),
+    }
+}
+
+impl Item {
+    fn entries(&self) -> select::Entry {
+        match self {
+            Self::Option { value, label } => select::item(value.clone(), label.clone()),
+            Self::Group { label, options } => select::group(
+                std::iter::once(select::label(label.clone()))
+                    .chain(options.iter().map(Item::entries)),
+            ),
+        }
+    }
+    fn options(&self) -> Box<dyn Iterator<Item = &Self> + '_> {
+        match self {
+            Self::Option { .. } => Box::new(std::iter::once(self)),
+            Self::Group { options, .. } => Box::new(options.iter().flat_map(Item::options)),
+        }
+    }
+    fn value(&self) -> Option<&str> {
+        match self {
+            Self::Option { value, .. } => Some(value),
+            Self::Group { .. } => None,
+        }
+    }
+}
 impl fmt::Display for Item {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.label)
+        match self {
+            Self::Option { label, .. } | Self::Group { label, .. } => f.write_str(label),
+        }
     }
 }
 
@@ -139,30 +175,51 @@ impl<'a, Message> NativeSelect<'a, Message> {
             .or(self.default_value.as_deref());
 
         value
-            .and_then(|value| self.items.iter().find(|item| item.value == value))
-            .or(self.items.first())
+            .and_then(|value| {
+                self.items
+                    .iter()
+                    .flat_map(Item::options)
+                    .find(|item| item.value() == Some(value))
+            })
+            .or_else(|| self.items.iter().flat_map(Item::options).next())
     }
 }
 
 impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for NativeSelect<'a, Message> {
     type State = State;
-    type Event = Item;
+    type Event = String;
 
-    fn update(&self, state: &mut State, item: Item, _renderer: &Renderer) -> Option<Message> {
-        if self.selected(state) == Some(&item) {
+    fn update(&self, state: &mut State, value: String, _renderer: &Renderer) -> Option<Message> {
+        if self.selected(state).and_then(Item::value) == Some(value.as_str()) {
             return None;
         }
 
         if self.value.is_none() {
-            state.value = Some(item.value.clone());
+            state.value = Some(value.clone());
         }
 
         self.on_value_change
             .as_ref()
-            .map(|on_change| on_change(item.value))
+            .map(|on_change| on_change(value))
     }
 
-    fn view(&self, state: &State) -> impl Widget<Item, Theme, Renderer> + 'a {
+    fn view(&self, state: &State) -> impl Widget<String, Theme, Renderer> + 'a {
+        // The stock pick list has no group-row model. A grouped Select keeps
+        // headings outside the selection order and preserves submitted values.
+        if self
+            .items
+            .iter()
+            .any(|item| matches!(item, Item::Group { .. }))
+        {
+            let mut list = select(self.items.iter().map(Item::entries))
+                .position(Position::Popper)
+                .size(self.size)
+                .disabled(self.disabled);
+            if let Some(current) = self.selected(state).and_then(Item::value) {
+                list = list.value(current);
+            }
+            return Element::from(list.on_value_change(|value| value));
+        }
         let selected = self.selected(state).cloned();
         let height = self.size.height();
         // `py-1 pl-2.5` around a `text-sm` line, centered in the
@@ -181,9 +238,11 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for NativeSel
             .style(move |theme: &Theme, status| style(theme, status));
 
         if self.disabled {
-            pick_list
+            pick_list.boxed()
         } else {
-            pick_list.on_select(|item| item)
+            pick_list
+                .on_select(|item| item.value().unwrap_or_default().to_owned())
+                .boxed()
         }
     }
 }

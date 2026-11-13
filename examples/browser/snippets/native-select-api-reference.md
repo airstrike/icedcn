@@ -15,4 +15,4 @@
 
 ### `native_select::item(value, label)`
 
-A `NativeSelectOption`. `NativeSelectOptGroup` has no counterpart: iced's pick list has no option groups.
+A `NativeSelectOption`. Use `native_select::group(label, options)` to insert labeled, nonselectable sections. Flat lists use iced’s pick list. Grouped lists use the same anchored list as Select.
