@@ -7,11 +7,9 @@
 //!
 //! # Example
 //! ```no_run
-//! # mod iced { pub mod widget { pub use iced_widget::*; } pub use iced_widget::Renderer; pub use iced_widget::core::*; }
-//! # pub type Element<'a, Message> = iced_widget::core::Element<'a, Message, iced_widget::Theme, iced_widget::Renderer>;
-//! #
-//! use iced::widget::markdown;
-//! use iced::Theme;
+//! use iced_widget::{Renderer, Theme, Widget};
+//! use iced_widget::core::Element;
+//! use icedxdy_widget::markdown;
 //!
 //! struct State {
 //!    markdown: Vec<markdown::Item>,
@@ -28,10 +26,8 @@
 //!         }
 //!     }
 //!
-//!     fn view(&self) -> Element<'_, Message> {
-//!         markdown::view(&self.markdown, Theme::TokyoNight)
-//!             .map(Message::LinkClicked)
-//!             .into()
+//!     fn view(&self) -> Element<'_, Message, Theme, Renderer> {
+//!         markdown::view(&self.markdown, Theme::TokyoNight).map(Message::LinkClicked).boxed()
 //!     }
 //!
 //!     fn update(state: &mut State, message: Message) {
@@ -418,11 +414,9 @@ impl Bullet {
 ///
 /// # Example
 /// ```no_run
-/// # mod iced { pub mod widget { pub use iced_widget::*; } pub use iced_widget::Renderer; pub use iced_widget::core::*; }
-/// # pub type Element<'a, Message> = iced_widget::core::Element<'a, Message, iced_widget::Theme, iced_widget::Renderer>;
-/// #
-/// use iced::widget::markdown;
-/// use iced::Theme;
+/// use iced_widget::{Renderer, Theme, Widget};
+/// use iced_widget::core::Element;
+/// use icedxdy_widget::markdown;
 ///
 /// struct State {
 ///    markdown: Vec<markdown::Item>,
@@ -439,10 +433,8 @@ impl Bullet {
 ///         }
 ///     }
 ///
-///     fn view(&self) -> Element<'_, Message> {
-///         markdown::view(&self.markdown, Theme::TokyoNight)
-///             .map(Message::LinkClicked)
-///             .into()
+///     fn view(&self) -> Element<'_, Message, Theme, Renderer> {
+///         markdown::view(&self.markdown, Theme::TokyoNight).map(Message::LinkClicked).boxed()
 ///     }
 ///
 ///     fn update(state: &mut State, message: Message) {
@@ -1195,11 +1187,9 @@ impl From<Theme> for Style {
 ///
 /// # Example
 /// ```no_run
-/// # mod iced { pub mod widget { pub use iced_widget::*; } pub use iced_widget::Renderer; pub use iced_widget::core::*; }
-/// # pub type Element<'a, Message> = iced_widget::core::Element<'a, Message, iced_widget::Theme, iced_widget::Renderer>;
-/// #
-/// use iced::widget::markdown;
-/// use iced::Theme;
+/// use iced_widget::{Renderer, Theme, Widget};
+/// use iced_widget::core::Element;
+/// use icedxdy_widget::markdown;
 ///
 /// struct State {
 ///    markdown: Vec<markdown::Item>,
@@ -1216,10 +1206,8 @@ impl From<Theme> for Style {
 ///         }
 ///     }
 ///
-///     fn view(&self) -> Element<'_, Message> {
-///         markdown::view(&self.markdown, Theme::TokyoNight)
-///             .map(Message::LinkClicked)
-///             .into()
+///     fn view(&self) -> Element<'_, Message, Theme, Renderer> {
+///         markdown::view(&self.markdown, Theme::TokyoNight).map(Message::LinkClicked).boxed()
 ///     }
 ///
 ///     fn update(state: &mut State, message: Message) {
