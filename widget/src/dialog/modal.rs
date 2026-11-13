@@ -128,6 +128,7 @@ impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
 #[derive(Default)]
 struct Focus {
     mounted: bool,
+    placement: Option<Placement>,
     enter: bool,
     restore: Option<usize>,
     drag: Option<(touch::Finger, Point)>,
@@ -150,10 +151,11 @@ where
     fn diff(&mut self, tree: &mut Tree) {
         let focus = tree.state.downcast_mut::<Focus>();
         let open = self.open();
-        if open && !focus.mounted {
+        if open && (!focus.mounted || focus.placement != Some(self.placement)) {
             focus.enter = true;
         }
         focus.mounted = open;
+        focus.placement = Some(self.placement);
         // Child 0 is the base, child 1 the panel while open. Closing drops
         // the panel's tree, so it mounts fresh next time, as in Radix.
         match &mut self.panel {
@@ -284,7 +286,10 @@ where
                 self.base
                     .operate(base_tree, child_layout, viewport, renderer, op)
             });
-            focus.restore = count.focused.or((count.total > 0).then_some(0));
+            focus.restore = count
+                .focused
+                .or(focus.restore)
+                .or((count.total > 0).then_some(0));
             self.base.operate(
                 base_tree,
                 child_layout,

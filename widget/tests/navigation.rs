@@ -375,3 +375,45 @@ fn combobox_popup_moves_focus_to_the_search_input() {
         [Message::Open(vec!["Apricot".into()])]
     );
 }
+
+#[test]
+fn responsive_drawer_uses_window_width_and_preserves_open_state() {
+    use iced_core::Size;
+    use icedxdy_widget::drawer;
+    let view = || -> Element<'static, Message, Theme, Renderer> {
+        drawer(
+            |d| d.trigger(button("Open")),
+            |d| {
+                if d.is_mobile() {
+                    column![
+                        button("Save").on_press(Message::Open(vec!["mobile".into()])),
+                        d.close(button("Cancel"))
+                    ]
+                    .into()
+                } else {
+                    button("Save")
+                        .on_press(Message::Open(vec!["desktop".into()]))
+                        .into()
+                }
+            },
+        )
+        .desktop_dialog(425.)
+        .default_open(true)
+        .into()
+    };
+    for width in [390., 1024.] {
+        let mut ui = Simulator::with_size(Default::default(), Size::new(width, 800.), view());
+        frame(&mut ui);
+        ui = ui.rebuild(view());
+        frame(&mut ui);
+        assert_eq!(focus(&mut ui).total, 2);
+        // Mobile gets form + cancel; desktop gets form + corner close.
+        assert_eq!(focus(&mut ui).focused, Some(0));
+        ui.tap_key(Named::Enter);
+        let mode = if width < 768. { "mobile" } else { "desktop" };
+        assert_eq!(
+            ui.into_messages().collect::<Vec<_>>(),
+            [Message::Open(vec![mode.into()])]
+        );
+    }
+}

@@ -1,7 +1,7 @@
 use crate::{Message, icon, page};
 use drawer::Side;
 use iced::widget::component::{Component, component};
-use iced::widget::{Space, responsive, scrollable};
+use iced::widget::{Space, scrollable};
 use iced::{Alignment, Element, Fill, Task, Widget};
 use icedxdy::theme::container::Style;
 use icedxdy::widget::{button, column, container, dialog, drawer, field, input, row, text};
@@ -157,7 +157,7 @@ fn panel(label: &'static str, side: Side, fraction: f32) -> Slot<'static, Messag
     .height_fraction(fraction)
     .into()
 }
-fn profile(desktop: bool) -> Slot<'static, Message> {
+fn profile() -> Slot<'static, Message> {
     let trigger = |d: &dialog::Handle| d.trigger(button("Edit Profile").style(button::Outline));
     let form = |d: &dialog::Handle| {
         column![
@@ -168,25 +168,22 @@ fn profile(desktop: bool) -> Slot<'static, Message> {
         .spacing(24)
     };
     let description = "Make changes to your profile here. Click save when you're done.";
-    if desktop {
-        dialog(trigger, move |d| {
-            column![dialog::header("Edit profile", description), form(d)]
-                .spacing(16)
-                .into()
-        })
-        .max_width(425.)
-        .into()
-    } else {
-        drawer(trigger, move |d| {
+    drawer(trigger, move |d| {
+        if d.is_mobile() {
             column![
                 drawer::header("Edit profile", description),
                 container(form(d)).padding([0, 16]),
                 drawer::footer([d.close(button("Cancel").width(Fill).style(button::Outline))])
             ]
             .into()
-        })
-        .into()
-    }
+        } else {
+            column![dialog::header("Edit profile", description), form(d)]
+                .spacing(16)
+                .into()
+        }
+    })
+    .desktop_dialog(425.)
+    .into()
 }
 impl page::Page for DrawerPage {
     fn page_index(&self) -> usize {
@@ -229,11 +226,7 @@ impl page::Page for DrawerPage {
             ]
             .spacing(8)
             .into(),
-            "dialog" => responsive(|size| {
-                Slot::from(container(profile(size.width >= 400.)).center_x(Fill)).compose()
-            })
-            .width(Fill)
-            .boxed(),
+            "dialog" => profile().compose(),
             _ => unreachable!("unknown drawer preview: {id}"),
         }
     }

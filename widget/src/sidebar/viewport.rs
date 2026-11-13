@@ -11,7 +11,7 @@ use icedxdy_core::Theme;
 
 /// A sidebar may mount after a window's initial resize event. Read the actual
 /// window passed to overlay layout, including inside a constrained preview.
-pub(super) struct Width<'a, M> {
+pub(crate) struct Width<'a, M> {
     pub content: Element<'a, M, Theme, Renderer>,
     pub mobile: bool,
     pub enabled: bool,
@@ -49,7 +49,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Width<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter_mut(&mut tree.children)
             .next()
-            .expect("a keyboard handler has one child");
+            .expect("a viewport detector has one child");
 
         if let Some(mobile) = *tree.state.downcast_ref::<Option<bool>>()
             && mobile != self.mobile
@@ -80,7 +80,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Width<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter(&tree.children)
             .next()
-            .expect("a keyboard handler has one child");
+            .expect("a viewport detector has one child");
 
         self.content.draw(
             child_tree,
@@ -104,7 +104,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Width<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter(&tree.children)
             .next()
-            .expect("a keyboard handler has one child");
+            .expect("a viewport detector has one child");
 
         self.content
             .mouse_interaction(child_tree, child_layout, cursor, viewport, renderer)
@@ -121,7 +121,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Width<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter_mut(&mut tree.children)
             .next()
-            .expect("a keyboard handler has one child");
+            .expect("a viewport detector has one child");
 
         self.content
             .operate(child_tree, child_layout, viewport, renderer, operation);
@@ -140,7 +140,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Width<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter_mut(&mut tree.children)
             .next()
-            .expect("a keyboard handler has one child");
+            .expect("a viewport detector has one child");
 
         self.content.overlay(
             child_tree,

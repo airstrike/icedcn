@@ -17,7 +17,7 @@ mod separator;
 mod state;
 mod submenu;
 mod trigger;
-mod viewport;
+pub(crate) mod viewport;
 
 pub use content::content;
 pub use footer::footer;

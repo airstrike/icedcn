@@ -49,6 +49,7 @@ use crate::button::{self, button};
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
 use crate::marker::{self, Press};
+use crate::sidebar::viewport::Width;
 use crate::{Size, column, row, text};
 
 pub use modal::{Placement, Side, Signal};
@@ -62,6 +63,7 @@ pub struct Dialog<'a, Message> {
     on_open_change: Option<Box<dyn Fn(bool) -> Message + 'a>>,
     placement: Placement,
     drawer_height: Option<f32>,
+    responsive: Option<f32>,
     show_close_button: bool,
     dismiss_outside: bool,
     padding: u16,
@@ -76,6 +78,7 @@ type Body<'a, Message> = Box<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
 #[derive(Debug, Clone, Copy)]
 pub struct Handle {
     is_open: bool,
+    mobile: bool,
 }
 
 /// The dialog's private events.
@@ -87,6 +90,8 @@ pub enum Event<Message> {
     Close,
     /// The closing animation reached its endpoint.
     Exited,
+    /// The window crossed the breakpoint for a responsive dialog.
+    Mobile(bool),
     /// The content published an app message.
     App(Message),
 }
@@ -96,6 +101,7 @@ pub enum Event<Message> {
 pub struct State {
     open: Option<bool>,
     shown: bool,
+    mobile: bool,
     closing: Option<Instant>,
 }
 
@@ -122,6 +128,7 @@ impl<'a, Message> Dialog<'a, Message> {
             on_open_change: None,
             placement,
             drawer_height: None,
+            responsive: None,
             show_close_button: true,
             dismiss_outside: true,
             padding: 16,
@@ -190,6 +197,12 @@ impl<'a, Message> Dialog<'a, Message> {
         }
         self
     }
+    /// Render a centered dialog at desktop width and this drawer below 768px.
+    /// Both presentations share the same controlled or uncontrolled open state.
+    pub fn desktop_dialog(mut self, max_width: f32) -> Self {
+        self.responsive = Some(max_width);
+        self
+    }
     /// Pin the panel to the selected window edge.
     pub fn side(mut self, side: Side) -> Self {
         self.placement = Placement::Side(side);
@@ -202,6 +215,10 @@ impl<'a, Message> Dialog<'a, Message> {
 }
 
 impl Handle {
+    /// Whether a responsive drawer is using its narrow-screen presentation.
+    pub fn is_mobile(&self) -> bool {
+        self.mobile
+    }
     /// Whether the dialog is open.
     pub fn is_open(&self) -> bool {
         self.is_open
@@ -298,6 +315,10 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
     ) -> Option<Message> {
         let next = match event {
             Event::App(message) => return Some(message),
+            Event::Mobile(mobile) => {
+                state.mobile = mobile;
+                return None;
+            }
             Event::Exited => {
                 if !self.is_open(state) {
                     state.closing = None;
@@ -323,10 +344,13 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
     }
 
     fn view(&self, state: &State) -> impl Widget<Event<Message>, Theme, Renderer> + 'a {
+        let desktop = self.responsive.filter(|_| !state.mobile);
+        let placement = desktop.map_or(self.placement, |max_width| Placement::Center { max_width });
+        let drawer_height = self.drawer_height.filter(|_| desktop.is_none());
         let handle = Handle {
             is_open: self.is_open(state),
+            mobile: state.mobile,
         };
-
         let mut base = (self.trigger)(&handle);
         base.inherit(&self.inherited);
         let base = marker::owner(
@@ -342,15 +366,15 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
             content.inherit(&self.inherited);
 
             // nova `p-4` on a dialog; a sheet's sections pad themselves.
-            let padding = match self.placement {
+            let padding = match placement {
                 Placement::Center { .. } => self.padding,
                 Placement::Side(_) => 0,
             };
             let content = Container::new(content).width(Fill).padding(padding);
 
-            let content: Slot<'a, Message> = if self.show_close_button {
+            let content: Slot<'a, Message> = if self.show_close_button || desktop.is_some() {
                 // nova `absolute top-2 right-2` (sheet: `top-3 right-3`).
-                let inset = match self.placement {
+                let inset = match placement {
                     Placement::Center { .. } => 8,
                     Placement::Side(_) => 12,
                 };
@@ -375,28 +399,25 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                 content.into()
             };
 
-            let content: Slot<'a, Message> = if self.drawer_height.is_some()
-                && self.placement == Placement::Side(Side::Bottom)
-            {
-                let handle = Container::new(iced_widget::Space::new())
-                    .width(100)
-                    .height(4)
-                    .style(|theme: &Theme| {
-                        let mut style = Style::default();
-                        style.background = Some(theme.muted.base.into());
-                        style.border.radius = 2.0.into();
-                        style.into()
-                    });
-                column![
-                    Container::new(handle).center_x(Fill).padding([16, 0, 0, 0]),
+            let content: Slot<'a, Message> =
+                if drawer_height.is_some() && placement == Placement::Side(Side::Bottom) {
+                    let handle = Container::new(iced_widget::Space::new())
+                        .width(100)
+                        .height(4)
+                        .style(|theme: &Theme| {
+                            let mut style = Style::default();
+                            style.background = Some(theme.muted.base.into());
+                            style.border.radius = 2.0.into();
+                            style.into()
+                        });
+                    column![
+                        Container::new(handle).center_x(Fill).padding([16, 0, 0, 0]),
+                        content
+                    ]
+                    .into()
+                } else {
                     content
-                ]
-                .into()
-            } else {
-                content
-            };
-            let drawer_height = self.drawer_height;
-            let placement = self.placement;
+                };
             let style = move |theme: &Theme| {
                 let mut style = dialog::sheet(theme);
                 if drawer_height.is_some() {
@@ -418,7 +439,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                 }
                 style.into()
             };
-            let panel = match self.placement {
+            let panel = match placement {
                 Placement::Center { .. } => {
                     Container::new(content).width(Fill).style(dialog::content)
                 }
@@ -436,10 +457,21 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
             Slot::from(panel).compose().map(Event::App).boxed()
         });
 
-        modal::Modal::new(base.into(), panel, self.placement, Event::Close)
+        let modal = modal::Modal::new(base.into(), panel, placement, Event::Close)
             .dismiss_outside(self.dismiss_outside)
             .animation(state.closing, || Event::Exited)
-            .drawer_height(self.drawer_height)
+            .drawer_height(drawer_height);
+        if self.responsive.is_some() {
+            Width {
+                content: modal.boxed(),
+                mobile: state.mobile,
+                enabled: true,
+                change: Event::Mobile,
+            }
+            .boxed()
+        } else {
+            modal.boxed()
+        }
     }
 }
 
