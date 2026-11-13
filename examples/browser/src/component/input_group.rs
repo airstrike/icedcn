@@ -1,3 +1,5 @@
+mod buttons;
+
 use iced::{Fill, Task};
 
 use icedxdy::widget::input_group::Align;
@@ -207,10 +209,7 @@ impl page::Page for InputGroupPage {
                     .into(),
             ]),
 
-            // shadcn `input-group-button.tsx`, its first group.
-            "button" => stack([input_group(input("https://x.com/shadcn"))
-                .addon(end(input_group::button(icon::copy()).square()))
-                .into()]),
+            "button" => buttons::preview(),
 
             // shadcn `input-group-kbd.tsx`.
             "kbd" => stack([input_group(input("Search..."))

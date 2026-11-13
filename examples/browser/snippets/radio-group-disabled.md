@@ -1,4 +1,6 @@
 ```rust
+use icedxdy::theme;
+use icedxdy::theme::tweak::Alpha;
 use icedxdy::Horizontal;
 use icedxdy::widget::{column, field, radio_group, text};
 
@@ -6,7 +8,7 @@ radio_group(|g| {
     column![
         field(g.item("option1").disabled(true))
             .orientation(Horizontal)
-            .label(text::small("Disabled")),
+            .label(text::small("Disabled").style(theme::text::Foreground + Alpha(0.5))),
         field(g.item("option2")).orientation(Horizontal).label(text::small("Option 2")),
         field(g.item("option3")).orientation(Horizontal).label(text::small("Option 3")),
     ]

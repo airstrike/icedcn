@@ -1,9 +1,7 @@
 //! Field component
 //!
-//! A wrapper around a form input with optional label, description, and error
-//! slots. Mirrors shadcn's `Field`/`FieldLabel`/`FieldDescription`/`FieldError`
-//! (the MVP subset). Other shadcn field exports — `FieldSet`, `FieldLegend`,
-//! `FieldSeparator`, `FieldContent`, `FieldTitle` — are not yet ported.
+//! A labeled input with description, error, horizontal and responsive layouts.
+//! The module also provides grouped controls, fieldsets, legends and actions.
 //!
 //! # Example
 //!

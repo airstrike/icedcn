@@ -4,7 +4,7 @@ mod date;
 use crate::column::Column;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::row::Row;
-use crate::{button, column, container, row, select, space, text};
+use crate::{button, column, container, row, space, text};
 pub use chrono::{Datelike, Duration};
 pub use date::{Date, System, Weekday, today};
 use iced_core::alignment::Horizontal;
@@ -148,14 +148,20 @@ impl<'a, Message> Calendar<'a, Message> {
 pub struct State {
     selected: Option<Option<Selection>>,
     month: Option<Date>,
+    caption: Option<Caption>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Caption {
+    Month(Date),
+    Year(Date, i32),
 }
 
 #[derive(Clone, Debug)]
 pub enum Event {
     Pick(Date),
     Month(Date),
-    CaptionYear(String, Date),
-    CaptionMonth(String, Date),
+    Caption(Option<Caption>),
 }
 
 impl<Message> Calendar<'_, Message> {
@@ -185,21 +191,28 @@ impl<Message> Calendar<'_, Message> {
     fn header(&self, month: Date, offset: usize) -> Slot<'static, Event> {
         let (year, number, _) = self.system.parts(month);
         let title: Slot<'static, Event> = if self.caption {
-            let months = (1..=12).map(|m| select::item(m.to_string(), self.system.month_name(m)));
-            let current_year = self.system.parts(today()).0;
-            let years = (current_year.min(year) - 100..=current_year.max(year) + 10)
-                .map(|y| select::item(y.to_string(), self.system.number(y)));
+            let toggle = |label: String, width, caption| {
+                button(
+                    row![
+                        text(label).size(13),
+                        space::horizontal(),
+                        text::muted("⌄").size(12)
+                    ]
+                    .spacing(2),
+                )
+                .style(button::Outline)
+                .width(width)
+                .height(30)
+                .disabled(self.disabled)
+                .on_press(Event::Caption(Some(caption)))
+            };
             row![
-                select(months)
-                    .value(number.to_string())
-                    .width(96)
-                    .disabled(self.disabled)
-                    .on_value_change(move |v| Event::CaptionMonth(v, month)),
-                select(years)
-                    .value(year.to_string())
-                    .width(70)
-                    .disabled(self.disabled)
-                    .on_value_change(move |v| Event::CaptionYear(v, month))
+                toggle(
+                    self.system.month_name(number).to_owned(),
+                    92,
+                    Caption::Month(month)
+                ),
+                toggle(self.system.number(year), 64, Caption::Year(month, year - 6))
             ]
             .spacing(4)
             .into()
@@ -215,6 +228,7 @@ impl<Message> Calendar<'_, Message> {
             if show && let Some(next) = self.system.shift(month, step - offset as i32) {
                 Slot::from(
                     button(label)
+                        .square()
                         .style(button::Ghost)
                         .width(28)
                         .height(28)
@@ -235,6 +249,72 @@ impl<Message> Calendar<'_, Message> {
         .width(self.cell_size * (7 + usize::from(self.week_numbers)) as f32)
         .align_y(Alignment::Center)
         .into()
+    }
+
+    // Keep the chooser in the calendar's surface: the calendar may itself live in
+    // a Date Picker popover, whose outside-click handler owns the overlay.
+    fn caption_panel(&self, caption: Caption) -> Slot<'static, Event> {
+        let mut rows = Vec::new();
+        let mut choices = Vec::new();
+        let (base, first, years) = match caption {
+            Caption::Month(base) => (base, 1, false),
+            Caption::Year(base, first) => (base, first, true),
+        };
+        let (year, month, _) = self.system.parts(base);
+        if years {
+            rows.push(
+                row![
+                    button("‹")
+                        .style(button::Ghost)
+                        .on_press(Event::Caption(Some(Caption::Year(base, first - 12)))),
+                    space::horizontal(),
+                    text::label(format!(
+                        "{} – {}",
+                        self.system.number(first),
+                        self.system.number(first + 11)
+                    )),
+                    space::horizontal(),
+                    button("›")
+                        .style(button::Ghost)
+                        .on_press(Event::Caption(Some(Caption::Year(base, first + 12))))
+                ]
+                .width(self.cell_size * 7.)
+                .align_y(Alignment::Center)
+                .into(),
+            );
+        }
+        for n in first..first + 12 {
+            let (y, m, label, active) = if years {
+                (n, month, self.system.number(n), n == year)
+            } else {
+                {
+                    let m = n as u32;
+                    (year, m, self.system.month_name(m).to_owned(), m == month)
+                }
+            };
+            let mut option = button(text(label).size(12))
+                .width(self.cell_size * 7. / 3.)
+                .height(34);
+            if !active {
+                option = option.style(button::Ghost);
+            }
+            if let Some(date) = self.system.date(y, m, 1) {
+                option = option.on_press(Event::Month(date));
+            } else {
+                option = option.disabled(true);
+            }
+            choices.push(option.into());
+            if choices.len() == 3 {
+                rows.push(Row::with_children(std::mem::take(&mut choices)).into());
+            }
+        }
+        rows.push(
+            button("Back")
+                .style(button::Ghost)
+                .on_press(Event::Caption(None))
+                .into(),
+        );
+        Column::with_children(rows).spacing(6).into()
     }
 
     fn grid(
@@ -298,6 +378,7 @@ impl<Message> Calendar<'_, Message> {
                         label.into()
                     };
                 let mut cell = button(label)
+                    .square()
                     .width(self.cell_size)
                     .height(self.cell_size)
                     .disabled(unavailable)
@@ -339,21 +420,21 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Calendar<
                 return self.on_change.as_ref().map(|change| change(selected));
             }
             Event::Month(date) => Some(date),
-            Event::CaptionYear(value, month) => {
-                self.system
-                    .date(value.parse().ok()?, self.system.parts(month).1, 1)
-            }
-            Event::CaptionMonth(value, month) => {
-                self.system
-                    .date(self.system.parts(month).0, value.parse().ok()?, 1)
+            Event::Caption(caption) => {
+                state.caption = caption;
+                return None;
             }
         }?;
+        state.caption = None;
         if self.month.is_none() {
             state.month = Some(next_month);
         }
         self.on_month.as_ref().map(|f| f(next_month))
     }
     fn view(&self, state: &State) -> impl Widget<Event, Theme, Renderer> + 'a {
+        if let Some(caption) = state.caption {
+            return Element::from(container(self.caption_panel(caption)).padding(12));
+        }
         let month = self.visible_month(state);
         let today = today();
         let grids = (0..self.months).filter_map(|i| {
@@ -361,7 +442,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Calendar<
                 .shift(month, i as i32)
                 .map(|m| self.grid(m, i, self.selected_value(state), today))
         });
-        Element::from(container(Row::with_children(grids).spacing(12)).padding(12))
+        Element::from(container(Row::with_children(grids).spacing(12).wrap()).padding(12))
     }
 }
 

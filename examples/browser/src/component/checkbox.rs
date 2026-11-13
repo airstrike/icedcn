@@ -195,11 +195,6 @@ impl page::Page for CheckboxPage {
                 .width(288)
                 .into(),
 
-            // Disabled: `.disabled(true)` paints `Status::Disabled` on the
-            // checkbox. Label uses `text::muted` to approximate shadcn's
-            // `data-disabled:opacity-50` cascade — a color shift rather than a
-            // true alpha overlay (real Field-level data-disabled propagation
-            // is deferred until the cascade infra lands).
             "disabled" => field(checkbox().disabled(true))
                 .orientation(field::Horizontal)
                 .label(
