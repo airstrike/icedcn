@@ -4,7 +4,7 @@ Card is a family of helper constructors, not a single component. Each helper ret
 
 ### `card()`
 
-Wraps any content with shadcn's card surface (`bg-card` + ring + rounded corners). Returns an `iced_widget::Container`, so all the standard container builders chain (`.padding(...)`, `.width(...)`, `.max_width(...)`, etc.). Prefer a fixed `.width(384.0)` over `.max_width(384)` when the card sits inside a `Length::Shrink` ancestor — iced's compression-flag semantics collapse a Shrink + `max_width` chain to the intrinsic content width.
+Wraps any content with shadcn's card surface (`bg-card` + ring + rounded corners). Returns an `iced_widget::Container`, so all the standard container builders chain (`.padding(...)`, `.width(...)`, etc.).
 
 ```rust
 card(column![
@@ -55,3 +55,5 @@ Shadcn's `Card`/`CardHeader`/`CardTitle`/`CardDescription`/`CardAction`/`CardCon
 
 - `Card.size = "default" | "sm"` (shadcn live docs) is not yet exposed at the helper level. The `card-small` example renders without a true `size="sm"` driver — visual delta vs the default size is small (text-base → text-sm on title, `gap-3 py-3 px-3` instead of `gap-4 py-4 px-4`).
 - `card-image` examples use a muted-bg placeholder rectangle in lieu of a raster asset (no checked-in image, no URL fetcher in iced).
+
+Use `header.inset(px)`, `card::content(child).padding([0.0, px])`, and `card::footer_with_spacing(child, px)` to apply the same spacing value throughout a card. The small size uses 12px insets and a 14px title.

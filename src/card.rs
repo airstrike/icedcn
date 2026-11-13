@@ -42,7 +42,6 @@ use crate::theme::container;
 use crate::theme::container::Style;
 use crate::widget::Slot;
 use crate::widget::rule;
-use crate::widget::space;
 use crate::widget::text;
 
 /// The boxed element a card slot holds.
@@ -82,7 +81,7 @@ pub fn description<'a>(content: impl IntoFragment<'a>) -> text::Text<'a> {
 /// CSS-grid `col-start-2 row-span-2 row-start-1 self-start justify-self-end`
 /// — top-right corner of the header. Iced doesn't have a CSS-grid analog,
 /// so the [`Header`] builder achieves the same layout by pushing the action
-/// flush-right with [`space::horizontal`].
+/// flush-right with a flexible title column.
 ///
 /// This constructor is an identity — it documents the slot, lets call sites
 /// read symmetrically (`card::action(...)` next to `card::title(...)` /
@@ -101,6 +100,7 @@ pub fn action<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a
 /// and description, matching nova's `CardHeader` cascade.
 pub struct Header<'a, Message> {
     title: Slot<'a, Message>,
+    inset: f32,
     description: Option<Slot<'a, Message>>,
     action: Option<Slot<'a, Message>>,
 }
@@ -120,12 +120,19 @@ pub struct Header<'a, Message> {
 pub fn header<'a, Message: 'a>(title: impl IntoTitle<'a, Message>) -> Header<'a, Message> {
     Header {
         title: title.into_title(),
+        inset: 16.0,
         description: None,
         action: None,
     }
 }
 
 impl<'a, Message: 'a> Header<'a, Message> {
+    /// Horizontal section padding, shared with the card content and footer.
+    pub fn inset(mut self, pixels: f32) -> Self {
+        self.inset = pixels.max(0.0);
+        self
+    }
+
     /// Set the description slot. Plain strings auto-style as [`description`]
     /// (`text-sm text-muted-foreground`); pre-styled values pass through.
     pub fn description(mut self, description: impl IntoDescription<'a, Message>) -> Self {
@@ -136,7 +143,7 @@ impl<'a, Message: 'a> Header<'a, Message> {
     /// Set the action slot — typically a top-right link, button, or badge.
     /// shadcn pins the action via `col-start-2 row-span-2 self-start
     /// justify-self-end`; the rendered Header pushes it flush-right with
-    /// [`space::horizontal`] inside a row.
+    /// a flexible title column inside a row.
     pub fn action(mut self, action: impl Into<Slot<'a, Message>>) -> Self {
         self.action = Some(action.into());
         self
@@ -147,6 +154,7 @@ impl<'a, Message: 'a> From<Header<'a, Message>> for Element<'a, Message> {
     fn from(h: Header<'a, Message>) -> Self {
         let Header {
             title,
+            inset,
             description,
             action,
         } = h;
@@ -165,7 +173,6 @@ impl<'a, Message: 'a> From<Header<'a, Message>> for Element<'a, Message> {
         let padded_inner: Element<'a, Message> = match action {
             Some(a) => Row::new()
                 .push(text_col.boxed())
-                .push(space::horizontal().boxed())
                 .push(a.compose())
                 .align_y(iced_core::Alignment::Start)
                 .width(Length::Fill)
@@ -174,7 +181,7 @@ impl<'a, Message: 'a> From<Header<'a, Message>> for Element<'a, Message> {
         };
 
         iced_widget::container(padded_inner)
-            .padding(Padding::X4)
+            .padding([0.0, inset])
             .width(Length::Fill)
             .boxed()
     }
@@ -270,10 +277,18 @@ pub fn content<'a, Message: 'a>(
 /// Card footer section. Caller composes the inner shape (row of buttons,
 /// stacked column, etc.); `footer` applies nova's muted footer surface.
 pub fn footer<'a, Message: 'a>(child: impl Into<Element<'a, Message>>) -> Slot<'a, Message> {
+    footer_with_spacing(child, 16.0)
+}
+
+/// A footer with a custom card spacing value.
+pub fn footer_with_spacing<'a, Message: 'a>(
+    child: impl Into<Element<'a, Message>>,
+    spacing: f32,
+) -> Slot<'a, Message> {
     let line: Element<'a, Message> = rule::horizontal(1).style(footer_rule_style()).boxed();
 
     let body = Container::new(child.into())
-        .padding(Padding::P4)
+        .padding(spacing.max(0.0))
         .width(Length::Fill)
         .style(|t| footer_style(t).into());
 

@@ -1,55 +1,47 @@
 ```rust
-use iced::Alignment::Center;
-use iced::Fill;
-
-use icedxdy::card;
-use icedxdy::widget::{button, column, field, input, row, space, text};
-use icedxdy::Gap;
-
-let password_label = row![
-    text::label("Password"),
-    space::horizontal(),
-    button("Forgot your password?").style(button::Link).on_press(Message::Forgot),
-]
-.align_y(Center)
-.width(Fill);
-
-card(column![
-    card::header("Login to your account")
-        .description("Enter your email below to login to your account")
-        .action(card::action(
-            button("Sign Up").style(button::Link).on_press(Message::SignUp),
-        )),
-    card::content(
+fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
+    let password_label = row![
+        text::label("Password"),
+        space::horizontal(),
+        button("Forgot your password?")
+            .style(button::Link)
+            .on_press(forgot)
+    ]
+    .align_y(Center)
+    .width(Fill);
+    card(
         column![
-            field(
-                input("m@example.com")
-                    .width(Fill),
+            card::header("Login to your account")
+                .description("Enter your email below to login to your account")
+                .action(button("Sign Up").style(button::Link))
+                .inset(spacing),
+            card::content(
+                column![
+                    field(input("m@example.com").width(Fill)).label("Email"),
+                    field(input("").secure(true).width(Fill)).label(Slot::from(password_label))
+                ]
+                .spacing(24)
+                .width(Fill)
             )
-            .label("Email"),
-            field(
-                input("")
-                    .secure(true)
-                    .width(Fill),
-            )
-            .label(password_label),
-        ]
-        .spacing(Gap::G6)
-        .width(Fill)
-    ),
-    card::footer(
-        column![
-            button("Login").on_press(Message::Login).width(Fill),
-            button("Login with Google").style(button::Outline)
-                .on_press(Message::Google)
+            .padding([0.0, spacing]),
+            card::footer_with_spacing(
+                column![
+                    button("Login").width(Fill),
+                    button("Login with Google")
+                        .style(button::Outline)
+                        .width(Fill)
+                ]
+                .spacing(8)
                 .width(Fill),
+                spacing
+            )
         ]
-        .spacing(Gap::G2)
         .width(Fill)
-    ),
-]
-.spacing(Gap::G4)
-.padding(iced::Padding::ZERO.top(Gap::G4).bottom(Gap::G4))
-.width(Fill))
-.width(384.0)
+        .spacing(spacing)
+        .padding(iced::Padding::ZERO.top(spacing)),
+    )
+    .width(384)
+    .boxed()
+    .into()
+}
 ```
