@@ -17,6 +17,8 @@
 //!     .side(tooltip::Side::Left)
 //! ```
 
+pub(crate) mod interaction;
+use interaction::{Interaction, Mode};
 use std::time::Duration;
 
 use iced_core::Pixels;
@@ -28,10 +30,6 @@ use crate::Size;
 use crate::compose::{Compose, Inherited, Slot};
 
 pub use iced_widget::anchored::{Align, Side};
-
-/// The arrow's size: nova's `size-2.5` square, rotated, shows a 10×5
-/// triangle.
-const ARROW: [f32; 2] = [10.0, 5.0];
 
 /// A trigger that shows a hint while hovered.
 pub struct Tooltip<'a, Message> {
@@ -119,20 +117,16 @@ impl<'a, Message: 'a> Compose<Message> for Tooltip<'a, Message> {
             .max_width(320)
             .style(|theme: &Theme| content(theme));
 
-        let mut tooltip = anchored(self.trigger.compose(), Slot::from(panel).compose())
-            .position(self.position)
-            .hover(self.delay, Duration::ZERO)
-            .arrow(ARROW, |theme: &Theme| theme.neutral.foreground.into());
-
-        if let Some(open) = self.open {
-            tooltip = tooltip.open(open);
-        }
-
-        if let Some(on_change) = self.on_open_change {
-            tooltip = tooltip.on_toggle(on_change);
-        }
-
-        tooltip.boxed()
+        Interaction::new(
+            self.trigger.compose(),
+            Slot::from(panel).compose(),
+            self.position,
+            (self.delay, Duration::ZERO),
+            Mode::Hint,
+            self.open,
+            self.on_open_change,
+        )
+        .boxed()
     }
 }
 

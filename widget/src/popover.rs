@@ -30,6 +30,7 @@ use iced_widget::{Renderer, Space, Widget};
 use icedxdy_core::Theme;
 use icedxdy_core::theme;
 use icedxdy_core::theme::popover::content;
+use std::time::Duration;
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
@@ -53,6 +54,7 @@ pub struct Popover<'a, Message> {
     min_width: f32,
     padding: Padding,
     modal: bool,
+    hover: Option<(Duration, Duration)>,
     inherited: Inherited,
 }
 
@@ -108,6 +110,7 @@ pub fn popover<'a, Message>(
         // `p-2.5`.
         padding: Padding::new(10.0),
         modal: false,
+        hover: None,
         inherited: Inherited::default(),
     }
 }
@@ -184,6 +187,11 @@ impl<'a, Message> Popover<'a, Message> {
     /// (a dropdown menu).
     pub(crate) fn modal(mut self, modal: bool) -> Self {
         self.modal = modal;
+        self
+    }
+
+    pub(crate) fn hover(mut self, open_delay: Duration, close_delay: Duration) -> Self {
+        self.hover = Some((open_delay, close_delay));
         self
     }
 
@@ -331,7 +339,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
             Space::new().boxed()
         };
 
-        anchored(Element::from(trigger), panel)
+        let mut anchor = anchored(Element::from(trigger), panel)
             .position(self.position)
             .width(if self.width.is_some() {
                 anchored::Width::Content
@@ -341,7 +349,11 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
             .min_width(self.min_width)
             .open(handle.is_open)
             .modal(self.modal)
-            .on_toggle(Event::Set)
+            .on_toggle(Event::Set);
+        if let Some((open, close)) = self.hover {
+            anchor = anchor.hover(open, close);
+        }
+        anchor
     }
 }
 

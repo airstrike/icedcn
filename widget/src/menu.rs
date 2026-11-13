@@ -20,7 +20,10 @@
 //! Selecting an item publishes its own message and closes the menu, as
 //! Radix's `onSelect` does; a disabled item does neither.
 
+use crate::tooltip::interaction::{Interaction, Mode};
 use std::time::Duration;
+
+pub(crate) mod list;
 
 use iced_core::Length::Fill;
 use iced_core::text::IntoFragment;
@@ -309,17 +312,26 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Sub<'a, Message> {
             .width(Fill)
             .style(content);
 
-        let sub = anchored(
+        let body = list::List {
+            content: Slot::from(panel).compose(),
+            horizontal: false,
+            autofocus: false,
+            on_move: None,
+        }
+        .boxed();
+        let position = anchored::Position::new(anchored::Side::Right)
+            .align(anchored::Align::Start)
+            .offset(4)
+            .align_offset(-4.);
+        let sub = Interaction::new(
             Slot::from(self.trigger).compose(),
-            Slot::from(panel).compose(),
-        )
-        .side(anchored::Side::Right)
-        .align(anchored::Align::Start)
-        .offset(4)
-        .align_offset(-4.0)
-        .min_width(96)
-        .hover(Duration::ZERO, Duration::from_millis(150));
-
+            body,
+            position,
+            (Duration::ZERO, Duration::from_millis(150)),
+            Mode::Submenu,
+            None,
+            None,
+        );
         marker::relay::<Signal, _, _, _>(sub.boxed()).into()
     }
 }

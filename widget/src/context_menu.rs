@@ -20,6 +20,8 @@
 //! .width(192)
 //! ```
 
+mod gesture;
+use gesture::LongPress;
 use iced_core::Length::Fill;
 use iced_core::{Element, Length, Pixels, Point};
 use iced_widget::component::{self, Component};
@@ -51,6 +53,8 @@ pub enum Event<Message> {
     Moved(Point),
     /// The trigger area was right-pressed.
     Open,
+    /// A stationary touch opened the menu at this point in the trigger.
+    OpenAt(Point),
     /// The menu asked to close.
     Close,
     /// The content published an app message.
@@ -117,6 +121,10 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 state.open_at = Some(state.pointer);
                 true
             }
+            Event::OpenAt(point) => {
+                state.open_at = Some(point);
+                true
+            }
             Event::Close => {
                 let _ = state.open_at.take()?;
                 false
@@ -136,6 +144,11 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
         let area = mouse_area(area.compose().map(Event::App))
             .on_move(Event::Moved)
             .on_right_press(Event::Open);
+
+        let area = LongPress {
+            content: area.boxed(),
+            open: Event::OpenAt,
+        };
 
         let menu: Element<'a, Event<Message>, Theme, Renderer> = if state.open_at.is_some() {
             let mut body = (self.content)(&handle);
