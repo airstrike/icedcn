@@ -23,9 +23,9 @@
 //! glyphs (`‹`, `›`, `…`); the widget crate carries no icon font, so pass a
 //! lucide icon with `.icon(..)` for parity.
 
-use iced_core::Alignment;
 use iced_core::Length::Fill;
 use iced_core::alignment::{Horizontal, Vertical};
+use iced_core::{Alignment, Length};
 use iced_widget::Renderer;
 use icedxdy_core::Theme;
 
@@ -37,6 +37,7 @@ use crate::text::{self, Text};
 /// A row of page links, centered in the available width.
 pub struct Pagination<'a, Message> {
     items: Vec<Slot<'a, Message>>,
+    width: Length,
 }
 
 /// Create a [`Pagination`] from its items, in order.
@@ -45,6 +46,15 @@ pub fn pagination<'a, Message: 'a>(
 ) -> Pagination<'a, Message> {
     Pagination {
         items: items.into_iter().collect(),
+        width: Fill,
+    }
+}
+
+impl<Message> Pagination<'_, Message> {
+    /// Set the width of the navigation landmark. Defaults to filling its parent.
+    pub fn width(mut self, width: impl Into<Length>) -> Self {
+        self.width = width.into();
+        self
     }
 }
 
@@ -59,7 +69,7 @@ impl<'a, Message: 'a> Compose<Message> for Pagination<'a, Message> {
                 .spacing(2)
                 .align_y(Alignment::Center),
         )
-        .width(Fill)
+        .width(self.width)
         .align_x(Horizontal::Center)
         .into()
     }

@@ -82,6 +82,7 @@ pub struct Item<'a, Message> {
     content: Slot<'a, Message>,
     disabled: bool,
     style: Option<Spec>,
+    square: Option<f32>,
 }
 
 /// Create a toggle group item for `value`, showing `content`.
@@ -94,10 +95,17 @@ pub fn item<'a, Message: 'a>(
         content: content.into(),
         disabled: false,
         style: None,
+        square: None,
     }
 }
 
 impl<'a, Message: 'a> Item<'a, Message> {
+    /// Render a square item with the given side length.
+    pub fn square(mut self, side: impl Into<iced_core::Pixels>) -> Self {
+        self.square = Some(side.into().0);
+        self
+    }
+
     /// Disable this item.
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
@@ -293,12 +301,16 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                     }
                 });
 
-                button::button(item.content.map(Event::App))
+                let button = button::button(item.content.map(Event::App))
                     .size(size)
                     .translate(false)
                     .style(paint)
                     .on_press(Event::Press(item.value))
-                    .disabled(disabled || item.disabled)
+                    .disabled(disabled || item.disabled);
+                match item.square {
+                    Some(side) => button.square().height(side),
+                    None => button,
+                }
             })
             .collect();
 

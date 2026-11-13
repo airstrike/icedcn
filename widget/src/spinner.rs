@@ -10,7 +10,7 @@ use iced_core::renderer;
 use iced_core::widget::Meta;
 use iced_core::widget::tree::{self, Tree};
 use iced_core::{
-    Color, Element, Event, Layout, Length, Radians, Rectangle, Shell, Size, Vector, Widget,
+    Color, Element, Event, Layout, Length, Point, Radians, Rectangle, Shell, Size, Vector, Widget,
 };
 use iced_widget::Renderer;
 use iced_widget::canvas;
@@ -76,6 +76,7 @@ where
     size: f32,
     bar_height: f32,
     rotation_duration: Duration,
+    spokes: bool,
     class: Theme::Class<'a>,
 }
 
@@ -84,13 +85,20 @@ impl<'a> Spinner<'a> {
         Self {
             size: 16.0,
             bar_height: 2.0,
-            rotation_duration: Duration::from_millis(1200),
+            rotation_duration: Duration::from_millis(1000),
+            spokes: false,
             class: <Theme as Catalog>::default(),
         }
     }
 
     pub fn size(mut self, size: f32) -> Self {
         self.size = size;
+        self
+    }
+
+    /// Draw the eight radial strokes of the Lucide loader glyph.
+    pub fn spokes(mut self) -> Self {
+        self.spokes = true;
         self
     }
 
@@ -251,21 +259,30 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Spinner<'a> {
                     .with_width(self.bar_height),
             );
 
-            // Fixed arc length (3/4 circle), just rotates
-            let start = Radians(state.animation.angle() * 2.0 * PI);
-            let arc_length = Radians(PI * 1.75);
-
+            let angle = state.animation.angle() * 2.0 * PI;
             let mut builder = canvas::path::Builder::new();
-            builder.arc(canvas::path::Arc {
-                center: frame.center(),
-                radius: track_radius,
-                start_angle: start,
-                end_angle: start + arc_length,
-            });
-
+            if self.spokes {
+                let center = frame.center();
+                for i in 0..8 {
+                    let theta = angle + PI * i as f32 / 4.0;
+                    let point =
+                        |r: f32| Point::new(center.x + theta.cos() * r, center.y + theta.sin() * r);
+                    builder.move_to(point(track_radius * 0.65));
+                    builder.line_to(point(track_radius));
+                }
+            } else {
+                let start = Radians(angle);
+                builder.arc(canvas::path::Arc {
+                    center: frame.center(),
+                    radius: track_radius,
+                    start_angle: start,
+                    end_angle: start + Radians(PI * 1.75),
+                });
+            }
             frame.stroke(
                 &builder.build(),
                 canvas::Stroke::default()
+                    .with_line_cap(canvas::LineCap::Round)
                     .with_color(bar_color)
                     .with_width(self.bar_height),
             );

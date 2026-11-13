@@ -1,10 +1,10 @@
-// Intentional skips: spinner-input-group (InputGroup is not ported) and
-// spinner-custom (it swaps in a different lucide icon spun with
-// `animate-spin`; iced has no CSS animation to spin an arbitrary icon).
-
 use iced::{Shrink, Task};
 
-use icedxdy::widget::{badge, button, column, empty, item, row, spinner, text};
+use crate::icon;
+use icedxdy::widget::input_group::Align;
+use icedxdy::widget::{
+    badge, button, column, empty, input, input_group, item, row, space, spinner, text, textarea,
+};
 use icedxdy::{Size, Theme};
 
 use crate::Message;
@@ -21,6 +21,12 @@ pub static BLOCKS: &[page::Block] = &[
         title: "",
         description: None,
         snippet: "examples/browser/snippets/spinner-demo.md",
+    },
+    page::Block::Example {
+        id: "custom",
+        title: "Customization",
+        description: Some("Change the spinning glyph to a radial loader."),
+        snippet: "examples/browser/snippets/spinner-custom.md",
     },
     page::Block::Group {
         title: "Examples",
@@ -42,6 +48,12 @@ pub static BLOCKS: &[page::Block] = &[
                 title: "Badge",
                 description: Some("Add a spinner to a badge to indicate a loading state."),
                 snippet: "examples/browser/snippets/spinner-badge.md",
+            },
+            page::Block::Example {
+                id: "input-group",
+                title: "Input Group",
+                description: None,
+                snippet: "examples/browser/snippets/spinner-input-group.md",
             },
             page::Block::Example {
                 id: "empty",
@@ -158,6 +170,33 @@ impl page::Page for SpinnerPage {
                 .description("Please wait while we process your request. Do not refresh the page.")
                 .content(button("Cancel").style(button::Outline).size(Size::Sm))
                 .into(),
+
+            "custom" => spinner().spokes().into(),
+
+            "input-group" => column![
+                input_group(input("Send a message...").disabled(true))
+                    .addon(input_group::addon(spinner()).align(Align::InlineEnd)),
+                input_group(textarea("Send a message...").disabled(true)).addon(
+                    input_group::addon(
+                        row![
+                            spinner(),
+                            input_group::text("Validating..."),
+                            space::horizontal(),
+                            input_group::button(icon::arrow_up())
+                                .square()
+                                .style(button::Default)
+                        ]
+                        .spacing(8)
+                        .align_y(iced::Center)
+                        .width(iced::Fill)
+                    )
+                    .align(Align::BlockEnd)
+                )
+            ]
+            .width(iced::Fill)
+            .max_width(448.0)
+            .spacing(16)
+            .into(),
 
             _ => unreachable!("unknown spinner preview id: {id}"),
         }

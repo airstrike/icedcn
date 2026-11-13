@@ -1,10 +1,8 @@
-// Intentional skips: pagination-icons-only (its rows-per-page picker is a
-// Select, which is not ported) and pagination-rtl (RTL).
-
 use iced::Task;
 
+use icedxdy::Horizontal;
 use icedxdy::Theme;
-use icedxdy::widget::pagination;
+use icedxdy::widget::{field, pagination, row, select};
 
 use crate::page;
 use crate::{Message, icon};
@@ -24,12 +22,20 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Md("examples/browser/snippets/pagination-composition.md"),
     page::Block::Group {
         title: "Examples",
-        children: &[page::Block::Example {
-            id: "simple",
-            title: "Simple",
-            description: Some("A simple pagination with only page numbers."),
-            snippet: "examples/browser/snippets/pagination-simple.md",
-        }],
+        children: &[
+            page::Block::Example {
+                id: "simple",
+                title: "Simple",
+                description: Some("A simple pagination with only page numbers."),
+                snippet: "examples/browser/snippets/pagination-simple.md",
+            },
+            page::Block::Example {
+                id: "icons-only",
+                title: "Icons Only",
+                description: Some("Use icon buttons beside a rows-per-page selector."),
+                snippet: "examples/browser/snippets/pagination-icons-only.md",
+            },
+        ],
     },
     page::Block::Md("examples/browser/snippets/pagination-api-reference.md"),
 ];
@@ -96,6 +102,36 @@ impl page::Page for PaginationPage {
                 pagination::link("4").into(),
                 pagination::link("5").into(),
             ])
+            .into(),
+
+            "icons-only" => row![
+                field(
+                    select(["10", "25", "50", "100"].map(|count| select::item(count, count)))
+                        .default_value("25")
+                        .icon(icon::chevron_down)
+                        .width(80)
+                )
+                .label("Rows per page")
+                .orientation(Horizontal)
+                .width(iced::Shrink),
+                pagination([
+                    pagination::link(icon::chevron_left())
+                        .on_press(Message::Page(
+                            self.page_index(),
+                            page::Message::LinkClicked("#".into())
+                        ))
+                        .into(),
+                    pagination::link(icon::chevron_right())
+                        .on_press(Message::Page(
+                            self.page_index(),
+                            page::Message::LinkClicked("#".into())
+                        ))
+                        .into(),
+                ])
+                .width(iced::Shrink)
+            ]
+            .align_y(iced::Center)
+            .spacing(16)
             .into(),
 
             _ => unreachable!("unknown pagination preview id: {id}"),

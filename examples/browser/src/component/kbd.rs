@@ -1,11 +1,12 @@
-// Intentional skips: kbd-input-group (InputGroup is not ported) and
-// kbd-tooltip (its tooltips sit inside a ButtonGroup, whose items are
-// buttons; the keyboard tooltip is on the Tooltip page).
-
 use iced::Task;
 
+use crate::icon;
 use icedxdy::Theme;
-use icedxdy::widget::{button, column, kbd, kbd_group, row, text};
+use icedxdy::widget::button::group;
+use icedxdy::widget::input_group::Align;
+use icedxdy::widget::{
+    button, button_group, column, container, input, input_group, kbd, kbd_group, row, text, tooltip,
+};
 
 use crate::Message;
 use crate::page;
@@ -37,6 +38,18 @@ pub static BLOCKS: &[page::Block] = &[
                 title: "Button",
                 description: Some("Use a `kbd` inside a `button` to display a keyboard key."),
                 snippet: "examples/browser/snippets/kbd-button.md",
+            },
+            page::Block::Example {
+                id: "tooltip",
+                title: "Tooltip",
+                description: Some("Show a keyboard shortcut inside a tooltip."),
+                snippet: "examples/browser/snippets/kbd-tooltip.md",
+            },
+            page::Block::Example {
+                id: "input-group",
+                title: "Input Group",
+                description: Some("Add keyboard keys to an input group addon."),
+                snippet: "examples/browser/snippets/kbd-input-group.md",
             },
         ],
     },
@@ -107,6 +120,38 @@ impl page::Page for KbdPage {
 
             // shadcn `kbd-button.tsx`.
             "button" => button!["Accept", kbd("⏎")].style(button::Outline).into(),
+
+            "tooltip" => button_group![
+                group::decorated(button("Save").style(button::Outline), |button| tooltip(
+                    button,
+                    row![text::xs("Save Changes"), kbd("S").style(kbd::Tooltip)].spacing(4)
+                )
+                .into()),
+                group::decorated(button("Print").style(button::Outline), |button| tooltip(
+                    button,
+                    row![
+                        text::xs("Print Document"),
+                        kbd_group![
+                            kbd("Ctrl").style(kbd::Tooltip),
+                            kbd("P").style(kbd::Tooltip)
+                        ]
+                    ]
+                    .spacing(4)
+                )
+                .into())
+            ]
+            .into(),
+
+            "input-group" => container(
+                input_group(input("Search..."))
+                    .addon(input_group::addon(icon::search()))
+                    .addon(
+                        input_group::addon(kbd_group![kbd("⌘"), kbd("K")]).align(Align::InlineEnd),
+                    ),
+            )
+            .max_width(320)
+            .width(iced::Fill)
+            .into(),
 
             _ => unreachable!("unknown kbd preview id: {id}"),
         }

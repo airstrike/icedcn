@@ -43,6 +43,7 @@ where
     content: Slot<'a, Message, Theme, Renderer>,
     size: Option<Size>,
     weight: crate::Weight,
+    height: Option<f32>,
     square: bool,
     rounded: bool,
     translate: bool,
@@ -62,6 +63,7 @@ pub fn button<'a, Message: Clone + 'a>(
         content: content.into(),
         size: None,
         weight: crate::Weight::Medium,
+        height: None,
         square: false,
         rounded: false,
         translate: true,
@@ -78,6 +80,12 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     /// Set the size variant
     pub fn size(mut self, size: impl Into<Size>) -> Self {
         self.size = Some(size.into());
+        self
+    }
+
+    /// Override the control height while keeping the variant's text size.
+    pub fn height(mut self, height: impl Into<iced_core::Pixels>) -> Self {
+        self.height = Some(height.into().0);
         self
     }
 
@@ -146,7 +154,8 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     ///
     /// [`button::group`]: crate::button::group
     pub fn size_height(&self) -> f32 {
-        self.size.unwrap_or_default().height()
+        self.height
+            .unwrap_or_else(|| self.size.unwrap_or_default().height())
     }
 
     /// Wrap the existing style fn with a post-processor that gets to mutate
@@ -198,9 +207,8 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
         btn.content
             .inherit(&Inherited::default().with_size(size).with_weight(btn.weight));
 
+        let h = btn.size_height();
         let content = btn.content.compose();
-
-        let h = size.height();
         let mut iced_btn = if btn.square {
             super::widget::Button::new(iced_widget::center(content))
                 .width(h)

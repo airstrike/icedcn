@@ -55,8 +55,8 @@ use iced_widget::Renderer;
 use iced_widget::Widget;
 use icedxdy_core::Theme;
 
-use crate::Button;
 use crate::compose::Compose;
+use crate::{Button, Slot};
 
 pub mod separator;
 
@@ -92,6 +92,16 @@ enum Position {
     Last,
 }
 
+/// Decorate a joined button with a tooltip or an overlay after its corners are resolved.
+pub fn decorated<'a, Message: 'a>(
+    button: Button<'a, Message>,
+    decorate: impl FnOnce(Button<'a, Message>) -> Slot<'a, Message> + 'a,
+) -> Item<'a, Message> {
+    Item::Decorated(button, Box::new(decorate))
+}
+
+type Decoration<'a, Message> = Box<dyn FnOnce(Button<'a, Message>) -> Slot<'a, Message> + 'a>;
+
 /// One slot in a [`ButtonGroup`]'s child sequence.
 ///
 /// Constructed via the [`button_group!`](crate::button_group) macro (which calls `.into()` on
@@ -103,6 +113,8 @@ pub enum Item<'a, Message> {
     /// A button that participates in the cluster — its corners get
     /// collapsed based on neighbors at iteration time.
     Button(Button<'a, Message>),
+    Decorated(Button<'a, Message>, Decoration<'a, Message>),
+    Content(Slot<'a, Message>),
     /// A vertical-or-horizontal divider drawn between buttons. The
     /// separator's own axis is set to be perpendicular to the group's
     /// orientation when `ButtonGroup::compose` runs.
@@ -214,19 +226,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for ButtonGroup<'a, Message> {
             width,
         } = *self;
 
-        // Pre-compute the Position label for each Item::Button slot. The
-        // walk counts ALL child slots (buttons + separators) — shadcn's
-        // `:first-child` / `:last-child` cascade keys off direct DOM
-        // children, not just buttons.
         let total = items.len();
-        let positions: Vec<Option<Position>> = items
-            .iter()
-            .enumerate()
-            .map(|(i, item)| match item {
-                Item::Button(_) => Some(position_at(i, total)),
-                Item::Separator(_) => None,
-            })
-            .collect();
 
         // Compute the max button height in this group so separators can
         // size their perpendicular axis to a concrete pixel value rather
@@ -239,8 +239,8 @@ impl<'a, Message: Clone + 'a> Compose<Message> for ButtonGroup<'a, Message> {
         let cross_axis_size = items
             .iter()
             .filter_map(|item| match item {
-                Item::Button(b) => Some(b.size_height()),
-                Item::Separator(_) => None,
+                Item::Button(b) | Item::Decorated(b, _) => Some(b.size_height()),
+                Item::Separator(_) | Item::Content(_) => None,
             })
             .fold(0.0_f32, f32::max);
 
@@ -249,18 +249,17 @@ impl<'a, Message: Clone + 'a> Compose<Message> for ButtonGroup<'a, Message> {
         // corners zeroed; separators get their group_orientation patched.
         let elements: Vec<iced_core::Element<'a, Message, Theme, Renderer>> = items
             .into_iter()
-            .zip(positions)
+            .enumerate()
             .map(
-                |(item, pos)| -> iced_core::Element<'a, Message, Theme, Renderer> {
+                |(i, item)| -> iced_core::Element<'a, Message, Theme, Renderer> {
+                    let pos = position_at(i, total);
+                    let joined = move |b: Button<'a, Message>| {
+                        b.map_style(move |s| collapse_corners(s, pos, orientation))
+                    };
                     match item {
-                        Item::Button(btn) => {
-                            // pos is always Some(_) for Item::Button per the
-                            // mapping above; expect makes the invariant explicit.
-                            let pos = pos.expect("Item::Button must carry a Position");
-                            let btn = btn
-                                .map_style(move |style| collapse_corners(style, pos, orientation));
-                            btn.into()
-                        }
+                        Item::Button(b) => joined(b).into(),
+                        Item::Decorated(b, decorate) => decorate(joined(b)).compose(),
+                        Item::Content(slot) => slot.compose(),
                         Item::Separator(mut sep) => {
                             sep.group_orientation = orientation;
                             sep.cross_axis = cross_axis_size;

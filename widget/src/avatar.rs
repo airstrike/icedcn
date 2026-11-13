@@ -33,13 +33,13 @@
 //!
 //! The fallback is visible while the renderer decodes the image and if it fails.
 
-mod image;
 pub mod badge;
 pub mod group;
+mod image;
 
+use self::image::Portrait;
 use iced_core::Length;
 use iced_core::Length::Fill;
-use self::image::Portrait;
 use iced_core::image::Handle;
 use iced_widget::{Renderer, Widget};
 use icedxdy_core::Theme;
@@ -72,6 +72,15 @@ impl Size {
     /// chip dimensions in logical pixels.
     pub fn geometry(self) -> Geometry {
         self.0
+    }
+}
+
+impl From<f32> for Size {
+    fn from(diameter: f32) -> Self {
+        Self(Geometry {
+            diameter: diameter.max(0.0),
+            ..Geometry::DEFAULT
+        })
     }
 }
 

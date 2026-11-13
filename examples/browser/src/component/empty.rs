@@ -1,13 +1,12 @@
-// Intentional skips: empty-outline (a dashed border; iced draws solid
-// borders only), empty-background (a `bg-muted/30` class on the root),
-// empty-avatar (a 48px avatar, between the avatar sizes), and
-// empty-avatar-group and empty-input-group (avatar groups with overlap and
-// InputGroup are not ported).
-
-use iced::Task;
+use super::avatar::{evilrabbit_handle, maxleiter_handle, shadcn_handle};
+use iced::mouse::Cursor;
+use iced::widget::{canvas, stack};
+use iced::{Element, Fill, Point, Rectangle, Task, Widget};
+use icedxdy::theme::container::Style;
+use icedxdy::widget::input_group::Align;
 
 use icedxdy::theme::tweak::{Fg, Token};
-use icedxdy::widget::{button, column, empty, row};
+use icedxdy::widget::{avatar, button, column, container, empty, input, input_group, kbd, row};
 use icedxdy::{Size, Slot, Theme};
 
 use crate::page;
@@ -28,12 +27,44 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Md("examples/browser/snippets/empty-composition.md"),
     page::Block::Group {
         title: "Examples",
-        children: &[page::Block::Example {
-            id: "card",
-            title: "Card",
-            description: Some("Content with a row of actions and a link below."),
-            snippet: "examples/browser/snippets/empty-card.md",
-        }],
+        children: &[
+            page::Block::Example {
+                id: "card",
+                title: "Card",
+                description: Some("Content with a row of actions and a link below."),
+                snippet: "examples/browser/snippets/empty-card.md",
+            },
+            page::Block::Example {
+                id: "outline",
+                title: "Outline",
+                description: Some("Frame the empty state with a dashed border."),
+                snippet: "examples/browser/snippets/empty-outline.md",
+            },
+            page::Block::Example {
+                id: "background",
+                title: "Background",
+                description: Some("Use a muted background to distinguish an empty state."),
+                snippet: "examples/browser/snippets/empty-background.md",
+            },
+            page::Block::Example {
+                id: "avatar",
+                title: "Avatar",
+                description: Some("Use an avatar in the empty state media."),
+                snippet: "examples/browser/snippets/empty-avatar.md",
+            },
+            page::Block::Example {
+                id: "avatar-group",
+                title: "Avatar Group",
+                description: Some("Show a group of avatars in the media slot."),
+                snippet: "examples/browser/snippets/empty-avatar-group.md",
+            },
+            page::Block::Example {
+                id: "input-group",
+                title: "InputGroup",
+                description: Some("Use an input group to search from an empty state."),
+                snippet: "examples/browser/snippets/empty-input-group.md",
+            },
+        ],
     },
     page::Block::Md("examples/browser/snippets/empty-api-reference.md"),
 ];
@@ -56,6 +87,40 @@ fn learn_more<'a>(label: &'a str, size: Size) -> Slot<'a, Message> {
         .style(button::Link + Fg(Token::MutedForeground))
         .size(size)
         .into()
+}
+
+struct Outline;
+impl canvas::Program<Message, Theme> for Outline {
+    type State = ();
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &iced::Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: Cursor,
+    ) -> Vec<canvas::Geometry> {
+        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        let path = canvas::Path::rounded_rectangle(
+            Point::new(0.5, 0.5),
+            iced::Size::new(
+                (bounds.width - 1.0).max(0.0),
+                (bounds.height - 1.0).max(0.0),
+            ),
+            12.0.into(),
+        );
+        let stroke = canvas::Stroke {
+            line_dash: canvas::LineDash {
+                segments: &[4.0, 3.0],
+                offset: 0,
+            },
+            ..canvas::Stroke::default()
+                .with_color(theme.neutral.border.into())
+                .with_width(1.0)
+        };
+        frame.stroke(&path, stroke);
+        vec![frame.into_geometry()]
+    }
 }
 
 impl page::Page for EmptyPage {
@@ -132,6 +197,35 @@ impl page::Page for EmptyPage {
                     .align_x(iced::Center),
                 )
                 .into(),
+
+            "outline" => stack![
+    Element::from(empty::empty().media(empty::media(icon::cloud()).style(empty::Icon)).title("Cloud Storage Empty")
+        .description("Upload files to your cloud storage to access them anywhere.")
+        .content(button("Upload Files").style(button::Outline).size(Size::Sm))),
+    canvas(Outline).width(Fill).height(Fill)
+].boxed(),
+
+            "background" => container(empty::empty().media(empty::media(icon::bell()).style(empty::Icon)).title("No Notifications")
+    .description("You're all caught up. New notifications will appear here.")
+    .content(button![icon::refresh_ccw(), "Refresh"].style(button::Outline))).width(Fill)
+    .style(|theme| Style { background: Some(theme.muted.base.alpha(0.3).into()), ..Style::default() }).into(),
+
+            "avatar" => empty::empty().media(empty::media(avatar(Some(shadcn_handle())).fallback("LR").size(48.0)))
+    .title("User Offline").description("This user is currently offline. You can leave a message to notify them or try again later.")
+    .content(button("Leave Message").size(Size::Sm)).into(),
+
+            "avatar-group" => empty::empty().media(empty::media(avatar::group([
+    avatar(Some(shadcn_handle())).fallback("CN").size(48.0), avatar(Some(maxleiter_handle())).fallback("LR").size(48.0), avatar(Some(evilrabbit_handle())).fallback("ER").size(48.0)])))
+    .title("No Team Members").description("Invite your team to collaborate on this project.")
+    .content(button![icon::plus(), "Invite Members"].size(Size::Sm)).into(),
+
+            "input-group" => empty::empty().title("404 - Not Found")
+    .description("The page you're looking for doesn't exist. Try searching for what you need below.")
+    .content(column![
+        input_group(input("Try searching for pages...")).addon(input_group::addon(icon::search())).addon(input_group::addon(kbd("/")).align(Align::InlineEnd)),
+        row![empty::description("Need help?"), button("Contact support").style(button::Link).on_press(Message::Page(self.page_index(), page::Message::LinkClicked("#".into())))]
+        .align_y(iced::Center)
+    ].spacing(16).align_x(iced::Center).max_width(288.0)).into(),
 
             _ => unreachable!("unknown empty preview id: {id}"),
         }

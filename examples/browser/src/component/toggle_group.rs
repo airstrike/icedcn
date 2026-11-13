@@ -1,10 +1,9 @@
-// Intentional skips: toggle-group-font-weight-selector (a styled card
-// layout around a group) and toggle-group-rtl (RTL).
+use iced::widget::component::{Component, component};
+use iced::{Element, Task, Widget};
 
-use iced::Task;
-
-use icedxdy::widget::{column, toggle_group};
+use icedxdy::widget::{column, field, row, text, toggle_group};
 use icedxdy::{Size, Theme, Vertical};
+use icedxdy::{Slot, Weight};
 
 use crate::page;
 use crate::{Message, icon};
@@ -55,6 +54,14 @@ pub static BLOCKS: &[page::Block] = &[
                 description: None,
                 snippet: "examples/browser/snippets/toggle-group-disabled.md",
             },
+            page::Block::Example {
+                id: "font-weight-selector",
+                title: "Custom",
+                description: Some(
+                    "Compose a custom toggle group to create a font weight selector.",
+                ),
+                snippet: "examples/browser/snippets/toggle-group-font-weight-selector.md",
+            },
         ],
     },
     page::Block::Md("examples/browser/snippets/toggle-group-api-reference.md"),
@@ -84,6 +91,65 @@ fn formatting<'a>() -> [toggle_group::Item<'a, Message>; 3] {
 /// Top, bottom, left and right items.
 fn sides<'a>() -> [toggle_group::Item<'a, Message>; 4] {
     ["Top", "Bottom", "Left", "Right"].map(|side| toggle_group::item(side.to_lowercase(), side))
+}
+
+struct FontWeight;
+impl<'a> Component<'a, Message, Theme> for FontWeight {
+    type State = Option<String>;
+    type Event = Vec<String>;
+
+    fn update(
+        &self,
+        state: &mut Self::State,
+        selection: Self::Event,
+        _: &iced::Renderer,
+    ) -> Option<Message> {
+        *state = Some(selection.into_iter().next().unwrap_or_default());
+        None
+    }
+
+    fn view(&self, state: &Self::State) -> impl Widget<Self::Event, Theme> + 'a {
+        let selected = state.as_deref().unwrap_or("normal");
+        let group = toggle_group(|| {
+            [
+                ("Light", Weight::Light),
+                ("Normal", Weight::Normal),
+                ("Medium", Weight::Medium),
+                ("Bold", Weight::Bold),
+            ]
+            .map(|(name, weight)| {
+                toggle_group::item(
+                    name.to_lowercase(),
+                    column![
+                        text::Text::new("Aa")
+                            .size(24.0)
+                            .line_height(1.0)
+                            .weight(weight),
+                        text::muted(name).size(12.0)
+                    ]
+                    .align_x(iced::Center),
+                )
+                .square(64)
+            })
+        })
+        .value([selected])
+        .on_value_change(|values| values)
+        .style(toggle_group::Outline)
+        .spacing(8)
+        .size(Size::Lg);
+        let description = row![
+            text::muted("Use"),
+            text::inline_code(format!("font-{selected}")),
+            text::muted("to set the font weight.")
+        ]
+        .spacing(4);
+        Element::from(
+            field(group)
+                .label("Font Weight")
+                .description(Slot::from(description))
+                .width(iced::Shrink),
+        )
+    }
 }
 
 impl page::Page for ToggleGroupPage {
@@ -168,6 +234,8 @@ impl page::Page for ToggleGroupPage {
                 .mode(toggle_group::Mode::Multiple)
                 .disabled(true)
                 .into(),
+
+            "font-weight-selector" => component(FontWeight).boxed(),
 
             _ => unreachable!("unknown toggle group preview id: {id}"),
         }
