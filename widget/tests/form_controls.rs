@@ -74,3 +74,26 @@ fn an_addon_focuses_its_input_except_when_a_button_handles_the_press() {
         );
     }
 }
+
+#[test]
+fn one_time_code_filters_input_and_edits_the_clicked_slot() {
+    use iced_core::keyboard::key::Named;
+    use icedxdy_widget::input_otp::{Pattern, input_otp};
+    use icedxdy_widget::operation::control;
+    let code: Element<'_, String, Theme, Renderer> = input_otp(4)
+        .pattern(Pattern::Digits)
+        .group_size(2)
+        .on_value_change(|code| code)
+        .into();
+    let mut ui = simulator(code);
+    ui.operate(&mut control::activate());
+    let _ = ui.typewrite("1a2345");
+    ui.point_at(Point::new(90., 16.));
+    let _ = ui.simulate(simulator::click());
+    let _ = ui.simulate([simulator::press_key(Named::Backspace, None)]);
+    let _ = ui.typewrite("8");
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        ["1", "12", "123", "1234", "134", "1834"]
+    );
+}

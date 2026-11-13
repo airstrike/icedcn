@@ -34,12 +34,14 @@
 use super::cursor::{self, Cursor};
 use super::editor::Editor;
 use super::value::Value;
+use crate::input_otp::Slots;
 
 use crate::core::Animation;
 use std::marker::PhantomData;
 
 use crate::core::alignment;
 use crate::core::animation::Easing;
+use crate::core::border::Radius;
 use crate::core::clipboard;
 use crate::core::input_method;
 use crate::core::keyboard;
@@ -102,6 +104,7 @@ where
     placeholder: String,
     value: Value,
     is_secure: bool,
+    slots: Option<Slots>,
     font: Option<Font>,
     width: Length,
     /// **Deviation from upstream**: explicit input height (Tailwind `h-8`,
@@ -143,6 +146,7 @@ where
             placeholder: String::from(placeholder),
             value: Value::new(value),
             is_secure: false,
+            slots: None,
             font: None,
             width: Length::Fill,
             height: Length::Shrink,
@@ -174,6 +178,32 @@ where
     pub fn secure(mut self, is_secure: bool) -> Self {
         self.is_secure = is_secure;
         self
+    }
+
+    pub(crate) fn slots(mut self, slots: Slots) -> Self {
+        self.width = slots.total_width().into();
+        self.height = slots.height.into();
+        self.padding = Padding::ZERO;
+        self.slots = Some(slots);
+        self
+    }
+
+    fn insertion(&self, cursor: &Cursor, text: Value) -> Value {
+        let Some(slots) = self.slots.as_ref() else {
+            return text;
+        };
+        let removed = cursor
+            .selection(&self.value)
+            .map_or(0, |(left, right)| right - left);
+        let capacity = slots.count.saturating_sub(self.value.len() - removed);
+        Value::new(
+            &text
+                .to_string()
+                .chars()
+                .filter(|c| slots.accepts(*c))
+                .take(capacity)
+                .collect::<String>(),
+        )
     }
 
     /// Sets the message that should be produced when the [`TextInput`] is
@@ -539,6 +569,109 @@ where
         let text_bounds = children_layout.next().unwrap().0.bounds();
 
         let style = theme.style(&self.class, self.last_status.unwrap_or(Status::Disabled));
+        if let Some(slots) = &self.slots {
+            let active = state
+                .is_focused
+                .as_ref()
+                .filter(|f| f.is_window_focused)
+                .map(|_| state.cursor.end(value).min(slots.count - 1));
+            let caret_visible = state.is_focused.as_ref().is_some_and(|focus| {
+                ((focus.now - focus.updated_at).as_millis() / CURSOR_BLINK_INTERVAL_MILLIS) % 2 == 0
+            });
+            let glyphs = value.to_string().chars().collect::<Vec<_>>();
+            let selection = state.cursor.selection(value);
+            for i in 0..slots.count {
+                let cell = Rectangle {
+                    x: bounds.x + slots.x(i),
+                    y: bounds.y,
+                    width: slots.width,
+                    height: slots.height,
+                };
+                let first = i % slots.group == 0;
+                let last = (i + 1) % slots.group == 0 || i + 1 == slots.count;
+                let selected = selection.is_some_and(|(a, b)| (a..b).contains(&i));
+                let mut border = style.border;
+                border.radius = Radius::default()
+                    .left(if first { 8. } else { 0. })
+                    .right(if last { 8. } else { 0. });
+                if Some(i) == active
+                    && let Some(ring) = style.ring
+                {
+                    renderer.fill_quad(
+                        renderer::Quad {
+                            bounds: cell.expand(ring.width),
+                            border: Border::default().rounded(border.radius),
+                            ..Default::default()
+                        },
+                        ring.color,
+                    );
+                }
+                renderer.fill_quad(
+                    renderer::Quad {
+                        bounds: cell,
+                        border,
+                        ..Default::default()
+                    },
+                    if selected {
+                        Background::Color(style.selection)
+                    } else {
+                        style.background
+                    },
+                );
+                if first && i > 0 {
+                    renderer.fill_quad(
+                        renderer::Quad {
+                            bounds: Rectangle {
+                                x: cell.x - 17.,
+                                y: cell.center_y(),
+                                width: 10.,
+                                height: 1.,
+                            },
+                            ..Default::default()
+                        },
+                        style.value,
+                    );
+                }
+                if let Some(c) = glyphs.get(i) {
+                    renderer.fill_text(
+                        Text {
+                            content: c.to_string(),
+                            font: self.font.unwrap_or_else(|| renderer.font()),
+                            size: Pixels(if slots.height >= 44. { 20. } else { 14. }),
+                            line_height: Default::default(),
+                            bounds: cell.size(),
+                            align_x: text::Alignment::Center,
+                            align_y: alignment::Vertical::Center,
+                            shaping: Default::default(),
+                            wrapping: Default::default(),
+                            ellipsis: Default::default(),
+                            letter_spacing: Default::default(),
+                            font_features: Vec::new(),
+                            font_variations: Vec::new(),
+                            weight: None,
+                            hint_factor: None,
+                        },
+                        cell.center(),
+                        style.value,
+                        *viewport,
+                    );
+                } else if active == Some(i) && caret_visible {
+                    renderer.fill_quad(
+                        renderer::Quad {
+                            bounds: Rectangle {
+                                x: cell.center_x(),
+                                y: cell.center_y() - 8.,
+                                width: 1.,
+                                height: 16.,
+                            },
+                            ..Default::default()
+                        },
+                        style.value,
+                    );
+                }
+            }
+            return;
+        }
 
         // Per shadcn nova, the input has `transition-colors` (150ms,
         // cubic-bezier(0.4,0,0.2,1)) which animates COLOR properties only —
@@ -929,7 +1062,13 @@ where
 
                     match click.kind() {
                         click::Kind::Single => {
-                            let position = if target > 0.0 {
+                            let position = if let Some(slots) = &self.slots {
+                                Some(
+                                    slots
+                                        .hit(cursor_position.x - layout.bounds().x)
+                                        .min(self.value.len()),
+                                )
+                            } else if target > 0.0 {
                                 let value = if self.is_secure {
                                     self.value.secure()
                                 } else {
@@ -1121,8 +1260,9 @@ where
                                 }
                             };
 
+                            let content = self.insertion(&state.cursor, content.clone());
                             let mut editor = Editor::new(&mut self.value, &mut state.cursor);
-                            editor.paste(content.clone());
+                            editor.paste(content);
 
                             self.changed(&mut state.uncontrolled, true, shell);
                             shell.capture_event();
@@ -1159,6 +1299,15 @@ where
                         state.is_pasting = None;
 
                         if let Some(c) = text.chars().next().filter(|c| !c.is_control()) {
+                            if let Some(slots) = &self.slots
+                                && (!slots.accepts(c)
+                                    || (self.value.len() >= slots.count
+                                        && state.cursor.selection(&self.value).is_none()))
+                            {
+                                shell.capture_event();
+                                return;
+                            }
+
                             let mut editor = Editor::new(&mut self.value, &mut state.cursor);
 
                             editor.insert(c);
@@ -1401,8 +1550,9 @@ where
                 {
                     state.is_pasting = Some(Paste::Pasting(Value::new(text)));
 
+                    let content = self.insertion(&state.cursor, Value::new(text));
                     let mut editor = Editor::new(&mut self.value, &mut state.cursor);
-                    editor.paste(Value::new(text));
+                    editor.paste(content);
 
                     self.changed(&mut state.uncontrolled, true, shell);
                     shell.capture_event();
@@ -1442,8 +1592,9 @@ where
                             return;
                         }
 
+                        let content = self.insertion(&state.cursor, Value::new(text));
                         let mut editor = Editor::new(&mut self.value, &mut state.cursor);
-                        editor.paste(Value::new(text));
+                        editor.paste(content);
 
                         focus.updated_at = Instant::now();
                         state.is_pasting = None;
