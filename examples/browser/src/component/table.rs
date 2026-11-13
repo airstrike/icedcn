@@ -39,6 +39,7 @@ pub static BLOCKS: &[page::Block] = &[
             },
         ],
     },
+    page::Block::Md("examples/browser/snippets/table-guide-data-table.md"),
     page::Block::Md("examples/browser/snippets/table-api-reference.md"),
 ];
 

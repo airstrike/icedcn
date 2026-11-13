@@ -22,6 +22,7 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/input-otp-demo.md",
     },
     page::Block::Md("examples/browser/snippets/input-otp-composition.md"),
+    page::Block::Md("examples/browser/snippets/input-otp-guide-about.md"),
     page::Block::Group {
         title: "Examples",
         children: &[

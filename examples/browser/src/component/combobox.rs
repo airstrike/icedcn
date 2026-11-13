@@ -26,6 +26,8 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/combobox-demo.md",
     },
     page::Block::Md("examples/browser/snippets/combobox-composition.md"),
+    page::Block::Md("examples/browser/snippets/combobox-guide-custom-items.md"),
+    page::Block::Md("examples/browser/snippets/combobox-guide-multiple-selection.md"),
     page::Block::Group {
         title: "Examples",
         children: &[

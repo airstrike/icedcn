@@ -27,6 +27,8 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/hover-card-demo.md",
     },
     page::Block::Md("examples/browser/snippets/hover-card-composition.md"),
+    page::Block::Md("examples/browser/snippets/hover-card-guide-trigger-delays.md"),
+    page::Block::Md("examples/browser/snippets/hover-card-guide-positioning.md"),
     page::Block::Group {
         title: "Examples",
         children: &[page::Block::Example {

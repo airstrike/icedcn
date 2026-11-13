@@ -26,6 +26,8 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/field-demo.md",
     },
     page::Block::Md("examples/browser/snippets/field-composition.md"),
+    page::Block::Md("examples/browser/snippets/field-guide-anatomy.md"),
+    page::Block::Md("examples/browser/snippets/field-guide-form.md"),
     page::Block::Group {
         title: "Examples",
         children: &[
@@ -97,6 +99,8 @@ pub static BLOCKS: &[page::Block] = &[
             },
         ],
     },
+    page::Block::Md("examples/browser/snippets/field-guide-validation-and-errors.md"),
+    page::Block::Md("examples/browser/snippets/field-guide-accessibility.md"),
     page::Block::Md("examples/browser/snippets/field-api-reference.md"),
 ];
 

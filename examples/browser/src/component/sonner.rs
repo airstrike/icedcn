@@ -18,6 +18,7 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/sonner-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/sonner-guide-about.md"),
     page::Block::Group {
         title: "Examples",
         children: &[

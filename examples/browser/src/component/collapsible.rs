@@ -32,6 +32,7 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/collapsible-demo.md",
     },
     page::Block::Md("examples/browser/snippets/collapsible-composition.md"),
+    page::Block::Md("examples/browser/snippets/collapsible-guide-controlled-state.md"),
     page::Block::Group {
         title: "Examples",
         children: &[

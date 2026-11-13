@@ -19,6 +19,7 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/native-select-demo.md",
     },
     page::Block::Md("examples/browser/snippets/native-select-composition.md"),
+    page::Block::Md("examples/browser/snippets/native-select-guide-native-select-vs-select.md"),
     page::Block::Group {
         title: "Examples",
         children: &[

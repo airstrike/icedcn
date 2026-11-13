@@ -26,6 +26,8 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/button-group-demo.md",
     },
     page::Block::Md("examples/browser/snippets/button-group-composition.md"),
+    page::Block::Md("examples/browser/snippets/button-group-guide-accessibility.md"),
+    page::Block::Md("examples/browser/snippets/button-group-guide-buttongroup-vs-togglegroup.md"),
     page::Block::Group {
         title: "Examples",
         children: &[
