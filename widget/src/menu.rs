@@ -47,6 +47,7 @@ pub struct Item<'a, Message> {
     on_select: Option<Message>,
     disabled: bool,
     inset: bool,
+    highlighted: bool,
     variant: Variant,
     indicator: Indicator,
     closes: bool,
@@ -71,6 +72,7 @@ pub fn item<'a, Message>(content: impl Into<Slot<'a, Message>>) -> Item<'a, Mess
         on_select: None,
         disabled: false,
         inset: false,
+        highlighted: false,
         variant: Variant::Default,
         indicator: Indicator::None,
         closes: true,
@@ -135,6 +137,12 @@ impl<'a, Message> Item<'a, Message> {
         self
     }
 
+    /// Paint this item as the active option of a keyboard-controlled list.
+    pub fn highlighted(mut self, highlighted: bool) -> Self {
+        self.highlighted = highlighted;
+        self
+    }
+
     /// Whether selecting the item closes the menu through its marker (a
     /// select closes itself instead).
     pub(crate) fn closes(mut self, closes: bool) -> Self {
@@ -164,6 +172,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
             on_select,
             disabled,
             inset,
+            highlighted,
             variant,
             indicator,
             closes,
@@ -210,6 +219,11 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
 
         let style: widget::StyleFn<'b, Theme> =
             Box::new(move |theme: &Theme, status: widget::Status| {
+                let status = if highlighted && !disabled {
+                    widget::Status::Hovered
+                } else {
+                    status
+                };
                 item::style(theme, status.into(), variant).into()
             });
 

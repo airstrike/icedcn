@@ -143,3 +143,44 @@ fn tabs_skip_disabled_triggers_and_activate_on_vertical_arrows() {
         ]
     );
 }
+
+#[test]
+fn combobox_filters_custom_values_and_selects_the_highlight_from_the_keyboard() {
+    use icedxdy_widget::combobox;
+    let widget: Element<'_, Message, Theme, Renderer> = combobox::options([
+        combobox::item("us", "United States").group("America"),
+        combobox::item("gb", "United Kingdom").description("Europe (gb)"),
+    ])
+    .auto_highlight(true)
+    .on_value_change(|value| Message::Open(vec![value]))
+    .into();
+    let mut ui = simulator(widget);
+    ui.point_at(Point::new(25.0, 16.0));
+    let _ = ui.simulate(simulator::click());
+    frame(&mut ui);
+    ui.typewrite("United");
+    ui.tap_key(Named::ArrowDown);
+    ui.tap_key(Named::Enter);
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        [Message::Open(vec!["gb".into()])]
+    );
+}
+
+#[test]
+fn command_search_skips_disabled_results_and_runs_the_highlighted_action() {
+    use icedxdy_widget::command;
+    let widget: Element<'_, Message, Theme, Renderer> = command([
+        command::item("Calendar").disabled(true),
+        command::item("Calculate").on_select(Message::Pressed),
+        command::item("Profile").on_select(Message::Open(vec![])),
+    ])
+    .into();
+    let mut ui = simulator(widget);
+    ui.point_at(Point::new(25.0, 16.0));
+    let _ = ui.simulate(simulator::click());
+    frame(&mut ui);
+    ui.typewrite("Cal");
+    ui.tap_key(Named::Enter);
+    assert_eq!(ui.into_messages().collect::<Vec<_>>(), [Message::Pressed]);
+}

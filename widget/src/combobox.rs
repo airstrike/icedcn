@@ -19,21 +19,65 @@
 //! The list is as wide as the input, non-modal (the page keeps the
 //! pointer), and closes on `Escape` or a press outside it.
 
+pub(crate) mod keys;
+use crate::{button, row};
 use iced_core::Length::Fill;
+use iced_core::keyboard::key::Named;
 use iced_core::{Element, Length};
 use iced_widget::component::{self, Component};
+use iced_widget::text::Text;
 use iced_widget::{Renderer, Space, Widget, anchored};
 use icedxdy_core::Theme;
 use icedxdy_core::theme::popover::content;
+use icedxdy_core::theme::text_input::Invalid;
+use keys::Keys;
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
 use crate::input_group::{self, input_group};
 use crate::{column, input, menu, scrollable, text};
 
+/// A searchable option; its stable value can differ from the text displayed.
+#[derive(Clone, Debug)]
+pub struct Item {
+    value: String,
+    label: String,
+    description: Option<String>,
+    group: Option<String>,
+}
+/// Make an option whose label can be customized independently of its value.
+pub fn item(value: impl Into<String>, label: impl Into<String>) -> Item {
+    Item {
+        value: value.into(),
+        label: label.into(),
+        description: None,
+        group: None,
+    }
+}
+impl Item {
+    /// Secondary text displayed below the option's label.
+    pub fn description(mut self, value: impl Into<String>) -> Self {
+        self.description = Some(value.into());
+        self
+    }
+    /// Group consecutive options under a heading.
+    pub fn group(mut self, label: impl Into<String>) -> Self {
+        self.group = Some(label.into());
+        self
+    }
+}
 /// An input choosing one of its items by filtering them as you type.
 pub struct Combobox<'a, Message> {
-    items: Vec<String>,
+    items: Vec<Item>,
+    auto_highlight: bool,
+    clear: bool,
+    invalid: bool,
+    popup: bool,
+    multiple: bool,
+    selected: Option<Vec<String>>,
+    defaults: Vec<String>,
+    on_selection_change: Option<Box<dyn Fn(Vec<String>) -> Message + 'a>>,
+    leading: Option<Box<dyn Fn() -> Text<'a, Theme> + 'a>>,
     placeholder: String,
     empty: String,
     value: Option<String>,
@@ -56,6 +100,12 @@ pub enum Event {
     Set(bool),
     /// An item was chosen.
     Choose(String),
+    /// Clear the selection.
+    Clear,
+    /// Move the highlighted option.
+    Step(bool),
+    /// Pick the highlighted option.
+    Submit,
 }
 
 /// What a combobox holds: the typed text, whether the list is open and,
@@ -63,6 +113,8 @@ pub enum Event {
 #[derive(Debug, Default)]
 pub struct State {
     query: Option<String>,
+    selection: Option<Vec<String>>,
+    highlight: Option<usize>,
     open: bool,
     value: Option<String>,
 }
@@ -71,8 +123,24 @@ pub struct State {
 pub fn combobox<'a, Message>(
     items: impl IntoIterator<Item = impl Into<String>>,
 ) -> Combobox<'a, Message> {
+    options(items.into_iter().map(|value| {
+        let value = value.into();
+        item(value.clone(), value)
+    }))
+}
+/// Create a combobox with structured values, descriptions or grouped options.
+pub fn options<'a, Message>(items: impl IntoIterator<Item = Item>) -> Combobox<'a, Message> {
     Combobox {
-        items: items.into_iter().map(Into::into).collect(),
+        items: items.into_iter().collect(),
+        auto_highlight: false,
+        clear: false,
+        invalid: false,
+        popup: false,
+        multiple: false,
+        selected: None,
+        defaults: Vec::new(),
+        on_selection_change: None,
+        leading: None,
         placeholder: String::new(),
         empty: "No items found.".to_owned(),
         value: None,
@@ -117,6 +185,54 @@ impl<'a, Message> Combobox<'a, Message> {
         self
     }
 
+    /// Show the first matching item as the active option when filtering.
+    pub fn auto_highlight(mut self, enabled: bool) -> Self {
+        self.auto_highlight = enabled;
+        self
+    }
+    /// Show a clear button while a value is selected.
+    pub fn clearable(mut self, enabled: bool) -> Self {
+        self.clear = enabled;
+        self
+    }
+    /// Style the control as invalid.
+    pub fn invalid(mut self, enabled: bool) -> Self {
+        self.invalid = enabled;
+        self
+    }
+    /// Place the search input in the popup, opened by a button.
+    pub fn popup(mut self, enabled: bool) -> Self {
+        self.popup = enabled;
+        self
+    }
+    /// Show selected items as removable chips.
+    pub fn multiple(mut self, enabled: bool) -> Self {
+        self.multiple = enabled;
+        self
+    }
+    /// Initial selections for an uncontrolled multiple combobox.
+    pub fn default_values(mut self, values: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.defaults = values.into_iter().map(Into::into).collect();
+        self.multiple = true;
+        self
+    }
+    /// Controlled selections for a multiple combobox.
+    pub fn values(mut self, values: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.selected = Some(values.into_iter().map(Into::into).collect());
+        self.multiple = true;
+        self
+    }
+    /// Receive every selected value when a chip or option is pressed.
+    pub fn on_values_change(mut self, f: impl Fn(Vec<String>) -> Message + 'a) -> Self {
+        self.on_selection_change = Some(Box::new(f));
+        self
+    }
+    /// Add an icon to the leading edge of the input group.
+    pub fn leading_icon(mut self, icon: impl Fn() -> Text<'a, Theme> + 'a) -> Self {
+        self.leading = Some(Box::new(icon));
+        self
+    }
+
     /// Disable the combobox.
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
@@ -136,6 +252,46 @@ impl<'a, Message> Combobox<'a, Message> {
         self
     }
 
+    fn selected<'s>(&'s self, state: &'s State) -> &'s [String] {
+        self.selected
+            .as_deref()
+            .or(state.selection.as_deref())
+            .unwrap_or(&self.defaults)
+    }
+    fn label<'s>(&'s self, value: &'s str) -> &'s str {
+        self.items
+            .iter()
+            .find(|item| item.value == value)
+            .map_or(value, |item| item.label.as_str())
+    }
+    fn matches<'s>(&'s self, state: &State) -> impl Iterator<Item = &'s Item> {
+        let needle = state.query.as_deref().unwrap_or("").to_lowercase();
+        self.items
+            .iter()
+            .filter(move |item| item.label.to_lowercase().contains(&needle))
+    }
+    fn choose(&self, state: &mut State, value: String) -> Option<Message> {
+        state.query = None;
+        state.highlight = None;
+        if self.multiple {
+            let mut selected = self.selected(state).to_vec();
+            if let Some(index) = selected.iter().position(|v| *v == value) {
+                selected.remove(index);
+            } else {
+                selected.push(value);
+            }
+            if self.selected.is_none() {
+                state.selection = Some(selected.clone());
+            }
+            self.on_selection_change.as_ref().map(|f| f(selected))
+        } else {
+            state.open = false;
+            if self.value.is_none() {
+                state.value = Some(value.clone());
+            }
+            self.on_value_change.as_ref().map(|f| f(value))
+        }
+    }
     fn current<'s>(&'s self, state: &'s State) -> Option<&'s str> {
         self.value
             .as_deref()
@@ -155,84 +311,178 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             Event::Query(query) => {
                 state.query = Some(query);
                 state.open = true;
+                state.highlight = self.auto_highlight.then_some(0);
                 None
             }
             Event::Focus => {
                 state.open = true;
+                state.highlight = self.auto_highlight.then_some(0);
                 None
             }
             Event::Set(open) => {
                 state.open = open;
+                state.query = None;
+                state.highlight = (open && self.auto_highlight).then_some(0);
                 None
             }
-            Event::Choose(value) => {
+            Event::Step(reverse) => {
+                state.open = true;
+                let n = self.matches(state).count();
+                state.highlight = if n == 0 {
+                    None
+                } else {
+                    Some(match (state.highlight, reverse) {
+                        (Some(i), true) => (i + n - 1) % n,
+                        (Some(i), false) => (i + 1) % n,
+                        (None, true) => n - 1,
+                        (None, false) => 0,
+                    })
+                };
+                None
+            }
+            Event::Submit => {
+                let value = self
+                    .matches(state)
+                    .nth(state.highlight?)
+                    .map(|item| item.value.clone())?;
+                self.choose(state, value)
+            }
+            Event::Choose(value) => self.choose(state, value),
+            Event::Clear => {
+                state.query = None;
+                state.highlight = None;
                 state.open = false;
-                state.query = Some(value.clone());
-
                 if self.value.is_none() {
-                    state.value = Some(value.clone());
+                    state.value = Some(String::new());
                 }
-
-                self.on_value_change
-                    .as_ref()
-                    .map(|on_change| on_change(value))
+                self.on_value_change.as_ref().map(|f| f(String::new()))
             }
         }
     }
 
     fn view(&self, state: &State) -> impl Widget<Event, Theme, Renderer> + 'a {
         let current = self.current(state).map(str::to_owned);
+        let choice = current
+            .as_deref()
+            .map(|value| self.label(value))
+            .unwrap_or("");
         let query = state
             .query
-            .clone()
-            .or_else(|| current.clone())
-            .unwrap_or_default();
-
-        let chevron: Slot<'a, Event> = match &self.icon {
-            Some(icon) => icon().size(16).into(),
-            None => text::muted("\u{2304}").into(),
-        };
-
-        let mut field: Slot<'a, Event> = Container::new(
-            input_group(
+            .as_deref()
+            .unwrap_or(if self.multiple || self.popup {
+                ""
+            } else {
+                choice
+            });
+        let open = state.open && !self.disabled;
+        let make_input = || {
+            let mut group = input_group(
                 input(self.placeholder.clone())
-                    .value(query.clone())
+                    .value(query.to_owned())
                     .on_input(Event::Query)
                     .on_focus(Event::Focus)
                     .disabled(self.disabled),
-            )
-            .addon(input_group::addon(chevron).align(input_group::Align::InlineEnd))
-            .disabled(self.disabled),
-        )
-        .width(self.width)
-        .into();
-        field.inherit(&self.inherited);
-
-        let is_open = state.open && !self.disabled;
-
-        let list: Element<'a, Event, Theme, Renderer> = if is_open {
-            // A query equal to the chosen item shows every item, so the
-            // list reopens whole after a choice.
-            let needle = query.to_lowercase();
-            let shows_all = current.as_deref() == Some(query.as_str());
-
-            let matches: Vec<Slot<'a, Event>> = self
-                .items
-                .iter()
-                .filter(|item| shows_all || item.to_lowercase().contains(&needle))
-                .map(|item| {
-                    let chosen = current.as_deref() == Some(item.as_str());
-                    let value = item.clone();
-
+            );
+            if self.invalid {
+                group = group.style(Invalid);
+            }
+            if let Some(leading) = &self.leading {
+                group = group.addon(input_group::addon(leading().size(16)));
+            }
+            if self.multiple && !self.selected(state).is_empty() {
+                let chips = self.selected(state).iter().map(|value| {
                     Slot::from(
-                        menu::checkbox_item(text::small(item.clone()), chosen, move |_| {
-                            Event::Choose(value.clone())
-                        })
-                        .closes(false),
+                        input_group::button(row![self.label(value).to_owned(), "×"].spacing(4))
+                            .style(button::Secondary)
+                            .on_press(Event::Choose(value.clone())),
                     )
-                })
-                .collect();
-
+                });
+                group = group.addon(input_group::addon(
+                    row::Row::with_children(chips).spacing(2),
+                ));
+            } else if !self.popup && !self.multiple {
+                let end = if self.clear && !choice.is_empty() {
+                    input_group::button("×")
+                        .square()
+                        .on_press(Event::Clear)
+                        .into()
+                } else {
+                    let chevron: Slot<'a, Event> = match &self.icon {
+                        Some(icon) => icon().size(16).into(),
+                        None => text::muted("⌄").into(),
+                    };
+                    Slot::from(
+                        input_group::button(chevron)
+                            .square()
+                            .on_press(Event::Set(!open)),
+                    )
+                };
+                group = group.addon(input_group::addon(end).align(input_group::Align::InlineEnd));
+            }
+            let input = Slot::from(group.disabled(self.disabled)).compose();
+            Keys {
+                content: input,
+                on_key: Box::new(move |key| match key {
+                    Named::ArrowDown => Some(Event::Step(false)),
+                    Named::ArrowUp => Some(Event::Step(true)),
+                    Named::Enter if open => Some(Event::Submit),
+                    _ => None,
+                }),
+            }
+            .boxed()
+        };
+        let mut field: Slot<'a, Event> = if self.popup {
+            button(if choice.is_empty() {
+                self.placeholder.clone()
+            } else {
+                choice.to_owned()
+            })
+            .width(self.width)
+            .style(button::Outline)
+            .disabled(self.disabled)
+            .on_press(Event::Set(!open))
+            .into()
+        } else {
+            Container::new(make_input()).width(self.width).into()
+        };
+        field.inherit(&self.inherited);
+        let is_open = open;
+        let list: Element<'a, Event, Theme, Renderer> = if is_open {
+            let mut matches = Vec::new();
+            let mut group = None;
+            for (index, item) in self.matches(state).enumerate() {
+                if item.group.as_deref() != group {
+                    if group.is_some() {
+                        matches.push(menu::separator());
+                    }
+                    if let Some(name) = &item.group {
+                        matches.push(menu::label(name.clone()));
+                    }
+                    group = item.group.as_deref();
+                }
+                let chosen = if self.multiple {
+                    self.selected(state).contains(&item.value)
+                } else {
+                    current.as_deref() == Some(item.value.as_str())
+                };
+                let label: Slot<'a, Event> = if let Some(detail) = &item.description {
+                    crate::column![
+                        text::small(item.label.clone()).medium(),
+                        text::muted(detail.clone())
+                    ]
+                    .spacing(2)
+                    .into()
+                } else {
+                    text::small(item.label.clone()).into()
+                };
+                let value = item.value.clone();
+                matches.push(
+                    menu::checkbox_item(label, chosen, move |_| Event::Choose(value.clone()))
+                        .highlighted(state.highlight == Some(index))
+                        .closes(false)
+                        .into(),
+                );
+            }
             let body: Slot<'a, Event> = if matches.is_empty() {
                 // `ComboboxEmpty`: `py-2 text-center text-sm text-muted-foreground`.
                 Container::new(text::muted(self.empty.clone()))
@@ -244,15 +494,18 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 column::Column::with_children(matches).width(Fill).into()
             };
 
-            let panel = Container::new(
-                scrollable(Container::new(body).width(Fill).padding(4))
-                    .width(Fill)
-                    .height(Length::Shrink),
-            )
-            .width(Fill)
-            .max_height(252)
-            .style(content);
-
+            let results = scrollable(Container::new(body).width(Fill).padding(4))
+                .width(Fill)
+                .height(Length::Shrink);
+            let panel: Slot<'a, Event> = if self.popup {
+                crate::column![make_input(), results].width(Fill).into()
+            } else {
+                results.into()
+            };
+            let panel = Container::new(panel)
+                .width(Fill)
+                .max_height(252)
+                .style(content);
             Slot::from(panel).compose()
         } else {
             Space::new().boxed()

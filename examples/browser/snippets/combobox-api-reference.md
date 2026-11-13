@@ -15,4 +15,15 @@ An iced `Component` that owns the typed text, the open state and, uncontrolled, 
 | `.width(length)` | `Length` | `256` | The input's width. |
 | `.icon(f)` | `Fn() -> Text` | text glyph | The chevron at the input's end. |
 
-Single choice only: chips (`multiple`), the clear button, groups and keyboard highlighting are not ported.
+Structured entries use `combobox::options`. Build each option with `combobox::item(value, label)`, then attach a `.group(label)` or `.description(text)`. `value` is the string delivered on selection.
+
+| Builder | Behavior |
+| --- | --- |
+| `.multiple(true)` | Select several choices. Press a chip to remove it. |
+| `.values(items)` / `.default_values(items)` | Set controlled or initial choices for multiple selection. |
+| `.on_values_change(handler)` | Receive the complete updated selection. |
+| `.auto_highlight(true)` | Highlight the first result after filtering. Up/Down move the highlight and Enter selects it. |
+| `.clearable(true)` | Add a button to clear the current value. |
+| `.invalid(true)` | Apply the invalid input style. |
+| `.popup(true)` | Open a search field and result list from a separate trigger. |
+| `.leading_icon(icon)` | Place the icon in the input's leading addon. |
