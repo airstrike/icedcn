@@ -10,26 +10,26 @@ The sidebar suite is a family of helpers, not a single component. Compose the ca
 | `sidebar::floating(content)` | `Container<'a>` | Sidebar floating with margin, rounded corners, border, and shadow. Mirrors shadcn's `floating` variant. |
 | `sidebar::inset(content)` | `Container<'a>` | Inset sidebar — no border on the sidebar itself; the content area (paired via `sidebar::main_styled`) carries the rounded/border/shadow chrome. Mirrors shadcn's `inset` variant. |
 
-These return a stock `iced_widget::Container`, so all the standard container builders chain (`.padding(...)`, `.width(...)`, etc.).
+The three constructors return an icedxdy container with width, padding and style builders.
 
 ### Section helpers
 
 | Constructor | Returns | Description |
 | --- | --- | --- |
-| `sidebar::header(content)` | `Container` | Top section — typically holds the brand badge + a `sidebar::trigger` for collapse. Mirrors shadcn's `SidebarHeader`. |
-| `sidebar::content(content)` | `Container` | Scrollable middle section that hosts groups + menus. Mirrors shadcn's `SidebarContent`. |
-| `sidebar::footer(content)` | `Container` | Bottom section — typically a `sidebar::menu(...)` with an account / settings button. Mirrors shadcn's `SidebarFooter`. |
-| `sidebar::group(content)` | `Container` | A logical group inside `content`. Mirrors shadcn's `SidebarGroup`. |
-| `sidebar::group_label(label)` | `Text<'a>` | Group heading (`text-xs uppercase tracking-wider muted-foreground`). Mirrors shadcn's `SidebarGroupLabel`. |
-| `sidebar::group_content(content)` | `Container` | Inner container for a group's items. Mirrors shadcn's `SidebarGroupContent`. |
+| `sidebar::header(content)` | `Column` | Top section for the brand badge + a `sidebar::trigger` for collapse. Mirrors shadcn's `SidebarHeader`. |
+| `sidebar::content(content)` | `Column` | Fill-height column for groups and menus. Wrap long navigation in a scrollable. Mirrors shadcn's `SidebarContent`. |
+| `sidebar::footer(content)` | `Column` | Bottom section — typically a `sidebar::menu(...)` with an account / settings button. Mirrors shadcn's `SidebarFooter`. |
+| `sidebar::group(content)` | `Column` | A logical group inside `content`. Mirrors shadcn's `SidebarGroup`. |
+| `sidebar::group_label(label)` | `Text<'a>` | Muted 12-point medium-weight group heading. Mirrors shadcn's `SidebarGroupLabel`. |
+| `sidebar::group_content(content)` | `Column` | Inner container for a group's items. Mirrors shadcn's `SidebarGroupContent`. |
 | `sidebar::separator()` | `Container` | 1px horizontal divider scoped to the sidebar palette. Mirrors shadcn's `SidebarSeparator`. |
 | `sidebar::menu(items)` | `Column` | Vertical list of menu items at consistent spacing. Mirrors shadcn's `SidebarMenu`. |
-| `sidebar::menu_item(content)` | `Slot` | Wraps a single menu row (typically a `menu_button`). Mirrors shadcn's `SidebarMenuItem`. |
+| `sidebar::menu_item(content)` | `Row` | Wraps a single menu row (typically a `menu_button`). Mirrors shadcn's `SidebarMenuItem`. |
 | `sidebar::input(...)` | `Slot` | Inline search box scoped to the sidebar palette. Mirrors shadcn's `SidebarInput`. |
 
 ### `sidebar::menu_button()`
 
-The interactive sidebar menu item — NOT our `Button`. Uses the raw button widget with `translate(false)` so there's no press-down effect; sidebar palette (`palette.sidebar.accent`) for hover, main `palette.accent` for active.
+The sidebar menu button uses its sidebar accent for hover and the active theme accent for a selected destination.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |

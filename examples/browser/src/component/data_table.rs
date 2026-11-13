@@ -26,6 +26,14 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/data-table-demo.md",
     },
     page::Block::Md("examples/browser/snippets/data-table-composition.md"),
+    page::Block::Md("examples/browser/snippets/data-table-guide-basic-table.md"),
+    page::Block::Md("examples/browser/snippets/data-table-guide-cell-formatting.md"),
+    page::Block::Md("examples/browser/snippets/data-table-guide-row-actions.md"),
+    page::Block::Md("examples/browser/snippets/data-table-guide-pagination.md"),
+    page::Block::Md("examples/browser/snippets/data-table-guide-sorting.md"),
+    page::Block::Md("examples/browser/snippets/data-table-guide-filtering.md"),
+    page::Block::Md("examples/browser/snippets/data-table-guide-visibility.md"),
+    page::Block::Md("examples/browser/snippets/data-table-guide-row-selection.md"),
 ];
 const PAYMENTS: [Payment; 5] = [
     Payment {

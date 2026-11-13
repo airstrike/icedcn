@@ -58,6 +58,7 @@ pub static BLOCKS: &[page::Block] = &[
         ],
     },
     page::Block::Md("examples/browser/snippets/chart-config.md"),
+    page::Block::Md("examples/browser/snippets/chart-guide-theming.md"),
     page::Block::Example {
         id: "tooltip",
         title: "Tooltip",
@@ -65,6 +66,7 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/chart-tooltip.md",
     },
     page::Block::Md("examples/browser/snippets/chart-api-reference.md"),
+    page::Block::Md("examples/browser/snippets/chart-guide-accessibility.md"),
 ];
 const LABELS: [&str; 6] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
 const DESKTOP: [f32; 6] = [186.0, 305.0, 237.0, 73.0, 209.0, 214.0];
