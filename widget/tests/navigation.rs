@@ -102,3 +102,44 @@ fn dialog_focus_enters_wraps_and_returns_on_escape() {
     );
     assert_eq!(ui.into_messages().collect::<Vec<_>>(), [Message::Pressed]);
 }
+
+#[test]
+fn tabs_skip_disabled_triggers_and_activate_on_vertical_arrows() {
+    use icedxdy_widget::tabs;
+    let element: Element<'static, Message, Theme, Renderer> = tabs(|t| {
+        t.list([
+            t.trigger("first", "First"),
+            t.trigger("second", "Second").disabled(true),
+            t.trigger("third", "Third"),
+        ])
+    })
+    .orientation(tabs::Orientation::Vertical)
+    .line(true)
+    .default_value("first")
+    .on_value_change(|v| Message::Open(vec![v]))
+    .into();
+    let mut ui = simulator(element);
+    let mut next = focusable::focus_next::<()>();
+    ui.operate(&mut next);
+    if let Outcome::Chain(mut step) = next.finish() {
+        ui.operate(step.as_mut());
+    }
+    assert_eq!(
+        focus(&mut ui),
+        focusable::Count {
+            focused: Some(0),
+            total: 2
+        }
+    );
+    ui.tap_key(Named::ArrowRight);
+    ui.tap_key(Named::ArrowDown);
+    assert_eq!(focus(&mut ui).focused, Some(1));
+    ui.tap_key(Named::Home);
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        [
+            Message::Open(vec!["third".into()]),
+            Message::Open(vec!["first".into()])
+        ]
+    );
+}

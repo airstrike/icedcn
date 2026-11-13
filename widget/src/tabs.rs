@@ -26,10 +26,16 @@
 //! Only the active panel is mounted, as in Radix. Panels share no widget
 //! state, so switching tabs resets whatever a panel kept in its own tree.
 
+mod list;
+
+use crate::column::Column;
+use iced_core::Length::Fill;
 use iced_core::{Element, Length};
 use iced_widget::component::{self, Component};
+use iced_widget::{self, Space};
 use iced_widget::{Renderer, Widget};
 use icedxdy_core::Theme;
+use icedxdy_core::theme::container;
 use icedxdy_core::theme::tabs;
 
 use crate::Size;
@@ -46,6 +52,8 @@ pub struct Tabs<'a, Message> {
     default_value: String,
     on_value_change: Option<Box<dyn Fn(String) -> Message + 'a>>,
     width: Length,
+    orientation: Orientation,
+    line: bool,
     inherited: Inherited,
 }
 
@@ -57,6 +65,16 @@ type Body<'a, Message> = Box<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
 #[derive(Debug, Clone)]
 pub struct Handle {
     value: String,
+    orientation: Orientation,
+    line: bool,
+}
+
+/// List layout and arrow-key direction.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum Orientation {
+    #[default]
+    Horizontal,
+    Vertical,
 }
 
 /// The signal a trigger records when pressed: the value it selects.
@@ -86,6 +104,8 @@ pub fn tabs<'a, Message>(body: impl Fn(&Handle) -> Slot<'a, Message> + 'a) -> Ta
         default_value: String::new(),
         on_value_change: None,
         width: Length::Shrink,
+        orientation: Orientation::Horizontal,
+        line: false,
         inherited: Inherited::default(),
     }
 }
@@ -111,6 +131,18 @@ impl<'a, Message> Tabs<'a, Message> {
         self
     }
 
+    /// Orient the list vertically or horizontally.
+    pub fn orientation(mut self, orientation: Orientation) -> Self {
+        self.orientation = orientation;
+        self
+    }
+
+    /// Display the active tab with a line indicator instead of a filled pill.
+    pub fn line(mut self, line: bool) -> Self {
+        self.line = line;
+        self
+    }
+
     /// Set the width of the tabs.
     pub fn width(mut self, width: impl Into<Length>) -> Self {
         self.width = width.into();
@@ -132,40 +164,57 @@ impl Handle {
     }
 
     /// The `TabsList`: the muted pill holding the triggers.
-    pub fn list<'a, Message: 'a>(
+    pub fn list<'a, Message: 'a, T: Into<Slot<'a, Message>>>(
         &self,
-        triggers: impl IntoIterator<Item = Slot<'a, Message>>,
+        triggers: impl IntoIterator<Item = T>,
     ) -> Slot<'a, Message> {
-        Container::new(Row::with_children(triggers))
-            .padding([4, 3])
-            .style(tabs::list)
-            .into()
+        let gap = if self.line { 4 } else { 0 };
+        let children = triggers.into_iter().map(Into::into);
+        let content: Slot<'a, Message> = match self.orientation {
+            Orientation::Horizontal => Row::with_children(children).spacing(gap).into(),
+            Orientation::Vertical => Column::with_children(children).spacing(gap).into(),
+        };
+        let mut content = Container::new(content).padding(3);
+        if !self.line {
+            content = content.style(tabs::list);
+        }
+        Slot::from(
+            list::List {
+                content: Slot::from(content).compose(),
+                orientation: self.orientation,
+            }
+            .boxed(),
+        )
     }
 
-    /// A `TabsTrigger` selecting `value`, labelled by `label`.
+    /// A trigger that selects `value` and can be individually disabled.
     pub fn trigger<'a, Message: Clone + 'a>(
         &self,
         value: impl Into<String>,
         label: impl Into<Slot<'a, Message>>,
-    ) -> Slot<'a, Message> {
+    ) -> Trigger<'a, Message> {
         let value = value.into();
-        let is_active = value == self.value;
-
-        // The list is `h-8`; triggers fill it at `text-sm`, so the label takes
-        // the default text size before the compact button pushes its own.
+        let active = value == self.value;
+        let line = self.line;
         let mut label = label.into();
         label.inherit(&Inherited::default().with_size(Size::Default));
-
-        Slot::new(Trigger {
-            button: button(label)
-                .size(Size::Xs)
-                .translate(false)
-                .style(Box::new(move |theme: &Theme, status| {
-                    tabs::trigger(theme, status, is_active).into()
-                })
-                    as iced_widget::button::StyleFn<'a, Theme>),
+        let style: iced_widget::button::StyleFn<'a, Theme> = Box::new(move |theme, status| {
+            let mut style = tabs::trigger(theme, status, active);
+            if line {
+                style.background = None;
+                style.border.width = 0.0;
+                style.shadow = Default::default();
+            }
+            style.into()
+        });
+        Trigger {
+            button: button(label).size(Size::Xs).translate(false).style(style),
             value,
-        })
+            disabled: false,
+            active,
+            line,
+            orientation: self.orientation,
+        }
     }
 
     /// A `TabsContent` panel, shown only while `value` is selected.
@@ -183,23 +232,70 @@ impl Handle {
 }
 
 /// A trigger button that records [`Select`] when pressed.
-struct Trigger<'a, Message> {
+pub struct Trigger<'a, Message> {
     button: crate::Button<'a, Message>,
     value: String,
+    disabled: bool,
+    active: bool,
+    line: bool,
+    orientation: Orientation,
+}
+
+impl<Message> Trigger<'_, Message> {
+    /// Exclude this trigger from pointer and keyboard selection.
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
+        self
+    }
+}
+
+impl<'a, Message: Clone + 'a> From<Trigger<'a, Message>> for Slot<'a, Message> {
+    fn from(trigger: Trigger<'a, Message>) -> Self {
+        Slot::new(trigger)
+    }
 }
 
 impl<'a, Message: Clone + 'a> Compose<Message> for Trigger<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {
+        self.disabled |= from.is_disabled();
         Compose::inherit(&mut self.button, from);
     }
-
     fn compose<'b>(self: Box<Self>) -> Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
     {
-        let Trigger { button, value } = *self;
-
-        marker::marker(Slot::from(button).compose(), Select(value), Press::Captured).into()
+        let Trigger {
+            button,
+            value,
+            disabled,
+            active,
+            line,
+            orientation,
+        } = *self;
+        let button: Slot<'a, Message> = button.disabled(disabled).into();
+        let content: Slot<'a, Message> = if line {
+            let indicator =
+                Container::new(Space::new()).style(move |theme: &Theme| container::Style {
+                    background: active.then(|| theme.neutral.foreground.into()),
+                    ..container::Style::default()
+                });
+            match orientation {
+                Orientation::Horizontal => crate::column![button, indicator.width(Fill).height(2)]
+                    .spacing(2)
+                    .into(),
+                Orientation::Vertical => crate::row![button, indicator.width(2).height(Fill)]
+                    .spacing(2)
+                    .into(),
+            }
+        } else {
+            button
+        };
+        let marker = marker::marker(content.compose(), Select(value), Press::Captured);
+        if disabled {
+            marker.into()
+        } else {
+            marker.control(active).into()
+        }
     }
 }
 
@@ -240,6 +336,8 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Tabs<'a, 
     fn view(&self, state: &State) -> impl Widget<Event<Message>, Theme, Renderer> + 'a {
         let handle = Handle {
             value: self.selected(state).to_owned(),
+            orientation: self.orientation,
+            line: self.line,
         };
 
         let mut body = (self.body)(&handle);

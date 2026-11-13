@@ -3,15 +3,13 @@
 //
 // Intentional skips:
 // - tabs-rtl — RTL is not in scope (per CLAUDE.md).
-// - tabs-line, tabs-vertical, tabs-disabled, tabs-icons — the list's
-//   `line` variant, vertical orientation and disabled triggers are not
-//   ported yet.
 
 use iced::Task;
 use iced::Widget;
 
+use crate::icon;
 use icedxdy::card;
-use icedxdy::widget::{column, tabs, text};
+use icedxdy::widget::{column, row, tabs, text};
 use icedxdy::{Slot, Theme};
 
 use crate::Message;
@@ -31,6 +29,37 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/tabs-demo.md",
     },
     page::Block::Md("examples/browser/snippets/tabs-composition.md"),
+    page::Block::Group {
+        title: "Examples",
+        children: &[
+            page::Block::Example {
+                id: "line",
+                title: "Line",
+                description: Some(
+                    "Use the `variant=\"line\"` prop on `TabsList` for a line style.",
+                ),
+                snippet: "examples/browser/snippets/tabs-line.md",
+            },
+            page::Block::Example {
+                id: "vertical",
+                title: "Vertical",
+                description: Some("Use `orientation=\"vertical\"` for vertical tabs."),
+                snippet: "examples/browser/snippets/tabs-vertical.md",
+            },
+            page::Block::Example {
+                id: "disabled",
+                title: "Disabled",
+                description: None,
+                snippet: "examples/browser/snippets/tabs-disabled.md",
+            },
+            page::Block::Example {
+                id: "icons",
+                title: "Icons",
+                description: None,
+                snippet: "examples/browser/snippets/tabs-icons.md",
+            },
+        ],
+    },
     page::Block::Md("examples/browser/snippets/tabs-api-reference.md"),
 ];
 
@@ -146,6 +175,45 @@ impl page::Page for TabsPage {
             .width(400)
             .into(),
 
+            "line" => tabs(|t| {
+                t.list([
+                    t.trigger("overview", "Overview"),
+                    t.trigger("analytics", "Analytics"),
+                    t.trigger("reports", "Reports"),
+                ])
+            })
+            .line(true)
+            .default_value("overview")
+            .into(),
+            "vertical" => tabs(|t| {
+                t.list([
+                    t.trigger("account", "Account"),
+                    t.trigger("password", "Password"),
+                    t.trigger("notifications", "Notifications"),
+                ])
+            })
+            .orientation(tabs::Orientation::Vertical)
+            .default_value("account")
+            .into(),
+            "disabled" => tabs(|t| {
+                t.list([
+                    t.trigger("home", "Home"),
+                    t.trigger("settings", "Disabled").disabled(true),
+                ])
+            })
+            .default_value("home")
+            .into(),
+            "icons" => tabs(|t| {
+                t.list([
+                    t.trigger(
+                        "preview",
+                        row![icon::app_window().size(16), "Preview"].spacing(6),
+                    ),
+                    t.trigger("code", row![icon::code().size(16), "Code"].spacing(6)),
+                ])
+            })
+            .default_value("preview")
+            .into(),
             _ => unreachable!("unknown tabs preview id: {id}"),
         }
     }
