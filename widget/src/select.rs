@@ -112,11 +112,14 @@ pub enum Position {
     Popper,
 }
 
+type ValueLabel<'a> = Box<dyn Fn(&str, &str) -> String + 'a>;
+
 /// A field choosing one value from a list.
 pub struct Select<'a, Message> {
     entries: Vec<Entry>,
     position: Position,
     placeholder: String,
+    value_label: Option<ValueLabel<'a>>,
     value: Option<String>,
     default_value: Option<String>,
     on_value_change: Option<Box<dyn Fn(String) -> Message + 'a>>,
@@ -153,6 +156,7 @@ pub fn select<'a, Message>(entries: impl IntoIterator<Item = Entry>) -> Select<'
         entries: entries.into_iter().collect(),
         position: Position::ItemAligned,
         placeholder: String::new(),
+        value_label: None,
         value: None,
         default_value: None,
         on_value_change: None,
@@ -166,6 +170,11 @@ pub fn select<'a, Message>(entries: impl IntoIterator<Item = Entry>) -> Select<'
 }
 
 impl<'a, Message> Select<'a, Message> {
+    /// Format the collapsed trigger independently from the labels in the menu.
+    pub fn format_value(mut self, format: impl Fn(&str, &str) -> String + 'a) -> Self {
+        self.value_label = Some(Box::new(format));
+        self
+    }
     /// Use selected-row alignment or popper placement.
     pub fn position(mut self, position: Position) -> Self {
         self.position = position;
@@ -318,7 +327,11 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
                 .iter()
                 .flat_map(Entry::items)
                 .find(|(value, _)| *value == current)
-                .map(|(_, label)| label.to_owned())
+                .map(|(value, label)| {
+                    self.value_label
+                        .as_ref()
+                        .map_or_else(|| label.to_owned(), |f| f(value, label))
+                })
         });
 
         let value: Slot<'a, Event> = match chosen {

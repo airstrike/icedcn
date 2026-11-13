@@ -381,7 +381,7 @@ fn view(id: &str, pi: usize) -> Slot<'static, Message> {
         .into(),
 
         "input" => button_group![
-            group::Item::Content(input("Search...").into()),
+            input("Search..."),
             button(icon::search()).style(button::Outline)
         ]
         .into(),
@@ -392,8 +392,10 @@ fn view(id: &str, pi: usize) -> Slot<'static, Message> {
             |&m| {
                 button_group![
                     button("Follow").style(button::Outline),
-                    group::decorated(button(icon::chevron_down()).style(button::Outline), move |b| m
-                        .trigger(b))
+                    group::decorated(
+                        button(icon::chevron_down()).style(button::Outline),
+                        move |b| m.trigger(b)
+                    )
                 ]
                 .into()
             },
@@ -431,11 +433,12 @@ fn view(id: &str, pi: usize) -> Slot<'static, Message> {
                         .map(|(v, label)| select::item(v, label))
                     )
                     .default_value("$")
-                    .width(128)
+                    .format_value(|value, _| value.to_owned())
+                    .width(52)
                     .icon(icon::chevron_down)
                     .into()
                 ),
-                group::Item::Content(input("10.00").width(120).into())
+                input("10.00").width(120)
             ],
             button(icon::arrow_right()).square().style(button::Outline)
         ]

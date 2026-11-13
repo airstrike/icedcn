@@ -115,6 +115,7 @@ pub enum Item<'a, Message> {
     Button(Button<'a, Message>),
     Decorated(Button<'a, Message>, Decoration<'a, Message>),
     Content(Slot<'a, Message>),
+    Input(crate::Input<'a, Message>),
     /// A vertical-or-horizontal divider drawn between buttons. The
     /// separator's own axis is set to be perpendicular to the group's
     /// orientation when `ButtonGroup::compose` runs.
@@ -124,6 +125,12 @@ pub enum Item<'a, Message> {
 impl<'a, Message: Clone + 'a> From<Button<'a, Message>> for Item<'a, Message> {
     fn from(b: Button<'a, Message>) -> Self {
         Item::Button(b)
+    }
+}
+
+impl<'a, Message> From<crate::Input<'a, Message>> for Item<'a, Message> {
+    fn from(input: crate::Input<'a, Message>) -> Self {
+        Self::Input(input)
     }
 }
 
@@ -240,7 +247,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for ButtonGroup<'a, Message> {
             .iter()
             .filter_map(|item| match item {
                 Item::Button(b) | Item::Decorated(b, _) => Some(b.size_height()),
-                Item::Separator(_) | Item::Content(_) => None,
+                Item::Separator(_) | Item::Content(_) | Item::Input(_) => None,
             })
             .fold(0.0_f32, f32::max);
 
@@ -260,6 +267,9 @@ impl<'a, Message: Clone + 'a> Compose<Message> for ButtonGroup<'a, Message> {
                         Item::Button(b) => joined(b).into(),
                         Item::Decorated(b, decorate) => decorate(joined(b)).compose(),
                         Item::Content(slot) => slot.compose(),
+                        Item::Input(input) => input
+                            .group_corners(move |radius| joined_radius(radius, pos, orientation))
+                            .into(),
                         Item::Separator(mut sep) => {
                             sep.group_orientation = orientation;
                             sep.cross_axis = cross_axis_size;
@@ -322,43 +332,43 @@ fn collapse_corners(
     pos: Position,
     orientation: Orientation,
 ) -> iced_widget::button::Style {
-    let r = &mut style.border.radius;
-    match (orientation, pos) {
-        (_, Position::Only) => {}
-        (Orientation::Horizontal, Position::First) => {
-            r.top_right = 0.0;
-            r.bottom_right = 0.0;
-        }
-        (Orientation::Horizontal, Position::Middle) => {
-            r.top_left = 0.0;
-            r.top_right = 0.0;
-            r.bottom_left = 0.0;
-            r.bottom_right = 0.0;
-            // Avoid the double-stroke seam — drop the leading border edge.
-            // The first button still paints its full border, so the seam
-            // shows the first button's right edge once (not twice).
-            style.border.width = style.border.width.max(0.0);
-        }
-        (Orientation::Horizontal, Position::Last) => {
-            r.top_left = 0.0;
-            r.bottom_left = 0.0;
-        }
-        (Orientation::Vertical, Position::First) => {
-            r.bottom_left = 0.0;
-            r.bottom_right = 0.0;
-        }
-        (Orientation::Vertical, Position::Middle) => {
-            r.top_left = 0.0;
-            r.top_right = 0.0;
-            r.bottom_left = 0.0;
-            r.bottom_right = 0.0;
-        }
-        (Orientation::Vertical, Position::Last) => {
-            r.top_left = 0.0;
-            r.top_right = 0.0;
+    style.border.radius = joined_radius(style.border.radius, pos, orientation);
+    style
+}
+
+fn joined_radius(
+    mut radius: iced_core::border::Radius,
+    pos: Position,
+    orientation: Orientation,
+) -> iced_core::border::Radius {
+    if pos == Position::Only {
+        return radius;
+    }
+    if matches!(pos, Position::Middle | Position::Last) {
+        match orientation {
+            Orientation::Horizontal => {
+                radius.top_left = 0.0;
+                radius.bottom_left = 0.0;
+            }
+            Orientation::Vertical => {
+                radius.top_left = 0.0;
+                radius.top_right = 0.0;
+            }
         }
     }
-    style
+    if matches!(pos, Position::Middle | Position::First) {
+        match orientation {
+            Orientation::Horizontal => {
+                radius.top_right = 0.0;
+                radius.bottom_right = 0.0;
+            }
+            Orientation::Vertical => {
+                radius.bottom_left = 0.0;
+                radius.bottom_right = 0.0;
+            }
+        }
+    }
+    radius
 }
 
 /// Default-variant button-group macro. Children are passed as a comma-list

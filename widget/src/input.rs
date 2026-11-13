@@ -25,6 +25,7 @@ use iced_widget::Renderer;
 use iced_widget::Widget;
 use icedxdy_core::Theme;
 use icedxdy_core::theme;
+use icedxdy_core::theme::text_input::default;
 
 /// A styled text input field matching shadcn/ui's Input component.
 ///
@@ -146,6 +147,18 @@ impl<'a, Message: Clone + 'a> Input<'a, Message> {
         self
     }
 
+    pub(crate) fn group_corners(
+        mut self,
+        corners: impl Fn(iced_core::border::Radius) -> iced_core::border::Radius + 'a,
+    ) -> Self {
+        let paint = self.style.take().unwrap_or_else(|| Box::new(default));
+        self.style = Some(Box::new(move |theme, status| {
+            let mut style = paint(theme, status);
+            style.border.radius = corners(style.border.radius.into()).into();
+            style
+        }));
+        self
+    }
     /// Input height — delegates to `Size::height` so size variants stay in
     /// sync with buttons. Nova `h-8` (32px) is `Size::Default`.
     fn height(&self) -> f32 {
