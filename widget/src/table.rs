@@ -38,6 +38,7 @@ pub struct Footer<'a, Message> {
 pub struct Row<'a, Message> {
     cells: Vec<Cell<'a, Message>>,
     border: bool,
+    selected: bool,
 }
 
 /// A table cell.
@@ -110,6 +111,7 @@ pub fn row<'a, Message: 'a>(
     Row {
         cells: cells.into_iter().collect(),
         border: true,
+        selected: false,
     }
 }
 
@@ -158,6 +160,12 @@ impl<'a, Message: 'a> Table<'a, Message> {
 }
 
 impl<'a, Message: 'a> Row<'a, Message> {
+    /// Tint the row with Nova's selected background.
+    pub fn selected(mut self, selected: bool) -> Self {
+        self.selected = selected;
+        self
+    }
+
     /// Set whether the row draws a bottom separator.
     pub fn border(mut self, border: bool) -> Self {
         self.border = border;
@@ -338,19 +346,31 @@ impl<'a, Message: 'a> Compose<Message> for Row<'a, Message> {
     where
         Self: 'b,
     {
-        let Row { cells, border } = *self;
+        let Row {
+            cells,
+            border,
+            selected,
+        } = *self;
         let cells = cells.into_iter().map(Slot::from);
         let row = crate::Row::with_children(cells)
             .align_y(iced_core::Alignment::Center)
             .width(Fill);
 
-        if border {
-            column([Slot::from(row), separator()])
-                .spacing(0)
+        let row: Slot<'_, Message> = if selected {
+            container(row)
                 .width(Fill)
+                .style(|theme: &Theme| Style {
+                    background: Some(theme.muted.base.into()),
+                    ..Style::default()
+                })
                 .into()
         } else {
             row.into()
+        };
+        if border {
+            column([row, separator()]).spacing(0).width(Fill).into()
+        } else {
+            row.compose()
         }
     }
 }
