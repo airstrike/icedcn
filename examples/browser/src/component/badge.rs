@@ -1,4 +1,3 @@
-// rawr
 use iced::Task;
 
 use icedxdy::widget::{badge, row, spinner};
