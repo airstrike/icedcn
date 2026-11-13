@@ -86,76 +86,291 @@ impl SidebarPage {
     }
 }
 
-/// The demo. Which project is active is UI state, so a user `Component`
-/// keeps it; the sidebar's open state lives in its provider, toggled by the
-/// trigger in the inset.
+use crate::component::avatar::shadcn_handle;
+use crate::icon;
+use iced::widget::{Space, Text};
+use iced::{Alignment, Fill};
+use icedxdy::theme::container::Style;
+use icedxdy::widget::{avatar, collapsible, container, dropdown_menu, menu, scrollable};
+
+type Glyph = fn() -> Text<'static, Theme>;
+const TEAMS: [(&str, &str, Glyph); 3] = [
+    ("Acme Inc", "Enterprise", icon::gallery_vertical_end),
+    ("Acme Corp.", "Startup", icon::audio_waveform),
+    ("Evil Corp.", "Free", icon::command),
+];
+const GROUPS: [(&str, Glyph, &[&str]); 4] = [
+    (
+        "Playground",
+        icon::square_terminal,
+        &["History", "Starred", "Settings"],
+    ),
+    ("Models", icon::bot, &["Genesis", "Explorer", "Quantum"]),
+    (
+        "Documentation",
+        icon::book_open,
+        &["Introduction", "Get Started", "Tutorials", "Changelog"],
+    ),
+    (
+        "Settings",
+        icon::settings_2,
+        &["General", "Team", "Billing", "Limits"],
+    ),
+];
+const PROJECTS: [(&str, Glyph); 3] = [
+    ("Design Engineering", icon::frame),
+    ("Sales & Marketing", icon::chart_pie),
+    ("Travel", icon::map),
+];
 struct Projects;
-
+#[derive(Default, Copy, Clone)]
+struct Workspace {
+    team: usize,
+    selected: Option<&'static str>,
+}
+#[derive(Debug, Clone)]
+enum Choice {
+    Team(usize),
+    Nav(&'static str),
+}
 impl<'a> Component<'a, crate::Message, Theme> for Projects {
-    type State = usize;
-    type Event = usize;
-
+    type State = Workspace;
+    type Event = Choice;
     fn update(
         &self,
-        selected: &mut usize,
-        project: usize,
-        _renderer: &iced::Renderer,
+        state: &mut Workspace,
+        event: Choice,
+        _: &iced::Renderer,
     ) -> Option<crate::Message> {
-        *selected = project;
+        match event {
+            Choice::Team(i) => state.team = i,
+            Choice::Nav(label) => state.selected = Some(label),
+        }
         None
     }
-
-    fn view(&self, selected: &usize) -> impl Widget<usize, Theme> + 'a {
-        let selected = *selected;
-
-        Element::from(sidebar::provider(move |s| {
-            row![
-                s.sidebar(demo(selected)),
-                sidebar::main(
+    fn view(&self, state: &Workspace) -> impl Widget<Choice, Theme> + 'a {
+        let state = *state;
+        Element::from(
+            sidebar::provider(move |s| {
+                let compact = !s.is_open() && !s.is_mobile();
+                let nav = sidebar::content([
+                    platform(compact, state.selected),
+                    if compact {
+                        Space::new().into()
+                    } else {
+                        projects(state.selected)
+                    },
+                ])
+                .height(iced::Shrink);
+                let side = sidebar::fixed(
                     column![
-                        sidebar::trigger(),
-                        text::muted("Press the trigger, or Cmd+B, to toggle the sidebar."),
+                        sidebar::header([teams(state.team, compact)]),
+                        scrollable(nav).width(Fill).height(Fill),
+                        sidebar::footer([account(compact)])
                     ]
-                    .spacing(8)
-                    .padding(8),
-                ),
-            ]
-            .height(iced::Fill)
-            .into()
-        }))
+                    .width(Fill)
+                    .height(Fill),
+                );
+                row![
+                    s.sidebar(side),
+                    if s.is_mobile() {
+                        Space::new().into()
+                    } else {
+                        sidebar::rail_trigger()
+                    },
+                    sidebar::main(container(sidebar::trigger()).padding([8, 16]))
+                ]
+                .width(Fill)
+                .height(Fill)
+                .into()
+            })
+            .collapsible(sidebar::Collapsible::Icon),
+        )
     }
 }
-
-fn demo<'a>(selected: usize) -> Slot<'a, usize> {
-    // Mirrors `sidebar-menu.tsx`: a floating sidebar with a "Projects" group
-    // and five menu items, the active one highlighted.
-    let items: &[&'static str] = &[
-        "Design Engineering",
-        "Sales & Marketing",
-        "Travel",
-        "Support",
-        "Feedback",
-    ];
-
-    let menu_items: Vec<Slot<'a, usize>> = items
+fn line(label: &'static str, glyph: Glyph) -> Slot<'static, Choice> {
+    row![glyph().size(16), text(label).size(14)]
+        .spacing(8)
+        .align_y(Alignment::Center)
+        .into()
+}
+fn teams(i: usize, compact: bool) -> Slot<'static, Choice> {
+    let (name, plan, glyph) = TEAMS[i];
+    dropdown_menu(
+        move |m| {
+            let logo = container(glyph().size(16)).center(32).style(|t: &Theme| {
+                let mut s = Style::default();
+                s.background = Some(t.sidebar.primary.base.into());
+                s.text_color = Some(t.sidebar.primary.foreground.into());
+                s.border.radius = 8.into();
+                s
+            });
+            let body: Slot<'static, Choice> = if compact {
+                logo.into()
+            } else {
+                row![
+                    logo,
+                    column![text(name).medium().size(14), text(plan).size(12)].width(Fill),
+                    icon::chevrons_up_down().size(16)
+                ]
+                .spacing(8)
+                .align_y(Alignment::Center)
+                .into()
+            };
+            m.trigger(
+                sidebar::menu_button(body)
+                    .size(sidebar::MenuButtonSize::Lg)
+                    .collapsed(compact),
+            )
+        },
+        |_| {
+            let mut entries = vec![menu::label("Teams")];
+            entries.extend(TEAMS.iter().enumerate().map(|(i, &(name, _, glyph))| {
+                menu::item(line(name, glyph))
+                    .shortcut(["⌘1", "⌘2", "⌘3"][i])
+                    .on_select(Choice::Team(i))
+                    .into()
+            }));
+            entries.extend([
+                menu::separator(),
+                menu::item(line("Add team", icon::plus)).into(),
+            ]);
+            menu::group(entries)
+        },
+    )
+    .side(dropdown_menu::Side::Right)
+    .align(dropdown_menu::Align::Start)
+    .width(224)
+    .into()
+}
+fn platform(compact: bool, selected: Option<&'static str>) -> Slot<'static, Choice> {
+    let items = GROUPS.iter().map(move |&(name, glyph, links)| {
+        collapsible(move |c| {
+            let label: Slot<'static, Choice> = if compact {
+                glyph().size(16).into()
+            } else {
+                row![
+                    glyph().size(16),
+                    text(name).width(Fill),
+                    if c.is_open() {
+                        icon::chevron_down().size(14)
+                    } else {
+                        icon::chevron_right().size(14)
+                    }
+                ]
+                .align_y(Alignment::Center)
+                .spacing(8)
+                .into()
+            };
+            let trigger = c.trigger(sidebar::menu_button(label).collapsed(compact).tooltip(name));
+            if compact {
+                return trigger;
+            }
+            let children = links.iter().map(move |&link| {
+                sidebar::submenu_item([sidebar::menu_button(link)
+                    .size(sidebar::MenuButtonSize::Sm)
+                    .active(selected == Some(link))
+                    .on_press(Choice::Nav(link))
+                    .into()])
+                .into()
+            });
+            column![trigger, c.content(sidebar::submenu(children))].into()
+        })
+        .default_open(name == "Playground")
+        .into()
+    });
+    let group = sidebar::menu(items);
+    if compact {
+        group.into()
+    } else {
+        sidebar::group([sidebar::group_label("Platform").into(), group.into()]).into()
+    }
+}
+fn projects(selected: Option<&'static str>) -> Slot<'static, Choice> {
+    let mut items: Vec<_> = PROJECTS
         .iter()
-        .enumerate()
-        .map(|(i, label)| {
-            sidebar::menu_item([sidebar::menu_button(*label)
-                .active(i == selected)
-                .on_press(i)
-                .into()])
+        .map(|&(name, glyph)| {
+            let more = dropdown_menu(
+                |d| d.trigger(sidebar::menu_action(icon::ellipsis().size(16))),
+                move |_| {
+                    menu::group([
+                        menu::item(line("View Project", icon::folder))
+                            .on_select(Choice::Nav(name))
+                            .into(),
+                        menu::item(line("Share Project", icon::forward)).into(),
+                        menu::separator(),
+                        menu::item(line("Delete Project", icon::trash_2)).into(),
+                    ])
+                },
+            )
+            .side(dropdown_menu::Side::Right)
+            .align(dropdown_menu::Align::Start)
+            .width(192);
+            sidebar::menu_item([
+                container(
+                    sidebar::menu_button(line(name, glyph))
+                        .active(selected == Some(name))
+                        .on_press(Choice::Nav(name)),
+                )
+                .width(Fill)
+                .into(),
+                more.into(),
+            ])
+            .align_y(Alignment::Center)
             .into()
         })
         .collect();
-
-    sidebar::floating(sidebar::content([sidebar::group([
+    items.push(sidebar::menu_button(line("More", icon::ellipsis)).into());
+    sidebar::group([
         sidebar::group_label("Projects").into(),
-        sidebar::group_content([sidebar::menu(menu_items).into()]).into(),
+        sidebar::menu(items).into(),
     ])
-    .into()]))
-    .width(sidebar::WIDTH)
-    .height(iced::Fill)
+    .into()
+}
+fn identity(compact: bool) -> Slot<'static, Choice> {
+    let face = avatar(Some(shadcn_handle())).fallback("CN");
+    if compact {
+        return face.into();
+    }
+    row![
+        face,
+        column![
+            text("shadcn").size(14).medium(),
+            text("m@example.com").size(12)
+        ]
+        .width(Fill),
+        icon::chevrons_up_down().size(16)
+    ]
+    .spacing(8)
+    .align_y(Alignment::Center)
+    .into()
+}
+fn account(compact: bool) -> Slot<'static, Choice> {
+    dropdown_menu(
+        move |d| {
+            d.trigger(
+                sidebar::menu_button(identity(compact))
+                    .size(sidebar::MenuButtonSize::Lg)
+                    .collapsed(compact),
+            )
+        },
+        |_| {
+            menu::group([
+                identity(false),
+                menu::separator(),
+                menu::item(line("Upgrade to Pro", icon::sparkles)).into(),
+                menu::separator(),
+                menu::item(line("Account", icon::badge_check)).into(),
+                menu::item(line("Billing", icon::credit_card)).into(),
+                menu::item(line("Notifications", icon::bell)).into(),
+                menu::separator(),
+                menu::item(line("Log out", icon::log_out)).into(),
+            ])
+        },
+    )
+    .width(224)
+    .side(dropdown_menu::Side::Right)
+    .align(dropdown_menu::Align::End)
     .into()
 }
 

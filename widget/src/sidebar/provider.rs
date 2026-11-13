@@ -20,12 +20,17 @@
 //! // .open(self.sidebar_open).on_open_change(Message::SidebarOpen)
 //! ```
 
+use super::state::WIDTH_MOBILE;
+use crate::dialog;
+use crate::dialog::{Placement, modal::Modal};
 use iced_core::Length::Fill;
 use iced_core::keyboard;
 use iced_core::{Element, Rectangle, mouse};
+use iced_core::window;
 use iced_widget::component::{self, Component};
 use iced_widget::{Action, Renderer, Widget};
 use icedxdy_core::Theme;
+use std::cell::RefCell;
 
 use super::state::{Collapsible, WIDTH, WIDTH_ICON};
 use super::trigger::Toggle;
@@ -43,12 +48,14 @@ pub struct Provider<'a, Message> {
 }
 
 /// The closure that builds a [`Provider`]'s layout.
-type Body<'a, Message> = Box<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
+type Body<'a, Message> = Box<dyn Fn(&Handle<'_, 'a, Message>) -> Slot<'a, Message> + 'a>;
 
 /// What a [`Provider`]'s closure receives: whether the sidebar is open, and
 /// the wrapper that sizes it.
-#[derive(Debug, Clone, Copy)]
-pub struct Handle {
+pub struct Handle<'view, 'a, Message> {
+    mobile: bool,
+    panel: &'view RefCell<Option<Slot<'a, Message>>>,
+
     is_open: bool,
     collapsible: Collapsible,
 }
@@ -58,6 +65,8 @@ pub struct Handle {
 pub enum Event<Message> {
     /// A trigger or the shortcut toggled the sidebar.
     Toggle,
+    Mobile(bool),
+    Dismiss,
     /// The layout published an app message.
     App(Message),
 }
@@ -65,13 +74,15 @@ pub enum Event<Message> {
 /// The open state of an uncontrolled provider.
 #[derive(Debug, Default)]
 pub struct State {
+    mobile: bool,
+    mobile_open: bool,
     open: Option<bool>,
 }
 
 /// Create an uncontrolled [`Provider`], open by default, whose layout is
 /// built by `body`.
 pub fn provider<'a, Message>(
-    body: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
+    body: impl Fn(&Handle<'_, 'a, Message>) -> Slot<'a, Message> + 'a,
 ) -> Provider<'a, Message> {
     Provider {
         body: Box::new(body),
@@ -115,7 +126,12 @@ impl<'a, Message> Provider<'a, Message> {
     }
 }
 
-impl Handle {
+impl<'view, 'a, Message: 'a> Handle<'view, 'a, Message> {
+    /// Whether the layout is currently using its narrow-screen sheet.
+    pub fn is_mobile(&self) -> bool {
+        self.mobile
+    }
+
     /// Whether the sidebar is open.
     pub fn is_open(&self) -> bool {
         self.is_open
@@ -132,20 +148,21 @@ impl Handle {
 
     /// Size `sidebar` for the current state: its full width while open,
     /// clipped to its icons or hidden while collapsed.
-    pub fn sidebar<'a, Message: 'a>(
-        &self,
-        sidebar: impl Into<Slot<'a, Message>>,
-    ) -> Slot<'a, Message> {
+    pub fn sidebar(&self, sidebar: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
+        let sidebar = sidebar.into();
+        if self.mobile {
+            if self.is_open {
+                self.panel.replace(Some(sidebar));
+            }
+            return iced_widget::Space::new().into();
+        }
         let width = self.width();
 
         if width == 0.0 {
             return Slot::from(iced_widget::Space::new());
         }
 
-        Slot::new(Sized {
-            sidebar: sidebar.into(),
-            width,
-        })
+        Slot::new(Sized { sidebar, width })
     }
 }
 
@@ -190,6 +207,21 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Provider<
     ) -> Option<Message> {
         match event {
             Event::App(message) => Some(message),
+            Event::Mobile(mobile) => {
+                state.mobile = mobile;
+                if !mobile {
+                    state.mobile_open = false;
+                }
+                None
+            }
+            Event::Dismiss => {
+                state.mobile_open = false;
+                None
+            }
+            Event::Toggle if state.mobile => {
+                state.mobile_open = !state.mobile_open;
+                None
+            }
             Event::Toggle => {
                 let next = !self.is_open(state);
 
@@ -206,12 +238,19 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Provider<
 
     fn listen(
         &self,
-        _state: &State,
+        state: &State,
         event: &iced_core::Event,
         _bounds: Rectangle,
         _cursor: mouse::Cursor,
     ) -> Action<Event<Message>> {
         match event {
+            iced_core::Event::Window(
+                window::Event::Resized(size) | window::Event::Opened { size, .. },
+            ) if state.mobile != (size.width < 768. && self.collapsible != Collapsible::None) => {
+                Action::publish(Event::Mobile(
+                    size.width < 768. && self.collapsible != Collapsible::None,
+                ))
+            }
             iced_core::Event::Keyboard(keyboard::Event::KeyPressed { key, modifiers, .. })
                 if modifiers.command() && matches!(key.as_ref(), keyboard::Key::Character("b")) =>
             {
@@ -222,17 +261,48 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Provider<
     }
 
     fn view(&self, state: &State) -> impl Widget<Event<Message>, Theme, Renderer> + 'a {
+        let panel = RefCell::new(None);
         let handle = Handle {
-            is_open: self.is_open(state),
+            mobile: state.mobile,
+            panel: &panel,
+            is_open: if state.mobile {
+                state.mobile_open
+            } else {
+                self.is_open(state)
+            },
             collapsible: self.collapsible,
         };
 
         let mut body = (self.body)(&handle);
         body.inherit(&self.inherited);
 
-        marker::owner(body.compose().map(Event::App).boxed(), |Toggle| {
+        let base = marker::owner(body.compose().map(Event::App).boxed(), |Toggle| {
             Event::Toggle
-        })
+        });
+        let panel = panel.into_inner().map(|mut panel| {
+            panel.inherit(&self.inherited);
+            iced_widget::container(panel.compose().map(Event::App))
+                .width(Fill)
+                .height(Fill)
+                .style(|t: &Theme| iced_widget::container::Style {
+                    background: Some(t.sidebar.background.into()),
+                    ..Default::default()
+                })
+                .boxed()
+        });
+        let modal = Modal::with_close(
+            base.boxed(),
+            panel,
+            Placement::Side(dialog::Side::Left),
+            || Event::Dismiss,
+        )
+        .side_width(WIDTH_MOBILE);
+        super::viewport::Width {
+            content: modal.boxed(),
+            mobile: state.mobile,
+            enabled: self.collapsible != Collapsible::None,
+            change: Event::Mobile,
+        }
     }
 }
 

@@ -12,12 +12,14 @@ use crate::core::layout;
 use crate::core::mouse;
 use crate::core::overlay;
 use crate::core::renderer;
+use crate::core::time::{Duration, Instant};
 use crate::core::touch;
 use crate::core::widget::tree::{self, Tree};
 use crate::core::widget::{Meta, Operation};
 use crate::core::{
     Background, Color, Element, Event, Layout, Length, Rectangle, Shell, Size, Vector, Widget,
 };
+use crate::core::{Point, Transformation, window};
 use crate::marker;
 use crate::operation::focus;
 
@@ -61,8 +63,11 @@ pub struct Modal<'a, Message, Theme, Renderer> {
     base: Element<'a, Message, Theme, Renderer>,
     panel: Option<Element<'a, Message, Theme, Renderer>>,
     placement: Placement,
-    on_close: Message,
+    on_close: Box<dyn Fn() -> Message + 'a>,
     dismiss_outside: bool,
+    closing: Option<(Instant, fn() -> Message)>,
+    drawer_height: Option<f32>,
+    side_width: Option<f32>,
 }
 
 impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
@@ -73,16 +78,45 @@ impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
         panel: Option<Element<'a, Message, Theme, Renderer>>,
         placement: Placement,
         on_close: Message,
+    ) -> Self
+    where
+        Message: Clone + 'a,
+    {
+        Self::with_close(base, panel, placement, move || on_close.clone())
+    }
+    pub(crate) fn with_close(
+        base: Element<'a, Message, Theme, Renderer>,
+        panel: Option<Element<'a, Message, Theme, Renderer>>,
+        placement: Placement,
+        on_close: impl Fn() -> Message + 'a,
     ) -> Self {
         Self {
             base,
             panel,
             placement,
-            on_close,
+            on_close: Box::new(on_close),
             dismiss_outside: true,
+            closing: None,
+            drawer_height: None,
+            side_width: None,
         }
     }
 
+    pub(crate) fn side_width(mut self, width: f32) -> Self {
+        self.side_width = Some(width);
+        self
+    }
+    pub(super) fn animation(mut self, at: Option<Instant>, exited: fn() -> Message) -> Self {
+        self.closing = at.map(|instant| (instant, exited));
+        self
+    }
+    pub(super) fn drawer_height(mut self, height: Option<f32>) -> Self {
+        self.drawer_height = height;
+        self
+    }
+    fn open(&self) -> bool {
+        self.panel.is_some() && self.closing.is_none()
+    }
     /// Whether a press outside the panel dismisses it (on by default; an
     /// alert dialog only closes from its own actions and `Escape`).
     pub fn dismiss_outside(mut self, dismiss: bool) -> Self {
@@ -96,6 +130,7 @@ struct Focus {
     mounted: bool,
     enter: bool,
     restore: Option<usize>,
+    drag: Option<(touch::Finger, Point)>,
 }
 
 impl<Message, Theme, Renderer> Meta for Modal<'_, Message, Theme, Renderer> {}
@@ -103,7 +138,6 @@ impl<Message, Theme, Renderer> Meta for Modal<'_, Message, Theme, Renderer> {}
 impl<Message, Theme, Renderer> Widget<Message, Theme, Renderer>
     for Modal<'_, Message, Theme, Renderer>
 where
-    Message: Clone,
     Renderer: crate::core::Renderer,
 {
     fn tag(&self) -> tree::Tag {
@@ -115,7 +149,7 @@ where
 
     fn diff(&mut self, tree: &mut Tree) {
         let focus = tree.state.downcast_mut::<Focus>();
-        let open = self.panel.is_some();
+        let open = self.open();
         if open && !focus.mounted {
             focus.enter = true;
         }
@@ -152,7 +186,7 @@ where
             .next()
             .expect("a modal has its base");
 
-        if self.panel.is_some() && matches!(event, Event::Keyboard(_)) {
+        if self.open() && matches!(event, Event::Keyboard(_)) {
             return;
         }
         self.base.update(
@@ -222,7 +256,7 @@ where
             .next()
             .expect("a modal has its base");
 
-        if self.panel.is_none() {
+        if !self.open() {
             self.base
                 .operate(child_tree, child_layout, viewport, renderer, operation);
         }
@@ -245,7 +279,7 @@ where
             .expect("a modal has its base");
 
         let focus = tree.state.downcast_mut::<Focus>();
-        if focus.enter && self.panel.is_some() {
+        if focus.enter && self.open() {
             let count = focus::count(|op| {
                 self.base
                     .operate(base_tree, child_layout, viewport, renderer, op)
@@ -258,7 +292,7 @@ where
                 renderer,
                 &mut focus::select(None),
             );
-        } else if self.panel.is_none()
+        } else if !self.open()
             && let Some(index) = focus.restore.take()
         {
             self.base.operate(
@@ -288,7 +322,10 @@ where
                     ),
                 ),
                 Placement::Side(Side::Left | Side::Right) => {
-                    let width = (window.width * 0.75).min(384.0);
+                    let width = self.side_width.map_or_else(
+                        || (window.width * 0.75).min(384.),
+                        |width| width.min(window.width),
+                    );
                     layout::Limits::new(
                         Size::new(width, window.height),
                         Size::new(width, window.height),
@@ -297,7 +334,10 @@ where
                 // `h-auto`: the content's height, up to the window's.
                 Placement::Side(Side::Top | Side::Bottom) => layout::Limits::new(
                     Size::new(window.width, 0.0),
-                    Size::new(window.width, window.height),
+                    Size::new(
+                        window.width,
+                        window.height * self.drawer_height.unwrap_or(1.0),
+                    ),
                 ),
             };
 
@@ -329,8 +369,11 @@ where
                 tree: panel_tree,
                 layout,
                 window,
-                on_close: self.on_close.clone(),
+                on_close: self.on_close.as_ref(),
                 dismiss_outside: self.dismiss_outside,
+                closing: self.closing,
+                placement: self.placement,
+                drag: self.drawer_height.map(|_| &mut focus.drag),
             })));
         }
 
@@ -341,7 +384,7 @@ where
 impl<'a, Message, Theme, Renderer> From<Modal<'a, Message, Theme, Renderer>>
     for Element<'a, Message, Theme, Renderer>
 where
-    Message: Clone + 'a,
+    Message: 'a,
     Theme: 'a,
     Renderer: crate::core::Renderer + 'a,
 {
@@ -356,14 +399,16 @@ struct Panel<'a, 'b, Message, Theme, Renderer> {
     tree: &'b mut Tree,
     layout: Layout,
     window: Size,
-    on_close: Message,
+    on_close: &'b dyn Fn() -> Message,
     dismiss_outside: bool,
+    closing: Option<(Instant, fn() -> Message)>,
+    placement: Placement,
+    drag: Option<&'b mut Option<(touch::Finger, Point)>>,
 }
 
 impl<Message, Theme, Renderer> overlay::Overlay<Message, Theme, Renderer>
     for Panel<'_, '_, Message, Theme, Renderer>
 where
-    Message: Clone,
     Renderer: crate::core::Renderer,
 {
     fn draw(
@@ -375,6 +420,27 @@ where
     ) {
         let viewport = Rectangle::with_size(self.window);
 
+        let progress = self.closing.as_ref().map_or(0., |(start, _)| {
+            (start.elapsed().as_secs_f32() / 0.15).clamp(0., 1.)
+        });
+        if progress >= 1. {
+            return;
+        }
+        let bounds = self.layout.bounds();
+        let transform = match self.placement {
+            Placement::Center { .. } => {
+                let center = bounds.center();
+                Transformation::translate(center.x, center.y)
+                    * Transformation::scale(1. - 0.05 * progress)
+                    * Transformation::translate(-center.x, -center.y)
+            }
+            Placement::Side(Side::Left) => Transformation::translate(-bounds.width * progress, 0.),
+            Placement::Side(Side::Right) => Transformation::translate(bounds.width * progress, 0.),
+            Placement::Side(Side::Top) => Transformation::translate(0., -bounds.height * progress),
+            Placement::Side(Side::Bottom) => {
+                Transformation::translate(0., bounds.height * progress)
+            }
+        };
         renderer.with_layer(viewport, |renderer| {
             // nova `bg-black/10`.
             renderer.fill_quad(
@@ -382,22 +448,27 @@ where
                     bounds: viewport,
                     ..renderer::Quad::default()
                 },
-                Background::Color(Color::from_rgba(0.0, 0.0, 0.0, 0.1)),
+                Background::Color(Color::from_rgba(0.0, 0.0, 0.0, 0.1 * (1. - progress))),
             );
 
-            self.panel.draw(
-                self.tree,
-                renderer,
-                theme,
-                style,
-                self.layout,
-                cursor,
-                &viewport,
-            );
+            renderer.with_transformation(transform, |renderer| {
+                self.panel.draw(
+                    self.tree,
+                    renderer,
+                    theme,
+                    style,
+                    self.layout,
+                    cursor,
+                    &viewport,
+                )
+            });
         });
     }
 
     fn operate(&mut self, renderer: &Renderer, operation: &mut dyn Operation) {
+        if self.closing.is_some() {
+            return;
+        }
         self.panel.operate(
             self.tree,
             self.layout,
@@ -414,6 +485,50 @@ where
         renderer: &Renderer,
         shell: &mut Shell<'_, Message>,
     ) {
+        if let Some((start, exited)) = &self.closing {
+            if let Event::Window(window::Event::RedrawRequested(now)) = event {
+                if now.saturating_duration_since(*start) >= Duration::from_millis(150) {
+                    shell.publish(exited());
+                } else {
+                    shell.request_redraw();
+                }
+            }
+            return;
+        }
+        if let Some(drag) = self.drag.as_deref_mut() {
+            match *event {
+                Event::Touch(touch::Event::FingerPressed { id, position })
+                    if self.layout.bounds().contains(position) =>
+                {
+                    *drag = Some((id, position))
+                }
+                Event::Touch(touch::Event::FingerLost { id, .. })
+                    if drag.is_some_and(|(finger, _)| finger == id) =>
+                {
+                    *drag = None
+                }
+                Event::Touch(touch::Event::FingerLifted { id, position })
+                    if drag.is_some_and(|(finger, _)| finger == id) =>
+                {
+                    if let Some((_, start)) = drag.take() {
+                        let delta = position - start;
+                        let (distance, cross) = match self.placement {
+                            Placement::Side(Side::Bottom) => (delta.y, delta.x),
+                            Placement::Side(Side::Top) => (-delta.y, delta.x),
+                            Placement::Side(Side::Left) => (-delta.x, delta.y),
+                            Placement::Side(Side::Right) => (delta.x, delta.y),
+                            _ => (0., 0.),
+                        };
+                        if distance > 64. && distance > cross.abs() * 1.5 {
+                            shell.publish((self.on_close)());
+                            shell.capture_event();
+                            return;
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
         let viewport = Rectangle::with_size(self.window);
 
         if let Event::Keyboard(keyboard::Event::KeyPressed {
@@ -468,7 +583,7 @@ where
         }
 
         if close {
-            shell.publish(self.on_close.clone());
+            shell.publish((self.on_close)());
         }
 
         // Modal: nothing below the backdrop sees the pointer.
@@ -481,6 +596,9 @@ where
     }
 
     fn mouse_interaction(&self, cursor: mouse::Cursor, renderer: &Renderer) -> mouse::Interaction {
+        if self.closing.is_some() {
+            return mouse::Interaction::None;
+        }
         let interaction = self.panel.mouse_interaction(
             self.tree,
             self.layout,
@@ -501,6 +619,9 @@ where
         &'c mut self,
         renderer: &Renderer,
     ) -> Vec<overlay::Element<'c, Message, Theme, Renderer>> {
+        if self.closing.is_some() {
+            return Vec::new();
+        }
         self.panel.overlay(
             self.tree,
             self.layout,

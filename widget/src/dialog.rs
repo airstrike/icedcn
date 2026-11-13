@@ -37,10 +37,12 @@ pub mod modal;
 use iced_core::Element;
 use iced_core::Length::Fill;
 use iced_core::alignment::Horizontal;
+use iced_core::time::Instant;
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
 use icedxdy_core::Theme;
 use icedxdy_core::theme;
+use icedxdy_core::theme::container::Style;
 use icedxdy_core::theme::dialog;
 
 use crate::button::{self, button};
@@ -59,6 +61,7 @@ pub struct Dialog<'a, Message> {
     default_open: bool,
     on_open_change: Option<Box<dyn Fn(bool) -> Message + 'a>>,
     placement: Placement,
+    drawer_height: Option<f32>,
     show_close_button: bool,
     dismiss_outside: bool,
     padding: u16,
@@ -82,6 +85,8 @@ pub enum Event<Message> {
     Open,
     /// The panel was dismissed.
     Close,
+    /// The closing animation reached its endpoint.
+    Exited,
     /// The content published an app message.
     App(Message),
 }
@@ -90,6 +95,8 @@ pub enum Event<Message> {
 #[derive(Debug, Default)]
 pub struct State {
     open: Option<bool>,
+    shown: bool,
+    closing: Option<Instant>,
 }
 
 /// Create a closed, uncontrolled [`Dialog`]: `trigger` builds what sits in
@@ -114,6 +121,7 @@ impl<'a, Message> Dialog<'a, Message> {
             default_open: false,
             on_open_change: None,
             placement,
+            drawer_height: None,
             show_close_button: true,
             dismiss_outside: true,
             padding: 16,
@@ -171,7 +179,19 @@ impl<'a, Message> Dialog<'a, Message> {
         self
     }
 
-    pub(crate) fn side(mut self, side: Side) -> Self {
+    pub(crate) fn drawer(mut self, fraction: f32) -> Self {
+        self.drawer_height = Some(fraction.clamp(0.1, 1.0));
+        self
+    }
+    /// Limit a top or bottom drawer to this fraction of the window height.
+    pub fn height_fraction(mut self, fraction: f32) -> Self {
+        if self.drawer_height.is_some() {
+            self.drawer_height = Some(fraction.clamp(0.1, 1.0));
+        }
+        self
+    }
+    /// Pin the panel to the selected window edge.
+    pub fn side(mut self, side: Side) -> Self {
         self.placement = Placement::Side(side);
         self
     }
@@ -251,6 +271,14 @@ impl<'a, Message: 'a> Compose<Message> for Marked<'a, Message> {
     }
 }
 
+impl State {
+    fn transition(&mut self, open: bool) {
+        if self.shown != open {
+            self.shown = open;
+            self.closing = (!open).then(Instant::now);
+        }
+    }
+}
 impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for Dialog<'a, Message> {
     type State = State;
     type Event = Event<Message>;
@@ -259,6 +287,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
         if self.open.is_none() && state.open.is_none() {
             state.open = Some(self.default_open);
         }
+        state.transition(self.is_open(state));
     }
 
     fn update(
@@ -269,6 +298,12 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
     ) -> Option<Message> {
         let next = match event {
             Event::App(message) => return Some(message),
+            Event::Exited => {
+                if !self.is_open(state) {
+                    state.closing = None;
+                }
+                return None;
+            }
             Event::Open => true,
             Event::Close => false,
         };
@@ -279,6 +314,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
 
         if self.open.is_none() {
             state.open = Some(next);
+            state.transition(next);
         }
 
         self.on_open_change
@@ -301,7 +337,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
             },
         );
 
-        let panel = handle.is_open.then(|| {
+        let panel = (handle.is_open || state.closing.is_some()).then(|| {
             let mut content = (self.content)(&handle);
             content.inherit(&self.inherited);
 
@@ -339,6 +375,49 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                 content.into()
             };
 
+            let content: Slot<'a, Message> = if self.drawer_height.is_some()
+                && self.placement == Placement::Side(Side::Bottom)
+            {
+                let handle = Container::new(iced_widget::Space::new())
+                    .width(100)
+                    .height(4)
+                    .style(|theme: &Theme| {
+                        let mut style = Style::default();
+                        style.background = Some(theme.muted.base.into());
+                        style.border.radius = 2.0.into();
+                        style.into()
+                    });
+                column![
+                    Container::new(handle).center_x(Fill).padding([16, 0, 0, 0]),
+                    content
+                ]
+                .into()
+            } else {
+                content
+            };
+            let drawer_height = self.drawer_height;
+            let placement = self.placement;
+            let style = move |theme: &Theme| {
+                let mut style = dialog::sheet(theme);
+                if drawer_height.is_some() {
+                    style.border.width = 1.0;
+                    style.border.color = theme.neutral.border;
+                    let [top_left, top_right, bottom_right, bottom_left] = match placement {
+                        Placement::Side(Side::Bottom) => [12., 12., 0., 0.],
+                        Placement::Side(Side::Top) => [0., 0., 12., 12.],
+                        Placement::Side(Side::Right) => [12., 0., 0., 12.],
+                        Placement::Side(Side::Left) => [0., 12., 12., 0.],
+                        Placement::Center { .. } => [12.; 4],
+                    };
+                    style.border.radius = icedxdy_core::Radius {
+                        top_left,
+                        top_right,
+                        bottom_right,
+                        bottom_left,
+                    };
+                }
+                style.into()
+            };
             let panel = match self.placement {
                 Placement::Center { .. } => {
                     Container::new(content).width(Fill).style(dialog::content)
@@ -348,9 +427,9 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                 Placement::Side(Side::Left | Side::Right) => Container::new(content)
                     .width(Fill)
                     .height(Fill)
-                    .style(dialog::sheet),
+                    .style(style),
                 Placement::Side(Side::Top | Side::Bottom) => {
-                    Container::new(content).width(Fill).style(dialog::sheet)
+                    Container::new(content).width(Fill).style(style)
                 }
             };
 
@@ -359,6 +438,8 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
 
         modal::Modal::new(base.into(), panel, self.placement, Event::Close)
             .dismiss_outside(self.dismiss_outside)
+            .animation(state.closing, || Event::Exited)
+            .drawer_height(self.drawer_height)
     }
 }
 

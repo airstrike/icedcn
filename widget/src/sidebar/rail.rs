@@ -25,8 +25,10 @@ use iced_widget::Renderer;
 use iced_widget::button::Status;
 use iced_widget::space;
 
+use super::trigger::Toggle;
 use crate::button::widget;
-use crate::compose::Compose;
+use crate::compose::{Compose, Slot};
+use crate::marker::{self, Press};
 use icedxdy_core::Theme;
 use icedxdy_core::theme::button;
 
@@ -35,7 +37,7 @@ pub const RAIL_WIDTH: f32 = 16.0;
 
 /// A thin click-target rail that toggles the sidebar.
 pub struct SidebarRail<Message> {
-    on_press: Message,
+    on_press: Option<Message>,
 }
 
 /// Create a sidebar rail.
@@ -43,10 +45,21 @@ pub struct SidebarRail<Message> {
 /// Emits `on_press` when clicked. Renders as a 16px-wide button spanning
 /// the full sidebar height with a horizontal-resize cursor.
 pub fn rail<Message: Clone>(on_press: Message) -> SidebarRail<Message> {
-    SidebarRail { on_press }
+    SidebarRail {
+        on_press: Some(on_press),
+    }
 }
 
-impl<Message: Clone> SidebarRail<Message> {}
+/// A resize rail linked to its enclosing sidebar provider.
+pub fn rail_trigger<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
+    let rail = SidebarRail { on_press: None };
+    let element: iced_core::Element<'a, Message, Theme, Renderer> = rail.into();
+    {
+        let element: iced_core::Element<'a, Message, Theme, Renderer> =
+            marker::marker(element, Toggle, Press::Captured).into();
+        element.into()
+    }
+}
 
 // -- From impls ---------------------------------------------------------------
 
@@ -76,7 +89,7 @@ impl<'a, Message: Clone + 'a> From<SidebarRail<Message>>
             .translate(false)
             .interaction(Interaction::ResizingHorizontally)
             .style(style)
-            .on_press(rail.on_press);
+            .on_press_maybe(rail.on_press);
 
         raw_btn.into()
     }

@@ -17,6 +17,7 @@ mod separator;
 mod state;
 mod submenu;
 mod trigger;
+mod viewport;
 
 pub use content::content;
 pub use footer::footer;
@@ -30,7 +31,7 @@ pub use menu_badge::menu_badge;
 pub use menu_button::{MenuButtonSize, SidebarMenuButton, menu_button};
 pub use menu_skeleton::menu_skeleton;
 pub use provider::{Handle, Provider, provider};
-pub use rail::{RAIL_WIDTH, SidebarRail, rail};
+pub use rail::{RAIL_WIDTH, SidebarRail, rail, rail_trigger};
 pub use separator::separator;
 pub use state::{Collapsible, Side, WIDTH, WIDTH_ICON, WIDTH_MOBILE};
 pub use submenu::{submenu, submenu_button, submenu_item};

@@ -184,3 +184,145 @@ fn command_search_skips_disabled_results_and_runs_the_highlighted_action() {
     ui.tap_key(Named::Enter);
     assert_eq!(ui.into_messages().collect::<Vec<_>>(), [Message::Pressed]);
 }
+
+fn focus_next(ui: &mut Simulator<'_>) {
+    let mut next = focusable::focus_next::<()>();
+    ui.operate(&mut next);
+    if let Outcome::Chain(mut step) = next.finish() {
+        ui.operate(step.as_mut());
+    }
+}
+
+#[test]
+fn tooltip_opens_on_keyboard_focus_and_escape_suppresses_it_until_refocus() {
+    use icedxdy_widget::tooltip;
+    let tip: Element<'_, Message, Theme, Renderer> = tooltip(button("Help"), "Hint")
+        .on_open_change(|open| Message::Open(vec![open.to_string()]))
+        .into();
+    let mut ui = simulator(tip);
+    focus_next(&mut ui);
+    frame(&mut ui);
+    ui.tap_key(Named::Escape);
+    frame(&mut ui);
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        [
+            Message::Open(vec!["true".into()]),
+            Message::Open(vec!["false".into()])
+        ]
+    );
+}
+
+#[test]
+fn submenu_arrow_keys_enter_the_first_item_and_return_to_the_trigger() {
+    use icedxdy_widget::menu;
+    let body: Element<'_, Message, Theme, Renderer> = menu::sub(
+        "More",
+        [menu::item("Choose").on_select(Message::Pressed).into()],
+    )
+    .into();
+    let mut ui = simulator(body);
+    focus_next(&mut ui);
+    ui.tap_key(Named::ArrowRight);
+    frame(&mut ui);
+    ui.tap_key(Named::ArrowLeft);
+    frame(&mut ui);
+    assert_eq!(focus(&mut ui).total, 1);
+    ui.tap_key(Named::ArrowRight);
+    frame(&mut ui);
+    ui.tap_key(Named::Enter);
+    assert_eq!(ui.into_messages().collect::<Vec<_>>(), [Message::Pressed]);
+}
+
+#[test]
+fn context_menu_stationary_touch_opens_but_vertical_scrolling_does_not() {
+    use iced_core::{time::Duration, touch};
+    use icedxdy_widget::{container, context_menu, menu};
+    let body: Element<'_, Message, Theme, Renderer> = context_menu(
+        |_| container("Area").width(200).height(100).into(),
+        |_| menu::group([menu::item("Inspect").into()]),
+    )
+    .on_open_change(|open| Message::Open(vec![open.to_string()]))
+    .into();
+    let mut ui = simulator(body);
+    let position = Point::new(12., 12.);
+    ui.point_at(position);
+    let id = touch::Finger(0);
+    let down = Event::Touch(touch::Event::FingerPressed { id, position });
+    let later = || {
+        Event::Window(window::Event::RedrawRequested(
+            Instant::now() + Duration::from_millis(710),
+        ))
+    };
+    let _ = ui.simulate([
+        down.clone(),
+        Event::Touch(touch::Event::FingerMoved {
+            id,
+            position: Point::new(12., 48.),
+        }),
+        later(),
+        Event::Touch(touch::Event::FingerLifted { id, position }),
+    ]);
+    let _ = ui.simulate([down, later()]);
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        [Message::Open(vec!["true".into()])]
+    );
+}
+
+#[test]
+fn drawer_outward_swipe_closes_on_the_selected_edge() {
+    use iced_core::touch;
+    use icedxdy_widget::{container, drawer};
+    let body: Element<'_, Message, Theme, Renderer> = drawer(
+        |d| d.trigger(button("Open")),
+        |_| container("Panel").width(200).height(200).into(),
+    )
+    .default_open(true)
+    .side(drawer::Side::Left)
+    .on_open_change(|open| Message::Open(vec![open.to_string()]))
+    .into();
+    let mut ui = simulator(body);
+    let start = Point::new(160., 120.);
+    ui.point_at(start);
+    let id = touch::Finger(1);
+    let _ = ui.simulate([
+        Event::Touch(touch::Event::FingerPressed {
+            id,
+            position: start,
+        }),
+        Event::Touch(touch::Event::FingerLifted {
+            id,
+            position: Point::new(24., 130.),
+        }),
+    ]);
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        [Message::Open(vec!["false".into()])]
+    );
+}
+
+#[test]
+fn mobile_sidebar_opens_in_a_sheet_without_changing_desktop_preference() {
+    use iced_core::Size;
+    use icedxdy_widget::{row, sidebar};
+    let body = || -> Element<'static, Message, Theme, Renderer> {
+        sidebar::provider(|s| row![s.sidebar(button("Workspace")), sidebar::trigger()].into())
+            .on_open_change(|_| Message::Pressed)
+            .into()
+    };
+    let mut ui = Simulator::with_size(Default::default(), Size::new(390., 800.), body());
+    frame(&mut ui);
+    ui = ui.rebuild(body());
+    frame(&mut ui);
+    assert_eq!(focus(&mut ui).total, 1);
+    ui.point_at(Point::new(12., 14.));
+    let _ = ui.simulate(simulator::click());
+    frame(&mut ui);
+    assert_eq!(focus(&mut ui).focused, Some(0));
+    ui.tap_key(Named::Escape);
+    ui = ui.rebuild(body());
+    frame(&mut ui);
+    assert_eq!(focus(&mut ui).total, 1);
+    assert_eq!(ui.into_messages().count(), 0);
+}
