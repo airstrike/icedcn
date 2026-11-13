@@ -1,12 +1,11 @@
-// Intentional skips: item-link, item-image, item-group, item-header,
-// item-avatar and item-dropdown (`asChild` links, remote images, avatar
-// images, grid groups and DropdownMenu are not ported) and item-rtl (RTL).
-// item-demo's second item is an `asChild` link; here it renders as a plain
-// item.
+use super::avatar::{evilrabbit_handle, maxleiter_handle, shadcn_handle};
+use iced::widget::image;
+use iced::{ContentFit, Fill, Shrink, Task, Widget};
+use std::sync::OnceLock;
 
-use iced::{Fill, Task};
-
-use icedxdy::widget::{Column, button, column, item};
+use icedxdy::widget::{
+    Column, Row, aspect_ratio, avatar, button, column, dropdown_menu, item, menu,
+};
 use icedxdy::{Size, Slot, Theme};
 
 use crate::page;
@@ -45,6 +44,42 @@ pub static BLOCKS: &[page::Block] = &[
                 title: "Icon",
                 description: Some("Use `item::media(..).style(item::Icon)` to display an icon."),
                 snippet: "examples/browser/snippets/item-icon.md",
+            },
+            page::Block::Example {
+                id: "avatar",
+                title: "Avatar",
+                description: Some("Use an avatar or avatar group as item media."),
+                snippet: "examples/browser/snippets/item-avatar.md",
+            },
+            page::Block::Example {
+                id: "image",
+                title: "Image",
+                description: Some("Display an image in an item."),
+                snippet: "examples/browser/snippets/item-image.md",
+            },
+            page::Block::Example {
+                id: "group",
+                title: "Group",
+                description: Some("Group related items together."),
+                snippet: "examples/browser/snippets/item-group.md",
+            },
+            page::Block::Example {
+                id: "header",
+                title: "Header",
+                description: None,
+                snippet: "examples/browser/snippets/item-header.md",
+            },
+            page::Block::Example {
+                id: "link",
+                title: "Link",
+                description: Some("Make the whole row a keyboard-accessible link."),
+                snippet: "examples/browser/snippets/item-link.md",
+            },
+            page::Block::Example {
+                id: "dropdown",
+                title: "Dropdown",
+                description: None,
+                snippet: "examples/browser/snippets/item-dropdown.md",
             },
         ],
     },
@@ -86,6 +121,26 @@ fn stack<'a>(
         .into()
 }
 
+fn people() -> [(&'static str, &'static str, image::Handle); 3] {
+    [
+        ("shadcn", "shadcn@vercel.com", shadcn_handle()),
+        ("maxleiter", "maxleiter@vercel.com", maxleiter_handle()),
+        ("evilrabbit", "evilrabbit@vercel.com", evilrabbit_handle()),
+    ]
+}
+
+fn artwork(bytes: &'static [u8], handle: &'static OnceLock<image::Handle>) -> image::Image {
+    image(
+        handle
+            .get_or_init(|| image::Handle::from_bytes(bytes))
+            .clone(),
+    )
+    .content_fit(ContentFit::Cover)
+    .width(Fill)
+    .height(Fill)
+    .border_radius(6)
+}
+
 impl page::Page for ItemPage {
     fn page_index(&self) -> usize {
         self.state.page_index
@@ -116,6 +171,7 @@ impl page::Page for ItemPage {
     }
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
+        let top = Message::Page(self.page_index(), page::Message::LinkClicked("#".into()));
         match id {
             // shadcn `item-demo.tsx`.
             "demo" => stack([
@@ -139,7 +195,7 @@ impl page::Page for ItemPage {
                 ])
                 .style(item::Outline)
                 .size(item::Size::Sm)
-                .into(),
+                .on_press(top.clone()),
             ]),
 
             // shadcn `item-variant.tsx`.
@@ -186,6 +242,213 @@ impl page::Page for ItemPage {
             ]
             .width(Fill)
             .max_width(512.0)
+            .into(),
+
+            "avatar" => stack([
+                item::item([
+                    item::media(
+                        avatar(Some(evilrabbit_handle()))
+                            .fallback("ER")
+                            .size(avatar::Lg),
+                    )
+                    .into(),
+                    item::content([
+                        item::title("Evil Rabbit").into(),
+                        item::description("Last seen 5 months ago").into(),
+                    ])
+                    .into(),
+                    item::actions([button(icon::plus())
+                        .rounded()
+                        .square()
+                        .size(Size::Sm)
+                        .style(button::Outline)
+                        .into()]),
+                ])
+                .style(item::Outline)
+                .into(),
+                item::item([
+                    item::media(avatar::group([
+                        avatar(Some(shadcn_handle())).fallback("CN"),
+                        avatar(Some(maxleiter_handle())).fallback("LR"),
+                        avatar(Some(evilrabbit_handle())).fallback("ER"),
+                    ]))
+                    .into(),
+                    item::content([
+                        item::title("No Team Members").into(),
+                        item::description("Invite your team to collaborate on this project.")
+                            .into(),
+                    ])
+                    .into(),
+                    item::actions([button("Invite")
+                        .style(button::Outline)
+                        .size(Size::Sm)
+                        .into()]),
+                ])
+                .style(item::Outline)
+                .into(),
+            ])
+            .into(),
+
+            "image" => {
+                let rows = [
+                    (
+                        "Midnight City Lights",
+                        "Electric Nights",
+                        "Neon Dreams",
+                        "3:45",
+                        include_bytes!("../../assets/item/midnight-city-lights.jpg").as_slice(),
+                    ),
+                    (
+                        "Coffee Shop Conversations",
+                        "Urban Stories",
+                        "The Morning Brew",
+                        "4:05",
+                        include_bytes!("../../assets/item/coffee-shop-conversations.jpg")
+                            .as_slice(),
+                    ),
+                    (
+                        "Digital Rain",
+                        "Binary Beats",
+                        "Cyber Symphony",
+                        "3:30",
+                        include_bytes!("../../assets/item/digital-rain.jpg").as_slice(),
+                    ),
+                ];
+                static COVERS: [OnceLock<image::Handle>; 3] = [const { OnceLock::new() }; 3];
+                column(rows.into_iter().zip(&COVERS).map(
+                    |((title, album, artist, duration, cover), cache)| {
+                        item::item([
+                            item::media(artwork(cover, cache).boxed())
+                                .style(item::Image)
+                                .into(),
+                            item::content([
+                                item::title(format!("{title} - {album}")).into(),
+                                item::description(artist).into(),
+                            ])
+                            .into(),
+                            item::content([item::description(duration).into()])
+                                .width(Shrink)
+                                .into(),
+                        ])
+                        .style(item::Outline)
+                        .on_press(top.clone())
+                    },
+                ))
+                .spacing(16)
+                .width(Fill)
+                .max_width(448.0)
+            }
+            .into(),
+
+            "group" => column(people().map(|(name, email, portrait)| {
+                item::item([
+                    item::media(avatar(Some(portrait)).fallback(&name[..1])).into(),
+                    item::content([item::title(name).into(), item::description(email).into()])
+                        .spacing(4)
+                        .into(),
+                    item::actions([button(icon::plus())
+                        .style(button::Ghost)
+                        .square()
+                        .rounded()
+                        .into()]),
+                ])
+                .style(item::Outline)
+                .into()
+            }))
+            .max_width(384.0)
+            .width(Fill)
+            .into(),
+
+            "header" => {
+                let models = [
+                    (
+                        "v0-1.5-sm",
+                        "Everyday tasks and UI generation.",
+                        include_bytes!("../../assets/item/v0-small.jpg").as_slice(),
+                    ),
+                    (
+                        "v0-1.5-lg",
+                        "Advanced thinking or reasoning.",
+                        include_bytes!("../../assets/item/v0-large.jpg").as_slice(),
+                    ),
+                    (
+                        "v0-2.0-mini",
+                        "Open Source model for everyone.",
+                        include_bytes!("../../assets/item/v0-mini.jpg").as_slice(),
+                    ),
+                ];
+                static IMAGES: [OnceLock<image::Handle>; 3] = [const { OnceLock::new() }; 3];
+                Row::with_children(models.into_iter().zip(&IMAGES).map(
+                    |((name, description, asset), cache)| {
+                        item::item([
+                            item::header([aspect_ratio(artwork(asset, cache).boxed(), 1.0).into()]),
+                            item::content([
+                                item::title(name).into(),
+                                item::description(description).into(),
+                            ])
+                            .into(),
+                        ])
+                        .orientation(icedxdy::Vertical)
+                        .style(item::Outline)
+                        .into()
+                    },
+                ))
+                .spacing(16)
+                .width(Fill)
+            }
+            .into(),
+
+            "link" => column![
+                item::item([
+                    item::content([
+                        item::title("Visit our documentation").into(),
+                        item::description("Learn how to get started with our components.").into()
+                    ])
+                    .into(),
+                    item::actions([icon::chevron_right().size(16).into()])
+                ])
+                .on_press(top),
+                item::item([
+                    item::content([
+                        item::title("External resource").into(),
+                        item::description("Opens in a new tab with security attributes.").into()
+                    ])
+                    .into(),
+                    item::actions([icon::external_link().size(16).into()])
+                ])
+                .style(item::Outline)
+                .on_press(Message::OpenUrl(
+                    "https://ui.shadcn.com/docs/components/radix/item"
+                ))
+            ]
+            .spacing(16)
+            .width(Fill)
+            .max_width(448.0)
+            .into(),
+
+            "dropdown" => dropdown_menu(
+                |m| m.trigger(button!["Select", icon::chevron_down()].style(button::Outline)),
+                |_| {
+                    menu::group(people().map(|(name, email, portrait)| {
+                        menu::item(
+                            item::item([
+                                item::media(avatar(Some(portrait)).fallback(&name[..1]).size(26.0))
+                                    .into(),
+                                item::content([
+                                    item::title(name).into(),
+                                    item::description(email).into(),
+                                ])
+                                .spacing(0)
+                                .into(),
+                            ])
+                            .size(item::Size::Xs),
+                        )
+                        .into()
+                    }))
+                },
+            )
+            .width(192)
+            .align(dropdown_menu::Align::End)
             .into(),
 
             _ => unreachable!("unknown item preview id: {id}"),

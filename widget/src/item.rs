@@ -21,8 +21,10 @@
 //! `.style(item::Muted)` on the item, `.style(item::Icon)` and
 //! `.style(item::Image)` on its media.
 
+use crate::button::widget::{self, Button, Status};
 use iced_core::Length::{self, Fill};
 use iced_core::alignment::{Horizontal, Vertical};
+use iced_core::mouse::Interaction;
 use iced_core::text::LineHeight;
 use iced_core::{Alignment, Padding};
 use iced_widget::Renderer;
@@ -53,62 +55,14 @@ pub struct Item<'a, Message> {
     orientation: Orientation,
 }
 
-/// Create an item from children.
-pub fn item<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, Message>>,
-) -> Item<'a, Message> {
-    Item {
-        children: children.into_iter().collect(),
-        style: Default.into(),
-        size: Size::Default,
-        orientation: Orientation::Horizontal,
-    }
-}
-
 impl<'a, Message: 'a> Item<'a, Message> {
-    /// Set the style: a variant (`item::Outline`, `item::Muted`) or a
-    /// tweaked `Spec`.
-    pub fn style(mut self, style: impl Into<Spec>) -> Self {
-        self.style = style.into();
-        self
-    }
-
-    /// Set the item size.
-    pub fn size(mut self, size: Size) -> Self {
-        self.size = size;
-        self
-    }
-
-    /// Set row vs column layout.
-    pub fn orientation(mut self, orientation: impl Into<Orientation>) -> Self {
-        self.orientation = orientation.into();
-        self
-    }
-}
-
-impl<'a, Message: 'a> From<Item<'a, Message>> for iced_core::Element<'a, Message, Theme, Renderer> {
-    fn from(item: Item<'a, Message>) -> Self {
-        Box::new(item).compose()
-    }
-}
-
-impl<'a, Message: 'a> From<Item<'a, Message>> for Slot<'a, Message> {
-    fn from(widget: Item<'a, Message>) -> Self {
-        Slot::new(widget)
-    }
-}
-
-impl<'a, Message: 'a> Compose<Message> for Item<'a, Message> {
-    fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
-    where
-        Self: 'b,
-    {
+    fn layout(self) -> (iced_core::Element<'a, Message, Theme, Renderer>, Padding) {
         let Item {
             children,
-            style,
+            style: _,
             size,
             orientation,
-        } = *self;
+        } = self;
 
         let spacing = match size {
             Size::Xs => Gap::G2,
@@ -145,6 +99,100 @@ impl<'a, Message: 'a> Compose<Message> for Item<'a, Message> {
                 .boxed(),
         };
 
+        (content, padding)
+    }
+}
+
+/// Create an item from children.
+pub fn item<'a, Message: 'a>(
+    children: impl IntoIterator<Item = Slot<'a, Message>>,
+) -> Item<'a, Message> {
+    Item {
+        children: children.into_iter().collect(),
+        style: Default.into(),
+        size: Size::Default,
+        orientation: Orientation::Horizontal,
+    }
+}
+
+impl<'a, Message: 'a> Item<'a, Message> {
+    /// Set the style: a variant (`item::Outline`, `item::Muted`) or a
+    /// tweaked `Spec`.
+    pub fn style(mut self, style: impl Into<Spec>) -> Self {
+        self.style = style.into();
+        self
+    }
+
+    /// Set the item size.
+    pub fn size(mut self, size: Size) -> Self {
+        self.size = size;
+        self
+    }
+
+    /// Set row vs column layout.
+    pub fn orientation(mut self, orientation: impl Into<Orientation>) -> Self {
+        self.orientation = orientation.into();
+        self
+    }
+}
+
+impl<'a, Message: Clone + 'a> Item<'a, Message> {
+    /// Make the entire row an activatable link with a hover and keyboard focus surface.
+    pub fn on_press(self, message: Message) -> Slot<'a, Message> {
+        let spec = self.style.clone();
+        let (content, padding) = self.layout();
+        let paint: widget::StyleFn<'a, Theme> = Box::new(move |theme, status| {
+            let mut surface = spec.resolve(theme);
+            if matches!(
+                status,
+                Status::Hovered | Status::Pressed | Status::Focused { is_hovered: true }
+            ) {
+                surface.background = Some(theme.muted.base.alpha(0.5).into());
+            }
+            if matches!(status, Status::Focused { .. }) {
+                surface.border.color = theme.neutral.ring;
+                surface.border.width = 2.0;
+            }
+            widget::Style {
+                background: surface.background.map(Into::into),
+                text_color: theme.neutral.foreground.into(),
+                border: surface.border.into(),
+                shadow: surface.shadow.into(),
+                snap: surface.snap,
+            }
+        });
+        Slot::from(
+            Button::new(content)
+                .width(Fill)
+                .padding(padding)
+                .style(paint)
+                .translate(false)
+                .interaction(Interaction::Pointer)
+                .on_press(message)
+                .boxed(),
+        )
+    }
+}
+
+impl<'a, Message: 'a> From<Item<'a, Message>> for iced_core::Element<'a, Message, Theme, Renderer> {
+    fn from(item: Item<'a, Message>) -> Self {
+        Box::new(item).compose()
+    }
+}
+
+impl<'a, Message: 'a> From<Item<'a, Message>> for Slot<'a, Message> {
+    fn from(widget: Item<'a, Message>) -> Self {
+        Slot::new(widget)
+    }
+}
+
+impl<'a, Message: 'a> Compose<Message> for Item<'a, Message> {
+    fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
+    where
+        Self: 'b,
+    {
+        let style = self.style.clone();
+        let (content, padding) = self.layout();
         crate::container(content)
             .padding(padding)
             .width(Fill)
