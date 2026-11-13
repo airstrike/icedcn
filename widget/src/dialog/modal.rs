@@ -13,12 +13,13 @@ use crate::core::mouse;
 use crate::core::overlay;
 use crate::core::renderer;
 use crate::core::touch;
-use crate::core::widget::tree::Tree;
+use crate::core::widget::tree::{self, Tree};
 use crate::core::widget::{Meta, Operation};
 use crate::core::{
     Background, Color, Element, Event, Layout, Length, Rectangle, Shell, Size, Vector, Widget,
 };
 use crate::marker;
+use crate::operation::focus;
 
 /// What a dialog's markers signal.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -90,6 +91,13 @@ impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
     }
 }
 
+#[derive(Default)]
+struct Focus {
+    mounted: bool,
+    enter: bool,
+    restore: Option<usize>,
+}
+
 impl<Message, Theme, Renderer> Meta for Modal<'_, Message, Theme, Renderer> {}
 
 impl<Message, Theme, Renderer> Widget<Message, Theme, Renderer>
@@ -98,7 +106,20 @@ where
     Message: Clone,
     Renderer: crate::core::Renderer,
 {
+    fn tag(&self) -> tree::Tag {
+        tree::Tag::of::<Focus>()
+    }
+    fn state(&self) -> tree::State {
+        tree::State::new(Focus::default())
+    }
+
     fn diff(&mut self, tree: &mut Tree) {
+        let focus = tree.state.downcast_mut::<Focus>();
+        let open = self.panel.is_some();
+        if open && !focus.mounted {
+            focus.enter = true;
+        }
+        focus.mounted = open;
         // Child 0 is the base, child 1 the panel while open. Closing drops
         // the panel's tree, so it mounts fresh next time, as in Radix.
         match &mut self.panel {
@@ -131,6 +152,9 @@ where
             .next()
             .expect("a modal has its base");
 
+        if self.panel.is_some() && matches!(event, Event::Keyboard(_)) {
+            return;
+        }
         self.base.update(
             child_tree,
             event,
@@ -198,8 +222,10 @@ where
             .next()
             .expect("a modal has its base");
 
-        self.base
-            .operate(child_tree, child_layout, viewport, renderer, operation);
+        if self.panel.is_none() {
+            self.base
+                .operate(child_tree, child_layout, viewport, renderer, operation);
+        }
     }
 
     fn overlay<'b>(
@@ -218,6 +244,31 @@ where
             .next()
             .expect("a modal has its base");
 
+        let focus = tree.state.downcast_mut::<Focus>();
+        if focus.enter && self.panel.is_some() {
+            let count = focus::count(|op| {
+                self.base
+                    .operate(base_tree, child_layout, viewport, renderer, op)
+            });
+            focus.restore = count.focused.or((count.total > 0).then_some(0));
+            self.base.operate(
+                base_tree,
+                child_layout,
+                viewport,
+                renderer,
+                &mut focus::select(None),
+            );
+        } else if self.panel.is_none()
+            && let Some(index) = focus.restore.take()
+        {
+            self.base.operate(
+                base_tree,
+                child_layout,
+                viewport,
+                renderer,
+                &mut focus::select(Some(index)),
+            );
+        }
         let mut overlays = self.base.overlay(
             base_tree,
             child_layout,
@@ -263,10 +314,20 @@ where
                 Placement::Side(Side::Bottom) => [0.0, window.height - size.height],
             };
 
+            let layout = Layout::new(size).move_to(position);
+            if std::mem::take(&mut focus.enter) {
+                panel.operate(
+                    panel_tree,
+                    layout,
+                    &Rectangle::with_size(window),
+                    renderer,
+                    &mut focus::select(Some(0)),
+                );
+            }
             overlays.push(overlay::Element::new(Box::new(Panel {
                 panel,
                 tree: panel_tree,
-                layout: Layout::new(size).move_to(position),
+                layout,
                 window,
                 on_close: self.on_close.clone(),
                 dismiss_outside: self.dismiss_outside,
@@ -355,6 +416,27 @@ where
     ) {
         let viewport = Rectangle::with_size(self.window);
 
+        if let Event::Keyboard(keyboard::Event::KeyPressed {
+            key: keyboard::Key::Named(key::Named::Tab),
+            modifiers,
+            ..
+        }) = event
+        {
+            let count = focus::count(|op| {
+                self.panel
+                    .operate(self.tree, self.layout, &viewport, renderer, op)
+            });
+            self.panel.operate(
+                self.tree,
+                self.layout,
+                &viewport,
+                renderer,
+                &mut focus::select(focus::adjacent(count, modifiers.shift())),
+            );
+            shell.request_redraw();
+            shell.capture_event();
+            return;
+        }
         self.panel.update(
             self.tree,
             event,
@@ -390,7 +472,10 @@ where
         }
 
         // Modal: nothing below the backdrop sees the pointer.
-        if matches!(event, Event::Mouse(_) | Event::Touch(_)) {
+        if matches!(
+            event,
+            Event::Mouse(_) | Event::Touch(_) | Event::Keyboard(_)
+        ) {
             shell.capture_event();
         }
     }

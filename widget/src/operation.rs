@@ -17,6 +17,7 @@
 //! ```
 
 pub mod control;
+pub(crate) mod focus;
 pub mod position;
 pub mod scroll;
 

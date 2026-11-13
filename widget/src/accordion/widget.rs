@@ -47,12 +47,14 @@ use std::time::Duration;
 use iced_core::Length::{Fill, Shrink};
 use iced_core::animation::Easing;
 use iced_core::border::Border;
+use iced_core::keyboard::{self, Key, key::Named};
 use iced_core::layout;
 use iced_core::mouse;
 use iced_core::overlay;
 use iced_core::renderer;
 use iced_core::time::Instant;
 use iced_core::touch;
+use iced_core::widget::operation::Focusable;
 use iced_core::widget::tree::{self, Tree};
 use iced_core::widget::{Meta, Operation};
 use iced_core::window;
@@ -179,6 +181,19 @@ struct ItemState {
     /// Whether the cursor is currently inside this item's trigger row —
     /// drives the catalog's `Status::Hovered` branch.
     hovered: bool,
+    focused: bool,
+}
+
+impl Focusable for ItemState {
+    fn is_focused(&self) -> bool {
+        self.focused
+    }
+    fn focus(&mut self) {
+        self.focused = true;
+    }
+    fn unfocus(&mut self) {
+        self.focused = false;
+    }
 }
 
 impl ItemState {
@@ -191,6 +206,7 @@ impl ItemState {
                 .easing(Easing::Custom(crate::animation::ease_out)),
             natural_height: 0.0,
             hovered: false,
+            focused: false,
         }
     }
 }
@@ -422,9 +438,11 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
         operation: &mut dyn Operation,
     ) {
         operation.container(None, layout.bounds(), viewport);
-        for (item, (item_layout, item_tree)) in self
+        let state = tree.state.downcast_mut::<State>();
+        for ((item, header), (item_layout, item_tree)) in self
             .items
             .iter_mut()
+            .zip(&mut state.items)
             .zip(layout.iter_mut(&mut tree.children))
         {
             let mut children = item_layout.iter_mut(&mut item_tree.children);
@@ -433,10 +451,15 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
             let _chevron_open = children.next();
             let (body_layout, body_tree) = children.next().expect("body layout");
 
+            if !item.disabled {
+                operation.focusable(None, trigger_layout.bounds(), header);
+            }
             item.trigger
                 .operate(trigger_tree, trigger_layout, viewport, renderer, operation);
-            item.body
-                .operate(body_tree, body_layout, viewport, renderer, operation);
+            if state.open.contains(&item.id) {
+                item.body
+                    .operate(body_tree, body_layout, viewport, renderer, operation);
+            }
         }
     }
 
@@ -495,6 +518,41 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
 
         // Hover + click handling per item.
         let mut clicked = None;
+        if let Event::Keyboard(keyboard::Event::KeyPressed {
+            key: Key::Named(key),
+            ..
+        }) = event
+            && let Some(index) = state.items.iter().position(|item| item.focused)
+            && !self.items[index].disabled
+        {
+            let enabled = || {
+                self.items
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, item)| !item.disabled)
+                    .map(|(i, _)| i)
+            };
+            let target = match key {
+                Named::Home => enabled().next(),
+                Named::End => enabled().next_back(),
+                Named::ArrowDown => enabled().find(|i| *i > index).or_else(|| enabled().next()),
+                Named::ArrowUp => enabled()
+                    .rev()
+                    .find(|i| *i < index)
+                    .or_else(|| enabled().next_back()),
+                Named::Space | Named::Enter => {
+                    clicked = Some(self.items[index].id.clone());
+                    Some(index)
+                }
+                _ => None,
+            };
+            if let Some(target) = target {
+                state.items[index].focused = false;
+                state.items[target].focused = true;
+                shell.request_redraw();
+                shell.capture_event();
+            }
+        }
 
         for (item, (item_layout, item_tree)) in self
             .items
@@ -531,6 +589,13 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
                 .find(|s| s.id == item.id)
                 .expect("ItemState exists by id");
 
+            if matches!(
+                event,
+                Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left))
+                    | Event::Touch(touch::Event::FingerPressed { .. })
+            ) {
+                s.focused = !item.disabled && cursor.is_over(trigger_hit);
+            }
             let now_hovered = !item.disabled && cursor.is_over(trigger_hit);
             if now_hovered != s.hovered {
                 s.hovered = now_hovered;
@@ -721,14 +786,13 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
                 .find(|s| s.id == item.id)
                 .expect("ItemState by id");
 
-            // Status resolution mirrors button: hover wins over active,
-            // disabled overrides everything. We don't track keyboard
-            // focus here yet (no Tab traversal in iced for arbitrary
-            // widget content), so Focused is currently unreachable from
-            // pure widget-side state — left as a seam for the future.
             let is_open_now = self.is_open(&item.id);
             let status = if item.disabled {
                 Status::Disabled {
+                    is_open: is_open_now,
+                }
+            } else if item_state.focused {
+                Status::Focused {
                     is_open: is_open_now,
                 }
             } else if item_state.hovered {
