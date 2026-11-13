@@ -1,16 +1,4 @@
 use iced::Element;
-// TODO: API Reference section once a table widget lands.
-//
-// The live Typography page is a styling guide rather than a component-with-
-// props page — it does not surface a structured API Reference table.
-// Captured shapes: `h1`, `h2`, `h3`, `h4`, `p`, `blockquote`, `ul`/`li`,
-// `code` (semantic HTML elements with Tailwind utility classes), plus
-// `Lead`, `Large`, `Small`, `Muted` (utility helpers). Restyle via
-// `.style(...)` with a `theme::text::*` variant. Captured here so the gap
-// is auditable when the table widget lands.
-//
-// Intentional skips per CLAUDE.md: typography-rtl (RTL).
-
 use iced::Widget;
 use iced::widget::column;
 use iced::{Fill, Task};
@@ -40,88 +28,83 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/text-demo.md",
     },
     page::Block::Md("examples/browser/snippets/text-usage.md"),
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "h1",
-                title: "Heading 1",
-                description: None,
-                snippet: "examples/browser/snippets/text-h1.md",
-            },
-            page::Block::Example {
-                id: "h2",
-                title: "Heading 2",
-                description: None,
-                snippet: "examples/browser/snippets/text-h2.md",
-            },
-            page::Block::Example {
-                id: "h3",
-                title: "Heading 3",
-                description: None,
-                snippet: "examples/browser/snippets/text-h3.md",
-            },
-            page::Block::Example {
-                id: "h4",
-                title: "Heading 4",
-                description: None,
-                snippet: "examples/browser/snippets/text-h4.md",
-            },
-            page::Block::Example {
-                id: "p",
-                title: "Paragraph",
-                description: None,
-                snippet: "examples/browser/snippets/text-p.md",
-            },
-            page::Block::Example {
-                id: "blockquote",
-                title: "Blockquote",
-                description: None,
-                snippet: "examples/browser/snippets/text-blockquote.md",
-            },
-            page::Block::Example {
-                id: "table",
-                title: "Table",
-                description: None,
-                snippet: "examples/browser/snippets/text-table.md",
-            },
-            page::Block::Example {
-                id: "list",
-                title: "List",
-                description: None,
-                snippet: "examples/browser/snippets/text-list.md",
-            },
-            page::Block::Example {
-                id: "inline-code",
-                title: "Inline code",
-                description: None,
-                snippet: "examples/browser/snippets/text-inline-code.md",
-            },
-            page::Block::Example {
-                id: "lead",
-                title: "Lead",
-                description: None,
-                snippet: "examples/browser/snippets/text-lead.md",
-            },
-            page::Block::Example {
-                id: "large",
-                title: "Large",
-                description: None,
-                snippet: "examples/browser/snippets/text-large.md",
-            },
-            page::Block::Example {
-                id: "small",
-                title: "Small",
-                description: None,
-                snippet: "examples/browser/snippets/text-small.md",
-            },
-            page::Block::Example {
-                id: "muted",
-                title: "Muted",
-                description: None,
-                snippet: "examples/browser/snippets/text-muted.md",
-            },
-        ],
+    page::Block::Example {
+        id: "h1",
+        title: "h1",
+        description: None,
+        snippet: "examples/browser/snippets/text-h1.md",
+    },
+    page::Block::Example {
+        id: "h2",
+        title: "h2",
+        description: None,
+        snippet: "examples/browser/snippets/text-h2.md",
+    },
+    page::Block::Example {
+        id: "h3",
+        title: "h3",
+        description: None,
+        snippet: "examples/browser/snippets/text-h3.md",
+    },
+    page::Block::Example {
+        id: "h4",
+        title: "h4",
+        description: None,
+        snippet: "examples/browser/snippets/text-h4.md",
+    },
+    page::Block::Example {
+        id: "p",
+        title: "p",
+        description: None,
+        snippet: "examples/browser/snippets/text-p.md",
+    },
+    page::Block::Example {
+        id: "blockquote",
+        title: "blockquote",
+        description: None,
+        snippet: "examples/browser/snippets/text-blockquote.md",
+    },
+    page::Block::Example {
+        id: "table",
+        title: "table",
+        description: None,
+        snippet: "examples/browser/snippets/text-table.md",
+    },
+    page::Block::Example {
+        id: "list",
+        title: "list",
+        description: None,
+        snippet: "examples/browser/snippets/text-list.md",
+    },
+    page::Block::Example {
+        id: "inline-code",
+        title: "Inline code",
+        description: None,
+        snippet: "examples/browser/snippets/text-inline-code.md",
+    },
+    page::Block::Example {
+        id: "lead",
+        title: "Lead",
+        description: None,
+        snippet: "examples/browser/snippets/text-lead.md",
+    },
+    page::Block::Example {
+        id: "large",
+        title: "Large",
+        description: None,
+        snippet: "examples/browser/snippets/text-large.md",
+    },
+    page::Block::Example {
+        id: "small",
+        title: "Small",
+        description: None,
+        snippet: "examples/browser/snippets/text-small.md",
+    },
+    page::Block::Example {
+        id: "muted",
+        title: "Muted",
+        description: None,
+        snippet: "examples/browser/snippets/text-muted.md",
     },
     page::Block::Md("examples/browser/snippets/text-api-reference.md"),
 ];
