@@ -222,6 +222,7 @@ impl<'a> Add<Token> for Span<'a> {
 /// Theme-aware: each span's [`Token`] color is resolved against the active
 /// palette at draw time, so swapping themes re-colors spans correctly.
 pub struct RichText<'a> {
+    font: Option<iced_core::Font>,
     spans: Vec<Span<'a>>,
     size: Option<Pixels>,
     line_height: text::LineHeight,
@@ -240,6 +241,7 @@ pub struct RichText<'a> {
 /// Create a [`RichText`] from an iterator of spans.
 pub fn rich_text<'a>(spans: impl IntoIterator<Item = Span<'a>>) -> RichText<'a> {
     RichText {
+        font: None,
         spans: spans.into_iter().collect(),
         size: None,
         line_height: text::LineHeight::default(),
@@ -254,6 +256,12 @@ pub fn rich_text<'a>(spans: impl IntoIterator<Item = Span<'a>>) -> RichText<'a> 
 }
 
 impl<'a> RichText<'a> {
+    /// Set the base font used to shape and draw this paragraph.
+    pub fn font(mut self, font: iced_core::Font) -> Self {
+        self.font = Some(font);
+        self
+    }
+
     /// Set the default font size of the rich text. Spans may override
     /// per-span.
     pub fn size(mut self, size: impl Into<crate::Size>) -> Self {
@@ -357,7 +365,9 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
         tree.size = layout::sized(limits, self.width, self.height, |limits| {
             let bounds = limits.bounds();
             let size = self.size.unwrap_or_else(|| renderer.text_size());
-            let font = <Renderer as text::Renderer>::font(renderer);
+            let font = self
+                .font
+                .unwrap_or_else(|| <Renderer as text::Renderer>::font(renderer));
 
             let text = Text {
                 content: layout_spans.as_slice(),
@@ -452,7 +462,9 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
 
         let bounds = layout.bounds().size();
         let size = self.size.unwrap_or_else(|| renderer.text_size());
-        let font = <Renderer as text::Renderer>::font(renderer);
+        let font = self
+            .font
+            .unwrap_or_else(|| <Renderer as text::Renderer>::font(renderer));
 
         let draw_paragraph = <<Renderer as text::Renderer>::Paragraph>::with_spans(Text {
             content: draw_spans.as_slice(),
