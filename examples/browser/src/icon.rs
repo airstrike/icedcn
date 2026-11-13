@@ -1,6 +1,6 @@
 // Generated automatically by iced_lucide at build time.
 // Do not edit manually.
-// 1410480fe106b054f157e786d2a4a61c140c81976f0b0f6c949d96e996998d29
+// a2f49a141afa8dee21683bd8e37ec575ca1a7851f3e7274550a436ad7d58c39f
 use iced::widget::text::{self, Text};
 
 pub const FONT: &[u8] = include_bytes!("../fonts/lucide.ttf");
@@ -43,12 +43,14 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("code", "\u{E093}"),
     ("columns_3", "\u{E099}"),
     ("copy", "\u{E09E}"),
+    ("corner_down_left", "\u{E0A1}"),
     ("credit_card", "\u{E0AA}"),
     ("download", "\u{E0B2}"),
     ("ellipsis", "\u{E0B6}"),
     ("ellipsis_vertical", "\u{E0B7}"),
     ("external_link", "\u{E0B9}"),
     ("eye", "\u{E0BA}"),
+    ("eye_off", "\u{E0BB}"),
     ("file", "\u{E0C0}"),
     ("file_code", "\u{E0C3}"),
     ("file_text", "\u{E0CC}"),
@@ -97,6 +99,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("user_round_x", "\u{E46D}"),
     ("volume_off", "\u{E626}"),
     ("wallet", "\u{E204}"),
+    ("wrap_text", "\u{E248}"),
     ("x", "\u{E1B2}"),
 ];
 
@@ -338,6 +341,13 @@ where
     icon("\u{E09E}")
 }
 
+pub fn corner_down_left<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E0A1}")
+}
+
 pub fn credit_card<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
@@ -378,6 +388,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E0BA}")
+}
+
+pub fn eye_off<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E0BB}")
 }
 
 pub fn file<'a, Theme>() -> Text<'a, Theme>
@@ -714,6 +731,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E204}")
+}
+
+pub fn wrap_text<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E248}")
 }
 
 pub fn x<'a, Theme>() -> Text<'a, Theme>
