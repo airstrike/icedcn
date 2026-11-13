@@ -4,6 +4,9 @@ use iced::clipboard;
 use iced::mouse::Interaction;
 use iced::widget::{column, combo_box, row, space, stack, svg};
 use icedxdy::widget::scrollable;
+use icedxdy::widget::spinner;
+use std::time::Duration;
+use tokio::time::sleep;
 
 use iced::{Center, Fill, Font, Pixels, Subscription, Task};
 use icedxdy::theme::tweak::Bg;
@@ -76,6 +79,7 @@ pub enum Message {
     SelectPage(usize),
     OpenUrl(&'static str),
     CopyText(String),
+    CreateEvent,
     SaveAttachment,
     AttachmentSaved(Result<(), String>),
     FontSelected(String),
@@ -97,10 +101,10 @@ impl App {
             bubble, button, button_group, calendar, card, carousel, chart, checkbox, code_block,
             collapsible, combobox, command, context_menu, data_table, date_picker, dialog, drawer,
             dropdown_menu, empty, field, hover_card, input, input_group, input_otp, item, kbd,
-            label, marker, menubar, message, native_select, navigation_menu, pagination, popover,
-            progress, radio_group, resizable, scroll_area, select, separator, sheet, sidebar,
-            skeleton, slider, sonner, spinner, switch, table, tabs, text, textarea, toggle,
-            toggle_group, tooltip,
+            label, marker, menubar, message, message_scroller, native_select, navigation_menu,
+            pagination, popover, progress, questionnaire, radio_group, resizable, scroll_area,
+            select, separator, sheet, sidebar, skeleton, slider, sonner, spinner, switch, table,
+            tabs, text, textarea, toggle, toggle_group, tooltip, trace,
         };
 
         let constructors: Vec<fn(usize) -> Box<dyn page::Page>> = vec![
@@ -142,11 +146,13 @@ impl App {
             marker::MarkerPage::new,
             menubar::MenubarPage::new,
             message::MessagePage::new,
+            message_scroller::MessageScrollerPage::new,
             native_select::NativeSelectPage::new,
             navigation_menu::NavigationMenuPage::new,
             pagination::PaginationPage::new,
             popover::PopoverPage::new,
             progress::ProgressPage::new,
+            questionnaire::QuestionnairePage::new,
             radio_group::RadioGroupPage::new,
             resizable::ResizablePage::new,
             scroll_area::ScrollAreaPage::new,
@@ -166,6 +172,7 @@ impl App {
             toggle::TogglePage::new,
             toggle_group::ToggleGroupPage::new,
             tooltip::TooltipPage::new,
+            trace::TracePage::new,
         ];
 
         for (i, ctor) in constructors.into_iter().enumerate() {
@@ -241,6 +248,15 @@ impl App {
             }
             Message::OpenUrl(url) => page::open_link(url),
             Message::CopyText(value) => clipboard::write(value).discard(),
+            Message::CreateEvent => toast::promise::<_, Message, _, ()>(
+                "Loading...",
+                async {
+                    sleep(Duration::from_secs(2)).await;
+                    Ok("Event")
+                },
+                |name| format!("{name} has been created"),
+                |()| "Error".to_owned(),
+            ),
             Message::SaveAttachment => Task::perform(
                 async {
                     let file = rfd::AsyncFileDialog::new()
@@ -544,6 +560,7 @@ impl App {
             .icons(|kind| {
                 let icon = match kind {
                     toast::Kind::Default => return None,
+                    toast::Kind::Loading => return Some(spinner().size(16.).into()),
                     toast::Kind::Success => icon::circle_check(),
                     toast::Kind::Info => icon::info(),
                     toast::Kind::Warning => icon::triangle_alert(),

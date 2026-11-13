@@ -16,10 +16,10 @@ use icedxdy::theme::container::{
     card, card_preview, code_block, code_block_panel, code_fade_overlay,
 };
 use icedxdy::theme::tweak::Opaque;
-use icedxdy::widget::container;
 use icedxdy::widget::markdown;
 use icedxdy::widget::markdown::widget::Highlight;
 use icedxdy::widget::{button, rule, text};
+use icedxdy::widget::{container, toast};
 use icedxdy::{Slot, Theme, Weight, radius, theme};
 
 use crate::component::code_block;
@@ -191,6 +191,7 @@ pub enum Message {
     SnippetLoaded(&'static str, Result<String, String>),
     LinkClicked(markdown::Uri),
     ChooseFile,
+    Notice(String, String),
     CodeBlock(code_block::Event),
     FileSelected(Option<PathBuf>),
     BlockShown(usize),
@@ -869,6 +870,9 @@ impl State {
                         .insert(*path, Some(markdown::parse(&body).collect()));
                 }
                 Task::none()
+            }
+            Message::Notice(title, detail) => {
+                toast::show(toast::toast::<super::Message>(title).description(detail))
             }
             Message::ChooseFile => {
                 let page = self.page_index;

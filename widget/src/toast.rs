@@ -49,6 +49,8 @@ pub enum Kind {
     /// No icon.
     #[default]
     Default,
+    /// A pending asynchronous operation.
+    Loading,
     /// A check mark.
     Success,
     /// An information mark.
@@ -81,6 +83,7 @@ pub enum Position {
 #[derive(Debug, Clone)]
 pub struct Toast<Message> {
     title: String,
+    key: Option<Id>,
     description: Option<String>,
     kind: Kind,
     position: Option<Position>,
@@ -92,6 +95,7 @@ pub struct Toast<Message> {
 pub fn toast<Message>(title: impl Into<String>) -> Toast<Message> {
     Toast {
         title: title.into(),
+        key: None,
         description: None,
         kind: Kind::Default,
         position: None,
@@ -157,6 +161,38 @@ where
     task::widget(Show(Some(toast)))
 }
 
+/// Show a pending toast until the future resolves, then update that same card.
+/// Concurrent operations each own a unique card.
+pub fn promise<T, Message, Value, Error>(
+    loading: impl Into<String>,
+    future: impl Future<Output = Result<Value, Error>> + Send + 'static,
+    success: impl FnOnce(Value) -> String + Send + 'static,
+    error: impl FnOnce(Error) -> String + Send + 'static,
+) -> Task<T>
+where
+    T: Send + 'static,
+    Message: Send + 'static,
+    Value: Send + 'static,
+    Error: Send + 'static,
+{
+    let key = Id::unique();
+    let mut pending: Toast<Message> = toast(loading).kind(Kind::Loading);
+    pending.key = Some(key.clone());
+    let settled = Task::perform(
+        async move {
+            let mut result: Toast<Message> = match future.await {
+                Ok(value) => toast(success(value)).kind(Kind::Success),
+                Err(cause) => toast(error(cause)).kind(Kind::Error),
+            };
+            result.key = Some(key);
+            result
+        },
+        |result| result,
+    )
+    .then(show);
+    show(pending).chain(settled)
+}
+
 /// The signal a [`trigger`] records when pressed.
 #[derive(Debug, Clone)]
 struct Raise<Message>(Toast<Message>);
@@ -208,6 +244,7 @@ impl<T, Message: Send + 'static> Operation<T> for Show<Message> {
 fn glyph(kind: Kind) -> Option<&'static str> {
     match kind {
         Kind::Default => None,
+        Kind::Loading => Some("…"),
         Kind::Success => Some("\u{2713}"),
         Kind::Info => Some("\u{2139}"),
         Kind::Warning => Some("\u{26A0}"),
@@ -217,6 +254,10 @@ fn glyph(kind: Kind) -> Option<&'static str> {
 
 /// The default icon for a toast `kind`, if it has one.
 fn default_icon<'a, Message: 'a>(kind: Kind) -> Option<Slot<'a, Message>> {
+    #[cfg(feature = "spinner")]
+    if kind == Kind::Loading {
+        return Some(crate::spinner().size(16.).into());
+    }
     glyph(kind).map(|glyph| Slot::from(Text::new(glyph).size(14)))
 }
 

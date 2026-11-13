@@ -25,7 +25,7 @@ The three constructors return an icedxdy container with width, padding and style
 | `sidebar::separator()` | `Container` | 1px horizontal divider scoped to the sidebar palette. Mirrors shadcn's `SidebarSeparator`. |
 | `sidebar::menu(items)` | `Column` | Vertical list of menu items at consistent spacing. Mirrors shadcn's `SidebarMenu`. |
 | `sidebar::menu_item(content)` | `Row` | Wraps a single menu row (typically a `menu_button`). Mirrors shadcn's `SidebarMenuItem`. |
-| `sidebar::input(...)` | `Slot` | Inline search box scoped to the sidebar palette. Mirrors shadcn's `SidebarInput`. |
+| `sidebar::input(...)` | `Container` | Inline search box scoped to the sidebar palette. Mirrors shadcn's `SidebarInput`. |
 
 ### `sidebar::menu_button()`
 

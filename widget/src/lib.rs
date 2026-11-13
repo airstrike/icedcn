@@ -48,6 +48,7 @@ pub mod operation;
 pub mod pagination;
 pub mod popover;
 pub mod progress;
+pub mod questionnaire;
 pub mod radio;
 pub mod resizable;
 pub mod rich_text;
@@ -76,6 +77,7 @@ pub mod toast;
 pub mod toggle;
 pub mod toggle_group;
 pub mod tooltip;
+pub mod trace;
 pub mod weight;
 
 pub use iced_widget::space;
@@ -123,6 +125,7 @@ pub use navigation_menu::navigation_menu;
 pub use pagination::Pagination;
 pub use popover::Popover;
 pub use progress::Progress;
+pub use questionnaire::questionnaire;
 pub use radio::Radio;
 pub use resizable::resizable;
 pub use rich_text::{RichText, Span, rich_text, span};
@@ -141,6 +144,7 @@ pub use textarea::Textarea;
 pub use toggle::Toggle;
 pub use toggle_group::ToggleGroup;
 pub use tooltip::Tooltip;
+pub use trace::trace;
 pub use weight::Weight;
 
 /// Create a [`Button`] with the given content and default style.

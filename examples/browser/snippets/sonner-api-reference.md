@@ -15,7 +15,7 @@
 | Builder | Type | Description |
 | --- | --- | --- |
 | `.description(text)` | `impl Into<String>` | A muted line below the title. |
-| `.kind(kind)` | `toast::Kind` | `Default`, `Success`, `Info`, `Warning` or `Error` (Sonner's `toast.success(..)` and friends): picks the icon. |
+| `.kind(kind)` | `toast::Kind` | `Default`, `Loading`, `Success`, `Info`, `Warning` or `Error` (Sonner's `toast.success(..)` and friends): picks the icon. |
 | `.action(label, message)` | `impl Into<String>`, `Message` | An action button: publishes `message` and dismisses the toast. |
 | `.position(position)` | `toast::Position` | Stack this toast elsewhere than the toaster's position. |
 | `.duration(duration)` | `Duration` | Show this toast for longer or shorter. |
@@ -25,4 +25,4 @@
 - `toast::trigger(child, toast)`: pressing `child` raises `toast`.
 - `toast::show(toast)`: a `Task` raising `toast`, for `update` (after a save completes, say).
 
-`toast.promise(..)`, swipe-to-dismiss and the collapsed stack that expands on hover are not ported.
+- `toast::promise(loading, future, success, error)` shows a spinner while the future is pending. Its result replaces the pending card and starts the normal dismissal timer.

@@ -1,9 +1,3 @@
-// Intentional skips: the "Promise" button of sonner-types (toast.promise
-// follows a future; an app raises its own toasts with `toast::show` when
-// its task completes). The toaster wraps the whole browser, as shadcn's
-// `<Toaster />` sits once in the root layout. Sonner collapses its stack
-// and expands it on hover; icedxdy shows the newest three expanded.
-
 use iced::Task;
 
 use icedxdy::widget::{button, column, row, toast};
@@ -133,8 +127,12 @@ impl page::Page for SonnerPage {
                     "Error",
                     toast::toast("Event has not been created").kind(toast::Kind::Error),
                 ),
+                button("Promise")
+                    .style(button::Outline)
+                    .on_press(Message::CreateEvent),
             ]
             .spacing(8)
+            .wrap()
             .into(),
 
             // shadcn `sonner-description.tsx`.

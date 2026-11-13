@@ -9,7 +9,7 @@ use iced_widget::Renderer;
 use icedxdy_core::Theme;
 use icedxdy_core::theme::toast;
 
-use super::{Icons, Inbox, Position, Raise, Toast};
+use super::{Icons, Inbox, Kind, Position, Raise, Toast};
 use crate::button::button;
 use crate::column::Column;
 use crate::compose::Slot;
@@ -217,12 +217,7 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
 
         if !toasts.is_empty() {
             for toast in toasts {
-                state.live.push(Live {
-                    id: state.next_id,
-                    toast,
-                    shown_at: None,
-                });
-                state.next_id += 1;
+                state.raise(toast);
             }
 
             shell.invalidate_widgets();
@@ -237,10 +232,9 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
                 live.shown_at.get_or_insert(*now);
             }
 
-            state.live.retain(|live| {
-                live.shown_at
-                    .is_none_or(|at| *now < at + live.toast.duration.unwrap_or(duration))
-            });
+            state
+                .live
+                .retain(|live| live.expires_at(duration).is_none_or(|end| *now < end));
 
             if state.live.len() != before {
                 shell.invalidate_widgets();
@@ -249,10 +243,7 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
             if let Some(next) = state
                 .live
                 .iter()
-                .filter_map(|live| {
-                    live.shown_at
-                        .map(|at| at + live.toast.duration.unwrap_or(duration))
-                })
+                .filter_map(|live| live.expires_at(duration))
                 .min()
             {
                 shell.request_redraw_at(window::RedrawRequest::At(next));
@@ -430,6 +421,37 @@ struct Live<Message> {
     shown_at: Option<Instant>,
 }
 
+impl<Message> State<Message> {
+    fn raise(&mut self, toast: Toast<Message>) {
+        if let Some(key) = &toast.key
+            && let Some(live) = self
+                .live
+                .iter_mut()
+                .find(|live| live.toast.key.as_ref() == Some(key))
+        {
+            live.toast = toast;
+            live.shown_at = None;
+        } else {
+            self.live.push(Live {
+                id: self.next_id,
+                toast,
+                shown_at: None,
+            });
+            self.next_id += 1;
+        }
+    }
+}
+
+impl<Message> Live<Message> {
+    fn expires_at(&self, duration: Duration) -> Option<Instant> {
+        if self.toast.kind == Kind::Loading {
+            return None;
+        }
+        self.shown_at
+            .map(|start| start + self.toast.duration.unwrap_or(duration))
+    }
+}
+
 /// A laid-out card in the overlay.
 struct Entry<'a, 'b, Message> {
     element: &'b mut Element<'a, Message, Theme, Renderer>,
@@ -531,5 +553,46 @@ impl<Message: Clone + Send + 'static> overlay::Overlay<Message, Theme, Renderer>
             })
             .max()
             .unwrap_or_default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Inbox, Instant, Kind, State};
+    use crate::core::widget::Id;
+    use crate::toast::toast;
+    use std::time::Duration;
+
+    #[test]
+    fn resolving_a_promise_replaces_only_its_own_loading_card() {
+        let mut state: State<()> = State {
+            live: Vec::new(),
+            inbox: Inbox(Vec::new()),
+            next_id: 0,
+        };
+        let first = Id::unique();
+        let second = Id::unique();
+        let mut a = toast("First").kind(Kind::Loading);
+        a.key = Some(first.clone());
+        let mut b = toast("Second").kind(Kind::Loading);
+        b.key = Some(second);
+        state.raise(a);
+        state.raise(b);
+        let now = Instant::now();
+        state.live[0].shown_at = Some(now);
+        assert_eq!(state.live[0].expires_at(Duration::ZERO), None);
+        let mut failure = toast("Failed").kind(Kind::Error);
+        failure.key = Some(first);
+        state.raise(failure);
+        assert_eq!(state.live.len(), 2);
+        assert_eq!(state.live[0].id, 0);
+        assert_eq!(state.live[0].toast.title, "Failed");
+        assert_eq!(state.live[0].shown_at, None);
+        assert_eq!(state.live[1].toast.kind, Kind::Loading);
+        state.live[0].shown_at = Some(now);
+        assert_eq!(
+            state.live[0].expires_at(Duration::from_secs(4)),
+            Some(now + Duration::from_secs(4))
+        );
     }
 }

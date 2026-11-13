@@ -1,6 +1,6 @@
 // Generated automatically by iced_lucide at build time.
 // Do not edit manually.
-// 7f1119611b3efd3a78ba2cf3b5da9e4ff72e8997a61f80dc73d273fa11338d8a
+// fa7540bbb265dfa3daf44fdf72ed855dbf729881126db89e4f38b1ab81cfc56e
 use iced::widget::text::{self, Text};
 
 pub const FONT: &[u8] = include_bytes!("../fonts/lucide.ttf");
@@ -27,6 +27,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("book_open_check", "\u{E381}"),
     ("bookmark", "\u{E060}"),
     ("bot", "\u{E1BB}"),
+    ("brain", "\u{E3C6}"),
     ("building_2", "\u{E290}"),
     ("calculator", "\u{E1BC}"),
     ("calendar", "\u{E063}"),
@@ -38,6 +39,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("chevron_right", "\u{E06F}"),
     ("chevron_up", "\u{E070}"),
     ("chevrons_up_down", "\u{E211}"),
+    ("circle", "\u{E076}"),
     ("circle_alert", "\u{E077}"),
     ("circle_check", "\u{E226}"),
     ("circle_check_big", "\u{E07C}"),
@@ -60,6 +62,8 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("eye_off", "\u{E0BB}"),
     ("file", "\u{E0C0}"),
     ("file_code", "\u{E0C3}"),
+    ("file_pen", "\u{E31F}"),
+    ("file_plus", "\u{E0C9}"),
     ("file_search", "\u{E0CB}"),
     ("file_text", "\u{E0CC}"),
     ("file_warning", "\u{E0CE}"),
@@ -72,6 +76,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("frame", "\u{E291}"),
     ("gallery_vertical_end", "\u{E4D2}"),
     ("git_branch", "\u{E0E2}"),
+    ("git_commit_horizontal", "\u{E0E3}"),
     ("globe", "\u{E0E8}"),
     ("house", "\u{E0F5}"),
     ("image", "\u{E0F6}"),
@@ -257,6 +262,13 @@ where
     icon("\u{E1BB}")
 }
 
+pub fn brain<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E3C6}")
+}
+
 pub fn building_2<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
@@ -332,6 +344,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E211}")
+}
+
+pub fn circle<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E076}")
 }
 
 pub fn circle_alert<'a, Theme>() -> Text<'a, Theme>
@@ -488,6 +507,20 @@ where
     icon("\u{E0C3}")
 }
 
+pub fn file_pen<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E31F}")
+}
+
+pub fn file_plus<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E0C9}")
+}
+
 pub fn file_search<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
@@ -570,6 +603,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E0E2}")
+}
+
+pub fn git_commit_horizontal<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E0E3}")
 }
 
 pub fn globe<'a, Theme>() -> Text<'a, Theme>
