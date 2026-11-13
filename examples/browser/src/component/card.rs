@@ -39,38 +39,34 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/card-demo.md",
     },
     page::Block::Md("examples/browser/snippets/card-composition.md"),
+    page::Block::Example {
+        id: "small",
+        title: "Size",
+        description: Some("Use the small size for a more compact card."),
+        snippet: "examples/browser/snippets/card-small.md",
+    },
     page::Block::Group {
-        title: "Examples",
+        title: "Spacing",
         children: &[
             page::Block::Example {
-                id: "small",
-                title: "Size",
-                description: Some(
-                    "Use the size=\"sm\" prop to set the size of the card to small. The small size variant uses smaller spacing.",
-                ),
-                snippet: "examples/browser/snippets/card-small.md",
-            },
-            page::Block::Example {
                 id: "spacing",
-                title: "Spacing",
-                description: Some("Adjust the shared spacing of the card and its sections."),
+                title: "",
+                description: Some("Set the spacing between the sections of a card."),
                 snippet: "examples/browser/snippets/card-spacing.md",
             },
             page::Block::Example {
                 id: "edge-to-edge",
-                title: "Edge-to-edge content",
-                description: Some("Extend content to the edges of the card."),
+                title: "",
+                description: Some("Extend the scrollable content to the edges of the card."),
                 snippet: "examples/browser/snippets/card-edge-to-edge.md",
             },
-            page::Block::Example {
-                id: "image",
-                title: "Image",
-                description: Some(
-                    "Add an image before the card header to create a card with an image.",
-                ),
-                snippet: "examples/browser/snippets/card-image.md",
-            },
         ],
+    },
+    page::Block::Example {
+        id: "image",
+        title: "Image",
+        description: Some("Add an image before the card header to create a card with an image."),
+        snippet: "examples/browser/snippets/card-image.md",
     },
     page::Block::Md("examples/browser/snippets/card-api-reference.md"),
 ];

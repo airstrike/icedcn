@@ -5,18 +5,18 @@ use iced::alignment::Horizontal::Right;
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Widget};
 use icedxdy::Theme;
+use icedxdy::core::Border;
 use icedxdy::theme::container::Style;
 use icedxdy::widget::table::Track;
 use icedxdy::widget::{
     button, checkbox, column, container, dropdown_menu, input, menu, row, space, table, text,
 };
-use icedxdy::core::Border;
 use icedxdy::{Size, Slot};
 use std::collections::BTreeSet;
 
 pub static META: page::Meta = page::Meta {
     title: "Data Table",
-    description: "Powerful table and datagrids built using TanStack Table.",
+    description: "An interactive data table with sorting, filtering, column visibility and row selection.",
 };
 pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
@@ -403,5 +403,27 @@ impl page::Page for DataTablePage {
             "demo" => component(Payments).boxed().into(),
             _ => unreachable!("unknown data-table preview id: {id}"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn filtering_and_sorting_preserve_selection_by_record() {
+        let mut model = Model::default();
+        model.apply(Event::Select(0, true));
+        model.apply(Event::Sort);
+        assert_eq!(model.current()[0], 1);
+        model.apply(Event::Filter("KEN99".into()));
+        assert_eq!(model.current(), &[0]);
+        assert_eq!(model.page_selection(), checkbox::State::Checked);
+        model.apply(Event::Filter(String::new()));
+        assert_eq!(model.page_selection(), checkbox::State::Indeterminate);
+        model.apply(Event::SelectPage(true));
+        assert_eq!(model.selected.len(), PAYMENTS.len());
+        model.apply(Event::Filter("nothing".into()));
+        assert!(model.current().is_empty());
+        assert!(!model.can_advance());
     }
 }

@@ -12,7 +12,7 @@ use icedxdy::{Slot, card};
 
 pub static META: page::Meta = page::Meta {
     title: "Chart",
-    description: "Beautiful charts. Built using Recharts. Copy and paste into your apps.",
+    description: "Interactive charts built with iced.",
 };
 pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
@@ -23,12 +23,12 @@ pub static BLOCKS: &[page::Block] = &[
     },
     page::Block::Md("examples/browser/snippets/chart-composition.md"),
     page::Block::Group {
-        title: "Examples",
+        title: "Your First Chart",
         children: &[
             page::Block::Example {
                 id: "example",
-                title: "Your First Chart",
-                description: None,
+                title: "",
+                description: Some("Start with desktop and mobile visitors grouped by month."),
                 snippet: "examples/browser/snippets/chart-example.md",
             },
             page::Block::Example {
@@ -55,13 +55,14 @@ pub static BLOCKS: &[page::Block] = &[
                 description: None,
                 snippet: "examples/browser/snippets/chart-example-legend.md",
             },
-            page::Block::Example {
-                id: "tooltip",
-                title: "Tooltip",
-                description: None,
-                snippet: "examples/browser/snippets/chart-tooltip.md",
-            },
         ],
+    },
+    page::Block::Md("examples/browser/snippets/chart-config.md"),
+    page::Block::Example {
+        id: "tooltip",
+        title: "Tooltip",
+        description: None,
+        snippet: "examples/browser/snippets/chart-tooltip.md",
     },
     page::Block::Md("examples/browser/snippets/chart-api-reference.md"),
 ];

@@ -11,7 +11,7 @@ use std::time::Duration;
 
 pub static META: page::Meta = page::Meta {
     title: "Carousel",
-    description: "A carousel with motion and swipe built using Embla.",
+    description: "A swipeable carousel with keyboard controls and optional autoplay.",
 };
 pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
@@ -27,36 +27,40 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "size",
                 title: "Sizes",
-                description: Some("Set the number of visible items in the viewport."),
+                description: Some("Set the number of visible items with `.visible(n)`."),
                 snippet: "examples/browser/snippets/carousel-size.md",
             },
             page::Block::Example {
                 id: "spacing",
                 title: "Spacing",
-                description: Some("Set the space between slides."),
+                description: Some("Set the gap between slides with `.spacing(px)`."),
                 snippet: "examples/browser/snippets/carousel-spacing.md",
             },
             page::Block::Example {
                 id: "orientation",
                 title: "Orientation",
-                description: Some("Use a vertical carousel to stack slides."),
+                description: Some(
+                    "Use the orientation prop to set the orientation of the carousel.",
+                ),
                 snippet: "examples/browser/snippets/carousel-orientation.md",
             },
-            page::Block::Example {
-                id: "api",
-                title: "API",
-                description: Some("Read the selected slide and total slide count."),
-                snippet: "examples/browser/snippets/carousel-api.md",
-            },
-            page::Block::Example {
-                id: "plugin",
-                title: "Plugins",
-                description: Some(
-                    "Advance every two seconds, pausing on hover and stopping after interaction.",
-                ),
-                snippet: "examples/browser/snippets/carousel-plugin.md",
-            },
         ],
+    },
+    page::Block::Md("examples/browser/snippets/carousel-options.md"),
+    page::Block::Example {
+        id: "api",
+        title: "API",
+        description: Some("Use the selected snap index to display the current slide."),
+        snippet: "examples/browser/snippets/carousel-api.md",
+    },
+    page::Block::Md("examples/browser/snippets/carousel-events.md"),
+    page::Block::Example {
+        id: "plugin",
+        title: "Plugins",
+        description: Some(
+            "Advance every two seconds. Hover to pause. Manual navigation stops autoplay.",
+        ),
+        snippet: "examples/browser/snippets/carousel-plugin.md",
     },
     page::Block::Md("examples/browser/snippets/carousel-api-reference.md"),
 ];
