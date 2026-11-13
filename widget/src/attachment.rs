@@ -226,6 +226,7 @@ impl<'a, Message: 'a> Compose<Message> for Attachment<'a, Message> {
                 stack![base, overlay].boxed().into()
             } else {
                 row![container(body).width(Fill), actions]
+                    .width(Fill)
                     .spacing(gap)
                     .align_y(Vertical::Center)
                     .into()

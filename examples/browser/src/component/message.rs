@@ -118,7 +118,8 @@ fn demo_example() -> Slot<'static, Message> {
             .avatar(portrait(0, "R")),
             status_marker(shimmer("Oliver is typing..."))
         ]
-        .spacing(24),
+        .spacing(24)
+        .width(Fill),
     )
 }
 
@@ -160,7 +161,8 @@ fn header_footer_example() -> Slot<'static, Message> {
                 .spacing(4)
             )
         ]
-        .spacing(32),
+        .spacing(32)
+        .width(Fill),
     )
 }
 
@@ -299,7 +301,8 @@ fn attachment_example() -> Slot<'static, Message> {
             ),
             message(bubble("Thanks. Looks good.")).align(Right)
         ]
-        .spacing(32),
+        .spacing(32)
+        .width(Fill),
     )
 }
 

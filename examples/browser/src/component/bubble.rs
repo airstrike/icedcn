@@ -157,7 +157,8 @@ fn demo() -> Slot<'static, Message> {
                 .style(Muted)
                 .reactions("👍 🔥 👀 +2", Right, Bottom)
         ]
-        .spacing(32),
+        .spacing(32)
+        .width(Fill),
     )
 }
 
@@ -183,7 +184,8 @@ fn variants() -> Slot<'static, Message> {
                 .reactions("🔥", Right, Bottom),
             bubble(ghost_text()).style(Ghost)
         ]
-        .spacing(48),
+        .spacing(48)
+        .width(Fill),
     )
 }
 
@@ -194,7 +196,8 @@ fn alignment() -> Slot<'static, Message> {
                 .style(Muted),
             bubble("This bubble is aligned to the end. Use this for user messages.").align(Right)
         ]
-        .spacing(32),
+        .spacing(32)
+        .width(Fill),
     )
 }
 
@@ -215,7 +218,8 @@ fn group_demo() -> Slot<'static, Message> {
             bubble("Want me to diff yesterday's you against today's you? It's a bit embarrassing.")
                 .style(Muted)
         ]
-        .spacing(32),
+        .spacing(32)
+        .width(Fill),
     )
 }
 
@@ -247,7 +251,8 @@ fn link_button() -> Slot<'static, Message> {
                 .into()
             ])
         ]
-        .spacing(32),
+        .spacing(32)
+        .width(Fill),
     )
 }
 
@@ -276,7 +281,8 @@ fn reactions() -> Slot<'static, Message> {
                     Bottom
                 )
         ]
-        .spacing(48),
+        .spacing(48)
+        .width(Fill),
     )
 }
 
@@ -286,7 +292,8 @@ fn collapsible_example() -> Slot<'static, Message> {
             bubble("How can I help you today?").style(Muted),
             bubble(review()).style(Muted).align(Right)
         ]
-        .spacing(32),
+        .spacing(32)
+        .width(Fill),
     )
 }
 
@@ -308,7 +315,8 @@ fn tooltip_example() -> Slot<'static, Message> {
                     Bottom
                 )
         ]
-        .spacing(16),
+        .spacing(16)
+        .width(Fill),
     )
 }
 
@@ -335,7 +343,8 @@ fn popover_example() -> Slot<'static, Message> {
                     Bottom
                 )
         ]
-        .spacing(16),
+        .spacing(16)
+        .width(Fill),
     )
 }
 
