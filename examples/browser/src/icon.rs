@@ -1,6 +1,6 @@
 // Generated automatically by iced_lucide at build time.
 // Do not edit manually.
-// 15213e98eda6014286b4cb1bc2322a2884c8d5338fa3cae63eb4f171c40733bb
+// 907940cbd6cbc73260b7b89092cf0b55f47f2b50d0ca46687cc74518727646d9
 use iced::widget::text::{self, Text};
 
 pub const FONT: &[u8] = include_bytes!("../fonts/lucide.ttf");
@@ -22,6 +22,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("bell", "\u{E059}"),
     ("bluetooth", "\u{E05C}"),
     ("bold", "\u{E05D}"),
+    ("book_open_check", "\u{E381}"),
     ("bookmark", "\u{E060}"),
     ("bot", "\u{E1BB}"),
     ("building_2", "\u{E290}"),
@@ -203,6 +204,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E05D}")
+}
+
+pub fn book_open_check<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E381}")
 }
 
 pub fn bookmark<'a, Theme>() -> Text<'a, Theme>

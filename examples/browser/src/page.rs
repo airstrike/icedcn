@@ -22,6 +22,7 @@ use icedxdy::widget::markdown::widget::Highlight;
 use icedxdy::widget::{button, rule, text};
 use icedxdy::{Slot, Theme, Weight, radius, theme};
 
+use crate::component::code_block;
 use crate::font;
 use crate::icon;
 
@@ -190,6 +191,7 @@ pub enum Message {
     SnippetLoaded(&'static str, Result<String, String>),
     LinkClicked(markdown::Uri),
     ChooseFile,
+    CodeBlock(code_block::Event),
     FileSelected(Option<PathBuf>),
     BlockShown(usize),
     BlockHidden(usize),
@@ -404,10 +406,9 @@ fn render_example<'a>(
 }
 
 /// Render shadcn's example-card chrome: an optional depth-aware heading
-/// (`h2`/`h3`) and muted description, then the bordered card — a 288px
-/// preview surface over an optional collapsible code block. An empty
-/// `title` selects the hero form: no heading, and a `min_height` preview
-/// surface so tall content grows.
+/// (`h2`/`h3`) and muted description, then the bordered card — a preview at least
+/// 288px tall over an optional collapsible code block. Tall previews grow
+/// with their content. An empty `title` omits the heading.
 pub fn example_card<'a>(
     depth: u8,
     title: &'a str,
@@ -415,23 +416,13 @@ pub fn example_card<'a>(
     preview: iced::Element<'a, super::Message, Theme>,
     code: Option<iced::Element<'a, super::Message, Theme>>,
 ) -> iced::Element<'a, super::Message, Theme> {
-    let preview_el: iced::Element<'_, super::Message, Theme> = if title.is_empty() {
-        container(preview)
-            .center(Fill)
-            .min_height(PREVIEW_HEIGHT)
-            .width(Fill)
-            .padding(PREVIEW_PADDING)
-            .style(card_preview)
-            .into()
-    } else {
-        container(preview)
-            .center(Fill)
-            .height(PREVIEW_HEIGHT)
-            .width(Fill)
-            .padding(PREVIEW_PADDING)
-            .style(card_preview)
-            .into()
-    };
+    let preview_el: iced::Element<'_, super::Message, Theme> = container(preview)
+        .center_x(Fill)
+        .align_y(iced::Center)
+        .min_height(PREVIEW_HEIGHT)
+        .padding(PREVIEW_PADDING)
+        .style(card_preview)
+        .into();
 
     let divider: Option<iced::Element<'_, super::Message, Theme>> =
         code.as_ref().map(|_| rule::horizontal(1).into());
@@ -891,7 +882,7 @@ impl State {
                     move |file| super::Message::Page(page, Message::FileSelected(file)),
                 )
             }
-            Message::FileSelected(_) => Task::none(),
+            Message::FileSelected(_) | Message::CodeBlock(_) => Task::none(),
             Message::LinkClicked(url) => {
                 if let Some(fragment) = url.strip_prefix('#') {
                     let index = if fragment.is_empty() {

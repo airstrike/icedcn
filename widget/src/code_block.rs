@@ -7,7 +7,7 @@ use iced_core::Length::{Fill, Shrink};
 use iced_core::alignment::Horizontal;
 use iced_core::text::Wrapping;
 use iced_core::{Element, Font};
-use iced_widget::{Renderer, text};
+use iced_widget::{Renderer, Widget, hover, text};
 use icedxdy_core::Theme;
 use icedxdy_core::theme;
 use icedxdy_core::theme::container::{Spec, Style};
@@ -138,7 +138,7 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
         let Self {
             content,
             title,
-            actions,
+            mut actions,
             footer,
             start_line,
             wrap,
@@ -154,15 +154,21 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
         } else {
             Wrapping::None
         };
-        let plain = |s: Cow<'a, str>| text(s).size(size).font(font).wrapping(wrapping);
+        let plain = |s: Cow<'a, str>| {
+            text(s)
+                .size(size)
+                .font(font)
+                .wrapping(wrapping)
+                .selectable(true)
+        };
         let mut panel = column![];
-        if title.is_some() || actions.is_some() {
+        if title.is_some() {
             let mut header = row![];
             if let Some(title) = title {
                 header = header.push(title);
             }
             header = header.push(space::horizontal().into());
-            if let Some(actions) = actions {
+            if let Some(actions) = actions.take() {
                 header = header.push(actions);
             }
             panel = panel
@@ -229,6 +235,15 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
                 }
                 viewport.into()
             }
+        };
+        let body = if let Some(actions) = actions {
+            let top = container(actions)
+                .width(Fill)
+                .align_x(Horizontal::Right)
+                .padding(4);
+            Slot::from(hover(body.compose(), Element::from(top)).boxed())
+        } else {
+            body
         };
         panel = panel.push(body);
         if let Some(footer) = footer {

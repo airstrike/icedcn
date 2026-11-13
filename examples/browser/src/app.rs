@@ -1,5 +1,6 @@
 use iced::Element;
 use iced::Widget;
+use iced::clipboard;
 use iced::mouse::Interaction;
 use iced::widget::{column, combo_box, row, space, stack, svg};
 use icedxdy::widget::scrollable;
@@ -74,6 +75,7 @@ pub enum Message {
     ToggleTheme,
     SelectPage(usize),
     OpenUrl(&'static str),
+    CopyText(String),
     FontSelected(String),
     Page(usize, page::Message),
     Font(fonts::Message),
@@ -90,9 +92,10 @@ impl App {
 
         use component::{
             accordion, alert, alert_dialog, aspect_ratio, avatar, badge, breadcrumb, button,
-            button_group, card, checkbox, collapsible, combobox, context_menu, dialog,
-            dropdown_menu, empty, field, hover_card, input, input_group, item, kbd, label,
-            native_select, pagination, popover, progress, radio_group, select, separator, sheet,
+            button_group, calendar, card, checkbox, code_block, collapsible, combobox, command,
+            context_menu, data_table, date_picker, dialog, dropdown_menu, empty, field, hover_card,
+            input, input_group, input_otp, item, kbd, label, marker, native_select, pagination,
+            popover, progress, radio_group, resizable, scroll_area, select, separator, sheet,
             sidebar, skeleton, slider, sonner, spinner, switch, table, tabs, text, textarea,
             toggle, toggle_group, tooltip,
         };
@@ -107,11 +110,16 @@ impl App {
             breadcrumb::BreadcrumbPage::new,
             button::ButtonPage::new,
             button_group::ButtonGroupPage::new,
+            calendar::CalendarPage::new,
             card::CardPage::new,
             checkbox::CheckboxPage::new,
+            code_block::CodeBlockPage::new,
             collapsible::CollapsiblePage::new,
             combobox::ComboboxPage::new,
+            command::CommandPage::new,
             context_menu::ContextMenuPage::new,
+            data_table::DataTablePage::new,
+            date_picker::DatePickerPage::new,
             dialog::DialogPage::new,
             dropdown_menu::DropdownMenuPage::new,
             empty::EmptyPage::new,
@@ -119,14 +127,18 @@ impl App {
             hover_card::HoverCardPage::new,
             input::InputPage::new,
             input_group::InputGroupPage::new,
+            input_otp::InputOtpPage::new,
             item::ItemPage::new,
             kbd::KbdPage::new,
             label::LabelPage::new,
+            marker::MarkerPage::new,
             native_select::NativeSelectPage::new,
             pagination::PaginationPage::new,
             popover::PopoverPage::new,
             progress::ProgressPage::new,
             radio_group::RadioGroupPage::new,
+            resizable::ResizablePage::new,
+            scroll_area::ScrollAreaPage::new,
             select::SelectPage::new,
             separator::SeparatorPage::new,
             sheet::SheetPage::new,
@@ -217,6 +229,7 @@ impl App {
                 Task::none()
             }
             Message::OpenUrl(url) => page::open_link(url),
+            Message::CopyText(value) => clipboard::write(value).discard(),
             Message::SelectPage(page) => {
                 if page != self.current_page
                     && let Some(prev) = self.pages.get_mut(self.current_page)
