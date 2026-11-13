@@ -24,7 +24,7 @@ use crate::page;
 
 pub static META: page::Meta = page::Meta {
     title: "Sidebar",
-    description: "A composable, themeable sidebar suite.",
+    description: "A composable, themeable and customizable sidebar component.",
 };
 
 pub static BLOCKS: &[page::Block] = &[
@@ -36,27 +36,41 @@ pub static BLOCKS: &[page::Block] = &[
     },
     page::Block::Md("examples/browser/snippets/sidebar-usage.md"),
     page::Block::Md("examples/browser/snippets/sidebar-composition.md"),
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "group",
-                title: "Group",
-                description: Some(
-                    "Use sidebar::group and sidebar::group_label to create labeled sections.",
-                ),
-                snippet: "examples/browser/snippets/sidebar-group.md",
-            },
-            page::Block::Example {
-                id: "header",
-                title: "Header",
-                description: Some(
-                    "Use sidebar::header to add a workspace switcher or branding at the top.",
-                ),
-                snippet: "examples/browser/snippets/sidebar-header.md",
-            },
-        ],
+    page::Block::Md("examples/browser/snippets/sidebar-guide-structure.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-provider.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-root.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-handle.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-header.md"),
+    page::Block::Example {
+        id: "header",
+        title: "Header example",
+        description: Some(
+            "Use sidebar::header to add a workspace switcher or branding at the top.",
+        ),
+        snippet: "examples/browser/snippets/sidebar-header.md",
     },
+    page::Block::Md("examples/browser/snippets/sidebar-guide-footer.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-content.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-group.md"),
+    page::Block::Example {
+        id: "group",
+        title: "Group example",
+        description: Some(
+            "Use sidebar::group and sidebar::group_label to create labeled sections.",
+        ),
+        snippet: "examples/browser/snippets/sidebar-group.md",
+    },
+    page::Block::Md("examples/browser/snippets/sidebar-guide-menu.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-menu-button.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-menu-action.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-menu-sub.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-menu-badge.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-menu-skeleton.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-trigger.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-rail.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-controlled.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-theming.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-guide-styling.md"),
     page::Block::Md("examples/browser/snippets/sidebar-api-reference.md"),
 ];
 
