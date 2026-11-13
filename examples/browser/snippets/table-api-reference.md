@@ -14,4 +14,4 @@
 | `table::cell(content)` | `TableCell`: a `p-2` cell. |
 | `table::caption(content)` | `TableCaption`: muted text below the table. |
 
-Cells take `.width(..)`, `.height(..)`, `.padding(..)`, `.align_x(..)` and `.align_y(..)`. Columns line up when matching cells share a width; a cell cannot span columns (`colSpan`).
+A shared grid lays out all row groups against the same tracks. Set `Track::Fixed(px)` for a known width, `Track::Auto` to measure the widest cell in the column, or `Track::Flex(weight)` to share the remaining width. Attach groups using `.header(..)`, `.body(..)` and `.footer(..)`. A cell with `.span(n)` occupies adjacent tracks. Use `.selected(true)` to tint a selected row.

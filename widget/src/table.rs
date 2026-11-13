@@ -3,6 +3,9 @@
 //! Mirrors shadcn's `Table` primitive shape while keeping icedxdy children
 //! as arbitrary [`Slot`](crate::Slot) values.
 
+mod grid;
+pub use grid::{Grid, Track, grid};
+
 use iced_core::Length::{Fill, Shrink};
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::{Length, Padding};
@@ -45,6 +48,7 @@ pub struct Row<'a, Message> {
 pub struct Cell<'a, Message> {
     content: Slot<'a, Message>,
     kind: cell::Kind,
+    span: usize,
     width: Length,
     height: Length,
     padding: Padding,
@@ -120,6 +124,7 @@ pub fn cell<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Cell<'a, 
     Cell {
         content: content.into(),
         kind: cell::Kind::Body,
+        span: 1,
         width: Shrink,
         height: Shrink,
         padding: Padding::from(8.0),
@@ -174,6 +179,12 @@ impl<'a, Message: 'a> Row<'a, Message> {
 }
 
 impl<'a, Message: 'a> Cell<'a, Message> {
+    /// Number of adjacent tracks occupied in a shared grid.
+    pub fn span(mut self, columns: usize) -> Self {
+        self.span = columns.max(1);
+        self
+    }
+
     /// Set the cell width.
     pub fn width(mut self, width: impl Into<Length>) -> Self {
         self.width = width.into();
@@ -395,6 +406,7 @@ impl<'a, Message: 'a> Compose<Message> for Cell<'a, Message> {
         let Cell {
             mut content,
             kind,
+            span: _,
             width,
             height,
             padding,
