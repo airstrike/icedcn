@@ -3,7 +3,6 @@
 //
 // Intentional skips:
 // - collapsible-rtl — RTL is not in scope (per CLAUDE.md).
-// - collapsible-settings — needs a numeric input group not ported yet.
 
 use iced::Alignment::Center;
 use iced::Fill;
@@ -13,7 +12,7 @@ use iced::Widget;
 use icedxdy::card;
 use icedxdy::core::{Border, Color};
 use icedxdy::theme::container::Style;
-use icedxdy::widget::{button, collapsible, column, container, row, space, text};
+use icedxdy::widget::{button, collapsible, column, container, input, row, space, text};
 use icedxdy::{Size, Slot, Theme, radius};
 
 use crate::Message;
@@ -41,6 +40,12 @@ pub static BLOCKS: &[page::Block] = &[
                 title: "Basic",
                 description: None,
                 snippet: "examples/browser/snippets/collapsible-basic.md",
+            },
+            page::Block::Example {
+                id: "settings",
+                title: "Settings Panel",
+                description: Some("Use a trigger button to reveal additional settings."),
+                snippet: "examples/browser/snippets/collapsible-settings.md",
             },
             page::Block::Example {
                 id: "file-tree",
@@ -299,6 +304,46 @@ impl page::Page for CollapsiblePage {
                 .boxed(),
             )
             .width(Fill.max(384.0))
+            .boxed(),
+
+            "settings" => card(
+                column![
+                    card::header("Radius").description("Set the corner radius of the element."),
+                    Slot::from(
+                        card::content(
+                            collapsible(|c| {
+                                let inputs = || {
+                                    row![
+                                        input("0").default_value("0").width(Fill),
+                                        input("0").default_value("0").width(Fill)
+                                    ]
+                                    .spacing(8)
+                                    .width(Fill)
+                                };
+                                let icon = if c.is_open() {
+                                    icon::minimize()
+                                } else {
+                                    icon::maximize()
+                                };
+                                row![
+                                    column![inputs(), c.content(inputs())]
+                                        .spacing(8)
+                                        .width(Fill),
+                                    c.trigger(button(icon).square().style(button::Outline)),
+                                ]
+                                .spacing(8)
+                                .width(Fill)
+                                .into()
+                            })
+                            .width(Fill)
+                        )
+                        .boxed()
+                    ),
+                ]
+                .spacing(12)
+                .padding([12, 0]),
+            )
+            .width(Fill.max(320.0))
             .boxed(),
 
             // shadcn `collapsible-file-tree.tsx`.

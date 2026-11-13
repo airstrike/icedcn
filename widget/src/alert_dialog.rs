@@ -153,9 +153,23 @@ impl Handle {
         title: &'a str,
         description: &'a str,
     ) -> Header<'a, Message> {
+        let alignment = if self.is_small {
+            Horizontal::Center
+        } else {
+            Horizontal::Left
+        };
+        self.header_content(title, text::muted(description).align_x(alignment))
+    }
+
+    /// Build a header with a composed description, such as rich text with a link.
+    pub fn header_content<'a, Message: 'a>(
+        &self,
+        title: &'a str,
+        description: impl Into<Slot<'a, Message>>,
+    ) -> Header<'a, Message> {
         Header {
             title,
-            description,
+            description: description.into(),
             media: None,
             media_style: Media.into(),
             is_small: self.is_small,
@@ -198,7 +212,7 @@ impl Handle {
 /// An `AlertDialogHeader`, built by [`Handle::header`].
 pub struct Header<'a, Message> {
     title: &'a str,
-    description: &'a str,
+    description: Slot<'a, Message>,
     media: Option<Slot<'a, Message>>,
     media_style: Spec,
     is_small: bool,
@@ -221,6 +235,7 @@ impl<'a, Message: 'a> Header<'a, Message> {
 
 impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {
+        self.description.inherit(from);
         if let Some(media) = &mut self.media {
             media.inherit(from);
         }
@@ -250,8 +265,7 @@ impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
             .medium()
             .style(Foreground)
             .align_x(alignment);
-        let description = text::muted(description).align_x(alignment);
-        let copy = Column::with_children([Slot::from(title), Slot::from(description)])
+        let copy = Column::with_children([Slot::from(title), description])
             .spacing(6)
             .align_x(alignment);
 

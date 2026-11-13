@@ -1,9 +1,8 @@
-// Intentional skips: alert-dialog-rtl (RTL). alert-dialog-basic is the
-// demo with a longer description, so the page shows the demo only. The
-// destructive example's description links "Settings"; here it is plain
-// text.
+// The RTL example is outside the project’s scope.
 
-use iced::{Fill, Task};
+use iced::widget::{rich_text, span};
+use iced::{Fill, Task, Widget};
+use icedxdy::theme::text::muted;
 
 use icedxdy::theme::tweak::{Alpha, Bg, Fg, Token};
 use icedxdy::widget::{alert_dialog, button, column};
@@ -28,6 +27,14 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Group {
         title: "Examples",
         children: &[
+            page::Block::Example {
+                id: "basic",
+                title: "Basic",
+                description: Some(
+                    "A basic alert dialog with a title, description, and cancel and continue buttons.",
+                ),
+                snippet: "examples/browser/snippets/alert-dialog-basic.md",
+            },
             page::Block::Example {
                 id: "small",
                 title: "Small",
@@ -104,24 +111,28 @@ impl page::Page for AlertDialogPage {
     }
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
+        let page_index = self.page_index();
         match id {
             // shadcn `alert-dialog-demo.tsx`.
-            "demo" => alert_dialog(show, |a| {
-                column![
-                    a.header(
-                        "Are you absolutely sure?",
-                        "This action cannot be undone. This will permanently delete your \
-                         account from our servers.",
-                    ),
-                    a.footer([
-                        a.cancel(button("Cancel").style(button::Outline)),
-                        a.action(button("Continue")),
-                    ]),
-                ]
-                .width(Fill)
+            "demo" | "basic" => {
+                let description = if id == "basic" {
+                    "This action cannot be undone. This will permanently delete your account and remove your data from our servers."
+                } else {
+                    "This action cannot be undone. This will permanently delete your account from our servers."
+                };
+                alert_dialog(show, move |a| {
+                    column![
+                        a.header("Are you absolutely sure?", description,),
+                        a.footer([
+                            a.cancel(button("Cancel").style(button::Outline)),
+                            a.action(button("Continue")),
+                        ]),
+                    ]
+                    .width(Fill)
+                    .into()
+                })
                 .into()
-            })
-            .into(),
+            }
 
             // shadcn `alert-dialog-small.tsx`.
             "small" => alert_dialog(show, |a| {
@@ -184,20 +195,26 @@ impl page::Page for AlertDialogPage {
             // shadcn `alert-dialog-destructive.tsx`.
             "destructive" => alert_dialog(
                 |a| a.trigger(button("Delete Chat").style(button::Destructive)),
-                |a| {
+                move |a| {
+                    let description = rich_text([
+                        span("This will permanently delete this chat conversation. View "),
+                        span("Settings").link(()).underline(true),
+                        span(" delete any memories saved during this chat."),
+                    ])
+                    .size(14)
+                    .align_x(iced::Center)
+                    .style(|theme| muted(theme).into())
+                    .on_link_click(move |()| Message::Page(page_index, page::Message::ScrollTo(0)))
+                    .boxed();
                     column![
-                        a.header(
-                            "Delete chat?",
-                            "This will permanently delete this chat conversation. View \
-                             Settings delete any memories saved during this chat.",
-                        )
-                        .media(icon::trash_2())
-                        .media_style(
-                            alert_dialog::Media
-                                + Bg(Token::Destructive)
-                                + Alpha(0.1)
-                                + Fg(Token::Destructive)
-                        ),
+                        a.header_content("Delete chat?", description,)
+                            .media(icon::trash_2())
+                            .media_style(
+                                alert_dialog::Media
+                                    + Bg(Token::Destructive)
+                                    + Alpha(0.1)
+                                    + Fg(Token::Destructive)
+                            ),
                         a.footer([
                             a.cancel(button("Cancel").style(button::Outline)),
                             a.action(button("Delete").style(button::Destructive)),

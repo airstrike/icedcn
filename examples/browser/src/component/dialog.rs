@@ -3,12 +3,11 @@
 //
 // Intentional skips:
 // - dialog-rtl — RTL is not in scope (per CLAUDE.md).
-// - dialog-scrollable-content, dialog-sticky-footer — need a scroll area
-//   sized to the viewport inside the overlay.
 
-use iced::Task;
+use iced::widget::responsive;
+use iced::{Shrink, Task, Widget};
 
-use icedxdy::widget::{button, column, dialog, field, input};
+use icedxdy::widget::{button, column, dialog, field, input, scrollable, text};
 use icedxdy::{Slot, Theme};
 
 use crate::Message;
@@ -43,6 +42,18 @@ pub static BLOCKS: &[page::Block] = &[
                 description: Some("Use `.show_close_button(false)` to hide the close button."),
                 snippet: "examples/browser/snippets/dialog-no-close-button.md",
             },
+            page::Block::Example {
+                id: "sticky-footer",
+                title: "Sticky Footer",
+                description: Some("Keep actions visible while the content scrolls."),
+                snippet: "examples/browser/snippets/dialog-sticky-footer.md",
+            },
+            page::Block::Example {
+                id: "scrollable-content",
+                title: "Scrollable Content",
+                description: Some("Long content can scroll while the header stays in view."),
+                snippet: "examples/browser/snippets/dialog-scrollable-content.md",
+            },
         ],
     },
     page::Block::Md("examples/browser/snippets/dialog-api-reference.md"),
@@ -66,6 +77,34 @@ fn labelled<'a>(label: &'a str, value: &'a str) -> Slot<'a, Message> {
     field(input("").default_value(value).width(iced::Fill))
         .label(label)
         .into()
+}
+
+const PARAGRAPH: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+
+fn scrolling(
+    title: &'static str,
+    description: &'static str,
+    footer: bool,
+) -> iced::Element<'static, Message, Theme> {
+    dialog(
+        move |d| d.trigger(button(title).style(button::Outline)),
+        move |d| {
+            let content = responsive(|size| {
+                let paragraphs = column((0..10).map(|_| text(PARAGRAPH).into())).spacing(16);
+                Slot::from(scrollable(paragraphs).height((size.height + 64.0) / 2.0)).compose()
+            })
+            .height(Shrink)
+            .boxed();
+            let mut body = column![dialog::header(title, description), content].spacing(16);
+            if footer {
+                body = body.push(dialog::footer([
+                    d.close(button("Close").style(button::Outline))
+                ]));
+            }
+            body.into()
+        },
+    )
+    .into()
 }
 
 impl page::Page for DialogPage {
@@ -157,6 +196,16 @@ impl page::Page for DialogPage {
             .show_close_button(false)
             .into(),
 
+            "sticky-footer" => scrolling(
+                "Sticky Footer",
+                "This dialog has a sticky footer that stays visible while the content scrolls.",
+                true,
+            ),
+            "scrollable-content" => scrolling(
+                "Scrollable Content",
+                "This is a dialog with scrollable content.",
+                false,
+            ),
             _ => unreachable!("unknown dialog preview id: {id}"),
         }
     }

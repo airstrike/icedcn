@@ -6,9 +6,18 @@ alert_dialog(
     |a| a.trigger(button("Delete Chat").style(button::Destructive)),
     |a| {
         column![
-            a.header(
+            a.header_content(
                 "Delete chat?",
-                "This will permanently delete this chat conversation. View Settings delete any memories saved during this chat.",
+                rich_text([
+                    span("This will permanently delete this chat conversation. View "),
+                    span("Settings").link(()).underline(true),
+                    span(" delete any memories saved during this chat."),
+                ])
+                .size(14)
+                .align_x(iced::Center)
+                .style(|theme| muted(theme).into())
+                .on_link_click(|()| Message::OpenSettings)
+                .boxed(),
             )
             .media(icon::trash_2())
             .media_style(alert_dialog::Media + Bg(Token::Destructive) + Alpha(0.1) + Fg(Token::Destructive)),
