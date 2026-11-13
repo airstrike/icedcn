@@ -17,7 +17,8 @@ column![
         item::actions([icon::chevron_right().size(16).into()]),
     ])
     .style(item::Outline)
-    .size(item::Size::Sm),
+    .size(item::Size::Sm)
+    .on_press(Message::Page(page_index, page::Message::LinkClicked("#".into()))),
 ]
 .spacing(24)
 .width(Fill)

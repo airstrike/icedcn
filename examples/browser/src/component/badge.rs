@@ -1,13 +1,4 @@
-// TODO: API Reference section once a table widget lands.
-//
-// Live docs API Reference covers `Badge`: `variant`
-// (`Default` / `Secondary` / `Destructive` / `Outline` / `Ghost` / `Link`,
-// default `Default`). Captured here so the gap is auditable when the table
-// widget lands.
-//
-// Intentional skips per CLAUDE.md: badge-colors (Custom Colors) and
-// badge-rtl (RTL).
-
+// rawr
 use iced::Task;
 
 use icedxdy::widget::{badge, row, spinner};
@@ -83,6 +74,7 @@ fn view(id: &str) -> Slot<'static, page::Message> {
             badge("Outline").style(badge::Outline),
         ]
         .spacing(8)
+        .wrap()
         .into(),
         // Variants (full set incl. ghost)
         "variants" => row![
@@ -93,23 +85,37 @@ fn view(id: &str) -> Slot<'static, page::Message> {
             badge("Ghost").style(badge::Ghost),
         ]
         .spacing(8)
+        .wrap()
         .into(),
         "icon" => row![
-            badge![icon::badge_check().size(12), "Verified"].style(badge::Secondary),
-            badge!["Bookmark", icon::bookmark().size(12)].style(badge::Outline),
+            badge![icon::badge_check().size(12), "Verified"]
+                .icon_start()
+                .style(badge::Secondary),
+            badge!["Bookmark", icon::bookmark().size(12)]
+                .icon_end()
+                .style(badge::Outline),
         ]
         .spacing(8)
+        .wrap()
         .into(),
         "spinner" => row![
-            badge![spinner().size(12.0), "Deleting"].style(badge::Destructive),
-            badge!["Generating", spinner().size(12.0)].style(badge::Secondary),
+            badge![spinner().size(12.0), "Deleting"]
+                .icon_start()
+                .style(badge::Destructive),
+            badge!["Generating", spinner().size(12.0)]
+                .icon_end()
+                .style(badge::Secondary),
         ]
         .spacing(8)
+        .wrap()
         .into(),
         "link" => row![
-            badge!["Open Link", icon::arrow_up_right().size(12)].on_press(page::Message::Noop),
+            badge!["Open Link", icon::arrow_up_right().size(12)]
+                .icon_end()
+                .on_press(page::Message::LinkClicked("#link".into())),
         ]
         .spacing(8)
+        .wrap()
         .into(),
         _ => unreachable!("unknown badge preview id: {id}"),
     }

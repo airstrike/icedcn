@@ -62,7 +62,7 @@ macro_rules! badge {
                 ])
                 .spacing(4)
             )
-        )
+        ).icon_start()
     };
     // Multi-arg arm — wraps children in a row with 4px gap.
     ($($child:expr),+ $(,)?) => {
@@ -78,18 +78,23 @@ macro_rules! badge {
 }
 
 use crate::Weight;
+use crate::button::widget;
 use crate::compose::{Compose, Inherited, Slot};
 use iced_core::mouse::Interaction;
-use iced_widget::{Renderer, mouse_area};
+use iced_core::{Background, Padding};
+use iced_widget::Renderer;
 use icedxdy_core::Theme;
 
-pub use icedxdy_core::theme::badge::{Default, Destructive, Ghost, Outline, Secondary};
+pub use icedxdy_core::theme::badge::{Default, Destructive, Ghost, Link, Outline, Secondary};
 
 /// A small inline pill label.
 pub struct Badge<'a, Message> {
     content: Slot<'a, Message>,
     style: iced_widget::container::StyleFn<'a, Theme>,
     on_press: Option<Message>,
+    start_icon: bool,
+    end_icon: bool,
+    disabled: bool,
 }
 
 /// Create a [`Badge`] with the default variant.
@@ -98,10 +103,22 @@ pub fn badge<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Badge<'a
         content: content.into(),
         style: Default.into(),
         on_press: None,
+        start_icon: false,
+        end_icon: false,
+        disabled: false,
     }
 }
 
 impl<'a, Message: 'a> Badge<'a, Message> {
+    /// Tighten the inset on the side of an inline icon.
+    pub fn icon_start(mut self) -> Self {
+        self.start_icon = true;
+        self
+    }
+    pub fn icon_end(mut self) -> Self {
+        self.end_icon = true;
+        self
+    }
     /// Set the style: a variant (`badge::Secondary`, `badge::Outline`, ...)
     /// or a tweaked `Spec`.
     pub fn style(mut self, style: impl Into<iced_widget::container::StyleFn<'a, Theme>>) -> Self {
@@ -136,6 +153,11 @@ impl<'a, Message: Clone + 'a> From<Badge<'a, Message>> for Slot<'a, Message> {
 }
 
 impl<'a, Message: Clone + 'a> Compose<Message> for Badge<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        self.disabled |= from.is_disabled();
+        self.content.inherit(from);
+    }
+
     fn compose<'b>(mut self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
@@ -153,25 +175,58 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Badge<'a, Message> {
 
         let style_fn = self.style;
 
-        // py-0.5 = 2px, px-2 = 8px (nova `px-2 py-0.5`).
-        //
-        // NOTE: nova additionally tightens the icon-side padding via
-        // `has-data-[icon=inline-end]:pr-1.5` and
-        // `has-data-[icon=inline-start]:pl-1.5` (6px instead of 8px). We
-        // don't yet have an icon-side hint on the builder so this remains
-        // a uniform 8px on both sides — minor visual drift when an icon
-        // sits flush on either edge. Acceptable for this audit pass.
-        let pill = iced_widget::container(self.content.compose())
-            .padding([2, 8])
-            .center_y(iced_core::Length::Shrink)
-            .style(style_fn);
-
+        let pad = Padding {
+            top: 2.0,
+            bottom: 2.0,
+            left: if self.start_icon { 6.0 } else { 8.0 },
+            right: if self.end_icon { 6.0 } else { 8.0 },
+        };
+        let content = self.content.compose();
         match self.on_press {
-            Some(message) => mouse_area(pill)
-                .interaction(Interaction::Pointer)
-                .on_press(message)
+            Some(message) => {
+                let paint: widget::StyleFn<'_, Theme> = Box::new(move |theme, status| {
+                    let mut base = style_fn(theme);
+                    let hover = matches!(
+                        status,
+                        widget::Status::Hovered
+                            | widget::Status::Pressed
+                            | widget::Status::Focused { is_hovered: true }
+                    );
+                    if hover {
+                        base.background = match base.background {
+                            Some(Background::Color(c)) => {
+                                Some(Background::Color(c.scale_alpha(0.8)))
+                            }
+                            None if base.border.width > 0.0 => Some(theme.muted.base.into()),
+                            background => background,
+                        };
+                    }
+                    if matches!(status, widget::Status::Focused { .. }) {
+                        base.border.color = theme.neutral.ring.into();
+                        base.border.width = 2.0;
+                    }
+                    widget::Style {
+                        background: base.background,
+                        text_color: base.text_color.unwrap_or(theme.neutral.foreground.into()),
+                        border: base.border,
+                        shadow: base.shadow,
+                        snap: base.snap,
+                    }
+                });
+                widget::Button::new(content)
+                    .on_press(message)
+                    .disabled(self.disabled)
+                    .interaction(Interaction::Pointer)
+                    .translate(false)
+                    .padding(pad)
+                    .class(paint)
+                    .boxed()
+            }
+            None => iced_widget::container(content)
+                .padding(pad)
+                .center_y(iced_core::Length::Shrink)
+                .style(style_fn)
                 .boxed(),
-            None => pill.boxed(),
         }
     }
 }

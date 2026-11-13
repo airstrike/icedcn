@@ -1,6 +1,10 @@
 ```rust
-use icedxdy::widget::badge;
-
-badge!["Open Link", icon::arrow_up_right()]
-    .on_press(Message::Open)
+row![
+            badge!["Open Link", icon::arrow_up_right().size(12)]
+                .icon_end()
+                .on_press(page::Message::LinkClicked("#link".into())),
+        ]
+        .spacing(8)
+        .wrap()
+        .into()
 ```

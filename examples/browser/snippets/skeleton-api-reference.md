@@ -10,4 +10,4 @@ A `bg-muted` block with `rounded-md` corners. Size it like the content it stands
 | `.height(height)` | `impl Into<Length>` | `Shrink` | The block's height. |
 | `.radius(radius)` | `impl Into<Radius>` | `radius::MD` | Corner radius; `u32::MAX as f32` for `rounded-full`. |
 
-shadcn's `animate-pulse` is not ported: the block does not pulse.
+Visible placeholders animate between full and half opacity on a two-second cycle.

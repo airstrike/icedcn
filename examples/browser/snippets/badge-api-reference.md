@@ -6,8 +6,10 @@ Constructor for a `Badge`. The single-arg constructor takes any `impl Into<Slot>
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `.style(style)` | `impl Into<container::StyleFn>` | `badge::Default` | The variant: `badge::Secondary`, `badge::Destructive`, `badge::Outline`, `badge::Ghost`, or a tweaked `Spec`. |
-| `.on_press(message)` | `Message` | `None` | Make the badge clickable (pointer cursor + click semantics) — the icedxdy equivalent of shadcn rendering the badge as a link. |
+| `.style(style)` | `impl Into<container::StyleFn>` | `badge::Default` | The variant: `badge::Secondary`, `badge::Destructive`, `badge::Outline`, `badge::Ghost`, `badge::Link`, or a tweaked `Spec`. |
+| `.on_press(message)` | `Message` | `None` | Make the badge clickable (pointer, keyboard focus and activation) — the icedxdy equivalent of shadcn rendering the badge as a link. |
+
+Use `.icon_start()` or `.icon_end()` to reduce the inset on the icon side to 6px.
 
 ### `badge!`
 
@@ -27,5 +29,7 @@ Wraps multiple children in a `Row` with 4px spacing — the iced equivalent of s
 | `badge::Destructive` | Destructive border + foreground. |
 | `badge::Outline` | Border-only, transparent background. |
 | `badge::Ghost` | No border, no background — text-only pill. |
+
+| `badge::Link` | Primary-colored text on a transparent surface. |
 
 Restyle via the `core::theme::badge::*` style functions (or compose your own).

@@ -25,9 +25,11 @@ macro_rules! row {
 pub struct Row<'a, Message> {
     children: Vec<Slot<'a, Message>>,
     spacing: Option<f32>,
+    padding: iced_core::Padding,
     width: Length,
     height: Length,
     align_y: iced_core::Alignment,
+    wrap: bool,
 }
 
 impl<'a, Message: 'a> Row<'a, Message> {
@@ -35,9 +37,11 @@ impl<'a, Message: 'a> Row<'a, Message> {
         Self {
             children: Vec::new(),
             spacing: None,
+            padding: iced_core::Padding::ZERO,
             width: Length::Shrink,
             height: Length::Shrink,
             align_y: iced_core::Alignment::Center,
+            wrap: false,
         }
     }
 
@@ -45,15 +49,22 @@ impl<'a, Message: 'a> Row<'a, Message> {
         Self {
             children: children.into_iter().collect(),
             spacing: None,
+            padding: iced_core::Padding::ZERO,
             width: Length::Shrink,
             height: Length::Shrink,
             align_y: iced_core::Alignment::Center,
+            wrap: false,
         }
     }
 
     /// Push our own Element.
     pub fn push(mut self, child: Slot<'a, Message>) -> Self {
         self.children.push(child);
+        self
+    }
+
+    pub fn padding(mut self, padding: impl Into<icedxdy_core::Padding>) -> Self {
+        self.padding = padding.into().into();
         self
     }
 
@@ -69,6 +80,12 @@ impl<'a, Message: 'a> Row<'a, Message> {
 
     pub fn height(mut self, height: impl Into<Length>) -> Self {
         self.height = height.into();
+        self
+    }
+
+    /// Wrap children to another line when they exceed the available width.
+    pub fn wrap(mut self) -> Self {
+        self.wrap = true;
         self
     }
 
@@ -110,6 +127,7 @@ impl<'a, Message: 'a> Compose<Message> for Row<'a, Message> {
     {
         let mut row = iced_widget::Row::new()
             .spacing(self.spacing.unwrap_or(0.0))
+            .padding(self.padding)
             .width(self.width)
             .height(self.height)
             .align_y(self.align_y);
@@ -118,6 +136,10 @@ impl<'a, Message: 'a> Compose<Message> for Row<'a, Message> {
             row = row.push(child.compose());
         }
 
-        row.boxed()
+        if self.wrap {
+            row.wrap().boxed()
+        } else {
+            row.boxed()
+        }
     }
 }

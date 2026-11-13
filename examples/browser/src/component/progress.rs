@@ -11,9 +11,9 @@
 use std::time::{Duration, Instant};
 
 use iced::widget::component::{Component, component};
-use iced::{Element, Fill, Task, Widget};
+use iced::{Element, FillPortion, Task, Widget};
 use icedxdy::Theme;
-use icedxdy::widget::{column, container, progress, row, slider, space, text};
+use icedxdy::widget::{column, progress, row, slider, space, text};
 
 use crate::Message;
 use crate::page;
@@ -165,13 +165,13 @@ impl page::Page for ProgressPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // Demo (hero): mirrors nova `progress-demo.tsx`. The bar caps
-            // at 450px so it doesn't span the full hero card on wide
-            // viewports.
-            "demo" => container(progress(self.hero_value()).width(Fill))
-                .max_width(450)
-                .width(Fill)
-                .into(),
+            "demo" => row![
+                space::horizontal().width(FillPortion(1)),
+                progress(self.hero_value()).width(FillPortion(3)),
+                space::horizontal().width(FillPortion(1))
+            ]
+            .width(iced::Fill)
+            .into(),
 
             // Label: an inline label row above a static 66% progress bar.
             "label" => column![

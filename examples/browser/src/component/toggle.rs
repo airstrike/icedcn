@@ -1,7 +1,10 @@
 // Intentional skips: toggle-rtl (RTL). shadcn's demo fills its bookmark
 // icon while on; lucide's font glyphs are outlines only.
 
-use iced::Task;
+use iced::widget::component::{Component, component};
+use iced::widget::svg;
+use iced::{Element, Task, Widget};
+use std::sync::OnceLock;
 
 use icedxdy::widget::{row, toggle};
 use icedxdy::{Size, Theme};
@@ -53,6 +56,38 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Md("examples/browser/snippets/toggle-api-reference.md"),
 ];
 
+struct Bookmark;
+impl<'a> Component<'a, Message, Theme> for Bookmark {
+    type State = bool;
+    type Event = bool;
+    fn update(&self, state: &mut bool, next: bool, _: &iced::Renderer) -> Option<Message> {
+        *state = next;
+        None
+    }
+    fn view(&self, pressed: &bool) -> impl Widget<bool, Theme> + 'a {
+        static FILLED: OnceLock<svg::Handle> = OnceLock::new();
+        let glyph: icedxdy::Slot<'a, bool> = if *pressed {
+            let handle=FILLED.get_or_init(||svg::Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21 12 17 5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" fill="black" stroke="black" stroke-linejoin="round" stroke-width="2"/></svg>"#));
+            svg(handle.clone())
+                .width(14)
+                .height(14)
+                .style(|t: &Theme, _| svg::Style {
+                    color: Some(t.neutral.foreground.into()),
+                })
+                .boxed()
+                .into()
+        } else {
+            icon::bookmark().size(14).into()
+        };
+        Element::from(
+            toggle(row![glyph, "Bookmark"].spacing(6))
+                .size(Size::Sm)
+                .style(toggle::Outline)
+                .pressed(*pressed)
+                .on_pressed_change(|v| v),
+        )
+    }
+}
 pub struct TogglePage {
     state: page::State,
 }
@@ -97,10 +132,7 @@ impl page::Page for TogglePage {
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
             // shadcn `toggle-demo.tsx`.
-            "demo" => toggle![bookmark, "Bookmark"]
-                .size(Size::Sm)
-                .style(toggle::Outline)
-                .into(),
+            "demo" => component(Bookmark).boxed(),
 
             // shadcn `toggle-outline.tsx`.
             "outline" => row![

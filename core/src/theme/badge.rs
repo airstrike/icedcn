@@ -118,6 +118,28 @@ pub struct Outline;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Ghost;
 
+/// A transparent badge using the primary foreground link color.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Link;
+
+pub fn link(theme: &Theme) -> Style {
+    Style {
+        text_color: Some(theme.primary.base),
+        ..ghost(theme)
+    }
+}
+
+impl From<Link> for Spec {
+    fn from(_: Link) -> Spec {
+        Spec::variant(link)
+    }
+}
+impl<'a> From<Link> for iced_widget::container::StyleFn<'a, Theme> {
+    fn from(_: Link) -> Self {
+        Box::new(|theme| link(theme).into())
+    }
+}
+
 // --- Spec --------------------------------------------------------------------
 
 /// A badge style: a base variant function plus a sequence of tweaks
@@ -194,7 +216,7 @@ macro_rules! variant_add {
     };
 }
 
-variant_add!(Default, Secondary, Destructive, Outline, Ghost);
+variant_add!(Default, Secondary, Destructive, Outline, Ghost, Link);
 
 impl<T: Into<Tweak>> Add<T> for Spec {
     type Output = Spec;

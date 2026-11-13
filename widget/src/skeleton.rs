@@ -1,19 +1,22 @@
 //! Skeleton loading placeholder.
 //!
 //! Mirrors shadcn's `<Skeleton>` primitive: a rounded muted block whose
-//! dimensions are supplied by the call site. shadcn's `animate-pulse` is not
-//! ported; the block is static.
+//! dimensions are supplied by the call site. The fill pulses on a two-second cycle while the placeholder is visible.
 
+use std::f32::consts::PI;
 use std::marker::PhantomData;
 
 use iced_core::Element;
 use iced_core::Length::{self, Shrink};
+use iced_core::time::Instant;
+use iced_core::widget::{Meta, Tree, tree};
+use iced_core::{
+    Event, Layout, Rectangle, Renderer as _, Shell, Size, Widget, layout, mouse, renderer, window,
+};
 use iced_widget::Renderer;
-use icedxdy_core::theme::container::Style;
-use icedxdy_core::{Border, Radius, Theme, radius};
+use icedxdy_core::{Radius, Theme, radius};
 
 use crate::compose::{Compose, Slot};
-use crate::space;
 
 /// A muted placeholder block.
 pub struct Skeleton<'a, Message> {
@@ -71,23 +74,74 @@ impl<'a, Message: 'a> Compose<Message> for Skeleton<'a, Message> {
     where
         Self: 'b,
     {
-        let radius = self.radius;
-
-        crate::container(space::vertical())
-            .width(self.width)
-            .height(self.height)
-            .style(move |theme| style(theme, radius))
-            .into()
+        (*self)._boxed()
     }
 }
 
-fn style(theme: &Theme, radius: Radius) -> Style {
-    Style {
-        background: Some(theme.muted.base.into()),
-        border: Border {
-            radius,
-            ..Default::default()
-        },
-        ..Default::default()
+struct Pulse {
+    start: Instant,
+    alpha: f32,
+}
+impl<Message> Meta for Skeleton<'_, Message> {}
+impl<Message> Widget<Message, Theme, Renderer> for Skeleton<'_, Message> {
+    fn tag(&self) -> tree::Tag {
+        tree::Tag::of::<Pulse>()
+    }
+    fn state(&self) -> tree::State {
+        tree::State::new(Pulse {
+            start: Instant::now(),
+            alpha: 1.0,
+        })
+    }
+    fn size(&self) -> Size<Length> {
+        Size::new(self.width, self.height)
+    }
+    fn layout(&mut self, tree: &mut Tree, _: &Renderer, limits: &layout::Limits) {
+        tree.size = limits.resolve(self.width, self.height, Size::ZERO);
+    }
+    fn update(
+        &mut self,
+        tree: &mut Tree,
+        event: &Event,
+        layout: Layout,
+        _: mouse::Cursor,
+        _: &Renderer,
+        shell: &mut Shell<'_, Message>,
+        viewport: &Rectangle,
+    ) {
+        if let Event::Window(window::Event::RedrawRequested(now)) = event
+            && layout.bounds().intersects(viewport)
+        {
+            let pulse = tree.state.downcast_mut::<Pulse>();
+            let phase = now.saturating_duration_since(pulse.start).as_secs_f32() * PI;
+            pulse.alpha = 0.75 + 0.25 * phase.cos();
+            shell.request_redraw();
+        }
+    }
+    fn draw(
+        &self,
+        tree: &Tree,
+        renderer: &mut Renderer,
+        theme: &Theme,
+        _: &renderer::Style,
+        layout: Layout,
+        _: mouse::Cursor,
+        viewport: &Rectangle,
+    ) {
+        if !layout.bounds().intersects(viewport) {
+            return;
+        }
+        let alpha = tree.state.downcast_ref::<Pulse>().alpha;
+        renderer.fill_quad(
+            renderer::Quad {
+                bounds: layout.bounds(),
+                border: iced_core::Border {
+                    radius: self.radius.into(),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            theme.muted.base.scale_alpha(alpha),
+        );
     }
 }
