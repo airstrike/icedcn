@@ -286,9 +286,11 @@ where
     }
 }
 
-impl<'a, T, Message> Compose<Message> for crate::slider::Slider<'a, T, Message, Theme>
+impl<'a, T, Message, Values> Compose<Message>
+    for crate::slider::Slider<'a, T, Message, Theme, Values>
 where
-    T: Copy + num_traits::AsPrimitive<f64> + num_traits::FromPrimitive + 'a,
+    Values: crate::slider::Thumbs<T> + 'a,
+    T: Copy + PartialOrd + num_traits::AsPrimitive<f64> + num_traits::FromPrimitive + 'a,
     Message: Clone + 'a,
 {
     fn inherit(&mut self, from: &Inherited) {
@@ -341,12 +343,14 @@ where
     }
 }
 
-impl<'a, T, Message> From<crate::slider::Slider<'a, T, Message, Theme>> for Slot<'a, Message>
+impl<'a, T, Message, Values> From<crate::slider::Slider<'a, T, Message, Theme, Values>>
+    for Slot<'a, Message>
 where
-    T: Copy + num_traits::AsPrimitive<f64> + num_traits::FromPrimitive + 'a,
+    Values: crate::slider::Thumbs<T> + 'a,
+    T: Copy + PartialOrd + num_traits::AsPrimitive<f64> + num_traits::FromPrimitive + 'a,
     Message: Clone + 'a,
 {
-    fn from(widget: crate::slider::Slider<'a, T, Message, Theme>) -> Self {
+    fn from(widget: crate::slider::Slider<'a, T, Message, Theme, Values>) -> Self {
         Slot::new(widget)
     }
 }

@@ -1,0 +1,6 @@
+```rust
+row![
+    slider(0.0..=100.0).default_value(50.0).orientation(Vertical).height(160),
+    slider(0.0..=100.0).default_value(25.0).orientation(Vertical).height(160),
+].spacing(24)
+```

@@ -15,4 +15,6 @@
 | `.disabled(disabled)` | `bool` | `false` | Ignore input and dim to half opacity. A disabled ancestor disables it too. |
 | `.width(width)` | `impl Into<Length>` | `Fill` | The slider's width. |
 
-Radix's slider takes an array of values for several thumbs; icedxdy's has one thumb and is horizontal only.
+Pass `slider::range(bounds)` for two thumbs or `slider::multiple(bounds, [a, b, c])` for an arbitrary fixed-size array. Their value, default value and change callback all use the same array type. Arrow keys step a focused thumb, Page Up and Page Down step by ten increments, and Home and End take it to its nearest allowed bound. A thumb stops when it reaches its neighbor.
+
+Use `.orientation(Vertical).height(160)` for a vertical track.
