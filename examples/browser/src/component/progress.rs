@@ -1,13 +1,3 @@
-// TODO: API Reference section once a table widget lands.
-//
-// The live docs page defers the prop matrix to Radix's own docs; the page
-// itself only demonstrates a single `Progress` rendered at 33. Captured
-// rows: `Progress.value` (`Option<f32>` — current progress 0..=100; `None`
-// for indeterminate) and `Progress.max` (`f32`, default `100`). Captured
-// here so the gap is auditable when the table widget lands.
-//
-// Intentional skips per CLAUDE.md: progress-rtl (RTL).
-
 use std::time::{Duration, Instant};
 
 use iced::widget::component::{Component, component};

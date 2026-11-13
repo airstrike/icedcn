@@ -31,13 +31,17 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "icon",
                 title: "With Icon",
-                description: Some("You can render an icon inside the badge."),
+                description: Some(
+                    "Use .icon_start() or .icon_end() on the badge to set the inset on the side with the icon.",
+                ),
                 snippet: "examples/browser/snippets/badge-icon.md",
             },
             page::Block::Example {
                 id: "spinner",
                 title: "With Spinner",
-                description: Some("You can render a spinner inside the badge."),
+                description: Some(
+                    "Place the spinner before or after the label and use .icon_start() or .icon_end() on that side.",
+                ),
                 snippet: "examples/browser/snippets/badge-spinner.md",
             },
             page::Block::Example {

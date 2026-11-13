@@ -26,10 +26,9 @@ Wraps multiple children in a `Row` with 4px spacing — the iced equivalent of s
 | --- | --- |
 | `badge::Default` | Primary-foreground pill. |
 | `badge::Secondary` | Muted background. |
-| `badge::Destructive` | Destructive border + foreground. |
+| `badge::Destructive` | Destructive foreground on a tinted background. |
 | `badge::Outline` | Border-only, transparent background. |
 | `badge::Ghost` | No border, no background — text-only pill. |
-
 | `badge::Link` | Primary-colored text on a transparent surface. |
 
 Restyle via the `core::theme::badge::*` style functions (or compose your own).
