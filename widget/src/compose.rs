@@ -22,6 +22,7 @@ use crate::Size;
 use crate::Weight;
 use crate::text::Text;
 use iced_core::Element;
+use iced_core::alignment::Horizontal;
 use iced_widget::{Renderer, Widget};
 use icedxdy_core::Theme;
 
@@ -37,6 +38,7 @@ pub struct Inherited {
     weight: Option<Weight>,
     line_height: Option<f32>,
     disabled: bool,
+    conversation_alignment: Option<Horizontal>,
 }
 
 impl Inherited {
@@ -85,6 +87,16 @@ impl Inherited {
         self.disabled
     }
 
+    /// Sender alignment inherited by conversational surfaces inside a message.
+    pub fn with_conversation_alignment(mut self, align: Horizontal) -> Self {
+        self.conversation_alignment = Some(align);
+        self
+    }
+
+    pub fn conversation_alignment(&self) -> Option<Horizontal> {
+        self.conversation_alignment
+    }
+
     /// Fill the fields `self` leaves unset from `fallback`. `self` wins,
     /// `disabled` is the union of both.
     pub fn or(self, fallback: Inherited) -> Inherited {
@@ -93,6 +105,9 @@ impl Inherited {
             weight: self.weight.or(fallback.weight),
             line_height: self.line_height.or(fallback.line_height),
             disabled: self.disabled || fallback.disabled,
+            conversation_alignment: self
+                .conversation_alignment
+                .or(fallback.conversation_alignment),
         }
     }
 }

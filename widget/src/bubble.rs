@@ -24,7 +24,7 @@ pub use Variant::{Destructive, Ghost, Muted, Outline, Secondary, Tinted};
 pub struct Bubble<'a, Message> {
     content: Slot<'a, Message>,
     variant: Variant,
-    align: Horizontal,
+    align: Option<Horizontal>,
     reactions: Option<(Slot<'a, Message>, Horizontal, Vertical)>,
 }
 
@@ -32,7 +32,7 @@ pub fn bubble<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Bubble<
     Bubble {
         content: content.into(),
         variant: Variant::Primary,
-        align: Horizontal::Left,
+        align: None,
         reactions: None,
     }
 }
@@ -50,7 +50,7 @@ impl<'a, Message: 'a> Bubble<'a, Message> {
         self
     }
     pub fn align(mut self, align: Horizontal) -> Self {
-        self.align = align;
+        self.align = Some(align);
         self
     }
     pub fn reactions(
@@ -103,6 +103,7 @@ fn surface(variant: Variant, theme: &Theme) -> Style {
 
 impl<'a, Message: 'a> Compose<Message> for Bubble<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {
+        self.align = self.align.or(from.conversation_alignment());
         self.content.inherit(from);
         if let Some((slot, ..)) = &mut self.reactions {
             slot.inherit(from);
@@ -114,6 +115,7 @@ impl<'a, Message: 'a> Compose<Message> for Bubble<'a, Message> {
         Self: 'b,
     {
         let variant = self.variant;
+        let align = self.align.unwrap_or(Horizontal::Left);
         self.content.inherit(
             &Inherited::default()
                 .with_size(Size::Sm)
@@ -158,12 +160,12 @@ impl<'a, Message: 'a> Compose<Message> for Bubble<'a, Message> {
         } else {
             FillPortion(4)
         };
-        let body = container(body).width(limit).align_x(self.align);
+        let body = container(body).width(limit).align_x(align);
         if variant == Ghost {
             return body.into();
         }
         let gutter = space().width(FillPortion(1));
-        if self.align == Horizontal::Right {
+        if align == Horizontal::Right {
             row![gutter, body].width(Fill).into()
         } else {
             row![body, gutter].width(Fill).into()

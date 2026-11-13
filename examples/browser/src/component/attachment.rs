@@ -1,0 +1,402 @@
+use crate::icon;
+use crate::{Message, page};
+use iced::widget::component::{Component, component};
+use iced::widget::image;
+use iced::widget::{Id, button};
+use iced::{ContentFit, Fill, Widget};
+use iced::{Element, Task};
+use icedxdy::Size;
+use icedxdy::theme::button::ghost;
+use icedxdy::widget::attachment::State;
+use icedxdy::widget::button::widget::{Button, Status, StyleFn};
+use icedxdy::widget::{attachment, column, container, dialog, spinner, tooltip};
+use icedxdy::{Slot, Theme};
+use page::Block;
+use std::collections::BTreeSet;
+use std::sync::LazyLock;
+
+pub static META: page::Meta = page::Meta {
+    title: "Attachment",
+    description: "Displays a file or image attachment with media, metadata, upload state, and actions.",
+};
+pub static BLOCKS: &[Block] = &[
+    Block::Example {
+        id: "demo",
+        title: "",
+        description: None,
+        snippet: "examples/browser/snippets/attachment-demo.md",
+    },
+    Block::Md("examples/browser/snippets/attachment-usage.md"),
+    Block::Md("examples/browser/snippets/attachment-composition.md"),
+    Block::Example {
+        id: "image",
+        title: "Image",
+        description: None,
+        snippet: "examples/browser/snippets/attachment-image.md",
+    },
+    Block::Example {
+        id: "states",
+        title: "States",
+        description: None,
+        snippet: "examples/browser/snippets/attachment-states.md",
+    },
+    Block::Example {
+        id: "sizes",
+        title: "Sizes",
+        description: None,
+        snippet: "examples/browser/snippets/attachment-sizes.md",
+    },
+    Block::Example {
+        id: "group",
+        title: "Group",
+        description: None,
+        snippet: "examples/browser/snippets/attachment-group.md",
+    },
+    Block::Example {
+        id: "trigger",
+        title: "Trigger",
+        description: None,
+        snippet: "examples/browser/snippets/attachment-trigger.md",
+    },
+    Block::Md("examples/browser/snippets/attachment-api-reference.md"),
+];
+pub struct AttachmentPage {
+    state: page::State,
+}
+impl AttachmentPage {
+    pub fn new(index: usize) -> Box<dyn page::Page> {
+        Box::new(Self {
+            state: page::State::new(index, BLOCKS),
+        })
+    }
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Example {
+    Demo,
+    Image,
+    States,
+    Sizes,
+    Group,
+    Trigger,
+}
+struct Files(Example);
+#[derive(Default)]
+struct FilesState {
+    removed: BTreeSet<&'static str>,
+    retried: bool,
+}
+#[derive(Debug, Clone)]
+enum Edit {
+    Remove(&'static str),
+    Retry,
+    Open(&'static str),
+    Copy,
+}
+
+const PHOTOS: [(&str, &str, &str); 3] = [
+    (
+        "workspace.png",
+        "PNG · 820 KB",
+        "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=900&auto=format&fit=crop&q=80",
+    ),
+    (
+        "desk-reference.jpg",
+        "JPG · 1.1 MB",
+        "https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=900&auto=format&fit=crop&q=80",
+    ),
+    (
+        "office-reference.jpg",
+        "JPG · 940 KB",
+        "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=900&auto=format&fit=crop&q=80",
+    ),
+];
+fn picture(index: usize, side: u32) -> Slot<'static, Edit> {
+    static HANDLES: LazyLock<[image::Handle; 3]> = LazyLock::new(|| {
+        [
+            image::Handle::from_bytes(
+                include_bytes!("../../assets/attachments/workspace.jpg").as_slice(),
+            ),
+            image::Handle::from_bytes(
+                include_bytes!("../../assets/attachments/desk.jpg").as_slice(),
+            ),
+            image::Handle::from_bytes(
+                include_bytes!("../../assets/attachments/office.jpg").as_slice(),
+            ),
+        ]
+    });
+    image(HANDLES[index].clone())
+        .width(side)
+        .height(side)
+        .content_fit(ContentFit::Cover)
+        .border_radius(8)
+        .boxed()
+        .into()
+}
+fn preview_button(content: Slot<'static, Edit>, message: Option<Edit>) -> Slot<'static, Edit> {
+    // Keep the target's natural height, including the image in a vertical card.
+    let mut b = Button::new(content.compose())
+        .inset(0)
+        .width(Fill)
+        .translate(false)
+        .style(Box::new(|theme: &Theme, status: Status| {
+            let style: button::Style = ghost(theme, status.into()).into();
+            style.into()
+        }) as StyleFn<Theme>);
+    if let Some(message) = message {
+        b = b.on_press(message);
+    }
+    b.boxed().into()
+}
+fn remove(name: &'static str) -> Slot<'static, Edit> {
+    tooltip(
+        attachment::action(icon::x()).on_press(Edit::Remove(name)),
+        format!("Remove {name}"),
+    )
+    .into()
+}
+fn photos(state: &FilesState, interactive: bool) -> Slot<'static, Edit> {
+    attachment::group(
+        PHOTOS
+            .into_iter()
+            .enumerate()
+            .filter(|(_, p)| !state.removed.contains(p.0))
+            .map(|(i, (name, meta, url))| {
+                let mut card = attachment(name)
+                    .media(picture(i, 104))
+                    .description(meta)
+                    .vertical(true);
+                if interactive {
+                    card = card
+                        .action(remove(name))
+                        .trigger(move |body| preview_button(body, Some(Edit::Open(url))));
+                }
+                card.into()
+            }),
+    )
+}
+fn status_card(
+    name: &'static str,
+    meta: &'static str,
+    state: State,
+    media: Slot<'static, Edit>,
+) -> Slot<'static, Edit> {
+    let mut card = attachment(name).description(meta).state(state).media(media);
+    if state == State::Error {
+        card = card.action(tooltip(
+            attachment::action(icon::refresh_ccw()).on_press(Edit::Retry),
+            "Retry upload",
+        ));
+    }
+    card.action(remove(name)).into()
+}
+fn states_list(state: &FilesState) -> Vec<Slot<'static, Edit>> {
+    use State::*;
+    let (s, description, glyph) = if state.retried {
+        (Done, "Uploaded", icon::check().into())
+    } else {
+        (
+            Error,
+            "Upload failed. Try again.",
+            icon::file_warning().into(),
+        )
+    };
+    [
+        (
+            "selected-file.pdf",
+            "Ready to upload",
+            Idle,
+            icon::clock().into(),
+        ),
+        (
+            "design-system.zip",
+            "Uploading · 64%",
+            Uploading,
+            spinner().size(16.).into(),
+        ),
+        (
+            "market-research.pdf",
+            "Processing document",
+            Processing,
+            icon::file_text().into(),
+        ),
+        ("financial-model.xlsx", description, s, glyph),
+        (
+            "uploaded-report.pdf",
+            "Uploaded · 1.8 MB",
+            Done,
+            icon::check().into(),
+        ),
+    ]
+    .into_iter()
+    .filter(|(name, ..)| !state.removed.contains(name))
+    .map(|(name, meta, s, glyph)| status_card(name, meta, s, glyph))
+    .collect()
+}
+fn tiles(state: &FilesState) -> Slot<'static, Edit> {
+    let items = [
+        (
+            "briefing-notes.pdf",
+            "PDF · 1.4 MB",
+            icon::file_text().into(),
+        ),
+        ("workspace.png", "PNG · 820 KB", picture(0, 40)),
+        ("customers.csv", "CSV · 18 KB", icon::table().into()),
+        ("renderer.tsx", "TSX · 12 KB", icon::file_code().into()),
+    ];
+    attachment::group(
+        items
+            .into_iter()
+            .filter(|(name, ..)| !state.removed.contains(name))
+            .map(|(name, meta, media): (_, _, Slot<'static, Edit>)| {
+                attachment(name)
+                    .media(media)
+                    .description(meta)
+                    .width(256)
+                    .action(remove(name))
+                    .into()
+            }),
+    )
+}
+fn preview_dialog() -> Slot<'static, Edit> {
+    let name = "research-summary.pdf";
+    dialog(move|d|{
+        let opener=*d;
+        attachment(name).description("Open preview dialog").media(icon::file_search())
+            .trigger(move|body|opener.trigger(preview_button(body,None)))
+            .action(tooltip(attachment::action(icon::copy()).on_press(Edit::Copy),"Copy link"))
+            .action(remove(name)).into()
+    },move |_|dialog::header(name,"The attachment trigger fills the card and opens the dialog, while the actions stay independently clickable above it.")).max_width(448.).into()
+}
+impl<'a> Component<'a, Message, Theme> for Files {
+    type State = FilesState;
+    type Event = Edit;
+    fn update(&self, state: &mut FilesState, event: Edit, _: &iced::Renderer) -> Option<Message> {
+        match event {
+            Edit::Remove(name) => {
+                state.removed.insert(name);
+            }
+            Edit::Retry => state.retried = true,
+            Edit::Open(url) => return Some(Message::OpenUrl(url)),
+            Edit::Copy => {
+                return Some(Message::CopyText(
+                    "https://ui.shadcn.com/docs/components/radix/attachment#trigger".into(),
+                ));
+            }
+        }
+        None
+    }
+    fn view(&self, state: &FilesState) -> impl Widget<Edit, Theme> + 'a {
+        let mut list = Vec::new();
+        match self.0 {
+            Example::Demo => {
+                list.push(photos(state, false));
+                if !state.removed.contains("sales-dashboard.pdf") {
+                    list.push(status_card(
+                        "sales-dashboard.pdf",
+                        "Uploading · 64%",
+                        State::Uploading,
+                        spinner().size(16.).into(),
+                    ));
+                }
+                if !state.removed.contains("message-renderer.tsx") {
+                    list.push(status_card(
+                        "message-renderer.tsx",
+                        "TypeScript · 12 KB",
+                        State::Done,
+                        icon::file_code().into(),
+                    ));
+                }
+            }
+            Example::Image => list.push(photos(state, true)),
+            Example::States => list = states_list(state),
+            Example::Group => list.push(tiles(state)),
+            Example::Trigger => {
+                if !state.removed.contains("research-summary.pdf") {
+                    list.push(preview_dialog());
+                }
+            }
+            Example::Sizes => {
+                for (name, size) in [
+                    ("Default attachment", Size::Default),
+                    ("Small attachment", Size::Sm),
+                    ("Extra small attachment", Size::Xs),
+                ] {
+                    let mut a = attachment(name).media(icon::file_text()).size(size);
+                    if size != Size::Xs {
+                        a = a.description("PDF · 2.4 MB");
+                    }
+                    list.push(a.into());
+                }
+            }
+        }
+        let gap = if self.0 == Example::States { 8 } else { 12 };
+        Element::from(
+            container(column(list).spacing(gap).width(Fill))
+                .width(Fill)
+                .max_width(384)
+                .padding([48, 0]),
+        )
+    }
+}
+
+fn demo_example() -> Slot<'static, Message> {
+    component(Files(Example::Demo)).boxed().into()
+}
+
+fn image_example() -> Slot<'static, Message> {
+    component(Files(Example::Image)).boxed().into()
+}
+
+fn states_example() -> Slot<'static, Message> {
+    component(Files(Example::States)).boxed().into()
+}
+
+fn sizes_example() -> Slot<'static, Message> {
+    component(Files(Example::Sizes)).boxed().into()
+}
+
+fn group_example() -> Slot<'static, Message> {
+    component(Files(Example::Group)).boxed().into()
+}
+
+fn trigger_example() -> Slot<'static, Message> {
+    component(Files(Example::Trigger)).boxed().into()
+}
+
+impl page::Page for AttachmentPage {
+    fn page_index(&self) -> usize {
+        self.state.page_index
+    }
+    fn meta(&self) -> &'static page::Meta {
+        &META
+    }
+    fn blocks(&self) -> &'static [page::Block] {
+        BLOCKS
+    }
+    fn state(&self) -> &page::State {
+        &self.state
+    }
+    fn scrollable_id(&self) -> Id {
+        self.state.scrollable_id.clone()
+    }
+    fn init(&self) -> Task<Message> {
+        self.state.init()
+    }
+    fn update(&mut self, event: page::Message) -> Task<Message> {
+        self.state.update(&event)
+    }
+    fn reset_volatile(&mut self) {
+        self.state.reset_volatile();
+    }
+    fn preview(&self, id: &str) -> Element<'_, Message, Theme> {
+        match id {
+            "demo" => demo_example().into(),
+            "image" => image_example().into(),
+            "states" => states_example().into(),
+            "sizes" => sizes_example().into(),
+            "group" => group_example().into(),
+            "trigger" => trigger_example().into(),
+            _ => unreachable!("unknown attachment preview {id}"),
+        }
+    }
+}

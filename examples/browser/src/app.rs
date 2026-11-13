@@ -76,6 +76,8 @@ pub enum Message {
     SelectPage(usize),
     OpenUrl(&'static str),
     CopyText(String),
+    SaveAttachment,
+    AttachmentSaved(Result<(), String>),
     FontSelected(String),
     Page(usize, page::Message),
     Font(fonts::Message),
@@ -91,14 +93,14 @@ impl App {
         let mut tasks: Vec<Task<Message>> = Vec::new();
 
         use component::{
-            accordion, alert, alert_dialog, aspect_ratio, avatar, badge, breadcrumb, bubble,
-            button, button_group, calendar, card, carousel, chart, checkbox, code_block,
-            collapsible, combobox, command, context_menu, data_table, date_picker, dialog,
+            accordion, alert, alert_dialog, aspect_ratio, attachment, avatar, badge, breadcrumb,
+            bubble, button, button_group, calendar, card, carousel, chart, checkbox, code_block,
+            collapsible, combobox, command, context_menu, data_table, date_picker, dialog, drawer,
             dropdown_menu, empty, field, hover_card, input, input_group, input_otp, item, kbd,
-            label, marker, menubar, native_select, navigation_menu, pagination, popover, progress,
-            radio_group, resizable, scroll_area, select, separator, sheet, sidebar, skeleton,
-            slider, sonner, spinner, switch, table, tabs, text, textarea, toggle, toggle_group,
-            tooltip,
+            label, marker, menubar, message, native_select, navigation_menu, pagination, popover,
+            progress, radio_group, resizable, scroll_area, select, separator, sheet, sidebar,
+            skeleton, slider, sonner, spinner, switch, table, tabs, text, textarea, toggle,
+            toggle_group, tooltip,
         };
 
         let constructors: Vec<fn(usize) -> Box<dyn page::Page>> = vec![
@@ -106,6 +108,7 @@ impl App {
             alert::AlertPage::new,
             alert_dialog::AlertDialogPage::new,
             aspect_ratio::AspectRatioPage::new,
+            attachment::AttachmentPage::new,
             avatar::AvatarPage::new,
             badge::BadgePage::new,
             breadcrumb::BreadcrumbPage::new,
@@ -125,6 +128,7 @@ impl App {
             data_table::DataTablePage::new,
             date_picker::DatePickerPage::new,
             dialog::DialogPage::new,
+            drawer::DrawerPage::new,
             dropdown_menu::DropdownMenuPage::new,
             empty::EmptyPage::new,
             field::FieldPage::new,
@@ -137,6 +141,7 @@ impl App {
             label::LabelPage::new,
             marker::MarkerPage::new,
             menubar::MenubarPage::new,
+            message::MessagePage::new,
             native_select::NativeSelectPage::new,
             navigation_menu::NavigationMenuPage::new,
             pagination::PaginationPage::new,
@@ -236,6 +241,32 @@ impl App {
             }
             Message::OpenUrl(url) => page::open_link(url),
             Message::CopyText(value) => clipboard::write(value).discard(),
+            Message::SaveAttachment => Task::perform(
+                async {
+                    let file = rfd::AsyncFileDialog::new()
+                        .set_file_name("sales-dashboard.pdf")
+                        .save_file()
+                        .await;
+                    if let Some(file) = file {
+                        file.write(include_bytes!("../assets/attachments/sales-dashboard.pdf"))
+                            .await
+                            .map_err(|e| e.to_string())?;
+                    }
+                    Ok(())
+                },
+                Message::AttachmentSaved,
+            ),
+            Message::AttachmentSaved(Ok(())) => Task::none(),
+            Message::AttachmentSaved(Err(error)) => Task::perform(
+                async move {
+                    rfd::AsyncMessageDialog::new()
+                        .set_title("Could not save attachment")
+                        .set_description(error)
+                        .show()
+                        .await;
+                },
+                |_| Message::AttachmentSaved(Ok(())),
+            ),
             Message::SelectPage(page) => {
                 if page != self.current_page
                     && let Some(prev) = self.pages.get_mut(self.current_page)
