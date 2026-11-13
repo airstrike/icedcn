@@ -102,7 +102,7 @@ fn one_time_code_filters_input_and_edits_the_clicked_slot() {
 fn radio_arrows_select_and_wrap_past_disabled_choices() {
     use iced_core::keyboard::key::Named;
     use iced_core::widget::Operation;
-    use iced_core::widget::operation::{self, focusable, Outcome};
+    use iced_core::widget::operation::{self, Outcome, focusable};
     use icedxdy_widget::{column, radio_group};
     let group: Element<'_, String, Theme, Renderer> = radio_group(|g| {
         column![

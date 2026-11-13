@@ -395,9 +395,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
             if let Some(description) = description {
                 heading = heading.push(description);
             }
-            let mut controls = Column::with_children([content])
-                .spacing(2)
-                .width(Fill);
+            let mut controls = Column::with_children([content]).spacing(2).width(Fill);
             if let Some(error) = error {
                 controls = controls.push(error);
             }
