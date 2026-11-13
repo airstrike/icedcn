@@ -20,6 +20,7 @@
 //! pointer), and closes on `Escape` or a press outside it.
 
 pub(crate) mod keys;
+use crate::menu::list::List;
 use crate::{button, row};
 use iced_core::Length::Fill;
 use iced_core::keyboard::key::Named;
@@ -506,7 +507,17 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 .width(Fill)
                 .max_height(252)
                 .style(content);
-            Slot::from(panel).compose()
+            if self.popup {
+                List {
+                    content: Slot::from(panel).compose(),
+                    horizontal: None,
+                    autofocus: true,
+                    on_move: None,
+                }
+                .boxed()
+            } else {
+                Slot::from(panel).compose()
+            }
         } else {
             Space::new().boxed()
         };

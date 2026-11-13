@@ -219,7 +219,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                             body.inherit(&inherited);
                             List {
                                 content: body.map(Event::App).compose(),
-                                horizontal: false,
+                                horizontal: Some(false),
                                 autofocus: keyboard,
                                 on_move: None,
                             }
@@ -260,7 +260,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
         }
         List {
             content: Slot::from(frame).compose(),
-            horizontal: true,
+            horizontal: Some(true),
             autofocus: false,
             on_move: Some(Box::new(Event::Move)),
         }

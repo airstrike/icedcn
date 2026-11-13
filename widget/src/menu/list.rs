@@ -14,7 +14,8 @@ use icedxdy_core::Theme;
 /// The keyboard focus scope of a horizontal menubar or a vertical menu panel.
 pub(crate) struct List<'a, Message> {
     pub content: Element<'a, Message, Theme, Renderer>,
-    pub horizontal: bool,
+    /// None manages initial focus only; the input owns its editing keys.
+    pub horizontal: Option<bool>,
     pub autofocus: bool,
     pub on_move: Option<Box<dyn Fn(usize) -> Message + 'a>>,
 }
@@ -76,12 +77,12 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
             let count = focus::count(&mut visit);
             if count.focused.is_some() {
                 let next = match (key, self.horizontal) {
-                    (Named::Home, _) => Some(0),
-                    (Named::End, _) => Some(count.total - 1),
-                    (Named::ArrowLeft, true) | (Named::ArrowUp, false) => {
+                    (Named::Home, Some(_)) => Some(0),
+                    (Named::End, Some(_)) => Some(count.total - 1),
+                    (Named::ArrowLeft, Some(true)) | (Named::ArrowUp, Some(false)) => {
                         focus::adjacent(count, true)
                     }
-                    (Named::ArrowRight, true) | (Named::ArrowDown, false) => {
+                    (Named::ArrowRight, Some(true)) | (Named::ArrowDown, Some(false)) => {
                         focus::adjacent(count, false)
                     }
                     _ => None,

@@ -314,7 +314,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Sub<'a, Message> {
 
         let body = list::List {
             content: Slot::from(panel).compose(),
-            horizontal: false,
+            horizontal: Some(false),
             autofocus: false,
             on_move: None,
         }

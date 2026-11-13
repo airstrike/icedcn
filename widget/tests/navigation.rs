@@ -326,3 +326,52 @@ fn mobile_sidebar_opens_in_a_sheet_without_changing_desktop_preference() {
     assert_eq!(focus(&mut ui).total, 1);
     assert_eq!(ui.into_messages().count(), 0);
 }
+
+#[test]
+fn dropdown_keyboard_focus_reaches_submenus_and_skips_disabled_items() {
+    use icedxdy_widget::{dropdown_menu, menu};
+    let body: Element<'_, Message, Theme, Renderer> = dropdown_menu(
+        |m| m.trigger(button("Menu")),
+        |_| {
+            menu::group([
+                menu::item("First").into(),
+                menu::item("Disabled").disabled(true).into(),
+                menu::sub(
+                    "More",
+                    [menu::item("Choose").on_select(Message::Pressed).into()],
+                ),
+            ])
+        },
+    )
+    .into();
+    let mut ui = simulator(body);
+    focus_next(&mut ui);
+    ui.tap_key(Named::Enter);
+    frame(&mut ui);
+    ui.tap_key(Named::ArrowDown);
+    ui.tap_key(Named::ArrowRight);
+    frame(&mut ui);
+    ui.tap_key(Named::Enter);
+    assert_eq!(ui.into_messages().collect::<Vec<_>>(), [Message::Pressed]);
+}
+
+#[test]
+fn combobox_popup_moves_focus_to_the_search_input() {
+    use icedxdy_widget::combobox;
+    let body: Element<'_, Message, Theme, Renderer> = combobox(["Apple", "Apricot", "Pear"])
+        .popup(true)
+        .auto_highlight(true)
+        .on_value_change(|s| Message::Open(vec![s]))
+        .into();
+    let mut ui = simulator(body);
+    ui.point_at(Point::new(12., 16.));
+    let _ = ui.simulate(simulator::click());
+    frame(&mut ui);
+    ui.typewrite("Ap");
+    ui.tap_key(Named::ArrowDown);
+    ui.tap_key(Named::Enter);
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        [Message::Open(vec!["Apricot".into()])]
+    );
+}

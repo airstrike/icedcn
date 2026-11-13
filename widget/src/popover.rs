@@ -35,6 +35,7 @@ use std::time::Duration;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
 use crate::marker::{self, Press};
+use crate::menu::list::List;
 use crate::{column, text};
 
 pub use iced_widget::anchored::{Align, Side};
@@ -330,11 +331,22 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
                 })
                 .style(content);
 
-            marker::owner(
+            let body = marker::owner(
                 Slot::from(panel).compose().map(Event::App).boxed(),
                 on_signal,
             )
-            .into()
+            .boxed();
+            if self.modal {
+                List {
+                    content: body,
+                    horizontal: Some(false),
+                    autofocus: true,
+                    on_move: None,
+                }
+                .boxed()
+            } else {
+                body
+            }
         } else {
             Space::new().boxed()
         };

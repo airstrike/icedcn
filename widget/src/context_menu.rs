@@ -32,6 +32,7 @@ use icedxdy_core::theme::popover::content;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
 use crate::marker;
+use crate::menu::list::List;
 use crate::popover::{Handle, Signal};
 
 /// A closure that builds part of a [`ContextMenu`].
@@ -160,13 +161,20 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 .width(self.width.map_or(Fill, Length::Fixed))
                 .style(content);
 
-            marker::owner(
+            let body = marker::owner(
                 Slot::from(panel).compose().map(Event::App).boxed(),
                 |signal| match signal {
                     Signal::Toggle | Signal::Close => Event::Close,
                 },
             )
-            .into()
+            .boxed();
+            List {
+                content: body,
+                horizontal: Some(false),
+                autofocus: true,
+                on_move: None,
+            }
+            .boxed()
         } else {
             Space::new().boxed()
         };
