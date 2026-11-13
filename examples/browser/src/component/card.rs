@@ -49,6 +49,7 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/card-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/card-composition.md"),
     page::Block::Group {
         title: "Examples",
         children: &[

@@ -27,6 +27,7 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/select-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/select-composition.md"),
     page::Block::Group {
         title: "Examples",
         children: &[

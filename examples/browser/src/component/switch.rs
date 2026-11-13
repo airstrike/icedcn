@@ -19,7 +19,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "demo",
         title: "",
         description: None,
-        snippet: "",
+        snippet: "examples/browser/snippets/switch-demo.md",
     },
     page::Block::Group {
         title: "Examples",

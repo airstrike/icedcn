@@ -22,6 +22,7 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/kbd-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/kbd-composition.md"),
     page::Block::Group {
         title: "Examples",
         children: &[

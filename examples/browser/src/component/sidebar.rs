@@ -35,6 +35,7 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/sidebar-demo.md",
     },
     page::Block::Md("examples/browser/snippets/sidebar-usage.md"),
+    page::Block::Md("examples/browser/snippets/sidebar-composition.md"),
     page::Block::Group {
         title: "Examples",
         children: &[

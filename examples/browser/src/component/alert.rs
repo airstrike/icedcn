@@ -30,9 +30,10 @@ pub static BLOCKS: &[page::Block] = &[
         id: "demo",
         title: "",
         description: None,
-        snippet: "",
+        snippet: "examples/browser/snippets/alert-demo.md",
     },
     page::Block::Md("examples/browser/snippets/alert-usage.md"),
+    page::Block::Md("examples/browser/snippets/alert-composition.md"),
     page::Block::Group {
         title: "Examples",
         children: &[

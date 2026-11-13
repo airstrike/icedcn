@@ -37,7 +37,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "demo",
         title: "",
         description: None,
-        snippet: "",
+        snippet: "examples/browser/snippets/text-demo.md",
     },
     page::Block::Md("examples/browser/snippets/text-usage.md"),
     page::Block::Group {

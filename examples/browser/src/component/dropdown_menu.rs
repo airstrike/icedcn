@@ -30,6 +30,7 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/dropdown-menu-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/dropdown-menu-composition.md"),
     page::Block::Group {
         title: "Examples",
         children: &[

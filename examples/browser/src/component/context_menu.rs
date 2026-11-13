@@ -34,6 +34,7 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/context-menu-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/context-menu-composition.md"),
     page::Block::Group {
         title: "Examples",
         children: &[page::Block::Example {
