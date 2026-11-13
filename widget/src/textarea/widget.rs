@@ -18,6 +18,7 @@ use crate::core::text::parser::PlainText;
 use crate::core::widget::tree::{self, Tree};
 use crate::core::widget::{Meta, Operation};
 use crate::core::{Event, Layout, Length, Padding, Rectangle, Shell, Size, Widget};
+use crate::operation::control::Editable;
 
 /// A multi-line text field.
 pub struct Textarea<'a, Message> {
@@ -286,6 +287,9 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
             .next()
             .expect("a textarea has one child");
 
+        if !self.is_disabled {
+            operation.custom(None, layout.bounds(), &mut Editable);
+        }
         self.editor(&state.content).operate(
             child_tree,
             child_layout,

@@ -51,6 +51,10 @@ impl Control {
     }
 }
 
+/// Marks the next focusable as an editable control. Used by editors that
+/// report their focusable operation before their text-input operation.
+pub(crate) struct Editable;
+
 /// An [`Operation`] that presses the first form control it reaches.
 #[derive(Debug, Default)]
 pub struct Activate {
@@ -82,7 +86,9 @@ impl Operation for Activate {
             return;
         }
 
-        if let Some(control) = state.downcast_mut::<Control>() {
+        if state.is::<Editable>() {
+            self.text_input = true;
+        } else if let Some(control) = state.downcast_mut::<Control>() {
             control.activated = true;
             self.done = true;
         }

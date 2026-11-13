@@ -45,3 +45,32 @@ fn resizing_a_responsive_field_preserves_the_typed_value() {
     let _ = ui.typewrite("d");
     assert_eq!(ui.into_messages().last().as_deref(), Some("abcd"));
 }
+
+#[test]
+fn an_addon_focuses_its_input_except_when_a_button_handles_the_press() {
+    use icedxdy_widget::{button, input, input_group};
+    for active_button in [false, true] {
+        let block: Slot<'_, String> = Space::new().width(22).height(20).into();
+        let addon = if active_button {
+            Slot::from(button(block).on_press("button".to_owned()))
+        } else {
+            block
+        };
+        let group: Element<'_, String, Theme, Renderer> =
+            input_group(input("").on_input(|value| value))
+                .addon(input_group::addon(addon))
+                .into();
+        let mut ui = simulator(group);
+        ui.point_at(Point::new(16., 15.));
+        let _ = ui.simulate(simulator::click());
+        let _ = ui.typewrite("x");
+        assert_eq!(
+            ui.into_messages().collect::<Vec<_>>(),
+            if active_button {
+                vec!["button"]
+            } else {
+                vec!["x"]
+            }
+        );
+    }
+}

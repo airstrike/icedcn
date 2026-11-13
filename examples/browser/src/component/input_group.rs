@@ -1,11 +1,8 @@
-// Intentional skips: input-group examples built on DropdownMenu, Popover,
-// Tooltip triggers inside addons, ButtonGroup and Spinner layouts beyond
-// the ones below, and input-group-rtl (RTL). Pressing an addon does not
-// focus the input as shadcn's `onClick` does.
-
 use iced::{Fill, Task};
 
+use icedxdy::widget::input_group::Align;
 use icedxdy::widget::{Column, input, input_group, kbd, row, textarea};
+use icedxdy::widget::{button, dropdown_menu, field, menu, space, spinner};
 use icedxdy::{Slot, Theme};
 
 use crate::page;
@@ -27,6 +24,30 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Group {
         title: "Examples",
         children: &[
+            page::Block::Example {
+                id: "inline-start",
+                title: "inline-start",
+                description: None,
+                snippet: "examples/browser/snippets/input-group-inline-start.md",
+            },
+            page::Block::Example {
+                id: "inline-end",
+                title: "inline-end",
+                description: None,
+                snippet: "examples/browser/snippets/input-group-inline-end.md",
+            },
+            page::Block::Example {
+                id: "block-start",
+                title: "block-start",
+                description: None,
+                snippet: "examples/browser/snippets/input-group-block-start.md",
+            },
+            page::Block::Example {
+                id: "block-end",
+                title: "block-end",
+                description: None,
+                snippet: "examples/browser/snippets/input-group-block-end.md",
+            },
             page::Block::Example {
                 id: "icon",
                 title: "Icon",
@@ -50,6 +71,30 @@ pub static BLOCKS: &[page::Block] = &[
                 title: "Kbd",
                 description: None,
                 snippet: "examples/browser/snippets/input-group-kbd.md",
+            },
+            page::Block::Example {
+                id: "dropdown",
+                title: "Dropdown",
+                description: None,
+                snippet: "examples/browser/snippets/input-group-dropdown.md",
+            },
+            page::Block::Example {
+                id: "spinner",
+                title: "Spinner",
+                description: None,
+                snippet: "examples/browser/snippets/input-group-spinner.md",
+            },
+            page::Block::Example {
+                id: "textarea",
+                title: "Textarea",
+                description: None,
+                snippet: "examples/browser/snippets/input-group-textarea.md",
+            },
+            page::Block::Example {
+                id: "custom",
+                title: "Custom Input",
+                description: None,
+                snippet: "examples/browser/snippets/input-group-custom.md",
             },
         ],
     },
@@ -116,10 +161,13 @@ impl page::Page for InputGroupPage {
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
             // shadcn `input-group-demo.tsx`.
-            "demo" => stack([input_group(input("Search..."))
+            "demo" => Column::with_children([input_group(input("Search..."))
                 .addon(input_group::addon(icon::search()))
                 .addon(end("12 results"))
-                .into()]),
+                .into()])
+            .width(Fill)
+            .max_width(320.)
+            .into(),
 
             // shadcn `input-group-icon.tsx`.
             "icon" => stack([
@@ -170,6 +218,151 @@ impl page::Page for InputGroupPage {
                 .addon(end(kbd("⌘K")))
                 .into()]),
 
+            "inline-start" => stack([field(
+                input_group(input("Search...")).addon(input_group::addon(icon::search())),
+            )
+            .label("Input")
+            .description("Icon positioned at the start.")
+            .into()]),
+            "inline-end" => stack([field(
+                input_group(input("Enter password").secure(true)).addon(end(icon::eye_off())),
+            )
+            .label("Input")
+            .description("Icon positioned at the end.")
+            .into()]),
+            "block-start" => stack([
+                field(input_group(input("Enter your name")).addon(
+                    input_group::addon(input_group::text("Full Name")).align(Align::BlockStart),
+                ))
+                .label("Input")
+                .description("Header positioned above the input.")
+                .into(),
+                field(
+                    input_group(textarea("console.log('Hello, world!');")).addon(
+                        input_group::addon(
+                            row![
+                                icon::file_code(),
+                                input_group::text("script.js"),
+                                space::horizontal(),
+                                input_group::button(icon::copy()).square()
+                            ]
+                            .spacing(8),
+                        )
+                        .align(Align::BlockStart),
+                    ),
+                )
+                .label("Textarea")
+                .description("Header positioned above the textarea.")
+                .into(),
+            ]),
+            "block-end" => stack([
+                field(
+                    input_group(input("Enter amount"))
+                        .addon(input_group::addon(input_group::text("USD")).align(Align::BlockEnd)),
+                )
+                .label("Input")
+                .description("Footer positioned below the input.")
+                .into(),
+                field(
+                    input_group(textarea("Write a comment...")).addon(
+                        input_group::addon(row![
+                            input_group::text("0/280"),
+                            space::horizontal(),
+                            input_group::button("Post").style(button::Default)
+                        ])
+                        .align(Align::BlockEnd),
+                    ),
+                )
+                .label("Textarea")
+                .description("Footer positioned below the textarea.")
+                .into(),
+            ]),
+            "dropdown" => stack([
+                input_group(input("Enter file name"))
+                    .addon(end(dropdown_menu(
+                        |d| d.trigger(input_group::button(icon::ellipsis()).square()),
+                        |_| {
+                            menu::group(
+                                ["Settings", "Copy path", "Open location"]
+                                    .map(|item| menu::item(item).into()),
+                            )
+                        },
+                    )
+                    .align(dropdown_menu::Align::End)))
+                    .into(),
+                input_group(input("Enter search query"))
+                    .addon(end(dropdown_menu(
+                        |d| {
+                            d.trigger(input_group::button(
+                                row!["Search In...", icon::chevron_down()].spacing(4),
+                            ))
+                        },
+                        |_| {
+                            menu::group(
+                                ["Documentation", "Blog Posts", "Changelog"]
+                                    .map(|item| menu::item(item).into()),
+                            )
+                        },
+                    )
+                    .align(dropdown_menu::Align::End)))
+                    .into(),
+            ]),
+            "spinner" => stack([
+                input_group(input("Searching..."))
+                    .addon(end(spinner()))
+                    .into(),
+                input_group(input("Processing..."))
+                    .addon(input_group::addon(spinner()))
+                    .into(),
+                input_group(input("Saving changes..."))
+                    .addon(end(
+                        row![input_group::text("Saving..."), spinner()].spacing(8)
+                    ))
+                    .into(),
+                input_group(input("Refreshing data..."))
+                    .addon(input_group::addon(spinner()))
+                    .addon(end(input_group::text("Please wait...")))
+                    .into(),
+            ]),
+            "textarea" => {
+                stack([
+                    input_group(textarea("console.log('Hello, world!');").min_height(200.))
+                        .addon(
+                            input_group::addon(
+                                row![
+                                    icon::file_code(),
+                                    input_group::text("script.js"),
+                                    space::horizontal(),
+                                    input_group::button(icon::refresh_ccw()).square(),
+                                    input_group::button(icon::copy()).square()
+                                ]
+                                .spacing(4),
+                            )
+                            .align(Align::BlockStart),
+                        )
+                        .addon(
+                            input_group::addon(row![
+                                input_group::text("Line 1, Column 1"),
+                                space::horizontal(),
+                                input_group::button(
+                                    row!["Run", icon::corner_down_left()].spacing(4)
+                                )
+                                .style(button::Default)
+                            ])
+                            .align(Align::BlockEnd),
+                        )
+                        .into(),
+                ])
+            }
+            "custom" => stack([input_group(textarea("Autoresize textarea..."))
+                .addon(
+                    input_group::addon(row![
+                        space::horizontal(),
+                        input_group::button("Submit").style(button::Default)
+                    ])
+                    .align(Align::BlockEnd),
+                )
+                .into()]),
             _ => unreachable!("unknown input group preview id: {id}"),
         }
     }

@@ -33,6 +33,7 @@ use crate::column::Column;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
 use crate::input::Input;
+use crate::marker::{self, Press};
 use crate::row::Row;
 use crate::text::{self, Text};
 use crate::textarea::Textarea;
@@ -202,11 +203,18 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
                     container::Style::default().color(theme.muted.foreground)
                 }) as container::StyleFn<'static, Theme>);
 
+            let addon = match align {
+                Align::BlockStart | Align::BlockEnd => addon.width(Fill),
+                _ => addon,
+            };
+            let addon = marker::marker(Slot::from(addon).compose(), widget::Focus, Press::Any)
+                .boxed()
+                .into();
             match align {
-                Align::InlineStart => start.push(Slot::from(addon)),
-                Align::InlineEnd => end.push(Slot::from(addon)),
-                Align::BlockStart => above.push(Slot::from(addon.width(Fill))),
-                Align::BlockEnd => below.push(Slot::from(addon.width(Fill))),
+                Align::InlineStart => start.push(addon),
+                Align::InlineEnd => end.push(addon),
+                Align::BlockStart => above.push(addon),
+                Align::BlockEnd => below.push(addon),
             }
         }
 

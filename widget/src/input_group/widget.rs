@@ -21,6 +21,11 @@ use crate::core::{
     Background, Border, Element, Event, Layout, Length, Rectangle, Shell, Size, Vector, Widget,
 };
 
+use crate::operation::control;
+
+#[derive(Clone, Copy)]
+pub(super) struct Focus;
+
 /// Wraps the group's content in the Input's surface.
 pub struct Surface<'a, Message> {
     content: Element<'a, Message, Theme, Renderer>,
@@ -94,6 +99,17 @@ impl<Message> Widget<Message, Theme, Renderer> for Surface<'_, Message> {
             viewport,
         );
 
+        if !self.is_disabled {
+            let mut pressed = crate::marker::drain::<Focus>();
+            self.content
+                .operate(child_tree, child_layout, viewport, renderer, &mut pressed);
+            if !pressed.into_signals().is_empty() {
+                let mut activate = control::activate();
+                self.content
+                    .operate(child_tree, child_layout, viewport, renderer, &mut activate);
+                shell.request_redraw();
+            }
+        }
         let mut focused = Focused(false);
         self.content
             .operate(child_tree, child_layout, viewport, renderer, &mut focused);

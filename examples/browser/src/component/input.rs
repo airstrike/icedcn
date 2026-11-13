@@ -1,26 +1,18 @@
-// TODO: API Reference section once a table widget lands.
-//
-// The live docs page does not surface a structured API Reference table;
-// it defers prop documentation to Radix and the source. Captured rows
-// (from usage examples on the page): the HTML `type` attribute (default
-// `text`; accepts any HTML input type), `disabled` (default `false`),
-// `required` (default `false`), and `aria-invalid` (validation styling).
-// Captured here so the gap is auditable when the table widget lands.
-//
-// Intentional skips per CLAUDE.md: input-rtl (RTL). Field Group, File,
-// Grid, Input Group, Button Group, and Form examples are also skipped —
-// they rely on widgets (FieldGroup, InputGroup, ButtonGroup, Select)
-// that have not yet been ported.
+mod forms;
 
 use iced::Fill;
 use iced::Task;
 
+use crate::icon;
 use icedxdy::Theme;
 use icedxdy::rich_text;
 use icedxdy::theme;
+use icedxdy::theme::tweak::Alpha;
 use icedxdy::theme::tweak::Token;
+use icedxdy::widget::button::group::Item;
 use icedxdy::widget::rich_text::span;
 use icedxdy::widget::{Slot, badge, button, field, input, row, space, text};
+use icedxdy::widget::{button_group, input_group};
 
 use crate::Message;
 use crate::page;
@@ -54,6 +46,12 @@ pub static BLOCKS: &[page::Block] = &[
                 snippet: "examples/browser/snippets/input-field.md",
             },
             page::Block::Example {
+                id: "fieldgroup",
+                title: "Field Group",
+                description: None,
+                snippet: "examples/browser/snippets/input-fieldgroup.md",
+            },
+            page::Block::Example {
                 id: "disabled",
                 title: "Disabled",
                 description: Some("A disabled input field."),
@@ -68,10 +66,22 @@ pub static BLOCKS: &[page::Block] = &[
                 snippet: "examples/browser/snippets/input-invalid.md",
             },
             page::Block::Example {
+                id: "file",
+                title: "File",
+                description: None,
+                snippet: "examples/browser/snippets/input-file.md",
+            },
+            page::Block::Example {
                 id: "inline",
                 title: "Inline",
                 description: Some("Use an input with a button to create a search input."),
                 snippet: "examples/browser/snippets/input-inline.md",
+            },
+            page::Block::Example {
+                id: "grid",
+                title: "Grid",
+                description: None,
+                snippet: "examples/browser/snippets/input-grid.md",
             },
             page::Block::Example {
                 id: "required",
@@ -89,6 +99,24 @@ pub static BLOCKS: &[page::Block] = &[
                 ),
                 snippet: "examples/browser/snippets/input-badge.md",
             },
+            page::Block::Example {
+                id: "input-group",
+                title: "Input Group",
+                description: None,
+                snippet: "examples/browser/snippets/input-input-group.md",
+            },
+            page::Block::Example {
+                id: "button-group",
+                title: "Button Group",
+                description: None,
+                snippet: "examples/browser/snippets/input-button-group.md",
+            },
+            page::Block::Example {
+                id: "form",
+                title: "Form",
+                description: None,
+                snippet: "examples/browser/snippets/input-form.md",
+            },
         ],
     },
     page::Block::Md("examples/browser/snippets/input-api-reference.md"),
@@ -96,12 +124,14 @@ pub static BLOCKS: &[page::Block] = &[
 
 pub struct InputPage {
     state: page::State,
+    file_name: Option<String>,
 }
 
 impl InputPage {
     pub fn new(page_index: usize) -> Box<dyn page::Page> {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
+            file_name: None,
         })
     }
 }
@@ -128,6 +158,11 @@ impl page::Page for InputPage {
     }
 
     fn update(&mut self, event: page::Message) -> Task<Message> {
+        if let page::Message::FileSelected(Some(path)) = &event {
+            self.file_name = path
+                .file_name()
+                .map(|name| name.to_string_lossy().into_owned());
+        }
         self.state.update(&event)
     }
 
@@ -160,7 +195,7 @@ impl page::Page for InputPage {
 
             // Disabled: nova `disabled` on the input.
             "disabled" => field(input("Email").width(Fill).disabled(true))
-                .label("Email")
+                .label(text::label("Email").style(theme::text::Foreground + Alpha(0.5)))
                 .description("This field is currently disabled.")
                 .width(320)
                 .into(),
@@ -168,7 +203,7 @@ impl page::Page for InputPage {
             // Invalid: destructive border + destructive focus ring
             // (aria-invalid). First-class `theme::text_input::Invalid`.
             "invalid" => field(input("Error").width(Fill).style(theme::text_input::Invalid))
-                .label("Invalid Input")
+                .label(text::label("Invalid Input").style(theme::text::Destructive))
                 .description("This field contains validation errors.")
                 .width(320)
                 .into(),
@@ -206,6 +241,45 @@ impl page::Page for InputPage {
                 .width(320)
                 .into(),
 
+            "file" => field(
+                input_group(
+                    input("")
+                        .value(self.file_name.as_deref().unwrap_or("No file chosen"))
+                        .width(Fill),
+                )
+                .addon(input_group::addon(
+                    input_group::button("Choose File")
+                        .on_press(Message::Page(pi, page::Message::ChooseFile)),
+                )),
+            )
+            .label("Picture")
+            .description("Select a picture to upload.")
+            .width(320)
+            .into(),
+            "grid" => row![
+                field(input("Jordan")).label("First Name").width(Fill),
+                field(input("Lee")).label("Last Name").width(Fill)
+            ]
+            .spacing(16)
+            .width(384)
+            .into(),
+            "input-group" => field(
+                input_group(input("example.com"))
+                    .addon(input_group::addon(input_group::text("https://")))
+                    .addon(input_group::addon(icon::info()).align(input_group::Align::InlineEnd)),
+            )
+            .label("Website URL")
+            .width(320)
+            .into(),
+            "button-group" => field(button_group![
+                Item::Content(input("Type to search...").width(Fill).into()),
+                button("Search").style(button::Outline)
+            ])
+            .label("Search")
+            .width(320)
+            .into(),
+            "fieldgroup" => forms::preview(false).into(),
+            "form" => forms::preview(true).into(),
             _ => unreachable!("unknown input preview id: {id}"),
         }
     }
