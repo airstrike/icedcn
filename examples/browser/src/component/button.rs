@@ -1,19 +1,3 @@
-// TODO: API Reference section once a table widget lands.
-//
-// Live docs API Reference covers `Button`: `variant`
-// (`Default` / `Outline` / `Ghost` / `Destructive` / `Secondary` / `Link`,
-// default `Default`) and `size`
-// (`Default` / `Xs` / `Sm` / `Lg` plus the icon-only forms, default
-// `Default`). Shadcn's `asChild` slot has no equivalent in icedxdy — wrap
-// the button in a `mouse_area` or compose your own surface for non-button
-// affordances. Captured here so the gap is auditable when the table widget
-// lands.
-//
-// Intentional skips per CLAUDE.md: button-rtl (RTL). Button Group and
-// As Child examples are also skipped — Button Group is a separate
-// widget we have not yet ported, and As Child relies on Tailwind's
-// `data-slot` cascade that we don't reproduce.
-
 pub(crate) mod default;
 mod destructive;
 mod ghost;
@@ -27,6 +11,7 @@ mod spinner;
 mod with_icon;
 
 use iced::Task;
+use iced::mouse::Interaction;
 
 use icedxdy::widget::{button, row};
 use icedxdy::{Slot, Theme};
@@ -116,6 +101,18 @@ pub static BLOCKS: &[page::Block] = &[
                 description: Some("Show a loading spinner inside the button."),
                 snippet: "examples/browser/snippets/button-spinner.md",
             },
+            page::Block::Example {
+                id: "button-group",
+                title: "Button Group",
+                description: None,
+                snippet: "examples/browser/snippets/button-group-demo.md",
+            },
+            page::Block::Example {
+                id: "aschild",
+                title: "As Child",
+                description: None,
+                snippet: "examples/browser/snippets/button-aschild.md",
+            },
         ],
     },
     page::Block::Md("examples/browser/snippets/button-api-reference.md"),
@@ -160,6 +157,13 @@ fn view(id: &str) -> Slot<'static, crate::Message> {
         "with-icon" => with_icon::view(),
         "rounded" => rounded::view(),
         "spinner" => spinner::view(),
+        "button-group" => super::button_group::demo(),
+
+        "aschild" => button("Login")
+            .interaction(Interaction::Pointer)
+            .on_press(crate::Message::OpenUrl("https://ui.shadcn.com/login"))
+            .into(),
+
         _ => unreachable!("unknown button preview id: {id}"),
     }
 }

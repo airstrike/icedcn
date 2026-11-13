@@ -1,56 +1,12 @@
-//! Button Group component page.
-//!
-//! 5 of 11 shadcn examples ported. Live docs page:
-//! <https://ui.shadcn.com/docs/components/radix/button-group>
-//!
-//! # Intentional skips
-//!
-//! Per the radix-batch-2 minimap (Phase 5) the compound examples that
-//! depend on primitives we haven't ported yet are deferred:
-//!
-//! - `button-group-split` — same primitive surface that `button-group-separator`
-//!   already exercises; revisit when there's a meaningfully distinct shape
-//!   to demonstrate.
-//! - `button-group-input` — needs an `Input` integrated into the group
-//!   so the field shares the cluster's seam radius. Out of scope until
-//!   `button::group` integrates non-button items.
-//! - `button-group-input-group` — needs `InputGroup` (not yet ported).
-//! - `button-group-dropdown` — needs `DropdownMenu` (not yet ported).
-//! - `button-group-select` — needs `Select` (not yet ported).
-//! - `button-group-popover` — needs `Popover` + `Textarea` (not yet ported).
-//!
-//! The hero (`Demo`) example is rendered without the `MoreHorizontal`
-//! drop-down since `DropdownMenu` is out of scope; the icon button stays
-//! but doesn't open a menu — the visual cluster still demonstrates a
-//! shadcn-faithful 5-button group composed of 3 nested sub-clusters.
-//!
-//! The `Nested` example's second sub-group wraps an `InputGroup` in the
-//! original; since `InputGroup` isn't ported yet, the second sub-group is
-//! two outline buttons instead — keeps the visual demonstration of "outer
-//! group separates sub-clusters with 8px gap" intact.
-//!
-//! # Animation note
-//!
-//! shadcn's `button.tsx` carries `transition-all`, but the edge-radius
-//! collapse the group performs is static layout (driven by sibling
-//! position, not state) — there is no transition into adjacent slots
-//! on hover/focus, matching shadcn's behavior. Hover/focus animation
-//! still happens at the per-button level via the button widget itself.
-//!
-//! # API Reference
-//!
-//! Rendered via the `button-group-api-reference.md` snippet at the bottom
-//! of BLOCKS. Live docs covers `ButtonGroup.orientation` and
-//! `ButtonGroupSeparator.orientation` (auto-derived from the surrounding
-//! group in our port). `ButtonGroupText` is not yet ported — no examples
-//! in the 5-example slice depend on it. The snippet captures the
-//! icedxdy-shaped builder API and the typed-children rationale (style
-//! mutation requires the typed `Item` enum, not erased elements).
-
-use iced::Task;
+use iced::widget::component::{Component, component};
+use iced::{Element, Fill, Task, Widget};
 
 use icedxdy::widget::button::group;
-use icedxdy::widget::{button, button_group, column, container, row};
+use icedxdy::widget::input_group::Align;
+use icedxdy::widget::{
+    button, button_group, column, container, dropdown_menu, field, input, input_group, menu,
+    popover, row, select, textarea, tooltip,
+};
 use icedxdy::{Slot, Theme};
 
 use crate::Message;
@@ -104,6 +60,42 @@ pub static BLOCKS: &[page::Block] = &[
                 ),
                 snippet: "examples/browser/snippets/button-group-separator.md",
             },
+            page::Block::Example {
+                id: "split",
+                title: "Split",
+                description: None,
+                snippet: "examples/browser/snippets/button-group-split.md",
+            },
+            page::Block::Example {
+                id: "input",
+                title: "Input",
+                description: Some("Group an input with a button."),
+                snippet: "examples/browser/snippets/button-group-input.md",
+            },
+            page::Block::Example {
+                id: "input-group",
+                title: "Input Group",
+                description: None,
+                snippet: "examples/browser/snippets/button-group-input-group.md",
+            },
+            page::Block::Example {
+                id: "dropdown",
+                title: "Dropdown Menu",
+                description: None,
+                snippet: "examples/browser/snippets/button-group-dropdown.md",
+            },
+            page::Block::Example {
+                id: "select",
+                title: "Select",
+                description: None,
+                snippet: "examples/browser/snippets/button-group-select.md",
+            },
+            page::Block::Example {
+                id: "popover",
+                title: "Popover",
+                description: None,
+                snippet: "examples/browser/snippets/button-group-popover.md",
+            },
         ],
     },
     page::Block::Md("examples/browser/snippets/button-group-api-reference.md"),
@@ -155,8 +147,115 @@ impl page::Page for ButtonGroupPage {
     }
 }
 
+struct MailActions;
+impl<'a> Component<'a, Message, Theme> for MailActions {
+    type State = Option<&'static str>;
+    type Event = &'static str;
+    fn update(
+        &self,
+        label: &mut Self::State,
+        value: Self::Event,
+        _: &iced::Renderer,
+    ) -> Option<Message> {
+        *label = Some(value);
+        None
+    }
+    fn view(&self, state: &Self::State) -> impl Widget<Self::Event, Theme> + 'a {
+        let selected = state.unwrap_or("Personal");
+        Element::from(
+            row![
+                button(icon::arrow_left()).square().style(button::Outline),
+                button_group![
+                    button("Archive").style(button::Outline),
+                    button("Report").style(button::Outline)
+                ],
+                dropdown_menu(
+                    |&m| button_group![
+                        button("Snooze").style(button::Outline),
+                        group::decorated(
+                            button(icon::ellipsis()).style(button::Outline).square(),
+                            move |b| m.trigger(b)
+                        )
+                    ]
+                    .into(),
+                    move |_| column![
+                        menu::item(row![icon::mail_check().size(16), "Mark as Read"].spacing(8)),
+                        menu::item(row![icon::archive().size(16), "Archive"].spacing(8)),
+                        menu::separator(),
+                        menu::item(row![icon::clock().size(16), "Snooze"].spacing(8)),
+                        menu::item(
+                            row![icon::calendar_plus().size(16), "Add to Calendar"].spacing(8)
+                        ),
+                        menu::item(row![icon::list_filter().size(16), "Add to List"].spacing(8)),
+                        menu::sub(
+                            row![icon::tag(), "Label As..."].spacing(8),
+                            ["Personal", "Work", "Other"].map(|label| menu::radio_item(
+                                label,
+                                label,
+                                Some(selected),
+                                |label| label
+                            )
+                            .into())
+                        ),
+                        menu::separator(),
+                        menu::item(row![icon::trash_2().size(16), "Trash"].spacing(8))
+                            .style(menu::Destructive)
+                    ]
+                    .width(Fill)
+                    .into()
+                )
+                .align(dropdown_menu::Align::End)
+                .width(160)
+            ]
+            .spacing(8)
+            .align_y(iced::Center),
+        )
+    }
+}
+pub(super) fn demo() -> Slot<'static, Message> {
+    Slot::from(component(MailActions).boxed())
+}
+
+struct Voice;
+impl<'a> Component<'a, Message, Theme> for Voice {
+    type State = bool;
+    type Event = bool;
+    fn update(&self, state: &mut bool, enabled: bool, _: &iced::Renderer) -> Option<Message> {
+        *state = enabled;
+        None
+    }
+    fn view(&self, enabled: &bool) -> impl Widget<bool, Theme> + 'a {
+        let toggle = input_group::button(icon::audio_lines())
+            .square()
+            .on_press(!*enabled);
+        let toggle = if *enabled {
+            toggle.style(button::Secondary)
+        } else {
+            toggle
+        };
+        Element::from(
+            row![
+                button(icon::plus())
+                    .rounded()
+                    .square()
+                    .style(button::Outline),
+                input_group(
+                    input(if *enabled {
+                        "Record and send audio..."
+                    } else {
+                        "Send a message..."
+                    })
+                    .disabled(*enabled)
+                )
+                .addon(input_group::addon(tooltip(toggle, "Voice Mode")).align(Align::InlineEnd))
+            ]
+            .spacing(8)
+            .align_y(iced::Center),
+        )
+    }
+}
+
 fn view(id: &str, pi: usize) -> Slot<'static, Message> {
-    use iced::Fill;
     use icedxdy::Size::{Lg, Sm};
 
     // Stub on_press target — every button in the page wires `.on_press(noop())`
@@ -165,35 +264,7 @@ fn view(id: &str, pi: usize) -> Slot<'static, Message> {
     let noop = || Message::Page(pi, page::Message::Noop);
 
     match id {
-        // Demo (hero). shadcn `button-group-demo.tsx` nests three child
-        // `ButtonGroup` elements inside an outer one to produce three
-        // visual clusters with 8px spacing between them. The third cluster
-        // ends with a `DropdownMenu` trigger styled as an icon button — we
-        // render the icon button without the menu since DropdownMenu isn't
-        // ported yet (see module docstring for the deferred-examples list).
-        "demo" => row![
-            button_group![
-                button(icon::arrow_left())
-                    .square()
-                    .style(button::Outline)
-                    .on_press(noop())
-            ],
-            button_group![
-                button("Archive").style(button::Outline).on_press(noop()),
-                button("Report").style(button::Outline).on_press(noop()),
-            ],
-            button_group![
-                button("Snooze").style(button::Outline).on_press(noop()),
-                button(icon::ellipsis())
-                    .square()
-                    .style(button::Outline)
-                    .on_press(noop()),
-            ],
-        ]
-        .spacing(8)
-        .align_y(iced::Alignment::Center)
-        .into(),
-
+        "demo" => demo(),
         // Orientation. shadcn `button-group-orientation.tsx`: vertical
         // group of two icon buttons (plus, minus).
         "orientation" => button_group![
@@ -276,26 +347,15 @@ fn view(id: &str, pi: usize) -> Slot<'static, Message> {
         .spacing(32)
         .into(),
 
-        // Nested. shadcn `button-group-nested.tsx`: an outer `ButtonGroup`
-        // containing two `ButtonGroup` children, demonstrating the 8px gap
-        // shadcn applies via the parent-keyed sibling cascade. We
-        // approximate it with an explicit `row![...].spacing(8)` since iced
-        // has no equivalent selector. See module docstring for the
-        // `InputGroup` degradation in the second sub-group.
         "nested" => row![
-            button_group![
-                button(icon::plus())
-                    .square()
-                    .style(button::Outline)
-                    .on_press(noop())
-            ],
-            button_group![
-                button("Add").style(button::Outline).on_press(noop()),
-                button("Remove").style(button::Outline).on_press(noop()),
-            ],
+            button(icon::plus()).square().style(button::Outline),
+            input_group(input("Send a message...")).addon(
+                input_group::addon(tooltip(icon::audio_lines(), "Voice Mode"))
+                    .align(Align::InlineEnd)
+            )
         ]
         .spacing(8)
-        .align_y(iced::Alignment::Center)
+        .align_y(iced::Center)
         .into(),
 
         // Separator. shadcn `button-group-separator.tsx`: two secondary
@@ -311,6 +371,103 @@ fn view(id: &str, pi: usize) -> Slot<'static, Message> {
                 .size(Sm)
                 .on_press(noop()),
         ]
+        .into(),
+
+        "split" => button_group![
+            button("Button").style(button::Secondary),
+            group::separator(),
+            button(icon::plus()).square().style(button::Secondary)
+        ]
+        .into(),
+
+        "input" => button_group![
+            group::Item::Content(input("Search...").into()),
+            button(icon::search()).style(button::Outline)
+        ]
+        .into(),
+
+        "input-group" => Slot::from(component(Voice).boxed()),
+
+        "dropdown" => dropdown_menu(
+            |&m| {
+                button_group![
+                    button("Follow").style(button::Outline),
+                    group::decorated(button(icon::chevron_down()).style(button::Outline), move |b| m
+                        .trigger(b))
+                ]
+                .into()
+            },
+            |_| {
+                column![
+                    menu::item(row![icon::volume_off().size(16), "Mute Conversation"].spacing(8)),
+                    menu::item(row![icon::check().size(16), "Mark as Read"].spacing(8)),
+                    menu::item(
+                        row![icon::triangle_alert().size(16), "Report Conversation"].spacing(8)
+                    ),
+                    menu::item(row![icon::user_round_x().size(16), "Block User"].spacing(8)),
+                    menu::item(row![icon::share().size(16), "Share Conversation"].spacing(8)),
+                    menu::item(row![icon::copy().size(16), "Copy Conversation"].spacing(8)),
+                    menu::separator(),
+                    menu::item(row![icon::trash_2().size(16), "Delete Conversation"].spacing(8))
+                        .style(menu::Destructive)
+                ]
+                .width(Fill)
+                .into()
+            },
+        )
+        .align(dropdown_menu::Align::End)
+        .width(176)
+        .into(),
+
+        "select" => row![
+            button_group![
+                group::Item::Content(
+                    select(
+                        [
+                            ("$", "$ US Dollar"),
+                            ("€", "€ Euro"),
+                            ("£", "£ British Pound")
+                        ]
+                        .map(|(v, label)| select::item(v, label))
+                    )
+                    .default_value("$")
+                    .width(128)
+                    .icon(icon::chevron_down)
+                    .into()
+                ),
+                group::Item::Content(input("10.00").width(120).into())
+            ],
+            button(icon::arrow_right()).square().style(button::Outline)
+        ]
+        .spacing(8)
+        .into(),
+
+        "popover" => popover(
+            |&p| {
+                button_group![
+                    button![icon::bot(), "Copilot"].style(button::Outline),
+                    group::decorated(
+                        button(icon::chevron_down()).square().style(button::Outline),
+                        move |b| p.trigger(b)
+                    )
+                ]
+                .into()
+            },
+            |_| {
+                column![
+                    popover::header(
+                        "Start a new task with Copilot",
+                        "Describe your task in natural language."
+                    ),
+                    field(textarea("I need to..."))
+                        .description("Copilot will open a pull request for review.")
+                ]
+                .spacing(12)
+                .width(Fill)
+                .into()
+            },
+        )
+        .align(popover::Align::End)
         .into(),
 
         _ => unreachable!("unknown button_group preview id: {id}"),

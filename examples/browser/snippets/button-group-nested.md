@@ -1,14 +1,6 @@
 ```rust
-use icedxdy::widget::{button, row};
-
 row![
-    button_group![
-        button(icon::plus()).square().style(button::Outline).on_press(Message::Add),
-    ],
-    button_group![
-        button("Add").style(button::Outline).on_press(Message::Add),
-        button("Remove").style(button::Outline).on_press(Message::Remove),
-    ],
-]
-.spacing(8)
+    button(icon::plus()).square().style(button::Outline),
+    input_group(input("Send a message...")).addon(input_group::addon(tooltip(icon::audio_lines(), "Voice Mode")).align(Align::InlineEnd))
+].spacing(8).align_y(iced::Center)
 ```
