@@ -132,6 +132,7 @@ impl Handle {
 
         Item {
             is_checked: value == self.value,
+            invalid: false,
             value,
             disabled: self.disabled,
         }
@@ -143,10 +144,17 @@ impl Handle {
 pub struct Item {
     value: String,
     is_checked: bool,
+    invalid: bool,
     disabled: bool,
 }
 
 impl Item {
+    /// Indicate an invalid field with Nova's destructive border and validation ring.
+    pub fn invalid(mut self, invalid: bool) -> Self {
+        self.invalid = invalid;
+        self
+    }
+
     /// Disable this item.
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled |= disabled;
@@ -166,6 +174,7 @@ impl<Message: 'static> Compose<Message> for Item {
         let Item {
             value,
             is_checked,
+            invalid,
             disabled,
         } = *self;
 
@@ -207,7 +216,15 @@ impl<Message: 'static> Compose<Message> for Item {
                 container::Style::default()
                     .background(style.background)
                     .border(Border {
-                        color: style.border_color,
+                        color: if invalid {
+                            theme
+                                .destructive
+                                .base
+                                .scale_alpha(if theme.neutral.base.l < 0.5 { 0.5 } else { 1. })
+                                .into()
+                        } else {
+                            style.border_color
+                        },
                         width: style.border_width,
                         radius: 8.0.into(),
                     })

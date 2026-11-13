@@ -22,6 +22,12 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/label-demo.md",
     },
+    page::Block::Example {
+        id: "field-demo",
+        title: "Field",
+        description: None,
+        snippet: "examples/browser/snippets/field-demo.md",
+    },
     page::Block::Md("examples/browser/snippets/label-api-reference.md"),
 ];
 
@@ -74,6 +80,7 @@ impl page::Page for LabelPage {
                 .label("Accept terms and conditions")
                 .into(),
 
+            "field-demo" => super::field::checkout(),
             _ => unreachable!("unknown label preview id: {id}"),
         }
     }

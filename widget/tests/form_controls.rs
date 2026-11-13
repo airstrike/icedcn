@@ -28,3 +28,20 @@ fn a_trailing_control_obeys_its_label_and_field_disabled_state() {
         );
     }
 }
+
+#[test]
+fn resizing_a_responsive_field_preserves_the_typed_value() {
+    use iced_core::Size;
+    use icedxdy_widget::{input, operation::control};
+    let label: Slot<'_, String> = Space::new().width(40).height(20).into();
+    let form: Element<'_, String, Theme, Renderer> = field(input("").on_input(|value| value))
+        .label(label)
+        .responsive()
+        .into();
+    let mut ui = simulator(form).resize(Size::new(540., 200.));
+    ui.operate(&mut control::activate());
+    let _ = ui.typewrite("abc");
+    let mut ui = ui.resize(Size::new(300., 200.));
+    let _ = ui.typewrite("d");
+    assert_eq!(ui.into_messages().last().as_deref(), Some("abcd"));
+}

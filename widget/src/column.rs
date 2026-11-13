@@ -31,6 +31,7 @@ pub struct Column<'a, Message> {
     children: Vec<Slot<'a, Message>>,
     spacing: Option<f32>,
     max_width: f32,
+    row_breakpoint: Option<f32>,
     width: Length,
     height: Length,
     padding: Padding,
@@ -44,6 +45,7 @@ impl<'a, Message: 'a> Column<'a, Message> {
             children: Vec::new(),
             spacing: None,
             max_width: f32::INFINITY,
+            row_breakpoint: None,
             width: Length::Shrink,
             height: Length::Shrink,
             padding: Padding::ZERO,
@@ -68,6 +70,12 @@ impl<'a, Message: 'a> Column<'a, Message> {
     /// Sets the maximum width of the [`Column`].
     pub fn max_width(mut self, max_width: f32) -> Self {
         self.max_width = max_width;
+        self
+    }
+
+    /// Lay out the same child tree horizontally at or above this container width.
+    pub(crate) fn row_at(mut self, breakpoint: f32) -> Self {
+        self.row_breakpoint = Some(breakpoint);
         self
     }
 
@@ -144,6 +152,7 @@ impl<'a, Message: 'a> Compose<Message> for Column<'a, Message> {
         let widget = ColumnWidget {
             spacing: self.spacing.unwrap_or(0.0),
             max_width: self.max_width,
+            row_breakpoint: self.row_breakpoint,
             width: self.width,
             height: self.height,
             padding: self.padding,
@@ -162,6 +171,7 @@ impl<'a, Message: 'a> Compose<Message> for Column<'a, Message> {
 struct ColumnWidget<'a, Message> {
     spacing: f32,
     max_width: f32,
+    row_breakpoint: Option<f32>,
     width: Length,
     height: Length,
     padding: Padding,
@@ -206,8 +216,16 @@ impl<Message> Widget<Message, Theme, Renderer> for ColumnWidget<'_, Message> {
 
         let cache = tree.state.downcast_mut::<flex::Cache>();
 
+        let axis = if self
+            .row_breakpoint
+            .is_some_and(|width| limits.max.width >= width)
+        {
+            flex::Axis::Horizontal
+        } else {
+            flex::Axis::Vertical
+        };
         tree.size = flex::resolve(
-            flex::Axis::Vertical,
+            axis,
             renderer,
             &limits,
             self.width,

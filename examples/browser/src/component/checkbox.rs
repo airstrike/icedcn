@@ -1,18 +1,10 @@
-// API Reference is rendered via the `checkbox-api-reference.md` snippet at
-// the bottom of BLOCKS. The live docs page defers the prop matrix to
-// Radix's own docs (`Checkbox.checked: boolean | "indeterminate"`,
-// `defaultChecked`, `onCheckedChange`, `disabled`, `aria-invalid`); the
-// snippet captures the icedxdy-shaped builder API and the `State`
-// triplet promotion (`Checked` / `Unchecked` / `Indeterminate`).
-//
-// Intentional skips per CLAUDE.md: checkbox-rtl (RTL), checkbox-group
-// (requires FieldGroup with multiple horizontally-labelled fields — deferred),
-// checkbox-table (out of scope).
+mod selection;
 
 use iced::Task;
 
 use icedxdy::Theme;
 use icedxdy::theme;
+use icedxdy::theme::tweak::Alpha;
 use icedxdy::widget::{checkbox, column, field, text};
 
 use crate::Message;
@@ -66,6 +58,18 @@ pub static BLOCKS: &[page::Block] = &[
                 title: "Disabled",
                 description: None,
                 snippet: "examples/browser/snippets/checkbox-disabled.md",
+            },
+            page::Block::Example {
+                id: "group",
+                title: "Group",
+                description: None,
+                snippet: "examples/browser/snippets/checkbox-group.md",
+            },
+            page::Block::Example {
+                id: "table",
+                title: "Table",
+                description: None,
+                snippet: "examples/browser/snippets/checkbox-table.md",
             },
         ],
     },
@@ -135,7 +139,10 @@ impl page::Page for CheckboxPage {
                     // FieldLabel (color shift, not a true alpha overlay).
                     field(checkbox().disabled(true))
                         .orientation(field::Horizontal)
-                        .label(text::muted("Enable notifications")),
+                        .label(
+                            text::label("Enable notifications")
+                                .style(theme::text::Foreground + Alpha(0.5))
+                        ),
                     // Row 4: FieldLabel-as-card — bordered + padded card,
                     // primary tint while checked; pressing anywhere on it
                     // toggles the checkbox.
@@ -195,10 +202,14 @@ impl page::Page for CheckboxPage {
             // is deferred until the cascade infra lands).
             "disabled" => field(checkbox().disabled(true))
                 .orientation(field::Horizontal)
-                .label(text::muted("Enable notifications"))
+                .label(
+                    text::label("Enable notifications").style(theme::text::Foreground + Alpha(0.5)),
+                )
                 .width(224)
                 .into(),
 
+            "group" => super::field::desktop_items(true).compose(),
+            "table" => selection::preview(),
             _ => unreachable!("unknown checkbox preview id: {id}"),
         };
 

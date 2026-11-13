@@ -71,6 +71,7 @@ use icedxdy_core::Theme;
 use icedxdy_core::theme::field::Card;
 use icedxdy_core::theme::field::CardActive;
 
+use crate::column::Column;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::marker::{self, Press};
 
@@ -99,6 +100,7 @@ pub struct Field<'a, Message> {
     description: Option<Slot<'a, Message>>,
     error: Option<Slot<'a, Message>>,
     orientation: Orientation,
+    responsive: bool,
     control_last: bool,
     description_above: bool,
     disabled: bool,
@@ -128,6 +130,7 @@ pub fn field<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Field<'a
         description: None,
         error: None,
         orientation: Orientation::Vertical,
+        responsive: false,
         control_last: false,
         description_above: false,
         disabled: false,
@@ -145,6 +148,37 @@ pub fn group<'a, Message: 'a>(
         spacing: 20.0,
         width: Length::Fill,
     }
+}
+
+/// The larger heading used by the default FieldLegend. Use `text::label`
+/// for Nova's smaller label variant.
+pub fn legend<'a>(label: impl iced_core::text::IntoFragment<'a>) -> crate::text::Text<'a> {
+    crate::text::small(label).size(16).medium()
+}
+
+/// A fieldset with its legend, optional description and related controls.
+pub fn set<'a, Message: 'a>(
+    legend: impl Into<Slot<'a, Message>>,
+    description: Option<&'a str>,
+    controls: impl Into<Slot<'a, Message>>,
+) -> Column<'a, Message> {
+    let mut header = Column::with_children([legend.into()]).spacing(6);
+    if let Some(description) = description {
+        header = header.push(crate::text::muted(description).into());
+    }
+    Column::with_children([header.into(), controls.into()])
+        .spacing(16)
+        .width(Fill)
+}
+
+/// Lay out field actions vertically on narrow surfaces and in a row from 28rem.
+pub fn actions<'a, Message: 'a>(
+    children: impl IntoIterator<Item = Slot<'a, Message>>,
+) -> Column<'a, Message> {
+    Column::with_children(children)
+        .spacing(8)
+        .width(Fill)
+        .row_at(448.)
 }
 
 impl<'a, Message: 'a> Field<'a, Message> {
@@ -186,6 +220,13 @@ impl<'a, Message: 'a> Field<'a, Message> {
     /// 8px gap. Matches shadcn's `orientation="horizontal"` on `Field`.
     pub fn orientation(mut self, orientation: impl Into<Orientation>) -> Self {
         self.orientation = orientation.into();
+        self
+    }
+
+    /// Stack field content on narrow surfaces. At Nova’s 28rem container
+    /// breakpoint the label and description share a row with the control.
+    pub fn responsive(mut self) -> Self {
+        self.responsive = true;
         self
     }
 
@@ -326,6 +367,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
             description,
             error,
             orientation,
+            responsive,
             control_last,
             description_above,
             card,
@@ -347,75 +389,96 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
         );
 
         // Build the inner layout depending on orientation.
-        let inner: iced_core::Element<'a, Message, Theme, Renderer> = match orientation {
-            Orientation::Vertical => {
-                // shadcn `field.tsx` line 55: `flex w-full gap-2` — 8px between
-                // every present slot. Composition follows the conditional-push
-                // pattern `alert::Alert::compose` uses.
-                let mut col = iced_widget::Column::new().spacing(8);
-                if let Some(label) = label {
-                    col = col.push(label);
-                }
-                let mut description = description.map(Slot::compose);
-                if description_above && let Some(above) = description.take() {
-                    col = col.push(above);
-                }
-                col = col.push(content.compose());
-                if let Some(below) = description {
-                    col = col.push(below);
-                }
-                if let Some(error) = error {
-                    col = col.push(error.compose());
-                }
-                col.boxed()
+        let inner: iced_core::Element<'a, Message, Theme, Renderer> = if responsive {
+            let mut heading = Column::new().spacing(2).width(Fill);
+            if let Some(label) = label {
+                heading = heading.push(label.into());
             }
-            Orientation::Horizontal => {
-                // shadcn `field.tsx` horizontal: `flex-row items-center
-                // has-[>[data-slot=field-content]]:items-start`
-                // The Center → Start switch is driven by FieldContent presence,
-                // which in shadcn appears when there's a description / error /
-                // multi-element block alongside the label. We mirror this by
-                // checking whether description or error is set: with neither,
-                // the right column is just the label (single-line) and
-                // alignment stays Center; with either, the right column is a
-                // multi-line stack and alignment switches to Start.
-                // Slot order: content (left) — FieldContent column (right).
-                // FieldContent inner: `gap-0.5` (2px). Row gap: `gap-2` (8px).
-                let has_right = label.is_some() || description.is_some() || error.is_some();
-                if has_right {
-                    let has_field_content = description.is_some() || error.is_some();
-                    let align = if has_field_content {
-                        iced_core::Alignment::Start
-                    } else {
-                        iced_core::Alignment::Center
-                    };
-
-                    let content_element = content.compose();
-                    let mut right = iced_widget::Column::new().spacing(2);
+            if let Some(description) = description {
+                heading = heading.push(description);
+            }
+            let mut controls = Column::with_children([content])
+                .spacing(2)
+                .width(Fill);
+            if let Some(error) = error {
+                controls = controls.push(error);
+            }
+            crate::column![heading, controls]
+                .spacing(8)
+                .width(Fill)
+                .row_at(448.)
+                .into()
+        } else {
+            match orientation {
+                Orientation::Vertical => {
+                    // shadcn `field.tsx` line 55: `flex w-full gap-2` — 8px between
+                    // every present slot. Composition follows the conditional-push
+                    // pattern `alert::Alert::compose` uses.
+                    let mut col = iced_widget::Column::new().spacing(8);
                     if let Some(label) = label {
-                        right = right.push(label);
+                        col = col.push(label);
                     }
-                    if let Some(description) = description {
-                        right = right.push(description.compose());
+                    let mut description = description.map(Slot::compose);
+                    if description_above && let Some(above) = description.take() {
+                        col = col.push(above);
+                    }
+                    col = col.push(content.compose());
+                    if let Some(below) = description {
+                        col = col.push(below);
                     }
                     if let Some(error) = error {
-                        right = right.push(error.compose());
+                        col = col.push(error.compose());
                     }
-                    let row = iced_widget::Row::new().spacing(8).align_y(align);
-                    if control_last {
-                        row.push(right.width(Fill).boxed())
-                            .push(content_element)
-                            .boxed()
+                    col.boxed()
+                }
+                Orientation::Horizontal => {
+                    // shadcn `field.tsx` horizontal: `flex-row items-center
+                    // has-[>[data-slot=field-content]]:items-start`
+                    // The Center → Start switch is driven by FieldContent presence,
+                    // which in shadcn appears when there's a description / error /
+                    // multi-element block alongside the label. We mirror this by
+                    // checking whether description or error is set: with neither,
+                    // the right column is just the label (single-line) and
+                    // alignment stays Center; with either, the right column is a
+                    // multi-line stack and alignment switches to Start.
+                    // Slot order: content (left) — FieldContent column (right).
+                    // FieldContent inner: `gap-0.5` (2px). Row gap: `gap-2` (8px).
+                    let has_right = label.is_some() || description.is_some() || error.is_some();
+                    if has_right {
+                        let has_field_content = description.is_some() || error.is_some();
+                        let align = if has_field_content {
+                            iced_core::Alignment::Start
+                        } else {
+                            iced_core::Alignment::Center
+                        };
+
+                        let content_element = content.compose();
+                        let mut right = iced_widget::Column::new().spacing(2);
+                        if let Some(label) = label {
+                            right = right.push(label);
+                        }
+                        if let Some(description) = description {
+                            right = right.push(description.compose());
+                        }
+                        if let Some(error) = error {
+                            right = right.push(error.compose());
+                        }
+                        let row = iced_widget::Row::new().spacing(8).align_y(align);
+                        if control_last {
+                            row.push(right.width(Fill).boxed())
+                                .push(content_element)
+                                .boxed()
+                        } else {
+                            row.push(content_element).push(right.boxed()).boxed()
+                        }
                     } else {
-                        row.push(content_element).push(right.boxed()).boxed()
+                        // No right-hand content — just content on its own in a row.
+                        iced_widget::Row::new()
+                            .spacing(8)
+                            .align_y(iced_core::Alignment::Center)
+                            .push(content.compose())
+                            .boxed()
                     }
-                } else {
-                    // No right-hand content — just content on its own in a row.
-                    iced_widget::Row::new()
-                        .spacing(8)
-                        .align_y(iced_core::Alignment::Center)
-                        .push(content.compose())
-                        .boxed()
                 }
             }
         };

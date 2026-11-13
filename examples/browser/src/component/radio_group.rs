@@ -1,12 +1,7 @@
-// Intentional skips: radio-group-choice-card (the radio sits right of a
-// FieldTitle inside a FieldLabel card), radio-group-fieldset and
-// radio-group-invalid (FieldSet, FieldLegend and an invalid item style are
-// not ported) and radio-group-rtl (RTL). In radio-group-disabled shadcn's
-// `Field data-disabled` also dims the label; icedxdy's field has no
-// disabled state yet, so only the item dims.
-
 use iced::Task;
 
+use icedxdy::theme;
+use icedxdy::theme::tweak::Alpha;
 use icedxdy::widget::{column, field, radio_group, text};
 use icedxdy::{Horizontal, Slot, Theme};
 
@@ -38,10 +33,28 @@ pub static BLOCKS: &[page::Block] = &[
                 snippet: "examples/browser/snippets/radio-group-description.md",
             },
             page::Block::Example {
+                id: "choice-card",
+                title: "Choice Card",
+                description: Some("Use card-style labels to choose a plan."),
+                snippet: "examples/browser/snippets/radio-group-choice-card.md",
+            },
+            page::Block::Example {
+                id: "fieldset",
+                title: "Fieldset",
+                description: Some("Group related radio buttons with a legend and description."),
+                snippet: "examples/browser/snippets/radio-group-fieldset.md",
+            },
+            page::Block::Example {
                 id: "disabled",
                 title: "Disabled",
                 description: Some("Use `.disabled(true)` on an item (or the group) to disable it."),
                 snippet: "examples/browser/snippets/radio-group-disabled.md",
+            },
+            page::Block::Example {
+                id: "invalid",
+                title: "Invalid",
+                description: Some("Use an invalid field to indicate a validation error."),
+                snippet: "examples/browser/snippets/radio-group-invalid.md",
             },
         ],
     },
@@ -153,7 +166,7 @@ impl page::Page for RadioGroupPage {
                 column![
                     field(g.item("option1").disabled(true))
                         .orientation(Horizontal)
-                        .label(text::small("Disabled")),
+                        .label(text::small("Disabled").style(theme::text::Foreground + Alpha(0.5))),
                     field(g.item("option2"))
                         .orientation(Horizontal)
                         .label(text::small("Option 2")),
@@ -167,6 +180,58 @@ impl page::Page for RadioGroupPage {
             .default_value("option2")
             .into(),
 
+            "choice-card" => radio_group(|g| {
+                field::group(
+                    [
+                        ("plus", "Plus", "For individuals and small teams."),
+                        ("pro", "Pro", "For growing businesses."),
+                        (
+                            "enterprise",
+                            "Enterprise",
+                            "For large teams and enterprises.",
+                        ),
+                    ]
+                    .map(|(value, label, description)| {
+                        field(g.item(value))
+                            .orientation(Horizontal)
+                            .control_last()
+                            .label(label)
+                            .description(description)
+                            .card()
+                            .into()
+                    }),
+                )
+                .spacing(8)
+                .width(384)
+                .into()
+            })
+            .default_value("plus")
+            .into(),
+            "fieldset" => super::field::subscription_plan().into(),
+            "invalid" => field::set(
+                text::label("Notification Preferences"),
+                Some("Choose how you want to receive notifications."),
+                radio_group(|g| {
+                    field::group(
+                        [
+                            ("email", "Email only"),
+                            ("sms", "SMS only"),
+                            ("both", "Both Email & SMS"),
+                        ]
+                        .map(|(value, label)| {
+                            field(g.item(value).invalid(true))
+                                .orientation(Horizontal)
+                                .label(text::small(label).style(theme::text::Destructive))
+                                .into()
+                        }),
+                    )
+                    .spacing(8)
+                    .into()
+                })
+                .default_value("email"),
+            )
+            .max_width(320.)
+            .into(),
             _ => unreachable!("unknown radio group preview id: {id}"),
         }
     }
