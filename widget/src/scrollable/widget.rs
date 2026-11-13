@@ -3716,3 +3716,39 @@ mod bridge {
         }
     }
 } // end mod bridge
+
+/// Current vertical offset for a top-anchored transcript. Read the native
+/// position after wheel, keyboard, touch, scrollbar or an external operation.
+pub(crate) fn transcript_offset(tree: &Tree) -> f32 {
+    let content = tree.children.first().map_or(0.0, |child| child.size.height);
+    tree.state.downcast_ref::<State>().offset_y.translation(
+        tree.size.height,
+        content,
+        Anchor::Start,
+    )
+}
+
+/// Set the initial/reconciled position before the first paint. Cancel any
+/// pending scroll animation that was aimed at the previous transcript geometry.
+pub(crate) fn set_transcript_offset(tree: &mut Tree, y: f32) {
+    let state = tree.state.downcast_mut::<State>();
+    state.cancel();
+    state.offset_y = Offset::Absolute(y.max(0.0));
+    state.last_translation.y = y.max(0.0);
+    state.last_notified = None;
+}
+
+/// Smooth command jumps reuse the native scroller's animation and redraw scheduler.
+pub(crate) fn animate_transcript_offset(tree: &mut Tree, y: f32) {
+    let content = tree.children[0].size;
+    tree.state.downcast_mut::<State>().scroll_to(
+        AbsoluteOffset {
+            x: None,
+            y: Some(y),
+        },
+        Animation::Smooth,
+        Rectangle::with_size(tree.size),
+        content,
+        Source::Operation,
+    );
+}
