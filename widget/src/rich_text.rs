@@ -67,6 +67,7 @@ pub struct Span<'a> {
     size: Option<Pixels>,
     line_height: Option<text::LineHeight>,
     weight: Option<font::Weight>,
+    font: Option<iced_core::Font>,
     italic: bool,
     color: Option<Token>,
     letter_spacing: Option<Em>,
@@ -79,6 +80,7 @@ pub fn span<'a>(fragment: impl text::IntoFragment<'a>) -> Span<'a> {
         size: None,
         line_height: None,
         weight: None,
+        font: None,
         italic: false,
         color: None,
         letter_spacing: None,
@@ -89,6 +91,12 @@ impl<'a> Span<'a> {
     /// Set the font size of this span.
     pub fn size(mut self, size: impl Into<crate::Size>) -> Self {
         self.size = Some(Pixels(size.into().text_size()));
+        self
+    }
+
+    /// Override the font for this run, for example for inline code.
+    pub fn font(mut self, font: iced_core::Font) -> Self {
+        self.font = Some(font);
         self
     }
 
@@ -160,10 +168,10 @@ impl<'a> Span<'a> {
     /// rendering concern and including it would needlessly invalidate the
     /// paragraph cache when the palette changes between draws).
     fn to_layout_span(&self) -> text::Span<'static, ()> {
-        let mut font = match self.italic {
-            true => Some(iced_core::Font::DEFAULT.style(font::Style::Italic)),
-            false => None,
-        };
+        let mut font = self.font;
+        if self.italic {
+            font = Some(font.unwrap_or_default().style(font::Style::Italic));
+        }
         if let Some(weight) = self.weight {
             let base = font.unwrap_or(iced_core::Font::DEFAULT);
             font = Some(base.weight(weight));

@@ -91,13 +91,14 @@ impl App {
         let mut tasks: Vec<Task<Message>> = Vec::new();
 
         use component::{
-            accordion, alert, alert_dialog, aspect_ratio, avatar, badge, breadcrumb, button,
-            button_group, calendar, card, checkbox, code_block, collapsible, combobox, command,
-            context_menu, data_table, date_picker, dialog, dropdown_menu, empty, field, hover_card,
-            input, input_group, input_otp, item, kbd, label, marker, native_select, pagination,
-            popover, progress, radio_group, resizable, scroll_area, select, separator, sheet,
-            sidebar, skeleton, slider, sonner, spinner, switch, table, tabs, text, textarea,
-            toggle, toggle_group, tooltip,
+            accordion, alert, alert_dialog, aspect_ratio, avatar, badge, breadcrumb, bubble,
+            button, button_group, calendar, card, carousel, chart, checkbox, code_block,
+            collapsible, combobox, command, context_menu, data_table, date_picker, dialog,
+            dropdown_menu, empty, field, hover_card, input, input_group, input_otp, item, kbd,
+            label, marker, menubar, native_select, navigation_menu, pagination, popover, progress,
+            radio_group, resizable, scroll_area, select, separator, sheet, sidebar, skeleton,
+            slider, sonner, spinner, switch, table, tabs, text, textarea, toggle, toggle_group,
+            tooltip,
         };
 
         let constructors: Vec<fn(usize) -> Box<dyn page::Page>> = vec![
@@ -108,10 +109,13 @@ impl App {
             avatar::AvatarPage::new,
             badge::BadgePage::new,
             breadcrumb::BreadcrumbPage::new,
+            bubble::BubblePage::new,
             button::ButtonPage::new,
             button_group::ButtonGroupPage::new,
             calendar::CalendarPage::new,
             card::CardPage::new,
+            carousel::CarouselPage::new,
+            chart::ChartPage::new,
             checkbox::CheckboxPage::new,
             code_block::CodeBlockPage::new,
             collapsible::CollapsiblePage::new,
@@ -132,7 +136,9 @@ impl App {
             kbd::KbdPage::new,
             label::LabelPage::new,
             marker::MarkerPage::new,
+            menubar::MenubarPage::new,
             native_select::NativeSelectPage::new,
+            navigation_menu::NavigationMenuPage::new,
             pagination::PaginationPage::new,
             popover::PopoverPage::new,
             progress::ProgressPage::new,
