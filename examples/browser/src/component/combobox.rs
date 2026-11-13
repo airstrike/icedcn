@@ -30,6 +30,12 @@ pub static BLOCKS: &[page::Block] = &[
         title: "Examples",
         children: &[
             page::Block::Example {
+                id: "basic",
+                title: "Basic",
+                description: Some("A simple combobox with a list of frameworks."),
+                snippet: "examples/browser/snippets/combobox-demo.md",
+            },
+            page::Block::Example {
                 id: "multiple",
                 title: "Multiple",
                 description: Some(
@@ -202,7 +208,7 @@ impl page::Page for ComboboxPage {
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
             // shadcn `combobox-demo.tsx` / `combobox-basic.tsx`.
-            "demo" => combobox(FRAMEWORKS)
+            "demo" | "basic" => combobox(FRAMEWORKS)
                 .placeholder("Select a framework")
                 .icon(icon::chevron_down)
                 .into(),
