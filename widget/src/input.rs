@@ -37,6 +37,7 @@ pub struct Input<'a, Message> {
     placeholder: Fragment<'a>,
     value: Option<Fragment<'a>>,
     default_value: Fragment<'a>,
+    secure: bool,
     disabled: bool,
     size: Option<Size>,
     width: Length,
@@ -57,6 +58,7 @@ pub fn input<'a, Message: Clone + 'a>(placeholder: impl IntoFragment<'a>) -> Inp
         placeholder: placeholder.into_fragment(),
         value: None,
         default_value: Fragment::Borrowed(""),
+        secure: false,
         disabled: false,
         size: None,
         width: Length::Shrink,
@@ -80,6 +82,12 @@ impl<'a, Message: Clone + 'a> Input<'a, Message> {
     /// the user typed.
     pub fn default_value(mut self, value: impl IntoFragment<'a>) -> Self {
         self.default_value = value.into_fragment();
+        self
+    }
+
+    /// Mask the displayed characters when entering a password.
+    pub fn secure(mut self, secure: bool) -> Self {
+        self.secure = secure;
         self
     }
 
@@ -178,6 +186,7 @@ impl<'a, Message: Clone + 'a> From<Input<'a, Message>>
                 .uncontrolled(&input.default_value),
         };
         let mut ti = ti
+            .secure(input.secure)
             .disabled(input.disabled)
             .padding(padding)
             .size(text_size)

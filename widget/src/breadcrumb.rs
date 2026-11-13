@@ -18,6 +18,7 @@
 //!
 //! Item kinds:
 //!
+//! - [`item`] — custom content, such as a dropdown menu, inside the trail.
 //! - [`link`] — clickable. Cursor changes to `Pointer`; emits the supplied
 //!   message on left-button release. Mirrors `<BreadcrumbLink>`.
 //! - [`page`] — current page. Renders content as-is, no click affordance.
@@ -63,9 +64,11 @@ use crate::text::Text;
 ///
 /// Public via the `breadcrumb::Item` namespace path (per RUST_STYLE
 /// no-composite-names: callers write `breadcrumb::Item`, never
-/// `BreadcrumbItem`). Construct via the [`link`], [`page`], and [`ellipsis`]
+/// `BreadcrumbItem`). Construct via the [`item`], [`link`], [`page`], and [`ellipsis`]
 /// helpers rather than the variants directly.
 pub enum Item<'a, Message> {
+    /// Custom content that participates in the trail as a breadcrumb item.
+    Content(Slot<'a, Message>),
     /// A clickable crumb. Mirrors `<BreadcrumbLink>`.
     Link(Slot<'a, Message>, Message),
     /// The current page. Mirrors `<BreadcrumbPage>`.
@@ -73,6 +76,11 @@ pub enum Item<'a, Message> {
     /// An "..." indicator standing in for elided intermediate crumbs.
     /// Mirrors `<BreadcrumbEllipsis>`.
     Ellipsis(Option<Message>),
+}
+
+/// Place a widget in the trail, preserving its own interactions and styling.
+pub fn item<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Item<'a, Message> {
+    Item::Content(content.into())
 }
 
 /// Build a clickable [`Item::Link`] crumb.
@@ -191,6 +199,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Breadcrumb<'a, Message> {
 /// reads as a flat match in one place.
 fn render_item<'a, Message: Clone + 'a>(item: Item<'a, Message>) -> Slot<'a, Message> {
     match item {
+        Item::Content(content) => content,
         Item::Link(content, on_press) => render_link(content, on_press),
         Item::Page(content) => render_page(content),
         Item::Ellipsis(on_press) => render_ellipsis(on_press),

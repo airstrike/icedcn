@@ -29,6 +29,7 @@ card(column![
             .label("Email"),
             field(
                 input("")
+                    .secure(true)
                     .width(Fill),
             )
             .label(password_label),

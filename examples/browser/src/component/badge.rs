@@ -1,3 +1,4 @@
+// rawr
 // TODO: API Reference section once a table widget lands.
 //
 // Live docs API Reference covers `Badge`: `variant`

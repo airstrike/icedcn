@@ -4,25 +4,20 @@
 //! # Intentional skips
 //!
 //! - `breadcrumb-rtl` — RTL is not applicable to iced (per CLAUDE.md).
-//! - `breadcrumb-dropdown` — requires DropdownMenu, not yet ported. Defer
-//!   until Dropdown lands. Note: shadcn's `breadcrumb-demo.tsx` (used as the
-//!   docs hero) wires the ellipsis as a DropdownMenu trigger with a ghost
-//!   icon button. Our hero renders the same trail with a clickable
-//!   `breadcrumb::ellipsis(Some(_))` — the visual is identical, just no menu
-//!   opens.
 //!
 //! # API Reference
 //!
 //! Rendered via the `breadcrumb-api-reference.md` snippet at the bottom of
 //! BLOCKS. The live docs API Reference table lists 7 components; the
 //! snippet captures the icedxdy-shaped builder API for `breadcrumb(...)`
-//! plus the item constructors (`link`, `page`, `ellipsis`) and the
+//! plus the item constructors (`item`, `link`, `page`, `ellipsis`) and the
 //! auto-interspersed separator.
 
-use iced::Task;
+use iced::{Element, Task};
 
-use icedxdy::widget::breadcrumb;
-use icedxdy::{Slot, Theme};
+use icedxdy::widget::button::widget;
+use icedxdy::widget::{breadcrumb, button, dropdown_menu, menu, row};
+use icedxdy::{Size, Slot, Theme};
 
 use crate::icon;
 use crate::page;
@@ -56,6 +51,14 @@ pub static BLOCKS: &[page::Block] = &[
                     "Pass a custom component to `.separator(...)` to override the default chevron.",
                 ),
                 snippet: "examples/browser/snippets/breadcrumb-separator.md",
+            },
+            page::Block::Example {
+                id: "dropdown",
+                title: "Dropdown",
+                description: Some(
+                    "Compose a breadcrumb item with a dropdown menu to show more destinations.",
+                ),
+                snippet: "examples/browser/snippets/breadcrumb-dropdown.md",
             },
             page::Block::Example {
                 id: "ellipsis",
@@ -94,16 +97,33 @@ fn chevron<'a>() -> Slot<'a, page::Message> {
     icon::chevron_right().size(14).into()
 }
 
+fn destinations(_: &dropdown_menu::Handle) -> Slot<'static, page::Message> {
+    menu::group([
+        menu::item("Documentation").into(),
+        menu::item("Themes").into(),
+        menu::item("GitHub").into(),
+    ])
+}
+
 fn view(id: &str) -> Slot<'static, page::Message> {
     match id {
-        // Hero / `breadcrumb-demo.tsx`. shadcn's demo wires the ellipsis up
-        // as a DropdownMenu trigger (Documentation / Themes / GitHub items).
-        // Without a dropdown widget, we render the same trail with a
-        // clickable ellipsis that dispatches `page::Message::Noop` — the
-        // visual is identical, just no menu opens.
         "demo" => breadcrumb([
             breadcrumb::link("Home", page::Message::Noop),
-            breadcrumb::ellipsis(Some(page::Message::Noop)),
+            breadcrumb::item(
+                dropdown_menu(
+                    |m| {
+                        m.trigger(
+                            button(icon::ellipsis().size(16))
+                                .size(Size::Sm)
+                                .square()
+                                .style(button::Ghost)
+                                .translate(false),
+                        )
+                    },
+                    destinations,
+                )
+                .align(dropdown_menu::Align::Start),
+            ),
             breadcrumb::link("Components", page::Message::Noop),
             breadcrumb::page("Breadcrumb"),
         ])
@@ -126,6 +146,32 @@ fn view(id: &str) -> Slot<'static, page::Message> {
         "separator" => breadcrumb([
             breadcrumb::link("Home", page::Message::Noop),
             breadcrumb::link("Components", page::Message::Noop),
+            breadcrumb::page("Breadcrumb"),
+        ])
+        .separator(|| "\u{2022}".into())
+        .into(),
+
+        "dropdown" => breadcrumb([
+            breadcrumb::link("Home", page::Message::Noop),
+            breadcrumb::item(
+                dropdown_menu(
+                    |m| {
+                        let content = row!["Components", icon::chevron_down().size(14)].spacing(4);
+                        let style: widget::StyleFn<'_, Theme> =
+                            Box::new(|theme, _| widget::Style {
+                                text_color: theme.muted.foreground.into(),
+                                ..widget::Style::default()
+                            });
+                        let trigger = widget::Button::new(Slot::from(content).compose())
+                            .padding(0)
+                            .translate(false)
+                            .style(style);
+                        m.trigger(Element::from(trigger))
+                    },
+                    destinations,
+                )
+                .align(dropdown_menu::Align::Start),
+            ),
             breadcrumb::page("Breadcrumb"),
         ])
         .separator(|| "\u{2022}".into())

@@ -181,6 +181,7 @@ impl page::Page for CardPage {
 
                 let password_field: Slot<'_, Message> = field(
                     input("")
+                        .secure(true)
                         .width(Fill),
                 )
                 .label(password_label)

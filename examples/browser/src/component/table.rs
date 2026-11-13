@@ -1,17 +1,14 @@
-// Intentional skips: table-actions (its row actions open a DropdownMenu,
-// which is not ported) and table-rtl (RTL). Columns line up through
-// matching cell widths: iced lays each row out on its own, so a cell
-// cannot span columns (`colSpan`); the footer's "Total" fills the first
-// three columns' width instead.
+// Intentional skip: table-rtl (RTL). Matching cell widths keep columns aligned
+// across independently laid out rows. The invoice footer’s Total cell fills
+// the first three columns.
 
 use iced::alignment::Horizontal::Right;
-use iced::{Fill, Task};
+use iced::{Fill, FillPortion, Task};
 
-use icedxdy::widget::{table, text};
+use icedxdy::widget::{button, column, dropdown_menu, menu, table, text};
 use icedxdy::{Slot, Theme};
 
-use crate::Message;
-use crate::page;
+use crate::{Message, icon, page};
 
 pub static META: page::Meta = page::Meta {
     title: "Table",
@@ -27,12 +24,22 @@ pub static BLOCKS: &[page::Block] = &[
     },
     page::Block::Group {
         title: "Examples",
-        children: &[page::Block::Example {
-            id: "footer",
-            title: "Footer",
-            description: Some("Use `table::footer(..)` to add a footer to the table."),
-            snippet: "examples/browser/snippets/table-footer.md",
-        }],
+        children: &[
+            page::Block::Example {
+                id: "footer",
+                title: "Footer",
+                description: Some("Use `table::footer(..)` to add a footer to the table."),
+                snippet: "examples/browser/snippets/table-footer.md",
+            },
+            page::Block::Example {
+                id: "actions",
+                title: "Actions",
+                description: Some(
+                    "A table showing actions for each row using a `dropdown_menu` component.",
+                ),
+                snippet: "examples/browser/snippets/table-actions.md",
+            },
+        ],
     },
     page::Block::Md("examples/browser/snippets/table-api-reference.md"),
 ];
@@ -97,6 +104,46 @@ fn invoices<'a>(count: usize) -> iced::Element<'a, Message, Theme> {
     table::table(children).width(Fill).into()
 }
 
+fn actions<'a>() -> iced::Element<'a, Message, Theme> {
+    let products = [
+        ("Wireless Mouse", "$29.99"),
+        ("Mechanical Keyboard", "$129.99"),
+        ("USB-C Hub", "$49.99"),
+    ];
+
+    let header = table::header([table::row([
+        table::head("Product").width(FillPortion(2)),
+        table::head("Price").width(Fill),
+        table::head("Actions").width(Fill).align_x(Right),
+    ])]);
+
+    let body = table::body(products.into_iter().map(|(name, price)| {
+        let actions = dropdown_menu(
+            |menu| menu.trigger(button(icon::ellipsis()).square().style(button::Ghost)),
+            |_| {
+                column![
+                    menu::item("Edit"),
+                    menu::item("Duplicate"),
+                    menu::separator(),
+                    menu::item("Delete").style(menu::Destructive),
+                ]
+                .width(Fill)
+                .into()
+            },
+        )
+        .align(dropdown_menu::Align::End);
+
+        table::row([
+            table::cell(text::small(name).medium()).width(FillPortion(2)),
+            table::cell(text::small(price)).width(Fill),
+            table::cell(actions).width(Fill).align_x(Right),
+        ])
+    }));
+
+    let parts: [Slot<'a, Message>; 2] = [header.into(), body.into()];
+    table::table(parts).width(Fill).into()
+}
+
 impl page::Page for TablePage {
     fn page_index(&self) -> usize {
         self.state.page_index
@@ -133,6 +180,8 @@ impl page::Page for TablePage {
 
             // shadcn `table-footer.tsx`: the first three invoices.
             "footer" => invoices(3),
+
+            "actions" => actions(),
 
             _ => unreachable!("unknown table preview id: {id}"),
         }
