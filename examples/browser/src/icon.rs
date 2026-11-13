@@ -1,6 +1,6 @@
 // Generated automatically by iced_lucide at build time.
 // Do not edit manually.
-// a2f49a141afa8dee21683bd8e37ec575ca1a7851f3e7274550a436ad7d58c39f
+// 15213e98eda6014286b4cb1bc2322a2884c8d5338fa3cae63eb4f171c40733bb
 use iced::widget::text::{self, Text};
 
 pub const FONT: &[u8] = include_bytes!("../fonts/lucide.ttf");
@@ -25,6 +25,8 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("bookmark", "\u{E060}"),
     ("bot", "\u{E1BB}"),
     ("building_2", "\u{E290}"),
+    ("calculator", "\u{E1BC}"),
+    ("calendar", "\u{E063}"),
     ("calendar_plus", "\u{E2BC}"),
     ("check", "\u{E06C}"),
     ("chevron_down", "\u{E06D}"),
@@ -57,13 +59,19 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("folder", "\u{E0D7}"),
     ("folder_code", "\u{E5FB}"),
     ("folder_open", "\u{E247}"),
+    ("folder_plus", "\u{E0D9}"),
     ("folder_search", "\u{E339}"),
     ("git_branch", "\u{E0E2}"),
+    ("globe", "\u{E0E8}"),
+    ("house", "\u{E0F5}"),
+    ("image", "\u{E0F6}"),
     ("inbox", "\u{E0F7}"),
     ("info", "\u{E0F9}"),
     ("italic", "\u{E0FB}"),
     ("keyboard", "\u{E284}"),
     ("languages", "\u{E0FE}"),
+    ("layout_grid", "\u{E0FF}"),
+    ("list", "\u{E106}"),
     ("list_filter", "\u{E460}"),
     ("log_out", "\u{E10E}"),
     ("mail", "\u{E10F}"),
@@ -87,6 +95,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("share", "\u{E155}"),
     ("shield", "\u{E158}"),
     ("shield_alert", "\u{E1FE}"),
+    ("smile", "\u{E164}"),
     ("star", "\u{E176}"),
     ("sun", "\u{E178}"),
     ("tag", "\u{E17F}"),
@@ -101,6 +110,8 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("wallet", "\u{E204}"),
     ("wrap_text", "\u{E248}"),
     ("x", "\u{E1B2}"),
+    ("zoom_in", "\u{E1B6}"),
+    ("zoom_out", "\u{E1B7}"),
 ];
 
 pub fn app_window<'a, Theme>() -> Text<'a, Theme>
@@ -213,6 +224,20 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E290}")
+}
+
+pub fn calculator<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E1BC}")
+}
+
+pub fn calendar<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E063}")
 }
 
 pub fn calendar_plus<'a, Theme>() -> Text<'a, Theme>
@@ -439,6 +464,13 @@ where
     icon("\u{E247}")
 }
 
+pub fn folder_plus<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E0D9}")
+}
+
 pub fn folder_search<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
@@ -451,6 +483,27 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E0E2}")
+}
+
+pub fn globe<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E0E8}")
+}
+
+pub fn house<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E0F5}")
+}
+
+pub fn image<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E0F6}")
 }
 
 pub fn inbox<'a, Theme>() -> Text<'a, Theme>
@@ -486,6 +539,20 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E0FE}")
+}
+
+pub fn layout_grid<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E0FF}")
+}
+
+pub fn list<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E106}")
 }
 
 pub fn list_filter<'a, Theme>() -> Text<'a, Theme>
@@ -649,6 +716,13 @@ where
     icon("\u{E1FE}")
 }
 
+pub fn smile<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E164}")
+}
+
 pub fn star<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
@@ -745,6 +819,20 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E1B2}")
+}
+
+pub fn zoom_in<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E1B6}")
+}
+
+pub fn zoom_out<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E1B7}")
 }
 
 /// Render any Lucide icon by its codepoint string.
