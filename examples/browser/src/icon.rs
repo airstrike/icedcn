@@ -1,6 +1,6 @@
 // Generated automatically by iced_lucide at build time.
 // Do not edit manually.
-// 907940cbd6cbc73260b7b89092cf0b55f47f2b50d0ca46687cc74518727646d9
+// 7f1119611b3efd3a78ba2cf3b5da9e4ff72e8997a61f80dc73d273fa11338d8a
 use iced::widget::text::{self, Text};
 
 pub const FONT: &[u8] = include_bytes!("../fonts/lucide.ttf");
@@ -18,10 +18,12 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("arrow_up_down", "\u{E37D}"),
     ("arrow_up_right", "\u{E04D}"),
     ("audio_lines", "\u{E55A}"),
+    ("audio_waveform", "\u{E55B}"),
     ("badge_check", "\u{E241}"),
     ("bell", "\u{E059}"),
     ("bluetooth", "\u{E05C}"),
     ("bold", "\u{E05D}"),
+    ("book_open", "\u{E05F}"),
     ("book_open_check", "\u{E381}"),
     ("bookmark", "\u{E060}"),
     ("bot", "\u{E1BB}"),
@@ -29,6 +31,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("calculator", "\u{E1BC}"),
     ("calendar", "\u{E063}"),
     ("calendar_plus", "\u{E2BC}"),
+    ("chart_pie", "\u{E06B}"),
     ("check", "\u{E06C}"),
     ("chevron_down", "\u{E06D}"),
     ("chevron_left", "\u{E06E}"),
@@ -45,6 +48,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("cloud", "\u{E088}"),
     ("code", "\u{E093}"),
     ("columns_3", "\u{E099}"),
+    ("command", "\u{E09A}"),
     ("copy", "\u{E09E}"),
     ("corner_down_left", "\u{E0A1}"),
     ("credit_card", "\u{E0AA}"),
@@ -56,12 +60,17 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("eye_off", "\u{E0BB}"),
     ("file", "\u{E0C0}"),
     ("file_code", "\u{E0C3}"),
+    ("file_search", "\u{E0CB}"),
     ("file_text", "\u{E0CC}"),
+    ("file_warning", "\u{E0CE}"),
     ("folder", "\u{E0D7}"),
     ("folder_code", "\u{E5FB}"),
     ("folder_open", "\u{E247}"),
     ("folder_plus", "\u{E0D9}"),
     ("folder_search", "\u{E339}"),
+    ("forward", "\u{E229}"),
+    ("frame", "\u{E291}"),
+    ("gallery_vertical_end", "\u{E4D2}"),
     ("git_branch", "\u{E0E2}"),
     ("globe", "\u{E0E8}"),
     ("house", "\u{E0F5}"),
@@ -77,6 +86,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("log_out", "\u{E10E}"),
     ("mail", "\u{E10F}"),
     ("mail_check", "\u{E361}"),
+    ("map", "\u{E110}"),
     ("maximize", "\u{E112}"),
     ("message_square", "\u{E117}"),
     ("minimize", "\u{E11A}"),
@@ -93,14 +103,20 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("scissors", "\u{E14E}"),
     ("search", "\u{E151}"),
     ("settings", "\u{E154}"),
+    ("settings_2", "\u{E245}"),
     ("share", "\u{E155}"),
     ("shield", "\u{E158}"),
     ("shield_alert", "\u{E1FE}"),
     ("smile", "\u{E164}"),
+    ("sparkles", "\u{E412}"),
+    ("square_terminal", "\u{E20A}"),
     ("star", "\u{E176}"),
     ("sun", "\u{E178}"),
+    ("table", "\u{E17D}"),
     ("tag", "\u{E17F}"),
     ("terminal", "\u{E181}"),
+    ("thumbs_down", "\u{E189}"),
+    ("thumbs_up", "\u{E18A}"),
     ("trash", "\u{E18D}"),
     ("trash_2", "\u{E18E}"),
     ("triangle_alert", "\u{E193}"),
@@ -178,6 +194,13 @@ where
     icon("\u{E55A}")
 }
 
+pub fn audio_waveform<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E55B}")
+}
+
 pub fn badge_check<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
@@ -204,6 +227,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E05D}")
+}
+
+pub fn book_open<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E05F}")
 }
 
 pub fn book_open_check<'a, Theme>() -> Text<'a, Theme>
@@ -253,6 +283,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E2BC}")
+}
+
+pub fn chart_pie<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E06B}")
 }
 
 pub fn check<'a, Theme>() -> Text<'a, Theme>
@@ -367,6 +404,13 @@ where
     icon("\u{E099}")
 }
 
+pub fn command<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E09A}")
+}
+
 pub fn copy<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
@@ -444,11 +488,25 @@ where
     icon("\u{E0C3}")
 }
 
+pub fn file_search<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E0CB}")
+}
+
 pub fn file_text<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E0CC}")
+}
+
+pub fn file_warning<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E0CE}")
 }
 
 pub fn folder<'a, Theme>() -> Text<'a, Theme>
@@ -484,6 +542,27 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E339}")
+}
+
+pub fn forward<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E229}")
+}
+
+pub fn frame<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E291}")
+}
+
+pub fn gallery_vertical_end<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E4D2}")
 }
 
 pub fn git_branch<'a, Theme>() -> Text<'a, Theme>
@@ -589,6 +668,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E361}")
+}
+
+pub fn map<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E110}")
 }
 
 pub fn maximize<'a, Theme>() -> Text<'a, Theme>
@@ -703,6 +789,13 @@ where
     icon("\u{E154}")
 }
 
+pub fn settings_2<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E245}")
+}
+
 pub fn share<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
@@ -731,6 +824,20 @@ where
     icon("\u{E164}")
 }
 
+pub fn sparkles<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E412}")
+}
+
+pub fn square_terminal<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E20A}")
+}
+
 pub fn star<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
@@ -745,6 +852,13 @@ where
     icon("\u{E178}")
 }
 
+pub fn table<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E17D}")
+}
+
 pub fn tag<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
@@ -757,6 +871,20 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E181}")
+}
+
+pub fn thumbs_down<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E189}")
+}
+
+pub fn thumbs_up<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E18A}")
 }
 
 pub fn trash<'a, Theme>() -> Text<'a, Theme>
