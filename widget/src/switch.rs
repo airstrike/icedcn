@@ -33,6 +33,14 @@ use icedxdy_core::theme;
 
 use self::element::from_core;
 
+/// Nova switch track dimensions.
+#[derive(Default, Debug, Clone, Copy)]
+pub enum Size {
+    Sm,
+    #[default]
+    Default,
+}
+
 /// A styled switch matching shadcn/ui's Switch component.
 ///
 /// Radix state: uncontrolled with [`default_checked`](Self::default_checked)
@@ -46,6 +54,7 @@ pub struct Switch<'a, Message> {
     disabled: bool,
     label: Option<iced_core::text::Fragment<'a>>,
     width: Length,
+    size: Size,
     on_checked_change: Option<Box<dyn Fn(bool) -> Message + 'a>>,
     style: Option<theme::switch::StyleFn<'a, Theme>>,
 }
@@ -58,6 +67,7 @@ pub fn switch<'a, Message: 'a>() -> Switch<'a, Message> {
         disabled: false,
         label: None,
         width: Length::Shrink,
+        size: Size::Default,
         on_checked_change: None,
         style: None,
     }
@@ -87,6 +97,12 @@ impl<'a, Message: 'a> Switch<'a, Message> {
     /// Disable the switch.
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
+        self
+    }
+
+    /// Choose the 24 × 14 or 32 × 18.4 track.
+    pub fn size(mut self, size: impl Into<Size>) -> Self {
+        self.size = size.into();
         self
     }
 
@@ -121,6 +137,9 @@ impl<'a, Message: 'a> From<Switch<'a, Message>>
             None => widget::Toggler::new(false).uncontrolled(s.default_checked),
         };
         let mut tg = tg.width(s.width).disabled(s.disabled);
+        if let Size::Sm = s.size {
+            tg = tg.track_size(24., 14.);
+        }
 
         if let Some(label) = s.label {
             tg = tg.label(label);

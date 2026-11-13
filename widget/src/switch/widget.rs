@@ -57,6 +57,7 @@ where
     label: Option<text::Fragment<'a>>,
     width: Length,
     size: f32,
+    track_width: f32,
     text_size: Option<Pixels>,
     line_height: text::LineHeight,
     alignment: text::Alignment,
@@ -99,6 +100,7 @@ where
             label: None,
             width: Length::Shrink,
             size: Self::DEFAULT_SIZE,
+            track_width: 32.,
             text_size: None,
             line_height: text::LineHeight::default(),
             alignment: text::Alignment::Default,
@@ -154,7 +156,15 @@ where
 
     /// Sets the size of the [`Toggler`].
     pub fn size(mut self, size: impl Into<Pixels>) -> Self {
-        self.size = size.into().0;
+        let height = size.into().0;
+        self.track_width = height * 32. / Self::DEFAULT_SIZE;
+        self.size = height;
+        self
+    }
+
+    pub(super) fn track_size(mut self, width: f32, height: f32) -> Self {
+        self.track_width = width;
+        self.size = height;
         self
     }
 
@@ -375,11 +385,7 @@ where
                 self.size
             };
 
-            // Nova default: `data-[size=default]:w-[32px] h-[18.4px]`.
-            // Width = (32 / 18.4) * size preserves the exact aspect ratio
-            // at any caller-supplied size. At DEFAULT_SIZE = 18.4 this
-            // yields exactly 32 × 18.4. (Sweeten used 2.0 × size = 32 × 16.)
-            Size::new(32.0 / 18.4 * size, size)
+            Size::new(self.track_width, size)
         };
 
         let label = if let Some(label) = self.label.as_deref() {

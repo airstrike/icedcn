@@ -1,18 +1,8 @@
 ```rust
-use icedxdy::theme;
-use icedxdy::widget::{column, row, switch, text};
-
-row![
-    column![
-        text::label("Accept terms and conditions")
-            .style(theme::text::Destructive),
-        text::muted("You must accept the terms and conditions to continue."),
-    ]
-    .spacing(2)
-    .width(iced::Fill),
-    switch()
-        .style(theme::switch::Invalid),
-]
-.spacing(8)
-.width(384)
+field(switch().style(theme::switch::Invalid))
+    .orientation(Horizontal)
+    .control_last()
+    .label(text::label("Accept terms and conditions").style(theme::text::Destructive))
+    .description("You must accept the terms and conditions to continue.")
+    .width(384)
 ```

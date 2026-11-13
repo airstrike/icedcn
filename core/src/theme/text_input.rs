@@ -261,53 +261,22 @@ pub fn default(theme: &Theme, status: Status) -> Style {
     }
 }
 
-/// Invalid text input variant — nova `aria-invalid:*` field.
-///
-/// Same layout as [`default`] but with the destructive token swapped in for
-/// border (rest), border-on-focus, and ring color. Mirrors the nova class
-/// triplet `aria-invalid:border-destructive`,
-/// `aria-invalid:focus-visible:ring-destructive/20`,
-/// `aria-invalid:focus-visible:border-destructive`.
-///
-/// Note: shadcn ships `ring-destructive/20` (20% alpha). We currently render
-/// the ring at full alpha — proper alpha tracking through the Ring atom is a
-/// separate follow-up (needs `Token` to carry an alpha override or a new
-/// alpha-aware Ring tweak).
+/// Nova invalid border and three-pixel validation ring.
 pub fn invalid(theme: &Theme, status: Status) -> Style {
-    let p = theme;
-    let base = default(theme, status);
-
-    match status {
-        Status::Active | Status::Hovered => Style {
-            border: Border {
-                color: p.destructive.base,
-                ..base.border
-            },
-            ..base
-        },
-        Status::Focused { .. } => Style {
-            border: Border {
-                color: p.destructive.base,
-                ..base.border
-            },
-            ring: Some(Ring {
-                // FIXME: shadcn `ring-destructive/20` = 20% alpha; full alpha
-                // here pending an alpha-aware Ring tweak (see module docs).
-                color: p.destructive.base,
-                width: 3.0,
-            }),
-            ..base
-        },
-        // Disabled propagates the destructive border through the same
-        // `scale_alpha(0.5)` dimming applied by `default`.
-        Status::Disabled => Style {
-            border: Border {
-                color: p.destructive.base.scale_alpha(0.5),
-                ..base.border
-            },
-            ..base
-        },
-    }
+    let mut style = default(theme, status);
+    let destructive = theme.destructive.base;
+    let dark = is_dark(theme);
+    let opacity = if matches!(status, Status::Disabled) {
+        0.5
+    } else {
+        1.0
+    };
+    style.border.color = destructive.scale_alpha(if dark { 0.5 * opacity } else { opacity });
+    style.ring = Some(Ring {
+        color: destructive.scale_alpha(if dark { 0.4 * opacity } else { 0.2 * opacity }),
+        width: 3.0,
+    });
+    style
 }
 
 // --- Variant unit structs ----------------------------------------------------

@@ -1,21 +1,10 @@
-// API Reference is rendered via the `switch-api-reference.md` snippet at
-// the bottom of BLOCKS. The live docs page defers the prop matrix to
-// Radix's own docs (`Switch.checked`, `defaultChecked`, `onCheckedChange`,
-// `disabled`, `aria-invalid`, `size`); the snippet captures the
-// icedxdy-shaped builder API plus the `field(...)`-driven `htmlFor`
-// reproduction and the size-matrix-out-of-scope note.
-//
-// Intentional skips per CLAUDE.md: switch-rtl (RTL),
-// switch-choice-card (composite of switch + container; defer to a later
-// minimap), switch-sizes (size variants are out-of-scope for the MVP —
-// shadcn ships `sm` and `default`; vendoring the full size matrix is its
-// own design surface).
-
 use iced::Task;
 
+use icedxdy::Horizontal;
 use icedxdy::Theme;
 use icedxdy::theme;
-use icedxdy::widget::{column, container, row, switch, text};
+use icedxdy::theme::tweak::Alpha;
+use icedxdy::widget::{container, field, switch, text};
 
 use crate::Message;
 use crate::page;
@@ -42,6 +31,12 @@ pub static BLOCKS: &[page::Block] = &[
                 snippet: "examples/browser/snippets/switch-description.md",
             },
             page::Block::Example {
+                id: "choice-card",
+                title: "Choice Card",
+                description: Some("Wrap a horizontal field in a clickable choice card."),
+                snippet: "examples/browser/snippets/switch-choice-card.md",
+            },
+            page::Block::Example {
                 id: "disabled",
                 title: "Disabled",
                 description: Some("A disabled switch cannot be toggled."),
@@ -54,6 +49,12 @@ pub static BLOCKS: &[page::Block] = &[
                     "Use the invalid variant to surface validation errors with a destructive border.",
                 ),
                 snippet: "examples/browser/snippets/switch-invalid.md",
+            },
+            page::Block::Example {
+                id: "sizes",
+                title: "Size",
+                description: Some("Use the size prop to change the size of the switch."),
+                snippet: "examples/browser/snippets/switch-sizes.md",
             },
         ],
     },
@@ -107,62 +108,67 @@ impl page::Page for SwitchPage {
         // centered demo layout. The page-level container already centers
         // vertically; this layer handles the horizontal axis explicitly.
         let inner: iced::Element<'_, Message, Theme> = match id {
-            // Demo (hero): switch + plain inline label. Verbatim from
-            // `.nova/apps/v4/examples/radix/switch-demo.tsx`.
-            "demo" => row![switch(), text::label("Airplane Mode"),]
-                .spacing(8)
+            "demo" => field(switch())
+                .orientation(Horizontal)
+                .label("Airplane Mode")
                 .into(),
 
-            // Description: horizontal field with label + muted description on
-            // the LEFT and the switch on the RIGHT. Verbatim from
-            // `.nova/apps/v4/examples/radix/switch-description.tsx`.
-            // Field/FieldContent/FieldLabel/FieldDescription are not yet
-            // shipped — Phase 4 lands them; for now we hand-roll the row +
-            // column + muted-description shape that Field will eventually
-            // wrap.
-            // TODO Phase 4: max-width 384 (currently fixed width — Row lacks
-            // max_width(); swap .width(384) to .max_width(384) once available).
-            "description" => row![
-                column![
-                    text::label("Share across devices"),
-                    text::muted(
+            "description" => field(switch())
+                .orientation(Horizontal)
+                .control_last()
+                .label("Share across devices")
+                .description(
+                    "Focus is shared across devices, and turns off when you leave the app.",
+                )
+                .width(384)
+                .into(),
+
+            "disabled" => field(switch())
+                .orientation(Horizontal)
+                .label(text::label("Disabled").style(theme::text::Foreground + Alpha(0.5)))
+                .disabled(true)
+                .into(),
+
+            "invalid" => field(switch().style(theme::switch::Invalid))
+                .orientation(Horizontal)
+                .control_last()
+                .label(text::label("Accept terms and conditions").style(theme::text::Destructive))
+                .description("You must accept the terms and conditions to continue.")
+                .width(384)
+                .into(),
+
+            "choice-card" => field::group([
+                field(switch())
+                    .orientation(Horizontal)
+                    .control_last()
+                    .label("Share across devices")
+                    .description(
                         "Focus is shared across devices, and turns off when you leave the app.",
-                    ),
-                ]
-                .spacing(2)
-                .width(iced::Fill),
-                switch(),
-            ]
-            .spacing(8)
+                    )
+                    .card()
+                    .into(),
+                field(switch().default_checked(true))
+                    .orientation(Horizontal)
+                    .control_last()
+                    .label("Enable notifications")
+                    .description("Receive notifications when focus mode is enabled or disabled.")
+                    .card()
+                    .into(),
+            ])
             .width(384)
             .into(),
 
-            // Disabled: `.disabled(true)` on the switch.
-            // Disabled label: nova cascades opacity-50 via data-disabled on Field.
-            // text::muted approximates the dimming today; text::label (Phase 3)
-            // + a proper opacity tweak (Phase 4) will land the exact spec.
-            "disabled" => row![switch().disabled(true), text::muted("Disabled").medium(),]
-                .spacing(8)
-                .into(),
-
-            // Invalid: destructive border via the `theme::switch::Invalid`
-            // variant, matching shadcn's `aria-invalid` styling. Layout
-            // mirrors the Description example.
-            // TODO Phase 4: max-width 384 (currently fixed width — Row lacks
-            // max_width(); swap .width(384) to .max_width(384) once available).
-            // Invalid label: nova cascades text-destructive via data-invalid on
-            // Field. text::error (Phase 3) will consolidate this idiom.
-            "invalid" => row![
-                column![
-                    text::label("Accept terms and conditions").style(theme::text::Destructive),
-                    text::muted("You must accept the terms and conditions to continue."),
-                ]
-                .spacing(2)
-                .width(iced::Fill),
-                switch().style(theme::switch::Invalid),
-            ]
-            .spacing(8)
-            .width(384)
+            "sizes" => field::group([
+                field(switch().size(switch::Size::Sm))
+                    .orientation(Horizontal)
+                    .label("Small")
+                    .into(),
+                field(switch())
+                    .orientation(Horizontal)
+                    .label("Default")
+                    .into(),
+            ])
+            .width(160)
             .into(),
 
             _ => unreachable!("unknown switch preview id: {id}"),

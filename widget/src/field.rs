@@ -65,6 +65,7 @@ use iced_widget::Widget;
 pub mod widget;
 
 use iced_core::Length;
+use iced_core::Length::Fill;
 use iced_widget::Renderer;
 use icedxdy_core::Theme;
 use icedxdy_core::theme::field::Card;
@@ -98,6 +99,9 @@ pub struct Field<'a, Message> {
     description: Option<Slot<'a, Message>>,
     error: Option<Slot<'a, Message>>,
     orientation: Orientation,
+    control_last: bool,
+    description_above: bool,
+    disabled: bool,
     card: bool,
     width: Option<Length>,
 }
@@ -124,6 +128,9 @@ pub fn field<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Field<'a
         description: None,
         error: None,
         orientation: Orientation::Vertical,
+        control_last: false,
+        description_above: false,
+        disabled: false,
         card: false,
         width: None,
     }
@@ -182,6 +189,24 @@ impl<'a, Message: 'a> Field<'a, Message> {
         self
     }
 
+    /// Place the control after its label and description in a horizontal field.
+    pub fn control_last(mut self) -> Self {
+        self.control_last = true;
+        self
+    }
+
+    /// Place the description between the label and control in a vertical field.
+    pub fn description_above(mut self) -> Self {
+        self.description_above = true;
+        self
+    }
+
+    /// Disable the field's control and its descendants.
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
+        self
+    }
+
     /// Wrap the entire field in a bordered card container.
     ///
     /// While the field's control is checked the card takes a primary-tinted
@@ -236,6 +261,12 @@ impl<'a, Message: 'a> From<Group<'a, Message>> for Slot<'a, Message> {
 }
 
 impl<'a, Message: 'a> Compose<Message> for Group<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        for child in &mut self.children {
+            child.inherit(from);
+        }
+    }
+
     fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
@@ -285,15 +316,22 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
     where
         Self: 'b,
     {
+        let mut contents = *self;
+        if contents.disabled {
+            contents.inherit(&Inherited::default().with_disabled(true));
+        }
         let Field {
             label,
             content,
             description,
             error,
             orientation,
+            control_last,
+            description_above,
             card,
             width,
-        } = *self;
+            ..
+        } = contents;
 
         // The label records presses for the field to activate its control.
         // A card is a label as a whole (shadcn wraps the field in its
@@ -318,9 +356,13 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
                 if let Some(label) = label {
                     col = col.push(label);
                 }
+                let mut description = description.map(Slot::compose);
+                if description_above && let Some(above) = description.take() {
+                    col = col.push(above);
+                }
                 col = col.push(content.compose());
-                if let Some(description) = description {
-                    col = col.push(description.compose());
+                if let Some(below) = description {
+                    col = col.push(below);
                 }
                 if let Some(error) = error {
                     col = col.push(error.compose());
@@ -359,12 +401,14 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
                     if let Some(error) = error {
                         right = right.push(error.compose());
                     }
-                    iced_widget::Row::new()
-                        .spacing(8)
-                        .align_y(align)
-                        .push(content_element)
-                        .push(right.boxed())
-                        .boxed()
+                    let row = iced_widget::Row::new().spacing(8).align_y(align);
+                    if control_last {
+                        row.push(right.width(Fill).boxed())
+                            .push(content_element)
+                            .boxed()
+                    } else {
+                        row.push(content_element).push(right.boxed()).boxed()
+                    }
                 } else {
                     // No right-hand content — just content on its own in a row.
                     iced_widget::Row::new()

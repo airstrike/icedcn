@@ -31,4 +31,4 @@ Inside `field(switch()).label("...")`, pressing the label toggles the switch, li
 | `Switch.onCheckedChange` | `.on_checked_change(f)`. |
 | `Switch.disabled` | `.disabled(true)`. |
 | `Switch.aria-invalid` | `.style(theme::switch::Invalid)`. |
-| `Switch.size` (`"default" \| "sm"`) | not yet exposed. |
+| `Switch.size` (`"default" \| "sm"`) | `.size(switch::Size::Default)` or `.size(switch::Size::Sm)`. |

@@ -1,10 +1,8 @@
-// Intentional skips: textarea-rtl (RTL). In textarea-field shadcn puts the
-// description between the label and the textarea; icedxdy's field always
-// puts it below its control. In textarea-disabled shadcn's
-// `Field data-disabled` also dims the label; field has no disabled state.
-
 use iced::{Fill, Task};
 
+use icedxdy::theme;
+use icedxdy::theme::tweak::Alpha;
+use icedxdy::widget::text;
 use icedxdy::widget::{button, column, container, field, textarea};
 use icedxdy::{Slot, Theme};
 
@@ -110,18 +108,21 @@ impl page::Page for TextareaPage {
             "field" => full(
                 field(textarea("Type your message here."))
                     .label("Message")
-                    .description("Enter your message below."),
+                    .description("Enter your message below.")
+                    .description_above(),
             ),
 
             // shadcn `textarea-disabled.tsx`.
-            "disabled" => {
-                full(field(textarea("Type your message here.").disabled(true)).label("Message"))
-            }
+            "disabled" => full(
+                field(textarea("Type your message here."))
+                    .disabled(true)
+                    .label(text::label("Message").style(theme::text::Foreground + Alpha(0.5))),
+            ),
 
             // shadcn `textarea-invalid.tsx`.
             "invalid" => full(
                 field(textarea("Type your message here.").style(textarea::Invalid))
-                    .label("Message")
+                    .label(text::label("Message").style(theme::text::Destructive))
                     .description("Please enter a valid message."),
             ),
 
