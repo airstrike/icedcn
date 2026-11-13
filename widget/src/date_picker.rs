@@ -88,10 +88,8 @@ pub enum Event {
     Pick(Option<Selection>),
 }
 
-impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for DatePicker<'a, Message> {
-    type State = State;
-    type Event = Event;
-    fn update(&self, state: &mut State, event: Event, _: &Renderer) -> Option<Message> {
+impl<Message> DatePicker<'_, Message> {
+    fn apply(&self, state: &mut State, event: Event) -> Option<Message> {
         if self.disabled {
             return None;
         }
@@ -110,6 +108,13 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for DatePicke
                 self.on_change.as_ref().map(|f| f(selection))
             }
         }
+    }
+}
+impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for DatePicker<'a, Message> {
+    type State = State;
+    type Event = Event;
+    fn update(&self, state: &mut State, event: Event, _: &Renderer) -> Option<Message> {
+        self.apply(state, event)
     }
     fn view(&self, state: &State) -> impl Widget<Event, Theme, Renderer> + 'a {
         let selected = self.value.or(state.selection).unwrap_or(self.initial);
@@ -195,17 +200,9 @@ mod tests {
         };
         let start = Date::from_ymd_opt(2026, 3, 8).unwrap();
         let end = Date::from_ymd_opt(2026, 3, 12).unwrap();
-        picker.update(
-            &mut state,
-            Event::Pick(Some(Selection::single(start))),
-            &Renderer::default(),
-        );
+        picker.apply(&mut state, Event::Pick(Some(Selection::single(start))));
         assert!(state.open);
-        picker.update(
-            &mut state,
-            Event::Pick(Some(Selection::range(start, end))),
-            &Renderer::default(),
-        );
+        picker.apply(&mut state, Event::Pick(Some(Selection::range(start, end))));
         assert!(!state.open);
         assert_eq!(state.selection, Some(Some(Selection::range(start, end))));
     }
