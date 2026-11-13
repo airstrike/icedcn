@@ -28,6 +28,7 @@ use iced_widget::{Renderer, Space, Widget, anchored};
 use icedxdy_core::Theme;
 use icedxdy_core::theme::popover::content;
 use icedxdy_core::theme::select::trigger;
+use std::rc::Rc;
 
 use crate::button::widget::{self, Button};
 use crate::compose::{Compose, Inherited, Slot};
@@ -114,6 +115,7 @@ pub enum Position {
 
 type ValueLabel<'a> = Box<dyn Fn(&str, &str) -> String + 'a>;
 
+type TriggerPaint<'a> = Rc<dyn Fn(&Theme, widget::Status, bool, bool) -> widget::Style + 'a>;
 /// A field choosing one value from a list.
 pub struct Select<'a, Message> {
     entries: Vec<Entry>,
@@ -127,6 +129,7 @@ pub struct Select<'a, Message> {
     width: Length,
     size: Size,
     variant: Variant,
+    trigger_paint: Option<TriggerPaint<'a>>,
     icon: Option<Box<dyn Fn() -> iced_widget::Text<'a, Theme> + 'a>>,
     inherited: Inherited,
 }
@@ -164,6 +167,7 @@ pub fn select<'a, Message>(entries: impl IntoIterator<Item = Entry>) -> Select<'
         width: Length::Shrink,
         size: Size::Default,
         variant: Variant::Default,
+        trigger_paint: None,
         icon: None,
         inherited: Inherited::default(),
     }
@@ -222,6 +226,14 @@ impl<'a, Message> Select<'a, Message> {
     /// Set the trigger's size: `Size::Sm` is `h-7`, the default `h-8`.
     pub fn size(mut self, size: impl Into<Size>) -> Self {
         self.size = size.into();
+        self
+    }
+
+    pub(crate) fn trigger_style(
+        mut self,
+        paint: impl Fn(&Theme, widget::Status, bool, bool) -> widget::Style + 'a,
+    ) -> Self {
+        self.trigger_paint = Some(Rc::new(paint));
         self
     }
 
@@ -334,6 +346,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
                 })
         });
 
+        let has_value = chosen.is_some();
         let value: Slot<'a, Event> = match chosen {
             Some(label) => text::small(label).into(),
             None => text::muted(self.placeholder.clone()).into(),
@@ -351,9 +364,14 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
         line.inherit(&self.inherited);
 
         let variant = self.variant;
+        let custom = self.trigger_paint.clone();
+        let opened = state.open;
         let style: widget::StyleFn<'a, Theme> =
             Box::new(move |theme: &Theme, status: widget::Status| {
-                trigger(theme, status.into(), variant).into()
+                custom.as_ref().map_or_else(
+                    || trigger(theme, status.into(), variant).into(),
+                    |paint| paint(theme, status, opened, has_value),
+                )
             });
 
         // `py-2 pr-2 pl-2.5`, `h-8` (`h-7` small).

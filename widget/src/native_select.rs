@@ -20,6 +20,7 @@
 //!
 //! `aria-invalid` is a style: `.style(native_select::Invalid)`.
 
+use crate::button::widget;
 use std::fmt;
 use std::rc::Rc;
 
@@ -211,7 +212,36 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for NativeSel
             .iter()
             .any(|item| matches!(item, Item::Group { .. }))
         {
+            let paint = Rc::clone(&self.style);
             let mut list = select(self.items.iter().map(Item::entries))
+                .trigger_style(move |theme, button, open, selected| {
+                    let hovered = matches!(
+                        button,
+                        widget::Status::Hovered | widget::Status::Focused { is_hovered: true }
+                    );
+                    let status = if button == widget::Status::Disabled {
+                        Status::Disabled
+                    } else if open {
+                        Status::Opened {
+                            is_hovered: hovered,
+                        }
+                    } else if hovered {
+                        Status::Hovered
+                    } else {
+                        Status::Active
+                    };
+                    let paint = paint(theme, status);
+                    widget::Style {
+                        background: Some(paint.background),
+                        border: paint.border,
+                        text_color: if selected {
+                            paint.text_color
+                        } else {
+                            paint.placeholder_color
+                        },
+                        ..widget::Style::default()
+                    }
+                })
                 .position(Position::Popper)
                 .size(self.size)
                 .disabled(self.disabled);
