@@ -7,12 +7,13 @@
 // Intentional skips:
 // - aspect-ratio-rtl — RTL is not in scope (per CLAUDE.md).
 
-use iced::Task;
-
+use iced::widget::{image, stack};
+use iced::{ContentFit, Fill, Task, Widget};
 use icedxdy::core::{Border, Color};
 use icedxdy::theme::container::Style;
 use icedxdy::widget::{aspect_ratio, container};
 use icedxdy::{Theme, radius};
+use std::sync::OnceLock;
 
 use crate::Message;
 use crate::page;
@@ -67,26 +68,39 @@ impl AspectRatioPage {
     }
 }
 
-/// Stand-in for the shadcn next/image shown inside the AspectRatio. iced has
-/// no built-in URL-fetcher and the project ships no checked-in raster
-/// asset, so the demo uses a `bg-muted` rounded fill — visually equivalent
-/// to shadcn's grayscale placeholder against the muted background card,
-/// just without the photographic content. The geometry — what the example
-/// is actually demonstrating — is unaffected.
-fn image_placeholder<'a>() -> iced::Element<'a, Message, Theme> {
-    container("")
-        .width(iced::Fill)
-        .height(iced::Fill)
-        .style(|theme: &Theme| Style {
-            background: Some(theme.muted.base.into()),
-            border: Border {
-                radius: radius::LG.into(),
-                width: 0.0,
-                color: Color::TRANSPARENT,
-            },
-            ..Style::default()
-        })
-        .into()
+/// Nova uses a grayscale crop of the shadcn1 avatar gradient and a darker
+/// image in dark mode. Both Aspect Ratio and Card use the same cover.
+pub(crate) fn cover<'a>(card: bool) -> iced::Element<'a, Message, Theme> {
+    static COVER: OnceLock<image::Handle> = OnceLock::new();
+    let handle = COVER.get_or_init(|| {
+        image::Handle::from_bytes(include_bytes!("../../assets/shadcn1.jpg").as_slice())
+    });
+    let radius = if card { 0.0 } else { radius::LG };
+    let image = image(handle.clone())
+        .width(Fill)
+        .height(Fill)
+        .content_fit(ContentFit::Cover)
+        .border_radius(radius);
+    let tint = container("")
+        .width(Fill)
+        .height(Fill)
+        .style(move |t: &Theme| {
+            let amount = match (card, t.neutral.is_dark) {
+                (true, true) => 0.74,
+                (true, false) => 0.61,
+                (false, true) => 0.8,
+                (false, false) => 0.0,
+            };
+            Style {
+                background: Some(Color::BLACK.alpha(amount).into()),
+                border: Border {
+                    radius: radius.into(),
+                    ..Default::default()
+                },
+                ..Style::default()
+            }
+        });
+    stack![image, iced::Element::from(tint)].boxed()
 }
 
 impl page::Page for AspectRatioPage {
@@ -126,21 +140,19 @@ impl page::Page for AspectRatioPage {
             // widget docs for why a wrapping `container(...).max_width(...)`
             // is the wrong shape (Shrink-width parent triggers
             // width-compression and collapses the child).
-            "demo" => aspect_ratio(image_placeholder(), 16.0 / 9.0)
+            "demo" => aspect_ratio(cover(false), 16.0 / 9.0)
                 .max_width(384.0)
                 .into(),
 
             // Portrait (9:16). shadcn `aspect-ratio-portrait.tsx`:
             // max-w-[10rem] = 160px.
-            "portrait" => aspect_ratio(image_placeholder(), 9.0 / 16.0)
+            "portrait" => aspect_ratio(cover(false), 9.0 / 16.0)
                 .max_width(160.0)
                 .into(),
 
             // Square (1:1). shadcn `aspect-ratio-square.tsx`:
             // max-w-[12rem] = 192px.
-            "square" => aspect_ratio(image_placeholder(), 1.0)
-                .max_width(192.0)
-                .into(),
+            "square" => aspect_ratio(cover(false), 1.0).max_width(192.0).into(),
 
             _ => unreachable!("unknown aspect_ratio preview id: {id}"),
         }

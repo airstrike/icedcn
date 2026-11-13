@@ -2,15 +2,15 @@
 use icedxdy::widget::{avatar, row};
 
 row![
-    avatar(Some(airstrike_handle())).fallback("AT"),
+    avatar(Some(shadcn_handle())).fallback("CN"),
     avatar::badge(
-        avatar(Some(hecrj_handle())).fallback("HR"),
+        avatar(Some(evilrabbit_handle())).fallback("ER"),
         avatar::dot(),
     ),
     avatar::group([
-        avatar(Some(airstrike_handle())).fallback("AT"),
-        avatar(Some(hecrj_handle())).fallback("HR"),
-        avatar(Some(iced_handle())).fallback("IC"),
+        avatar(Some(shadcn_handle())).fallback("CN"),
+        avatar(Some(maxleiter_handle())).fallback("LR"),
+        avatar(Some(evilrabbit_handle())).fallback("ER"),
     ])
     .count("+3"),
 ]

@@ -9,7 +9,7 @@ Constructor for an `Avatar` builder. Takes an `Option<image::Handle>` — `Some(
 | `.fallback(content)` | `impl Into<Slot>` | `None` | Content rendered on the muted surface when no image is provided. Typically initials (`"CN"`, `"ER"`) but accepts any `Slot` — an icon, a single character, etc. |
 | `.size(size)` | `impl Into<Size>` | `Default` (32px) | Size variant: `avatar::Sm` (24px), `avatar::Default` (32px), `avatar::Lg` (40px). Drives diameter, font size, and badge chip dimensions. |
 
-**Image-load failure caveat.** Shadcn's `AvatarImage` falls back to `AvatarFallback` on runtime image-load failure. Iced's `Image` widget exposes no equivalent event surface, so the fallback only triggers when the caller passes `None` — a `Some(handle)` whose file is broken renders iced's blank/broken-image affordance instead.
+The fallback is visible while the image loads and when decoding fails.
 
 ### `avatar::badge()`
 

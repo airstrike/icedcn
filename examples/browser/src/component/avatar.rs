@@ -1,56 +1,55 @@
-// API Reference is rendered via the `avatar-api-reference.md` snippet at
-// the bottom of BLOCKS. Live docs API Reference covers `Avatar.size`
-// (`Default` / `Sm` / `Lg`, default `Default`) plus the `AvatarImage`,
-// `AvatarFallback`, `AvatarBadge`, `AvatarGroup`, and `AvatarGroupCount`
-// sub-components. The snippet captures the icedxdy-shaped builder API for
-// `avatar(...)`, `avatar::badge(...)`, `avatar::group(...)`, plus the
-// image-load-failure caveat.
-//
-// Intentional skips:
-// - Composition preamble (live-docs section between Usage and Examples) —
-//   it's an ASCII tree of `Avatar`/`AvatarGroup` subcomponent shapes
-//   (`Avatar ├── AvatarImage ├── AvatarFallback └── AvatarBadge`, etc.).
-//   Pure docs scaffolding; nothing to render as a `Block::Example`. Will fold
-//   in once a `Block::Md` (or equivalent prose block) primitive lands.
-// - avatar-dropdown — needs a dropdown-menu primitive (not yet ported).
-// - avatar-rtl — RTL is not in scope (per CLAUDE.md).
-//
-// Avatars are bundled as static PNGs under `examples/browser/assets/avatars/`
-// and surfaced through small `*_handle()` helpers below. Snippets reference
-// these same helpers verbatim so users can copy-paste the rendered example
-// directly. iced has no URL fetcher; `include_bytes!` is the canonical path.
-
 use std::sync::OnceLock;
 
 use iced::Task;
 use iced::widget::image;
 
 use icedxdy::Theme;
-use icedxdy::widget::{avatar, row};
+use icedxdy::widget::{avatar, button, column, dropdown_menu, menu, row};
 
 use crate::Message;
 use crate::icon;
 use crate::page;
 
-/// Andy Terra's GitHub avatar (the icedxdy author).
-fn airstrike_handle() -> image::Handle {
-    static H: OnceLock<image::Handle> = OnceLock::new();
-    static BYTES: &[u8] = include_bytes!("../../assets/avatars/airstrike.png");
-    H.get_or_init(|| image::Handle::from_bytes(BYTES)).clone()
+pub(crate) fn shadcn_handle() -> image::Handle {
+    static IMAGE: OnceLock<image::Handle> = OnceLock::new();
+    IMAGE
+        .get_or_init(|| {
+            image::Handle::from_bytes(include_bytes!("../../assets/avatars/shadcn.png").as_slice())
+        })
+        .clone()
 }
 
-/// Héctor Ramón's GitHub avatar (iced's creator).
-fn hecrj_handle() -> image::Handle {
-    static H: OnceLock<image::Handle> = OnceLock::new();
-    static BYTES: &[u8] = include_bytes!("../../assets/avatars/hecrj.png");
-    H.get_or_init(|| image::Handle::from_bytes(BYTES)).clone()
+pub(crate) fn maxleiter_handle() -> image::Handle {
+    static IMAGE: OnceLock<image::Handle> = OnceLock::new();
+    IMAGE
+        .get_or_init(|| {
+            image::Handle::from_bytes(
+                include_bytes!("../../assets/avatars/maxleiter.png").as_slice(),
+            )
+        })
+        .clone()
 }
 
-/// The iced framework's snowflake mark (iced-rs org avatar).
-fn iced_handle() -> image::Handle {
-    static H: OnceLock<image::Handle> = OnceLock::new();
-    static BYTES: &[u8] = include_bytes!("../../assets/avatars/iced.png");
-    H.get_or_init(|| image::Handle::from_bytes(BYTES)).clone()
+pub(crate) fn evilrabbit_handle() -> image::Handle {
+    static IMAGE: OnceLock<image::Handle> = OnceLock::new();
+    IMAGE
+        .get_or_init(|| {
+            image::Handle::from_bytes(
+                include_bytes!("../../assets/avatars/evilrabbit.png").as_slice(),
+            )
+        })
+        .clone()
+}
+
+pub(crate) fn pranathip_handle() -> image::Handle {
+    static IMAGE: OnceLock<image::Handle> = OnceLock::new();
+    IMAGE
+        .get_or_init(|| {
+            image::Handle::from_bytes(
+                include_bytes!("../../assets/avatars/pranathip.png").as_slice(),
+            )
+        })
+        .clone()
 }
 
 pub static META: page::Meta = page::Meta {
@@ -113,6 +112,12 @@ pub static BLOCKS: &[page::Block] = &[
                 description: Some("Use the size prop to change the size of the avatar."),
                 snippet: "examples/browser/snippets/avatar-size.md",
             },
+            page::Block::Example {
+                id: "dropdown",
+                title: "Dropdown",
+                description: Some("Use an avatar as a dropdown menu trigger."),
+                snippet: "examples/browser/snippets/avatar-dropdown.md",
+            },
         ],
     },
     page::Block::Md("examples/browser/snippets/avatar-api-reference.md"),
@@ -159,23 +164,21 @@ impl page::Page for AvatarPage {
         self.state.reset_volatile();
     }
 
-    /// Each example wires a real `image::Handle` (PNGs bundled under
-    /// `examples/browser/assets/avatars/` via `include_bytes!`). The
-    /// fallback initials still match each persona — they only render if
-    /// decoding fails, which mirrors the image-load-failure deviation
-    /// documented on the avatar widget itself.
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
             // Hero (avatar-demo.tsx): three avatars in a row at gap-6 (24px),
             // demonstrating the basic avatar, an avatar with a status badge,
             // and a group with a +3 count.
             "demo" => row![
-                avatar(Some(airstrike_handle())).fallback("AT"),
-                avatar::badge(avatar(Some(hecrj_handle())).fallback("HR"), avatar::dot(),),
+                avatar(Some(shadcn_handle())).fallback("CN"),
+                avatar::badge(
+                    avatar(Some(evilrabbit_handle())).fallback("ER"),
+                    avatar::dot(),
+                ),
                 avatar::group([
-                    avatar(Some(airstrike_handle())).fallback("AT"),
-                    avatar(Some(hecrj_handle())).fallback("HR"),
-                    avatar(Some(iced_handle())).fallback("IC"),
+                    avatar(Some(shadcn_handle())).fallback("CN"),
+                    avatar(Some(maxleiter_handle())).fallback("LR"),
+                    avatar(Some(evilrabbit_handle())).fallback("ER"),
                 ])
                 .count("+3"),
             ]
@@ -184,33 +187,35 @@ impl page::Page for AvatarPage {
             .into(),
 
             // Basic (avatar-basic.tsx): single avatar — image + fallback.
-            "basic" => avatar(Some(airstrike_handle())).fallback("AT").into(),
+            "basic" => avatar(Some(shadcn_handle())).fallback("CN").into(),
 
             // Badge (avatar-badge.tsx): avatar + corner status dot.
             "badge" => {
-                avatar::badge(avatar(Some(hecrj_handle())).fallback("HR"), avatar::dot()).into()
+                avatar::badge(avatar(Some(shadcn_handle())).fallback("CN"), avatar::dot()).into()
             }
 
             // Badge with Icon (avatar-badge-icon.tsx): avatar + corner badge
             // containing a `+` icon (lucide PlusIcon).
-            "badge-icon" => {
-                avatar::badge(avatar(Some(iced_handle())).fallback("IC"), icon::plus()).into()
-            }
+            "badge-icon" => avatar::badge(
+                avatar(Some(pranathip_handle())).fallback("PP"),
+                icon::plus(),
+            )
+            .into(),
 
             // Avatar Group (avatar-group.tsx): three overlapping avatars.
             "group" => avatar::group([
-                avatar(Some(airstrike_handle())).fallback("AT"),
-                avatar(Some(hecrj_handle())).fallback("HR"),
-                avatar(Some(iced_handle())).fallback("IC"),
+                avatar(Some(shadcn_handle())).fallback("CN"),
+                avatar(Some(maxleiter_handle())).fallback("LR"),
+                avatar(Some(evilrabbit_handle())).fallback("ER"),
             ])
             .into(),
 
             // Avatar Group Count (avatar-group-count.tsx): three avatars +
             // a `+3` text count chip on the right.
             "group-count" => avatar::group([
-                avatar(Some(airstrike_handle())).fallback("AT"),
-                avatar(Some(hecrj_handle())).fallback("HR"),
-                avatar(Some(iced_handle())).fallback("IC"),
+                avatar(Some(shadcn_handle())).fallback("CN"),
+                avatar(Some(maxleiter_handle())).fallback("LR"),
+                avatar(Some(evilrabbit_handle())).fallback("ER"),
             ])
             .count("+3")
             .into(),
@@ -218,9 +223,9 @@ impl page::Page for AvatarPage {
             // Avatar Group with Icon (avatar-group-count-icon.tsx): three
             // avatars + a `+` icon count chip on the right.
             "group-count-icon" => avatar::group([
-                avatar(Some(airstrike_handle())).fallback("AT"),
-                avatar(Some(hecrj_handle())).fallback("HR"),
-                avatar(Some(iced_handle())).fallback("IC"),
+                avatar(Some(shadcn_handle())).fallback("CN"),
+                avatar(Some(maxleiter_handle())).fallback("LR"),
+                avatar(Some(evilrabbit_handle())).fallback("ER"),
             ])
             .count(icon::plus())
             .into(),
@@ -229,16 +234,40 @@ impl page::Page for AvatarPage {
             // a row at gap-2 (8px). Same persona at three sizes mirrors the
             // shadcn example (which uses the same avatar three times).
             "size" => row![
-                avatar(Some(airstrike_handle()))
-                    .fallback("AT")
+                avatar(Some(shadcn_handle()))
+                    .fallback("CN")
                     .size(avatar::Sm),
-                avatar(Some(airstrike_handle())).fallback("AT"),
-                avatar(Some(airstrike_handle()))
-                    .fallback("AT")
+                avatar(Some(shadcn_handle())).fallback("CN"),
+                avatar(Some(shadcn_handle()))
+                    .fallback("CN")
                     .size(avatar::Lg),
             ]
             .spacing(8)
             .align_y(iced::Center)
+            .into(),
+
+            "dropdown" => dropdown_menu(
+                |m| {
+                    m.trigger(
+                        button(avatar(Some(shadcn_handle())).fallback("CN"))
+                            .style(button::Ghost)
+                            .square()
+                            .rounded(),
+                    )
+                },
+                |_| {
+                    column![
+                        menu::item("Profile"),
+                        menu::item("Billing"),
+                        menu::item("Settings"),
+                        menu::separator(),
+                        menu::item("Log out").style(menu::Destructive)
+                    ]
+                    .width(iced::Fill)
+                    .into()
+                },
+            )
+            .width(128)
             .into(),
 
             _ => unreachable!("unknown avatar preview id: {id}"),

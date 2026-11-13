@@ -1,13 +1,12 @@
 ```rust
 use iced::Fill;
-use iced::widget::stack;
 
 use icedxdy::card;
 use icedxdy::widget::{aspect_ratio, badge, button, column};
 use icedxdy::Gap;
 
 card(column![
-    aspect_ratio(stack![image_placeholder(), image_overlay()], 16.0 / 9.0),
+    aspect_ratio(cover(true), 16.0 / 9.0),
     card::header("Design systems meetup")
         .description(
             "A practical talk on component APIs, accessibility, and shipping faster.",

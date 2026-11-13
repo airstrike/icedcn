@@ -8,29 +8,15 @@
 //
 // Intentional skips per CLAUDE.md: card-rtl (RTL).
 //
-// Scope notes:
-// - The card-small example renders without a true `Sm`-size driver
-//   (no `Card.size(Sm)` builder yet — out of scope this phase). Visual
-//   delta vs the default size is small (text-base → text-sm on the title,
-//   `gap-3 py-3 px-3` instead of `gap-4 py-4 px-4`); the example demonstrates
-//   the same content shape shadcn ships.
-// - The card-image example uses a muted-bg placeholder rectangle in lieu of
-//   a raster asset (no checked-in image, no URL fetcher in iced) — same
-//   stand-in `aspect_ratio.rs` adopted, with a 35%-black overlay layered on
-//   top per shadcn's `absolute inset-0 z-30 aspect-video bg-black/35`.
-
 use iced::Alignment::Center;
 use iced::Fill;
 use iced::Task;
 use iced::Widget;
-use iced::widget::stack;
+use super::aspect_ratio::cover;
 
 use icedxdy::card;
-use icedxdy::core::Border;
-use icedxdy::core::Color;
-use icedxdy::theme::container::Style;
 use icedxdy::widget::{
-    aspect_ratio, badge, button, column, container, field, input, row, space, text,
+    aspect_ratio, badge, button, column, field, input, row, space, text,
 };
 use icedxdy::{Gap, Size, Slot, Theme};
 
@@ -84,41 +70,6 @@ impl CardPage {
             state: page::State::new(page_index, BLOCKS),
         })
     }
-}
-
-/// Stand-in for the shadcn `<img>` shown above the card header. iced has
-/// no built-in URL fetcher and the project ships no checked-in raster
-/// asset, so the example uses a muted-bg rectangle — the same approach
-/// `aspect_ratio.rs` adopted. The aspect ratio (16:9) and the 35% black
-/// overlay above it are unaffected; that's what the example demonstrates.
-fn image_placeholder<'a>() -> iced::Element<'a, Message, Theme> {
-    container("")
-        .width(Fill)
-        .height(Fill)
-        .style(|theme: &Theme| Style {
-            background: Some(theme.muted.base.into()),
-            border: Border {
-                radius: 0.0.into(),
-                width: 0.0,
-                color: Color::TRANSPARENT,
-            },
-            ..Style::default()
-        })
-        .into()
-}
-
-/// Translucent black tint layered on top of `image_placeholder`. Mirrors
-/// shadcn's `absolute inset-0 z-30 aspect-video bg-black/35` — 35% alpha
-/// over OKLCH black.
-fn image_overlay<'a>() -> iced::Element<'a, Message, Theme> {
-    container("")
-        .width(Fill)
-        .height(Fill)
-        .style(|_t: &Theme| Style {
-            background: Some(Color::BLACK.alpha(0.35).into()),
-            ..Style::default()
-        })
-        .into()
 }
 
 impl page::Page for CardPage {
@@ -257,7 +208,7 @@ impl page::Page for CardPage {
                     .into();
 
                 card(column![
-                    aspect_ratio(stack![image_placeholder(), image_overlay()], 16.0 / 9.0),
+                    aspect_ratio(cover(true), 16.0 / 9.0),
                     header,
                     card::footer(
                         button("View Event")

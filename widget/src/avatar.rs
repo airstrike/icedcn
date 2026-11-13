@@ -31,27 +31,15 @@
 //! .count("+3")
 //! ```
 //!
-//! # Image-load failure — explicit shadcn deviation
-//!
-//! Shadcn's `<AvatarImage>` falls back to `<AvatarFallback>` on **runtime**
-//! image-load failure (Radix surfaces this via `onLoadingStatusChange`).
-//! Iced's `Image` widget exposes no equivalent event surface, so our
-//! [`avatar`] builder takes `Option<image::Handle>` and the fallback
-//! triggers only when the caller passes `None`. **A `Some(handle)` whose
-//! file/URL is broken will render iced's blank/broken-image affordance,
-//! NOT the fallback.** Promoting runtime-detection requires an upstream
-//! iced change to surface load status from the renderer; tracked as a
-//! follow-up minimap.
-//!
-//! No fade-in animation either — shadcn's
-//! `data-[state=loaded]:opacity-100` cascade depends on the same load
-//! event we don't have. Avatars render at full opacity from frame 1.
+//! The fallback is visible while the renderer decodes the image and if it fails.
 
+mod image;
 pub mod badge;
 pub mod group;
 
 use iced_core::Length;
 use iced_core::Length::Fill;
+use self::image::Portrait;
 use iced_core::image::Handle;
 use iced_widget::{Renderer, Widget};
 use icedxdy_core::Theme;
@@ -115,8 +103,7 @@ impl std::default::Default for Size {
 ///
 /// Born from an `Option<image::Handle>`: `Some(handle)` renders the image
 /// (clipped to a circle); `None` renders [`fallback`](Self::fallback) text
-/// centered on the muted surface. See the module docstring for the
-/// runtime-load-failure caveat.
+/// centered on the muted surface.
 pub struct Avatar<'a, Message> {
     image: Option<Handle>,
     fallback: Option<Slot<'a, Message>>,
@@ -131,8 +118,7 @@ pub struct Avatar<'a, Message> {
 /// Create an [`Avatar`] from an optional image handle.
 ///
 /// Pass `None` to always render the fallback content; pass `Some(handle)`
-/// to render the image (clipped to a circle). See the module docstring
-/// for the runtime-load-failure caveat.
+/// to render the image (clipped to a circle).
 pub fn avatar<'a, Message: 'a>(image: Option<Handle>) -> Avatar<'a, Message> {
     Avatar {
         image,
@@ -208,30 +194,14 @@ impl<'a, Message: 'a> Compose<Message> for Avatar<'a, Message> {
         let style_fn: iced_widget::container::StyleFn<'static, Theme> =
             Box::new(move |t| fallback_style(t, ring).into());
 
-        // Inner content: image clipped to the circle if Some, fallback
-        // text otherwise. iced's Image widget supports `border_radius`
-        // directly — the pill clamp matches the surrounding container.
-        let inner: Slot<'_, Message> = if let Some(handle) = handle {
-            Slot::from(
-                iced_widget::Image::new(handle)
-                    .width(Fill)
-                    .height(Fill)
-                    .content_fit(iced_core::ContentFit::Cover)
-                    .border_radius(u32::MAX as f32)
-                    .boxed(),
-            )
-        } else {
-            // Centered fallback. The fallback's text size is pushed down
-            // through the standard size-propagation channel so a bare
-            // string flows into `text::Text` and picks up the variant's
-            // font size automatically.
-            let body: Slot<'_, Message> = match fallback {
-                Some(content) => content,
-                None => Slot::from(""),
-            };
-            let mut sized = body;
-            sized.inherit(&Inherited::default().with_size(crate::Size::Custom(geometry.font_size)));
-            sized
+        let mut fallback = fallback.unwrap_or_else(|| Slot::from(""));
+        fallback.inherit(&Inherited::default().with_size(crate::Size::Custom(geometry.font_size)));
+        let inner: Slot<'_, Message> = match handle {
+            Some(handle) => {
+                let centered = Container::new(fallback).center(Fill);
+                Slot::from(Portrait::new(handle, centered.into()).boxed())
+            }
+            None => fallback,
         };
 
         let circle = Container::new(inner)
