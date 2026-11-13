@@ -1,0 +1,599 @@
+//! Trace rows and their step, source, and transcript compositions.
+mod replay;
+use crate::{Message, icon, page};
+use iced::widget::{
+    Text,
+    component::{Component, component},
+};
+use iced::{Fill, Task, Widget};
+use icedxdy::theme::container::CodeBlock;
+use icedxdy::theme::tweak::{Alpha, Bg, Fg, Token};
+use icedxdy::widget::{
+    badge, button, code_block, column, container, dialog, row, sheet, spinner, text, trace,
+};
+use icedxdy::{Slot, Theme};
+use trace::{Line, Status};
+
+type Glyph = fn() -> Text<'static, Theme>;
+
+fn line<M: 'static>(title: &'static str, glyph: Glyph) -> Line<'static, M> {
+    trace::line(title).icon(glyph().size(16))
+}
+fn output<M: 'static>(value: &'static str) -> Slot<'static, M> {
+    code_block(value).compact(true).wrap(true).into()
+}
+fn command_output<M: 'static>(value: &'static str, error: bool) -> Slot<'static, M> {
+    if error {
+        code_block(value)
+            .compact(true)
+            .wrap(true)
+            .style(CodeBlock + Bg(Token::Destructive) + Alpha(0.10) + Fg(Token::Destructive))
+            .into()
+    } else {
+        output(value)
+    }
+}
+fn result<M: Clone + 'static>(
+    title: &'static str,
+    glyph: Glyph,
+    body: &'static str,
+    status: Status,
+    open: bool,
+) -> Slot<'static, M> {
+    trace::disclosure(
+        move || line(title, glyph).status(status),
+        move || command_output(body, status == Status::Error),
+    )
+    .default_open(open)
+    .into()
+}
+fn source(title: &'static str, href: &'static str) -> Slot<'static, Message> {
+    trace::action(
+        line(title, icon::globe).trailing(icon::arrow_up_right().size(16)),
+        Some(Message::OpenUrl(href)),
+    )
+}
+fn local(title: &'static str, slug: &str, index: usize) -> Slot<'static, Message> {
+    let block = BLOCKS
+        .iter()
+        .flat_map(|b| {
+            std::iter::once(b).chain(match b {
+                page::Block::Group { children, .. } => children.iter(),
+                _ => [].iter(),
+            })
+        })
+        .position(|b| matches!(b,page::Block::Example{id,..} if *id==slug))
+        .unwrap_or(0);
+    trace::action(
+        line(title, icon::file_text).trailing(icon::chevron_right().size(16)),
+        Some(Message::Page(index, page::Message::ScrollTo(block))),
+    )
+}
+fn static_line() -> Slot<'static, Message> {
+    line("Created branch fix/frozen-lockfile", icon::git_branch).into()
+}
+fn status() -> Slot<'static, Message> {
+    trace([
+        line("Ran pnpm install", icon::circle_check).into(),
+        line("Failed to run pnpm lint", icon::circle_alert)
+            .status(Status::Error)
+            .into(),
+        trace::line("Running pnpm build")
+            .icon(spinner().size(16.))
+            .status(Status::Running)
+            .into(),
+        line("Run pnpm test", icon::circle)
+            .status(Status::Pending)
+            .into(),
+    ])
+    .into()
+}
+fn description() -> Slot<'static, Message> {
+    trace([
+        line(
+            "Edited components/settings/notification-preferences-form.tsx",
+            icon::file_pen,
+        )
+        .description("+48 −12")
+        .into(),
+        line("Ran pnpm test", icon::terminal)
+            .description("14s")
+            .into(),
+        line("Searched for useChat", icon::search)
+            .description("8 results")
+            .into(),
+    ])
+    .into()
+}
+fn collapsible() -> Slot<'static, Message> {
+    result(
+        "Ran node --version",
+        icon::terminal,
+        "$ node --version\nv24.18.0",
+        Status::Complete,
+        false,
+    )
+}
+struct OpenState;
+impl<'a> Component<'a, Message, Theme> for OpenState {
+    type State = bool;
+    type Event = bool;
+    fn update(&self, state: &mut bool, next: bool, _: &iced::Renderer) -> Option<Message> {
+        *state = next;
+        None
+    }
+    fn view(&self, state: &bool) -> impl Widget<bool, Theme> + 'a {
+        let open = *state;
+        Slot::from(
+            column![
+                result(
+                    "Ran node --version",
+                    icon::terminal,
+                    "$ node --version\nv24.18.0",
+                    Status::Complete,
+                    true
+                ),
+                trace::disclosure(
+                    || line("Ran pnpm --version", icon::terminal),
+                    || output("$ pnpm --version\n10.33.4")
+                )
+                .open(open)
+                .on_open_change(|next| next),
+                button(if open {
+                    "Hide the pnpm output"
+                } else {
+                    "Show the pnpm output"
+                })
+                .size(icedxdy::Size::Sm)
+                .style(button::Outline)
+                .on_press(!open)
+            ]
+            .spacing(8)
+            .width(Fill),
+        )
+        .compose()
+    }
+}
+fn links(index: usize) -> Slot<'static, Message> {
+    trace([
+        local("Read apps/v4/lib/docs.ts", "link", index),
+        source(
+            "Install Astro | docs.astro.build",
+            "https://docs.astro.build/en/install-and-setup/",
+        ),
+    ])
+    .into()
+}
+fn search_dialog() -> Slot<'static, Message> {
+    dialog(
+        |d| {
+            d.trigger(trace::action(
+                line("Searched the web for cache keys", icon::globe)
+                    .trailing(icon::chevron_right().size(16)),
+                None,
+            ))
+        },
+        |_| {
+            column![
+                dialog::header(
+                    "Searched the web for cache keys",
+                    "Three results were used in the response."
+                ),
+                trace([
+                    source(
+                        "Caching build outputs",
+                        "https://nextjs.org/docs/app/guides/caching"
+                    ),
+                    source(
+                        "Image optimization reference",
+                        "https://nextjs.org/docs/app/api-reference/components/image"
+                    ),
+                    source(
+                        "Deploy hooks and cache keys",
+                        "https://vercel.com/docs/deploy-hooks"
+                    )
+                ])
+            ]
+            .spacing(16)
+            .into()
+        },
+    )
+    .into()
+}
+fn files_sheet() -> Slot<'static, Message> {
+    sheet(
+        |s| {
+            s.trigger(trace::action(
+                line("Explored 4 files", icon::folder_search)
+                    .trailing(icon::chevron_right().size(16)),
+                None,
+            ))
+        },
+        |_| {
+            column![
+                sheet::header(
+                    "Explored 4 files",
+                    "Files read while preparing the response."
+                ),
+                column![
+                    text("apps/v4/lib/docs.ts"),
+                    text("apps/v4/lib/components.ts"),
+                    text("apps/v4/next.config.mjs"),
+                    text("apps/v4/package.json")
+                ]
+                .spacing(8)
+                .padding([0, 16])
+            ]
+            .into()
+        },
+    )
+    .into()
+}
+fn group() -> Slot<'static, Message> {
+    trace([
+        line("Searched for minimumReleaseAge", icon::search).into(),
+        line("Read pnpm-workspace.yaml", icon::file_text).into(),
+        line("Ran pnpm install", icon::terminal).into(),
+    ])
+    .into()
+}
+fn sources() -> Slot<'static, Message> {
+    trace::disclosure(
+        || line("Used 3 sources", icon::globe),
+        || {
+            trace([
+                source(
+                    "Install Astro | docs.astro.build",
+                    "https://docs.astro.build/en/install-and-setup/",
+                ),
+                source(
+                    "create-astro | npmjs.com",
+                    "https://www.npmjs.com/package/create-astro",
+                ),
+                source(
+                    "Settings: minimumReleaseAge | pnpm.io",
+                    "https://pnpm.io/settings#minimumreleaseage",
+                ),
+            ])
+            .into()
+        },
+    )
+    .default_open(true)
+    .into()
+}
+fn steps(index: usize) -> Slot<'static, Message> {
+    trace::disclosure(
+        || trace::line("Looking into the slow deploy").status(Status::Running),
+        move || {
+            trace([
+                trace::disclosure(
+                    || line("Searched for the checkout build log", icon::search),
+                    || {
+                        row![
+                            badge("vercel.com").style(badge::Secondary),
+                            badge("github.com").style(badge::Secondary)
+                        ]
+                        .spacing(6)
+                        .into()
+                    },
+                )
+                .into(),
+                local("Read the last twelve deploys", "steps", index),
+                result(
+                    "Searching for the cache key",
+                    icon::search,
+                    "cache key image optimization",
+                    Status::Running,
+                    false,
+                ),
+            ])
+            .into()
+        },
+    )
+    .default_open(true)
+    .into()
+}
+fn file_diff(
+    path: &'static str,
+    title: &'static str,
+    stat: &'static str,
+    desc: &'static str,
+    src: &'static str,
+    glyph: Glyph,
+) -> Slot<'static, Message> {
+    use code_block::{CodeBlock, LineStyle};
+    sheet(
+        move |s| {
+            s.trigger(trace::action(
+                line(title, glyph)
+                    .description(stat)
+                    .trailing(icon::chevron_right().size(16)),
+                None,
+            ))
+        },
+        move |_| {
+            let diff = CodeBlock::lines(src.lines().map(|line| {
+                let (kind, value) = if let Some(add) = line.strip_prefix('+') {
+                    (LineStyle::Added, add)
+                } else if let Some(del) = line.strip_prefix('-') {
+                    (LineStyle::Removed, del)
+                } else {
+                    (LineStyle::Default, line)
+                };
+                (kind, text(value).size(12).into())
+            }));
+            column![sheet::header(path, desc), container(diff).padding([0, 24])].into()
+        },
+    )
+    .into()
+}
+fn commit() -> Slot<'static, Message> {
+    trace::disclosure(
+        || {
+            line(
+                "Committed a1b2c3: Fix the login redirect",
+                icon::git_commit_horizontal,
+            )
+        },
+        || {
+            trace([
+                file_diff(
+                    "app/login/page.tsx",
+                    "Edited app/login/page.tsx",
+                    "+2 −2",
+                    "2 additions, 2 deletions",
+                    LOGIN_DIFF,
+                    icon::file_pen,
+                ),
+                file_diff(
+                    "lib/auth/redirect.ts",
+                    "Added lib/auth/redirect.ts",
+                    "+7 −0",
+                    "7 additions, 0 deletions",
+                    AUTH_DIFF,
+                    icon::file_plus,
+                ),
+            ])
+            .into()
+        },
+    )
+    .default_open(true)
+    .into()
+}
+fn turn(index: usize) -> Slot<'static, Message> {
+    trace::disclosure(||trace::line("Worked for 2m 4s, 1 command failed").status(Status::Error),move||column![
+        trace([
+            trace::disclosure(||line("Thought",icon::brain).description("12s"),||text("I should check which package managers are installed before I scaffold anything.").into()).into(),
+            trace::disclosure(||line("Ran 2 commands, 1 failed",icon::terminal).status(Status::Error),||trace([
+                line("Ran node --version",icon::terminal).into(),result("Failed to run pnpm --version",icon::terminal,"command not found: pnpm",Status::Error,false)
+            ]).into()).default_open(true).into()
+        ]),
+        text("Node is installed and pnpm is not. Reading the docs config."),
+        local("Read apps/v4/lib/docs.ts","turn",index)
+    ].spacing(8).into()).default_open(true).into()
+}
+
+const LOGIN_DIFF: &str = r#"@@ -14,7 +14,7 @@ export default async function LoginPage({
+   searchParams,
+ }) {
+   const { next } = await searchParams
+-  const redirectTo =
+-    next && next.startsWith("/") ? next : "/"
++  const redirectTo = safeRedirect(next)
++
+   return <LoginForm redirectTo={redirectTo} />
+ }"#;
+const AUTH_DIFF: &str = r#"@@ -0,0 +1,7 @@
++export function safeRedirect(next: string | undefined) {
++  if (!next || !next.startsWith("/") || next.startsWith("//")) {
++    return "/"
++  }
++
++  return next
++}"#;
+
+pub static META: page::Meta = page::Meta {
+    title: "Trace",
+    description: "The building block for reasoning, tool calls, sources and more.",
+};
+pub static BLOCKS: &[page::Block] = &[
+    page::Block::Example {
+        id: "demo",
+        title: "",
+        description: None,
+        snippet: "examples/browser/snippets/trace-demo.md",
+    },
+    page::Block::Md("examples/browser/snippets/trace-built-with.md"),
+    page::Block::Md("examples/browser/snippets/trace-composition.md"),
+    page::Block::Md("examples/browser/snippets/trace-features.md"),
+    page::Block::Group {
+        title: "Examples",
+        children: &[
+            page::Block::Example {
+                id: "static",
+                title: "Trace Line",
+                description: Some(
+                    "Use a `TraceLine` on its own for a step with no detail to show. It reads as plain text.",
+                ),
+                snippet: "examples/browser/snippets/trace-static.md",
+            },
+            page::Block::Example {
+                id: "status",
+                title: "Status",
+                description: Some(
+                    "Set `status` on `TraceLine` when a step is running, has failed or hasn't started yet.",
+                ),
+                snippet: "examples/browser/snippets/trace-status.md",
+            },
+            page::Block::Example {
+                id: "description",
+                title: "Description",
+                description: Some(
+                    "Put secondary text such as a diff stat, a duration or a count in a `TraceDescription` after the `TraceTitle`. It does not truncate.",
+                ),
+                snippet: "examples/browser/snippets/trace-description.md",
+            },
+            page::Block::Example {
+                id: "collapsible",
+                title: "Collapsible",
+                description: Some(
+                    "Wrap the line in a `TraceCollapsible` to show more detail when it expands. Put the `TraceLine` inside `TraceCollapsibleTrigger` and the detail in `TraceCollapsibleContent`.",
+                ),
+                snippet: "examples/browser/snippets/trace-collapsible.md",
+            },
+            page::Block::Example {
+                id: "open",
+                title: "Open State",
+                description: Some(
+                    "Rows start closed. Use `defaultOpen` on `TraceCollapsible` to start open, or `open` with `onOpenChange` to control a row.",
+                ),
+                snippet: "examples/browser/snippets/trace-open.md",
+            },
+            page::Block::Example {
+                id: "link",
+                title: "Link",
+                description: Some(
+                    "Wrap the `TraceLine` in an anchor. For a new tab, use an arrow-up-right icon and sr-only \"(opens in a new tab)\".",
+                ),
+                snippet: "examples/browser/snippets/trace-link.md",
+            },
+            page::Block::Example {
+                id: "dialog",
+                title: "Dialog",
+                description: Some(
+                    "Wrap the `TraceLine` in the dialog's trigger. The dialog owns its open state, Escape and focus return.",
+                ),
+                snippet: "examples/browser/snippets/trace-dialog.md",
+            },
+            page::Block::Example {
+                id: "sheet",
+                title: "Sheet",
+                description: Some(
+                    "The same shape as the dialog. Drawer and Popover work the same way.",
+                ),
+                snippet: "examples/browser/snippets/trace-sheet.md",
+            },
+            page::Block::Example {
+                id: "group",
+                title: "Group",
+                description: Some(
+                    "Put rows that sit next to each other in a `Trace`. It also styles any trigger or link that wraps a `TraceLine`.",
+                ),
+                snippet: "examples/browser/snippets/trace-group.md",
+            },
+            page::Block::Example {
+                id: "sources",
+                title: "Sources",
+                description: Some("A collapsible row whose detail is a `Trace` of link rows."),
+                snippet: "examples/browser/snippets/trace-sources.md",
+            },
+            page::Block::Example {
+                id: "steps",
+                title: "Chain of Thought",
+                description: Some(
+                    "A chain of thought is a collapsible row with step rows inside. Set the parent's status and title from its children.",
+                ),
+                snippet: "examples/browser/snippets/trace-steps.md",
+            },
+            page::Block::Example {
+                id: "commit",
+                title: "Commit",
+                description: Some(
+                    "A commit is a collapsible row with a line for each changed file. Say what changed in the title, Added, Edited or Deleted, and put the line counts in the description. Each file opens its diff in a Sheet.",
+                ),
+                snippet: "examples/browser/snippets/trace-commit.md",
+            },
+            page::Block::Example {
+                id: "turn",
+                title: "Whole Turn",
+                description: Some(
+                    "Three levels: the turn, a summary, and the rows. Text between steps sits between two `Trace` lists.",
+                ),
+                snippet: "examples/browser/snippets/trace-turn.md",
+            },
+            page::Block::Example {
+                id: "thinking",
+                title: "Reasoning",
+                description: Some(
+                    "Render a `reasoning` part from the AI SDK. The row is a `TraceLine` until the first text arrives. See Open State.",
+                ),
+                snippet: "examples/browser/snippets/trace-thinking.md",
+            },
+            page::Block::Example {
+                id: "tool-calls",
+                title: "Tool",
+                description: Some(
+                    "Render tool parts from the AI SDK. Map the tool part as in Tool.",
+                ),
+                snippet: "examples/browser/snippets/trace-tool-calls.md",
+            },
+        ],
+    },
+    page::Block::Md("examples/browser/snippets/trace-accessibility.md"),
+    page::Block::Md("examples/browser/snippets/trace-api-reference.md"),
+];
+pub struct TracePage {
+    state: page::State,
+}
+
+impl TracePage {
+    pub fn new(page_index: usize) -> Box<dyn page::Page> {
+        Box::new(Self {
+            state: page::State::new(page_index, BLOCKS),
+        })
+    }
+}
+
+impl page::Page for TracePage {
+    fn page_index(&self) -> usize {
+        self.state.page_index
+    }
+    fn meta(&self) -> &'static page::Meta {
+        &META
+    }
+    fn blocks(&self) -> &'static [page::Block] {
+        BLOCKS
+    }
+    fn state(&self) -> &page::State {
+        &self.state
+    }
+    fn scrollable_id(&self) -> iced::widget::Id {
+        self.state.scrollable_id.clone()
+    }
+
+    fn init(&self) -> Task<Message> {
+        self.state.init()
+    }
+
+    fn update(&mut self, event: page::Message) -> Task<Message> {
+        self.state.update(&event)
+    }
+
+    fn reset_volatile(&mut self) {
+        self.state.reset_volatile();
+    }
+
+    fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
+        let index = self.state.page_index;
+        let content = match id {
+            "demo" => component(replay::Replay::Demo).boxed(),
+            "open" => component(OpenState).boxed(),
+            "thinking" => component(replay::Replay::Thinking).boxed(),
+            "tool-calls" => component(replay::Replay::Tool).boxed(),
+            "static" => static_line().compose(),
+            "status" => status().compose(),
+            "description" => description().compose(),
+            "collapsible" => collapsible().compose(),
+            "link" => links(index).compose(),
+            "dialog" => search_dialog().compose(),
+            "sheet" => files_sheet().compose(),
+            "group" => group().compose(),
+            "sources" => sources().compose(),
+            "steps" => steps(index).compose(),
+            "commit" => commit().compose(),
+            "turn" => turn(index).compose(),
+            _ => unreachable!("unknown trace preview: {id}"),
+        };
+        Slot::from(container(content).width(Fill.max(384.))).compose()
+    }
+}
