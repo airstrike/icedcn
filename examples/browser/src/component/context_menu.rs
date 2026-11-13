@@ -6,19 +6,18 @@
 //
 // Intentional skips:
 // - context-menu-rtl: RTL is not in scope (per CLAUDE.md).
-// - context-menu-checkboxes, -destructive, -groups, -icons, -radio,
-//   -shortcuts, -sides, -submenu: the same `menu::` parts the demo shows;
-//   not ported one by one yet.
 
+use iced::widget::Text;
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Task, Widget};
 
 use icedxdy::core::Border;
 use icedxdy::theme::container::Style;
-use icedxdy::widget::{column, container, context_menu, menu, text};
+use icedxdy::widget::{column, container, context_menu, menu, row, text};
 use icedxdy::{Slot, Theme, radius};
 
 use crate::Message;
+use crate::icon;
 use crate::page;
 
 pub static META: page::Meta = page::Meta {
@@ -37,12 +36,58 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Md("examples/browser/snippets/context-menu-composition.md"),
     page::Block::Group {
         title: "Examples",
-        children: &[page::Block::Example {
-            id: "basic",
-            title: "Basic",
-            description: Some("A simple context menu with a few actions."),
-            snippet: "examples/browser/snippets/context-menu-basic.md",
-        }],
+        children: &[
+            page::Block::Example {
+                id: "basic",
+                title: "Basic",
+                description: Some("A simple context menu with a few actions."),
+                snippet: "examples/browser/snippets/context-menu-basic.md",
+            },
+            page::Block::Example {
+                id: "submenu",
+                title: "Submenu",
+                description: Some("Use `ContextMenuSub` to nest secondary actions."),
+                snippet: "examples/browser/snippets/context-menu-submenu.md",
+            },
+            page::Block::Example {
+                id: "shortcuts",
+                title: "Shortcuts",
+                description: Some("Add `ContextMenuShortcut` to show keyboard hints."),
+                snippet: "examples/browser/snippets/context-menu-shortcuts.md",
+            },
+            page::Block::Example {
+                id: "groups",
+                title: "Groups",
+                description: Some("Group related actions and separate them with dividers."),
+                snippet: "examples/browser/snippets/context-menu-groups.md",
+            },
+            page::Block::Example {
+                id: "icons",
+                title: "Icons",
+                description: Some("Combine icons with labels for quick scanning."),
+                snippet: "examples/browser/snippets/context-menu-icons.md",
+            },
+            page::Block::Example {
+                id: "checkboxes",
+                title: "Checkboxes",
+                description: Some("Use `ContextMenuCheckboxItem` for toggles."),
+                snippet: "examples/browser/snippets/context-menu-checkboxes.md",
+            },
+            page::Block::Example {
+                id: "radio",
+                title: "Radio",
+                description: Some("Use `ContextMenuRadioItem` for exclusive choices."),
+                snippet: "examples/browser/snippets/context-menu-radio.md",
+            },
+            page::Block::Example {
+                id: "destructive",
+                title: "Destructive",
+                description: Some(
+                    "Use `variant=\"destructive\"` to style the menu item as destructive.",
+                ),
+                snippet: "examples/browser/snippets/context-menu-destructive.md",
+            },
+        ],
     },
     page::Block::Md("examples/browser/snippets/context-menu-api-reference.md"),
 ];
@@ -76,40 +121,74 @@ fn area<'a, M: 'a>() -> Slot<'a, M> {
         .into()
 }
 
+fn with_icon<'a, M: 'a>(glyph: Text<'a, Theme>, label: &'a str) -> Slot<'a, M> {
+    row![glyph.size(16), text(label)]
+        .spacing(6)
+        .align_y(iced::Center)
+        .into()
+}
+
 /// The demo's toggles and person, held by a user `Component`.
 #[derive(Debug, Clone, Copy)]
 enum Choice {
+    Checked(usize, bool),
+    Theme(&'static str),
     Bookmarks(bool),
     FullUrls(bool),
     Person(&'static str),
 }
 
-struct Demo;
+#[derive(Clone, Copy)]
+struct Preferences {
+    checked: [bool; 3],
+    person: &'static str,
+    theme: &'static str,
+}
+impl Default for Preferences {
+    fn default() -> Self {
+        Self {
+            checked: [true, false, true],
+            person: "pedro",
+            theme: "light",
+        }
+    }
+}
+enum Demo {
+    Browser,
+    Checkboxes,
+    Radio,
+}
 
 impl<'a> Component<'a, Message, Theme> for Demo {
-    type State = Option<(bool, bool, &'static str)>;
+    type State = Preferences;
     type Event = Choice;
 
     fn update(
         &self,
-        state: &mut Option<(bool, bool, &'static str)>,
+        state: &mut Preferences,
         choice: Choice,
         _renderer: &iced::Renderer,
     ) -> Option<Message> {
-        let (mut bookmarks, mut full_urls, mut person) = state.unwrap_or((true, false, "pedro"));
-
         match choice {
-            Choice::Bookmarks(on) => bookmarks = on,
-            Choice::FullUrls(on) => full_urls = on,
-            Choice::Person(who) => person = who,
+            Choice::Bookmarks(on) => state.checked[0] = on,
+            Choice::FullUrls(on) => state.checked[1] = on,
+            Choice::Person(who) => state.person = who,
+            Choice::Checked(i, on) => state.checked[i] = on,
+            Choice::Theme(choice) => state.theme = choice,
         }
 
-        *state = Some((bookmarks, full_urls, person));
         None
     }
 
-    fn view(&self, state: &Option<(bool, bool, &'static str)>) -> impl Widget<Choice, Theme> + 'a {
-        let (bookmarks, full_urls, person) = state.unwrap_or((true, false, "pedro"));
+    fn view(&self, state: &Preferences) -> impl Widget<Choice, Theme> + 'a {
+        let state = *state;
+        let [bookmarks, full_urls, _] = state.checked;
+        let person = state.person;
+        match self {
+            Self::Checkboxes => return Element::from(checkboxes(state)),
+            Self::Radio => return Element::from(radio(state)),
+            Self::Browser => {}
+        }
 
         Element::from(
             context_menu(
@@ -158,6 +237,187 @@ impl<'a> Component<'a, Message, Theme> for Demo {
     }
 }
 
+fn submenu() -> Element<'static, Message, Theme> {
+    context_menu(
+        |_| area(),
+        |_| {
+            menu::group([
+                menu::group([
+                    menu::item("Copy").shortcut("⌘C").into(),
+                    menu::item("Cut").shortcut("⌘X").into(),
+                ]),
+                menu::sub(
+                    "More Tools",
+                    [
+                        menu::group([
+                            menu::item("Save Page...").into(),
+                            menu::item("Create Shortcut...").into(),
+                            menu::item("Name Window...").into(),
+                        ]),
+                        menu::separator(),
+                        menu::group([menu::item("Developer Tools").into()]),
+                        menu::separator(),
+                        menu::group([menu::item("Delete").style(menu::Destructive).into()]),
+                    ],
+                ),
+            ])
+        },
+    )
+    .into()
+}
+
+fn shortcuts() -> Element<'static, Message, Theme> {
+    context_menu(
+        |_| area(),
+        |_| {
+            menu::group([
+                menu::group([
+                    menu::item("Back").shortcut("⌘[").into(),
+                    menu::item("Forward").disabled(true).shortcut("⌘]").into(),
+                    menu::item("Reload").shortcut("⌘R").into(),
+                ]),
+                menu::separator(),
+                menu::group([
+                    menu::item("Save").shortcut("⌘S").into(),
+                    menu::item("Save As...").shortcut("⇧⌘S").into(),
+                ]),
+            ])
+        },
+    )
+    .into()
+}
+
+fn groups() -> Element<'static, Message, Theme> {
+    context_menu(
+        |_| area(),
+        |_| {
+            menu::group([
+                menu::group([
+                    menu::label("File"),
+                    menu::item("New File").shortcut("⌘N").into(),
+                    menu::item("Open File").shortcut("⌘O").into(),
+                    menu::item("Save").shortcut("⌘S").into(),
+                ]),
+                menu::separator(),
+                menu::group([
+                    menu::label("Edit"),
+                    menu::item("Undo").shortcut("⌘Z").into(),
+                    menu::item("Redo").shortcut("⇧⌘Z").into(),
+                ]),
+                menu::separator(),
+                menu::group([
+                    menu::item("Cut").shortcut("⌘X").into(),
+                    menu::item("Copy").shortcut("⌘C").into(),
+                    menu::item("Paste").shortcut("⌘V").into(),
+                ]),
+                menu::separator(),
+                menu::group([menu::item("Delete")
+                    .style(menu::Destructive)
+                    .shortcut("⌫")
+                    .into()]),
+            ])
+        },
+    )
+    .into()
+}
+
+fn icons() -> Element<'static, Message, Theme> {
+    context_menu(
+        |_| area(),
+        |_| {
+            menu::group([
+                menu::group([
+                    menu::item(with_icon(icon::copy(), "Copy")).into(),
+                    menu::item(with_icon(icon::scissors(), "Cut")).into(),
+                    menu::item(with_icon(icon::clipboard_paste(), "Paste")).into(),
+                ]),
+                menu::separator(),
+                menu::group([menu::item(with_icon(icon::trash(), "Delete"))
+                    .style(menu::Destructive)
+                    .into()]),
+            ])
+        },
+    )
+    .into()
+}
+
+fn checkboxes(state: Preferences) -> Element<'static, Choice, Theme> {
+    context_menu(
+        |_| area(),
+        move |_| {
+            menu::group([menu::group([
+                menu::checkbox_item("Show Bookmarks Bar", state.checked[0], |v| {
+                    Choice::Checked(0, v)
+                })
+                .into(),
+                menu::checkbox_item("Show Full URLs", state.checked[1], |v| {
+                    Choice::Checked(1, v)
+                })
+                .into(),
+                menu::checkbox_item("Show Developer Tools", state.checked[2], |v| {
+                    Choice::Checked(2, v)
+                })
+                .into(),
+            ])])
+        },
+    )
+    .into()
+}
+
+fn radio(state: Preferences) -> Element<'static, Choice, Theme> {
+    context_menu(
+        |_| area(),
+        move |_| {
+            menu::group([
+                menu::group([
+                    menu::label("People"),
+                    menu::group([
+                        menu::radio_item(
+                            "Pedro Duarte",
+                            "pedro",
+                            Some(state.person),
+                            Choice::Person,
+                        )
+                        .into(),
+                        menu::radio_item("Colm Tuite", "colm", Some(state.person), Choice::Person)
+                            .into(),
+                    ]),
+                ]),
+                menu::separator(),
+                menu::group([
+                    menu::label("Theme"),
+                    menu::group([
+                        menu::radio_item("Light", "light", Some(state.theme), Choice::Theme).into(),
+                        menu::radio_item("Dark", "dark", Some(state.theme), Choice::Theme).into(),
+                        menu::radio_item("System", "system", Some(state.theme), Choice::Theme)
+                            .into(),
+                    ]),
+                ]),
+            ])
+        },
+    )
+    .into()
+}
+
+fn destructive() -> Element<'static, Message, Theme> {
+    context_menu(
+        |_| area(),
+        |_| {
+            menu::group([
+                menu::group([
+                    menu::item(with_icon(icon::pencil(), "Edit")).into(),
+                    menu::item(with_icon(icon::share(), "Share")).into(),
+                ]),
+                menu::separator(),
+                menu::group([menu::item(with_icon(icon::trash(), "Delete"))
+                    .style(menu::Destructive)
+                    .into()]),
+            ])
+        },
+    )
+    .into()
+}
+
 impl page::Page for ContextMenuPage {
     fn page_index(&self) -> usize {
         self.state.page_index
@@ -190,7 +450,7 @@ impl page::Page for ContextMenuPage {
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
             // shadcn `context-menu-demo.tsx`.
-            "demo" => component(Demo).boxed(),
+            "demo" => component(Demo::Browser).boxed(),
 
             // shadcn `context-menu-basic.tsx`.
             "basic" => context_menu(
@@ -205,6 +465,13 @@ impl page::Page for ContextMenuPage {
             )
             .into(),
 
+            "submenu" => submenu(),
+            "shortcuts" => shortcuts(),
+            "groups" => groups(),
+            "icons" => icons(),
+            "checkboxes" => component(Demo::Checkboxes).boxed(),
+            "radio" => component(Demo::Radio).boxed(),
+            "destructive" => destructive(),
             _ => unreachable!("unknown context menu preview id: {id}"),
         }
     }

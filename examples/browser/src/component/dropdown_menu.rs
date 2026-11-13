@@ -3,17 +3,15 @@
 //
 // Intentional skips:
 // - dropdown-menu-rtl: RTL is not in scope (per CLAUDE.md).
-// - dropdown-menu-avatar, -complex, -icons, -checkboxes-icons,
-//   -radio-icons: the same parts with avatars and more icons; not ported
-//   yet.
 
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Task, Widget};
 
-use icedxdy::widget::{button, column, dropdown_menu, menu, row, text};
+use icedxdy::widget::{avatar, button, column, dropdown_menu, menu, row, text};
 use icedxdy::{Slot, Theme};
 
 use crate::Message;
+use crate::component::avatar::shadcn_handle;
 use crate::icon;
 use crate::page;
 
@@ -53,10 +51,22 @@ pub static BLOCKS: &[page::Block] = &[
                 snippet: "examples/browser/snippets/dropdown-menu-shortcuts.md",
             },
             page::Block::Example {
+                id: "icons",
+                title: "Icons",
+                description: Some("Combine icons with labels for quick scanning."),
+                snippet: "examples/browser/snippets/dropdown-menu-icons.md",
+            },
+            page::Block::Example {
                 id: "checkboxes",
                 title: "Checkboxes",
                 description: Some("Use `menu::checkbox_item` for toggles."),
                 snippet: "examples/browser/snippets/dropdown-menu-checkboxes.md",
+            },
+            page::Block::Example {
+                id: "checkboxes-icons",
+                title: "Checkboxes Icons",
+                description: Some("Add icons to checkbox items."),
+                snippet: "examples/browser/snippets/dropdown-menu-checkboxes-icons.md",
             },
             page::Block::Example {
                 id: "radio-group",
@@ -65,10 +75,28 @@ pub static BLOCKS: &[page::Block] = &[
                 snippet: "examples/browser/snippets/dropdown-menu-radio-group.md",
             },
             page::Block::Example {
+                id: "radio-icons",
+                title: "Radio Icons",
+                description: Some("Show radio options with icons."),
+                snippet: "examples/browser/snippets/dropdown-menu-radio-icons.md",
+            },
+            page::Block::Example {
                 id: "destructive",
                 title: "Destructive",
                 description: Some("Use `.style(menu::Destructive)` for irreversible actions."),
                 snippet: "examples/browser/snippets/dropdown-menu-destructive.md",
+            },
+            page::Block::Example {
+                id: "avatar",
+                title: "Avatar",
+                description: Some("An account switcher dropdown triggered by an avatar."),
+                snippet: "examples/browser/snippets/dropdown-menu-avatar.md",
+            },
+            page::Block::Example {
+                id: "complex",
+                title: "Complex",
+                description: Some("A richer example combining groups, icons, and submenus."),
+                snippet: "examples/browser/snippets/dropdown-menu-complex.md",
             },
         ],
     },
@@ -102,6 +130,56 @@ fn with_icon<'a, Message: 'a>(
         .into()
 }
 
+#[derive(Clone, Copy)]
+struct Preferences {
+    checked: [bool; 3],
+    payment: &'static str,
+    theme: &'static str,
+}
+impl Default for Preferences {
+    fn default() -> Self {
+        Self {
+            checked: [true, false, true],
+            payment: "card",
+            theme: "light",
+        }
+    }
+}
+#[derive(Debug, Clone)]
+enum Choice {
+    Checked(usize, bool),
+    Payment(&'static str),
+    Theme(&'static str),
+}
+enum PreferencesMenu {
+    Notifications,
+    Payment,
+    Complex,
+}
+impl<'a> Component<'a, Message, Theme> for PreferencesMenu {
+    type State = Preferences;
+    type Event = Choice;
+    fn update(
+        &self,
+        state: &mut Preferences,
+        event: Choice,
+        _: &iced::Renderer,
+    ) -> Option<Message> {
+        match event {
+            Choice::Checked(i, v) => state.checked[i] = v,
+            Choice::Payment(v) => state.payment = v,
+            Choice::Theme(v) => state.theme = v,
+        }
+        None
+    }
+    fn view(&self, state: &Preferences) -> impl Widget<Choice, Theme> + 'a {
+        match self {
+            Self::Notifications => checkboxes_icons(*state),
+            Self::Payment => radio_icons(*state),
+            Self::Complex => complex(*state),
+        }
+    }
+}
 /// shadcn `dropdown-menu-checkboxes.tsx`: three toggles the menu shows and
 /// flips, held by a user `Component` rather than app state.
 struct Appearance;
@@ -174,6 +252,269 @@ impl<'a> Component<'a, Message, Theme> for Position {
             .width(128),
         )
     }
+}
+
+fn icons() -> Element<'static, Message, Theme> {
+    dropdown_menu(
+        |m| m.trigger(button("Open").style(button::Outline)),
+        |_| {
+            menu::group([
+                menu::item(with_icon(icon::user(), "Profile")).into(),
+                menu::item(with_icon(icon::credit_card(), "Billing")).into(),
+                menu::item(with_icon(icon::settings(), "Settings")).into(),
+                menu::separator(),
+                menu::item(with_icon(icon::log_out(), "Log out"))
+                    .style(menu::Destructive)
+                    .into(),
+            ])
+        },
+    )
+    .into()
+}
+
+fn checkboxes_icons(state: Preferences) -> Element<'static, Choice, Theme> {
+    dropdown_menu(
+        |m| m.trigger(button("Notifications").style(button::Outline)),
+        move |_| {
+            menu::group([menu::group([
+                menu::label("Notification Preferences"),
+                menu::checkbox_item(
+                    with_icon(icon::mail(), "Email notifications"),
+                    state.checked[0],
+                    |v| Choice::Checked(0, v),
+                )
+                .into(),
+                menu::checkbox_item(
+                    with_icon(icon::message_square(), "SMS notifications"),
+                    state.checked[1],
+                    |v| Choice::Checked(1, v),
+                )
+                .into(),
+                menu::checkbox_item(
+                    with_icon(icon::bell(), "Push notifications"),
+                    state.checked[2],
+                    |v| Choice::Checked(2, v),
+                )
+                .into(),
+            ])])
+        },
+    )
+    .width(192)
+    .into()
+}
+
+fn radio_icons(state: Preferences) -> Element<'static, Choice, Theme> {
+    dropdown_menu(
+        |m| m.trigger(button("Payment Method").style(button::Outline)),
+        move |_| {
+            menu::group([menu::group([
+                menu::label("Select Payment Method"),
+                menu::group([
+                    menu::radio_item(
+                        with_icon(icon::credit_card(), "Credit Card"),
+                        "card",
+                        Some(state.payment),
+                        Choice::Payment,
+                    )
+                    .into(),
+                    menu::radio_item(
+                        with_icon(icon::wallet(), "PayPal"),
+                        "paypal",
+                        Some(state.payment),
+                        Choice::Payment,
+                    )
+                    .into(),
+                    menu::radio_item(
+                        with_icon(icon::building_2(), "Bank Transfer"),
+                        "bank",
+                        Some(state.payment),
+                        Choice::Payment,
+                    )
+                    .into(),
+                ]),
+            ])])
+        },
+    )
+    .width(224)
+    .into()
+}
+
+fn avatar_menu() -> Element<'static, Message, Theme> {
+    dropdown_menu(
+        |m| {
+            m.trigger(
+                button(avatar(Some(shadcn_handle())).fallback("LR"))
+                    .square()
+                    .rounded()
+                    .translate(false)
+                    .style(button::Ghost),
+            )
+        },
+        |_| {
+            menu::group([
+                menu::group([
+                    menu::item(with_icon(icon::badge_check(), "Account")).into(),
+                    menu::item(with_icon(icon::credit_card(), "Billing")).into(),
+                    menu::item(with_icon(icon::bell(), "Notifications")).into(),
+                ]),
+                menu::separator(),
+                menu::item(with_icon(icon::log_out(), "Sign Out")).into(),
+            ])
+        },
+    )
+    .align(dropdown_menu::Align::End)
+    .into()
+}
+
+fn complex(state: Preferences) -> Element<'static, Choice, Theme> {
+    dropdown_menu(
+        |m| m.trigger(button("Complex Menu").style(button::Outline)),
+        move |_| {
+            menu::group([
+                menu::group([
+                    menu::label("File"),
+                    menu::item(with_icon(icon::file(), "New File"))
+                        .shortcut("⌘N")
+                        .into(),
+                    menu::item(with_icon(icon::folder(), "New Folder"))
+                        .shortcut("⇧⌘N")
+                        .into(),
+                    menu::sub(
+                        with_icon(icon::folder_open(), "Open Recent"),
+                        [
+                            menu::group([
+                                menu::label("Recent Projects"),
+                                menu::item(with_icon(icon::file_code(), "Project Alpha")).into(),
+                                menu::item(with_icon(icon::file_code(), "Project Beta")).into(),
+                                menu::sub(
+                                    with_icon(icon::ellipsis(), "More Projects"),
+                                    [
+                                        menu::item(with_icon(icon::file_code(), "Project Gamma"))
+                                            .into(),
+                                        menu::item(with_icon(icon::file_code(), "Project Delta"))
+                                            .into(),
+                                    ],
+                                ),
+                            ]),
+                            menu::separator(),
+                            menu::group([menu::item(with_icon(
+                                icon::folder_search(),
+                                "Browse...",
+                            ))
+                            .into()]),
+                        ],
+                    ),
+                    menu::separator(),
+                    menu::item(with_icon(icon::save(), "Save"))
+                        .shortcut("⌘S")
+                        .into(),
+                    menu::item(with_icon(icon::download(), "Export"))
+                        .shortcut("⇧⌘E")
+                        .into(),
+                ]),
+                menu::separator(),
+                menu::group([
+                    menu::label("View"),
+                    menu::checkbox_item(
+                        with_icon(icon::eye(), "Show Sidebar"),
+                        state.checked[0],
+                        |v| Choice::Checked(0, v),
+                    )
+                    .into(),
+                    menu::checkbox_item(
+                        with_icon(icon::panels_top_left(), "Show Status Bar"),
+                        state.checked[1],
+                        |v| Choice::Checked(1, v),
+                    )
+                    .into(),
+                    menu::sub(
+                        with_icon(icon::palette(), "Theme"),
+                        [menu::group([
+                            menu::label("Appearance"),
+                            menu::group([
+                                menu::radio_item(
+                                    with_icon(icon::sun(), "Light"),
+                                    "light",
+                                    Some(state.theme),
+                                    Choice::Theme,
+                                )
+                                .into(),
+                                menu::radio_item(
+                                    with_icon(icon::moon(), "Dark"),
+                                    "dark",
+                                    Some(state.theme),
+                                    Choice::Theme,
+                                )
+                                .into(),
+                                menu::radio_item(
+                                    with_icon(icon::monitor(), "System"),
+                                    "system",
+                                    Some(state.theme),
+                                    Choice::Theme,
+                                )
+                                .into(),
+                            ]),
+                        ])],
+                    ),
+                ]),
+                menu::separator(),
+                menu::group([
+                    menu::label("Account"),
+                    menu::item(with_icon(icon::user(), "Profile"))
+                        .shortcut("⇧⌘P")
+                        .into(),
+                    menu::item(with_icon(icon::credit_card(), "Billing")).into(),
+                    menu::sub(
+                        with_icon(icon::settings(), "Settings"),
+                        [
+                            menu::group([
+                                menu::label("Preferences"),
+                                menu::item(with_icon(icon::keyboard(), "Keyboard Shortcuts"))
+                                    .into(),
+                                menu::item(with_icon(icon::languages(), "Language")).into(),
+                                menu::sub(
+                                    with_icon(icon::bell(), "Notifications"),
+                                    [menu::group([
+                                        menu::label("Notification Types"),
+                                        menu::checkbox_item(
+                                            with_icon(icon::bell(), "Push Notifications"),
+                                            state.checked[2],
+                                            |v| Choice::Checked(2, v),
+                                        )
+                                        .into(),
+                                        menu::checkbox_item(
+                                            with_icon(icon::mail(), "Email Notifications"),
+                                            state.checked[0],
+                                            |v| Choice::Checked(0, v),
+                                        )
+                                        .into(),
+                                    ])],
+                                ),
+                            ]),
+                            menu::separator(),
+                            menu::group([menu::item(with_icon(
+                                icon::shield(),
+                                "Privacy & Security",
+                            ))
+                            .into()]),
+                        ],
+                    ),
+                ]),
+                menu::separator(),
+                menu::group([
+                    menu::item(with_icon(icon::circle_question_mark(), "Help & Support")).into(),
+                    menu::item(with_icon(icon::file_text(), "Documentation")).into(),
+                ]),
+                menu::separator(),
+                menu::group([menu::item(with_icon(icon::log_out(), "Sign Out"))
+                    .style(menu::Destructive)
+                    .shortcut("⇧⌘Q")
+                    .into()]),
+            ])
+        },
+    )
+    .width(176)
+    .into()
 }
 
 impl page::Page for DropdownMenuPage {
@@ -331,6 +672,11 @@ impl page::Page for DropdownMenuPage {
             )
             .into(),
 
+            "icons" => icons(),
+            "checkboxes-icons" => component(PreferencesMenu::Notifications).boxed(),
+            "radio-icons" => component(PreferencesMenu::Payment).boxed(),
+            "avatar" => avatar_menu(),
+            "complex" => component(PreferencesMenu::Complex).boxed(),
             _ => unreachable!("unknown dropdown menu preview id: {id}"),
         }
     }
