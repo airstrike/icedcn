@@ -176,31 +176,16 @@ fn is_dark(theme: &Theme) -> bool {
 
 /// Default text input variant — nova `h-8` field.
 ///
-/// Light bg = `palette.background` (the classlist says `bg-transparent` but
-/// we have no parent fill in the preview, so the field's own surface is the
-/// page background). Dark bg = `palette.input` at α `input.a × 0.3`. Border
-/// = `palette.input`, radius `radius::LG` (10px). Focused border swaps to
-/// `palette.ring`. Hover has NO state change (nova has no `:hover` rule).
+/// A light input is transparent. Dark inputs apply the Nova input token
+/// at 30% opacity. Focus changes the border to the ring color.
 pub fn default(theme: &Theme, status: Status) -> Style {
     let p = theme;
     let dark = is_dark(theme);
 
     let bg = if dark {
-        // FIXME(renderer): nova ships `dark:bg-input/30` — i.e.
-        // `oklch(1 0 0 / 4.5%)` (input is `oklch(1 0 0 / 15%)`, alpha
-        // overridden to 0.3 → effective 0.045 against the dark page).
-        // Composited over `--background` (`oklch(0.145 0 0)`) in a faithful
-        // renderer that yields a barely-lifted dark surface. iced's current
-        // alpha-compositing path renders that translucent white close to a
-        // bright gray, making the field bg read as too light against the
-        // dark page bg. Workaround: substitute `muted.base` at 0.5 alpha,
-        // which composites to a perceptually-similar quietly-lifted dark
-        // surface in the dark palette. When iced's compositor is fixed
-        // upstream, restore `p.input.alpha(0.3)` here. Same shape as the
-        // switch fix in `core/src/theme/switch.rs::default`.
-        p.muted.base.alpha(0.5)
+        p.input.scale_alpha(0.3)
     } else {
-        p.neutral.base
+        Color::TRANSPARENT
     };
 
     let active = Style {
@@ -235,17 +220,8 @@ pub fn default(theme: &Theme, status: Status) -> Style {
             ..active
         },
         Status::Disabled => {
-            // Tailwind `/N` overrides alpha; doesn't multiply with the
-            // source. Spec: `disabled:bg-input/50` (light), `dark:disabled:bg-input/80`.
-            let dis_bg = if dark {
-                p.input.alpha(0.8)
-            } else {
-                p.input.alpha(0.5)
-            };
-            // The element-wide `disabled:opacity-50` on top multiplies every
-            // pixel by 0.5 — we apply that to non-bg colors with `scale_alpha`
-            // so they preserve their *own* base alpha (matters for dark
-            // `palette.input` which is α 0.15, not 1.0).
+            let dis_bg = p.input.scale_alpha(if dark { 0.8 } else { 0.5 });
+            // The disabled element's 50% opacity also applies to its background.
             Style {
                 background: dis_bg.scale_alpha(0.5).into(),
                 border: Border {
@@ -574,23 +550,24 @@ mod tests {
         (a.l - b.l).abs() < 1e-4 && (a.c - b.c).abs() < 1e-4 && (a.a - b.a).abs() < 1e-4
     }
 
-    /// Dark theme rest bg uses the `muted.base` workaround for the
-    /// renderer alpha-compositing issue (see FIXME in [`default`]). Nova's
-    /// CSS source is `dark:bg-input/30` (`oklch(1 0 0 / 4.5%)`); the
-    /// faithful render is a barely-lifted dark surface that iced's current
-    /// compositor renders as a bright gray. Workaround substitutes
-    /// `muted.base` at 0.5 alpha, which composites to a perceptually-
-    /// similar quiet lift. Restore the alpha-multiplied assertion when
-    /// the compositor is fixed.
     #[test]
-    fn default_dark_bg_is_muted_base_workaround() {
-        let theme = Theme::dark();
-        let resolved = default(&theme, Status::Active);
-        let bg = bg_color(&resolved);
-        let expected = theme.muted.base.alpha(0.5);
-        assert!(
-            close(bg, expected),
-            "expected bg ≈ muted.base.alpha(0.5) ({expected:?}), got {bg:?}",
+    fn surfaces_preserve_the_input_tokens_alpha() {
+        let light = Theme::light();
+        let dark = Theme::dark();
+        let background = |theme, state| bg_color(&default(theme, state));
+
+        assert_eq!(background(&light, Status::Active), Color::TRANSPARENT);
+        assert_eq!(
+            background(&dark, Status::Active),
+            dark.input.scale_alpha(0.3)
+        );
+        assert_eq!(
+            background(&light, Status::Disabled),
+            light.input.scale_alpha(0.25)
+        );
+        assert_eq!(
+            background(&dark, Status::Disabled),
+            dark.input.scale_alpha(0.4)
         );
     }
 
