@@ -35,13 +35,13 @@ Implemented via `field::IntoLabel`, `field::IntoDescription`, `field::IntoError`
 | Shadcn primitive | icedxdy equivalent |
 | --- | --- |
 | `<Field>` | `field(content)` |
-| `<FieldSet>` | n/a — compose with `column![field(...), field(...)]`. |
-| `<FieldLegend>` | n/a — use `text::h3(...)` or `text::small(...).medium()` as the row's heading. |
-| `<FieldGroup>` | n/a — `column![field(...), field(...)]` with explicit spacing. |
+| `<FieldSet>` | `field::set(legend, description, controls)`. |
+| `<FieldLegend>` | `field::legend(...)` or `text::label(...)` for the smaller variant. |
+| `<FieldGroup>` | `field::group([...])` with optional `.spacing(...)`. |
 | `<FieldLabel>` | `.label(content)` builder. |
 | `<FieldDescription>` | `.description(content)` builder. |
 | `<FieldError>` | `.error(content)` builder. |
-| `<FieldSeparator>` | n/a — use `rule::horizontal(1)`. |
-| `<FieldContent>` | implicit — the right-hand column in `Horizontal` mode is the FieldContent slot. |
+| `<FieldSeparator>` | `separator()`. |
+| `<FieldContent>` | The text column in a horizontal field. `.control_last()` places the control to its right. |
 
-Restyle via `.style(...)` on the inner widgets or compose your own surface helper. shadcn's `data-checked` card tint follows the control on its own; the label's `data-disabled` muting is still applied at the call site with `text::muted(...)`.
+Use `.description_above()` for helper text before a vertical control. `.responsive()` switches to a horizontal layout at a container width of 448 logical pixels. `.disabled(true)` disables all controls inside the field.

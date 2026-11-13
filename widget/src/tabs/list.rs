@@ -15,9 +15,9 @@ use std::any::Any;
 
 // List-level keyboard navigation operates on the actual mounted controls, so
 // it's independent of construction order and naturally skips disabled triggers.
-pub(super) struct List<'a, Message> {
+pub(crate) struct List<'a, Message> {
     pub content: Element<'a, Message, Theme, Renderer>,
-    pub orientation: Orientation,
+    pub orientation: Option<Orientation>,
 }
 
 struct Activate {
@@ -63,7 +63,7 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter_mut(&mut tree.children)
             .next()
-            .expect("a tab list has one child");
+            .expect("a roving group has one child");
 
         let mut visit = |op: &mut dyn Operation| {
             self.content
@@ -79,10 +79,14 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
                 let target = match (key, self.orientation) {
                     (Named::Home, _) => Some(0),
                     (Named::End, _) => Some(count.total - 1),
-                    (Named::ArrowRight, Orientation::Horizontal)
-                    | (Named::ArrowDown, Orientation::Vertical) => focus::adjacent(count, false),
-                    (Named::ArrowLeft, Orientation::Horizontal)
-                    | (Named::ArrowUp, Orientation::Vertical) => focus::adjacent(count, true),
+                    (Named::ArrowRight, Some(Orientation::Horizontal) | None)
+                    | (Named::ArrowDown, Some(Orientation::Vertical) | None) => {
+                        focus::adjacent(count, false)
+                    }
+                    (Named::ArrowLeft, Some(Orientation::Horizontal) | None)
+                    | (Named::ArrowUp, Some(Orientation::Vertical) | None) => {
+                        focus::adjacent(count, true)
+                    }
                     _ => None,
                 };
                 if let Some(index) = target {
@@ -117,7 +121,7 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter(&tree.children)
             .next()
-            .expect("a tab list has one child");
+            .expect("a roving group has one child");
 
         self.content.draw(
             child_tree,
@@ -141,7 +145,7 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter(&tree.children)
             .next()
-            .expect("a tab list has one child");
+            .expect("a roving group has one child");
 
         self.content
             .mouse_interaction(child_tree, child_layout, cursor, viewport, renderer)
@@ -158,7 +162,7 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter_mut(&mut tree.children)
             .next()
-            .expect("a tab list has one child");
+            .expect("a roving group has one child");
 
         self.content
             .operate(child_tree, child_layout, viewport, renderer, operation);
@@ -176,7 +180,7 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter_mut(&mut tree.children)
             .next()
-            .expect("a tab list has one child");
+            .expect("a roving group has one child");
 
         self.content.overlay(
             child_tree,

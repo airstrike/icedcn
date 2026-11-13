@@ -28,10 +28,13 @@ use iced_widget::radio::Status;
 use iced_widget::{Renderer, Space, Widget, container};
 use icedxdy_core::Theme;
 use icedxdy_core::theme::radio;
+use std::convert::Infallible;
 
+use crate::button::widget;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
 use crate::marker::{self, Press};
+use crate::tabs::list::List;
 
 /// A set of radio items, one checked at a time.
 pub struct Group<'a, Message> {
@@ -190,7 +193,7 @@ impl<Message: 'static> Compose<Message> for Item {
         };
 
         // `size-2 rounded-full bg-primary-foreground`.
-        let dot: Slot<'b, Message> = if is_checked {
+        let dot: Slot<'b, Infallible> = if is_checked {
             Container::new(Space::new())
                 .width(8)
                 .height(8)
@@ -205,7 +208,7 @@ impl<Message: 'static> Compose<Message> for Item {
         };
 
         // `size-4 rounded-full border`.
-        let circle: Element<'b, Message, Theme, Renderer> = Container::new(dot)
+        let circle: Element<'b, Infallible, Theme, Renderer> = Container::new(dot)
             .width(16)
             .height(16)
             .align_x(Horizontal::Center)
@@ -232,11 +235,30 @@ impl<Message: 'static> Compose<Message> for Item {
             .into();
 
         if disabled {
-            circle
+            circle.map(|never| match never {}).boxed()
         } else {
-            marker::marker(circle, Select(value), Press::Any)
-                .control(is_checked)
-                .into()
+            let hit = widget::Button::new(circle)
+                .width(16)
+                .height(16)
+                .padding(0)
+                .translate(false)
+                .style(Box::new(|theme: &Theme, status| {
+                    let mut style = widget::Style::default();
+                    if matches!(status, widget::Status::Focused { .. }) {
+                        style.border = Border::default()
+                            .color(theme.neutral.ring)
+                            .width(2)
+                            .rounded(8);
+                    }
+                    style
+                }) as widget::StyleFn<'b, Theme>);
+            marker::marker(
+                hit.boxed().map(|never| match never {}).boxed(),
+                Select(value),
+                Press::Captured,
+            )
+            .control(is_checked)
+            .into()
         }
     }
 }
@@ -292,7 +314,11 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Group<'a,
 
         let body = iced_widget::container(body.compose().map(Event::App)).width(Length::Shrink);
 
-        marker::owner(body.boxed(), |Select(value)| Event::Select(value))
+        let list = List {
+            content: body.boxed(),
+            orientation: None,
+        };
+        marker::owner(list.boxed(), |Select(value)| Event::Select(value))
     }
 }
 

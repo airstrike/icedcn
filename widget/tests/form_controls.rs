@@ -97,3 +97,38 @@ fn one_time_code_filters_input_and_edits_the_clicked_slot() {
         ["1", "12", "123", "1234", "134", "1834"]
     );
 }
+
+#[test]
+fn radio_arrows_select_and_wrap_past_disabled_choices() {
+    use iced_core::keyboard::key::Named;
+    use iced_core::widget::Operation;
+    use iced_core::widget::operation::{self, focusable, Outcome};
+    use icedxdy_widget::{column, radio_group};
+    let group: Element<'_, String, Theme, Renderer> = radio_group(|g| {
+        column![
+            g.item("first"),
+            g.item("disabled").disabled(true),
+            g.item("third"),
+        ]
+        .into()
+    })
+    .default_value("first")
+    .on_value_change(|new| new)
+    .into();
+    let mut ui = simulator(group);
+    let mut first = focusable::focus_next::<()>();
+    ui.operate(&mut operation::black_box(&mut first));
+    if let Outcome::Chain(mut apply) = first.finish() {
+        ui.operate(&mut operation::black_box(apply.as_mut()));
+    }
+    for key in [Named::ArrowDown, Named::ArrowRight, Named::ArrowUp] {
+        let _ = ui.simulate([simulator::press_key(key, None)]);
+        let _ = ui.simulate([Event::Window(
+            window::Event::RedrawRequested(Instant::now()),
+        )]);
+    }
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        ["third", "first", "third"]
+    );
+}

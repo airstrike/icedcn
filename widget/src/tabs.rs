@@ -26,7 +26,7 @@
 //! Only the active panel is mounted, as in Radix. Panels share no widget
 //! state, so switching tabs resets whatever a panel kept in its own tree.
 
-mod list;
+pub(crate) mod list;
 
 use crate::column::Column;
 use iced_core::Length::Fill;
@@ -181,7 +181,7 @@ impl Handle {
         Slot::from(
             list::List {
                 content: Slot::from(content).compose(),
-                orientation: self.orientation,
+                orientation: Some(self.orientation),
             }
             .boxed(),
         )

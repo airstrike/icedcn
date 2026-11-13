@@ -19,4 +19,4 @@ A `RadioGroupItem`: a 16px circle, filled with `bg-primary` while checked. `.dis
 
 The standalone radio, `radio(label, value, selected, on_click)`, stays for app-owned values; it takes `.disabled(..)` too.
 
-Arrow-key navigation between items is not ported.
+Use an arrow key to select the previous or next enabled item. Home and End select the first or last enabled item.
