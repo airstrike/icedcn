@@ -73,6 +73,7 @@ impl NavSection {
 pub enum Message {
     ToggleTheme,
     SelectPage(usize),
+    OpenUrl(&'static str),
     FontSelected(String),
     Page(usize, page::Message),
     Font(fonts::Message),
@@ -215,6 +216,7 @@ impl App {
                 self.snippet_viewer = SnippetViewer::new(map, &active_theme);
                 Task::none()
             }
+            Message::OpenUrl(url) => page::open_link(url),
             Message::SelectPage(page) => {
                 if page != self.current_page
                     && let Some(prev) = self.pages.get_mut(self.current_page)

@@ -189,6 +189,8 @@ pub enum Message {
     /// break dispatch.
     SnippetLoaded(&'static str, Result<String, String>),
     LinkClicked(markdown::Uri),
+    ChooseFile,
+    FileSelected(Option<PathBuf>),
     BlockShown(usize),
     BlockHidden(usize),
     ScrollTo(usize),
@@ -877,7 +879,42 @@ impl State {
                 }
                 Task::none()
             }
-            Message::LinkClicked(_) => Task::none(),
+            Message::ChooseFile => {
+                let page = self.page_index;
+                Task::perform(
+                    async {
+                        rfd::AsyncFileDialog::new()
+                            .pick_file()
+                            .await
+                            .map(|file| file.path().to_owned())
+                    },
+                    move |file| super::Message::Page(page, Message::FileSelected(file)),
+                )
+            }
+            Message::FileSelected(_) => Task::none(),
+            Message::LinkClicked(url) => {
+                if let Some(fragment) = url.strip_prefix('#') {
+                    let index = if fragment.is_empty() {
+                        Some(0)
+                    } else {
+                        flatten(self.blocks).iter().position(|(block, _)| {
+                            let matches_title = block.toc_title(self).is_some_and(|title| {
+                                let anchor = title
+                                    .split_whitespace()
+                                    .map(str::to_lowercase)
+                                    .collect::<Vec<_>>()
+                                    .join("-");
+                                anchor == fragment
+                            });
+                            matches_title
+                                || matches!(block, Block::Example { id, .. } if *id == fragment)
+                        })
+                    };
+                    return index
+                        .map_or_else(Task::none, |index| self.update(&Message::ScrollTo(index)));
+                }
+                open_link(url)
+            }
             Message::BlockShown(idx) => {
                 self.visible.insert(*idx);
                 Task::none()
@@ -915,6 +952,20 @@ impl State {
             Message::Noop => Task::none(),
         }
     }
+}
+
+/// Open a documentation or demo link in the user's default browser.
+pub fn open_link(url: &str) -> Task<super::Message> {
+    if url.starts_with("https://") || url.starts_with("http://") || url.starts_with("mailto:") {
+        let url = url.to_owned();
+        return Task::perform(async move { open::that_detached(url) }, |result| {
+            if let Err(error) = result {
+                eprintln!("Could not open link: {error}");
+            }
+        })
+        .discard();
+    }
+    Task::none()
 }
 
 /// Extract the contents of the FIRST fenced code block from a markdown
