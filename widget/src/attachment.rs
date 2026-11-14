@@ -51,6 +51,7 @@ pub fn group<'a, Message: 'a>(
 ) -> Slot<'a, Message> {
     scroll_area(container(Row::with_children(cards).spacing(12)).padding([4, 0]))
         .direction(Direction::Horizontal(scroll_area::bar()))
+        .focus_group()
         .width(Fill)
         .into()
 }

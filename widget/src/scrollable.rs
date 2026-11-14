@@ -51,6 +51,7 @@ pub struct Scrollable<'a, Message> {
     height: Length,
     direction: Direction,
     auto_scroll: bool,
+    focus_group: bool,
     on_scroll: Option<Box<dyn Fn(Viewport) -> Message + 'a>>,
     style: Option<iced_widget::scrollable::StyleFn<'static, Theme>>,
 }
@@ -66,9 +67,16 @@ impl<'a, Message: 'a> Scrollable<'a, Message> {
             height: Length::Shrink,
             direction: Direction::Vertical(scrollbar()),
             auto_scroll: false,
+            focus_group: false,
             on_scroll: None,
             style: None,
         }
+    }
+
+    /// Include a horizontal attachment strip and its off-screen controls in keyboard navigation.
+    pub(crate) fn focus_group(mut self) -> Self {
+        self.focus_group = true;
+        self
     }
 
     /// Set this scrollable's widget [`Id`] — required for
@@ -212,7 +220,8 @@ impl<'a, Message: 'a> Compose<Message> for Scrollable<'a, Message> {
         let mut s = widget::Scrollable::with_direction(self.content.compose(), self.direction)
             .width(self.width)
             .height(self.height)
-            .auto_scroll(self.auto_scroll);
+            .auto_scroll(self.auto_scroll)
+            .focus_group(self.focus_group);
 
         if let Some(id) = self.id {
             s = s.id(id);

@@ -44,7 +44,7 @@ use iced_widget::container;
 use crate::core::Em;
 use crate::core::alignment;
 use crate::core::border::{self, Border};
-use crate::core::keyboard;
+use crate::core::keyboard::{self, Key, key::Named};
 use crate::core::layout;
 use crate::core::mouse;
 use crate::core::overlay;
@@ -53,7 +53,7 @@ use crate::core::text;
 use crate::core::time::{Duration, Instant};
 use crate::core::touch;
 use crate::core::widget;
-use crate::core::widget::operation::{self, Animation, Operation};
+use crate::core::widget::operation::{self, Animation, Focusable, Operation};
 use crate::core::widget::tree::{self, Tree};
 use crate::core::window;
 use crate::core::{
@@ -119,6 +119,7 @@ pub struct Scrollable<
     height: Length,
     direction: Direction,
     auto_scroll: bool,
+    focus_group: bool,
     smooth_scroll: bool,
     click_to_scroll: bool,
     content: W,
@@ -143,12 +144,18 @@ where
             height: Length::Fit,
             direction: direction.into(),
             auto_scroll: false,
+            focus_group: false,
             smooth_scroll: true,
             click_to_scroll: false,
             content,
             on_scroll: None,
             class: Theme::default(),
         }
+    }
+
+    pub(super) fn focus_group(mut self, enabled: bool) -> Self {
+        self.focus_group = enabled;
+        self
     }
 
     /// Makes the [`Scrollable`] scroll horizontally, with default [`Scrollbar`] settings.
@@ -659,6 +666,9 @@ where
         let translation = state.last_translation;
         let viewport = viewport.intersection(&bounds).unwrap_or_default() + translation;
 
+        if self.focus_group && content.width > bounds.width {
+            operation.focusable(self.id.as_ref(), bounds, state);
+        }
         operation.scrollable(self.id.as_ref(), bounds, content, translation, state);
         operation.container(self.id.as_ref(), content_bounds, &viewport);
 
@@ -666,6 +676,38 @@ where
             self.content
                 .operate(content_tree, content_layout, &viewport, renderer, operation);
         });
+
+        // Focus traversal updates children during the operation. Reveal a newly
+        // focused action once, allowing subsequent pointer scrolls to stay put.
+        if self.focus_group {
+            let mut focus = Focus::default();
+            self.content.operate(
+                content_tree,
+                content_layout,
+                &viewport,
+                renderer,
+                &mut focus,
+            );
+            if focus.target != state.focused_child {
+                state.focused_child = focus.target;
+                if let Some((_, child)) = &state.focused_child {
+                    let start = child.x - bounds.x;
+                    let end = start + child.width - bounds.width;
+                    let x = translation.x.clamp(end.min(start), start);
+                    state.scroll_to(
+                        AbsoluteOffset {
+                            x: Some(x),
+                            y: None,
+                        },
+                        Animation::Instant,
+                        bounds,
+                        content,
+                        Source::Operation,
+                    );
+                    state.last_translation = state.translation(self.direction, bounds, content);
+                }
+            }
+        }
     }
 
     fn update(
@@ -688,6 +730,41 @@ where
         let scrollbars = Scrollbars::new(state.last_translation, self.direction, bounds, content);
         let mouse_over_scrollbar = scrollbars.is_mouse_over(cursor);
         let last_offsets = (state.offset_x, state.offset_y);
+
+        if self.focus_group
+            && state.focused
+            && !shell.is_event_captured()
+            && let Event::Keyboard(keyboard::Event::KeyPressed {
+                key: Key::Named(key),
+                ..
+            }) = event
+        {
+            let x = state.last_translation.x;
+            let end = (content.width - bounds.width).max(0.0);
+            let target = match key {
+                Named::ArrowLeft => Some(x - 40.0),
+                Named::ArrowRight => Some(x + 40.0),
+                Named::Home => Some(0.0),
+                Named::End => Some(end),
+                _ => None,
+            };
+            if let Some(target) = target {
+                state.scroll_to(
+                    AbsoluteOffset {
+                        x: Some(target.clamp(0.0, end)),
+                        y: None,
+                    },
+                    Animation::Instant,
+                    bounds,
+                    content,
+                    Source::Operation,
+                );
+                state.last_translation = state.translation(self.direction, bounds, content);
+                shell.capture_event();
+                shell.request_redraw();
+                return;
+            }
+        }
 
         let interact = state.interact(
             event,
@@ -748,6 +825,16 @@ where
                 }
             }
 
+            if self.focus_group
+                && matches!(
+                    event,
+                    Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left))
+                )
+            {
+                state.focused = !shell.is_event_captured()
+                    && cursor_over_scrollable.is_some()
+                    && content.width > bounds.width;
+            }
             let update = state.update(
                 event,
                 bounds,
@@ -1264,6 +1351,8 @@ struct Update {
 
 #[derive(Debug, Clone)]
 struct State {
+    focused: bool,
+    focused_child: Option<(widget::Id, Rectangle)>,
     offset_y: Offset,
     offset_x: Offset,
     smooth_scroll: bool,
@@ -1279,6 +1368,37 @@ struct State {
     is_scrollbar_visible: bool,
     last_status: Option<Status>,
     last_id: Option<widget::Id>,
+}
+
+impl Focusable for State {
+    fn is_focused(&self) -> bool {
+        self.focused
+    }
+    fn focus(&mut self) {
+        self.focused = true;
+    }
+    fn unfocus(&mut self) {
+        self.focused = false;
+    }
+}
+
+#[derive(Default)]
+struct Focus {
+    target: Option<(widget::Id, Rectangle)>,
+}
+
+impl Operation for Focus {
+    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+        visit(self);
+    }
+
+    fn focusable(&mut self, id: Option<&widget::Id>, bounds: Rectangle, state: &mut dyn Focusable) {
+        if state.is_focused()
+            && let Some(id) = id
+        {
+            self.target = Some((id.clone(), bounds));
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -1422,6 +1542,8 @@ impl Axis {
 impl Default for State {
     fn default() -> Self {
         Self {
+            focused: false,
+            focused_child: None,
             offset_y: Offset::Absolute(0.0),
             offset_x: Offset::Absolute(0.0),
             smooth_scroll: true,

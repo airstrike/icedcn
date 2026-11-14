@@ -1,12 +1,28 @@
 ```rust
-dialog(|handle| {
-    let opener = *handle;
-    attachment("research-summary.pdf")
-        .description("Open preview dialog")
-        .media(icon::file_search())
-        .trigger(move |body| opener.trigger(preview_button(body, None)))
-        .action(attachment::action(icon::copy()).on_press(Edit::Copy))
-        .action(remove("research-summary.pdf"))
-        .into()
-}, |_| dialog::header("research-summary.pdf", "Preview the selected file."))
+use iced::Fill;
+use icedxdy::widget::{attachment, button, dialog, tooltip};
+
+let name = "research-summary.pdf";
+dialog(
+    move |d| {
+        let opener = *d;
+        attachment(name)
+            .media(icon::file_search())
+            .description("Open preview dialog")
+            .trigger(move |body| {
+                opener.trigger(button(body).style(button::Ghost).height(40).width(Fill))
+            })
+            .action(tooltip(
+                attachment::action(icon::copy()).on_press(Message::Copy),
+                "Copy link",
+            ))
+            .action(tooltip(
+                attachment::action(icon::x()).on_press(Message::Remove(name)),
+                format!("Remove {name}"),
+            ))
+            .into()
+    },
+    move |_| dialog::header(name, "The attachment trigger fills the card and opens the dialog, while the actions stay independently clickable above it."),
+)
+.max_width(448.)
 ```

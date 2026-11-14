@@ -1,4 +1,5 @@
 use crate::icon;
+use crate::page::rhea;
 use crate::{Message, page};
 use iced::widget::component::{Component, component};
 use iced::widget::image;
@@ -26,39 +27,75 @@ pub static BLOCKS: &[Block] = &[
         description: None,
         snippet: "examples/browser/snippets/attachment-demo.md",
     },
+    Block::Md("examples/browser/snippets/attachment-introduction.md"),
+    Block::Md("examples/browser/snippets/attachment-installation.md"),
     Block::Md("examples/browser/snippets/attachment-usage.md"),
     Block::Md("examples/browser/snippets/attachment-composition.md"),
+    Block::Md("examples/browser/snippets/attachment-features.md"),
     Block::Example {
         id: "image",
         title: "Image",
-        description: None,
+        description: Some(
+            "Use `.media(image(handle))` for an image preview. Set `.vertical(true)` to stack the image above the filename and metadata.",
+        ),
         snippet: "examples/browser/snippets/attachment-image.md",
     },
     Block::Example {
         id: "states",
         title: "States",
-        description: None,
+        description: Some(
+            "Set `.state(...)` to reflect the upload lifecycle. `Uploading` and `Processing` shimmer the title, and `Error` switches to a destructive treatment.",
+        ),
         snippet: "examples/browser/snippets/attachment-states.md",
     },
     Block::Example {
         id: "sizes",
         title: "Sizes",
-        description: None,
+        description: Some(
+            "Use `.size(...)` to switch between `Size::Default`, `Size::Sm`, and `Size::Xs`.",
+        ),
         snippet: "examples/browser/snippets/attachment-sizes.md",
     },
     Block::Example {
         id: "group",
         title: "Group",
-        description: None,
+        description: Some(
+            "Wrap cards in `attachment::group` to arrange them in a horizontally scrollable row.",
+        ),
         snippet: "examples/browser/snippets/attachment-group.md",
     },
     Block::Example {
         id: "trigger",
         title: "Trigger",
-        description: None,
+        description: Some(
+            "Use `.trigger(...)` to open a link or dialog from the card. Its action buttons stay independently clickable.",
+        ),
         snippet: "examples/browser/snippets/attachment-trigger.md",
     },
-    Block::Md("examples/browser/snippets/attachment-api-reference.md"),
+    Block::Group {
+        title: "Accessibility",
+        children: &[
+            Block::Md("examples/browser/snippets/attachment-accessibility.md"),
+            Block::Md("examples/browser/snippets/attachment-label-actions.md"),
+            Block::Md("examples/browser/snippets/attachment-label-trigger.md"),
+            Block::Md("examples/browser/snippets/attachment-keyboard-scrolling.md"),
+            Block::Md("examples/browser/snippets/attachment-meaning.md"),
+        ],
+    },
+    Block::Group {
+        title: "API Reference",
+        children: &[
+            Block::Md("examples/browser/snippets/attachment-api-reference.md"),
+            Block::Md("examples/browser/snippets/attachment-api-media.md"),
+            Block::Md("examples/browser/snippets/attachment-api-content.md"),
+            Block::Md("examples/browser/snippets/attachment-api-title.md"),
+            Block::Md("examples/browser/snippets/attachment-api-description.md"),
+            Block::Md("examples/browser/snippets/attachment-api-actions.md"),
+            Block::Md("examples/browser/snippets/attachment-api-action.md"),
+            Block::Md("examples/browser/snippets/attachment-api-trigger.md"),
+            Block::Md("examples/browser/snippets/attachment-api-group.md"),
+        ],
+    },
 ];
 pub struct AttachmentPage {
     state: page::State,
@@ -134,23 +171,26 @@ fn picture(index: usize, side: u32) -> Slot<'static, Edit> {
 }
 fn preview_button(content: Slot<'static, Edit>, message: Option<Edit>) -> Slot<'static, Edit> {
     // Keep the target's natural height, including the image in a vertical card.
-    let mut b = Button::new(content.compose())
-        .inset(0)
+    Button::new(content.compose())
+        .padding(0)
         .width(Fill)
         .translate(false)
         .style(Box::new(|theme: &Theme, status: Status| {
             let style: button::Style = ghost(theme, status.into()).into();
             style.into()
-        }) as StyleFn<Theme>);
-    if let Some(message) = message {
-        b = b.on_press(message);
-    }
-    b.boxed().into()
+        }) as StyleFn<Theme>)
+        .on_press_maybe(message)
+        .boxed()
+        .into()
 }
-fn remove(name: &'static str) -> Slot<'static, Edit> {
+fn action(name: &'static str, cancel: bool) -> Slot<'static, Edit> {
     tooltip(
         attachment::action(icon::x()).on_press(Edit::Remove(name)),
-        format!("Remove {name}"),
+        if cancel {
+            "Cancel upload".into()
+        } else {
+            format!("Remove {name}")
+        },
     )
     .into()
 }
@@ -167,7 +207,7 @@ fn photos(state: &FilesState, interactive: bool) -> Slot<'static, Edit> {
                     .vertical(true);
                 if interactive {
                     card = card
-                        .action(remove(name))
+                        .action(action(name, false))
                         .trigger(move |body| preview_button(body, Some(Edit::Open(url))));
                 }
                 card.into()
@@ -187,7 +227,7 @@ fn status_card(
             "Retry upload",
         ));
     }
-    card.action(remove(name)).into()
+    card.action(action(name, state == State::Uploading)).into()
 }
 fn states_list(state: &FilesState) -> Vec<Slot<'static, Edit>> {
     use State::*;
@@ -252,20 +292,31 @@ fn tiles(state: &FilesState) -> Slot<'static, Edit> {
                     .media(media)
                     .description(meta)
                     .width(256)
-                    .action(remove(name))
+                    .action(action(name, false))
                     .into()
             }),
     )
 }
 fn preview_dialog() -> Slot<'static, Edit> {
     let name = "research-summary.pdf";
-    dialog(move|d|{
-        let opener=*d;
-        attachment(name).description("Open preview dialog").media(icon::file_search())
-            .trigger(move|body|opener.trigger(preview_button(body,None)))
-            .action(tooltip(attachment::action(icon::copy()).on_press(Edit::Copy),"Copy link"))
-            .action(remove(name)).into()
-    },move |_|dialog::header(name,"The attachment trigger fills the card and opens the dialog, while the actions stay independently clickable above it.")).max_width(448.).into()
+    dialog(
+        move |d| {
+            let opener = *d;
+            attachment(name)
+                .description("Open preview dialog")
+                .media(icon::file_search())
+                .trigger(move |body| opener.trigger(preview_button(body, None)))
+                .action(tooltip(
+                    attachment::action(icon::copy()).on_press(Edit::Copy),
+                    "Copy link",
+                ))
+                .action(action(name, false))
+                .into()
+        },
+        move |_| dialog::header(name, "The attachment trigger fills the card and opens the dialog, while the actions stay independently clickable above it."),
+    )
+    .max_width(448.)
+    .into()
 }
 impl<'a> Component<'a, Message, Theme> for Files {
     type State = FilesState;
@@ -388,6 +439,17 @@ impl page::Page for AttachmentPage {
     fn reset_volatile(&mut self) {
         self.state.reset_volatile();
     }
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: 40.into(),
+            ..rhea::backdrop()
+        }
+    }
+
+    fn preview_theme(&self, outer: &Theme) -> Option<Theme> {
+        Some(rhea::theme(outer))
+    }
+
     fn preview(&self, id: &str) -> Element<'_, Message, Theme> {
         match id {
             "demo" => demo_example().into(),

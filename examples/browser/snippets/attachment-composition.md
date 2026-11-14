@@ -1,3 +1,21 @@
 ## Composition
 
-A card contains media, a title and description, and optional action buttons. Wrap the content with `.trigger(...)` to open a preview while keeping remove and copy controls independently clickable. Use `attachment::group` for a horizontally scrollable strip.
+The title is required. Builders supply the media, description, actions, and optional activation target.
+
+```text
+attachment(title)
+├── .media(icon or image)
+├── content
+│   ├── title
+│   └── .description(metadata)
+├── .action(button)
+└── .trigger(build_target)
+```
+
+Place several cards inside a scrollable row with `attachment::group`.
+
+```text
+attachment::group
+├── attachment(title)
+└── attachment(title)
+```
