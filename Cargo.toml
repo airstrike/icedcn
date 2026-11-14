@@ -67,6 +67,11 @@ tree-sitter = "0.26"
 tree-sitter-highlight = "0.26"
 tree-sitter-rust = "0.24"
 
+# Keep debug info in one file per crate instead of an object per codegen unit
+# per rebuild, which macOS's default (unpacked) leaves piling up in target/.
+[profile.dev]
+split-debuginfo = "packed"
+
 # Optimize dependencies (built once, cached) while the workspace crates stay at
 # the default dev opt-level for fast incremental recompiles. The per-frame
 # widget walk lives mostly in deps (iced/wgpu/icedxdy_widget), so this is the
