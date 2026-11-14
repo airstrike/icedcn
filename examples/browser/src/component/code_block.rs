@@ -8,7 +8,7 @@ use iced::widget::Id;
 use iced::{Element, Fill, Task, clipboard};
 use icedxdy::{Theme, widget::container};
 use sections::BLOCKS;
-use std::time::Instant;
+use iced::time::Instant;
 pub static META: page::Meta = page::Meta {
     title: "Code Block",
     description: "Displays code, terminal output and diffs with an optional header, line numbers and a copy button.",

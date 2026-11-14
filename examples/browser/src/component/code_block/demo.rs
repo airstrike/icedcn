@@ -1,6 +1,6 @@
 use iced::widget::text::LineHeight;
 use std::collections::BTreeMap;
-use std::time::{Duration, Instant};
+use iced::time::{Duration, Instant};
 
 use iced::alignment::Horizontal;
 use iced::widget::button::Style;

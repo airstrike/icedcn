@@ -158,10 +158,8 @@ impl page::Page for InputPage {
     }
 
     fn update(&mut self, event: page::Message) -> Task<Message> {
-        if let page::Message::FileSelected(Some(path)) = &event {
-            self.file_name = path
-                .file_name()
-                .map(|name| name.to_string_lossy().into_owned());
+        if let page::Message::FileSelected(Some(name)) = &event {
+            self.file_name = Some(name.clone());
         }
         self.state.update(&event)
     }

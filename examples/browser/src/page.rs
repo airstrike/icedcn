@@ -3,9 +3,15 @@ pub(crate) mod rhea;
 use iced::Element;
 use iced::Widget;
 use std::collections::{BTreeSet, HashMap};
-use std::path::{Path, PathBuf};
-
+use std::path::Path;
+#[cfg(not(target_arch = "wasm32"))]
 use tokio::fs::read_to_string;
+
+#[cfg(target_arch = "wasm32")]
+mod bundled {
+    include!(concat!(env!("OUT_DIR"), "/snippets.rs"));
+}
+
 
 use iced::Alignment::*;
 use iced::border;
@@ -205,7 +211,7 @@ pub enum Message {
     ChooseFile,
     Notice(String, String),
     CodeBlock(code_block::Event),
-    FileSelected(Option<PathBuf>),
+    FileSelected(Option<String>),
     BlockShown(usize),
     BlockHidden(usize),
     ScrollTo(usize),
@@ -957,12 +963,8 @@ impl State {
         let tasks: Vec<Task<super::Message>> = paths
             .into_iter()
             .map(|path| {
-                let buf = Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .parent()
-                    .and_then(Path::parent)
-                    .map_or_else(|| PathBuf::from(path), |root| root.join(path));
                 Task::perform(
-                    async move { read_to_string(buf).await.map_err(|e| e.to_string()) },
+                    load_snippet(path),
                     move |result| super::Message::Page(pi, Message::SnippetLoaded(path, result)),
                 )
             })
@@ -1004,7 +1006,7 @@ impl State {
                         rfd::AsyncFileDialog::new()
                             .pick_file()
                             .await
-                            .map(|file| file.path().to_owned())
+                            .map(|file| file.file_name())
                     },
                     move |file| super::Message::Page(page, Message::FileSelected(file)),
                 )
@@ -1056,6 +1058,21 @@ impl State {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+async fn load_snippet(path: &str) -> Result<String, String> {
+    let name = path.strip_prefix("examples/browser/")
+        .ok_or_else(|| format!("Unknown snippet: {path}"))?;
+    let file = Path::new(env!("CARGO_MANIFEST_DIR")).join(name);
+    read_to_string(file).await.map_err(|error| error.to_string())
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn load_snippet(path: &str) -> Result<String, String> {
+    bundled::snippet(path)
+        .map(str::to_owned)
+        .ok_or_else(|| format!("Unknown snippet: {path}"))
+}
+
 pub(crate) fn slug(title: &str) -> String {
     title.to_lowercase().replace(' ', "-")
 }
@@ -1066,13 +1083,22 @@ pub fn open_link(url: &str) -> Task<super::Message> {
         return Task::done(super::Message::OpenComponent(target.to_owned()));
     }
     if url.starts_with("https://") || url.starts_with("http://") || url.starts_with("mailto:") {
-        let url = url.to_owned();
-        return Task::perform(async move { open::that_detached(url) }, |result| {
-            if let Err(error) = result {
-                eprintln!("Could not open link: {error}");
-            }
-        })
-        .discard();
+        #[cfg(target_arch = "wasm32")]
+        if let Some(window) = web_sys::window() {
+            let _ = window.open_with_url_and_target_and_features(
+                url, "_blank", "noopener,noreferrer",
+            );
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let url = url.to_owned();
+            return Task::perform(async move { open::that_detached(url) }, |result| {
+                if let Err(error) = result {
+                    eprintln!("Could not open link: {error}");
+                }
+            })
+            .discard();
+        }
     }
     Task::none()
 }
