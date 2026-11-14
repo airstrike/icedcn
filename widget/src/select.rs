@@ -274,8 +274,8 @@ impl<'a, Message> Select<'a, Message> {
     }
 
     /// Set the selected value's font (for example, a monospace currency symbol).
-    pub fn font(mut self, font: iced_core::Font) -> Self {
-        self.font = Some(font);
+    pub fn font(mut self, font: impl Into<iced_core::Font>) -> Self {
+        self.font = Some(font.into());
         self
     }
 

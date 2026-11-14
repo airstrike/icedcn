@@ -2,9 +2,8 @@ mod demo;
 mod samples;
 mod sections;
 use crate::{Message, page};
-use iced::time::Instant;
 use iced::widget::Id;
-use iced::{Element, Fill, Task, clipboard};
+use iced::{Element, Fill, Task};
 use icedcn::{Theme, widget::container};
 use sections::BLOCKS;
 pub static META: page::Meta = page::Meta {
@@ -14,11 +13,6 @@ pub static META: page::Meta = page::Meta {
 
 #[derive(Clone, Debug)]
 pub enum Event {
-    Copy {
-        target: Id,
-        id: &'static str,
-        value: String,
-    },
     Save {
         target: Id,
         name: &'static str,
@@ -51,16 +45,6 @@ impl CodeBlockPage {
             )
         };
         match event {
-            Event::Copy { target, id, value } => clipboard::write(value).then(move |result| {
-                if result.is_ok() {
-                    Task::done(send(
-                        target.clone(),
-                        demo::Message::Copied(id, Instant::now()),
-                    ))
-                } else {
-                    Task::none()
-                }
-            }),
             Event::Save {
                 target,
                 name,

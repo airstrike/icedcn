@@ -3,36 +3,23 @@ use super::super::Event;
 use super::*;
 
 #[test]
-fn wrap_and_expansion_are_independent_and_repeatable() {
+fn wrap_is_independent_across_examples_and_repeatable() {
     let mut page = State::new();
     for _ in 0..2 {
         let _ = page.update(Message::Wrap("demo"));
         assert_eq!(page.wraps["demo"], true);
         let _ = page.update(Message::Wrap("actions"));
         assert_eq!(page.wraps["actions"], false);
-        let _ = page.update(Message::Expand("show-more"));
-        assert_eq!(page.expanded["show-more"], true);
-        assert!(!page.expanded.contains_key("show-more-scroll"));
         let _ = page.update(Message::Wrap("demo"));
         let _ = page.update(Message::Wrap("actions"));
-        let _ = page.update(Message::Expand("show-more"));
         assert_eq!(page.wraps["demo"], false);
         assert_eq!(page.wraps["actions"], true);
-        assert_eq!(page.expanded["show-more"], false);
     }
 }
 
 #[test]
-fn repeated_copy_rejects_stale_reset_and_cancel_does_not_claim_save() {
+fn cancelled_save_keeps_the_status_empty() {
     let mut page = State::new();
-    let first = Instant::now();
-    let second = first + Duration::from_millis(500);
-    let _ = page.update(Message::Copied("demo", first));
-    let _ = page.update(Message::Copied("demo", second));
-    let _ = page.update(Message::ResetCopy("demo", first));
-    assert_eq!(page.copied["demo"], second);
-    let _ = page.update(Message::ResetCopy("demo", second));
-    assert!(!page.copied.contains_key("demo"));
     let _ = page.update(Message::Saved("view.rs", Ok(false)));
     assert!(page.save_status.is_empty());
     let _ = page.update(Message::Saved("view.rs", Ok(true)));
@@ -101,28 +88,27 @@ fn markdown_uses_word_plus_whitespace_deltas() {
 fn completion_receipts_are_targeted_replay_safe_and_not_lost_in_a_batch() {
     let mut first = State::new();
     let mut second = State::new();
-    let now = Instant::now();
     let a = Completion {
         target: first.target.clone(),
         serial: Id::unique(),
-        message: Message::Copied("view", now),
+        message: Message::Saved("view.rs", Ok(true)),
     };
     let b = Completion {
         target: first.target.clone(),
         serial: Id::unique(),
-        message: Message::Copied("search", now),
+        message: Message::Saved("search.rs", Ok(true)),
     };
     for completion in [&a, &b] {
         first.receive(completion);
         second.receive(completion);
     }
-    assert_eq!(first.copied.len(), 2);
-    assert!(second.copied.is_empty());
-    first.advance(now + Duration::from_secs(2));
-    assert!(first.copied.is_empty());
+    assert_eq!(first.save_status.len(), 2);
+    assert!(second.save_status.is_empty());
+    first.save_status.clear();
+    assert!(first.save_status.is_empty());
     first.receive(&a);
     assert!(
-        first.copied.is_empty(),
+        first.save_status.is_empty(),
         "a rebuild cannot replay an old receipt"
     );
     let Some(Event::Acknowledged(ids)) = first.update(Message::Acknowledge) else {
@@ -133,23 +119,6 @@ fn completion_receipts_are_targeted_replay_safe_and_not_lost_in_a_batch() {
     let _ = first.update(Message::Wrap("demo"));
     assert!(first.wraps["demo"]);
     assert!(second.wraps.is_empty());
-}
-#[test]
-fn chevron_rotates_reverses_continuously_and_settles() {
-    let now = Instant::now();
-    let mut turn = Turn::default();
-    turn.retarget(1., now);
-    assert_eq!(turn.value, 0.);
-    turn.advance(now + Duration::from_millis(75));
-    let midway = turn.value;
-    assert!(midway > 0. && midway < 1.);
-    turn.retarget(0., now + Duration::from_millis(75));
-    assert_eq!(turn.value, midway);
-    turn.advance(now + Duration::from_millis(150));
-    assert!(turn.value > 0. && turn.value < midway);
-    turn.advance(now + Duration::from_millis(225));
-    assert_eq!(turn.value, 0.);
-    assert!(turn.start.is_none());
 }
 #[test]
 fn markdown_and_typeset_prose_remain_paragraphs() {

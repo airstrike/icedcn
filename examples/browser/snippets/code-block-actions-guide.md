@@ -1,1 +1,1 @@
-Keep the wrap value in the example's state and pass it to `.wrap(wrap)`. A typed message flips that value. The complete snippet includes copy success feedback, a two-second reset, and a native save dialog whose cancellation leaves the output unchanged.
+The Wrap button toggles `.wrap(self.wrap)`. Download opens a save dialog and displays the result in the footer. The copy button handles clipboard feedback itself.

@@ -1,6 +1,6 @@
 ```rust
 use iced::widget::svg;
-use iced::{Font, Task, Widget};
+use iced::{Task, Widget};
 use icedcn::widget::{CodeBlock, button, code_block, row, text, tooltip};
 use icedcn::{Size, Slot, Theme};
 #[derive(Clone, Debug)]
@@ -52,9 +52,8 @@ impl Demo {
         Task::none()
     }
     pub fn view(&self) -> CodeBlock<'_, Message> {
-        let block = code_block(ACTIONS);
-        let mut block = block
-            .font(Font::new("Geist Mono"))
+        let mut block = code_block(ACTIONS)
+            .font("Geist Mono")
             .wrap(self.wrap)
             .title(code_block::terminal_title("Terminal"))
             .actions(

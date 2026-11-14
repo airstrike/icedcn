@@ -1,6 +1,6 @@
 ### Title
 
-`code_block::title(text)` supplies a medium-weight title that truncates within the available width. Put an optional icon beside it in a row.
+`code_block::title(text)` supplies a medium-weight title that truncates within the available width. Use a plain string for a short header. For a terminal glyph and a truncating label together, pass `code_block::terminal_title("Terminal")` to `.title(...)`.
 
 | API | Type | Default | Behavior |
 | --- | --- | --- | --- |

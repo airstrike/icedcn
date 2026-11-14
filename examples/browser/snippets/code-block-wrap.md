@@ -1,14 +1,12 @@
 ```rust
-use iced::Font;
 use icedcn::{
     Slot,
     widget::{code_block, column},
 };
-pub fn view<Message: Clone + 'static>() -> Slot<'static, Message> {
-    let font = Font::new("Geist Mono");
+pub fn view<'a, Message: 'a>() -> Slot<'a, Message> {
     column![
-        code_block(WRAP).font(font),
-        code_block(WRAP).font(font).wrap(true)
+        code_block(WRAP).font("Geist Mono"),
+        code_block(WRAP).font("Geist Mono").wrap(true)
     ]
     .spacing(16)
     .into()

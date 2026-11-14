@@ -1,12 +1,11 @@
 ```rust
-use iced::Font;
 use icedcn::widget::{CodeBlock, code_block};
 
-pub fn view<Message: Clone + 'static>() -> CodeBlock<'static, Message> {
+pub fn view<Message: 'static>() -> CodeBlock<'static, Message> {
     code_block(START_LINE)
-        .font(Font::new("Geist Mono"))
+        .font("Geist Mono")
         .language("rust")
-        .title(code_block::title("src/notebooks.rs"))
+        .title("src/notebooks.rs")
         .start_line(995)
 }
 

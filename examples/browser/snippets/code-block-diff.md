@@ -1,13 +1,12 @@
 ```rust
-use iced::Font;
 use icedcn::widget::{CodeBlock, code_block};
 
-pub fn view<Message: Clone + 'static>() -> CodeBlock<'static, Message> {
+pub fn view<Message: 'static>() -> CodeBlock<'static, Message> {
     code_block(DIFF)
-        .font(Font::new("Geist Mono"))
+        .font("Geist Mono")
         .language("rust")
         .diff()
-        .title(code_block::title("src/search.rs"))
+        .title("src/search.rs")
         .actions(code_block::copy_button(code_block::diff_text(DIFF)))
 }
 

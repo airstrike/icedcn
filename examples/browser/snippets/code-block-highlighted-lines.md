@@ -1,10 +1,9 @@
 ```rust
-use iced::Font;
 use icedcn::widget::{CodeBlock, code_block};
 
-pub fn view<Message: Clone + 'static>() -> CodeBlock<'static, Message> {
+pub fn view<Message: 'static>() -> CodeBlock<'static, Message> {
     code_block(HIGHLIGHTED_LINES)
-        .font(Font::new("Geist Mono"))
+        .font("Geist Mono")
         .line_style(3, code_block::LineStyle::Highlighted)
         .line_style(4, code_block::LineStyle::Highlighted)
         .start_line(1)

@@ -87,8 +87,8 @@ impl<'a> Text<'a> {
     }
 
     /// Set the font used for this text.
-    pub fn font(mut self, font: iced_core::Font) -> Self {
-        self.font = Some(font);
+    pub fn font(mut self, font: impl Into<iced_core::Font>) -> Self {
+        self.font = Some(font.into());
         self
     }
 

@@ -1,13 +1,12 @@
 ## Usage
 
 ```rust
-use iced::Font;
 use icedcn::widget::{CodeBlock, code_block};
 
-pub fn view<Message: Clone + 'static>() -> CodeBlock<'static, Message> {
+pub fn view<'a, Message>() -> CodeBlock<'a, Message> {
     code_block(HEADER)
-        .font(Font::new("Geist Mono"))
-        .title(code_block::terminal_title("Terminal"))
+        .font("Geist Mono")
+        .title("Terminal")
         .actions(code_block::copy_button("cargo check -p icedcn_widget"))
 }
 

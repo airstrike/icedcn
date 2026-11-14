@@ -1,9 +1,8 @@
 ```rust
-use iced::Font;
 use icedcn::widget::{CodeBlock, code_block};
 
-pub fn view<Message: Clone + 'static>() -> CodeBlock<'static, Message> {
-    code_block(BASIC).font(Font::new("Geist Mono"))
+pub fn view<'a, Message>() -> CodeBlock<'a, Message> {
+    code_block(BASIC).font("Geist Mono")
 }
 
 const BASIC: &str = r##"$ cargo build --release

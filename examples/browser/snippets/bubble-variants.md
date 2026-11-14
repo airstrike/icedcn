@@ -49,7 +49,7 @@ fn frame(body: impl Into<Slot<'static, ()>>) -> Slot<'static, ()> {
 fn ghost_text(theme: &Theme) -> Slot<'static, ()> {
     let bold = Font::DEFAULT.weight(Weight::Bold);
     let code = Span::<()>::new("code")
-        .font(Font::new("Geist Mono"))
+        .font("Geist Mono")
         .size(12.25)
         .color(theme.neutral.foreground)
         .background(iced::Color::from(theme.muted.base))

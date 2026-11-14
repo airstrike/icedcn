@@ -1,10 +1,9 @@
 ```rust
-use iced::Font;
 use icedcn::widget::{CodeBlock, code_block};
 
-pub fn view<Message: Clone + 'static>() -> CodeBlock<'static, Message> {
+pub fn view<Message: 'static>() -> CodeBlock<'static, Message> {
     code_block(HIGHLIGHTING)
-        .font(Font::new("Geist Mono"))
+        .font("Geist Mono")
         .language("rust")
         .title("src/notebook.rs")
 }

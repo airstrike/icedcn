@@ -1,5 +1,4 @@
 ```rust
-use iced::Font;
 use iced::alignment::Horizontal;
 use icedcn::widget::{bubble, message, text};
 use icedcn::{
@@ -15,7 +14,7 @@ pub fn view<Message: Clone + 'static>() -> Slot<'static, Message> {
                 text::p("Compare the query and each title in lowercase."),
                 code_block(CHAT)
                     .language("rust")
-                    .font(Font::new("Geist Mono"))
+                    .font("Geist Mono")
                     .title("src/search.rs")
                     .actions(code_block::copy_button(CHAT)),
                 text::p("The result borrows the matching titles from the original list.")

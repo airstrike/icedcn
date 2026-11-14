@@ -1,10 +1,9 @@
 ```rust
-use iced::Font;
 use icedcn::widget::{CodeBlock, code_block};
 
-pub fn view<Message: Clone + 'static>() -> CodeBlock<'static, Message> {
+pub fn view<'a, Message>() -> CodeBlock<'a, Message> {
     code_block(DESTRUCTIVE)
-        .font(Font::new("Geist Mono"))
+        .font("Geist Mono")
         .wrap(true)
         .style(code_block::Destructive)
         .title("Error")

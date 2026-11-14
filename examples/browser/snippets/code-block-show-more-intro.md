@@ -1,1 +1,1 @@
-Cap the viewport with `.max_height(256.)` and `.collapsed(true)`. A ghost button in `.footer(...)` toggles the notebook listing between its collapsed and expanded heights.
+Use `code_block::show_more(256, || ...)` to preview the first 256 pixels. Its footer toggles the full listing, and the copy action always receives the complete source.

@@ -243,3 +243,22 @@ fn highlighted_patch_rebuilds_with_incoming_source_and_preserves_rows() {
         );
     }
 }
+
+#[test]
+fn header_accepts_borrowed_source_and_messages() {
+    use icedcn_widget::code_block;
+
+    fn view<'a, Message>(source: &'a str) -> CodeBlock<'a, Message> {
+        code_block(source)
+            .font("Geist Mono")
+            .title("Terminal")
+            .actions(code_block::copy_button(source))
+    }
+
+    fn mount<'a>(source: &'a mut str) -> Element<'a, &'a mut str, Theme, Renderer> {
+        view(source).into()
+    }
+
+    let mut source = String::from("+fn main() {}");
+    drop(mount(&mut source));
+}

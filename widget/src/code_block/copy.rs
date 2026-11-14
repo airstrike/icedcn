@@ -1,7 +1,9 @@
 //! A clipboard action that keeps its acknowledgement and feedback deadline in the widget tree.
 use std::borrow::Cow;
+use std::convert::Infallible;
 
 use iced_core::clipboard;
+use iced_core::shell::Bus;
 use iced_core::time::{Duration, Instant};
 use iced_core::widget::tree::{self, Tree};
 use iced_core::widget::{Meta, Operation};
@@ -39,7 +41,7 @@ impl CopyButton<'_> {
     }
 }
 
-impl<'src, M: Clone + 'src> Compose<M> for CopyButton<'src> {
+impl<'src, M: 'src> Compose<M> for CopyButton<'src> {
     fn inherit(&mut self, from: &Inherited) {
         self.disabled |= from.is_disabled();
     }
@@ -55,12 +57,12 @@ impl<'src, M: Clone + 'src> Compose<M> for CopyButton<'src> {
         .boxed()
     }
 }
-impl<'a, M: Clone + 'a> From<CopyButton<'a>> for Slot<'a, M> {
+impl<'a, M: 'a> From<CopyButton<'a>> for Slot<'a, M> {
     fn from(button: CopyButton<'a>) -> Self {
         Slot::new(button)
     }
 }
-impl<'a, M: Clone + 'a> From<CopyButton<'a>> for Element<'a, M, Theme, Renderer> {
+impl<'a, M: 'a> From<CopyButton<'a>> for Element<'a, M, Theme, Renderer> {
     fn from(button: CopyButton<'a>) -> Self {
         Box::new(button).compose()
     }
@@ -70,9 +72,9 @@ impl<'a, M: Clone + 'a> From<CopyButton<'a>> for Element<'a, M, Theme, Renderer>
 struct Pressed;
 
 impl CopyButton<'_> {
-    fn control<'a, M: Clone + 'a>(&self, copied: bool) -> Element<'a, M, Theme, Renderer> {
+    fn control<'a>(&self, copied: bool) -> Element<'a, Infallible, Theme, Renderer> {
         let glyph = if copied { Glyph::Check } else { Glyph::Copy };
-        let button: Element<'a, M, Theme, Renderer> = button(glyph.view())
+        let button: Element<'a, Infallible, Theme, Renderer> = button(glyph.view())
             .size(crate::Size::Xs)
             .square()
             .style(button::Ghost)
@@ -83,9 +85,9 @@ impl CopyButton<'_> {
     }
 }
 
-struct Control<'a, M> {
+struct Control<'a> {
     button: CopyButton<'a>,
-    child: Element<'a, M, Theme, Renderer>,
+    child: Element<'a, Infallible, Theme, Renderer>,
 }
 #[derive(Default)]
 struct State {
@@ -100,8 +102,8 @@ impl State {
         }
     }
 }
-impl<M> Meta for Control<'_, M> {}
-impl<'a, M: Clone + 'a> Widget<M, Theme, Renderer> for Control<'a, M> {
+impl Meta for Control<'_> {}
+impl<'a, M: 'a> Widget<M, Theme, Renderer> for Control<'a> {
     fn tag(&self) -> tree::Tag {
         tree::Tag::of::<State>()
     }
@@ -134,8 +136,14 @@ impl<'a, M: Clone + 'a> Widget<M, Theme, Renderer> for Control<'a, M> {
             .iter_mut(&mut tree.children)
             .next()
             .expect("copy button child");
+        let mut bus = Bus::new();
+        let mut local = shell.local(&mut bus);
+        if shell.is_event_captured() {
+            local.capture_event();
+        }
         self.child
-            .update(child, event, layout, cursor, renderer, shell, viewport);
+            .update(child, event, layout, cursor, renderer, &mut local, viewport);
+        shell.merge(local, |never| match never {});
         let mut drain = marker::drain::<Pressed>();
         self.child
             .operate(child, layout, viewport, renderer, &mut drain);
@@ -227,6 +235,9 @@ impl<'a, M: Clone + 'a> Widget<M, Theme, Renderer> for Control<'a, M> {
             .expect("copy button child");
         self.child
             .overlay(child, layout, renderer, viewport, translation, window)
+            .into_iter()
+            .map(|overlay| overlay.map(&|never| match never {}))
+            .collect()
     }
 }
 
@@ -234,17 +245,19 @@ impl<'a, M: Clone + 'a> Widget<M, Theme, Renderer> for Control<'a, M> {
 mod tests {
     use super::*;
     use iced_core::clipboard::{Content, Error};
+    use iced_core::keyboard::key::Named;
     use iced_core::renderer::Headless;
-    use iced_core::shell::{Bus, Waker};
+    use iced_core::shell::Waker;
     use iced_test::futures::futures::executor::block_on;
+    use iced_test::simulator::press_key;
 
     #[test]
     fn copy_writes_on_release_and_shows_feedback_only_after_success() {
-        let button = copy_button("first\n\nlast");
-        let mut control = Control::<()> {
-            child: button.control(false),
-            button,
-        };
+        fn action<'a>(source: &'a str) -> Element<'a, &'a mut str, Theme, Renderer> {
+            Slot::from(copy_button(source)).compose()
+        }
+        let source = String::from("first\n\nlast");
+        let mut control = action(&source);
         let mut tree = Tree::new(&control);
         tree.diff(&mut control);
         let renderer =
@@ -270,6 +283,7 @@ mod tests {
         let release = Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left));
         let ok = Event::Clipboard(clipboard::Event::Written(Ok(())));
         let fail = Event::Clipboard(clipboard::Event::Written(Err(Error::ClipboardUnavailable)));
+        assert!(send(&mut tree, press_key(Named::Enter, None)).is_none());
         send(&mut tree, ok.clone());
         assert!(tree.state.downcast_ref::<State>().until.is_none());
         for completion in [fail, ok.clone(), ok] {
@@ -303,6 +317,16 @@ mod tests {
             Event::Window(window::Event::RedrawRequested(until)),
         );
         assert!(tree.state.downcast_ref::<State>().until.is_none());
+        for key in [Named::Enter, Named::Space] {
+            assert_eq!(
+                send(&mut tree, press_key(key, None)),
+                Some(Content::Text(source.clone()))
+            );
+            send(
+                &mut tree,
+                Event::Clipboard(clipboard::Event::Written(Ok(()))),
+            );
+        }
         assert!(bus.is_empty());
     }
 }

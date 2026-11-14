@@ -1,10 +1,9 @@
 ```rust
-use iced::Font;
 use icedcn::{
     Slot,
     widget::{code_block, column},
 };
-pub fn view<Message: Clone + 'static>() -> Slot<'static, Message> {
+pub fn view<Message: 'static>() -> Slot<'static, Message> {
     let files = [
         ("Cargo.toml", "toml", LANGUAGES_0),
         ("src/main.rs", "rust", LANGUAGES_1),
@@ -12,9 +11,9 @@ pub fn view<Message: Clone + 'static>() -> Slot<'static, Message> {
     ];
     column(files.map(|(title, language, source)| {
         code_block(source)
-            .font(Font::new("Geist Mono"))
+            .font("Geist Mono")
             .language(language)
-            .title(code_block::title(title))
+            .title(title)
             .into()
     }))
     .spacing(16)

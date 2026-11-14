@@ -1,6 +1,6 @@
 ```rust
 use iced::widget::svg;
-use iced::{Fill, Font, Subscription, Widget, time};
+use iced::{Fill, Subscription, Widget, time};
 use icedcn::widget::{button, code_block, column};
 use icedcn::{Size, Slot, Theme};
 use std::time::{Duration, Instant};
@@ -52,9 +52,7 @@ impl Demo {
             }
             let count = remaining.min(source.len());
             let visible = &source[..source.floor_char_boundary(count)];
-            let mut block = code_block(visible)
-                .language(language)
-                .font(Font::new("Geist Mono"));
+            let mut block = code_block(visible).language(language).font("Geist Mono");
             if source == STREAMING_2 {
                 block = block.diff();
             } else if source == STREAMING_3 {
@@ -69,7 +67,7 @@ impl Demo {
                     code_block::copy_button(source)
                 };
                 block = block
-                    .title(code_block::title(title))
+                    .title(title)
                     .actions(copy.disabled(count < source.len()));
             }
             if !matches!(title, "Terminal" | ".cargo/config.toml") {

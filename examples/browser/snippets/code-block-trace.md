@@ -1,6 +1,6 @@
 ```rust
+use iced::Widget;
 use iced::widget::svg;
-use iced::{Font, Widget};
 use icedcn::{
     Slot, Theme,
     widget::{code_block, column, trace},
@@ -24,7 +24,7 @@ fn transcript(title: &'static str, source: &'static str, failed: bool) -> Slot<'
         },
         move || {
             let block = code_block(source)
-                .font(Font::new("Geist Mono"))
+                .font("Geist Mono")
                 .compact(true)
                 .wrap(true)
                 .max_height(256.);

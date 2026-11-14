@@ -1,10 +1,13 @@
 //! Small line icons use the enclosing control's text color.
 use crate::compose::Slot;
+#[cfg(not(feature = "svg"))]
+use std::f32::consts::FRAC_PI_2;
 
 pub(super) enum Glyph {
     Terminal,
     Copy,
     Check,
+    Chevron(f32),
 }
 
 impl Glyph {
@@ -19,6 +22,8 @@ impl Glyph {
                 Self::Terminal => "›",
                 Self::Copy => "⧉",
                 Self::Check => "✓",
+                Self::Chevron(angle) if angle >= FRAC_PI_2 => "▴",
+                Self::Chevron(_) => "▾",
             })
             .size(14.0)
             .line_height(14.0)
@@ -77,16 +82,19 @@ mod svg {
             });
             static CHECK: LazyLock<Handle> =
                 LazyLock::new(|| icon(r#"<path d="m20 6-11 11-5-5"/>"#));
+            static CHEVRON: LazyLock<Handle> =
+                LazyLock::new(|| icon(r#"<path d="m6 9 6 6 6-6"/>"#));
             let handle: &Handle = match self {
                 Self::Terminal => &TERMINAL,
                 Self::Copy => &COPY,
                 Self::Check => &CHECK,
+                Self::Chevron(_) => &CHEVRON,
             };
-            renderer.draw_svg(
-                Svg::new(handle.clone()).color(style.text_color),
-                layout.bounds(),
-                *viewport,
-            );
+            let mut svg = Svg::new(handle.clone()).color(style.text_color);
+            if let Self::Chevron(angle) = self {
+                svg = svg.rotation(*angle);
+            }
+            renderer.draw_svg(svg, layout.bounds(), *viewport);
         }
     }
 }

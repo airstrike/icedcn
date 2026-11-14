@@ -1,6 +1,6 @@
 ```rust
+use iced::Widget;
 use iced::widget::svg;
-use iced::{Font, Widget};
 use icedcn::{
     Slot, Theme,
     widget::{code_block, column, markdown, row, text},
@@ -11,7 +11,14 @@ pub struct Article {
 }
 impl Default for Article {
     fn default() -> Self {
-        Self {before:markdown::parse("Read the notebook index with `read_to_string` and return one title per line.").collect(),after:markdown::parse("The caller receives an `io::Result` and can display a read error in the application.").collect()}
+        Self {
+            before: markdown::parse(
+                "Read the notebook index with `read_to_string` and return one title per line.",
+            ).collect(),
+            after: markdown::parse(
+                "The caller receives an `io::Result` and can display a read error in the application.",
+            ).collect(),
+        }
     }
 }
 impl Article {
@@ -23,7 +30,7 @@ impl Article {
             markdown::view(&self.before, settings).map(|_| ()).boxed(),
             code_block(TYPESET)
                 .language("rust")
-                .font(Font::new("Geist Mono"))
+                .font("Geist Mono")
                 .start_line(1)
                 .title(row![file_code(), code_block::title("src/index.rs")].spacing(6))
                 .actions(code_block::copy_button(TYPESET)),

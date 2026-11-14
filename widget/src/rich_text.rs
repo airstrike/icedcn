@@ -95,8 +95,8 @@ impl<'a> Span<'a> {
     }
 
     /// Override the font for this run, for example for inline code.
-    pub fn font(mut self, font: iced_core::Font) -> Self {
-        self.font = Some(font);
+    pub fn font(mut self, font: impl Into<iced_core::Font>) -> Self {
+        self.font = Some(font.into());
         self
     }
 
@@ -283,8 +283,8 @@ impl<'a> RichText<'a> {
     }
 
     /// Set the base font used to shape and draw this paragraph.
-    pub fn font(mut self, font: iced_core::Font) -> Self {
-        self.font = Some(font);
+    pub fn font(mut self, font: impl Into<iced_core::Font>) -> Self {
+        self.font = Some(font.into());
         self
     }
 

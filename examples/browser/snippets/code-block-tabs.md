@@ -1,5 +1,4 @@
 ```rust
-use iced::Font;
 use icedcn::widget::tabs;
 use icedcn::{
     Slot,
@@ -26,9 +25,9 @@ pub fn view<Message: Clone + 'static>() -> Slot<'static, Message> {
                     id,
                     code_block(source)
                         .language(language)
-                        .font(Font::new("Geist Mono"))
+                        .font("Geist Mono")
                         .start_line(1)
-                        .title(code_block::title(title))
+                        .title(title)
                         .actions(code_block::copy_button(source)),
                 ),
             );

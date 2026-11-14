@@ -1,13 +1,12 @@
 ```rust
-use iced::Font;
 use icedcn::{
     Slot,
     widget::{code_block, column},
 };
-pub fn view<Message: Clone + 'static>() -> Slot<'static, Message> {
+pub fn view<'a, Message: 'a>() -> Slot<'a, Message> {
     let block = || {
         code_block(SIZE)
-            .font(Font::new("Geist Mono"))
+            .font("Geist Mono")
             .wrap(true)
             .title(code_block::terminal_title("Terminal"))
             .actions(code_block::copy_button(SIZE))

@@ -2,9 +2,8 @@ use iced::time::{Duration, Instant};
 use std::collections::BTreeMap;
 
 use iced::alignment::Horizontal;
-use iced::widget::button::Style;
 use iced::widget::{Id, svg};
-use iced::{Element, Fill, Font, Widget};
+use iced::{Element, Fill, Widget};
 use icedcn::core::Border;
 use icedcn::widget::code_block::LineStyle;
 use icedcn::widget::{
@@ -14,20 +13,13 @@ use icedcn::widget::{
 use icedcn::{Size, Slot, Theme, radius, theme};
 
 use super::samples::*;
-use crate::{font, icon, page};
+use crate::{icon, page};
 use iced::widget::{Action, Component, component};
 use iced::{mouse, window};
-use icedcn::theme::button::{Status, ghost};
-use icedcn::widget::animation::cubic_bezier;
-use std::f32::consts::PI;
 
 #[derive(Clone, Debug)]
 pub enum Message {
     Wrap(&'static str),
-    Expand(&'static str),
-    Copy(&'static str, String),
-    Copied(&'static str, Instant),
-    ResetCopy(&'static str, Instant),
     Replay(&'static str),
     Idle,
     Acknowledge,
@@ -41,11 +33,8 @@ pub struct State {
     receipts: Vec<Id>,
     acknowledgements: Vec<Id>,
     progress: BTreeMap<&'static str, usize>,
-    turns: BTreeMap<&'static str, Turn>,
     last_tick: Instant,
     wraps: BTreeMap<&'static str, bool>,
-    expanded: BTreeMap<&'static str, bool>,
-    copied: BTreeMap<&'static str, Instant>,
     streaming: BTreeMap<&'static str, Instant>,
     save_status: BTreeMap<&'static str, String>,
     logs: String,
@@ -62,11 +51,8 @@ impl State {
             receipts: Vec::new(),
             acknowledgements: Vec::new(),
             progress: BTreeMap::new(),
-            turns: BTreeMap::new(),
             last_tick: Instant::now(),
             wraps: BTreeMap::new(),
-            expanded: BTreeMap::new(),
-            copied: BTreeMap::new(),
             streaming: BTreeMap::new(),
             save_status: BTreeMap::new(),
             typeset_before: markdown::parse("Read the notebook index with `read_to_string` and return one title per line.").collect(),
@@ -85,29 +71,11 @@ impl State {
                 .join("\n"),
         }
     }
-    fn event(&self, event: Message) -> Message {
-        event
-    }
     fn update(&mut self, event: Message) -> Option<super::Event> {
         match event {
             Message::Wrap(id) => {
                 let value = self.wraps.entry(id).or_insert(id == "actions");
                 *value = !*value;
-            }
-            Message::Expand(id) => {
-                let value = self.expanded.entry(id).or_default();
-                *value = !*value;
-                self.turns
-                    .entry(id)
-                    .or_default()
-                    .retarget(if *value { 1. } else { 0. }, Instant::now());
-            }
-            Message::Copy(id, value) => {
-                return Some(super::Event::Copy {
-                    target: self.target.clone(),
-                    id,
-                    value,
-                });
             }
             Message::Save(name, value) => {
                 return Some(super::Event::Save {
@@ -115,14 +83,6 @@ impl State {
                     name,
                     value,
                 });
-            }
-            Message::Copied(id, at) => {
-                self.copied.insert(id, at);
-            }
-            Message::ResetCopy(id, at) => {
-                if self.copied.get(id) == Some(&at) {
-                    self.copied.remove(id);
-                }
             }
             Message::Saved(name, Ok(true)) => {
                 self.save_status.insert(name, format!("Saved {name}"));
@@ -151,11 +111,6 @@ impl State {
     }
     fn advance(&mut self, now: Instant) {
         self.last_tick = now;
-        self.copied
-            .retain(|_, at| now.saturating_duration_since(*at) < Duration::from_secs(2));
-        for turn in self.turns.values_mut() {
-            turn.advance(now);
-        }
         let previous = self.progress.get("markdown").copied();
         self.streaming.retain(|id, start| {
             let elapsed = now.saturating_duration_since(*start).as_millis() as usize;
@@ -173,22 +128,14 @@ impl State {
         }
     }
     fn deadline(&self) -> Option<Instant> {
-        let copy = self
-            .copied
-            .values()
-            .map(|at| *at + Duration::from_secs(2))
-            .min();
-        let playing =
-            !self.streaming.is_empty() || self.turns.values().any(|turn| turn.value != turn.to);
-        let frame = playing.then(|| {
+        (!self.streaming.is_empty()).then(|| {
             self.last_tick
                 + Duration::from_millis(if self.streaming.contains_key("markdown") {
                     30
                 } else {
                     16
                 })
-        });
-        copy.into_iter().chain(frame).min()
+        })
     }
     fn receive(&mut self, completion: &Completion) {
         if completion.target == self.target && !self.receipts.contains(&completion.serial) {
@@ -197,26 +144,6 @@ impl State {
             let _ = self.update(completion.message.clone());
         }
     }
-    fn copy(&self, id: &'static str, source: &str) -> Slot<'static, Message> {
-        let copied = self.copied.contains_key(id);
-        let glyph = if copied { icon::check() } else { icon::copy() };
-        let event = self.event(Message::Copy(id, source.to_owned()));
-        let label = if copied { "Copied" } else { "Copy" };
-        if id == "floating-actions" {
-            tooltip(
-                button(glyph.size(14))
-                    .square()
-                    .size(Size::Xs)
-                    .style(floating_style)
-                    .on_press(event),
-                label,
-            )
-            .into()
-        } else {
-            action(glyph.size(14), label, event)
-        }
-    }
-
     fn header(
         &self,
         id: &'static str,
@@ -225,29 +152,22 @@ impl State {
         filename: &'static str,
         block: CodeBlock<'static, Message>,
     ) -> Slot<'static, Message> {
-        let wrap = action(
-            icon::wrap_text().size(14),
-            "Wrap lines",
-            self.event(Message::Wrap(id)),
-        );
+        let wrap = action(icon::wrap_text().size(14), "Wrap lines", Message::Wrap(id));
         let save = action(
             icon::download().size(14),
             "Download",
-            self.event(Message::Save(filename, source)),
+            Message::Save(filename, source),
         );
+        let title = if id == "actions" {
+            code_block::terminal_title(title)
+        } else {
+            row![icon::file_code().size(14), code_block::title(title)]
+                .spacing(6)
+                .into()
+        };
         let mut block = block
-            .title(
-                row![
-                    if id == "actions" {
-                        icon::terminal().size(14)
-                    } else {
-                        icon::file_code().size(14)
-                    },
-                    code_block::title(title)
-                ]
-                .spacing(6),
-            )
-            .actions(row![wrap, save, self.copy(id, source)].spacing(4));
+            .title(title)
+            .actions(row![wrap, save, code_block::copy_button(source)].spacing(4));
         if let Some(status) = self.save_status.get(filename) {
             block = block.footer(text::muted(status.clone()));
         }
@@ -258,7 +178,7 @@ impl State {
             .style(button::Outline)
             .size(Size::Sm)
             .disabled(self.streaming.contains_key(id))
-            .on_press(self.event(Message::Replay(id)))
+            .on_press(Message::Replay(id))
             .into()
     }
     fn streaming(&self) -> Slot<'static, Message> {
@@ -273,11 +193,7 @@ impl State {
                 break;
             }
             let count = remaining.min(source.len());
-            let mut end = count;
-            while !source.is_char_boundary(end) {
-                end -= 1;
-            }
-            let visible = &source[..end];
+            let visible = &source[..source.floor_char_boundary(count)];
             let mut block = terminal(visible).language(language);
             if source == STREAMING_2 {
                 block = block.diff();
@@ -287,27 +203,14 @@ impl State {
                 }
             }
             if title != "Terminal" {
-                let copied = self.copied.contains_key(title);
-                block = block.title(code_block::title(title)).actions(tooltip(
-                    button(if copied {
-                        icon::check().size(14)
-                    } else {
-                        icon::copy().size(14)
-                    })
-                    .square()
-                    .size(Size::Xs)
-                    .style(button::Ghost)
-                    .disabled(count < source.len())
-                    .on_press(self.event(Message::Copy(
-                        title,
-                        if source == STREAMING_2 {
-                            code_block::diff_text(source)
-                        } else {
-                            source.to_owned()
-                        },
-                    ))),
-                    if copied { "Copied" } else { "Copy" },
-                ));
+                let copy = if source == STREAMING_2 {
+                    code_block::copy_button(code_block::diff_text(source))
+                } else {
+                    code_block::copy_button(source)
+                };
+                block = block
+                    .title(title)
+                    .actions(copy.disabled(count < source.len()));
             }
             if !matches!(title, "Terminal" | ".cargo/config.toml") {
                 block = block.start_line(1);
@@ -326,36 +229,21 @@ impl State {
             .min(MARKDOWN.len());
         let body = &MARKDOWN[..end];
         let (_, fenced) = body.split_once("```rust\n").unwrap_or((body, ""));
-        let noop = self.event(Message::Idle);
-        let mut reply = column![prose(&self.markdown_before, dark, noop)]
+        let mut reply = column![prose(&self.markdown_before, dark)]
             .width(Fill)
             .spacing(12);
         if !fenced.is_empty() {
             let (code, _) = fenced.split_once("```").unwrap_or((fenced, ""));
             let complete = fenced.contains("```");
-            let copied = self.copied.contains_key("markdown");
             reply = reply.push(
                 terminal(code.trim_end_matches('\n'))
                     .language("rust")
-                    .title(code_block::title("rust"))
-                    .actions(tooltip(
-                        button(if copied {
-                            icon::check().size(14)
-                        } else {
-                            icon::copy().size(14)
-                        })
-                        .square()
-                        .size(Size::Xs)
-                        .style(button::Ghost)
-                        .disabled(!complete)
-                        .on_press(self.event(Message::Copy("markdown", code.to_owned()))),
-                        if copied { "Copied" } else { "Copy" },
-                    ))
+                    .title("rust")
+                    .actions(code_block::copy_button(code).disabled(!complete))
                     .into(),
             );
         }
-        let noop = self.event(Message::Idle);
-        reply = reply.push(prose(&self.markdown_after, dark, noop));
+        reply = reply.push(prose(&self.markdown_after, dark));
         let mut items = column![
             message(bubble("How do I ignore case when searching?").style(bubble::Variant::Muted))
                 .align(Horizontal::Right),
@@ -368,7 +256,7 @@ impl State {
                 button("Replay")
                     .size(Size::Sm)
                     .style(button::Outline)
-                    .on_press(self.event(Message::Replay("markdown")))
+                    .on_press(Message::Replay("markdown"))
                     .into(),
             );
         }
@@ -390,8 +278,8 @@ impl State {
             }
             "basic" => terminal(BASIC).into(),
             "header" => terminal(HEADER)
-                .title(row![icon::terminal().size(14), code_block::title("Terminal")].spacing(6))
-                .actions(self.copy("header", "cargo check -p icedcn_widget"))
+                .title("Terminal")
+                .actions(code_block::copy_button("cargo check -p icedcn_widget"))
                 .into(),
             "actions" => {
                 let wrap = *self.wraps.get("actions").unwrap_or(&true);
@@ -404,24 +292,22 @@ impl State {
                 )
             }
             "floating-actions" => terminal(FLOATING_ACTIONS)
-                .actions(
-                    container(self.copy("floating-actions", FLOATING_ACTIONS)).style(
-                        |theme: &Theme| theme::container::Style {
-                            background: Some(theme.neutral.base.into()),
-                            border: Border {
-                                width: 1.,
-                                color: theme.neutral.foreground.scale_alpha(0.1),
-                                radius: radius::SM.into(),
-                            },
-                            ..Default::default()
+                .actions(container(code_block::copy_button(FLOATING_ACTIONS)).style(
+                    |theme: &Theme| theme::container::Style {
+                        background: Some(theme.neutral.base.into()),
+                        border: Border {
+                            width: 1.,
+                            color: theme.neutral.foreground.scale_alpha(0.1),
+                            radius: radius::SM.into(),
                         },
-                    ),
-                )
+                        ..Default::default()
+                    },
+                ))
                 .into(),
             "line-numbers" => terminal(LINE_NUMBERS).start_line(1).into(),
             "start-line" => terminal(START_LINE)
                 .language("rust")
-                .title(code_block::title("src/notebooks.rs"))
+                .title("src/notebooks.rs")
                 .start_line(995)
                 .into(),
             "wrap" => column![terminal(WRAP), terminal(WRAP).wrap(true)]
@@ -435,68 +321,46 @@ impl State {
             "diff" => terminal(DIFF)
                 .language("rust")
                 .diff()
-                .title(code_block::title("src/search.rs"))
-                .actions(self.copy("diff", &code_block::diff_text(DIFF)))
+                .title("src/search.rs")
+                .actions(code_block::copy_button(code_block::diff_text(DIFF)))
                 .into(),
             "height" => terminal(self.logs.clone())
                 .max_height(192.)
                 .title("Logs")
-                .actions(self.copy("height", &self.logs))
+                .actions(code_block::copy_button(self.logs.clone()))
                 .into(),
             "show-more" | "show-more-scroll" => {
-                let id = if id == "show-more" {
-                    "show-more"
-                } else {
-                    "show-more-scroll"
-                };
-                let expanded = *self.expanded.get(id).unwrap_or(&false);
-                let mut block = terminal(SHOW_MORE)
-                    .language("rust")
-                    .title(code_block::title("src/notebook.rs"))
-                    .start_line(1)
-                    .actions(self.copy(id, SHOW_MORE))
-                    .footer(
-                        container(
-                            button(
-                                row![
-                                    chevron(self.turns.get(id).map_or(0., |turn| turn.value)),
-                                    if expanded { "Show less" } else { "Show more" }
-                                ]
-                                .spacing(4),
-                            )
-                            .size(Size::Xs)
-                            .style(button::Ghost)
-                            .on_press(self.event(Message::Expand(id))),
-                        )
-                        .center_x(Fill),
-                    );
-                if !expanded {
-                    block = block.max_height(256.).collapsed(true);
-                } else if id == "show-more-scroll" {
-                    block = block.max_height(384.);
-                }
-                block.into()
+                let scroll = id == "show-more-scroll";
+                code_block::show_more(256, move || {
+                    let block = terminal(SHOW_MORE)
+                        .language("rust")
+                        .title("src/notebook.rs")
+                        .start_line(1)
+                        .actions(code_block::copy_button(SHOW_MORE));
+                    if scroll {
+                        block.max_height(384.)
+                    } else {
+                        block
+                    }
+                })
+                .into()
             }
             "size" => column![
                 terminal(SIZE)
                     .wrap(true)
-                    .title(
-                        row![icon::terminal().size(14), code_block::title("Terminal")].spacing(6)
-                    )
-                    .actions(self.copy("size-normal", SIZE)),
+                    .title(code_block::terminal_title("Terminal"))
+                    .actions(code_block::copy_button(SIZE)),
                 terminal(SIZE)
                     .wrap(true)
-                    .title(
-                        row![icon::terminal().size(14), code_block::title("Terminal")].spacing(6)
-                    )
+                    .title(code_block::terminal_title("Terminal"))
                     .compact(true)
-                    .actions(self.copy("size-small", SIZE))
+                    .actions(code_block::copy_button(SIZE))
             ]
             .spacing(16)
             .into(),
             "destructive" => error_block(DESTRUCTIVE)
                 .title("Error")
-                .actions(self.copy("destructive", DESTRUCTIVE))
+                .actions(code_block::copy_button(DESTRUCTIVE))
                 .into(),
             "trace" => column![
                 trace_output("Ran cargo --version", TRACE, false),
@@ -504,41 +368,33 @@ impl State {
             ]
             .spacing(8)
             .into(),
-            "tabs" => {
-                let copies = [("view", TABS_0), ("search", TABS_1), ("config", TABS_2)]
-                    .map(|(id, source)| (id, self.copied.contains_key(id), source));
-                tabs(move |t| {
-                    let mut body = column![t.list([
-                        t.trigger("view", "view.rs"),
-                        t.trigger("search", "search.rs"),
-                        t.trigger("config", "config.toml")
-                    ])]
-                    .spacing(8);
-                    for (id, title, language, source) in [
-                        ("view", "src/view.rs", "rust", TABS_0),
-                        ("search", "src/search.rs", "rust", TABS_1),
-                        ("config", ".cargo/config.toml", "toml", TABS_2),
-                    ] {
-                        body = body.push(
-                            t.content(
-                                id,
-                                terminal(source)
-                                    .language(language)
-                                    .start_line(1)
-                                    .title(code_block::title(title))
-                                    .actions(copy_action(
-                                        id,
-                                        source,
-                                        copies.iter().any(|(key, copied, _)| *key == id && *copied),
-                                    )),
-                            ),
-                        );
-                    }
-                    body.into()
-                })
-                .default_value("view")
-                .into()
-            }
+            "tabs" => tabs(move |t| {
+                let mut body = column![t.list([
+                    t.trigger("view", "view.rs"),
+                    t.trigger("search", "search.rs"),
+                    t.trigger("config", "config.toml")
+                ])]
+                .spacing(8);
+                for (id, title, language, source) in [
+                    ("view", "src/view.rs", "rust", TABS_0),
+                    ("search", "src/search.rs", "rust", TABS_1),
+                    ("config", ".cargo/config.toml", "toml", TABS_2),
+                ] {
+                    body = body.push(
+                        t.content(
+                            id,
+                            terminal(source)
+                                .language(language)
+                                .start_line(1)
+                                .title(title)
+                                .actions(code_block::copy_button(source)),
+                        ),
+                    );
+                }
+                body.into()
+            })
+            .default_value("view")
+            .into(),
             "chat" => column![
                 message(bubble("How do I filter notebook titles?").style(bubble::Variant::Muted))
                     .align(Horizontal::Right),
@@ -548,7 +404,7 @@ impl State {
                         terminal(CHAT)
                             .language("rust")
                             .title("src/search.rs")
-                            .actions(self.copy("chat-sample", CHAT)),
+                            .actions(code_block::copy_button(CHAT)),
                         text::p("The result borrows the matching titles from the original list.")
                     ]
                     .spacing(12)
@@ -558,7 +414,7 @@ impl State {
             .into(),
             "typeset" => column![
                 text::h3("Read a notebook index"),
-                prose(&self.typeset_before, dark, self.event(Message::Idle)),
+                prose(&self.typeset_before, dark),
                 terminal(TYPESET)
                     .language("rust")
                     .start_line(1)
@@ -569,8 +425,8 @@ impl State {
                         ]
                         .spacing(6)
                     )
-                    .actions(self.copy("typeset", TYPESET)),
-                prose(&self.typeset_after, dark, self.event(Message::Idle))
+                    .actions(code_block::copy_button(TYPESET)),
+                prose(&self.typeset_after, dark)
             ]
             .spacing(12)
             .into(),
@@ -583,14 +439,9 @@ impl State {
                 for (title, language, source) in [
                     ("Cargo.toml", "toml", LANGUAGES_0),
                     ("src/main.rs", "rust", LANGUAGES_1),
-                    ("notes.txt", "txt", LANGUAGES_2),
+                    ("notes.txt", "text", LANGUAGES_2),
                 ] {
-                    samples = samples.push(
-                        terminal(source)
-                            .language(language)
-                            .title(code_block::title(title))
-                            .into(),
-                    );
+                    samples = samples.push(terminal(source).language(language).title(title).into());
                 }
                 samples.into()
             }
@@ -600,7 +451,7 @@ impl State {
                 static OUTPUT: LazyLock<ansi::Output> = LazyLock::new(|| ansi::parse(ANSI));
                 OUTPUT
                     .view()
-                    .font(Font::new(font::GEIST_MONO_NAME))
+                    .font("Geist Mono")
                     .title(code_block::terminal_title("Terminal"))
                     .actions(code_block::copy_button(OUTPUT.as_str()))
                     .into()
@@ -613,7 +464,7 @@ impl State {
 }
 
 fn terminal<'a>(source: impl Into<std::borrow::Cow<'a, str>>) -> CodeBlock<'a, Message> {
-    code_block(source).font(Font::new(font::GEIST_MONO_NAME))
+    code_block(source).font("Geist Mono")
 }
 fn error_block(source: &str) -> CodeBlock<'_, Message> {
     terminal(source).wrap(true).style(code_block::Destructive)
@@ -678,14 +529,12 @@ fn markdown_parts(end: usize) -> (Vec<markdown::Item>, Vec<markdown::Item>) {
     )
 }
 
-fn prose(items: &[markdown::Item], dark: bool, noop: Message) -> Slot<'static, Message> {
+fn prose(items: &[markdown::Item], dark: bool) -> Slot<'static, Message> {
     let mut output = column![].width(Fill).spacing(12);
     for item in items {
         if let markdown::Item::Paragraph(text) = item {
-            let noop = noop.clone();
-            output = output.push(
-                markdown::paragraph(prose_settings(dark), text, move |_| noop.clone()).into(),
-            );
+            output = output
+                .push(markdown::paragraph(prose_settings(dark), text, |_| Message::Idle).into());
         }
     }
     output.into()
@@ -802,59 +651,6 @@ impl Component<'static, crate::Message, Theme> for Demo {
         Action::none()
     }
 }
-#[derive(Default)]
-struct Turn {
-    value: f32,
-    from: f32,
-    to: f32,
-    start: Option<Instant>,
-}
-impl Turn {
-    fn retarget(&mut self, to: f32, now: Instant) {
-        self.advance(now);
-        self.from = self.value;
-        self.to = to;
-        self.start = Some(now);
-    }
-    fn advance(&mut self, now: Instant) {
-        if let Some(start) = self.start {
-            let p = (now.saturating_duration_since(start).as_secs_f32() / 0.15).min(1.);
-            self.value = self.from + (self.to - self.from) * cubic_bezier(0.4, 0., 0.2, 1., p);
-            if p == 1. {
-                self.start = None;
-                self.value = self.to;
-            }
-        }
-    }
-}
-fn chevron(turn: f32) -> Slot<'static, Message> {
-    svg(svg::Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>"#))
-        .width(14).height(14).rotation(turn * PI)
-        .style(|theme: &Theme, _| svg::Style { color: Some(theme.neutral.foreground.into()) }).boxed().into()
-}
-fn copy_action(id: &'static str, source: &'static str, copied: bool) -> Slot<'static, Message> {
-    action(
-        if copied {
-            icon::check().size(14)
-        } else {
-            icon::copy().size(14)
-        },
-        if copied { "Copied" } else { "Copy" },
-        Message::Copy(id, source.to_owned()),
-    )
-}
 #[cfg(test)]
 #[path = "tests.rs"]
 mod tests;
-
-fn floating_style(theme: &Theme, status: Status) -> Style {
-    let mut style = ghost(theme, status);
-    // Ghost's dark hover and pressed alpha are explicit CSS opacity values.
-    // Restore the parent's opacity after those values are resolved.
-    if theme.neutral.is_dark || status == Status::Pressed {
-        if let Some(background) = style.background {
-            style.background = Some(background.scale_alpha(theme.neutral.foreground.a));
-        }
-    }
-    style.into()
-}

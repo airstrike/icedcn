@@ -1,6 +1,6 @@
 ```rust
 use iced::alignment::Horizontal;
-use iced::{Fill, Font, Subscription, Widget, time};
+use iced::{Fill, Subscription, Widget, time};
 use icedcn::{
     Size, Slot, Theme,
     widget::{bubble, button, code_block, column, container, markdown, message},
@@ -74,8 +74,8 @@ impl Demo {
             reply = reply.push(
                 code_block(code.trim_end_matches('\n'))
                     .language("rust")
-                    .font(Font::new("Geist Mono"))
-                    .title(code_block::title("rust"))
+                    .font("Geist Mono")
+                    .title("rust")
                     .actions(code_block::copy_button(code).disabled(!complete))
                     .into(),
             );

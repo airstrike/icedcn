@@ -142,39 +142,42 @@ fn selecting_one_line_does_not_copy_adjacent_blank_rows() {
 #[test]
 fn show_more_state_stays_local_across_theme_and_width_rebuilds() {
     let page = CodeBlockPage::new(0);
-    let mut ui = Simulator::with_size(
-        Default::default(),
-        Size::new(558., 1800.),
-        page.docs_preview("show-more", &Theme::light()),
-    );
-    ui.draw(&Theme::light());
-    ui.click("Show more").expect("mounted footer");
-    ui.draw(&Theme::light());
-    assert!(ui.find("Show less").is_ok());
-    assert_eq!(
-        ui.drain().count(),
-        0,
-        "local expansion publishes no page message"
-    );
-    let mut bounds = Viewports::default();
-    ui.operate(&mut bounds);
-    assert!(bounds.0[0].0.height > 256.);
-    ui = ui
-        .rebuild(page.docs_preview("show-more", &Theme::dark()))
-        .resize(Size::new(260., 1800.));
-    ui.draw(&Theme::dark());
-    assert!(ui.find("Show less").is_ok());
-    let mut expanded = Viewports::default();
-    ui.operate(&mut expanded);
-    assert_eq!(expanded.0[0].0.height, 38. * 22.75 + 16.);
-    ui.click("Show less").expect("footer after rebuild");
-    ui.draw(&Theme::dark());
-    let mut bounds = Viewports::default();
-    ui.operate(&mut bounds);
-    assert_eq!(bounds.0[0].0.height, 256.);
-    assert_eq!(bounds.0[0].0.width, 258.);
-    assert!(ui.find("Show more").is_ok());
-    assert_eq!(ui.drain().count(), 0);
+    for (example, open_height) in [("show-more", 38. * 22.75 + 16.), ("show-more-scroll", 384.)] {
+        let mut ui = Simulator::with_size(
+            Default::default(),
+            Size::new(558., 1800.),
+            page.docs_preview(example, &Theme::light()),
+        );
+        ui.draw(&Theme::light());
+        ui.click("Show more").expect("mounted footer");
+        ui.draw(&Theme::light());
+        assert!(ui.find("Show less").is_ok());
+        assert_eq!(
+            ui.drain().count(),
+            0,
+            "local expansion publishes no page message"
+        );
+        let mut bounds = Viewports::default();
+        ui.operate(&mut bounds);
+        assert!(bounds.0[0].0.height > 256.);
+        ui = ui
+            .rebuild(page.docs_preview(example, &Theme::dark()))
+            .resize(Size::new(260., 1800.));
+        ui.draw(&Theme::dark());
+        assert!(ui.find("Show less").is_ok());
+        let mut expanded = Viewports::default();
+        ui.operate(&mut expanded);
+        assert_eq!(expanded.0[0].0.height, open_height);
+        assert_eq!(expanded.0[0].1.height, 38. * 22.75 + 16.);
+        ui.click("Show less").expect("footer after rebuild");
+        ui.draw(&Theme::dark());
+        let mut bounds = Viewports::default();
+        ui.operate(&mut bounds);
+        assert_eq!(bounds.0[0].0.height, 256.);
+        assert_eq!(bounds.0[0].0.width, 258.);
+        assert!(ui.find("Show more").is_ok());
+        assert_eq!(ui.drain().count(), 0);
+    }
 }
 
 #[test]

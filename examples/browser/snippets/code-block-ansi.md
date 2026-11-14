@@ -1,8 +1,7 @@
 ```rust
-use std::sync::LazyLock;
-use iced::Font;
-use icedcn::widget::{CodeBlock, code_block};
 use code_block::ansi;
+use icedcn::widget::{CodeBlock, code_block};
+use std::sync::LazyLock;
 
 const TRANSCRIPT: &str = concat!(
     "$ cargo test --color always\n",
@@ -17,9 +16,10 @@ const TRANSCRIPT: &str = concat!(
 
 static OUTPUT: LazyLock<ansi::Output> = LazyLock::new(|| ansi::parse(TRANSCRIPT));
 
-pub fn terminal<Message: Clone + 'static>() -> CodeBlock<'static, Message> {
-    OUTPUT.view()
-        .font(Font::new("Geist Mono"))
+pub fn terminal<'a, Message>() -> CodeBlock<'a, Message> {
+    OUTPUT
+        .view()
+        .font("Geist Mono")
         .title(code_block::terminal_title("Terminal"))
         .actions(code_block::copy_button(OUTPUT.as_str()))
 }

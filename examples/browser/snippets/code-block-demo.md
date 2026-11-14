@@ -1,6 +1,6 @@
 ```rust
 use iced::widget::svg;
-use iced::{Font, Task, Widget};
+use iced::{Task, Widget};
 use icedcn::widget::{CodeBlock, button, code_block, row, text, tooltip};
 use icedcn::{Size, Slot, Theme};
 #[derive(Clone, Debug)]
@@ -9,17 +9,10 @@ pub enum Message {
     Save,
     Saved(Result<bool, String>),
 }
+#[derive(Default)]
 pub struct Demo {
     wrap: bool,
     status: Option<String>,
-}
-impl Default for Demo {
-    fn default() -> Self {
-        Self {
-            wrap: false,
-            status: None,
-        }
-    }
 }
 impl Demo {
     pub fn update(&mut self, message: Message) -> Task<Message> {
@@ -57,7 +50,7 @@ impl Demo {
             block = block.line_style(n, code_block::LineStyle::Highlighted);
         }
         let mut block = block
-            .font(Font::new("Geist Mono"))
+            .font("Geist Mono")
             .wrap(self.wrap)
             .title(row![icon(FILE_CODE), code_block::title("src/view.rs")].spacing(6))
             .actions(

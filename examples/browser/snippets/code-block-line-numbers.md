@@ -1,11 +1,8 @@
 ```rust
-use iced::Font;
 use icedcn::widget::{CodeBlock, code_block};
 
-pub fn view<Message: Clone + 'static>() -> CodeBlock<'static, Message> {
-    code_block(LINE_NUMBERS)
-        .font(Font::new("Geist Mono"))
-        .start_line(1)
+pub fn view<'a, Message>() -> CodeBlock<'a, Message> {
+    code_block(LINE_NUMBERS).font("Geist Mono").start_line(1)
 }
 
 const LINE_NUMBERS: &str = r##"[package]

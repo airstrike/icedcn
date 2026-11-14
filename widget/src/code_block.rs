@@ -11,7 +11,9 @@ pub use copy::{CopyButton, copy_button};
 mod frame;
 mod lines;
 mod selection;
+mod show_more;
 mod viewport;
+pub use show_more::show_more;
 
 use std::borrow::Cow;
 
@@ -136,7 +138,7 @@ pub fn title<'a>(value: impl iced_core::text::IntoFragment<'a>) -> crate::Text<'
 }
 
 /// Builder for the surface, header, selectable content and footer.
-pub struct CodeBlock<'a, Message> {
+pub struct CodeBlock<'a, Message: 'a> {
     content: Content<'a, Message>,
     listing: listing::Options<'a>,
     listing_view: Option<listing::View<'a, Message>>,
@@ -255,8 +257,8 @@ impl<'a, Message: 'a> CodeBlock<'a, Message> {
         self
     }
     /// Set the code and gutter font. Styled child slots may override it explicitly.
-    pub fn font(mut self, font: Font) -> Self {
-        self.font = font;
+    pub fn font(mut self, font: impl Into<Font>) -> Self {
+        self.font = font.into();
         self
     }
     /// Set the panel style, for example [`Destructive`], a container variant or a closure.
