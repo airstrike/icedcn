@@ -313,6 +313,10 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
         let inner_limits = limits.shrink(Size::new(pad_h, pad_v));
 
         let inner_max = inner_limits.max;
+        // Scrollable columns keep a finite remaining-height hint even when
+        // their children can grow vertically. Below the first viewport that
+        // hint can be zero; the trigger and its icons still need their height.
+        let trigger_height_limit = inner_limits.bounds().height;
         let mut cursor_y = 0.0_f32;
         let mut max_width = 0.0_f32;
 
@@ -340,7 +344,8 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
 
             // ----- chevrons (laid out first so we know their size for the
             // trigger row's width budget) ------------------------------
-            let chevron_limits = layout::Limits::new(Size::ZERO, inner_max).loose();
+            let chevron_limits =
+                layout::Limits::new(Size::ZERO, Size::new(inner_max.width, trigger_height_limit));
             item.chevron_closed
                 .layout(chevron_closed_tree, renderer, &chevron_limits);
             item.chevron_open
@@ -356,7 +361,7 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
             let content_w = (inner_max.width - 2.0 * item_inset).max(0.0);
             let trigger_max_w = (content_w - chevron_w - 2.0 * TRIGGER_BORDER).max(0.0);
             let trigger_limits =
-                layout::Limits::new(Size::ZERO, Size::new(trigger_max_w, inner_max.height)).loose();
+                layout::Limits::new(Size::ZERO, Size::new(trigger_max_w, trigger_height_limit));
             item.trigger.layout(trigger_tree, renderer, &trigger_limits);
 
             let trigger_label_h = trigger_tree.size.height;

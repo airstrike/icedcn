@@ -31,6 +31,36 @@ fn frame(ui: &mut Simulator<'_>) {
 }
 
 #[test]
+fn accordion_header_keeps_its_height_below_a_scrollable_viewport() {
+    use iced_core::mouse::ScrollDelta;
+    use iced_core::widget::Id;
+    use iced_widget::Space;
+    use icedxdy_widget::{container, scrollable};
+
+    let id = Id::unique();
+    let label = container(Space::new().width(80).height(20)).id(id.clone());
+    let disclosure = accordion([accordion::item("shipping", label)]).on_value_change(Message::Open);
+    let content = column![Space::new().height(500), disclosure];
+    let mut ui = simulator(Element::from(scrollable::scrollable(content).height(200)));
+
+    ui.point_at(Point::new(25., 50.));
+    ui.scroll(ScrollDelta::Pixels { x: 0., y: -600. });
+    frame(&mut ui);
+    let visible = ui
+        .find(id)
+        .expect("header is mounted")
+        .visible_bounds()
+        .expect("header scrolled into view");
+    assert_eq!(visible.height, 20.);
+    ui.point_at(visible.center());
+    ui.simulate(simulator::click());
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        [Message::Open(vec!["shipping".into()])]
+    );
+}
+
+#[test]
 fn accordion_arrows_skip_disabled_headers_and_activate_the_selected_item() {
     let content: Element<'_, Message, Theme, Renderer> = accordion([
         accordion::item("one", "One"),
