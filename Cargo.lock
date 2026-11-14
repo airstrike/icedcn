@@ -505,6 +505,9 @@ dependencies = [
  "serde_json",
  "sweeten",
  "tokio",
+ "tree-sitter",
+ "wasmtimer",
+ "web-sys",
 ]
 
 [[package]]

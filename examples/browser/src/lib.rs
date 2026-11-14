@@ -18,6 +18,8 @@ pub mod font;
 pub mod fonts;
 pub mod icon;
 pub mod page;
+#[cfg(target_arch = "wasm32")]
+mod parser_heap;
 
 use iced::widget::column;
 use iced::{Element, Subscription, Task};
@@ -26,6 +28,11 @@ use icedxdy::widget::markdown::highlighter::Map;
 use icedxdy::widget::{center, progress, text};
 
 use app::App;
+
+#[cfg(not(target_arch = "wasm32"))]
+use tokio::time::sleep;
+#[cfg(target_arch = "wasm32")]
+use wasmtimer::tokio::sleep;
 
 /// Bundled GitHub code themes, parsed once during startup.
 const GH_LIGHT: &str = include_str!("../themes/github-light-default.json");
@@ -59,7 +66,7 @@ impl Browser {
         (
             Browser {
                 app,
-                font_loaded: false,
+                font_loaded: cfg!(target_arch = "wasm32"),
                 load_progress: 0.0,
             },
             Task::batch([app_init, fonts_init]),
@@ -85,9 +92,11 @@ impl Browser {
         if let Message::Font(font_msg) = &msg {
             let bump = match font_msg {
                 fonts::Message::SystemFontsLoaded(_) => 25.0,
+                #[cfg(not(target_arch = "wasm32"))]
                 fonts::Message::CatalogLoaded(Ok(_)) => 50.0,
                 // CatalogLoaded(Err): offline; no `Loaded` will follow, so
                 // jump to 100 to drive the splash through to dismissal.
+                #[cfg(not(target_arch = "wasm32"))]
                 fonts::Message::CatalogLoaded(Err(_)) => 100.0,
                 // Any `Loaded` (success or per-font failure) means the font
                 // pipeline is done — drive to 100.
@@ -137,14 +146,28 @@ fn splash<'a>(message: &str, progress_value: f32) -> Element<'a, Message, Theme>
     .into()
 }
 
-/// Run the native component browser with its bundled fonts and theme.
+/// Run the component browser with its bundled fonts and theme.
 pub fn run() -> iced::Result {
-    iced::application(Browser::new, Browser::update, Browser::view)
+    #[cfg(target_arch = "wasm32")]
+    {
+        use web_sys::console;
+        std::panic::set_hook(Box::new(|panic| {
+            console::error_1(&panic.to_string().into());
+        }));
+        parser_heap::install();
+    }
+    let application = iced::application(Browser::new, Browser::update, Browser::view)
         .title("icedxdy \u{2022} components browser")
         .window_size([1440.0, 900.0])
         .antialiasing(true)
         .subscription(Browser::subscription)
         .theme(Browser::theme)
-        .fonts([icon::FONT, font::GEIST_MONO])
-        .run()
+        .fonts([icon::FONT, font::GEIST_MONO]);
+    #[cfg(target_arch = "wasm32")]
+    let application = application
+        // A canvas cannot switch to 2D after an unsuccessful WebGPU probe.
+        .backend(iced::Backend::Software)
+        .fonts([include_bytes!("../fonts/Geist.ttf").as_slice()])
+        .font(iced::Font::new("Geist"));
+    application.run()
 }

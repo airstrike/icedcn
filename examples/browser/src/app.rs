@@ -8,7 +8,6 @@ use iced::{clipboard, window};
 use icedxdy::widget::scrollable;
 use icedxdy::widget::spinner;
 use std::time::Duration;
-use tokio::time::sleep;
 
 use iced::{Center, Fill, Font, Pixels, Subscription, Task};
 use icedxdy::theme::tweak::Bg;
@@ -24,6 +23,7 @@ use crate::component;
 use crate::docs;
 use crate::fonts;
 use crate::icon;
+use crate::sleep;
 use crate::page::{self, SnippetViewer};
 
 const PINNED_FONTS: &[&str] = &["Geist", "Inter"];
@@ -39,7 +39,7 @@ pub struct App {
     gh_light: Map,
     gh_dark: Map,
     snippet_viewer: SnippetViewer,
-    fount: fount::Fount,
+    fount: fonts::Fount,
     font_list: combo_box::State<String>,
     current_font: String,
 }
@@ -195,7 +195,7 @@ impl App {
                 gh_light,
                 gh_dark,
                 snippet_viewer,
-                fount: fount::Fount::new(),
+                fount: fonts::Fount::new(),
                 font_list: combo_box::State::new(vec![default_font.clone()]),
                 current_font: default_font,
             },
@@ -313,7 +313,11 @@ impl App {
                     let name: &'static str = Box::leak(name.into_boxed_str());
                     iced::font::set_defaults(Font::new(name), Pixels(14.0))
                 } else {
-                    fonts::load(name, self.fount.google_catalog()).map(Message::Font)
+                    #[cfg(not(target_arch = "wasm32"))]
+                    let task = fonts::load(name, self.fount.google_catalog());
+                    #[cfg(target_arch = "wasm32")]
+                    let task = fonts::load(name);
+                    task.map(Message::Font)
                 }
             }
             Message::Page(i, message) => {
@@ -371,17 +375,20 @@ impl App {
                     self.rebuild_font_list();
                     Task::none()
                 }
+                #[cfg(not(target_arch = "wasm32"))]
                 fonts::Message::CatalogLoaded(Ok(catalog)) => {
                     self.fount.set_google_catalog(catalog);
                     self.rebuild_font_list();
                     fonts::load(self.current_font.clone(), self.fount.google_catalog())
                         .map(Message::Font)
                 }
+                #[cfg(not(target_arch = "wasm32"))]
                 fonts::Message::CatalogLoaded(Err(_)) => Task::none(),
                 fonts::Message::Loaded(name, Err(e)) => {
                     eprintln!("Font loading failed ({name}): {e}");
                     Task::none()
                 }
+                fonts::Message::Loaded(name, Ok(())) if name != self.current_font => Task::none(),
                 fonts::Message::Loaded(name, Ok(())) => {
                     let name: &'static str = Box::leak(name.into_boxed_str());
                     iced::font::set_defaults(Font::new(name), Pixels(14.0))

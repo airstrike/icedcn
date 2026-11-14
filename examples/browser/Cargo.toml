@@ -6,17 +6,25 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
-open = "5"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 serde.workspace = true
 serde_json.workspace = true
 rfd = "0.17"
 icedxdy = { workspace = true, features = ["markdown", "spinner", "svg", "sweeten"] }
-iced = { workspace = true, features = ["advanced-shaping", "markdown", "highlighter", "selector", "tokio", "svg", "image"] }
+iced = { workspace = true, features = ["advanced-shaping", "markdown", "highlighter", "selector", "svg", "image"] }
 iced_widget.workspace = true
 sweeten.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+iced = { workspace = true, features = ["tokio"] }
+open = "5"
 fount = { git = "https://github.com/airstrike/fount" }
 tokio = { version = "1", features = ["fs"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+tree-sitter.workspace = true
+wasmtimer = "0.4"
+web-sys = { version = "0.3", features = ["Window", "console"] }
 
 [build-dependencies]
 iced_lucide = { git = "https://github.com/airstrike/iced_lucide", branch = "codex/configurable-source" }

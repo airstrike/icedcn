@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0a0a">
+  <link rel="icon" href="data:,">
+  <title>icedxdy components</title>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #0a0a0a; }
+    #status { position: absolute; inset: 0; display: grid; place-content: center; margin: 0; color: #eee; font: 16px system-ui, sans-serif; }
+    body:has(canvas) #status:not([role="alert"]) { display: none; }
+    #status[role="alert"] { z-index: 1; background: #0a0a0a; }
+    canvas { outline: none; }
+  </style>
+</head>
+<body>
+  <p id="status" role="status">Loading components…</p>
+  <noscript>This component browser requires JavaScript and WebAssembly.</noscript>
+  <script type="module">
+    try {
+      const { default: start } = await import("./BROWSER_MODULE");
+      await start();
+    } catch (error) {
+      const status = document.querySelector("#status");
+      status.setAttribute("role", "alert");
+      status.textContent = "The component browser could not start. Reload the page to try again.";
+      console.error(error);
+    }
+  </script>
+</body>
+</html>

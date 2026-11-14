@@ -1,4 +1,4 @@
-use std::time::{Duration, Instant};
+use iced::time::{Duration, Instant};
 
 use iced::widget::component::{Component, component};
 use iced::{Element, FillPortion, Task, Widget};
@@ -132,7 +132,7 @@ impl page::Page for ProgressPage {
         let pi = self.state.page_index;
         Task::perform(
             async {
-                tokio::time::sleep(Duration::from_millis(DELAY_MS)).await;
+                crate::sleep(Duration::from_millis(DELAY_MS)).await;
             },
             move |_| Message::Page(pi, page::Message::Noop),
         )
