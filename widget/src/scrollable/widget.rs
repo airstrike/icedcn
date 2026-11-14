@@ -730,7 +730,14 @@ where
         viewport: &Rectangle,
     ) {
         let bounds = layout.bounds();
-        let cursor_over_scrollable = cursor.position_over(bounds);
+        let cursor_over_scrollable =
+            if matches!(event, Event::Touch(touch::Event::FingerPressed { .. })) {
+                bounds
+                    .intersection(viewport)
+                    .and_then(|visible| cursor.position_over(visible))
+            } else {
+                cursor.position_over(bounds)
+            };
 
         let (content_layout, content_tree) = layout.iter_mut(&mut tree.children).next().unwrap();
         let content = content_layout.size();
@@ -1450,13 +1457,34 @@ struct Segment {
 enum Interaction {
     None,
     ScrollerGrabbed(Axis, f32),
-    TouchScrolling(Point),
+    TouchScrolling(Swipe),
     AutoScrolling {
         origin: Point,
         current: Point,
         last_frame: Option<Instant>,
     },
     RailHeld(RailHeld),
+}
+
+/// Tracks the contact in window coordinates, even inside a translated scrollable.
+#[derive(Debug, Clone, Copy)]
+struct Swipe {
+    finger: touch::Finger,
+    position: Point,
+    moved_at: Instant,
+    velocity: Vector,
+}
+
+impl Swipe {
+    fn drag(&mut self, position: Point, now: Instant) -> Vector {
+        let delta = self.position - position;
+        // Low-pass the velocity over 25ms, including events batched in the same frame.
+        let dt = now.saturating_duration_since(self.moved_at).as_secs_f32();
+        self.velocity = (self.velocity * 0.025 + delta) / (0.025 + dt);
+        self.position = position;
+        self.moved_at = now;
+        delta
+    }
 }
 
 impl Interaction {
@@ -2046,6 +2074,47 @@ impl State {
                 (self.offset_x.absolute(bounds.width, content.width) + delta.x)
                     .clamp(0.0, content.width - bounds.width),
             );
+        }
+    }
+
+    /// Continue a released swipe on the same bounded segment used for wheel and
+    /// programmatic scrolling. Start at the finger's speed and ease down to rest.
+    fn fling(
+        &mut self,
+        swipe: Swipe,
+        direction: Direction,
+        bounds: Rectangle,
+        content: Size,
+        now: Instant,
+    ) {
+        let age = now.saturating_duration_since(swipe.moved_at).as_secs_f32();
+        let mut velocity = direction.align(swipe.velocity) * (1. - age / 0.100).clamp(0., 1.);
+        if direction.horizontal().is_none() || content.width <= bounds.width {
+            velocity.x = 0.;
+        }
+        if direction.vertical().is_none() || content.height <= bounds.height {
+            velocity.y = 0.;
+        }
+        let speed = velocity.x.abs().max(velocity.y.abs());
+        if speed < 90. {
+            return;
+        }
+
+        // Logical pixels per second. Bound batched input spikes and shorten
+        // slow coasts. The segment's average speed is half its initial speed.
+        let speed_limit = speed.min(4000.);
+        let duration = (speed_limit / 4500.).clamp(0.12, 0.65);
+        let travel = velocity * (speed_limit / speed * duration * 0.5);
+        self.cancel();
+        self.scroll_smoothly(travel, bounds, content, now);
+        if let Some(target) = self.target {
+            let dx = (target.destination.x - self.segment.start.x).abs();
+            let dy = (target.destination.y - self.segment.start.y).abs();
+            self.segment.duration = 2. * dx.max(dy) / speed_limit;
+            self.segment.started = now;
+            self.segment.slope = 2.;
+            self.last_frame = Some(now);
+            self.source = Some(Source::Touch);
         }
     }
 
@@ -2825,6 +2894,14 @@ impl State {
             }
         }
 
+        // A tap arrests a coast immediately, even when a child handles the press.
+        if self.source == Some(Source::Touch)
+            && cursor_over_scrollable.is_some()
+            && matches!(event, Event::Touch(touch::Event::FingerPressed { .. }))
+        {
+            self.cancel();
+        }
+
         let mut translation = self.last_translation;
 
         if let Event::Window(window::Event::RedrawRequested(now)) = event {
@@ -3129,12 +3206,30 @@ impl State {
     ) -> Update {
         let mut update = Update::default();
 
+        if let Event::Touch(
+            touch::Event::FingerLifted { id, .. } | touch::Event::FingerLost { id, .. },
+        ) = event
+        {
+            if let Interaction::TouchScrolling(swipe) = self.interaction {
+                if swipe.finger != *id {
+                    return update;
+                }
+                if matches!(event, Event::Touch(touch::Event::FingerLifted { .. })) {
+                    self.fling(swipe, direction, bounds, content, Instant::now());
+                    update.request_redraw = self.target.is_some();
+                }
+            }
+            self.interaction = Interaction::None;
+            return update;
+        }
+
         if matches!(
             event,
             Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
-                | Event::Touch(touch::Event::FingerLifted { .. } | touch::Event::FingerLost { .. })
         ) {
-            self.interaction = Interaction::None;
+            if !matches!(self.interaction, Interaction::TouchScrolling(_)) {
+                self.interaction = Interaction::None;
+            }
             return update;
         }
 
@@ -3148,6 +3243,9 @@ impl State {
                     return update;
                 }
 
+                if self.source == Some(Source::Touch) {
+                    self.cancel();
+                }
                 let (delta, is_significant) = match *delta {
                     mouse::ScrollDelta::Lines { x, y } => {
                         let is_shift_pressed = self.keyboard_modifiers.shift();
@@ -3226,31 +3324,28 @@ impl State {
                     || mouse_over_scrollbar.is_none() =>
             {
                 match event {
-                    touch::Event::FingerPressed { .. } => {
-                        let Some(position) = cursor_over_scrollable else {
+                    touch::Event::FingerPressed { id, position } => {
+                        if cursor_over_scrollable.is_none()
+                            || !matches!(self.interaction, Interaction::None)
+                        {
                             return update;
-                        };
-
-                        self.interaction = Interaction::TouchScrolling(position);
+                        }
+                        self.interaction = Interaction::TouchScrolling(Swipe {
+                            finger: *id,
+                            position: *position,
+                            moved_at: Instant::now(),
+                            velocity: Vector::ZERO,
+                        });
                     }
-                    touch::Event::FingerMoved { .. } => {
-                        let Interaction::TouchScrolling(scroll_box_touched_at) = self.interaction
-                        else {
+                    touch::Event::FingerMoved { id, position } => {
+                        let Interaction::TouchScrolling(swipe) = &mut self.interaction else {
                             return update;
                         };
-
-                        let Some(cursor_position) = cursor.position() else {
+                        if swipe.finger != *id {
                             return update;
-                        };
-
-                        let delta = Vector::new(
-                            scroll_box_touched_at.x - cursor_position.x,
-                            scroll_box_touched_at.y - cursor_position.y,
-                        );
-
+                        }
+                        let delta = swipe.drag(*position, Instant::now());
                         self.scroll(direction.align(delta), bounds, content);
-
-                        self.interaction = Interaction::TouchScrolling(cursor_position);
                         self.source = Some(Source::Touch);
 
                         if let Some(notification) = self.notify_scroll(bounds, content) {
@@ -3912,3 +4007,6 @@ pub(crate) fn animate_transcript_offset(tree: &mut Tree, y: f32) {
         Source::Operation,
     );
 }
+
+#[cfg(test)]
+mod tests;

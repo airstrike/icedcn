@@ -183,3 +183,55 @@ fn repeated_jumps_to_the_same_key_work_after_reader_navigation() {
         assert_eq!(offset.0, 0.);
     }
 }
+
+#[test]
+fn scrollable_keeps_child_taps_and_coasts_after_an_unhandled_swipe() {
+    use iced_core::{Point, time::Duration, touch};
+    use icedcn_widget::{button, column, scrollable};
+
+    let body = scrollable(column![
+        button("Tap").width(100).height(28).on_press(true),
+        Space::new().height(600).width(160),
+    ])
+    .height(100)
+    .width(160);
+    let mut ui = simulator(Element::<bool, Theme, Renderer>::from(body));
+    let id = touch::Finger(1);
+    let button = Point::new(12., 12.);
+    ui.point_at(button);
+    let _ = ui.simulate([
+        Event::Touch(touch::Event::FingerPressed {
+            id,
+            position: button,
+        }),
+        Event::Touch(touch::Event::FingerLifted {
+            id,
+            position: button,
+        }),
+    ]);
+    assert_eq!(ui.drain().collect::<Vec<_>>(), [true]);
+
+    let start = Point::new(24., 90.);
+    let end = Point::new(24., 48.);
+    ui.point_at(start);
+    let _ = ui.simulate([
+        Event::Touch(touch::Event::FingerPressed {
+            id,
+            position: start,
+        }),
+        Event::Touch(touch::Event::FingerMoved { id, position: end }),
+        Event::Touch(touch::Event::FingerLifted { id, position: end }),
+    ]);
+    let now = Instant::now();
+    let mut offset = Offset::default();
+    let _ = ui.simulate([Event::Window(window::Event::RedrawRequested(now))]);
+    ui.operate(&mut offset);
+    let released = offset.0;
+    assert!(released >= 42.);
+    let _ = ui.simulate([Event::Window(window::Event::RedrawRequested(
+        now + Duration::from_millis(100),
+    ))]);
+    ui.operate(&mut offset);
+    assert!(offset.0 > released + 12.);
+    assert_eq!(ui.drain().count(), 0);
+}
