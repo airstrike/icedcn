@@ -67,6 +67,9 @@ pub struct Dialog<'a, Message> {
     show_close_button: bool,
     dismiss_outside: bool,
     padding: u16,
+    style: fn(&Theme) -> Style,
+    margin: f32,
+    backdrop: bool,
     inherited: Inherited,
 }
 
@@ -132,6 +135,9 @@ impl<'a, Message> Dialog<'a, Message> {
             show_close_button: true,
             dismiss_outside: true,
             padding: 16,
+            style: dialog::content,
+            margin: 16.,
+            backdrop: true,
             inherited: Inherited::default(),
         }
     }
@@ -181,8 +187,26 @@ impl<'a, Message> Dialog<'a, Message> {
 
     /// Set the centered panel's padding (`p-4` by default; an alert
     /// dialog's sections pad themselves).
-    pub(crate) fn padding(mut self, padding: u16) -> Self {
+    pub fn padding(mut self, padding: u16) -> Self {
         self.padding = padding;
+        self
+    }
+
+    /// Paint the centered dialog panel.
+    pub fn style(mut self, style: fn(&Theme) -> Style) -> Self {
+        self.style = style;
+        self
+    }
+
+    /// Minimum clearance between a centered panel and the window edge.
+    pub fn margin(mut self, margin: f32) -> Self {
+        self.margin = margin.max(0.);
+        self
+    }
+
+    /// Dim the background while open. Input remains modal in either case.
+    pub fn backdrop(mut self, visible: bool) -> Self {
+        self.backdrop = visible;
         self
     }
 
@@ -440,9 +464,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                 style.into()
             };
             let panel = match placement {
-                Placement::Center { .. } => {
-                    Container::new(content).width(Fill).style(dialog::content)
-                }
+                Placement::Center { .. } => Container::new(content).width(Fill).style(self.style),
                 // A left or right sheet spans the window's height; a top or
                 // bottom one takes its content's (`h-auto`).
                 Placement::Side(Side::Left | Side::Right) => Container::new(content)
@@ -459,6 +481,8 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
 
         let modal = modal::Modal::new(base.into(), panel, placement, Event::Close)
             .dismiss_outside(self.dismiss_outside)
+            .margin(self.margin)
+            .backdrop(self.backdrop)
             .animation(state.closing, || Event::Exited)
             .drawer_height(drawer_height);
         if self.responsive.is_some() {

@@ -3,7 +3,7 @@ use iced_core::Length::Fill;
 
 use crate::combobox::keys::Keys;
 use crate::compose::{Compose, Inherited, Slot};
-use crate::{column, container, input, menu, row, scrollable, text};
+use crate::{Input, column, container, input, menu, row, scrollable, text};
 use iced_core::keyboard::key::Named;
 use iced_core::{Element, Length};
 use iced_widget::component::{self, Component};
@@ -67,8 +67,11 @@ pub struct Command<'a, Message> {
     empty: String,
     width: Length,
     limit: usize,
+    field: Option<Field<'a>>,
     inherited: Inherited,
 }
+type Field<'a> = Box<dyn Fn(Input<'a, Event>) -> Slot<'a, Event> + 'a>;
+
 /// Build a list from its source order. Filtering retains all matching groups.
 pub fn command<'a, Message>(
     items: impl IntoIterator<Item = Item<'a, Message>>,
@@ -79,6 +82,7 @@ pub fn command<'a, Message>(
         empty: "No results found.".into(),
         width: Fill,
         limit: usize::MAX,
+        field: None,
         inherited: Inherited::default(),
     }
 }
@@ -101,6 +105,13 @@ impl<'a, Message> Command<'a, Message> {
     /// Cap the visible results after filtering a large command list.
     pub fn limit(mut self, limit: usize) -> Self {
         self.limit = limit;
+        self
+    }
+
+    /// Embed the results in a surface supplied by the caller. The field
+    /// receives the current query and already publishes edits to the list.
+    pub fn embedded(mut self, field: impl Fn(Input<'a, Event>) -> Slot<'a, Event> + 'a) -> Self {
+        self.field = Some(Box::new(field));
         self
     }
 
@@ -215,8 +226,12 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             .value(st.query.clone())
             .on_input(Event::Input)
             .width(Fill);
+        let search = match &self.field {
+            Some(build) => build(search),
+            None => search.into(),
+        };
         let search = Keys {
-            content: Slot::from(search).compose(),
+            content: search.compose(),
             on_key: Box::new(|key| match key {
                 Named::ArrowUp => Some(Event::Step(true)),
                 Named::ArrowDown => Some(Event::Step(false)),
@@ -226,15 +241,26 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 _ => None,
             }),
         };
-        let list = scrollable(column(results).width(Fill).padding(4))
-            .width(Fill)
-            .height(Length::Shrink.max(300));
-        let mut palette: Slot<'a, Event> =
+        let embedded = self.field.is_some();
+        let list = scrollable(
+            column(results)
+                .width(Fill)
+                .padding(if embedded { 0 } else { 4 }),
+        )
+        .width(Fill)
+        .height(Length::Shrink.max(300));
+        let mut palette: Slot<'a, Event> = if embedded {
+            column![search.boxed(), list]
+                .width(self.width)
+                .spacing(8)
+                .into()
+        } else {
             container(column![search.boxed(), menu::separator(), list].width(Fill))
                 .padding(4)
                 .width(self.width)
                 .style(content)
-                .into();
+                .into()
+        };
         palette.inherit(&self.inherited);
         palette.compose()
     }

@@ -2,6 +2,7 @@ use iced_core::Length;
 use iced_core::Length::Fill;
 use iced_core::Padding;
 use iced_core::alignment;
+use iced_core::border;
 use iced_widget::Widget;
 
 use crate::Size;
@@ -51,6 +52,7 @@ where
     interaction: Option<iced_core::mouse::Interaction>,
     width: Option<Length>,
     style: Theme::Class<'a>,
+    focus_ring: Option<(f32, fn(&Theme) -> icedxdy_core::Color)>,
     on_press: Option<Message>,
     disabled: bool,
 }
@@ -71,6 +73,7 @@ pub fn button<'a, Message: Clone + 'a>(
         interaction: None,
         width: None,
         style: Box::new(|t, s| theme::button::default(t, s).into()),
+        focus_ring: None,
         on_press: None,
         disabled: false,
     }
@@ -142,6 +145,16 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     /// Set the style
     pub fn style(mut self, style: impl Into<iced_widget::button::StyleFn<'a, Theme>>) -> Self {
         self.style = style.into();
+        self
+    }
+
+    /// Paint an exterior ring when the button receives keyboard focus.
+    pub fn focus_ring(
+        mut self,
+        width: impl Into<iced_core::Pixels>,
+        color: fn(&Theme) -> icedxdy_core::Color,
+    ) -> Self {
+        self.focus_ring = Some((width.into().0, color));
         self
     }
 
@@ -259,6 +272,16 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
                 let mut style: super::widget::Style = (btn.style)(t, iced_status).into();
                 if rounded {
                     style.border.radius = (u32::MAX as f32).into();
+                }
+                if let Some((width, color)) = btn.focus_ring
+                    && matches!(s, widget::Status::Focused { .. })
+                {
+                    let mut radius = style.border.radius;
+                    radius.top_left += width;
+                    radius.top_right += width;
+                    radius.bottom_right += width;
+                    radius.bottom_left += width;
+                    style.ring = Some(border::width(width).color(color(t)).rounded(radius));
                 }
                 style
             });

@@ -68,6 +68,8 @@ pub struct Modal<'a, Message, Theme, Renderer> {
     closing: Option<(Instant, fn() -> Message)>,
     drawer_height: Option<f32>,
     side_width: Option<f32>,
+    margin: f32,
+    backdrop: bool,
 }
 
 impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
@@ -99,11 +101,21 @@ impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
             closing: None,
             drawer_height: None,
             side_width: None,
+            margin: 16.,
+            backdrop: true,
         }
     }
 
     pub(crate) fn side_width(mut self, width: f32) -> Self {
         self.side_width = Some(width);
+        self
+    }
+    pub(super) fn margin(mut self, margin: f32) -> Self {
+        self.margin = margin;
+        self
+    }
+    pub(super) fn backdrop(mut self, visible: bool) -> Self {
+        self.backdrop = visible;
         self
     }
     pub(super) fn animation(mut self, at: Option<Instant>, exited: fn() -> Message) -> Self {
@@ -131,6 +143,7 @@ struct Focus {
     placement: Option<Placement>,
     enter: bool,
     restore: Option<usize>,
+    pointer_opened: bool,
     drag: Option<(touch::Finger, Point)>,
 }
 
@@ -188,8 +201,24 @@ where
             .next()
             .expect("a modal has its base");
 
-        if self.open() && matches!(event, Event::Keyboard(_)) {
-            return;
+        if self.open() {
+            if matches!(event, Event::Keyboard(_)) {
+                return;
+            }
+        } else {
+            let focus = tree.state.downcast_mut::<Focus>();
+            match event {
+                Event::Mouse(mouse::Event::ButtonPressed(_))
+                | Event::Touch(touch::Event::FingerPressed { .. })
+                    if cursor.is_over(child_layout.bounds()) =>
+                {
+                    focus.pointer_opened = true;
+                }
+                Event::Keyboard(keyboard::Event::KeyPressed { .. }) => {
+                    focus.pointer_opened = false;
+                }
+                _ => {}
+            }
         }
         self.base.update(
             child_tree,
@@ -305,7 +334,7 @@ where
                 child_layout,
                 viewport,
                 renderer,
-                &mut focus::select(Some(index)),
+                &mut focus::restore(Some(index), !focus.pointer_opened),
             );
         }
         let mut overlays = self.base.overlay(
@@ -322,8 +351,8 @@ where
                 Placement::Center { max_width } => layout::Limits::new(
                     Size::ZERO,
                     Size::new(
-                        (window.width - 32.0).min(max_width).max(0.0),
-                        (window.height - 32.0).max(0.0),
+                        (window.width - 2. * self.margin).min(max_width).max(0.0),
+                        (window.height - 2. * self.margin).max(0.0),
                     ),
                 ),
                 Placement::Side(Side::Left | Side::Right) => {
@@ -378,7 +407,9 @@ where
                 dismiss_outside: self.dismiss_outside,
                 closing: self.closing,
                 placement: self.placement,
+                backdrop: self.backdrop,
                 drag: self.drawer_height.map(|_| &mut focus.drag),
+                pointer_opened: &mut focus.pointer_opened,
             })));
         }
 
@@ -408,7 +439,9 @@ struct Panel<'a, 'b, Message, Theme, Renderer> {
     dismiss_outside: bool,
     closing: Option<(Instant, fn() -> Message)>,
     placement: Placement,
+    backdrop: bool,
     drag: Option<&'b mut Option<(touch::Finger, Point)>>,
+    pointer_opened: &'b mut bool,
 }
 
 impl<Message, Theme, Renderer> overlay::Overlay<Message, Theme, Renderer>
@@ -448,13 +481,15 @@ where
         };
         renderer.with_layer(viewport, |renderer| {
             // nova `bg-black/10`.
-            renderer.fill_quad(
-                renderer::Quad {
-                    bounds: viewport,
-                    ..renderer::Quad::default()
-                },
-                Background::Color(Color::from_rgba(0.0, 0.0, 0.0, 0.1 * (1. - progress))),
-            );
+            if self.backdrop {
+                renderer.fill_quad(
+                    renderer::Quad {
+                        bounds: viewport,
+                        ..renderer::Quad::default()
+                    },
+                    Background::Color(Color::from_rgba(0.0, 0.0, 0.0, 0.1 * (1. - progress))),
+                );
+            }
 
             renderer.with_transformation(transform, |renderer| {
                 self.panel.draw(
@@ -499,6 +534,9 @@ where
                 }
             }
             return;
+        }
+        if matches!(event, Event::Keyboard(keyboard::Event::KeyPressed { .. })) {
+            *self.pointer_opened = false;
         }
         if let Some(drag) = self.drag.as_deref_mut() {
             match *event {

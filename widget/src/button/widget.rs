@@ -47,6 +47,7 @@ use crate::core::{
     Background, Color, Element, Event, Layout, Length, Padding, Rectangle, Shadow, Shell, Size,
     Theme, Vector, Widget,
 };
+use crate::operation::focus;
 
 /// A generic widget that produces a message when pressed.
 ///
@@ -289,6 +290,7 @@ where
 #[derive(Debug, Clone)]
 struct State {
     is_focused: bool,
+    indicator: focus::Visible,
     was_focused: bool,
     is_pressed: bool,
     hover: crate::core::Animation<bool>,
@@ -298,6 +300,7 @@ impl Default for State {
     fn default() -> Self {
         Self {
             is_focused: false,
+            indicator: focus::Visible::default(),
             was_focused: false,
             is_pressed: false,
             hover: crate::core::Animation::new(false)
@@ -317,6 +320,7 @@ impl operation::Focusable for State {
 
     fn focus(&mut self) {
         self.is_focused = true;
+        self.indicator.0 = true;
     }
 
     fn unfocus(&mut self) {
@@ -402,6 +406,7 @@ where
         if !self.disabled {
             let state = tree.state.downcast_mut::<State>();
             operation.focusable(self.id.as_ref(), layout.bounds(), state);
+            operation.custom(self.id.as_ref(), layout.bounds(), &mut state.indicator);
         }
 
         operation.container(None, layout.bounds(), viewport);
@@ -463,6 +468,7 @@ where
                 if cursor.is_over(bounds) {
                     if !self.disabled {
                         state.is_pressed = true;
+                        state.indicator.0 = false;
                         shell.capture_event();
 
                         if !state.is_focused {
@@ -506,6 +512,7 @@ where
                 let state = tree.state.downcast_mut::<State>();
 
                 if state.is_focused && !self.disabled {
+                    state.indicator.0 = true;
                     match key.as_ref() {
                         keyboard::Key::Named(key::Named::Enter)
                         | keyboard::Key::Named(key::Named::Space) => {
@@ -572,9 +579,18 @@ where
         let now = crate::core::time::Instant::now();
 
         let style = if state.hover.is_animating(now) {
-            // Animating: interpolate between active and hovered styles
-            let active = theme.style(&self.class, Status::Active);
-            let hovered = theme.style(&self.class, Status::Hovered);
+            // Keep a focused button's ring while its hover colors transition.
+            let (active, hovered) = if matches!(status, Status::Focused { .. }) {
+                (
+                    theme.style(&self.class, Status::Focused { is_hovered: false }),
+                    theme.style(&self.class, Status::Focused { is_hovered: true }),
+                )
+            } else {
+                (
+                    theme.style(&self.class, Status::Active),
+                    theme.style(&self.class, Status::Hovered),
+                )
+            };
 
             fn bg_color(style: &Style) -> Option<Color> {
                 style.background.map(|b| match b {
@@ -610,6 +626,7 @@ where
                     active.shadow
                 },
                 snap: active.snap,
+                ring: active.ring,
             }
         } else {
             theme.style(&self.class, status)
@@ -638,6 +655,20 @@ where
 
         // Translate everything down by press_y
         renderer.with_translation(Vector::new(0.0, press_y), |renderer| {
+            if state.indicator.0
+                && let Some(ring) = style.ring
+                && ring.width > 0.
+            {
+                renderer.fill_quad(
+                    renderer::Quad {
+                        bounds: visual_bounds.expand(ring.width),
+                        border: ring,
+                        snap: style.snap,
+                        ..renderer::Quad::default()
+                    },
+                    Color::TRANSPARENT,
+                );
+            }
             if style.background.is_some() || style.border.width > 0.0 || style.shadow.color.a > 0.0
             {
                 renderer.fill_quad(
@@ -760,6 +791,8 @@ pub struct Style {
     pub text_color: Color,
     /// The [`Border`] of the button.
     pub border: Border,
+    /// An optional exterior stroke, with its radius measured at the outer edge.
+    pub ring: Option<Border>,
     /// The [`Shadow`] of the button.
     pub shadow: Shadow,
     /// Whether the button should be snapped to the pixel grid.
@@ -782,6 +815,7 @@ impl Default for Style {
             background: None,
             text_color: Color::BLACK,
             border: Border::default(),
+            ring: None,
             shadow: Shadow::default(),
             snap: cfg!(feature = "crisp"),
         }
@@ -870,6 +904,7 @@ impl From<iced_widget::button::Style> for Style {
             background: s.background,
             text_color: s.text_color,
             border: s.border,
+            ring: None,
             shadow: s.shadow,
             snap: s.snap,
         }

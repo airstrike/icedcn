@@ -157,6 +157,7 @@ impl<'a, Message: Clone + 'a> Item<'a, Message> {
                 background: surface.background.map(Into::into),
                 text_color: theme.neutral.foreground.into(),
                 border: surface.border.into(),
+                ring: None,
                 shadow: surface.shadow.into(),
                 snap: surface.snap,
             }

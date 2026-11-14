@@ -1,4 +1,5 @@
 use super::{App, Message};
+mod search;
 use crate::{icon, page};
 use iced::Widget;
 use iced::keyboard::key::Named;
@@ -12,7 +13,7 @@ use icedxdy::widget::{
     button, column, command, container, dialog, dropdown_menu, menu, row, rule, space, text,
     tooltip,
 };
-use icedxdy::{Slot, Theme};
+use icedxdy::{Slot, Theme, radius};
 use serde::Deserialize;
 use std::time::Duration;
 
@@ -154,6 +155,7 @@ impl App {
                 };
                 let style: StyleFn<'_, Theme> = Box::new(|theme, status| {
                     let mut style = ghost(theme, status);
+                    style.border.radius = radius::LG.into();
                     let surface = if theme.neutral.is_dark {
                         theme.card.base
                     } else {
@@ -176,6 +178,9 @@ impl App {
                             192
                         })
                         .style(style)
+                        .focus_ring(3, |theme| {
+                            theme.neutral.ring.scale_alpha(0.5).over(theme.neutral.base)
+                        })
                         .translate(false),
                 )
             },
@@ -184,7 +189,11 @@ impl App {
         .open(self.search)
         .on_open_change(Message::Search)
         .show_close_button(false)
-        .max_width(512.);
+        .padding(search::INSET + search::RIM)
+        .max_width(512. + 2. * f32::from(search::RIM))
+        .margin(16. - f32::from(search::RIM))
+        .backdrop(false)
+        .style(search::panel);
         let github = symbol(include_bytes!("../../assets/navigation/github.svg"), 16.);
         let mut repo = row![github].spacing(6);
         if let Some(stars) = self.stars {
@@ -307,6 +316,7 @@ impl App {
         .limit(8)
         .placeholder("Search documentation...")
         .empty("No results found.")
+        .embedded(search::field)
         .into()
     }
 }

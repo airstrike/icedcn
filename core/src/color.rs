@@ -63,6 +63,25 @@ impl Color {
         self
     }
 
+    /// Composite this color over a background in sRGB, as CSS paints layers.
+    pub fn over(self, background: Self) -> Self {
+        if self.a == 0.0 || background.a == 0.0 || self.a == 1.0 {
+            return if self.a == 0.0 { background } else { self };
+        }
+        let source = iced_core::Color::from(self);
+        let backdrop = iced_core::Color::from(background);
+        let remaining = backdrop.a * (1.0 - source.a);
+        let alpha = source.a + remaining;
+        let channel = |front, back| (front * source.a + back * remaining) / alpha;
+
+        Self::from_srgb(iced_core::Color::from_rgba(
+            channel(source.r, backdrop.r),
+            channel(source.g, backdrop.g),
+            channel(source.b, backdrop.b),
+            alpha,
+        ))
+    }
+
     /// Lighten the color by a percentage (0.0 to 1.0)
     pub fn lighten(mut self, amount: f32) -> Self {
         self.l = (self.l + amount).min(1.0);
@@ -269,6 +288,20 @@ pub const fn oklch_alpha(l: f32, c: f32, h: f32, a: f32) -> Color {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn over_composites_srgb_channels_and_preserves_the_combined_alpha() {
+        let source = Color::from_srgb(iced_core::Color::from_rgba(1., 0., 0., 0.5));
+        let backdrop = Color::from_srgb(iced_core::Color::from_rgba(0., 0., 1., 0.5));
+        let result = iced_core::Color::from(source.over(backdrop));
+        assert!((result.r - 2. / 3.).abs() < 1e-4);
+        assert!(result.g.abs() < 1e-4);
+        assert!((result.b - 1. / 3.).abs() < 1e-4);
+        assert_eq!(result.a, 0.75);
+        assert_eq!(source.over(Color::TRANSPARENT), source);
+        assert_eq!(Color::TRANSPARENT.over(backdrop), backdrop);
+        assert_eq!(Color::BLACK.over(backdrop), Color::BLACK);
+    }
 
     #[test]
     fn test_white() {

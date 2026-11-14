@@ -209,6 +209,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Badge<'a, Message> {
                         background: base.background,
                         text_color: base.text_color.unwrap_or(theme.neutral.foreground.into()),
                         border: base.border,
+                        ring: None,
                         shadow: base.shadow,
                         snap: base.snap,
                     }
