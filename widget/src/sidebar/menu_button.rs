@@ -58,7 +58,7 @@ impl MenuButtonSize {
         match self {
             Self::Default | Self::Lg => 14.0, // text-sm
             Self::Sm => 12.0,                 // text-xs
-            Self::Docs => 13.0,               // text-[0.8rem] ≈ 12.8
+            Self::Docs => 12.8,               // text-[0.8rem]
         }
     }
 
@@ -67,8 +67,9 @@ impl MenuButtonSize {
             Self::Default => Padding::from([4.0, 8.0]),
             Self::Sm => Padding::from([2.0, 8.0]),
             Self::Lg => Padding::from([8.0, 8.0]),
-            // Canonical docs-sidebar items use `p-2` (8 px on every side).
-            Self::Docs => Padding::from([8.0, 8.0]),
+            // CSS flex centers the intrinsic line even when it exceeds the
+            // height left by p-2. Reserve only the inline inset in iced.
+            Self::Docs => Padding::from([0.0, 8.0]),
         }
     }
 }
@@ -153,18 +154,16 @@ impl<'a, Message: Clone + 'a> From<SidebarMenuButton<'a, Message>>
 {
     fn from(mut btn: SidebarMenuButton<'a, Message>) -> Self {
         let text_size = btn.size.text_size();
-        // Collapse the line-box to the Docs content area (16px = 32px -
-        // 8/8 padding). Default 1.3 leading on text-13 produces a ~17px
-        // box that overflows by 1px DOWN — iced's `padded` layout puts
-        // the line-box at the TOP of the content area, leaving the glyph
-        // ~1px below center. Pin to 16 so the baseline lands at the
-        // midpoint without spilling. Other sizes have ample content slack;
-        // `center_y(Fill)` below handles them.
+        let line_height = if btn.size == MenuButtonSize::Docs {
+            text_size * 20.0 / 14.0
+        } else {
+            16.0
+        };
         btn.content.inherit(
             &Inherited::default()
                 .with_size(Size::Custom(text_size))
                 .with_weight(crate::Weight::Medium)
-                .with_line_height(16.0)
+                .with_line_height(line_height)
                 .with_selectable(false),
         );
 
