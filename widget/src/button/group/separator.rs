@@ -1,14 +1,7 @@
 //! [`Separator`] for use inside a [`super::ButtonGroup`].
 //!
-//! Mirrors shadcn's `<ButtonGroupSeparator>`: a 1px line drawn perpendicular
-//! to the group's orientation, in the same color as a button outline border
-//! (`palette.input` / `palette.border`). The separator's own orientation is
-//! the *opposite* of the group's — a horizontal group gets vertical
-//! separators between its buttons; a vertical group gets horizontal ones.
-//!
-//! The separator is a value type — no builder, no theme catalog of its own.
-//! Color is read from the active [`Theme`] at draw time via the same accessor
-//! the button outline variant uses, so a theme swap reflows automatically.
+//! The one-pixel divider runs perpendicular to the group and uses the active theme’s
+//! neutral border color.
 //!
 //! Constructed via [`super::separator()`]; the parent `ButtonGroup` wraps
 //! each instance in `super::Item::Separator`.
@@ -26,23 +19,13 @@ use super::Orientation;
 
 /// A 1px divider rendered between adjacent buttons in a [`super::ButtonGroup`].
 ///
-/// The held [`Orientation`] is the *group's* orientation — the separator is
-/// drawn perpendicular to it. Constructed by [`super::separator()`]
-/// with `Horizontal` as the default; the parent `ButtonGroup` overwrites the
-/// field at iteration time once its own orientation is known, so callers
-/// never need to spell the axis themselves (matching shadcn's auto-axis
-/// derivation from the surrounding `ButtonGroup`).
+/// The group sets the orientation during composition.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Separator {
     /// The *group's* orientation. The separator draws perpendicular to it.
     pub(super) group_orientation: Orientation,
-    /// Pixel size for the cross axis (perpendicular to the group's axis).
-    /// Set by the parent group at iteration time to the tallest button's
-    /// height (horizontal group) or widest button's width (vertical group),
-    /// so the separator shrinks to the cluster's natural size rather than
-    /// stretching to whatever Fill resolves to in the surrounding container
-    /// — matches shadcn's `flex items-stretch` semantics, not `Length::Fill`.
-    /// Zero means "no buttons in the group" → atomic 1×1 placeholder.
+    /// Length of the divider in logical pixels, supplied by the group. A zero length
+    /// falls back to a one-pixel square.
     pub(super) cross_axis: f32,
 }
 
@@ -100,10 +83,6 @@ where
         _cursor: mouse::Cursor,
         _viewport: &Rectangle,
     ) {
-        // Color matches the outline button's border source: in dark mode
-        // `palette.input` (the same OKLCH translucent white the outline button
-        // uses); in light mode `palette.border`. shadcn's separator uses
-        // `bg-input` directly — same source.
         let bg: iced_core::Color = theme.neutral.border.into();
 
         renderer.fill_quad(

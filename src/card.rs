@@ -47,8 +47,7 @@ use crate::widget::{self, Compose, Inherited, Slot};
 /// The boxed element a card slot holds.
 type Element<'a, Message> = iced_core::Element<'a, Message, Theme, Renderer>;
 
-/// Card root — wraps content with shadcn's card surface (bg-card + ring +
-/// rounded corners).
+/// Wrap content in a rounded card surface and clip it to the card bounds.
 pub fn card<'a, Message>(
     content: impl Into<Element<'a, Message>>,
 ) -> Container<'a, Element<'a, Message>, Theme> {

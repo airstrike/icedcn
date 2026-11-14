@@ -1,8 +1,4 @@
-//! Button Group — shadcn-faithful sibling-button cluster
-//!
-//! Visually fuses a set of [`Button`]s along a single axis (horizontal or
-//! vertical), collapsing the touching corners so the cluster reads as one
-//! pill-shaped group. Mirrors shadcn's `<ButtonGroup>` component.
+//! A group of buttons joined along a horizontal or vertical axis.
 //!
 //! # Children are typed
 //!
@@ -34,14 +30,8 @@
 //!
 //! # Edge-radius collapse
 //!
-//! shadcn does this via Tailwind's child-selector cascade
-//! (`[&>*:not(:first-child)]:rounded-l-none`). We reproduce it by walking
-//! the items vec, computing each button's [`Position`] (`First`,
-//! `Middle`, `Last`, `Only`), and calling [`Button::map_style`] to zero out
-//! the appropriate corners on the resolved [`iced_widget::button::Style`].
-//! Position counts every child slot (buttons AND separators) — a button
-//! immediately after a separator is *not* a "first" button by shadcn's
-//! cascade rules.
+//! The group counts every item, including separators, when it determines which button corners
+//! touch neighboring items. It applies the corner adjustment after resolving each button’s style.
 //!
 //! # Orientation
 //!
@@ -71,13 +61,8 @@ pub use icedxdy_core::Horizontal;
 pub use icedxdy_core::Orientation;
 pub use icedxdy_core::Vertical;
 
-/// Position of a [`Button`] within the group's child sequence — drives
-/// which corners get collapsed at radius-stripping time.
-///
-/// Counts every child slot (buttons AND separators). A button that sits
-/// immediately after a separator is NOT [`Position::First`] — the separator
-/// occupies that slot. Matches shadcn's `[&>*:not(:first-child)]` semantics:
-/// the selector counts every direct DOM child, not just the buttons.
+/// Position of a button among all the items in its group, including separators. This
+/// determines which outer corners keep their radius.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Position {
     /// The only child in the group — keeps every corner.
@@ -178,9 +163,6 @@ pub fn group<'a, Message: Clone + 'a>(
 ) -> ButtonGroup<'a, Message> {
     ButtonGroup {
         items: items.into_iter().collect(),
-        // Horizontal is the default per shadcn's live docs page — the
-        // `<ButtonGroup orientation="horizontal" | "vertical">` prop
-        // defaults to "horizontal" in `apps/v4/styles/radix-nova/ui/button-group.tsx`.
         orientation: Orientation::Horizontal,
         width: None,
     }
@@ -235,14 +217,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for ButtonGroup<'a, Message> {
 
         let total = items.len();
 
-        // Compute the max button height in this group so separators can
-        // size their perpendicular axis to a concrete pixel value rather
-        // than `Length::Fill`. With Fill, the separator inherits the
-        // surrounding container's available cross-axis size and stretches
-        // far past the buttons (288px in the browser preview card). With
-        // a fixed pixel value matching the tallest button, the separator
-        // shrinks to the cluster's natural height — like shadcn's
-        // `flex items-stretch` resolves to the tallest sibling.
+        // Bound the separator length by the tallest button so a roomy parent cannot stretch it.
         let cross_axis_size = items
             .iter()
             .filter_map(|item| match item {
@@ -280,11 +255,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for ButtonGroup<'a, Message> {
             )
             .collect();
 
-        // Lay them out along the chosen axis with NO inter-child spacing —
-        // the buttons share the seam (matches shadcn's `flex items-stretch`
-        // with no `gap`). Cross-axis stretches so vertical groups have
-        // consistent button widths and horizontal groups present a
-        // consistent height for separator fill.
+        // Adjacent items share an edge along the group axis.
         let element: iced_core::Element<'a, Message, Theme, Renderer> = match orientation {
             Orientation::Horizontal => iced_widget::Row::with_children(elements)
                 .spacing(0)
@@ -318,15 +289,7 @@ fn position_at(i: usize, total: usize) -> Position {
     }
 }
 
-/// Zero the corners of `style.border.radius` that should collapse for a
-/// button at the given position in a group with the given orientation.
-///
-/// Mirrors shadcn's `[&>*:not(:first-child)]:rounded-l-none` /
-/// `:not(:last-child)]:rounded-r-none` cascade for horizontal groups, and
-/// the `rounded-t-none` / `rounded-b-none` analogs for vertical.
-///
-/// Also collapses the inward border so adjacent buttons don't double-stroke
-/// the shared seam (`[&>*:not(:first-child)]:border-l-0` in shadcn).
+/// Remove corner radii on edges that face a neighboring group item.
 fn collapse_corners(
     mut style: iced_widget::button::Style,
     pos: Position,
