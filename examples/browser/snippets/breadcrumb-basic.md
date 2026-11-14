@@ -1,10 +1,19 @@
 ```rust
+use icedxdy::Slot;
 use icedxdy::widget::breadcrumb;
 
-breadcrumb([
-    breadcrumb::link("Home", Message::GoHome),
-    breadcrumb::link("Components", Message::GoComponents),
-    breadcrumb::page("Breadcrumb"),
-])
-.separator(|| icon::chevron_right().size(14).into())
+#[derive(Debug, Clone)]
+enum Message {
+    GoHome,
+    GoComponents,
+}
+
+fn view() -> Slot<'static, Message> {
+    breadcrumb([
+        breadcrumb::link("Home", Message::GoHome),
+        breadcrumb::link("Components", Message::GoComponents),
+        breadcrumb::page("Breadcrumb"),
+    ])
+    .into()
+}
 ```

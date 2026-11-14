@@ -7,11 +7,11 @@
 //! into a flat list of [`Item`] values plus an auto-interspersed separator.
 //!
 //! ```ignore
-//! use icedxdy::widget::{breadcrumb, text};
+//! use icedxdy::widget::breadcrumb;
 //!
 //! breadcrumb([
-//!     breadcrumb::link(text::muted("Home"), Message::GoHome),
-//!     breadcrumb::link(text::muted("Components"), Message::GoComponents),
+//!     breadcrumb::link("Home", Message::GoHome),
+//!     breadcrumb::link("Components", Message::GoComponents),
 //!     breadcrumb::page("Breadcrumb"),
 //! ])
 //! ```
@@ -23,7 +23,7 @@
 //!   message on left-button release. Mirrors `<BreadcrumbLink>`.
 //! - [`page`] — current page. Renders content as-is, no click affordance.
 //!   Mirrors `<BreadcrumbPage>`.
-//! - [`ellipsis`] — collapsed-items indicator (a `…` glyph). Pass
+//! - [`ellipsis`] — collapsed-items indicator. Pass
 //!   `Some(message)` to make it clickable (e.g. to open a dropdown of the
 //!   elided crumbs); pass `None` for a purely visual placeholder.
 //!   Mirrors `<BreadcrumbEllipsis>`.
@@ -37,28 +37,32 @@
 //! (separator icons, raw-string links) inherit muted at draw time without
 //! callers threading colors manually.
 //!
-//! Animation gap: shadcn's `<BreadcrumbLink>` carries
-//! `transition-colors hover:text-foreground`. We don't yet have a
-//! breadcrumb [`Catalog`](icedxdy_core::theme) surfacing link state, so
-//! hover snaps rather than fades.
+//! Links use the native button's keyboard focus, release activation and
+//! animated hover color. Disabled ancestors disable every interactive item.
 //!
 //! # Separator
 //!
-//! Default separator is a `›` glyph at body size — the widget crate has no
-//! icon-font dependency, so callers pass `icon::chevron_right()` (or any
-//! widget) via [`Breadcrumb::separator`] for lucide-icon parity.
+//! With the `svg` feature, the default chevron and ellipsis use Lucide paths
+//! without an icon font. Without SVG, text glyphs occupy the same boxes.
+//! Use [`Breadcrumb::separator`] for a custom separator.
 
+#[cfg(feature = "svg")]
+mod icon;
+
+use crate::Weight;
+use crate::button::widget;
+use crate::compose::{Compose, Inherited, Slot};
+use crate::row::Row;
+#[cfg(not(feature = "svg"))]
+use crate::text;
+#[cfg(not(feature = "svg"))]
+use crate::text::Text;
+use iced_core::border;
 use iced_core::mouse::Interaction;
 use iced_widget::Widget;
 use iced_widget::container::Style;
-use iced_widget::{Renderer, container, mouse_area};
+use iced_widget::{Renderer, container};
 use icedxdy_core::Theme;
-use icedxdy_core::theme;
-
-use crate::compose::{Compose, Slot};
-use crate::row::Row;
-use crate::text;
-use crate::text::Text;
 
 /// One entry in a breadcrumb trail.
 ///
@@ -102,8 +106,7 @@ pub fn ellipsis<'a, Message: 'a>(on_press: Option<Message>) -> Item<'a, Message>
     Item::Ellipsis(on_press)
 }
 
-/// Build a [`Breadcrumb`] from a list of items. The separator (default = a
-/// muted `›` glyph) is auto-interspersed between adjacent items.
+/// Build a [`Breadcrumb`] with a muted chevron between adjacent items.
 pub fn breadcrumb<'a, Message: 'a>(
     items: impl IntoIterator<Item = Item<'a, Message>>,
 ) -> Breadcrumb<'a, Message> {
@@ -121,6 +124,7 @@ type SeparatorFn<'a, Message> = Box<dyn Fn() -> Slot<'a, Message> + 'a>;
 pub struct Breadcrumb<'a, Message> {
     items: Vec<Item<'a, Message>>,
     separator: Option<SeparatorFn<'a, Message>>,
+    inherited: Inherited,
 }
 
 impl<'a, Message: 'a> Breadcrumb<'a, Message> {
@@ -130,6 +134,7 @@ impl<'a, Message: 'a> Breadcrumb<'a, Message> {
         Self {
             items: items.into_iter().collect(),
             separator: None,
+            inherited: Inherited::default(),
         }
     }
 
@@ -165,11 +170,23 @@ impl<'a, Message: Clone + 'a> From<Breadcrumb<'a, Message>> for Slot<'a, Message
 }
 
 impl<'a, Message: Clone + 'a> Compose<Message> for Breadcrumb<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        self.inherited = self.inherited.or(*from);
+    }
+
     fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
     {
-        let Breadcrumb { items, separator } = *self;
+        let Breadcrumb {
+            items,
+            separator,
+            inherited,
+        } = *self;
+        let inherited = inherited.or(Inherited::default()
+            .with_size(14.0)
+            .with_line_height(20.0)
+            .with_weight(Weight::Normal));
 
         let make_separator: SeparatorFn<'a, Message> =
             separator.unwrap_or_else(|| Box::new(default_separator));
@@ -177,12 +194,14 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Breadcrumb<'a, Message> {
         let item_count = items.len();
         // shadcn `<BreadcrumbList>` uses `gap-1.5` (6px) between adjacent
         // children (items + separators).
-        let mut row = Row::new().spacing(6.0);
+        let mut row = Row::new().spacing(6.0).wrap();
 
         for (idx, item) in items.into_iter().enumerate() {
-            row = row.push(render_item(item));
+            row = row.push(render_item(item, &inherited));
             if idx + 1 < item_count {
-                row = row.push(make_separator());
+                let mut separator = make_separator();
+                separator.inherit(&inherited);
+                row = row.push(separator);
             }
         }
 
@@ -197,12 +216,21 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Breadcrumb<'a, Message> {
 
 /// Render a single [`Item`] to a [`Slot`]. Extracted so the dispatch
 /// reads as a flat match in one place.
-fn render_item<'a, Message: Clone + 'a>(item: Item<'a, Message>) -> Slot<'a, Message> {
+fn render_item<'a, Message: Clone + 'a>(
+    item: Item<'a, Message>,
+    inherited: &Inherited,
+) -> Slot<'a, Message> {
     match item {
-        Item::Content(content) => content,
-        Item::Link(content, on_press) => render_link(content, on_press),
-        Item::Page(content) => render_page(content),
-        Item::Ellipsis(on_press) => render_ellipsis(on_press),
+        Item::Content(mut content) => {
+            content.inherit(inherited);
+            content
+        }
+        Item::Link(content, on_press) => render_link(content, on_press, inherited),
+        Item::Page(mut content) => {
+            content.inherit(inherited);
+            render_page(content)
+        }
+        Item::Ellipsis(on_press) => render_ellipsis(on_press, inherited),
     }
 }
 
@@ -214,43 +242,81 @@ fn render_page<'a, Message: Clone + 'a>(content: Slot<'a, Message>) -> Slot<'a, 
         .into()
 }
 
-/// Render a clickable link crumb. Wraps the content in `mouse_area` for
-/// the Pointer cursor + click dispatch — matches the sidebar nav precedent
-/// and shadcn's `<a>` semantics.
+/// The existing native button owns release, cancellation and keyboard input.
 fn render_link<'a, Message: Clone + 'a>(
-    content: Slot<'a, Message>,
+    mut content: Slot<'a, Message>,
     on_press: Message,
+    inherited: &Inherited,
 ) -> Slot<'a, Message> {
-    mouse_area(content.compose())
+    content.inherit(&Inherited::default().with_selectable(false).or(*inherited));
+    let style: widget::StyleFn<'a, Theme> = Box::new(link_style);
+    widget::Button::new(content.compose())
+        .padding(0)
+        .translate(false)
+        .disabled(inherited.is_disabled())
         .interaction(Interaction::Pointer)
         .on_press(on_press)
+        .style(style)
+        .boxed()
         .into()
+}
+
+fn link_style(theme: &Theme, status: widget::Status) -> widget::Style {
+    let hovered = matches!(
+        status,
+        widget::Status::Hovered
+            | widget::Status::Pressed
+            | widget::Status::Focused { is_hovered: true }
+    );
+    let color = if hovered {
+        theme.neutral.foreground
+    } else {
+        theme.muted.foreground
+    };
+    widget::Style {
+        text_color: if status == widget::Status::Disabled {
+            color.alpha(0.5).into()
+        } else {
+            color.into()
+        },
+        ring: matches!(status, widget::Status::Focused { .. })
+            .then(|| border::width(2).color(theme.neutral.foreground).rounded(2)),
+        ..widget::Style::default()
+    }
 }
 
 /// Render an ellipsis indicator. `on_press = Some(_)` makes it clickable.
 ///
-/// shadcn renders `<MoreHorizontalIcon />` inside a 20px-square
-/// `flex size-5 items-center justify-center` box. Using Unicode `…`
-/// (U+2026) keeps the widget crate font-free while reading as "more" at
-/// body sizes.
-fn render_ellipsis<'a, Message: Clone + 'a>(on_press: Option<Message>) -> Slot<'a, Message> {
-    let glyph: Slot<'a, Message> = Text::new("\u{2026}")
-        .size(text::size::SM)
-        .style(theme::text::Muted)
-        .into();
+/// A 16px Lucide icon inside the source's 20px square; the text fallback
+/// retains that square when the SVG feature is not enabled.
+fn render_ellipsis<'a, Message: Clone + 'a>(
+    on_press: Option<Message>,
+    inherited: &Inherited,
+) -> Slot<'a, Message> {
+    #[cfg(feature = "svg")]
+    let glyph: Slot<'a, Message> = icon::Icon::Ellipsis.boxed().into();
+    #[cfg(not(feature = "svg"))]
+    let glyph: Slot<'a, Message> = Text::new("\u{2026}").size(text::size::SM).into();
+    let glyph = container(glyph.compose()).center_x(20).center_y(20).into();
 
     match on_press {
-        Some(message) => mouse_area(glyph.compose())
-            .interaction(Interaction::Pointer)
-            .on_press(message)
-            .into(),
+        Some(message) => render_link(glyph, message, inherited),
         None => glyph,
     }
 }
 
-/// Default separator factory: a `›` glyph at body size. Override with
-/// [`Breadcrumb::separator`] for icon-based parity (e.g. `icon::chevron_right`).
-/// Color comes from the parent container's muted text_color cascade.
+/// Default 14px chevron. Its color comes from the list's muted cascade.
 fn default_separator<'a, Message: 'a>() -> Slot<'a, Message> {
-    Text::new("\u{203A}").size(text::size::SM).into()
+    #[cfg(feature = "svg")]
+    {
+        icon::Icon::Chevron.boxed().into()
+    }
+    #[cfg(not(feature = "svg"))]
+    {
+        container(Slot::<Message>::from(Text::new("\u{203A}").size(text::size::SM)).compose())
+            .center_x(14)
+            .center_y(14)
+            .boxed()
+            .into()
+    }
 }
