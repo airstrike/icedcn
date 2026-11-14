@@ -19,9 +19,8 @@ pub const RAIL_WIDTH: f32 = 1.0;
 /// Width of the scroller drawn over the rail.
 pub const SCROLLER_WIDTH: f32 = 2.0;
 
-/// The thin scrollbar every icedxdy scrollable uses: a 1px invisible
-/// rail with a 2px scroller, like the overlay scrollbar the shadcn docs
-/// get from the browser. Its colors come from `core::theme::scrollable`.
+/// The shared thin scrollbar uses an invisible one-pixel rail and a two-pixel thumb. Its colors
+/// come from `core::theme::scrollable`.
 pub fn scrollbar() -> Scrollbar {
     Scrollbar::default()
         .width(RAIL_WIDTH)

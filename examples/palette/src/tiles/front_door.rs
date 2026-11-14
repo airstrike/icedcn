@@ -1,6 +1,4 @@
-//! Preview-02 front-door card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/front-door.tsx`.
+//! Front door card.
 
 use iced::Widget;
 use iced::{Fill, Right};

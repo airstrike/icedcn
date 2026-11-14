@@ -1,16 +1,8 @@
 //! A layout-only wrapper that constrains its single child to a fixed
 //! width-to-height ratio.
 //!
-//! Mirrors shadcn's `<AspectRatio ratio={16 / 9}>...</AspectRatio>` (a thin
-//! Radix wrapper). By default the widget consumes whatever width its parent
-//! provides (`Length::Fill`) and reports `width / ratio` as its height —
-//! matching Radix's behavior of `padding-bottom: (1 / ratio) * 100%` on the
-//! inner wrapper, which grows the box to the desired ratio relative to the
-//! caller-supplied width.
-//!
-//! There's no theme catalog here: aspect-ratio is purely structural. Style
-//! the child (e.g. `bg-muted`, `rounded-lg`) at the call site, just as
-//! shadcn's examples do.
+//! The widget fills the available width by default and computes the height as `width / ratio`.
+//! Apply visual styles directly to its child.
 //!
 //! ```ignore
 //! use icedxdy::widget::aspect_ratio;
@@ -34,13 +26,9 @@ use icedxdy_core::Theme;
 
 use crate::compose::{Compose, Inherited, Slot};
 
-/// A widget that constrains its child to a `width : height` ratio.
-///
-/// `ratio` follows the shadcn / CSS convention: it's `width / height` (so
-/// `16.0 / 9.0` is widescreen, `9.0 / 16.0` is portrait). The widget
-/// claims the available width (`Length::Fill`) by default and reports
-/// `width / ratio` for its height. Use [`AspectRatio::max_width`] or
-/// [`AspectRatio::width`] to control the width.
+/// Constrains a child to the given width divided by height. For example, `16.0 / 9.0` produces
+/// a widescreen frame. Use [`AspectRatio::width`] or [`AspectRatio::max_width`] to control its
+/// width.
 pub struct AspectRatio<'a, Message, Renderer = iced_widget::Renderer>
 where
     Renderer: iced_core::Renderer,
@@ -75,19 +63,14 @@ where
         self
     }
 
-    /// Cap the resolved width at `max_width` pixels. Mirrors shadcn's
-    /// `max-w-sm` / `max-w-[10rem]` parent-width idioms — the equivalent
-    /// of applying a maximum width to the parent.
+    /// Cap the resolved width in logical pixels.
     pub fn max_width(mut self, max_width: impl Into<Pixels>) -> Self {
         self.max_width = max_width.into().0;
         self
     }
 }
 
-/// Constrain `content` to a `width / height` ratio at layout time.
-///
-/// Mirrors shadcn's `<AspectRatio ratio={...}>` — pass the ratio as
-/// `width / height` (e.g. `16.0 / 9.0` for widescreen).
+/// Constrain the child to a width-to-height ratio, such as `16.0 / 9.0`.
 pub fn aspect_ratio<'a, Message: 'a>(
     content: impl Into<Slot<'a, Message>>,
     ratio: f32,

@@ -1,6 +1,4 @@
-//! Preview-02 empty-connect-bank card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/empty-connect-bank.tsx`.
+//! Empty connect bank card.
 
 use iced::Fill;
 use iced::Widget;

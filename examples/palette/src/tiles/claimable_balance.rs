@@ -1,6 +1,4 @@
 //! Preview 01 claimable-balance card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/claimable-balance.tsx`.
 
 use iced::Widget;
 use iced::widget::space;

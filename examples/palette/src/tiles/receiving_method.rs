@@ -1,6 +1,4 @@
-//! Preview-02 receiving-method card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/receiving-method.tsx`.
+//! Receiving method card.
 
 use iced::Fill;
 use iced::Widget;

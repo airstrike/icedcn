@@ -1,7 +1,5 @@
-//! Skeleton loading placeholder.
-//!
-//! Mirrors shadcn's `<Skeleton>` primitive: a rounded muted block whose
-//! dimensions are supplied by the call site. The fill pulses on a two-second cycle while the placeholder is visible.
+//! A rounded loading placeholder. Set its dimensions to match the expected content. The fill
+//! pulses on a two-second cycle while visible.
 
 use std::f32::consts::PI;
 use std::marker::PhantomData;

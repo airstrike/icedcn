@@ -95,13 +95,7 @@ pub struct Radius {
     pub bottom_left: f32,
 }
 
-/// Build a [`Radius`] from anything convertible to one — `f32`, the
-/// `Size` enum (via `From<Size> for Radius`), `[f32; 4]`, etc. Reads
-/// like Tailwind's `rounded-lg` at call sites: `radius(Lg)`.
-///
-/// Diverges from iced's `border::radius(impl Into<Pixels>)` so that
-/// scale primitives (the `Size` enum from the widget crate) can be
-/// passed directly without a manual `.into()`.
+/// Build a [`Radius`] from a pixel value, a component size, or four corner radii.
 pub fn radius(value: impl Into<Radius>) -> Radius {
     value.into()
 }

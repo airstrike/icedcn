@@ -1,6 +1,4 @@
-//! Preview-02 syncing-state card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/syncing-state.tsx`.
+//! Syncing state card.
 
 use iced::Fill;
 use iced::Widget;

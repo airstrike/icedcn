@@ -1,4 +1,4 @@
-//! Card components per shadcn nova.
+//! Cards with header, content, and footer sections.
 //!
 //! Container component with header / content / footer slots and three
 //! header-internal slots: `title`, `description`, and `action`. The header
@@ -57,10 +57,7 @@ pub fn card<'a, Message>(
         .style(|t| container::card(t).into())
 }
 
-/// A `<CardTitle>`-shaped Text — `text-base font-medium leading-snug`,
-/// foreground color. Use directly when composing a header by hand;
-/// [`header`] applies this to its first argument automatically when given
-/// a string.
+/// Medium-weight card title. A string passed to [`header`] receives this style automatically.
 pub fn title<'a>(content: impl IntoFragment<'a>) -> text::Text<'a> {
     text::Text::new(content)
         .size(text::size::BASE)
@@ -69,35 +66,21 @@ pub fn title<'a>(content: impl IntoFragment<'a>) -> text::Text<'a> {
         .style(theme::text::Foreground)
 }
 
-/// A `<CardDescription>`-shaped Text — `text-sm text-muted-foreground`.
-/// Equivalent to [`text::muted`]; exposed under `card::` so the slot
-/// vocabulary mirrors shadcn's API surface (`<CardTitle>` /
-/// `<CardDescription>` / `<CardAction>` round-trip cleanly).
+/// Creates muted description text for a card with a 20-pixel line height.
 pub fn description<'a>(content: impl IntoFragment<'a>) -> text::Text<'a> {
     text::muted(content).line_height(iced_core::Pixels(20.0))
 }
 
-/// A `<CardAction>`-shaped passthrough. shadcn positions the action via the
-/// CSS-grid `col-start-2 row-span-2 row-start-1 self-start justify-self-end`
-/// — top-right corner of the header. Iced doesn't have a CSS-grid analog,
-/// so the [`Header`] builder achieves the same layout by pushing the action
-/// flush-right with a flexible title column.
-///
-/// This constructor is an identity — it documents the slot, lets call sites
-/// read symmetrically (`card::action(...)` next to `card::title(...)` /
-/// `card::description(...)`), and reserves a hook for any future
-/// action-specific styling.
+/// Marks content as a card action. Pass it to [`Header::action`] to place it at the top right
+/// of the header.
 pub fn action<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
     content.into()
 }
 
 /// Builder for a card header.
 ///
-/// Returned by [`header`]. Title is supplied at construction; description
-/// and action are independently optional via [`Header::description`] and
-/// [`Header::action`]. Renders as a column (or row, when an action is
-/// present) with `px-4` horizontal padding and `gap-1` (4px) between title
-/// and description, matching nova's `CardHeader` cascade.
+/// Start with a title and optionally add a description or action. The header stacks title and
+/// description and aligns the action to their right.
 pub struct Header<'a, Message> {
     title: Slot<'a, Message>,
     inset: f32,
@@ -140,10 +123,7 @@ impl<'a, Message: 'a> Header<'a, Message> {
         self
     }
 
-    /// Set the action slot — typically a top-right link, button, or badge.
-    /// shadcn pins the action via `col-start-2 row-span-2 self-start
-    /// justify-self-end`; the rendered Header pushes it flush-right with
-    /// a flexible title column inside a row.
+    /// Places a link, button, badge, or other action at the top right of the header.
     pub fn action(mut self, action: impl Into<Slot<'a, Message>>) -> Self {
         self.action = Some(action.into());
         self
@@ -180,9 +160,7 @@ impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
             text_col = text_col.push(d.compose());
         }
 
-        // When an action is present, place it at the end of a row so it sits
-        // flush against the right edge of the inner padded rect — the iced
-        // analog of shadcn's `col-start-2 ... justify-self-end` grid pin.
+        // The flexible title column pushes the action to the right edge.
         let padded_inner: Element<'a, Message> = match action {
             Some(a) => Row::new()
                 .push(text_col.boxed())

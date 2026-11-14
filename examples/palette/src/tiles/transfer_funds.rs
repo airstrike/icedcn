@@ -1,6 +1,4 @@
-//! Preview-02 transfer-funds card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/transfer-funds.tsx`.
+//! Transfer funds card.
 
 use iced::Widget;
 use iced::widget::space;

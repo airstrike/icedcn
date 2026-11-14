@@ -12,11 +12,8 @@
 //! etc.), but the underlying type is the one defined here so values cross
 //! module boundaries seamlessly.
 
-/// Layout orientation for a widget that has a single axis prop.
-///
-/// Mirrors shadcn's `<Field orientation="...">` / `<ButtonGroup orientation="...">`
-/// prop. Each widget picks its own default (Field defaults to Vertical;
-/// ButtonGroup to Horizontal) — this enum is just the value space.
+/// Layout axis for fields and button groups. Fields default to vertical and button groups to
+/// horizontal.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Orientation {
     /// Stacked top-to-bottom (Field's default).

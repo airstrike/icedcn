@@ -1,4 +1,4 @@
-//! DropdownMenu: shadcn/ui faithful port (Radix `DropdownMenu`).
+//! A menu opened from a button or other trigger.
 //!
 //! A [`Popover`] holding a menu: its panel is as wide as its trigger (at
 //! least 128px) with `p-1`, and it is modal, so the page ignores the
@@ -46,7 +46,7 @@ pub fn dropdown_menu<'a, Message>(
     content: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
 ) -> DropdownMenu<'a, Message> {
     DropdownMenu {
-        // `w-(--radix-dropdown-menu-trigger-width) min-w-32 p-1`.
+        // Match the trigger width with a 128-pixel minimum and four pixels of padding.
         popover: popover::popover(trigger, content)
             .trigger_width(128.0)
             .padding(4)
@@ -92,7 +92,7 @@ impl<'a, Message> DropdownMenu<'a, Message> {
         self
     }
 
-    /// Set the menu's width instead of the trigger's (`className="w-56"`).
+    /// Set an explicit menu width. By default the menu matches the trigger width.
     pub fn width(mut self, width: impl Into<Pixels>) -> Self {
         self.popover = self.popover.width(width);
         self

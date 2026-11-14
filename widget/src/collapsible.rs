@@ -1,9 +1,5 @@
-//! Collapsible — shadcn/ui faithful port (Radix `Collapsible`).
-//!
-//! An iced `Component` that owns its open state. Its content is a closure
-//! receiving a [`Handle`], which places the trigger and the content wherever
-//! the layout puts them, like Radix's `CollapsibleTrigger asChild` and
-//! `CollapsibleContent`:
+//! A disclosure with an open state. Its content closure receives a [`Handle`] for placing the
+//! trigger and expandable content in your layout.
 //!
 //! ```ignore
 //! use icedxdy::widget::{button, collapsible, column, row, text};
@@ -142,8 +138,7 @@ impl Handle {
         self.disabled
     }
 
-    /// Make `child` toggle the collapsible when pressed, like
-    /// `<CollapsibleTrigger asChild>`. The child keeps its own handlers.
+    /// Pressing the child toggles the disclosure. The child keeps its own handlers.
     pub fn trigger<'a, Message: 'a>(
         &self,
         child: impl Into<Slot<'a, Message>>,
@@ -153,8 +148,7 @@ impl Handle {
         Slot::new(Trigger { child })
     }
 
-    /// Show `child` only while the collapsible is open, like
-    /// `<CollapsibleContent>`.
+    /// Show `child` only while the disclosure is open.
     pub fn content<'a, Message: 'a>(
         &self,
         child: impl Into<Slot<'a, Message>>,

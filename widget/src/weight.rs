@@ -1,6 +1,6 @@
 //! Font weight for icedxdy components.
 
-/// Font weight, matching CSS/shadcn conventions.
+/// Font weight used by text and control labels.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Weight {
     /// 100

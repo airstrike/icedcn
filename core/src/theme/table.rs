@@ -25,11 +25,8 @@ pub fn default(theme: &Theme) -> Style {
     }
 }
 
-/// Catalog implementation for sweeten's enhanced table widget. Sweeten's
-/// `Style` adds `border`, `sticky_background`, and `header_underline` on
-/// top of the stock iced fields — this default mirrors the nova table
-/// look (separator + border share `palette.border`, sticky header sits
-/// on `palette.background`, no underline).
+/// Style for the enhanced table. The sticky header uses the background color, and the row
+/// separators and outer border share the border color.
 #[cfg(feature = "sweeten")]
 pub mod sweeten_table {
     use sweeten::widget::table::{Catalog, Style, StyleFn};

@@ -15,9 +15,7 @@
 //!
 //! # Variants
 //!
-//! shadcn's `variant` prop is a style: `.style(button::Outline)`. The
-//! variant unit structs below are re-exported from the theme and take
-//! tweaks (`button::Outline + Bg(...)`) like any other style.
+//! Choose a variant with `.style(button::Outline)` or customize a variant with theme tweaks.
 
 mod element;
 pub mod group;

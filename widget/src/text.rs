@@ -29,7 +29,7 @@ use crate::rule;
 use icedxdy_core::Theme;
 use icedxdy_core::theme;
 
-/// Font sizes based on Tailwind/shadcn scale
+/// Text size presets in logical pixels.
 pub mod size {
     pub const XS: f32 = 12.0;
     pub const SM: f32 = 14.0;
@@ -310,10 +310,7 @@ pub fn small<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
         .style(theme::text::Foreground)
 }
 
-/// Field-style label typography (Tailwind `text-sm font-medium leading-none`).
-/// `leading-none` (`line_height(1.0)`) strips the invisible line-height
-/// padding that otherwise throws off vertical alignment math in horizontal
-/// Field layouts — mirroring shadcn's `<Label>` cascade exactly.
+/// Medium-weight field label with a tight line height for alignment beside controls.
 pub fn label<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     Text::new(content)
         .size(size::SM)
@@ -326,10 +323,7 @@ pub fn muted<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     Text::new(content).size(size::SM).style(theme::text::Muted)
 }
 
-/// Field-style error message typography
-/// (Tailwind `text-sm text-destructive leading-none`). `leading-none`
-/// matches shadcn's `<FieldError>` typography and keeps the vertical
-/// rhythm consistent with the label above it.
+/// Field error text in the destructive color, with the same tight line height as the label.
 pub fn error<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     Text::new(content)
         .size(size::SM)
@@ -343,11 +337,8 @@ pub fn xs<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
         .style(theme::text::Foreground)
 }
 
-/// A blockquote: 2px left rule + 24px gap + italic body, all in one
-/// widget. Mirrors shadcn nova's `border-l-2 pl-6 italic` cascade.
-///
-/// Vertical spacing (`mt-6` in shadcn) is the caller's responsibility —
-/// drive it from the enclosing column's `.spacing(...)`.
+/// An italic blockquote with a two-pixel left rule and a 24-pixel inset. Set vertical spacing
+/// on the enclosing column.
 pub struct Blockquote<'a> {
     body: Text<'a>,
 }
@@ -407,13 +398,8 @@ impl<'a, Message: 'a> Compose<Message> for Blockquote<'a> {
     }
 }
 
-/// An inline `code`-styled fragment. Shadcn classlist:
-/// `relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono
-/// text-sm font-semibold`.
-///
-/// Font + size + weight live on the returned `Text`; `bg-muted` +
-/// padding + radius are container-level — the call site wraps this
-/// in a small container.
+/// Semibold monospace text for inline code. Wrap it in a container to add padding, a
+/// background, or rounded corners.
 pub fn inline_code<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     Text::new(content)
         .size(size::SM)
@@ -421,15 +407,8 @@ pub fn inline_code<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
         .style(theme::text::Foreground)
 }
 
-/// A bulleted list. Mirrors shadcn nova's
-/// `<ul class="ml-6 list-disc [&>li]:mt-2">` cascade — 24px left
-/// indent, 8px gap between items, body-size foreground text with a
-/// hard `\u{2022}` prefix per item (the closest iced approximation
-/// of native browser bullets).
-///
-/// Vertical spacing around the list (`my-6` in shadcn) is the
-/// caller's responsibility — drive it from the enclosing column's
-/// `.spacing(...)`.
+/// A bulleted list with a 24-pixel indent and eight pixels between items. Set surrounding
+/// spacing on the enclosing column.
 pub struct List<'a, Message> {
     items: Vec<Text<'a>>,
     _phantom: PhantomData<Message>,

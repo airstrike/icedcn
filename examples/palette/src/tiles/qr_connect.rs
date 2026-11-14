@@ -1,6 +1,4 @@
 //! Preview 01 QR-connect card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/qr-connect.tsx`.
 
 use iced::Widget;
 use iced::{Center, Color, Fill, Padding};

@@ -1,6 +1,4 @@
-//! Preview-02 sidebar-nav card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/sidebar-nav.tsx`.
+//! Sidebar nav card.
 
 use iced::Fill;
 use icedxdy::widget::{column, row, sidebar, text};

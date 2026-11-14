@@ -1,21 +1,5 @@
-//! Avatar styling
-//!
-//! Mirrors shadcn nova's three-size avatar shape: `Sm` = 24px, `Default` =
-//! 32px, `Lg` = 40px (`size-6`, `size-8`, `size-10`). The visual atom set
-//! includes the fallback surface and legacy container ring styles. The
-//! Avatar widget paints its inset edge and outer rings separately. The
-//! shared surface values are
-//!
-//! - the fallback bg (`bg-muted`) and fallback fg (`text-muted-foreground`),
-//!   shared with our muted palette;
-//! - a 2px outer ring (in group context) drawn as a `border-color =
-//!   neutral.base` outset on the circular container.
-//!
-//! Avatar's container border is *circular* (PILL_RADIUS clamp); a separate
-//! Spec layer is overkill at this stage, so the variants ship as
-//! ready-to-use `(diameter, font_size, badge_diameter, badge_icon_size)`
-//! geometry tuples plus a single `style(theme)` resolver for the fallback
-//! container.
+//! Avatar geometry and fallback colors. Small, default, and large avatars measure 24, 32, and
+//! 40 pixels across. The widget paints the inset edge and outer group ring separately.
 
 use super::Theme;
 use super::container::Style;
@@ -45,16 +29,11 @@ pub struct Lg;
 pub struct Geometry {
     /// Diameter of the circular avatar surface (`size-6` / `size-8` / `size-10`).
     pub diameter: f32,
-    /// Font size for the fallback initials text. Matches shadcn's
-    /// `text-sm` (14) on default/lg and `text-xs` (12) on sm.
+    /// Font size for fallback initials, in logical pixels.
     pub font_size: f32,
-    /// Diameter of the AvatarBadge dot when shown in this avatar's corner.
-    /// Matches shadcn's `size-2` / `size-2.5` / `size-3` for sm/default/lg.
+    /// Diameter of the corner badge, in logical pixels.
     pub badge_diameter: f32,
-    /// Edge length of an icon rendered inside the AvatarBadge for this
-    /// avatar. Matches shadcn's `[&>svg]:size-2` cascade — note that on
-    /// the `sm` size shadcn hides the icon entirely (`[&>svg]:hidden`);
-    /// callers should treat `badge_icon_size == 0.0` as the hide signal.
+    /// Icon size inside the corner badge. A zero size hides the icon on small avatars.
     pub badge_icon_size: f32,
 }
 
@@ -103,13 +82,8 @@ impl From<Lg> for Geometry {
     }
 }
 
-/// Container style for the avatar's circular surface.
-///
-/// Mirrors shadcn `bg-muted text-muted-foreground` for the fallback layer.
-/// `ring` controls the 2px outer border that AvatarGroup adds via
-/// `*:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:ring-background` —
-/// This container-style helper retains the legacy inset border representation.
-/// The Avatar widget uses `false` and paints its group ring outside the bounds.
+/// Container style for the circular fallback surface. Set `ring` to draw a two-pixel inset
+/// border. Grouped avatars paint their ring outside the bounds.
 pub fn fallback_style(theme: &Theme, ring: bool) -> Style {
     let p = theme;
     Style {
@@ -130,10 +104,7 @@ pub fn fallback_style(theme: &Theme, ring: bool) -> Style {
     }
 }
 
-/// Style for the AvatarBadge corner dot — shadcn `bg-primary
-/// text-primary-foreground ring-2 ring-background` (the inner badge always
-/// has a 2px ring against the page background so it reads as a separate
-/// dot punched into the avatar corner).
+/// Corner badge style with primary fill and a two-pixel ring in the background color.
 pub fn badge_style(theme: &Theme) -> Style {
     let p = theme;
     Style {

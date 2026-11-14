@@ -14,7 +14,7 @@ use super::widget;
 /// Default girth — `h-1` in nova (4px).
 const HEIGHT: f32 = 4.0;
 
-/// A styled progress bar matching shadcn/ui's `Progress` component.
+/// A styled progress bar with an animated fill.
 ///
 /// Animates internally: each render whose `value` differs from the
 /// currently-displayed value triggers a 150ms cubic-bezier ease toward

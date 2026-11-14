@@ -1,7 +1,5 @@
-//! Textarea - shadcn/ui port over iced's `text_editor`.
-//!
-//! A multi-line field with the Input's look, at least 64px tall
-//! (`min-h-16`) and growing with its text (`field-sizing-content`).
+//! A multiline field built on iced’s `text_editor`. It starts at a minimum height of 64 pixels
+//! and grows with its text.
 //!
 //! # Example
 //!
@@ -19,7 +17,7 @@
 //!
 //! # Variants
 //!
-//! `aria-invalid` is a style: `.style(textarea::Invalid)`.
+//! Use `.style(textarea::Invalid)` to indicate a validation error.
 
 mod widget;
 
@@ -34,10 +32,8 @@ pub use icedxdy_core::theme::textarea::{Default, Invalid};
 
 /// A multi-line text field.
 ///
-/// Radix-style state, like Input: uncontrolled with
-/// [`default_value`](Self::default_value) (the text lives in the widget
-/// tree), or controlled with [`value`](Self::value) plus
-/// [`on_input`](Self::on_input).
+/// Use [`default_value`](Self::default_value) to initialize text stored in the widget, or
+/// [`value`](Self::value) and [`on_input`](Self::on_input) to manage it in the application.
 pub struct Textarea<'a, Message> {
     placeholder: String,
     value: Option<String>,

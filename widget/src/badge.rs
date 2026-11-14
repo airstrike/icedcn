@@ -22,7 +22,7 @@
 //!
 //! # Variants
 //!
-//! shadcn's `variant` prop is a style: `.style(badge::Outline)`.
+//! Pass a variant such as `badge::Outline` to `.style(..)`.
 
 mod widget;
 
@@ -151,10 +151,8 @@ impl<'a, Message: 'a> Badge<'a, Message> {
 }
 
 impl<'a, Message: Clone + 'a> Badge<'a, Message> {
-    /// Make the badge clickable, emitting `message` on a release inside it.
-    ///
-    /// Mirrors shadcn's `<Badge asChild><a href=...>` pattern: the badge
-    /// keeps its visual styling and gains pointer-cursor + click semantics.
+    /// Show a pointer cursor and emit `message` when the user releases the badge inside its
+    /// bounds.
     pub fn on_press(mut self, message: Message) -> Self {
         self.on_press = Some(message);
         self

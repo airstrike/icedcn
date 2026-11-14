@@ -168,12 +168,7 @@ pub fn code_block_panel(theme: &Theme) -> Style {
     }
 }
 
-/// Inset-variant sibling of `super::sidebar::inset` — the content area
-/// when paired with an Inset sidebar. Per shadcn nova
-/// (`sidebar.tsx::SidebarInset`, the `peer-data-[variant=inset]` branch):
-/// `bg-background rounded-xl shadow-sm`. We approximate `rounded-xl` with
-/// `radius::LG` (closest available) and add a 1px border for legibility
-/// in flat themes.
+/// Content surface for an inset sidebar, with rounded corners and a one-pixel border.
 pub fn sidebar_inset(theme: &Theme) -> Style {
     let p = theme;
     Style {
@@ -192,11 +187,8 @@ pub fn sidebar_inset(theme: &Theme) -> Style {
     }
 }
 
-/// Vertical "to top" gradient fade for the View Code overlay — matches
-/// shadcn's `linear-gradient(to top, var(--color-code),
-/// color-mix(in oklab, var(--color-code) 60%, transparent), transparent)`.
-/// Stop 0.0 (top) = transparent, 0.5 (middle) = 60% alpha, 1.0 (bottom) =
-/// solid code bg.
+/// View Code overlay gradient. The top is transparent, the midpoint uses 60% opacity, and the
+/// bottom uses the solid code background.
 pub fn code_fade_overlay(theme: &Theme) -> Style {
     use iced_core::gradient::Linear;
     use std::f32::consts::PI;

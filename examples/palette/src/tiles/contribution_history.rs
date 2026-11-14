@@ -1,6 +1,4 @@
 //! Preview 01 contribution history card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/contribution-history.tsx`.
 
 use iced::Widget;
 use iced::{Center, Fill, Padding};

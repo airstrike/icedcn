@@ -1,6 +1,4 @@
-//! Preview-02 preferences card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/preferences.tsx`.
+//! Preferences card.
 
 use iced::Widget;
 use iced::widget::space;

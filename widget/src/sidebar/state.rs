@@ -7,7 +7,7 @@ pub enum Side {
     Right,
 }
 
-/// How the sidebar collapses (shadcn's `collapsible` prop).
+/// How the sidebar collapses.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Collapsible {
     /// Slides out of view entirely.

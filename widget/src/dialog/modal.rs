@@ -169,8 +169,8 @@ where
         }
         focus.mounted = open;
         focus.placement = Some(self.placement);
-        // Child 0 is the base, child 1 the panel while open. Closing drops
-        // the panel's tree, so it mounts fresh next time, as in Radix.
+        // Child zero holds the base. Closing drops the panel’s widget tree, so it starts fresh
+        // next time.
         match &mut self.panel {
             Some(panel) => tree.diff_children(&mut [&mut self.base, panel]),
             None => tree.diff_children(std::slice::from_mut(&mut self.base)),

@@ -1,6 +1,4 @@
-//! Preview-02 loading-card card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/loading-card.tsx`.
+//! Loading card.
 
 use iced::Fill;
 use iced::Widget;

@@ -86,9 +86,8 @@ pub struct Style {
     pub font: Option<Font>,
 }
 
-/// Maps highlighter capture indices to visual styles. Implementations like
-/// [`Light`] / [`Dark`] live in this module; downstream crates can
-/// implement their own (e.g., a shadcn-faithful GitHub theme).
+/// Maps syntax captures to visual styles. Implement this trait to provide a custom highlighting
+/// theme.
 pub trait Theme {
     fn style(&self, capture: u32) -> Style;
 }
@@ -280,11 +279,7 @@ fn unstyled_line(line: &str) -> Line {
 
 // --- Themes (data) --------------------------------------------------------------
 //
-// Themes are *data*: a [`Map`] from capture index → [`Style`]. The two
-// built-in maps ([`github_light`], [`github_dark`]) hold the palettes
-// shadcn's nova style ships via Shiki's `github-light-default` and
-// `github-dark` themes (verified from
-// shikijs/textmate-grammars-themes — no nova-specific overrides).
+// The browser example loads its GitHub Light Default and GitHub Dark palettes from Shiki.
 //
 // Custom themes:
 //
@@ -350,8 +345,8 @@ pub fn fg_italic(hex: u32) -> Style {
 /// [`CAPTURE_NAMES`]. Captures not explicitly set inherit the renderer's
 /// default text colour.
 ///
-/// Build via [`Map::from_entries`] or one of the named constructors
-/// ([`github_light`], [`github_dark`]).
+/// Build a map with [`Map::from_entries`], load a theme with [`Map::from_vscode_theme`],
+/// or convert an icedxdy theme with `Map::from`.
 #[derive(Debug, Clone)]
 pub struct Map {
     styles: Vec<Style>,
@@ -645,8 +640,7 @@ impl Map {
     /// etc. are ignored.
     ///
     /// For each tree-sitter capture in [`CAPTURE_NAMES`], we look up the
-    /// best-matching TM scope rule using [`CAPTURE_TO_TM_SCOPES`]'s
-    /// fallback chain, then use that rule's foreground + fontStyle.
+    /// first matching TextMate scope and apply its foreground color and font style.
     pub fn from_vscode_theme(json: &str) -> Result<Self, serde_json::Error> {
         let theme: VsCodeTheme = serde_json::from_str(json)?;
         let mut entries = Vec::with_capacity(CAPTURE_TO_TM_SCOPES.len());
@@ -665,12 +659,8 @@ impl Map {
 
 // --- Default Map derived from the icedxdy palette -------------------------------
 
-/// Build a default [`Map`] from an [`icedxdy_core::Theme`] palette. Used
-/// as the fallback when the application hasn't supplied a custom code
-/// theme — colours come from the same semantic tokens the rest of the
-/// UI uses (primary, accent, destructive, muted, …) so the code block
-/// looks coherent with the surrounding app chrome regardless of which
-/// shadcn-style theme is active.
+/// Build a default [`Map`] from an [`icedxdy_core::Theme`]. The fallback uses semantic colors
+/// from the application theme.
 ///
 /// Apps that want a specific aesthetic (GitHub Light/Dark, Monokai,
 /// etc.) should ship their own VS Code theme JSON and parse it via
@@ -680,18 +670,14 @@ impl From<&icedxdy_core::Theme> for Map {
         let p = theme;
         let is_dark = p.neutral.base.l < 0.5;
 
-        // Hybrid mapping — TN's blue-family nuance for the categories
-        // where it matters (paths read distinctly from punctuation reads
-        // distinctly from `use`-style keywords) layered with shadcn's
-        // colour personality (purple functions, green types, red
-        // keywords, blue strings, orange attributes) for the rest.
+        // Distinguish paths, fields, and punctuation with three variations on the info color.
         //
         // Three TN-style blue tones derived from `info.base`:
         //   teal    (info −25° hue)                — paths/namespaces
         //   cyan    (info −20°, +0.10 L, light desat) — struct field access
         //   subtle  (info −15°, +0.20 L, half C)   — punctuation, `use`/`mod`
         //
-        // Plus four shadcn accents:
+        // Semantic accent colors:
         //   red     destructive                   — keywords, `self`, escapes
         //   blue    info                          — strings, numbers, constants
         //   green   success                       — types, constructors, tags

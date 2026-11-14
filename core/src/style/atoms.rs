@@ -86,8 +86,7 @@ pub fn focus(s: BoxedStyleFn) -> BoxedStyleFn {
     gate(s, Status::Focused)
 }
 
-/// Apply `s` only when the widget is being pressed. Matches shadcn's
-/// `active:` Tailwind class — currently-pressed, NOT resting.
+/// Apply `s` only while the widget is pressed.
 pub fn active(s: BoxedStyleFn) -> BoxedStyleFn {
     gate(s, Status::Pressed)
 }

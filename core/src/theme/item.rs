@@ -1,9 +1,6 @@
 //! Item styling.
 //!
-//! Nova `itemVariants`: `default` is `border-transparent`, `outline` is
-//! `border-border`, `muted` is `border-transparent bg-muted/50`, all on a
-//! `rounded-lg border` box. `itemMediaVariants`: `default` and `icon` leave
-//! the content unframed; `image` is `size-10 overflow-hidden rounded-sm`.
+//! Items can use an outline or a muted fill. Image media is clipped to a rounded square.
 
 use std::ops::Add;
 

@@ -1,6 +1,4 @@
-//! Preview-02 social-links card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/social-links.tsx`.
+//! Social links card.
 
 use iced::Fill;
 use iced::Widget;

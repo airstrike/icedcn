@@ -1,6 +1,4 @@
-//! Design tokens for spacing, sizing, and border radius
-//!
-//! Based on shadcn/ui design system values.
+//! Design tokens for spacing, sizing, and corner radii.
 
 /// Border radius values
 ///
@@ -27,9 +25,7 @@ impl Radius {
     pub const FULL: f32 = 9999.0;
 }
 
-/// Spacing values in pixels
-///
-/// Based on Tailwind's spacing scale (1 unit = 4px)
+/// Spacing in logical pixels on a four-pixel scale.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Spacing;
 
@@ -64,9 +60,7 @@ impl Spacing {
     pub const XL8: f32 = 64.0;
 }
 
-/// Font size values in pixels
-///
-/// Based on Tailwind's font size scale
+/// Font sizes in logical pixels.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct FontSize;
 
@@ -91,9 +85,7 @@ impl FontSize {
     pub const XL4: f32 = 36.0;
 }
 
-/// Component size values (heights) in pixels
-///
-/// Based on shadcn button size specifications
+/// Component heights in logical pixels.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Size;
 

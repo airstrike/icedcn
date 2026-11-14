@@ -1,7 +1,5 @@
 //! Button styling — nova style
 //!
-//! See plan/nova-style-guide.md for full spec.
-//!
 //! `Style` is OKLCH-native — variants and tweaks operate on our `Color`,
 //! `Border`, `Shadow`, `Background` end-to-end. Conversion to iced's sRGB
 //! types happens once at the catalog boundary (`From<Style> for
@@ -98,8 +96,7 @@ fn is_dark(theme: &Theme) -> bool {
     theme.neutral.base.l < 0.5
 }
 
-/// Default/primary: bg-primary text-primary-foreground
-/// Nova: NO hover fill change on buttons ([a]:hover only applies inside <a>)
+/// Primary button fill and text colors. The fill stays constant on hover.
 pub fn default(theme: &Theme, status: Status) -> Style {
     let p = theme;
 
@@ -163,7 +160,7 @@ pub fn outline(theme: &Theme, status: Status) -> Style {
     let p = theme;
     let dark = is_dark(theme);
 
-    // Dark: input is oklch(1 0 0 / 15%). Tailwind /30 and /50 MULTIPLY the alpha.
+    // Multiply the opacity by the input color’s existing alpha to preserve its translucency.
     let input_a = p.input.a;
     let (bg, border_color, hover_bg) = if dark {
         (
@@ -326,18 +323,12 @@ pub fn sidebar(theme: &Theme, status: Status) -> Style {
     }
 }
 
-/// Sidebar active: currently selected sidebar item
-/// Matches nova `SidebarMenuButton` `data-active:bg-sidebar-accent
-/// data-active:text-sidebar-accent-foreground` — uses sidebar palette
-/// (subtler than main accent, especially in dark mode).
+/// Selected navigation button with an accent background, border, and foreground.
 pub fn sidebar_active(theme: &Theme, status: Status) -> Style {
     let p = theme;
 
-    // Docs-site override (`.nova/apps/v4/components/docs-sidebar.tsx`):
-    // `data-[active=true]:border-accent data-[active=true]:bg-accent`. The
-    // accent is the main palette accent (NOT sidebar.accent) — visibly
-    // stronger than the inactive hover surface so the current selection
-    // stands out from the row a user is mousing over.
+    // The selected navigation item uses the main accent so it stands out against the sidebar
+    // hover color.
     let base = Style {
         background: Some(p.accent.base.into()),
         text_color: p.accent.foreground,
@@ -390,9 +381,7 @@ pub fn link(theme: &Theme, status: Status) -> Style {
 
 // --- Variant unit structs ----------------------------------------------------
 //
-// Tag types matching shadcn variant names. Each impls `Add<T: Into<Tweak>>` to
-// produce a `Spec` (tweak-augmented variant) and `From<Variant> for Spec` for
-// implicit promotion. The lowercase fns above remain as the resolution backing.
+// Variant tags convert to a `Spec`. Adding a tweak produces a customized variant.
 
 /// Default/primary button variant (`bg-primary`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -863,8 +852,7 @@ impl From<SidebarActive> for style::StyleFn<fn(Palette, status::Status) -> style
     }
 }
 
-/// Outline button intrinsic default. Reads multi-palette slots
-/// (neutral / muted / input) per shadcn's light/dark spec.
+/// Outline button defaults for light and dark palettes.
 pub fn intrinsic_outline(theme: &Theme, status: status::Status) -> style::Style {
     let dark = theme.neutral.is_dark;
     let input_a = theme.input.a;
@@ -990,9 +978,7 @@ where
     }
 }
 
-// Bare `Tint` dispatches to the per-variant impl that matches shadcn-nova's
-// recipe for that role (destructive's alpha-tinted bg differs from the
-// filled-solid default). Tints without a dedicated impl fall through.
+// A role with a dedicated style resolves its own tint. Other roles use the filled default.
 impl From<style::Tint> for iced_widget::button::StyleFn<'static, Theme> {
     fn from(t: style::Tint) -> Self {
         let inner: fn(Palette, status::Status) -> style::Style = match t {

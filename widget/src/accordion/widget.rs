@@ -1,46 +1,10 @@
-//! Vendored disclosure widget for the accordion suite.
+//! Accordion layout, interaction, and animation. The widget measures the natural height of each
+//! body and clips it to its animated height during drawing. Opening or closing takes 200 ms.
+//! The trigger chevron switches immediately.
 //!
-//! There is no upstream iced or sweeten widget that fits — the closest
-//! precedents are `switch::widget::Toggler` (animated state, but
-//! interpolates between two known scalars: thumb-x positions) and
-//! `progress::widget::ProgressBar` (animated value, but again a single
-//! scalar). Accordion animates the widget's *own height* between 0 and a
-//! measured natural body height. The "measure-but-don't-render" piece is
-//! resolved by always laying out the body (so iced computes its natural
-//! size unconditionally), then constraining the parent layout node's
-//! reported height to `trigger_height + interpolate(0, body_height, t)`
-//! and clipping the body in `draw()` to the same interpolated band.
-//!
-//! # Animation contract
-//!
-//! - **Body open/close**: 200 ms over CSS `ease-out` =
-//!   `cubic-bezier(0, 0, 0.58, 1)` — sourced verbatim from
-//!   `tw-animate-css`'s `--animate-accordion-down/up` tokens
-//!   (`accordion-down|up var(--tw-duration, 200ms) var(--tw-ease, ease-out) ...`).
-//!   See `crate::animation::ease_out`. This is intentionally *different*
-//!   from the project's button-hover / progress easing
-//!   (`cubic-bezier(0.4, 0, 0.2, 1)` over 150ms — shadcn's generic
-//!   `transition-all` default): shadcn's accordion ships its own
-//!   directional ease via the `tw-animate-css` keyframes, and matching
-//!   it requires this curve, not the generic one.
-//! - **Chevron swap**: the wrapper builds the chevron icon into the
-//!   trigger Row at view time based on `is_open` for the item. No
-//!   widget-level rotation animation (shadcn nova ships two icons that
-//!   swap via `group-aria-expanded:hidden` — instantaneous). The body
-//!   height tween supplies the smooth-state-change visual.
-//! - **Disabled**: the trigger label and chevron use `Style::disabled_alpha`.
-//!   An open panel keeps its normal color and interactions.
-//!
-//! # State
-//!
-//! Radix state: the open set lives in the tree state of an uncontrolled
-//! accordion (seeded from its default), or comes from the app each rebuild
-//! when controlled; `diff` syncs the two. A trigger click applies the
-//! [`Mode`] rules with [`Mode::toggle`], stores the new set when
-//! uncontrolled and publishes it in full. Per-item animation bookkeeping
-//! (`last_is_open`, `Animation<bool>`, the cached natural body height) sits
-//! beside it; when the set changes the widget kicks the relevant animations
-//! from `update` and the next layout/draw cycle interpolates accordingly.
+//! An uncontrolled accordion keeps its open items in the widget tree. A controlled accordion
+//! reads the open set from the application. Pressing a trigger applies [`Mode::toggle`] and
+//! publishes the complete new set.
 
 use keyboard::Event::KeyReleased;
 use std::time::Duration;
@@ -71,12 +35,7 @@ use iced_core::Renderer as _;
 use icedxdy_core::Theme;
 use icedxdy_core::theme::accordion::{self, Status};
 
-/// Animation duration. Matches `tw-animate-css`'s
-/// `--animate-accordion-down/up` token, which defaults to
-/// `var(--tw-duration, 200ms)` — this is shadcn's accordion at runtime.
-/// Intentionally not the project's 150ms button-hover standard: shadcn's
-/// accordion uses its own dedicated keyframe pair, and pixel/ms-faithful
-/// parity requires the matching duration.
+/// Duration of the opening and closing animation.
 const TRANSITION_DURATION: Duration = Duration::from_millis(200);
 
 /// Vertical padding around each trigger row (`py-2.5` = 10 px).
@@ -102,13 +61,8 @@ pub struct Item<'a, Message> {
     pub(crate) inset: f32,
 }
 
-/// Whether multiple items can be open simultaneously.
-///
-/// `Single { collapsible: false }` is the only mode that can refuse a
-/// close click — it ensures one item is always open. Shadcn's
-/// `<Accordion type="single">` without `collapsible` matches this. All
-/// six bundled examples pass `collapsible`, so the wrapper defaults to
-/// `Single { collapsible: true }`.
+/// Whether several items can be open together. In single mode, disabling collapse prevents the
+/// user from closing the open item.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
     /// At most one item open. `collapsible = true` allows zero open.
@@ -819,7 +773,6 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
 
             // ----- divider ---------------------------------------------
             // Paint the bottom border under every item except the last.
-            // shadcn `not-last:border-b`.
             if item_index < last_index && style.divider.a > 0.0 {
                 let bounds = item_layout.bounds();
                 let line_y = bounds.y + bounds.height - 1.0;

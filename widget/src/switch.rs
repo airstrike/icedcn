@@ -1,9 +1,4 @@
-//! Switch component — shadcn/ui faithful port
-//!
-//! A pill-shaped on/off control with an animated thumb slide. Wraps our
-//! vendored `switch::widget::Toggler` (sweetened from sweeten + a focus
-//! ring painter) so `.style(...)` can carry the focus halo (Tailwind
-//! `ring-*`) end-to-end.
+//! An on/off switch with an animated thumb and optional label.
 //!
 //! # Example
 //!
@@ -41,13 +36,11 @@ pub enum Size {
     Default,
 }
 
-/// A styled switch matching shadcn/ui's Switch component.
+/// A two-state switch.
 ///
-/// Radix state: uncontrolled with [`default_checked`](Self::default_checked)
-/// (the value lives in the widget tree), or controlled with
-/// [`checked`](Self::checked) plus
-/// [`on_checked_change`](Self::on_checked_change). It is enabled unless
-/// [`disabled`](Self::disabled) or a disabled ancestor says otherwise.
+/// Use [`default_checked`](Self::default_checked) to initialize widget-owned state, or
+/// [`checked`](Self::checked) with [`on_checked_change`](Self::on_checked_change) to manage it
+/// in the application. [`disabled`](Self::disabled) and disabled ancestors prevent interaction.
 pub struct Switch<'a, Message> {
     checked: Option<bool>,
     default_checked: bool,

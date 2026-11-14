@@ -6,16 +6,16 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::{field, input, text};
+//! use icedxdy::widget::{checkbox, field, input, text};
 //!
 //! // Terse — strings auto-style with the matching typography helper
 //! // (`text::label`, `text::muted`, `text::error`).
-//! field::field(input("Username", &value).on_input(Message::Changed))
+//! field::field(input("Username").value(&value).on_input(Message::Changed))
 //!     .label("Username")
 //!     .description("Choose a unique username for your account.");
 //!
 //! // Explicit — pass any pre-styled `Text` (or `Slot`) through unchanged.
-//! field::field(input("Email", &value).on_input(Message::Changed))
+//! field::field(input("Email").value(&value).on_input(Message::Changed))
 //!     .label(text::label("Email"))
 //!     .error(text::error("This email is already taken."));
 //!
@@ -31,15 +31,13 @@
 //!
 //! # Label and control
 //!
-//! Like shadcn's `<FieldLabel htmlFor>`, pressing the label activates the
-//! field's control through the [`control`](crate::operation::control)
-//! operations: a checkbox, switch, radio or toggle toggles, an input takes
-//! focus.
+//! Pressing the label activates the control through the [`control`](crate::operation::control)
+//! operations. A checkbox, switch, radio, or toggle updates its selection and a text input
+//! receives focus.
 //!
 //! # Slot order — Vertical (default)
 //!
-//! Rendered top-to-bottom in a `Column` with 8px (`gap-2`) spacing per
-//! shadcn's `field.tsx`:
+//! The field stacks present slots in a column with eight pixels between them.
 //!
 //! 1. `label`
 //! 2. `content` (the input widget)
@@ -48,11 +46,8 @@
 //!
 //! # Slot order — Horizontal
 //!
-//! The content widget sits on the left; a FieldContent column (label +
-//! description + error stacked at 2px gap) sits on the right. Both are
-//! in a `Row` with 8px spacing per shadcn's `flex-row items-center
-//! has-[>[data-slot=field-content]]:items-start`. Matches
-//! `field-checkbox.tsx` and `field-switch.tsx`.
+//! The control sits on the left. The label, description, and error stack to its right, with two
+//! pixels between text elements and eight pixels between the column and control.
 //!
 //! Slots are independently optional; missing slots collapse out of the
 //! column entirely (no empty rows). Composition follows the same
@@ -79,10 +74,8 @@ use crate::marker::{self, Press};
 // the SAME enum, so callers can build `use icedxdy::{Vertical, Horizontal};`
 // once and feed into every `.orientation()` builder via `impl Into`.
 //
-// Field's default is Vertical (shadcn's default field shape used by Input,
-// Textarea, etc. — `<Field><FieldLabel>...</FieldLabel><Input/></Field>`).
-// Horizontal is for compact controls where the label sits inline with the
-// control (Checkbox, Switch — `field-checkbox.tsx`, `field-switch.tsx`).
+// Fields default to a vertical layout. Use a horizontal layout for a label beside a compact
+// control.
 pub use icedxdy_core::Horizontal;
 pub use icedxdy_core::Orientation;
 pub use icedxdy_core::Vertical;
@@ -106,11 +99,7 @@ pub struct Field<'a, Message> {
     width: Option<Length>,
 }
 
-/// A vertical group of fields.
-///
-/// Mirrors shadcn's `FieldGroup`: `flex w-full flex-col gap-5`. Nested
-/// group-specific CSS variants are intentionally deferred until the matching
-/// checkbox/radio group primitives exist.
+/// A full-width vertical group of fields.
 pub struct Group<'a, Message> {
     children: Vec<Slot<'a, Message>>,
     spacing: f32,
@@ -215,7 +204,7 @@ impl<'a, Message: 'a> Field<'a, Message> {
     ///
     /// [`Orientation::Horizontal`]: content on the left, FieldContent column
     /// (label / description / error at 2px gap) on the right, in a Row with
-    /// 8px gap. Matches shadcn's `orientation="horizontal"` on `Field`.
+    /// 8px gap.
     pub fn orientation(mut self, orientation: impl Into<Orientation>) -> Self {
         self.orientation = orientation.into();
         self
@@ -246,17 +235,9 @@ impl<'a, Message: 'a> Field<'a, Message> {
         self
     }
 
-    /// Wrap the entire field in a bordered card container.
-    ///
-    /// While the field's control is checked the card takes a primary-tinted
-    /// border and background (`border-primary/30`, `bg-primary/5`), shadcn's
-    /// `has-data-checked:` cascade on `FieldLabel`; otherwise a 1px
-    /// `border-border` on a transparent background. The control's state is
-    /// read through the `checked` operation
-    /// ([`control`](crate::operation::control)), so the card needs no flag of its own.
-    ///
-    /// The card adds a 1px border around 10px padding (`p-2.5`) on all sides and `rounded-lg`
-    /// corners.
+    /// Wrap the field in a rounded card with a one-pixel border and ten pixels of padding. The
+    /// card reads its control’s checked state with a [`control`](crate::operation::control)
+    /// operation and tints its border and background while checked.
     pub fn card(mut self) -> Self {
         self.card = true;
         self
@@ -373,9 +354,8 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
             ..
         } = contents;
 
-        // The label records presses for the field to activate its control.
-        // A card is a label as a whole (shadcn wraps the field in its
-        // `FieldLabel`), so it marks the entire field below instead.
+        // Pressing the label activates the control. For a card, the entire field acts as the
+        // label.
         let label = label.map(
             |label| -> iced_core::Element<'a, Message, Theme, Renderer> {
                 if card {
@@ -407,9 +387,6 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
         } else {
             match orientation {
                 Orientation::Vertical => {
-                    // shadcn `field.tsx` line 55: `flex w-full gap-2` — 8px between
-                    // every present slot. Composition follows the conditional-push
-                    // pattern `alert::Alert::compose` uses.
                     let mut col = iced_widget::Column::new().spacing(8);
                     if let Some(label) = label {
                         col = col.push(label);
@@ -428,17 +405,8 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
                     col.boxed()
                 }
                 Orientation::Horizontal => {
-                    // shadcn `field.tsx` horizontal: `flex-row items-center
-                    // has-[>[data-slot=field-content]]:items-start`
-                    // The Center → Start switch is driven by FieldContent presence,
-                    // which in shadcn appears when there's a description / error /
-                    // multi-element block alongside the label. We mirror this by
-                    // checking whether description or error is set: with neither,
-                    // the right column is just the label (single-line) and
-                    // alignment stays Center; with either, the right column is a
-                    // multi-line stack and alignment switches to Start.
-                    // Slot order: content (left) — FieldContent column (right).
-                    // FieldContent inner: `gap-0.5` (2px). Row gap: `gap-2` (8px).
+                    // Center a single label beside its control. Align a stack of text to the
+                    // top of the control.
                     let has_right = label.is_some() || description.is_some() || error.is_some();
                     if has_right {
                         let has_field_content = description.is_some() || error.is_some();
@@ -481,9 +449,6 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
 
         let field = widget::Field::new(inner);
         let field: iced_core::Element<'a, Message, Theme, Renderer> = if card {
-            // shadcn FieldLabel: `has-[>[data-slot=field]]:rounded-lg
-            //   has-[>[data-slot=field]]:border *:data-[slot=field]:p-2.5
-            //   has-data-checked:border-primary/30 has-data-checked:bg-primary/5`
             field.card(Card.into(), CardActive.into(), 10).into()
         } else {
             field.into()

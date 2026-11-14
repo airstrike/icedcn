@@ -1,6 +1,5 @@
-//! Menu content: the items, labels, separators and submenus shared by
-//! [`DropdownMenu`](crate::dropdown_menu) and
-//! [`ContextMenu`](crate::context_menu) (Radix's `Menu` parts, nova style).
+//! Menu items, labels, separators, and submenus shared by
+//! [`DropdownMenu`](crate::DropdownMenu) and [`ContextMenu`](crate::ContextMenu).
 //!
 //! ```ignore
 //! use icedxdy::widget::menu;
@@ -17,8 +16,8 @@
 //! ]
 //! ```
 //!
-//! Selecting an item publishes its own message and closes the menu, as
-//! Radix's `onSelect` does; a disabled item does neither.
+//! Selecting an enabled item publishes its message and closes the menu. Disabled items ignore
+//! selection.
 
 use crate::tooltip::interaction::{Interaction, Mode};
 use std::time::Duration;

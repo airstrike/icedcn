@@ -22,9 +22,7 @@
 //!
 //! # Variants
 //!
-//! shadcn's `variant` prop is a style: `.style(alert::Destructive)`. The
-//! style also decides the description color (muted by default,
-//! `destructive/90` for [`Destructive`]).
+//! Pass `alert::Destructive` to `.style(..)` for an error alert.
 
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::text::{IntoFragment, LineHeight, Wrapping};
@@ -114,9 +112,7 @@ impl<'a, Message: 'a> Alert<'a, Message> {
         self
     }
 
-    /// Cap the alert's outer width. Defaults to no cap. Mirrors shadcn's
-    /// `max-w-md` (448px) usage in the docs examples — most call sites
-    /// pass `.max_width(448)` to keep alerts comfortably narrow.
+    /// Set the maximum outer width. By default the alert has no width cap.
     pub fn max_width(mut self, max_width: impl Into<Pixels>) -> Self {
         self.max_width = max_width.into().0;
         self

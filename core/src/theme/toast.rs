@@ -1,10 +1,5 @@
-//! Toast (Sonner) styling - nova style.
-//!
-//! Sonner's toast with shadcn's variables: `--normal-bg: var(--popover)`,
-//! `--normal-text: var(--popover-foreground)`, `--normal-border:
-//! var(--border)`, nova's `rounded-2xl` and Sonner's
-//! `box-shadow: 0 4px 12px #0000001a`. The action button inverts the
-//! toast's colors.
+//! Toast colors, rounded border, and shadow. Action buttons invert the toast’s foreground and
+//! background colors.
 
 use iced_core::Vector;
 

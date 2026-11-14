@@ -1,8 +1,5 @@
-//! Tabs — shadcn/ui faithful port (Radix `Tabs`).
-//!
-//! An iced `Component` that owns the selected value. Its content is a
-//! closure receiving a [`Handle`], which builds the `TabsList`, its
-//! triggers and the `TabsContent` panels wherever the layout puts them:
+//! Tabs for switching between panels. The content closure receives a [`Handle`] for arranging
+//! the tab list, triggers, and panels.
 //!
 //! ```ignore
 //! use icedxdy::widget::{column, tabs};
@@ -23,8 +20,8 @@
 //! // Controlled: .value(&self.tab).on_value_change(Message::TabChanged)
 //! ```
 //!
-//! Only the active panel is mounted, as in Radix. Panels share no widget
-//! state, so switching tabs resets whatever a panel kept in its own tree.
+//! Only the active panel is mounted. Switching tabs resets state kept in the outgoing panel’s
+//! widget tree.
 
 pub(crate) mod list;
 

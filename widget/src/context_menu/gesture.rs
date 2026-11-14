@@ -12,7 +12,7 @@ use iced_core::{
 use iced_widget::Renderer;
 use icedxdy_core::Theme;
 
-/// Radix's touch context gesture allows short taps and vertical scrolling.
+/// Recognizes a long press while allowing short taps and vertical scrolling.
 pub(super) struct LongPress<'a, Message> {
     pub content: Element<'a, Message, Theme, Renderer>,
     pub open: fn(Point) -> Message,

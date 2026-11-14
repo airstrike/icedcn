@@ -107,9 +107,7 @@ where
     slots: Option<Slots>,
     font: Option<Font>,
     width: Length,
-    /// **Deviation from upstream**: explicit input height (Tailwind `h-8`,
-    /// `h-9`, etc.). Defaults to `Length::Shrink` so non-icedxdy users get
-    /// the original "intrinsic" sizing behavior.
+    /// Requested input height. Defaults to intrinsic sizing.
     height: Length,
     padding: Padding,
     size: Option<Pixels>,
@@ -333,13 +331,7 @@ where
         self
     }
 
-    /// Sets the height of the [`TextInput`].
-    ///
-    /// **Deviation from upstream sweeten/iced**: stock iced determines a
-    /// text input's height intrinsically from `padding + text_size +
-    /// line_height`. We add an explicit `.height()` so shadcn-style fixed
-    /// `h-8` / `h-9` / `h-10` field sizing maps cleanly without wrapping
-    /// the widget in an outer container (which would clip the focus ring).
+    /// Set the input height directly to keep the focus ring outside the field bounds.
     pub fn height(mut self, height: impl Into<Length>) -> Self {
         self.height = height.into();
         self
@@ -673,15 +665,8 @@ where
             return;
         }
 
-        // Per shadcn nova, the input has `transition-colors` (150ms,
-        // cubic-bezier(0.4,0,0.2,1)) which animates COLOR properties only —
-        // including `border-color`. The focus RING (`ring-3 ring-ring/50`)
-        // is a `box-shadow` and is NOT in `transition-colors`, so it
-        // appears/disappears INSTANTLY with the focus state.
-        //
-        // We mirror that here: `focus_anim` interpolates the border color
-        // between the unfocused (Active) style and the focused style; the
-        // ring is rendered as-is iff the input is actually focused.
+        // Animate the border color over 150 ms. The focus ring follows the current focus state
+        // immediately.
         let now = Instant::now();
         let active_style = theme.style(&self.class, Status::Active);
         let focused_style = theme.style(&self.class, Status::Focused { is_hovered: false });
@@ -767,15 +752,7 @@ where
             0.0
         };
 
-        // Caret height = the resolved font size (not the full line height).
-        // Sweetened iced upstream paints the caret at `text_bounds.height`
-        // (= `line_height.to_absolute(text_size)`), which for shadcn body
-        // text at 14px / 1.5 line-height gives a ~21px caret while the
-        // visible glyph is ~14px tall — too imposing against the field.
-        // Browser caret behavior is similar (it spans the line box) but
-        // shadcn's nova-faithful preview reads with the caret matched to
-        // the glyph cap — clamp the height and vertically center it
-        // within the line to land on the same visual cadence.
+        // Center the caret in the line box and limit its height to the text size.
         let text_size = self.size.unwrap_or_else(|| renderer.text_size()).0;
         let caret_height = text_size.min(text_bounds.height);
         let caret_y = text_bounds.y + (text_bounds.height - caret_height) * 0.5;
@@ -1741,12 +1718,7 @@ pub enum Side {
     Right,
 }
 
-/// The state of a [`TextInput`].
-///
-/// **Deviation from upstream sweeten/iced**: adds `focus_anim`, an
-/// `Animation<bool>` that drives ring opacity in/out over 150ms with shadcn's
-/// `cubic-bezier(0.4, 0, 0.2, 1)` curve. The derive of `Default` is replaced
-/// with a manual impl so the animation gets its easing/duration set up.
+/// State of a [`TextInput`], including the animation used for focus border transitions.
 #[derive(Debug, Clone)]
 pub struct State<P: text::Paragraph> {
     value: paragraph::Plain<P>,
@@ -2090,14 +2062,7 @@ const CURSOR_BLINK_INTERVAL_MILLIS: u128 = 500;
 /// 1:1 so the rest of this file's pattern matches keep working.
 pub use icedxdy_core::theme::text_input::Status;
 
-/// A focus ring rendered around the text input — a solid colored halo of
-/// `width` pixels painted behind the main fill. Equivalent to CSS
-/// `box-shadow: 0 0 0 {width}px {color}` (Tailwind `ring-*`).
-///
-/// **Deviation from upstream sweeten/iced**: this widget renders a focus ring
-/// in `draw()` when `Style::ring` is `Some`. iced's stock `text_input::Style`
-/// has no ring field; we add it here so our nova-correct focus-visible halo
-/// (`focus-visible:ring-3 ring-ring/50`) renders.
+/// A ring of `width` pixels painted behind the text field.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ring {
     /// Halo color (already alpha-resolved by the catalog).
@@ -2121,7 +2086,7 @@ pub struct Style {
     pub value: Color,
     /// The [`Color`] of the selection of the text input.
     pub selection: Color,
-    /// Optional focus ring (Tailwind `ring-*`). `None` = no halo rendered.
+    /// Optional ring painted around the text field.
     pub ring: Option<Ring>,
 }
 

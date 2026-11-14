@@ -1,5 +1,4 @@
-//! Link widgets to the form controls inside them, the way an HTML
-//! `<label for>` links to its `<input>`.
+//! Operations for activating form controls and reading their checked state.
 //!
 //! A form control (Checkbox, Switch, Radio, Toggle) keeps a [`Control`] in
 //! its tree state and hands it to every [`Operation`] through

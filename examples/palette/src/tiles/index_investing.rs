@@ -1,6 +1,4 @@
-//! Preview-02 index-investing card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/index-investing.tsx`.
+//! Index investing card.
 
 use iced::Fill;
 use iced::Widget;

@@ -1,4 +1,4 @@
-//! ContextMenu: shadcn/ui faithful port (Radix `ContextMenu`).
+//! A menu anchored to the pointer.
 //!
 //! A menu opened at the pointer by a right press inside its trigger area,
 //! over iced's [`anchored`](iced_widget::anchored) overlay anchored to that
@@ -86,8 +86,7 @@ pub fn context_menu<'a, Message>(
 }
 
 impl<'a, Message> ContextMenu<'a, Message> {
-    /// Set the menu's width (`className="w-48"`); by default it fits its
-    /// items, at least 144px wide (`min-w-36`).
+    /// Set a fixed menu width. By default the menu fits its items with a 144-pixel minimum.
     pub fn width(mut self, width: impl Into<Pixels>) -> Self {
         self.width = Some(width.into().0);
         self
@@ -179,8 +178,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             Space::new().boxed()
         };
 
-        // Radix opens the menu to the right of the pointer, its top level
-        // with it, 2px away.
+        // Align the menu’s top edge with the pointer and leave a two-pixel gap to its right.
         anchored(area.boxed(), menu)
             .at(state.open_at.unwrap_or(Point::ORIGIN))
             .side(anchored::Side::Right)

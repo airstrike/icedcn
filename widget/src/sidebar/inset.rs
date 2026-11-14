@@ -1,11 +1,7 @@
 //! SidebarInset — main content area paired with a sidebar.
 //!
-//! Two flavors, mirroring shadcn's `SidebarInset` rendering:
-//!
-//! - [`main`] — the baseline content-area wrapper (`flex-1` equivalent),
-//!   used with `fixed` or `floating` sidebars.
-//! - [`main_styled`] — the inset-variant chrome (`rounded-xl border
-//!   shadow-sm`), paired with [`super::inset`] sidebars.
+//! Use [`main`] for content alongside a fixed or floating sidebar. [`main_styled`] adds the
+//! rounded surface used with an [`inset`](super::inset) sidebar.
 
 use crate::compose::Slot;
 use crate::container::Container;

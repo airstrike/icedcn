@@ -1,4 +1,4 @@
-//! Combobox: shadcn/ui faithful port (`Combobox`).
+//! A searchable list of options with an input and popup.
 //!
 //! An input that filters a list of items anchored below it. Typing or
 //! focusing the input opens the list, which shows the items containing the
@@ -10,10 +10,10 @@
 //! ```ignore
 //! use icedxdy::widget::combobox;
 //!
-//! combobox(["Next.js", "SvelteKit", "Nuxt.js", "Remix", "Astro"])
-//!     .placeholder("Select a framework")
+//! combobox(["Cargo", "Clippy", "Miri", "Rustfmt"])
+//!     .placeholder("Select a tool")
 //!     .width(256)
-//! // Controlled: .value(self.framework.clone()).on_value_change(Message::Framework)
+//! // Controlled: .value(self.tool.clone()).on_value_change(Message::Tool)
 //! ```
 //!
 //! The list is as wide as the input, non-modal (the page keeps the
@@ -246,8 +246,7 @@ impl<'a, Message> Combobox<'a, Message> {
         self
     }
 
-    /// Set the trigger chevron at the input's end (lucide's `chevron-down`
-    /// in shadcn); a text glyph by default.
+    /// Replace the built-in chevron at the end of the input.
     pub fn icon(mut self, icon: impl Fn() -> iced_widget::Text<'a, Theme> + 'a) -> Self {
         self.icon = Some(Box::new(icon));
         self

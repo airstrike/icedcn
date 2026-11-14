@@ -343,7 +343,7 @@ impl Default for State {
             text: Vec::new(),
             hover: crate::core::Animation::new(false)
                 .easing(crate::core::animation::Easing::Custom(
-                    // cubic-bezier(0.4, 0, 0.2, 1) — shadcn's transition-all
+                    // Smooth hover transitions over 150 ms.
                     |t| crate::animation::cubic_bezier(0.4, 0.0, 0.2, 1.0, t),
                 ))
                 .duration(std::time::Duration::from_millis(150)),

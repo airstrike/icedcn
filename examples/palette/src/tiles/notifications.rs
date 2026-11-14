@@ -35,7 +35,7 @@ const NOTES: &[Note] = &[
     Note {
         id: "feedback",
         title: "Send feedback to tech@inboard.ai",
-        body: "Bug reports and pixel-comparison screenshots welcome. We treat shadcn parity as load-bearing.",
+        body: "Include a screenshot and the steps to reproduce the issue when reporting a bug.",
     },
 ];
 

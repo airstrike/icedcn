@@ -1,6 +1,4 @@
-//! Preview-02 empty-explore-catalog card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/empty-explore-catalog.tsx`.
+//! Empty explore catalog card.
 
 use iced::Fill;
 use iced::Widget;

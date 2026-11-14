@@ -1,6 +1,4 @@
-//! Preview-02 recent-transactions card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/recent-transactions.tsx`.
+//! Recent transactions card.
 
 use iced::Widget;
 use iced::{Center, Fill, Right};

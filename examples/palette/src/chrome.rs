@@ -1,4 +1,4 @@
-//! Top chrome bar — shadcn site nav · search · create actions.
+//! Palette preview navigation and controls.
 
 use iced::widget::{space, svg};
 use iced::{Center, Fill};
@@ -97,7 +97,7 @@ pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
         separator(),
         mode_button,
         separator(),
-        button("Open in v0")
+        button("Preview")
             .style(button::Outline)
             .size(Size::Sm)
             .style(chrome_outline_button_style())

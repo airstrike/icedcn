@@ -1,4 +1,4 @@
-//! AlertDialog - shadcn/ui faithful port (Radix `AlertDialog`).
+//! A modal confirmation prompt.
 //!
 //! A [`Dialog`] that interrupts with a question: it has no corner close
 //! button and a press outside it does not dismiss it; its cancel and action
@@ -26,7 +26,7 @@
 //! ```
 //!
 //! `Size::Sm` narrows the panel, centers the header and splits the footer
-//! into equal halves, as shadcn's `size="sm"` does.
+//! into equal halves.
 
 use iced_core::Element;
 use iced_core::Length::Fill;
@@ -94,7 +94,7 @@ pub fn alert_dialog<'a, Message>(
 }
 
 impl<'a, Message> AlertDialog<'a, Message> {
-    /// Set the size: `Default` or `Sm` (shadcn's `size="sm"`).
+    /// Choose the default or small dialog size.
     pub fn size(mut self, size: impl Into<Size>) -> Self {
         self.size = size.into();
         self
@@ -133,8 +133,8 @@ impl Handle {
         self.dialog.trigger(child)
     }
 
-    /// An `AlertDialogCancel`: `button` closes the dialog. shadcn's cancel
-    /// is an outline button by default; style it at the call site.
+    /// Closes the dialog when the supplied button is pressed. Style the button at the call
+    /// site.
     pub fn cancel<'a, Message: Clone + 'a>(
         &self,
         button: Button<'a, Message>,

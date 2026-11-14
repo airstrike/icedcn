@@ -1,4 +1,4 @@
-//! Tailwind-shaped padding tokens.
+//! Padding values for layout builders.
 
 use std::ops::{Add, AddAssign};
 
@@ -6,10 +6,8 @@ use iced_core::Pixels;
 
 use crate::Gap;
 
-/// Edge padding in logical pixels.
-///
-/// Mirrors iced's edge order (`top`, `right`, `bottom`, `left`) while exposing
-/// Tailwind-shaped constants like [`X4`] (`px-4`) and [`Y4`] (`py-4`).
+/// Edge padding in logical pixels, ordered top, right, bottom, left. Use [`X4`] for horizontal
+/// padding and [`Y4`] for vertical padding.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Padding {
     /// Top edge.

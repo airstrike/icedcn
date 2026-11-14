@@ -1,10 +1,5 @@
-//! Breadcrumb navigation — list-of-items API with auto separator interspersing.
-//!
-//! Mirrors shadcn's `<Breadcrumb><BreadcrumbList>...</BreadcrumbList></Breadcrumb>`
-//! composition. The shadcn API exposes seven primitives (`Breadcrumb`,
-//! `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage`,
-//! `BreadcrumbSeparator`, `BreadcrumbEllipsis`); we collapse the JSX nesting
-//! into a flat list of [`Item`] values plus an auto-interspersed separator.
+//! Breadcrumb navigation from a list of [`Item`] values. The widget inserts separators between
+//! the items.
 //!
 //! ```ignore
 //! use icedxdy::widget::breadcrumb;
@@ -16,26 +11,14 @@
 //! ])
 //! ```
 //!
-//! Item kinds:
-//!
-//! - [`item`] — custom content, such as a dropdown menu, inside the trail.
-//! - [`link`] — clickable. Cursor changes to `Pointer`; emits the supplied
-//!   message on left-button release. Mirrors `<BreadcrumbLink>`.
-//! - [`page`] — current page. Renders content as-is, no click affordance.
-//!   Mirrors `<BreadcrumbPage>`.
-//! - [`ellipsis`] — collapsed-items indicator. Pass
-//!   `Some(message)` to make it clickable (e.g. to open a dropdown of the
-//!   elided crumbs); pass `None` for a purely visual placeholder.
-//!   Mirrors `<BreadcrumbEllipsis>`.
+//! Use [`link`] for an earlier page and [`page`] for the current one. Use [`item`] for custom
+//! content such as a menu. [`ellipsis`] accepts an optional message for revealing omitted
+//! pages.
 //!
 //! # Color cascade
 //!
-//! Mirrors shadcn: `<BreadcrumbList>` applies `text-muted-foreground` and
-//! `<BreadcrumbPage>` overrides back to `text-foreground`. Internally we
-//! wrap the row in a Container with the muted text-color cascade and wrap
-//! page items in an inner Container with foreground — so unstyled children
-//! (separator icons, raw-string links) inherit muted at draw time without
-//! callers threading colors manually.
+//! Items and separators inherit the muted text color. The current page uses the foreground
+//! color.
 //!
 //! Links use the native button's keyboard focus, release activation and
 //! animated hover color. Disabled ancestors disable every interactive item.
@@ -227,8 +210,6 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Breadcrumb<'a, Message> {
             separator.unwrap_or_else(|| Box::new(default_separator));
 
         let item_count = items.len();
-        // shadcn `<BreadcrumbList>` uses `gap-1.5` (6px) between adjacent
-        // children (items + separators).
         let mut row = Row::new().spacing(6.0).wrap();
 
         for (idx, mut item) in items.into_iter().enumerate() {
@@ -241,9 +222,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Breadcrumb<'a, Message> {
             }
         }
 
-        // shadcn `<BreadcrumbList>` cascades `text-muted-foreground` to
-        // unstyled descendants; Container's text_color is iced's only
-        // mechanism for the same. `<BreadcrumbPage>` overrides in `render_page`.
+        // Set the inherited color once. The current page overrides it in `render_page`.
         container(Box::new(row).compose())
             .style(|t: &Theme| Style::default().color(t.muted.foreground))
             .boxed()
@@ -270,8 +249,7 @@ fn render_item<'a, Message: Clone + 'a>(
     }
 }
 
-/// Render the current-page crumb. shadcn's `<BreadcrumbPage>` wraps the
-/// label in `text-foreground` to override the list's muted cascade.
+/// Render the current page in the foreground color.
 fn render_page<'a, Message: Clone + 'a>(content: Slot<'a, Message>) -> Slot<'a, Message> {
     container(content.compose())
         .style(|t: &Theme| Style::default().color(t.neutral.foreground))

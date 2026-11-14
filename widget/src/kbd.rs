@@ -1,7 +1,5 @@
-//! Kbd - shadcn/ui faithful port.
-//!
-//! A keyboard key: `text-xs font-medium` on a 20px muted cap. [`group`]
-//! (or `kbd_group!`) lines several keys up with a 4px gap.
+//! Keyboard shortcut labels. [`group`] and `kbd_group!` arrange several keycaps with a
+//! four-pixel gap.
 //!
 //! # Example
 //!

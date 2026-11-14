@@ -19,7 +19,7 @@ impl Catalog for Theme {
         self.primary.base.into()
     }
 
-    /// shadcn's inline `<code>` chip: `bg-muted` with body-colored text.
+    /// Inline code uses a muted background and the body text color.
     fn code(&self) -> InlineCode {
         InlineCode {
             padding: padding::horizontal(2),

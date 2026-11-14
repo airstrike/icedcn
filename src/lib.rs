@@ -1,7 +1,5 @@
-//! icedxdy - A shadcn-inspired component library for Iced
-//!
-//! This library provides a design system and themed components for Iced applications,
-//! inspired by the shadcn/ui design system.
+//! Themed widgets for iced applications. Compose controls and layouts with the widget builders
+//! and customize their appearance with the shared theme and design tokens.
 
 pub mod card;
 pub mod separator;

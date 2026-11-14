@@ -1,7 +1,5 @@
-//! Separator - shadcn/ui faithful port (Radix `Separator`).
-//!
-//! A 1px `bg-border` line: full width when horizontal (the default), full
-//! height of its row when vertical (`self-stretch`).
+//! A one-pixel divider in the theme’s border color. It fills the width horizontally (the
+//! default) or the row’s height vertically.
 //!
 //! # Example
 //!

@@ -1,6 +1,4 @@
-//! Preview-02 savings-targets card pair.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/savings-targets.tsx`.
+//! Savings targets card pair.
 
 use iced::widget::space;
 use iced::{Center, Fill};

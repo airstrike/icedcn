@@ -1,15 +1,5 @@
-//! SidebarRail — thin click-target rail to toggle the sidebar.
-//!
-//! Per shadcn nova `sidebar.tsx::SidebarRail`: a 16px-wide hit target
-//! (`w-4`), full-height (`inset-y-0`), with a 2px hover line down the
-//! middle (`after:w-[2px] hover:after:bg-sidebar-border`) and a horizontal
-//! resize cursor. Click toggles the sidebar.
-//!
-//! In iced we render the rail as a thin button: `widget::Button` with
-//! `width(16)`, `height(Fill)`, no press-down (`translate(false)`), and
-//! a horizontal resize cursor. The 2px hover indicator is approximated
-//! by setting the button's hover background to `palette.sidebar.border`
-//! (the same token shadcn's `::after` pseudo-element targets).
+//! A full-height, 16-pixel-wide rail for toggling the sidebar. On hover it shows a horizontal
+//! resize cursor and the sidebar border color.
 //!
 //! # Example
 //!
@@ -32,7 +22,7 @@ use crate::marker::{self, Press};
 use icedxdy_core::Theme;
 use icedxdy_core::theme::button;
 
-/// Width of the rail hit target (matches shadcn's `w-4` = 16px).
+/// Width of the rail hit target in logical pixels.
 pub const RAIL_WIDTH: f32 = 16.0;
 
 /// A thin click-target rail that toggles the sidebar.
@@ -67,11 +57,7 @@ impl<'a, Message: Clone + 'a> From<SidebarRail<Message>>
     for iced_core::Element<'a, Message, Theme, Renderer>
 {
     fn from(rail: SidebarRail<Message>) -> Self {
-        // Hover lights up the rail with `palette.sidebar.border` — same
-        // token shadcn's `hover:after:bg-sidebar-border` pseudo-element
-        // targets. Resting state is fully transparent (ghost) so the rail
-        // vanishes until pointed at. The chained `.into()` lands core::Style
-        // → iced::Style → widget::Style.
+        // Show the sidebar border color when the pointer is over the rail.
         let style: widget::StyleFn<'a, Theme> = Box::new(|t, s: widget::Status| {
             let status: Status = s.into();
             let mut core = button::ghost(t, status);

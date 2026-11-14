@@ -1,17 +1,8 @@
-//! Size variants — nova style
-//!
-//! See plan/nova-style-guide.md for full spec.
+//! Component size presets.
 
 use iced_core::Padding;
 
-/// Component size, matching shadcn nova style.
-///
-/// Nova sizes:
-/// - `Xs`:      h-6  (24px), px-2 (8px),   text-xs (12px),         gap-1 (4px)
-/// - `Sm`:      h-7  (28px), px-2.5 (10px), text-[0.8rem] (12.8px), gap-1 (4px)
-/// - `Default`: h-8  (32px), px-2.5 (10px), text-sm (14px),         gap-1.5 (6px)
-/// - `Lg`:      h-9  (36px), px-2.5 (10px), text-sm (14px),         gap-1.5 (6px)
-/// - `Icon`:    size-8 (32×32)
+/// Component size presets for control height, padding, typography, and icon spacing.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum Size {
     Xs,

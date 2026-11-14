@@ -1,8 +1,4 @@
-//! Main dashboard area — `/create`-style masonry columns.
-//!
-//! shadcn's preview iframe uses fixed-width bento columns inside a
-//! horizontally-scrollable surface. Matching that geometry first makes the
-//! remaining per-card fidelity work much easier to see.
+//! Dashboard tiles arranged in fixed-width columns inside a horizontally scrollable surface.
 
 use iced::{Alignment, Fill};
 use icedxdy::widget::{Column, container, row};

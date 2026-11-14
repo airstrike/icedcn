@@ -16,10 +16,7 @@ pub fn group<'a, Message: 'a>(
     Column::with_children(children).padding(8).width(Fill)
 }
 
-/// Create a sidebar group label.
-///
-/// Renders as text-xs (12px), font-medium, with muted foreground color.
-/// Corresponds to shadcn's SidebarGroupLabel (h-8, text-xs, font-medium).
+/// Create a sidebar group label with small, medium-weight muted text.
 pub fn group_label<'a>(label: impl iced_core::text::IntoFragment<'a>) -> Text<'a> {
     Text::new(label)
         .size(12.0)

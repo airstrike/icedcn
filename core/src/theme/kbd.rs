@@ -1,7 +1,6 @@
 //! Kbd styling - nova style.
 //!
-//! `rounded-sm bg-muted text-muted-foreground`; inside tooltip content,
-//! `bg-background/20 text-background` (`dark:bg-background/10`).
+//! Keycaps use a muted surface by default and a translucent fill inside tooltips.
 
 use std::ops::Add;
 

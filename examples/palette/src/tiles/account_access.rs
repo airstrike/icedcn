@@ -1,6 +1,4 @@
-//! Preview-02 account-access card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/account-access.tsx`.
+//! Account access card.
 
 use iced::Fill;
 use iced::Widget;

@@ -1,4 +1,4 @@
-//! ToggleGroup - shadcn/ui faithful port (Radix `ToggleGroup`).
+//! A group of related toggle buttons.
 //!
 //! An iced `Component` that owns the pressed set. Its items come from a
 //! closure (a [`Slot`] cannot be cloned, and the component rebuilds its
@@ -30,8 +30,8 @@
 //!
 //! # Variants
 //!
-//! shadcn's `variant` prop is a style: `.style(toggle_group::Outline)` on
-//! the group, or on one item to override the group's.
+//! Set `.style(toggle_group::Outline)` on the group or override the style of an individual
+//! item.
 
 use iced_core::Length::{self, Shrink};
 use iced_core::{Alignment, Element};
@@ -48,7 +48,7 @@ use crate::{Button, Size};
 
 pub use icedxdy_core::theme::toggle::{Default, Outline};
 
-/// How many items can be pressed at once (Radix's `type`).
+/// How many items can be pressed at once.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, std::default::Default)]
 pub enum Mode {
     /// At most one; pressing it again releases it.

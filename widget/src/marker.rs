@@ -1,15 +1,9 @@
 //! Markers: let a child inside user content signal the widget that owns it.
 //!
-//! Radix's `asChild` triggers (`CollapsibleTrigger`, `DialogClose`,
-//! `SidebarTrigger`, a `FieldLabel`'s `htmlFor`) wrap an element the user
-//! builds, in the user's own message type. That element cannot publish the
-//! owner's private event, so the owner wraps it in a [`Marker`] instead. The
-//! marker watches the events its child receives and, when the child is
-//! pressed, records a signal in its own tree state. The owner forwards every
-//! event to its content and then runs [`drain`] over it, an [`Operation`]
-//! that takes the recorded signals, and acts on them in the same event.
-//! [`Owner`] does exactly that and publishes a message per signal, which is
-//! how an iced `Component` turns its markers into its private events.
+//! A trigger or field label can use its application message type while signaling its owner. A
+//! [`Marker`] records a signal in its widget tree when its child is pressed. After forwarding
+//! the event to its content, the owner runs [`drain`] to collect the signals. [`Owner`]
+//! publishes one message for each signal.
 //!
 //! Signals stay in the marker until an owner drains them, so a marker deeper
 //! in the tree is drained by its nearest owner: an owner updates its content
@@ -22,7 +16,7 @@
 //! reads whether it is checked.
 //!
 //! A child's own handlers still fire. `c.trigger(button("Close").on_press(m))`
-//! publishes `m` and toggles the owner, like Radix's `composeEventHandlers`.
+//! publishes `m` and toggles the owner.
 
 use std::any::Any;
 

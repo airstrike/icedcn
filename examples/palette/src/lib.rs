@@ -1,10 +1,5 @@
-//! Dogfood demo for the icedxdy widget catalog.
-//!
-//! Layout mirrors shadcn's `/create` page: a top chrome bar (brand · nav ·
-//! search · auth), a left rail (customizer), and a dense main dashboard of
-//! cards exercising every widget in `widget/src/`. Tints appear thematically
-//! — a success alert, a destructive armed-delete, a primary CTA — rather
-//! than as abstract swatches.
+//! Interactive palette preview for icedxdy. Use the side panel to customize the theme and see
+//! how its colors apply to dashboard cards, alerts, and actions.
 //!
 //! The root scrollable opts into both axes; tiles that genuinely need
 //! horizontal overflow (transactions, etc.) wrap their own.
@@ -332,7 +327,7 @@ struct GithubRepo {
 
 async fn fetch_github_stars() -> Result<String, String> {
     let repo = reqwest::Client::new()
-        .get("https://api.github.com/repos/shadcn-ui/ui")
+        .get("https://api.github.com/repos/airstrike/icedxdy")
         .header(reqwest::header::USER_AGENT, "icedxdy-palette")
         .send()
         .await

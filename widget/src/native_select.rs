@@ -1,9 +1,5 @@
-//! NativeSelect - shadcn/ui port over iced's `pick_list`.
-//!
-//! A bordered field showing the chosen option; pressing it opens the list
-//! of options. As with an HTML `<select>`, the first option shows when
-//! nothing else is chosen, so a leading option with an empty value works as
-//! the prompt:
+//! A choice field built on iced’s `pick_list`. With no explicit selection, the field displays
+//! the first item. A leading item with an empty value can serve as a prompt.
 //!
 //! ```ignore
 //! use icedxdy::widget::native_select;
@@ -18,7 +14,7 @@
 //!
 //! # Variants
 //!
-//! `aria-invalid` is a style: `.style(native_select::Invalid)`.
+//! Use `.style(native_select::Invalid)` to indicate a validation error.
 
 use crate::button::widget;
 use std::fmt;

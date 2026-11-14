@@ -1,6 +1,4 @@
 //! Preview 01 empty-state card for the music distribution flow.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/empty-distribute-track.tsx`.
 
 use iced::Fill;
 use iced::Widget;

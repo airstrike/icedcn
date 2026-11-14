@@ -1062,10 +1062,7 @@ pub struct Settings {
     pub code_size: Pixels,
     /// The spacing to be used between elements.
     pub spacing: Pixels,
-    /// Line-height applied to body paragraphs and list items. shadcn's
-    /// `prose leading-7` is `1.75rem` on a 16px body — so `Relative(1.75)`
-    /// matches the upstream feel. Defaults to `Relative(1.5)` (a balanced
-    /// prose default) when callers don't override.
+    /// Line height for paragraphs and list items. Defaults to `Relative(1.5)`.
     pub line_height: core::text::LineHeight,
     /// The styling of the Markdown.
     pub style: Style,
@@ -1085,8 +1082,7 @@ impl Settings {
     pub fn with_text_size(text_size: impl Into<Pixels>, style: impl Into<Style>) -> Self {
         let text_size = text_size.into();
         let mut style = style.into();
-        // shadcn renders inline `<code>` at `text-sm` (0.875em) — keep
-        // the chip in sync with the chosen body size automatically.
+        // Scale inline code with the surrounding body text.
         style.inline_code_size = text_size * 0.875;
 
         Self {
@@ -1130,13 +1126,8 @@ pub struct Style {
     pub inline_code_color: Color,
     /// The [`Font`] to be applied to inline code.
     pub inline_code_font: Font,
-    /// The text size of inline code.
-    ///
-    /// shadcn renders inline code at `0.875em` of the surrounding body
-    /// (e.g. 14px when body is 16px). [`Settings::with_text_size`]
-    /// auto-derives this as `text_size * 0.875` so call sites that
-    /// build a [`Style`] without going through the helper inherit a
-    /// reasonable baseline from [`Style::from_palette`].
+    /// Text size of inline code. [`Settings::with_text_size`] sets it to 87.5% of the body
+    /// size.
     pub inline_code_size: Pixels,
     /// The [`Font`] to be applied to code blocks.
     pub code_block_font: Font,

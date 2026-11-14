@@ -4,9 +4,7 @@
 //! `Theme::tinted(tint)` returns one of `Design`'s per-role palettes;
 //! all slots resolve in lockstep against that role.
 //!
-//! Light/dark per-role palette values populate `Design::light()` /
-//! `Design::dark()` in `core/src/design.rs` — the canonical shadcn
-//! OKLCH constants live there.
+//! The light and dark designs each define OKLCH colors for every role.
 //!
 //! `SidebarPalette` stays as a side-field on `Design` for now; a sidebar
 //! context that swaps the full Design is deferred.
@@ -29,10 +27,8 @@ pub struct Palette {
     /// Tinted hues set this to `base`; neutral and surfaces set it to
     /// `foreground` (neutral's `base` is the page bg, not page text).
     pub tint_text: Color,
-    /// True when this palette was constructed for a dark-theme `Design`.
-    /// StyleFn inner closures use this to gate light/dark alpha levels
-    /// (e.g. shadcn's `dark:bg-destructive/20` vs light's `/10`) without
-    /// needing to read another palette's luminance.
+    /// Whether this palette belongs to a dark theme. Styles use this flag to adjust opacity for
+    /// dark surfaces.
     pub is_dark: bool,
 }
 

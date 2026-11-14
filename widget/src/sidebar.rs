@@ -1,4 +1,4 @@
-//! Sidebar components — a faithful port of shadcn/ui's Sidebar suite.
+//! Sidebars, navigation items, and controls for expanding or collapsing the layout.
 
 mod content;
 mod footer;

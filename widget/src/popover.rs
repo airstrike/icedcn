@@ -1,10 +1,6 @@
-//! Popover: shadcn/ui faithful port (Radix `Popover`).
-//!
-//! An iced `Component` that owns its open state, over iced's
-//! [`anchored`](iced_widget::anchored) overlay. Two closures receive a
-//! [`Handle`]: one builds what sits in place (the trigger), the other the
-//! panel shown next to it while open. `p.trigger` and `p.close` play
-//! `PopoverTrigger asChild` and `PopoverClose asChild`:
+//! A panel anchored to its trigger. Two closures receive a [`Handle`]. Use the first to place a
+//! trigger and the second to build the panel. The handle can turn a child into a toggle or
+//! close control.
 //!
 //! ```ignore
 //! use icedxdy::widget::{button, popover};
@@ -21,7 +17,7 @@
 //! window has no room below and slides along it to stay inside. A press
 //! outside the panel (the page still receives it) and `Escape` close it;
 //! pressing the trigger again does too. The panel is built only while open,
-//! so its widgets mount fresh each time, as in Radix.
+//! so its widgets start with fresh state each time.
 
 use iced_core::keyboard::key::Named;
 use iced_core::{Element, Length, Padding, Pixels};
@@ -154,8 +150,7 @@ impl<'a, Message> Popover<'a, Message> {
         self
     }
 
-    /// Set the gap between the trigger and the panel (shadcn's
-    /// `sideOffset`, 4px by default).
+    /// Set the gap between the trigger and panel, four pixels by default.
     pub fn side_offset(mut self, offset: impl Into<Pixels>) -> Self {
         self.position = self.position.offset(offset);
         self
@@ -174,8 +169,7 @@ impl<'a, Message> Popover<'a, Message> {
         self
     }
 
-    /// Size the panel to its trigger, at least `min_width` wide (a menu's
-    /// `w-(--radix-*-trigger-width) min-w-*`).
+    /// Match the trigger width while keeping the panel at least `min_width` wide.
     pub(crate) fn trigger_width(mut self, min_width: f32) -> Self {
         self.width = None;
         self.min_width = min_width;
@@ -224,8 +218,7 @@ impl Handle {
         self.is_open
     }
 
-    /// Make `child` toggle the popover when pressed, like
-    /// `<PopoverTrigger asChild>`. The child keeps its own handlers.
+    /// Pressing the child toggles the popover and runs the child’s own handlers.
     pub fn trigger<'a, Message: 'a>(
         &self,
         child: impl Into<Slot<'a, Message>>,
@@ -238,8 +231,7 @@ impl Handle {
         })
     }
 
-    /// Make `child` close the popover when pressed, like
-    /// `<PopoverClose asChild>`. The child keeps its own handlers.
+    /// Pressing the child closes the popover and runs the child’s own handlers.
     pub fn close<'a, Message: 'a>(&self, child: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
         Slot::new(Marked {
             child: child.into(),

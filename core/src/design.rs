@@ -254,11 +254,8 @@ impl Default for Design {
     }
 }
 
-// Tinted-palette border/ring v0 derivation: border = base, ring = base @ 0.5.
-// `tint_text = base` matches shadcn `text-{role}` semantics — when a
-// transparent-fill widget tints with this hue, text takes the role's
-// base color directly (e.g. outlined-destructive renders text in
-// destructive's red, not destructive.foreground white).
+// Transparent-fill widgets use the role’s base color for text, keeping outlined destructive
+// controls legible against the underlying surface.
 fn tinted_palette(base: Color, foreground: Color, is_dark: bool) -> Palette {
     Palette {
         base,

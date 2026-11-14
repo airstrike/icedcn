@@ -21,8 +21,7 @@ pub fn shimmer<'a, Message: 'a>(label: impl Into<String>) -> Slot<'a, Message> {
         .boxed(),
     )
 }
-/// Attachment's CSS shimmer uses its already-styled title and a two-second
-/// foreground-opacity sweep. Other status labels retain their existing paint.
+/// Animate an attachment title with a two-second sweep over its existing text style.
 pub(crate) fn title<'a, Message: 'a>(text: iced_widget::Text<'a, Theme>) -> Slot<'a, Message> {
     Shimmer {
         text,

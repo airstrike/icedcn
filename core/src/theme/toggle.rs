@@ -1,9 +1,6 @@
 //! Toggle styling, shared by `Toggle` and `ToggleGroup` items.
 //!
-//! Nova `toggleVariants`: a transparent `rounded-lg` box with
-//! `hover:bg-muted hover:text-foreground`, `disabled:opacity-50` and
-//! `data-[state=on]:bg-muted`; `outline` adds `border border-input`. A toggle
-//! is a button, so its styles are button [`Spec`]s and take the same tweaks.
+//! Active toggles use a muted fill. The outline variant adds a border. Both accept button [`Spec`] tweaks.
 
 use std::ops::Add;
 

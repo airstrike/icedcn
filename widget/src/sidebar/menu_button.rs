@@ -37,11 +37,7 @@ pub enum MenuButtonSize {
     Default, // h-8 = 32px, text-sm
     Sm, // h-7 = 28px, text-xs
     Lg, // h-12 = 48px, text-sm
-    /// Docs-sidebar override (`apps/v4/components/docs-sidebar.tsx`):
-    /// `h-[30px] text-[0.8rem] font-medium` with `border border-transparent`.
-    /// We render as h=32 + inset(1) elsewhere, so the painted fill lands
-    /// at 30 px while the 1px transparent halo around the fill mirrors the
-    /// `border border-transparent` on the canonical class.
+    /// Compact navigation dimensions with room for a one-pixel border.
     Docs,
 }
 
@@ -177,10 +173,7 @@ impl<'a, Message: Clone + 'a> From<SidebarMenuButton<'a, Message>>
                 .height(height)
                 .padding(0)
         } else {
-            // Width(Shrink) for both the inner container and the outer
-            // button — shadcn's docs-sidebar items use `w-fit`, so the
-            // active-state bg paint hugs the text + padding rather than
-            // stretching the full sidebar column. Hit area follows.
+            // Shrink the hit area and selection background to the label and its padding.
             //
             // `center_y(Fill)` centers the line-box within the post-padding
             // content area for sizes whose content slack > line-box (Default,

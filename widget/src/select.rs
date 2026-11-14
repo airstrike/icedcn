@@ -1,4 +1,4 @@
-//! Select: shadcn/ui faithful port (Radix `Select`).
+//! An anchored list for selecting one item.
 //!
 //! A trigger showing the chosen item's label (or a muted placeholder) that
 //! opens a modal list of items anchored below it, at least as wide as the
@@ -272,8 +272,7 @@ impl<'a, Message> Select<'a, Message> {
         self
     }
 
-    /// Set the trigger's chevron (lucide's `chevron-down` in shadcn); a text
-    /// glyph by default.
+    /// Replace the chevron on the trigger.
     pub fn icon(mut self, icon: impl Fn() -> iced_widget::Text<'a, Theme> + 'a) -> Self {
         self.icon = Some(Box::new(icon));
         self

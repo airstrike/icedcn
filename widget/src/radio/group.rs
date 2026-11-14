@@ -1,4 +1,4 @@
-//! RadioGroup - shadcn/ui faithful port (Radix `RadioGroup`).
+//! A group of radio controls with one selected value.
 //!
 //! An iced `Component` that owns the selected value. Its content is a
 //! closure receiving a [`Handle`], whose [`item`](Handle::item) builds each

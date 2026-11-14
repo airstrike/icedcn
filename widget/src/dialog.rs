@@ -1,9 +1,5 @@
-//! Dialog — shadcn/ui faithful port (Radix `Dialog`).
-//!
-//! An iced `Component` that owns its open state. Two closures receive a
-//! [`Handle`]: one builds what sits in place (usually the trigger), the
-//! other the panel shown above a backdrop while open. `d.trigger` and
-//! `d.close` play `DialogTrigger asChild` and `DialogClose asChild`:
+//! A modal panel displayed over a backdrop. Two closures receive a [`Handle`]. Use the first to
+//! place the trigger and the second to build the panel and its close controls.
 //!
 //! ```ignore
 //! use icedxdy::widget::{button, column, dialog, field, input};
@@ -26,11 +22,8 @@
 //! // Controlled: .open(self.editing).on_open_change(Message::Editing)
 //! ```
 //!
-//! A press outside the panel, `Escape`, the corner close button and any
-//! `d.close(..)` child close it. The panel is built only while open, so its
-//! widgets mount fresh each time, as in Radix. Both closures are built in
-//! the app's message type and mapped once at the component's boundary
-//! (`Message: 'static`).
+//! Click outside the panel, press Escape, or activate a close control to dismiss it. Each
+//! opening creates a fresh panel widget tree. Both closures use the application’s message type.
 
 pub mod modal;
 
@@ -165,15 +158,14 @@ impl<'a, Message> Dialog<'a, Message> {
         self
     }
 
-    /// Whether the panel shows its corner close button (shadcn's
-    /// `showCloseButton`, on by default).
+    /// Show or hide the panel’s corner close button. It is visible by default.
     pub fn show_close_button(mut self, show: bool) -> Self {
         self.show_close_button = show;
         self
     }
 
-    /// Set the panel's maximum width (shadcn's `sm:max-w-sm`, 384px, by
-    /// default). Ignored by sheets, which take their side's extent.
+    /// Set the maximum width of a centered panel, 384 pixels by default. Sheets use the extent
+    /// of their window edge.
     pub fn max_width(mut self, max_width: f32) -> Self {
         if let Placement::Center { .. } = self.placement {
             self.placement = Placement::Center { max_width };
@@ -256,8 +248,7 @@ impl Handle {
         self.is_open
     }
 
-    /// Make `child` open the dialog when pressed, like
-    /// `<DialogTrigger asChild>`. The child keeps its own handlers.
+    /// Pressing the child opens the dialog and runs the child’s own handlers.
     pub fn trigger<'a, Message: 'a>(
         &self,
         child: impl Into<Slot<'a, Message>>,
@@ -268,8 +259,7 @@ impl Handle {
         })
     }
 
-    /// Make `child` close the dialog when pressed, like
-    /// `<DialogClose asChild>`. The child keeps its own handlers.
+    /// Pressing the child closes the dialog and runs the child’s own handlers.
     pub fn close<'a, Message: 'a>(&self, child: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
         Slot::new(Marked {
             child: child.into(),

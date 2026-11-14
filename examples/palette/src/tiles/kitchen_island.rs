@@ -1,6 +1,4 @@
-//! Preview-02 kitchen-island card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/kitchen-island.tsx`.
+//! Kitchen island card.
 
 use iced::Fill;
 use iced::Widget;

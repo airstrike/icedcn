@@ -1,9 +1,4 @@
-//! Textarea styling - nova style.
-//!
-//! A textarea paints like an Input (`rounded-lg border border-input`,
-//! `focus-visible:border-ring`, `disabled:opacity-50`, `aria-invalid`), so
-//! its styles are the Input's, projected onto iced's `text_editor::Style`.
-//! The Input's focus halo has no counterpart in `text_editor::Style`.
+//! Multiline field styles. The editor shares input colors and border states.
 
 use iced_widget::text_editor::{Catalog, Status, Style, StyleFn};
 
@@ -46,7 +41,7 @@ pub fn default(theme: &Theme, status: Status) -> Style {
     project(text_input::default(theme, input_status(status)))
 }
 
-/// An invalid textarea (`aria-invalid`): a destructive border.
+/// An invalid textarea: a destructive border.
 pub fn invalid(theme: &Theme, status: Status) -> Style {
     project(text_input::invalid(theme, input_status(status)))
 }
@@ -55,7 +50,7 @@ pub fn invalid(theme: &Theme, status: Status) -> Style {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Default;
 
-/// Invalid textarea style (`aria-invalid`).
+/// Invalid textarea style.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Invalid;
 

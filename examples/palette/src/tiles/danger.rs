@@ -48,9 +48,7 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
     .label("Acknowledge this is irreversible")
     .description("Required before the delete fires.");
 
-    // shadcn's `<code>` chip: bg-muted + small padding + radius. The
-    // `text::inline_code` helper sets only the font/size/weight; the
-    // container chrome lives at the call site per the helper's docs.
+    // The container supplies the background and padding around the inline code.
     let code_chip = container(text::inline_code("delete --hard"))
         .padding([2, 6])
         .style(code_block);

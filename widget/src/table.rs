@@ -1,7 +1,4 @@
-//! Table component slots.
-//!
-//! Mirrors shadcn's `Table` primitive shape while keeping icedxdy children
-//! as arbitrary [`Slot`](crate::Slot) values.
+//! Table rows, headers, and cells accept arbitrary [`Slot`] content.
 
 mod grid;
 pub use grid::{Grid, Track, grid};

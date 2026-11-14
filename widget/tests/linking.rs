@@ -1,5 +1,4 @@
-//! End-to-end checks that markers, owners and the control operations link
-//! widgets the way Radix's `htmlFor` and `asChild` triggers do.
+//! End-to-end checks for label activation and triggers that signal their owning widget.
 //!
 //! Children are fixed-size blocks clicked by position, so the checks do not
 //! depend on text shaping in the headless renderer.

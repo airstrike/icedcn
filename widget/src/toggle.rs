@@ -1,4 +1,4 @@
-//! Toggle - shadcn/ui faithful port (Radix `Toggle`).
+//! A button with persistent on and off states.
 //!
 //! A two-state button: transparent at rest, `bg-muted` while on.
 //!
@@ -22,7 +22,7 @@
 //!
 //! # Variants
 //!
-//! shadcn's `variant` prop is a style: `.style(toggle::Outline)`.
+//! Apply an outline with `.style(toggle::Outline)`.
 
 mod widget;
 
@@ -73,10 +73,9 @@ macro_rules! toggle {
 
 /// A button that is either on or off.
 ///
-/// Radix state: uncontrolled with [`default_pressed`](Self::default_pressed),
-/// or controlled with [`pressed`](Self::pressed) plus
-/// [`on_pressed_change`](Self::on_pressed_change). It is enabled unless
-/// [`disabled`](Self::disabled) or a disabled ancestor says otherwise.
+/// Use [`default_pressed`](Self::default_pressed) to initialize widget-owned state, or
+/// [`pressed`](Self::pressed) and [`on_pressed_change`](Self::on_pressed_change) to manage it
+/// in the application. Disabled ancestors also disable the toggle.
 pub struct Toggle<'a, Message> {
     content: Slot<'a, Message>,
     pressed: Option<bool>,

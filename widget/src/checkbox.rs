@@ -1,8 +1,4 @@
-//! Checkbox component — shadcn/ui faithful port
-//!
-//! A 16×16 box that can be checked, unchecked, or indeterminate, with an
-//! optional label. Wraps our vendored `checkbox::widget::Checkbox` so
-//! `.style(...)` can carry the focus ring (Tailwind `ring-*`) end-to-end.
+//! A checkbox with an optional label. It supports checked, unchecked, and indeterminate states.
 //!
 //! # Example
 //!
@@ -33,13 +29,12 @@ use icedxdy_core::theme;
 
 use self::element::from_core;
 
-/// A styled checkbox matching shadcn/ui's Checkbox component.
+/// A three-state checkbox with an optional label.
 ///
-/// Radix state: uncontrolled with [`default_checked`](Self::default_checked)
-/// (the value lives in the widget tree), or controlled with
-/// [`checked`](Self::checked) plus
-/// [`on_checked_change`](Self::on_checked_change). It is enabled unless
-/// [`disabled`](Self::disabled) or a disabled ancestor says otherwise.
+/// Use [`default_checked`](Self::default_checked) for widget-owned state or
+/// [`checked`](Self::checked) with [`on_checked_change`](Self::on_checked_change) for
+/// application-owned state. [`disabled`](Self::disabled) and disabled ancestors prevent
+/// interaction.
 pub struct Checkbox<'a, Message> {
     checked: Option<State>,
     default_checked: State,

@@ -49,11 +49,8 @@ pub fn secondary(theme: &Theme) -> Style {
     }
 }
 
-/// Destructive: `bg-destructive/10 dark:bg-destructive/20` text-`destructive`.
-///
-/// Nova spec: `bg-destructive/10 text-destructive dark:bg-destructive/20` — fill
-/// is the destructive hue at 10% alpha (light) / 20% (dark); text is the
-/// destructive hue at full opacity (not `destructive-foreground`).
+/// Destructive badge with full-strength text and a translucent fill. The fill uses 10% opacity
+/// in light themes and 20% in dark themes.
 pub fn destructive(theme: &Theme) -> Style {
     let p = theme;
     let is_dark = p.neutral.base.l < 0.5;

@@ -53,8 +53,7 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
         deploy = deploy.on_press(Message::Deploy);
     }
 
-    // Tiny 16:9 placeholder strip. `aspect_ratio` claims a known width
-    // and reports height = width / ratio, mirroring shadcn's `<AspectRatio>`.
+    // Reserve a 16:9 area for the preview.
     let banner = aspect_ratio(
         container(text::muted("preview"))
             .center_x(Fill)
@@ -78,7 +77,7 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
     card::card(
         column([
             card::header("Welcome to icedxdy")
-                .description("A shadcn-faithful port for the iced GUI framework.")
+                .description("Themed widgets for iced applications.")
                 .into(),
             card::content(body).into(),
         ])

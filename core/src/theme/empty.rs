@@ -1,7 +1,6 @@
 //! Empty-state media styling.
 //!
-//! Nova `emptyMediaVariants`: `default` is `bg-transparent`; `icon` is
-//! `size-8 rounded-lg bg-muted text-foreground [&_svg]:size-4`.
+//! Media is unframed by default. The icon style adds a rounded, muted tile.
 
 use std::ops::Add;
 

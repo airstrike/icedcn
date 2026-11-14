@@ -1,8 +1,6 @@
 //! SidebarTrigger — toggle button for collapsing/expanding the sidebar
 //!
-//! A ghost-style button (28x28) that toggles the nearest enclosing
-//! [`provider`](super::provider), wherever it sits inside it, like
-//! shadcn's `SidebarTrigger` reading `useSidebar()`.
+//! A 28-pixel square button that toggles the nearest enclosing [`provider`](super::provider).
 //!
 //! # Example
 //!

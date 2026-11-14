@@ -30,13 +30,13 @@ use crate::row::Row;
 use crate::size;
 use crate::text::{self, Text};
 
-/// Sonner's `--width`.
+/// Toast width in logical pixels.
 const WIDTH: f32 = 356.0;
-/// Sonner's viewport offset from the window edges.
+/// Distance between the stack and the window edges.
 const OFFSET: f32 = 24.0;
-/// Sonner's gap between expanded toasts.
+/// Vertical gap between expanded toasts.
 const GAP: f32 = 14.0;
-/// Sonner's `visibleToasts`.
+/// Maximum number of visible toasts.
 const VISIBLE: usize = 3;
 
 /// The signal a toast's action records: the toast to dismiss.

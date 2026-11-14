@@ -1,30 +1,8 @@
-//! Text input styling — nova style
-//!
-//! `Style` is OKLCH-native — variants and tweaks operate on our `Color`,
-//! `Border`, `Background` end-to-end. Conversion to iced's sRGB types
-//! happens once at the catalog boundary (`From<Style> for
-//! iced::text_input::Style`).
-//!
-//! Nova classlist (verbatim from `.nova/apps/v4/styles/radix-nova/ui/input.tsx`):
-//!
-//! ```text
-//! h-8 w-full min-w-0 rounded-lg border border-input bg-transparent
-//! px-2.5 py-1 text-base transition-colors outline-none
-//! placeholder:text-muted-foreground
-//! focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50
-//! disabled:pointer-events-none disabled:cursor-not-allowed
-//! disabled:bg-input/50 disabled:opacity-50
-//! md:text-sm
-//! dark:bg-input/30 dark:disabled:bg-input/80
-//! ```
+//! Text input styles for the field surface, placeholder, selection, and focus ring.
 
 use std::ops::Add;
 
-/// Interaction state of a text input. Mirrors `iced_widget::text_input::Status`
-/// field-for-field, but it's our type so we're not bound to iced's choices when
-/// adding new states (e.g. `Invalid` for `aria-invalid`).
-///
-/// Convert from iced's stock `Status` via `From` if you have one in hand.
+/// Text field interaction state. Convert from iced’s text-input status with `From`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Status {
     /// The input can be interacted with.
@@ -78,14 +56,11 @@ pub struct Style {
     pub value: Color,
     /// The selection-highlight color.
     pub selection: Color,
-    /// Optional focus ring (Tailwind `ring-*`). `None` = no halo rendered.
+    /// Optional ring painted around the control.
     pub ring: Option<Ring>,
 }
 
-/// Resolved focus-ring fragment: a solid colored halo painted at `width`
-/// pixels around the input's bounds, behind the main fill. Equivalent to
-/// CSS `box-shadow: 0 0 0 {width}px {color}`. Tailwind's `ring-offset` is
-/// dropped — iced has no `outline-offset` analog.
+/// A colored halo extending `width` pixels beyond the input bounds, behind the field.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ring {
     pub color: Color,
@@ -264,7 +239,7 @@ pub fn invalid(theme: &Theme, status: Status) -> Style {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Default;
 
-/// Invalid text input variant (nova `aria-invalid:*` field). See [`invalid`].
+/// Invalid text input variant. See [`invalid`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Invalid;
 
@@ -381,9 +356,7 @@ fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme, status: Status) {
             width,
             offset: _,
         } => {
-            // Ring renders as a halo at `width` px around the bounds, behind
-            // the main fill. `offset` is dropped (no iced equivalent for
-            // Tailwind's `ring-offset` / CSS `outline-offset`).
+            // Draw the ring immediately outside the field bounds.
             style.ring = Some(Ring {
                 color: color.resolve(theme),
                 width: *width,
@@ -631,8 +604,7 @@ mod tests {
         assert!(close(ring.color, theme.neutral.ring));
     }
 
-    /// `focus(Ring(...))` writes ring only when status = Focused.
-    /// Mirrors the nova classlist `focus-visible:ring-3 ring-ring/50`.
+    /// A focused ring tweak only applies while the input is focused.
     #[test]
     fn focus_trigger_gates_ring() {
         let theme = Theme::light();

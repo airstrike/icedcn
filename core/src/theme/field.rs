@@ -1,16 +1,5 @@
-//! Field card-mode container styling
-//!
-//! Provides two container variants for `Field`'s optional card wrapper:
-//!
-//! - [`Card`] — inactive border (`palette.border`) + transparent background.
-//!   Matches shadcn FieldLabel's `has-[>[data-slot=field]]:border` rule.
-//! - [`CardActive`] — primary-tinted border (`palette.primary` @ 30% alpha)
-//!   and a primary-tinted background (`palette.primary` @ 5% alpha).
-//!   Matches `has-data-checked:border-primary/30` and `has-data-checked:bg-primary/5`.
-//!
-//! Both carry 8px corner radius (`rounded-lg` per nova) and 1px border width.
-//! The caller selects the variant based on the inner widget's checked/active
-//! state — iced has no CSS-style `data-checked` cascade.
+//! Card surfaces for fields. [`Card`] has a neutral border and transparent background.
+//! [`CardActive`] uses the primary color to highlight a checked control.
 
 use super::Theme;
 use super::container::Style;
@@ -18,10 +7,7 @@ use crate::{Border, radius};
 
 // --- Variant fns -------------------------------------------------------------
 
-/// Inactive card: 1px `border-border`, transparent bg, `rounded-lg`.
-///
-/// Matches shadcn's `has-[>[data-slot=field]]:rounded-lg has-[>[data-slot=field]]:border`
-/// (inactive branch, no `has-data-checked` overrides).
+/// Transparent card with a one-pixel border and rounded corners.
 pub fn card(theme: &Theme) -> Style {
     let p = theme;
     Style {
@@ -35,15 +21,8 @@ pub fn card(theme: &Theme) -> Style {
     }
 }
 
-/// Active card: primary-tinted border + bg, `rounded-lg`. Dark-mode-aware.
-///
-/// Matches shadcn's full FieldLabel-as-card spec from `field.tsx`:
-///   light: `has-data-checked:border-primary/30 has-data-checked:bg-primary/5`
-///   dark:  `dark:has-data-checked:border-primary/20 dark:has-data-checked:bg-primary/10`
-///
-/// In dark mode the bg alpha doubles (5% → 10%) for a more visible tint, and
-/// the border alpha drops (30% → 20%) so the chrome doesn't compete with
-/// the bg fill.
+/// Checked field card with a primary-tinted background and border. Dark themes use a stronger
+/// fill and a subtler border.
 pub fn card_active(theme: &Theme) -> Style {
     use crate::Background;
     let p = theme;
@@ -120,8 +99,7 @@ mod tests {
         );
     }
 
-    /// Active card light mode: primary @ 5% bg, primary @ 30% border.
-    /// Matches shadcn `has-data-checked:bg-primary/5 has-data-checked:border-primary/30`.
+    /// Light active cards use a 5% fill and a 30% border.
     #[test]
     fn card_active_light_alphas() {
         use crate::Background;
@@ -153,8 +131,7 @@ mod tests {
         );
     }
 
-    /// Active card dark mode: primary @ 10% bg, primary @ 20% border.
-    /// Matches shadcn `dark:has-data-checked:bg-primary/10 dark:has-data-checked:border-primary/20`.
+    /// Dark active cards use a 10% fill and a 20% border.
     #[test]
     fn card_active_dark_alphas() {
         use crate::Background;

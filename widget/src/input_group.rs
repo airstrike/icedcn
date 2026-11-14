@@ -1,4 +1,4 @@
-//! InputGroup - shadcn/ui faithful port.
+//! A text control and its addons in a shared bordered field.
 //!
 //! An Input (or a Textarea) and its addons inside one bordered field. The
 //! group paints the Input's surface and focus ring around everything, and
@@ -14,8 +14,7 @@
 //!
 //! # Variants
 //!
-//! An invalid control is a style on the group: `.style(input::Invalid)`
-//! paints the Input's `aria-invalid` surface.
+//! Apply `.style(input::Invalid)` to the group to mark the whole field as invalid.
 
 mod widget;
 
@@ -59,7 +58,7 @@ impl<'a, Message> From<Textarea<'a, Message>> for Control<'a, Message> {
     }
 }
 
-/// Where an [`Addon`] sits (shadcn's `align`).
+/// Placement of an [`Addon`] within the group.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, std::default::Default)]
 pub enum Align {
     /// Before the control, on its line.

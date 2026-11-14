@@ -1,6 +1,4 @@
-//! Preview-02 new-milestone card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/new-milestone.tsx`.
+//! New milestone card.
 
 use iced::Fill;
 use iced::Widget;

@@ -3,14 +3,8 @@
 //! This is a sweetened version of `iced`'s [`checkbox`], vendored from
 //! sweeten with these additions on top of sweeten's animated mark fade:
 //!
-//! - **Indeterminate state** via the [`State`] domain enum. Stock iced's
-//!   `is_checked: bool` lacks the `data-state="indeterminate"` flavor that
-//!   shadcn surfaces; the [`State::Indeterminate`] variant renders a
-//!   horizontal stroke instead of the check glyph.
-//! - **Focus ring painter** in `draw()` — when `Style::ring` is `Some`, a
-//!   colored halo is rendered behind the box bounds. Stock iced's
-//!   `checkbox::Style` has no ring field; we add it here so our nova-correct
-//!   focus-visible halo (`focus-visible:ring-3 ring-ring/50`) renders.
+//! - [`State::Indeterminate`] draws a horizontal stroke.
+//! - `Style::ring` controls the halo behind the box.
 //! - **Native input state** — focus operations, Space release activation,
 //!   an expanded pointer target, and canceled-gesture handling. The focus
 //!   ring follows keyboard modality; disabled controls leave focus traversal.
@@ -328,8 +322,7 @@ where
     /// Flip the checkbox as a click does: an uncontrolled checkbox stores
     /// the new value, and the change message is published either way.
     ///
-    /// Indeterminate resolves to checked (the Radix convention: clicking a
-    /// tri-state checkbox commits to the on state).
+    /// Activating an indeterminate checkbox checks it.
     fn toggle(
         &mut self,
         internal: &mut Internal<Renderer::Paragraph>,
@@ -514,7 +507,7 @@ where
                         internal.space_pressed = true;
                         shell.capture_event();
                     } else if matches!(key, Key::Named(Named::Enter)) {
-                        // Radix suppresses the native button's Enter activation.
+                        // Space activates a focused checkbox.
                         shell.capture_event();
                     }
                 }
@@ -613,12 +606,8 @@ where
             }
         });
 
-        // While the checkbox is animating, interpolate ONLY background and
-        // border color so they fade in sync. Sweeten's checkbox also fades
-        // the icon color and scales the glyph; we snap the indicator
-        // (`transition-none` on shadcn's `<Checkbox.Indicator>`) — the
-        // shadcn-faithful behavior is bg/border fades with `transition-colors`,
-        // indicator appears/disappears instantly when state flips.
+        // Fade the background and border together. The indicator changes as soon as the value
+        // changes.
         let style = match internal.now {
             Some(now) if internal.animation.is_animating(now) => {
                 let off = theme.style(&self.class, current_status.with_checked(false));
@@ -760,10 +749,7 @@ where
                     );
                 }
                 State::Indeterminate => {
-                    // Horizontal stroke in the center of the box, mirroring
-                    // shadcn's `MinusIcon` for `data-state="indeterminate"`.
-                    // Width: 50% of the box; height: ~10% (1.5px on a 16px
-                    // box at default sizing).
+                    // Draw a centered dash for the indeterminate state.
                     let stroke_w = bounds.width * 0.5;
                     let stroke_h = (bounds.height * 0.1).max(1.0);
                     renderer.fill_quad(
@@ -875,21 +861,14 @@ pub struct Icon {
     pub shaping: text::Shaping,
 }
 
-/// The check / mark state of a [`Checkbox`].
-///
-/// **Deviation from upstream sweeten/iced**: stock represents the check as a
-/// `bool`; we use a domain enum so `Indeterminate` (matching shadcn /
-/// radix's `data-state="indeterminate"`) is a first-class state. The
-/// `From<bool> for State` impl preserves the bool-shaped call site:
-/// `checkbox(self.is_checked)` keeps working.
+/// Selection state of a [`Checkbox`]. Boolean values convert to checked and unchecked states.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum State {
     /// Checked. Renders the check glyph.
     Checked,
     /// Unchecked. Renders an empty box.
     Unchecked,
-    /// Indeterminate. Renders a horizontal stroke (the `MinusIcon` shape
-    /// shadcn uses for `data-state="indeterminate"`).
+    /// Indeterminate, drawn with a horizontal stroke.
     Indeterminate,
 }
 
@@ -930,14 +909,7 @@ impl StatusExt for Status {
     }
 }
 
-/// A focus ring rendered around the checkbox — a solid colored halo of
-/// `width` pixels painted behind the main fill. Equivalent to CSS
-/// `box-shadow: 0 0 0 {width}px {color}` (Tailwind `ring-*`).
-///
-/// **Deviation from upstream sweeten/iced**: this widget renders a focus ring
-/// in `draw()` when `Style::ring` is `Some`. Stock `checkbox::Style` has no
-/// ring field; we add it here so our nova-correct focus-visible halo
-/// (`focus-visible:ring-3 ring-ring/50`) renders.
+/// A ring of `width` pixels painted behind the checkbox.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ring {
     /// Halo color (already alpha-resolved by the catalog).
@@ -957,7 +929,7 @@ pub struct Style {
     pub border: Border,
     /// The text [`Color`] of the checkbox.
     pub text_color: Option<Color>,
-    /// Optional focus ring (Tailwind `ring-*`). `None` = no halo rendered.
+    /// Optional ring painted around the checkbox.
     pub ring: Option<Ring>,
 }
 

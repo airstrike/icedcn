@@ -1,6 +1,4 @@
-//! Preview-02 power-usage card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/power-usage.tsx`.
+//! Power usage card.
 
 use icedxdy::Theme;
 
@@ -10,7 +8,7 @@ use crate::{Message, State};
 pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
     api_gap::missing(
         "Power Usage",
-        "power-usage.tsx",
+        "power_usage.rs",
         &["ChartContainer", "BarChart", "XAxis", "ChartTooltip"],
     )
 }

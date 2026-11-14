@@ -1,7 +1,4 @@
-//! Input component — shadcn/ui faithful port
-//!
-//! A styled text input field. Wraps our vendored `text_input::TextInput` so
-//! `.style()` can carry the focus ring (Tailwind `ring-*`) end-to-end.
+//! A single-line text input with a styled focus ring.
 //!
 //! # Example
 //!
@@ -27,13 +24,9 @@ use icedxdy_core::Theme;
 use icedxdy_core::theme;
 use icedxdy_core::theme::text_input::default;
 
-/// A styled text input field matching shadcn/ui's Input component.
-///
-/// React state: uncontrolled by default, keeping what the user types in the
-/// widget tree (seeded by [`default_value`](Self::default_value)), or
-/// controlled with [`value`](Self::value) plus [`on_input`](Self::on_input).
-/// A controlled input without `on_input` is read-only. It is enabled unless
-/// [`disabled`](Self::disabled) or a disabled ancestor says otherwise.
+/// A single-line text field. [`default_value`](Self::default_value) initializes text kept by
+/// the widget. Use [`value`](Self::value) and [`on_input`](Self::on_input) to manage the text
+/// in the application. A controlled field without an input handler is read-only.
 pub struct Input<'a, Message> {
     placeholder: Fragment<'a>,
     value: Option<Fragment<'a>>,
@@ -104,11 +97,8 @@ impl<'a, Message: Clone + 'a> Input<'a, Message> {
         self
     }
 
-    /// Set the input's width. Defaults to `Length::Shrink` — shadcn's
-    /// `<Input />` is `w-full` only because the parent `Field` lays children
-    /// out as `flex flex-col`; the input itself doesn't force `w-full`. Set
-    /// `Length::Fill` (or a numeric value) when the call site wants the input
-    /// to occupy its parent.
+    /// Set the field width. It defaults to `Length::Shrink`. Use `Length::Fill` to take the
+    /// available width.
     pub fn width(mut self, width: impl Into<Length>) -> Self {
         self.width = width.into();
         self

@@ -1,8 +1,5 @@
-//! Pagination - shadcn/ui faithful port.
-//!
-//! Page navigation: a centered row of ghost buttons, the current page in
-//! outline. shadcn's `Pagination` / `PaginationContent` / `PaginationItem`
-//! nesting collapses into [`pagination`] over a list of items.
+//! Page navigation. Pass links and other items to [`pagination`] to build a centered row. The
+//! active page uses an outline.
 //!
 //! # Example
 //!
@@ -179,7 +176,7 @@ pub fn next<'a, Message: 'a>() -> Step<'a, Message> {
 }
 
 impl<'a, Message: 'a> Step<'a, Message> {
-    /// Replace the label (shadcn's `text` prop).
+    /// Replace the navigation label.
     pub fn label(mut self, label: impl Into<Slot<'a, Message>>) -> Self {
         self.label = label.into();
         self

@@ -3,9 +3,7 @@
 //! `Style` is OKLCH-native — sidebar reuses container's `Style` field-for-field.
 //! Variant fns + Spec/atom apply tweaks before conversion.
 //!
-//! Other sidebar styling (menu buttons, separators, group labels) is handled
-//! inside each respective widget module, matching docs-sidebar rendering rather
-//! than base shadcn `SidebarMenuButton`.
+//! Menu buttons, separators, and group labels have their own widget styles.
 
 use std::ops::Add;
 
@@ -48,13 +46,8 @@ pub fn floating(theme: &Theme) -> Style {
     }
 }
 
-/// Inset sidebar — sidebar bg, NO border, NO shadow.
-///
-/// Per shadcn nova `sidebar-inner` (sidebar.tsx:244): the floating variant
-/// adds `rounded-lg shadow-sm ring-1`, but the inset variant does not. The
-/// content area (`SidebarInset`) is what gets the rounded/border/shadow
-/// treatment when paired with this variant — see
-/// `super::container::sidebar_inset`.
+/// Inset sidebar surface. The paired content area supplies the rounded corners, border, and
+/// shadow.
 pub fn inset(theme: &Theme) -> Style {
     Style {
         background: Some(theme.sidebar.background.into()),

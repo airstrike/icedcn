@@ -1,9 +1,8 @@
 //! Alert container styling
 //!
 //! `Style` is OKLCH-native — alert reuses container's `Style` field-for-field.
-//! Variant fns + Spec/atom apply tweaks before conversion. A [`Spec`] also
-//! carries the variant's description color, which shadcn sets on the
-//! `alert-description` slot rather than on the alert itself.
+//! Variants and style tweaks apply before conversion. A [`Spec`] can also set the description
+//! text color independently.
 
 use std::ops::Add;
 

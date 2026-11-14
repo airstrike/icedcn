@@ -1,35 +1,4 @@
-//! Switch styling — nova style
-//!
-//! `Style` is OKLCH-native — variants and tweaks operate on our `Color`,
-//! `Border`, `Background` end-to-end. Conversion to iced's sRGB types happens
-//! once at the catalog boundary (`From<Style> for iced::toggler::Style`).
-//!
-//! Nova classlist (verbatim from `.nova/apps/v4/styles/radix-nova/ui/switch.tsx`):
-//!
-//! ```text
-//! peer group/switch relative inline-flex shrink-0 items-center
-//! rounded-full border border-transparent transition-all outline-none
-//! after:absolute after:-inset-x-3 after:-inset-y-2
-//! focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50
-//! aria-invalid:border-destructive aria-invalid:ring-3
-//! aria-invalid:ring-destructive/20
-//! data-[size=default]:h-[18.4px] data-[size=default]:w-[32px]
-//! dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40
-//! data-checked:bg-primary data-unchecked:bg-input
-//! dark:data-unchecked:bg-input/80
-//! data-disabled:cursor-not-allowed data-disabled:opacity-50
-//! ```
-//!
-//! Thumb classlist:
-//!
-//! ```text
-//! pointer-events-none block rounded-full bg-background ring-0
-//! transition-transform group-data-[size=default]/switch:size-4
-//! group-data-[size=default]/switch:data-checked:translate-x-[calc(100%-2px)]
-//! dark:data-checked:bg-primary-foreground
-//! group-data-[size=default]/switch:data-unchecked:translate-x-0
-//! dark:data-unchecked:bg-foreground
-//! ```
+//! Switch track, thumb, and ring styles for checked, disabled, and invalid states.
 
 pub use iced_widget::toggler::Status;
 
@@ -72,7 +41,7 @@ pub struct Style {
     /// The ratio of separation between the track and the thumb, as a
     /// fraction of track height.
     pub padding_ratio: f32,
-    /// Optional focus ring (Tailwind `ring-*`). `None` = no halo rendered.
+    /// Optional ring painted around the control.
     pub ring: Option<Ring>,
 }
 
@@ -232,12 +201,7 @@ pub fn default(theme: &Theme, status: Status) -> Style {
     }
 }
 
-/// Invalid switch variant — nova `aria-invalid:*` track.
-///
-/// Border swaps to `palette.destructive` (`aria-invalid:border-destructive`);
-/// the focus ring uses `palette.destructive` at low alpha
-/// (`aria-invalid:ring-destructive/20`). In dark mode the destructive border
-/// drops to alpha 0.5 (`dark:aria-invalid:border-destructive/50`).
+/// Invalid switch track with a destructive border and validation ring.
 pub fn invalid(theme: &Theme, status: Status) -> Style {
     let p = theme;
     let dark = is_dark(theme);

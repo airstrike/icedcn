@@ -1,6 +1,4 @@
-//! Preview-02 notification-settings card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/notification-settings.tsx`.
+//! Notification settings card.
 
 use iced::Fill;
 use iced::Widget;

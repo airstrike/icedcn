@@ -1,4 +1,4 @@
-//! `/create` preview showcase cards from the shadcn reference.
+//! Showcase cards for the palette preview.
 
 use iced::Element;
 

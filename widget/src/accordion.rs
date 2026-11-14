@@ -1,7 +1,4 @@
-//! Accordion component — shadcn/ui faithful port
-//!
-//! A vertically stacked set of disclosure items where each header reveals
-//! a body section. Wraps our vendored `accordion::widget::Accordion`.
+//! Stacked disclosure items with individually expandable bodies.
 //!
 //! # Example
 //!
@@ -25,12 +22,10 @@
 //!
 //! # State model
 //!
-//! Radix state: uncontrolled with [`default_value`](Accordion::default_value)
-//! (the open set lives in the widget tree), or controlled with
-//! [`value`](Accordion::value) plus
-//! [`on_value_change`](Accordion::on_value_change). Either way the widget
-//! applies the [`Mode`] rules itself and publishes the complete new open
-//! set.
+//! Use [`default_value`](Accordion::default_value) to seed the widget’s open items, or
+//! [`value`](Accordion::value) to supply them from the application.
+//! [`on_value_change`](Accordion::on_value_change) receives the complete open set after the
+//! widget applies its [`Mode`] rules.
 
 #[cfg(feature = "svg")]
 mod chevron;
@@ -143,8 +138,7 @@ where
 }
 
 impl<'a, Message: 'a> Accordion<'a, Message> {
-    /// Set the accordion mode. Defaults to `Mode::Single { collapsible: true }`
-    /// — matching shadcn's `<Accordion type="single" collapsible>`.
+    /// Set the selection mode. The default allows one open item and lets the user close it.
     pub fn mode(mut self, mode: Mode) -> Self {
         self.mode = mode;
         self
@@ -297,8 +291,7 @@ mod tests {
         open.iter().map(|id| (*id).to_owned()).collect()
     }
 
-    /// Single-mode click on a closed item opens it AND closes whatever
-    /// else was open. Matches shadcn's `<Accordion type="single">`.
+    /// Opening an item in single mode closes the previously open item.
     #[test]
     fn single_mode_toggle_opens_one_closes_others() {
         let mode = Mode::Single { collapsible: true };

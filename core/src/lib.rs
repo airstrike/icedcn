@@ -1,7 +1,4 @@
-//! Core types for icedxdy - design tokens, colors, and theme definitions
-//!
-//! This crate provides the foundational types for the icedxdy design system,
-//! inspired by shadcn/ui.
+//! Design tokens, colors, and theme definitions shared by icedxdy widgets.
 
 pub mod background;
 pub mod border;

@@ -719,14 +719,7 @@ impl StatusExt for Status {
     }
 }
 
-/// A focus ring rendered around the switch track — a solid colored halo of
-/// `width` pixels painted behind the main fill. Equivalent to CSS
-/// `box-shadow: 0 0 0 {width}px {color}` (Tailwind `ring-*`).
-///
-/// **Deviation from upstream sweeten**: this widget renders a focus ring in
-/// `draw()` when `Style::ring` is `Some`. Sweeten's `toggler::Style` (and
-/// iced's stock one) have no ring field; we add it here so our nova-correct
-/// focus halo (`focus-visible:ring-3 ring-ring/50`) renders.
+/// A ring of `width` pixels painted behind the switch track.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ring {
     /// Halo color (already alpha-resolved by the catalog).
@@ -759,7 +752,7 @@ pub struct Style {
     /// The ratio of separation between the background and the toggle in
     /// relative height.
     pub padding_ratio: f32,
-    /// Optional focus ring (Tailwind `ring-*`). `None` = no halo rendered.
+    /// Optional ring painted around the switch.
     pub ring: Option<Ring>,
 }
 

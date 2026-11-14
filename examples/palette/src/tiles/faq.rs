@@ -1,6 +1,4 @@
-//! Preview-02 FAQ card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/faq.tsx`.
+//! FAQ card.
 
 use icedxdy::Theme;
 
@@ -8,5 +6,5 @@ use super::api_gap;
 use crate::{Message, State};
 
 pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
-    api_gap::missing("FAQ", "faq.tsx", &["Tabs"])
+    api_gap::missing("FAQ", "faq.rs", &["Tabs"])
 }

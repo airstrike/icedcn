@@ -1,6 +1,4 @@
 //! Preview 01 payout-threshold form card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/payout-threshold.tsx`.
 
 use iced::Widget;
 use iced::widget::{space, svg};

@@ -1,6 +1,4 @@
-//! Preview-02 card-overview card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/card-overview.tsx`.
+//! Card overview card.
 
 use icedxdy::Theme;
 
@@ -10,7 +8,7 @@ use crate::{Message, State};
 pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
     api_gap::missing(
         "Card Overview",
-        "card-overview.tsx",
+        "card_overview.rs",
         &["ChartContainer", "BarChart", "XAxis", "ChartTooltip"],
     )
 }

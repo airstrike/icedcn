@@ -5,7 +5,6 @@
 //!   [`Label`] signal. After every event the field drains those signals and,
 //!   when its label was pressed, runs [`control::activate`] over its content:
 //!   a checkbox, switch or radio toggles as if clicked, an input takes focus.
-//!   This is shadcn's `<FieldLabel htmlFor>`.
 //! - **Card.** The complete padded surface is a label. Its tint follows the
 //!   control immediately, as Nova FieldLabel has no transition class. Keyboard
 //!   focus decorates the card instead of the nested Checkbox.

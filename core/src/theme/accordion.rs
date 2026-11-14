@@ -1,33 +1,5 @@
-//! Accordion styling — nova style
-//!
-//! `Style` is OKLCH-native — variants and tweaks operate on our `Color`,
-//! `Border` end-to-end. Conversion to iced's sRGB types happens once at the
-//! catalog boundary in `widget/src/accordion/element.rs`.
-//!
-//! Nova classlist (verbatim from `.nova/apps/v4/styles/radix-nova/ui/accordion.tsx`):
-//!
-//! Item: `not-last:border-b` — every item except the last is bottom-bordered
-//! using `--color-border`.
-//!
-//! Trigger: `flex-1 items-start justify-between rounded-lg border border-transparent
-//! py-2.5 text-left text-sm font-medium transition-all outline-none
-//! hover:underline focus-visible:border-ring focus-visible:ring-3
-//! focus-visible:ring-ring/50 focus-visible:after:border-ring
-//! disabled:pointer-events-none disabled:opacity-50`. The chevron icon
-//! inherits `text-muted-foreground` and `size-4` (16px).
-//!
-//! Content: `overflow-hidden text-sm` body with `pt-0 pb-2.5` inner padding
-//! and animated open/close (`data-open:animate-accordion-down`,
-//! `data-closed:animate-accordion-up`). The body color is whatever the
-//! ambient `--color-foreground` resolves to.
-//!
-//! There is no `Card` variant in shadcn's accordion.tsx itself — the
-//! `accordion-card` example wraps the entire `<Accordion>` in a `<Card>`,
-//! so it composes externally. We mirror that with the `Card` variant fn
-//! here that simply leaves the divider/trigger surfaces alone (the wrapping
-//! `card` container provides the chrome). Kept as a named variant so the
-//! accordion-card example can declare its style intent at the call site for
-//! clarity / future surface tweaks.
+//! Accordion styles for dividers, triggers, and expanded content. The theme resolves colors in
+//! OKLCH before converting them for the iced renderer.
 
 use std::ops::Add;
 
@@ -71,15 +43,7 @@ impl Status {
     }
 }
 
-/// OKLCH-native accordion style. One value parametrizes a whole accordion's
-/// visuals: divider color (between items), trigger text color, body text
-/// color, hover/focus ring, and disabled opacity.
-///
-/// Field naming follows the shadcn slots: `divider` is the `border-b` line
-/// between consecutive items; `trigger_text` and `body_text` are the two
-/// distinct text surfaces (the trigger uses `font-medium`, the body uses
-/// the regular weight); `ring` is the focus halo painted around the
-/// trigger when keyboard-focused.
+/// Colors, focus ring, and disabled opacity shared by the items of an accordion.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Style {
     /// Color of the 1px line between consecutive items (`not-last:border-b`).
@@ -103,8 +67,7 @@ pub struct Style {
     /// `rounded-lg` ring; we surface that as a tweak knob rather than a
     /// dedicated variant — the wrapper container provides the rounding.
     pub border: Border,
-    /// Border-radius of the trigger row's focus highlight (`rounded-lg`).
-    /// Mirrors shadcn nova's `rounded-lg` on the trigger element.
+    /// Corner radius of the trigger’s focus highlight.
     pub trigger_radius: crate::Radius,
 }
 
@@ -167,17 +130,8 @@ pub fn default(theme: &Theme, status: Status) -> Style {
     }
 }
 
-/// Card accordion variant — used by the `accordion-card` shadcn example,
-/// which wraps the accordion in a `<Card>`. Same trigger / body surfaces as
-/// `default`; suppresses the outer border (the wrapping card already paints
-/// one) but keeps the inter-item divider so multiple items still read as
-/// distinct rows.
-///
-/// In practice this is currently identical to `default` — the wrapping
-/// `card` container's chrome lives at the call site, so we don't need to
-/// duplicate it here. Kept as a named variant for call-site clarity and
-/// to provide a stable seam if shadcn adds card-specific accordion tweaks
-/// upstream.
+/// Accordion style for use inside a card. The card paints the outer surface and the accordion
+/// paints dividers between items.
 pub fn card(theme: &Theme, status: Status) -> Style {
     default(theme, status)
 }

@@ -1,9 +1,4 @@
-//! NativeSelect styling - nova style.
-//!
-//! `rounded-lg border border-input bg-transparent text-sm`, a muted
-//! chevron, `dark:bg-input/30 dark:hover:bg-input/50`;
-//! `aria-invalid:border-destructive` (`/50` in dark);
-//! `disabled:cursor-not-allowed` with `opacity-50` on the wrapper.
+//! Single-choice field styles, including muted chevrons and validation borders.
 
 use iced_widget::pick_list::{Status, Style, StyleFn};
 
@@ -73,7 +68,7 @@ pub fn invalid(theme: &Theme, status: Status) -> Style {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Default;
 
-/// Invalid select style (`aria-invalid`).
+/// Invalid select style.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Invalid;
 

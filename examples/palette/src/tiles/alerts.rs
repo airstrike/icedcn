@@ -21,7 +21,7 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
     let info = tinted_alert(
         |t: &Theme| t.info,
         "Heads up",
-        "icedxdy ships only the alert variants shadcn does — the rest come from container + tint.",
+        "This dashboard uses your current notification settings.",
     );
     let success = tinted_alert(
         |t: &Theme| t.success,
@@ -60,10 +60,7 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
     .boxed()
 }
 
-/// A small alert-shaped block painted in a tint that the stock alert
-/// widget doesn't carry as a variant (info / success / warning).
-/// Mirrors shadcn's `bg-{tint}/10 text-{tint}-foreground border-{tint}/20`
-/// cascade by building the container style closure directly.
+/// Build an informational, success, or warning alert with the selected palette.
 fn tinted_alert(
     getter: fn(&Theme) -> Palette,
     title: &'static str,
@@ -98,8 +95,7 @@ fn tinted_alert(
         .into()
 }
 
-/// Tint surface fill: 10% of `base` in light, 20% in dark — matches
-/// shadcn's `bg-{tint}/10 dark:bg-{tint}/20` for low-emphasis surfaces.
+/// Use a 10% fill in light themes and a 20% fill in dark themes.
 fn tint_fill(p: Palette) -> Color {
     if p.is_dark {
         p.base.alpha(0.20)

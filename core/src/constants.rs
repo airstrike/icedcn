@@ -1,14 +1,10 @@
-//! Design constants based on shadcn/ui
-//!
-//! These are the specific values from shadcn's design system.
-//! Use iced's native Radius, Padding, etc. types with these values.
+//! Design constants in logical pixels for use with iced geometry and layout builders.
 
 /// Border radius constants (in pixels)
 ///
 /// Base radius is 10px, with variants calculated relative to it.
 pub mod radius {
-    /// 4px - extra small radius. shadcn checkbox uses this verbatim
-    /// (`rounded-[4px]` — a literal pixel value, not a Tailwind preset).
+    /// 4px corner radius used by checkboxes.
     pub const XS: f32 = 4.0;
     /// 6px - small radius
     pub const SM: f32 = 6.0;
@@ -26,9 +22,7 @@ pub mod radius {
     pub const XL4: f32 = 26.0;
 }
 
-/// Spacing constants (in pixels)
-///
-/// Based on Tailwind's 4px base unit.
+/// Spacing in logical pixels on a four-pixel scale.
 pub mod spacing {
     pub const UNIT: f32 = 4.0;
     /// 2px
@@ -51,23 +45,11 @@ pub mod spacing {
     pub const XL5: f32 = 32.0;
 }
 
-/// A spacing scalar — Tailwind `gap-N` / `p-N` units mapped to pixels.
+/// A spacing value in logical pixels. Pass it to builders that accept `Pixels` or uniform
+/// `Padding`.
 ///
-/// `Space::U4` reads as "Tailwind spacing unit 4" (`16px`) and can be
-/// used anywhere iced accepts `Pixels`; it also converts to uniform
-/// `Padding` for `p-N` call sites. `Gap::G4` remains as the gap-specific
-/// spelling for source ports that mirror `gap-4` literally.
-///
-/// Wraps a raw `f32` so iced builders that take `impl Into<Pixels>`
-/// (`Column::spacing`, `Padding::top`, `Padding::ZERO.bottom`, …) accept
-/// `Space::U2` / `Gap::G2` directly via the `From<Gap> for Pixels` impl
-/// below. Custom values escape via the public `f32` field (`Gap(13.0)`)
-/// or the `From<f32>` impl that mirrors `Pixels` itself.
-///
-/// Modeled as a struct with associated constants (rather than an enum)
-/// for parity with iced's own scalar wrappers (`Pixels`, `Em`) and to
-/// avoid a `Custom(f32)` arm cluttering pattern matches we don't need
-/// — every consumer just converts to `Pixels` and forgets the original.
+/// For example, `Space::U4` and `Gap::G4` both represent 16 pixels. Use `Gap(13.0)` for a
+/// custom distance.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
 pub struct Gap(pub f32);
 
@@ -164,9 +146,7 @@ pub mod font_size {
     pub const XL2: f32 = 24.0;
 }
 
-/// Component height constants (in pixels)
-///
-/// Based on shadcn button sizes.
+/// Component heights in logical pixels.
 pub mod height {
     /// 24px - xs
     pub const XS: f32 = 24.0;

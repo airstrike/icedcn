@@ -1,6 +1,7 @@
 [package]
 name = "icedxdy"
-description = "A shadcn-inspired component library for Iced"
+description = "Themed widgets for iced applications"
+exclude = ["/scripts/sync-nova.sh"]
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -39,7 +40,7 @@ edition = "2024"
 license = "MIT"
 repository = "https://github.com/airstrike/icedxdy"
 categories = ["gui"]
-keywords = ["gui", "ui", "graphics", "interface", "widgets", "shadcn"]
+keywords = ["gui", "iced", "graphics", "interface", "widgets"]
 rust-version = "1.85"
 
 [workspace.dependencies]

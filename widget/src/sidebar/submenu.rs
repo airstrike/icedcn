@@ -9,11 +9,7 @@ use iced_core::Padding;
 use iced_widget::Widget;
 use icedxdy_core::Theme;
 
-/// Create a sidebar submenu.
-///
-/// A nested list with a left border line, matching shadcn's SidebarMenuSub
-/// (mx-3.5 = 14px, px-2.5 = 10px, py-0.5 = 2px). The left border provides
-/// visual nesting indication.
+/// Create a nested sidebar list with indentation and a left border.
 pub fn submenu<'a, Message: 'a>(
     children: impl IntoIterator<Item = Slot<'a, Message>>,
 ) -> Row<'a, Message> {

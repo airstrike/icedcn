@@ -1,4 +1,4 @@
-//! Sheet — shadcn/ui faithful port (Radix `Dialog`, pinned to an edge).
+//! A modal panel attached to a window edge.
 //!
 //! The same component as [`Dialog`]: two closures receive a
 //! [`Handle`](crate::dialog::Handle), `s.trigger` opens it and `s.close`

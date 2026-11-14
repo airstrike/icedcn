@@ -1,7 +1,6 @@
 //! Empty-state component slots.
 //!
-//! Mirrors shadcn's `Empty` family: a centered empty-state body, optional
-//! media, title/description header, and trailing content slot.
+//! A centered empty state with optional media, a title, a description, and trailing content.
 //!
 //! # Example
 //!
@@ -16,7 +15,7 @@
 //!
 //! # Variants
 //!
-//! shadcn's `EmptyMedia` `variant` prop is a style: `.style(empty::Icon)`.
+//! Use `.style(empty::Icon)` to frame an icon in the media slot.
 
 use iced_core::Length::Fill;
 use iced_core::Padding;
@@ -78,8 +77,7 @@ impl<'a, Message: 'a> Empty<'a, Message> {
         self
     }
 
-    /// Override root padding. shadcn's default is `p-6`; many blocks pass
-    /// class overrides like `p-4`.
+    /// Change the padding around the empty state.
     pub fn padding(mut self, padding: impl Into<icedxdy_core::Padding>) -> Self {
         let padding: icedxdy_core::Padding = padding.into();
         self.padding = padding.into();

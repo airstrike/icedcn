@@ -2,7 +2,7 @@
 //!
 //! An iced `Component` around the whole layout, sidebar and inset alike, so
 //! a [`trigger`](super::trigger) anywhere inside it toggles the sidebar, as
-//! does `Cmd+B` (`Ctrl+B` elsewhere), shadcn's keyboard shortcut. The body
+//! does `Cmd+B` (`Ctrl+B` elsewhere). The body
 //! closure receives a [`Handle`] that sizes the sidebar for the current
 //! state:
 //!
@@ -115,7 +115,7 @@ impl<'a, Message> Provider<'a, Message> {
         self
     }
 
-    /// How the sidebar collapses (shadcn's `collapsible` on `Sidebar`).
+    /// Set how the sidebar collapses.
     pub fn collapsible(mut self, collapsible: Collapsible) -> Self {
         self.collapsible = collapsible;
         self

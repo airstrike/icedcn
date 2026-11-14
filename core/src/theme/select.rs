@@ -1,8 +1,4 @@
-//! Select trigger styling: nova style.
-//!
-//! `SelectTrigger`: `rounded-lg border border-input bg-transparent text-sm`,
-//! `dark:bg-input/30 dark:hover:bg-input/50`, `disabled:opacity-50`, and
-//! `aria-invalid:border-destructive` (`dark:aria-invalid:border-destructive/50`).
+//! Select trigger colors for the field, hover, disabled, and invalid states.
 //! Its menu uses [`popover::content`](super::popover::content) and the
 //! [`menu::item`](super::menu::item) rows.
 
@@ -17,7 +13,7 @@ pub enum Variant {
     /// A plain trigger.
     #[default]
     Default,
-    /// An invalid field (`aria-invalid`): a destructive border.
+    /// An invalid field: a destructive border.
     Invalid,
 }
 

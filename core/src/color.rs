@@ -1,6 +1,6 @@
 //! Color types with OKLCH support
 //!
-//! shadcn/ui uses OKLCH color space for perceptually uniform colors.
+//! OKLCH represents a color by its perceptual lightness, chroma, and hue.
 //! OKLCH format: oklch(lightness chroma hue)
 //! - lightness: 0.0 (black) to 1.0 (white)
 //! - chroma: 0.0 (gray) to ~0.4 (vivid)

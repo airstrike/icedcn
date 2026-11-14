@@ -1,12 +1,5 @@
-//! Progress component — shadcn/ui faithful port.
-//!
-//! A pill-shaped progress indicator, 4px tall (`h-1`), with a `bg-muted`
-//! track and `bg-primary` fill. Mirrors nova's `Progress` exactly.
-//!
-//! The widget self-animates: prop value changes ease over 150ms via
-//! `cubic-bezier(0.4, 0, 0.2, 1)`, the same easing button uses for hover
-//! transitions and the same Tailwind `transition-all` default that
-//! shadcn's React `<Progress>` inherits on its `<Indicator>` element.
+//! A four-pixel progress bar with a muted track and a primary-colored fill. When the value
+//! changes, the fill animates from its current position to the new target over 150 ms.
 //!
 //! # Example
 //!

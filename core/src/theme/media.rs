@@ -1,9 +1,6 @@
 //! Media-slot framing shared by `ItemMedia` and `EmptyMedia`.
 //!
-//! shadcn's media `variant` classes bundle paint with geometry
-//! (`size-8 rounded-lg bg-muted`, `size-10 overflow-hidden rounded-sm`), so a
-//! media style is a [`Frame`]: a container [`Spec`] plus the square tile and
-//! clipping the variant asks for.
+//! A media [`Frame`] combines a container [`Spec`] with the size and clipping of the tile.
 
 use std::ops::Add;
 

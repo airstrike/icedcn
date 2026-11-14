@@ -1,8 +1,7 @@
 //! Variant consts — `outline`, `ghost`, `link`, `filled`.
 //!
-//! Each variant sets only the structural fields it owns; the widget's
-//! intrinsic default fills the rest at apply time. Intrinsic tints
-//! follow shadcn: outline/ghost are neutral, link/filled are primary.
+//! Each variant sets its structural fields. Widgets supply the remaining defaults. Outline and
+//! ghost use a neutral tint, while link and filled use the primary tint.
 
 #![allow(non_upper_case_globals)]
 

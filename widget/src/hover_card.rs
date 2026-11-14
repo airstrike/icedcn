@@ -1,4 +1,4 @@
-//! HoverCard: shadcn/ui faithful port (Radix `HoverCard`).
+//! A preview panel that appears when the pointer rests on its trigger.
 //!
 //! A card shown next to its trigger while the pointer rests on it, over
 //! iced's [`anchored`](iced_widget::anchored) overlay in hover mode. The
@@ -10,7 +10,7 @@
 //!
 //! hover_card(
 //!     button("Hover Here").style(button::Link),
-//!     column![text("@nextjs").semibold(), text("The React Framework.")],
+//!     column![text("iced").semibold(), text("A GUI library for Rust.")],
 //! )
 //! .open_delay(Duration::from_millis(10))
 //! .close_delay(Duration::from_millis(100))
@@ -52,7 +52,6 @@ pub fn hover_card<'a, Message>(
         trigger: trigger.into(),
         content: content.into(),
         position: anchored::Position::new(Side::Bottom).offset(4),
-        // Radix's defaults.
         open_delay: Duration::from_millis(700),
         close_delay: Duration::from_millis(300),
         // `w-64`.

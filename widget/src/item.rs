@@ -1,7 +1,6 @@
 //! Item component slots.
 //!
-//! Mirrors shadcn's `Item` primitive for compact rows or muted panels inside
-//! cards.
+//! Compose compact rows or muted panels from media, content, and actions.
 //!
 //! # Example
 //!
@@ -17,9 +16,8 @@
 //!
 //! # Variants
 //!
-//! shadcn's `variant` props are styles: `.style(item::Outline)` and
-//! `.style(item::Muted)` on the item, `.style(item::Icon)` and
-//! `.style(item::Image)` on its media.
+//! Apply `.style(item::Outline)` or `.style(item::Muted)` to an item. Its media can use
+//! `item::Icon` or `item::Image`.
 
 use crate::button::widget::{self, Button, Status};
 use iced_core::Length::{self, Fill};

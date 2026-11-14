@@ -39,8 +39,8 @@ pub fn from_checkbox(s: iced_widget::checkbox::Status) -> Status {
     }
 }
 
-/// Map iced's text-input status to ours. `Focused { is_hovered }` collapses
-/// to `Focused` — hover-while-focused isn't a distinct style in shadcn nova.
+/// Map iced text-input states to theme states. A focused input retains its focused style while
+/// hovered.
 pub fn from_text_input(s: iced_widget::text_input::Status) -> Status {
     use iced_widget::text_input::Status;
     match s {

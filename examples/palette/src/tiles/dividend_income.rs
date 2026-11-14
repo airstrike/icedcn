@@ -1,6 +1,4 @@
-//! Preview-02 dividend-income card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/dividend-income.tsx`.
+//! Dividend income card.
 
 use icedxdy::Theme;
 
@@ -10,7 +8,7 @@ use crate::{Message, State};
 pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
     api_gap::missing(
         "Q2 Dividend Income",
-        "dividend-income.tsx",
+        "dividend_income.rs",
         &["ChartContainer", "BarChart"],
     )
 }

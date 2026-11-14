@@ -1,7 +1,4 @@
-//! Source-backed gap cards for preview-02 tiles.
-//!
-//! These are intentionally explicit: a tile may be present in the grid while
-//! still documenting which icedxdy primitive is missing before it can be LPP.
+//! Placeholder cards listing the widgets a dashboard tile needs.
 
 use iced::Widget;
 use iced::{Center, Fill};
@@ -43,7 +40,7 @@ fn gap_rows(gaps: &'static [&'static str]) -> Vec<Slot<'static, Message>> {
     let mut rows: Vec<Slot<'static, Message>> = vec![
         row![
             marker(),
-            text::small("Missing primitive blocks LPP")
+            text::small("Widgets needed for this example")
                 .medium()
                 .width(Fill),
         ]
@@ -69,7 +66,7 @@ pub fn missing(
             .style(theme::text::Muted)
             .into(),
         text::small(source).medium().into(),
-        text::muted("Present in the source grid, blocked from LPP by missing primitives.")
+        text::muted("This example requires the widgets listed below.")
             .width(Fill)
             .into(),
     ];
@@ -81,7 +78,7 @@ pub fn missing(
     card::card(
         column![
             card::header(title)
-                .description("Flagged for icedxdy API coverage.")
+                .description("Widget coverage for this example.")
                 .action(marker()),
             card::content(container(body).width(Fill)),
         ]

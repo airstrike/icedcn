@@ -1,4 +1,4 @@
-//! Observability card from the shadcn `/create` preview.
+//! Observability preview card.
 
 use iced::Fill;
 use iced::Widget;

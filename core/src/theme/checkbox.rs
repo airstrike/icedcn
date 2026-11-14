@@ -1,25 +1,4 @@
-//! Checkbox styling — nova style
-//!
-//! `Style` is OKLCH-native — variants and tweaks operate on our `Color`,
-//! `Border`, `Background` end-to-end. Conversion to iced's sRGB types happens
-//! once at the catalog boundary (`From<Style> for iced::checkbox::Style`).
-//!
-//! Nova classlist (verbatim from `.nova/apps/v4/styles/radix-nova/ui/checkbox.tsx`):
-//!
-//! ```text
-//! peer relative flex size-4 shrink-0 items-center justify-center
-//! rounded-[4px] border border-input transition-colors outline-none
-//! group-has-disabled/field:opacity-50
-//! after:absolute after:-inset-x-3 after:-inset-y-2
-//! focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50
-//! disabled:cursor-not-allowed disabled:opacity-50
-//! aria-invalid:border-destructive aria-invalid:ring-3
-//! aria-invalid:ring-destructive/20 aria-invalid:aria-checked:border-primary
-//! dark:bg-input/30 dark:aria-invalid:border-destructive/50
-//! dark:aria-invalid:ring-destructive/40
-//! data-checked:border-primary data-checked:bg-primary
-//! data-checked:text-primary-foreground dark:data-checked:bg-primary
-//! ```
+//! Checkbox styles for checked, indeterminate, focused, and invalid states.
 
 pub use iced_widget::checkbox::Status;
 
@@ -45,7 +24,7 @@ pub struct Style {
     pub border: Border,
     /// Optional label text color (None inherits the default).
     pub text_color: Option<Color>,
-    /// Optional focus ring (Tailwind `ring-*`). `None` = no halo rendered.
+    /// Optional ring painted around the control.
     pub ring: Option<Ring>,
 }
 
@@ -153,8 +132,8 @@ pub fn default(theme: &Theme, status: Status) -> Style {
     let dark = is_dark(theme);
     let checked = is_checked(status);
 
-    // Tailwind's color-mix with transparent preserves the input token's alpha:
-    // dark input is white at 0.15, so bg-input/30 resolves to alpha 0.045.
+    // Multiply by the input color’s existing alpha. White at 15% opacity becomes 4.5% at this
+    // strength.
     let unchecked_bg = if dark {
         p.input.scale_alpha(0.3)
     } else {
@@ -166,10 +145,6 @@ pub fn default(theme: &Theme, status: Status) -> Style {
             background: p.primary.base.into(),
             icon_color: p.primary.foreground,
             border: Border {
-                // shadcn nova: `rounded-[4px]` — a literal pixel value, NOT a
-                // Tailwind preset. We expose this as `radius::XS` rather than
-                // a magic literal so future 4px-radius widgets pick it up
-                // consistently.
                 radius: radius::XS.into(),
                 width: 1.0,
                 color: p.primary.base,
@@ -210,15 +185,8 @@ pub fn default(theme: &Theme, status: Status) -> Style {
     }
 }
 
-/// Invalid checkbox variant — nova `aria-invalid:*` box.
-///
-/// Border swaps to `palette.destructive` (`aria-invalid:border-destructive`);
-/// a 3px ring is rendered at `palette.destructive` @ 20% alpha
-/// (`aria-invalid:ring-3 ring-destructive/20`) — in dark mode the ring drops
-/// to 40% alpha (`dark:aria-invalid:ring-destructive/40`). Special case: when
-/// invalid AND checked, the border returns to `palette.primary`
-/// (`aria-invalid:aria-checked:border-primary`). In dark mode the
-/// destructive border drops to alpha 0.5 (`dark:aria-invalid:border-destructive/50`).
+/// Invalid checkbox with a three-pixel validation ring. Checked controls retain their primary
+/// border. The destructive ring is more opaque in dark themes.
 pub fn invalid(theme: &Theme, status: Status) -> Style {
     let p = theme;
     let dark = is_dark(theme);
@@ -234,10 +202,7 @@ pub fn invalid(theme: &Theme, status: Status) -> Style {
         p.destructive.base
     };
 
-    // shadcn `aria-invalid:ring-3 ring-destructive/20` (`/40` in dark).
-    // Always rendered for the invalid variant — shadcn's `aria-invalid:`
-    // prefix unconditionally enables the ring, no focus required (different
-    // from the `focus-visible:ring-3` ring which gates on focus).
+    // Invalid controls show the validation ring regardless of focus.
     let invalid_ring = Some(Ring {
         color: p.destructive.base.alpha(if dark { 0.40 } else { 0.20 }),
         width: 3.0,
@@ -769,8 +734,7 @@ mod tests {
         assert!(close(ring.color, theme.neutral.ring));
     }
 
-    /// shadcn `rounded-[4px]` — literal 4 (NOT a Tailwind preset). We expose
-    /// it as `radius::XS` so future 4px-radius widgets pick it up consistently.
+    /// Checkbox corners use the shared four-pixel radius.
     #[test]
     fn default_uses_xs_radius() {
         let theme = Theme::light();
@@ -788,10 +752,8 @@ mod tests {
         }
     }
 
-    /// shadcn `aria-invalid:ring-3 ring-destructive/20` — invalid checkbox
-    /// emits a 3px ring at destructive @ 20% alpha (light) / 40% (dark) by
-    /// default, no focus required. Verifies the variant fn writes the ring
-    /// directly (not via a tweak).
+    /// Invalid checkboxes show a three-pixel ring in the destructive color, including while
+    /// unfocused.
     #[test]
     fn invalid_emits_destructive_ring_3px_at_20_percent() {
         let theme = Theme::light();
@@ -800,7 +762,7 @@ mod tests {
         let ring = resolved.ring.expect("invalid variant must emit a ring");
         assert!(
             (ring.width - 3.0).abs() < 1e-4,
-            "expected 3px ring (shadcn `ring-3`), got {}",
+            "expected 3px ring, got {}",
             ring.width,
         );
         let expected_color = p.destructive.base.alpha(0.20);

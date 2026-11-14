@@ -104,13 +104,13 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
         self
     }
 
-    /// Reserve Nova's reduced leading icon padding (`data-icon="inline-start"`).
+    /// Use reduced leading padding for an icon at the start of the button.
     pub fn icon_start(mut self) -> Self {
         self.icon_start = true;
         self
     }
 
-    /// Reserve Nova's reduced trailing icon padding (`data-icon="inline-end"`).
+    /// Use reduced trailing padding for an icon at the end of the button.
     pub fn icon_end(mut self) -> Self {
         self.icon_end = true;
         self
@@ -240,15 +240,8 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
             .unwrap_or_else(|| self.size.unwrap_or_default().height())
     }
 
-    /// Wrap the existing style fn with a post-processor that gets to mutate
-    /// the resolved [`iced_widget::button::Style`] before the bridge to our
-    /// vendored widget. Used by [`button::group`] to selectively zero out
-    /// edge-button corner radii at iteration time, after the user's style
-    /// closure has run — matches shadcn's `[&>*:not(:first-child)]:rounded-l-none`
-    /// child-position cascade, which can only be applied once the parent
-    /// knows the child's position in the group.
-    ///
-    /// [`button::group`]: crate::button::group
+    /// Adjust the resolved [`iced_widget::button::Style`] after applying the user’s style. A
+    /// button group uses this to join the corners of adjacent buttons.
     pub fn map_style<F>(mut self, transform: F) -> Self
     where
         F: Fn(iced_widget::button::Style) -> iced_widget::button::Style + 'a,

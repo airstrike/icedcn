@@ -1,19 +1,14 @@
-//! Forked progress-bar widget with an internal value-easing animation.
+//! An animated variant of [`iced's progress bar`](https://docs.iced.rs/iced/widget/progress_bar/).
 //!
-//! This is a sweetened version of [`iced`'s `ProgressBar`] that owns its
-//! own [`Animation<f32>`]: each time the parent re-renders with a new
-//! `value`, the bar smoothly interpolates from its currently-displayed
-//! value to the new target over 150ms using
-//! `cubic-bezier(0.4, 0, 0.2, 1)` — Tailwind's `transition-all` default,
-//! same easing as our [`button`] hover transitions.
+//! The widget animates from the displayed value to each new target over 150 ms, using the same
+//! easing curve as [`button`] hover transitions.
 //!
 //! Style integrates with [`progress_bar::Catalog`] so the
 //! existing OKLCH-native catalog in `theme::progress_bar` continues to
 //! drive the visuals. No widget-level palette work happens here — the
 //! widget only owns the value transition.
 //!
-//! [`iced`'s `ProgressBar`]: https://docs.iced.rs/iced/widget/progress_bar/
-//! [`button`]: crate::button
+//! [`button`]: mod@crate::button
 
 use std::ops::RangeInclusive;
 use std::time::Duration;
@@ -31,20 +26,13 @@ use iced_core::{
 };
 use iced_widget::progress_bar;
 
-/// Duration of the value-eased transition. Matches Tailwind's
-/// `transition-all` default — what shadcn's `<Progress>` uses on its
-/// `<Indicator>` element.
+/// Duration of the animation to a new value.
 const TRANSITION_DURATION: Duration = Duration::from_millis(150);
 
 /// A self-animating progress bar.
 ///
-/// Whenever the [`value`] prop changes between renders, the widget eases
-/// from the currently-displayed value to the new target over 150ms.
-/// Reads its style from [`progress_bar::Catalog`] — the same
-/// catalog iced's stock `progress_bar` uses, so OKLCH-native styles in
-/// `theme::progress_bar` apply unchanged.
-///
-/// [`value`]: ProgressBar::value
+/// When its value changes, the widget eases to the new value over 150 ms. It uses the same
+/// [`progress_bar::Catalog`] as the stock iced widget.
 pub struct ProgressBar<'a, Message, Theme = iced_widget::Theme>
 where
     Theme: progress_bar::Catalog,
@@ -132,7 +120,7 @@ struct State {
 }
 
 impl State {
-    /// Seed the animation at `value` with the shadcn `transition-all` easing.
+    /// Start the animation at the supplied value.
     /// Called from [`Widget::state`] so the first mount renders at the
     /// initial prop value rather than 0.0 — iced's `Tree::new` does NOT call
     /// `Widget::diff`, so any lazy-init via `diff()` would silently miss.
@@ -140,7 +128,6 @@ impl State {
         Self {
             animated: Animation::new(value)
                 .easing(Easing::Custom(
-                    // cubic-bezier(0.4, 0, 0.2, 1) — shadcn's transition-all
                     |t| crate::animation::cubic_bezier(0.4, 0.0, 0.2, 1.0, t),
                 ))
                 .duration(TRANSITION_DURATION),

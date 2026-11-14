@@ -1,6 +1,4 @@
-//! Preview-02 roller-shades card.
-//!
-//! Source: shadcn `registry/bases/radix/blocks/preview-02/cards/roller-shades.tsx`.
+//! Roller shades card.
 
 use iced::Fill;
 use iced::Widget;

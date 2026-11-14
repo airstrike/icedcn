@@ -1,6 +1,5 @@
 //! Avatar — circular image with text fallback.
 //!
-//! Mirrors shadcn nova's `<Avatar>`/`<AvatarImage>`/`<AvatarFallback>` triple.
 //! Three sizes (`Sm` 24px, `Default` 32px, `Lg` 40px), an optional corner
 //! [`badge`], and a [`group`] constructor for negative-space overlap with an
 //! optional trailing count chip via [`group::Group::count`].
@@ -183,9 +182,7 @@ impl<'a, Message: 'a> Avatar<'a, Message> {
         self.size.geometry()
     }
 
-    /// Toggle the 2px outer ring. Internal API: [`group`] flips this on
-    /// for every avatar it composes; stand-alone avatars don't expose it
-    /// to keep the builder surface focused on shadcn parity.
+    /// Enable the two-pixel outer ring that separates overlapping avatars in a group.
     pub(crate) fn ring(mut self, ring: bool) -> Self {
         self.ring = ring;
         self

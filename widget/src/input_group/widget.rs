@@ -1,7 +1,5 @@
-//! The surface behind [`InputGroup`](super::InputGroup): it paints the
-//! Input's border, background and focus ring around its content and tracks
-//! whether a control inside it is focused, which is how shadcn's
-//! `has-[[data-slot=input-group-control]:focus-visible]` reads.
+//! Paints the border, background, and focus ring around the contents of an
+//! [`InputGroup`](super::InputGroup). The group tracks focus on its inner control.
 
 use std::any::Any;
 

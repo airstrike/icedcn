@@ -1,4 +1,4 @@
-//! Toast - a port of shadcn/ui's Sonner.
+//! Short-lived notifications displayed in a corner of the window.
 //!
 //! A [`Toaster`] wraps part of the interface (usually all of it) and shows
 //! the toasts raised inside it in a corner of the window, each for a few
@@ -42,8 +42,7 @@ use crate::core::widget::{Id, Operation};
 use crate::marker::{self, Press};
 use crate::text::Text;
 
-/// What a toast is about (Sonner's `toast.success`, `toast.info`, ...),
-/// which picks its icon.
+/// Kind of notification, which determines the icon.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, std::default::Default)]
 pub enum Kind {
     /// No icon.
@@ -74,7 +73,7 @@ pub enum Position {
     BottomLeft,
     /// Bottom edge, centered.
     BottomCenter,
-    /// Bottom right corner (Sonner's default).
+    /// Bottom right corner (the default).
     #[default]
     BottomRight,
 }
@@ -91,7 +90,7 @@ pub struct Toast<Message> {
     action: Option<(String, Message)>,
 }
 
-/// Create a [`Toast`] titled `title` (Sonner's `toast(title)`).
+/// Create a [`Toast`] with the given title.
 pub fn toast<Message>(title: impl Into<String>) -> Toast<Message> {
     Toast {
         title: title.into(),
@@ -264,7 +263,7 @@ fn default_icon<'a, Message: 'a>(kind: Kind) -> Option<Slot<'a, Message>> {
 /// Builds the icon for a toast of the given [`Kind`].
 type Icons<'a, Message> = Box<dyn Fn(Kind) -> Option<Slot<'a, Message>> + 'a>;
 
-/// Shows the toasts raised inside its content (Sonner's `<Toaster />`).
+/// Displays toasts raised inside its content.
 pub struct Toaster<'a, Message> {
     content: Slot<'a, Message>,
     position: Position,

@@ -1,4 +1,4 @@
-//! Tooltip: shadcn/ui faithful port (Radix `Tooltip`).
+//! A short hint anchored to a widget.
 //!
 //! A `text-xs` hint on a `bg-foreground` panel with an arrow pointing at its
 //! trigger, shown while the pointer rests on the trigger, on the trigger's
@@ -49,10 +49,8 @@ pub fn tooltip<'a, Message: 'a>(
     Tooltip {
         trigger: trigger.into(),
         content: content.into(),
-        // Radix places the content `sideOffset + arrow height` away; the
-        // arrow fills that gap.
+        // Include the arrow height in the distance between the trigger and panel.
         position: anchored::Position::new(Side::Top).offset(10),
-        // shadcn's `TooltipProvider delayDuration={0}`.
         delay: Duration::ZERO,
         open: None,
         on_open_change: None,

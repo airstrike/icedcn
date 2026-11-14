@@ -156,9 +156,8 @@ pub fn button<'a, Message: Clone + 'a>(
     button::button(content)
 }
 
-/// Create a [`Text`] widget at small size — matches shadcn's default body
-/// text (`text-sm`, 14px). For other sizes use the explicit helpers
-/// (`text::h1`, `text::large`, `text::muted`, etc.).
+/// Create a [`Text`] widget at the default body size of 14 pixels. See the `text` module for
+/// headings, muted text, and other typography helpers.
 pub fn text<'a>(content: impl iced_core::text::IntoFragment<'a>) -> Text<'a> {
     text::small(content)
 }
@@ -341,8 +340,7 @@ pub fn alert<'a, Message: 'a>() -> Alert<'a, Message> {
     alert::alert()
 }
 
-/// Create an [`AspectRatio`] wrapper that constrains `content` to a
-/// `width / height` ratio. Mirrors shadcn's `<AspectRatio ratio={...}>`.
+/// Constrain `content` to a width-to-height ratio with an [`AspectRatio`] widget.
 pub fn aspect_ratio<'a, Message: 'a>(
     content: impl Into<Slot<'a, Message>>,
     ratio: f32,
