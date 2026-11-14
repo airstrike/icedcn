@@ -1,12 +1,10 @@
-use crate::icon;
+// The RTL example is outside the supported browser examples.
 use crate::{Message, page};
-use iced::Widget;
 use iced::widget::component::{Component, component};
-use iced::{Element, Task};
-use icedcn::Slot;
-use icedcn::Theme;
-use icedcn::widget::calendar::{Date, Datelike, Duration, Mode, Selection, Weekday, today};
-use icedcn::widget::{calendar, date_picker, field, input, input_group, popover, row, space, text};
+use iced::{Element, Fill, Task, Widget};
+use icedcn::widget::calendar::{Date, Datelike, Duration, Mode, Selection, today};
+use icedcn::widget::{date_picker, field, input, row, text};
+use icedcn::{Slot, Theme};
 
 pub static META: page::Meta = page::Meta {
     title: "Date Picker",
@@ -20,57 +18,62 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/date-picker-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/date-picker-installation.md"),
+    page::Block::Md("examples/browser/snippets/date-picker-usage.md"),
     page::Block::Md("examples/browser/snippets/date-picker-composition.md"),
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "basic",
-                title: "Basic",
-                description: None,
-                snippet: "examples/browser/snippets/date-picker-basic.md",
-            },
-            page::Block::Example {
-                id: "range",
-                title: "Range Picker",
-                description: None,
-                snippet: "examples/browser/snippets/date-picker-range.md",
-            },
-            page::Block::Example {
-                id: "dob",
-                title: "Date of Birth",
-                description: None,
-                snippet: "examples/browser/snippets/date-picker-dob.md",
-            },
-            page::Block::Example {
-                id: "input",
-                title: "Input",
-                description: None,
-                snippet: "examples/browser/snippets/date-picker-input.md",
-            },
-            page::Block::Example {
-                id: "time",
-                title: "Time Picker",
-                description: None,
-                snippet: "examples/browser/snippets/date-picker-time.md",
-            },
-            page::Block::Example {
-                id: "natural-language",
-                title: "Natural Language Picker",
-                description: None,
-                snippet: "examples/browser/snippets/date-picker-natural-language.md",
-            },
-        ],
+    page::Block::Example {
+        id: "basic",
+        title: "Basic",
+        description: Some("Choose a single date."),
+        snippet: "examples/browser/snippets/date-picker-basic.md",
+    },
+    page::Block::Example {
+        id: "range",
+        title: "Range Picker",
+        description: Some("Choose a start and end date across two months."),
+        snippet: "examples/browser/snippets/date-picker-range.md",
+    },
+    page::Block::Example {
+        id: "dob",
+        title: "Date of Birth",
+        description: Some("Choose a month and year from the calendar captions."),
+        snippet: "examples/browser/snippets/date-picker-dob.md",
+    },
+    page::Block::Example {
+        id: "input",
+        title: "Input",
+        description: Some("Type a date or select one from the calendar."),
+        snippet: "examples/browser/snippets/date-picker-input.md",
+    },
+    page::Block::Example {
+        id: "time",
+        title: "Time Picker",
+        description: Some("Choose a date and enter a time, including seconds."),
+        snippet: "examples/browser/snippets/date-picker-time.md",
+    },
+    page::Block::Example {
+        id: "natural-language",
+        title: "Natural Language Picker",
+        description: Some("Enter relative dates such as tomorrow, next Friday or in 2 weeks."),
+        snippet: "examples/browser/snippets/date-picker-natural-language.md",
     },
     page::Block::Md("examples/browser/snippets/date-picker-api-reference.md"),
 ];
 pub struct DatePickerPage {
     state: page::State,
+    date: Date,
+    window: f32,
 }
 
 impl DatePickerPage {
     pub fn new(page_index: usize) -> Box<dyn page::Page> {
+        Self::at(page_index, today())
+    }
+    /// Build the same recipes relative to a supplied local day.
+    pub fn at(page_index: usize, date: Date) -> Box<dyn page::Page> {
         Box::new(Self {
+            date,
+            window: 1440.,
             state: page::State::new(page_index, BLOCKS),
         })
     }
@@ -105,249 +108,122 @@ impl page::Page for DatePickerPage {
         self.state.reset_volatile();
     }
 
-    fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
+    fn window_width(&mut self, width: f32) {
+        self.window = width;
+    }
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: 40.into(),
+            ..Default::default()
+        }
+    }
+    fn preview(&self, id: &str) -> Element<'_, Message, Theme> {
+        let compact = self.window < 768.;
+        let size = if compact { 16. } else { 14. };
+        let label = |s| text::label(s).line_height(1.375);
+        let picker = || date_picker().default_month(self.date);
         match id {
-            "demo" => date_picker()
-                .width(256)
-                .label(|value| {
-                    row![
-                        Slot::from(icon::calendar()),
-                        text::small(label(value, "Pick a date")),
-                        space::horizontal()
-                    ]
-                    .spacing(8)
-                    .into()
-                })
+            "demo" => picker().close_on_select(false).into(),
+            "basic" => field(picker().width(Fill).chevron(false).close_on_select(false))
+                .label(label("Date"))
+                .width(176)
                 .into(),
-            "basic" => field(date_picker().label(|value| {
-                row![
-                    text::small(label(value, "Pick a date")),
-                    space::horizontal(),
-                    icon::chevron_down()
-                ]
-                .spacing(8)
-                .into()
-            }))
-            .label("Date")
-            .into(),
-            "range" => range_preview().into(),
             "dob" => field(
-                date_picker()
-                    .caption_dropdown(true)
+                picker()
+                    .width(Fill)
+                    .chevron(false)
                     .placeholder("Select date")
-                    .label(|value| {
-                        row![
-                            text::small(
-                                value
-                                    .map(|s| s.start.format("%-m/%-d/%Y").to_string())
-                                    .unwrap_or_else(|| "Select date".into())
-                            ),
-                            space::horizontal(),
-                            icon::chevron_down()
-                        ]
-                        .into()
-                    }),
+                    .format("%-m/%-d/%Y")
+                    .caption_dropdown(true),
             )
-            .label("Date of birth")
+            .label(label("Date of birth"))
+            .width(176)
             .into(),
-            "input" => component(Typed { natural: false }).boxed().into(),
-            "time" => row![
-                field(date_picker().placeholder("Select date")).label("Date"),
-                field(input("HH:mm:ss").default_value("10:30:00"))
-                    .label("Time")
-                    .width(128)
-            ]
-            .spacing(12)
+            "range" => {
+                let start = Date::from_ymd_opt(self.date.year(), 1, 20).unwrap_or(self.date);
+                field(
+                    picker()
+                        .width(Fill)
+                        .mode(Mode::Range)
+                        .stacked(compact)
+                        .default_value(Selection::range(start, start + Duration::days(20))),
+                )
+                .label(label("Date Picker Range"))
+                .width(240)
+                .into()
+            }
+            "input" => field(
+                date_picker::input("June 01, 2025")
+                    .text_size(size)
+                    .default_value(Date::from_ymd_opt(2025, 6, 1).expect("valid example date")),
+            )
+            .label(label("Subscription Date"))
+            .width(192)
             .into(),
-            "natural-language" => component(Typed { natural: true }).boxed().into(),
-            _ => unreachable!("unknown preview: {id}"),
+            "time" => {
+                let time_width = if compact { 99 } else { 90 };
+                row![
+                    field(
+                        picker()
+                            .width(Fill)
+                            .placeholder("Select date")
+                            .caption_dropdown(true)
+                    )
+                    .label(label("Date"))
+                    .width(Fill),
+                    field(input("HH:mm:ss").text_size(size).default_value("10:30:00"))
+                        .label(label("Time"))
+                        .width(time_width)
+                ]
+                .spacing(20)
+                .width(320)
+                .into()
+            }
+            "natural-language" => component(Schedule {
+                initial: self.date + Duration::days(2),
+                size,
+            })
+            .boxed(),
+            _ => unreachable!("unknown Date Picker preview: {id}"),
         }
     }
 }
 
-fn label(value: Option<Selection>, placeholder: &str) -> String {
-    value
-        .map(|selection| selection.start.format("%B %-d, %Y").to_string())
-        .unwrap_or_else(|| placeholder.to_owned())
+struct Schedule {
+    initial: Date,
+    size: f32,
 }
-
-fn range_preview<'a>() -> Element<'a, Message, Theme> {
-    let from = Date::from_ymd_opt(today().year(), 1, 20).unwrap_or_else(today);
-    field(
-        date_picker()
-            .mode(Mode::Range)
-            .default_value(Selection::range(from, from + Duration::days(20)))
-            .width(288),
-    )
-    .label("Date Picker Range")
-    .width(288)
-    .into()
-}
-
-struct Typed {
-    natural: bool,
-}
-#[derive(Default)]
-struct Entry {
-    open: bool,
-    value: Option<String>,
-    selected: Option<Date>,
-}
-#[derive(Clone, Debug)]
-enum Edit {
-    Open(bool),
-    Type(String),
-    Pick(Option<Selection>),
-}
-
-fn parse(value: &str, today: Date, natural: bool) -> Option<Date> {
-    let phrase = value.trim().to_lowercase();
-    if natural {
-        let offset = match phrase.as_str() {
-            "today" => Some(0),
-            "tomorrow" => Some(1),
-            "yesterday" => Some(-1),
-            "next week" => Some(7),
-            _ => None,
-        };
-        if let Some(days) = offset {
-            return today.checked_add_signed(Duration::days(days));
-        }
-        if let Some(next) = phrase.strip_prefix("next ") {
-            let weekday = match next {
-                "monday" => Some(Weekday::Mon),
-                "tuesday" => Some(Weekday::Tue),
-                "wednesday" => Some(Weekday::Wed),
-                "thursday" => Some(Weekday::Thu),
-                "friday" => Some(Weekday::Fri),
-                "saturday" => Some(Weekday::Sat),
-                "sunday" => Some(Weekday::Sun),
-                _ => None,
-            };
-            if let Some(weekday) = weekday {
-                let delta = (i64::from(weekday.num_days_from_monday())
-                    - i64::from(today.weekday().num_days_from_monday())
-                    - 1)
-                .rem_euclid(7)
-                    + 1;
-                return today.checked_add_signed(Duration::days(delta));
-            }
-        }
-        let mut words = phrase.split_whitespace();
-        if words.next() == Some("in")
-            && let (Some(n), Some(unit), None) = (words.next(), words.next(), words.next())
-        {
-            let n: i64 = n.parse().ok()?;
-            let multiplier = match unit {
-                "day" | "days" => 1,
-                "week" | "weeks" => 7,
-                _ => return None,
-            };
-            return today.checked_add_signed(Duration::try_days(n.checked_mul(multiplier)?)?);
-        }
-    }
-    ["%Y-%m-%d", "%B %d, %Y", "%b %d, %Y", "%m/%d/%Y"]
-        .iter()
-        .find_map(|format| Date::parse_from_str(value.trim(), format).ok())
-}
-
-impl Typed {
-    fn initial(&self) -> Date {
-        if self.natural {
-            today() + Duration::days(2)
-        } else {
-            Date::from_ymd_opt(2025, 6, 1).unwrap_or_else(today)
-        }
-    }
-}
-
-impl<'a> Component<'a, Message, Theme> for Typed {
-    type State = Entry;
-    type Event = Edit;
-    fn update(&self, state: &mut Entry, edit: Edit, _: &iced::Renderer) -> Option<Message> {
-        match edit {
-            Edit::Open(open) => state.open = open,
-            Edit::Type(value) => {
-                if let Some(date) = parse(&value, today(), self.natural) {
-                    state.selected = Some(date);
-                }
-                state.value = Some(value);
-            }
-            Edit::Pick(value) => {
-                state.selected = value.map(|s| s.start);
-                state.value = Some(
-                    state
-                        .selected
-                        .map(|d| d.format("%B %d, %Y").to_string())
-                        .unwrap_or_default(),
-                );
-                state.open = false;
-            }
-        }
+impl Component<'static, Message, Theme> for Schedule {
+    type State = Option<Option<Date>>;
+    type Event = Option<Date>;
+    fn update(
+        &self,
+        state: &mut Self::State,
+        date: Self::Event,
+        _: &iced::Renderer,
+    ) -> Option<Message> {
+        *state = Some(date);
         None
     }
-    fn view(&self, state: &Entry) -> impl Widget<Edit, Theme> + 'a {
-        let selected = state.selected.unwrap_or_else(|| self.initial());
-        let value = state.value.clone().unwrap_or_else(|| {
-            if self.natural {
-                "In 2 days".into()
-            } else {
-                selected.format("%B %d, %Y").to_string()
-            }
-        });
-        let popup = popover(
-            |p| p.trigger(input_group::button(icon::calendar()).square()),
-            move |_| {
-                calendar()
-                    .selected(Some(Selection::single(selected)))
-                    .default_month(selected)
-                    .on_select(Edit::Pick)
-                    .into()
-            },
-        )
-        .align(popover::Align::End)
-        .width(256.)
-        .open(state.open)
-        .on_open_change(Edit::Open);
-        let (label, placeholder) = if self.natural {
-            ("Schedule Date", "Tomorrow or next week")
-        } else {
-            ("Subscription Date", "June 01, 2025")
-        };
-        let mut control = field(
-            input_group(input(placeholder).value(value).on_input(Edit::Type))
-                .addon(input_group::addon(popup).align(input_group::Align::InlineEnd)),
-        )
-        .label(label)
-        .width(320);
-        if self.natural {
-            control = control.description(format!(
-                "Your post will be published on {}.",
-                selected.format("%B %d, %Y")
-            ));
-        }
-        Element::from(control)
+    fn view(&self, state: &Self::State) -> impl Widget<Self::Event, Theme> + 'static {
+        schedule(state.unwrap_or(Some(self.initial)), self.size).compose()
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn interprets_relative_dates_across_month_and_year_boundaries() {
-        let base = Date::from_ymd_opt(2025, 12, 31).unwrap();
-        assert_eq!(
-            parse("tomorrow", base, true),
-            Date::from_ymd_opt(2026, 1, 1)
-        );
-        assert_eq!(
-            parse("next Wednesday", base, true),
-            Date::from_ymd_opt(2026, 1, 7)
-        );
-        assert_eq!(
-            parse("in 2 weeks", base, true),
-            Date::from_ymd_opt(2026, 1, 14)
-        );
-        assert_eq!(parse("02/29/2026", base, false), None);
-    }
+fn schedule(date: Option<Date>, size: f32) -> Slot<'static, Option<Date>> {
+    let display = date
+        .map(|d| d.format("%B %d, %Y").to_string())
+        .unwrap_or_default();
+    field(
+        date_picker::input("Tomorrow or next week")
+            .default_text("In 2 days")
+            .parse_with(date_picker::relative)
+            .caption_dropdown(true)
+            .text_size(size)
+            .value(date)
+            .on_value_change(|date| date),
+    )
+    .label(text::label("Schedule Date").line_height(1.375))
+    .description(format!("Your post will be published on {display}."))
+    .width(320)
+    .into()
 }

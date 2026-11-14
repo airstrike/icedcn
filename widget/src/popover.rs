@@ -54,6 +54,7 @@ pub struct Popover<'a, Message> {
     min_width: f32,
     padding: Padding,
     modal: bool,
+    focus_content: Option<bool>,
     open_on_arrow_down: bool,
     hover: Option<(Duration, Duration)>,
     inherited: Inherited,
@@ -115,6 +116,7 @@ pub fn popover<'a, Message>(
         // `p-2.5`.
         padding: Padding::new(10.0),
         modal: false,
+        focus_content: None,
         open_on_arrow_down: false,
         hover: None,
         inherited: Inherited::default(),
@@ -194,6 +196,12 @@ impl<'a, Message> Popover<'a, Message> {
         self
     }
 
+    /// Focus the first control when mounting a keyboard-navigable popup.
+    pub(crate) fn focus_content(mut self, keyboard: bool) -> Self {
+        self.focus_content = Some(keyboard);
+        self
+    }
+
     /// Dropdowns opt into keyboard opening; ordinary popovers keep their keys.
     pub(crate) fn open_on_arrow_down(mut self) -> Self {
         self.open_on_arrow_down = true;
@@ -228,8 +236,17 @@ impl Handle {
         &self,
         child: impl Into<Slot<'a, Message>>,
     ) -> Slot<'a, Message> {
+        self.trigger_with_control(child, false)
+    }
+
+    pub(crate) fn trigger_with_control<'a, Message: 'a>(
+        &self,
+        child: impl Into<Slot<'a, Message>>,
+        form_control: bool,
+    ) -> Slot<'a, Message> {
         Slot::new(Marked {
             child: child.into(),
+            form_control,
             signal: Signal::Toggle,
             press: Press::Captured,
             open_on_arrow_down: self.open_on_arrow_down && !self.is_open,
@@ -241,6 +258,7 @@ impl Handle {
         Slot::new(Marked {
             child: child.into(),
             signal: Signal::Close,
+            form_control: false,
             press: Press::Captured,
             open_on_arrow_down: false,
         })
@@ -265,6 +283,7 @@ pub(crate) struct Marked<'a, Message> {
     pub(crate) child: Slot<'a, Message>,
     pub(crate) signal: Signal,
     pub(crate) press: Press,
+    form_control: bool,
     open_on_arrow_down: bool,
 }
 
@@ -277,7 +296,10 @@ impl<'a, Message: 'a> Compose<Message> for Marked<'a, Message> {
     where
         Self: 'b,
     {
-        let marker = marker::marker(self.child.compose(), self.signal, self.press);
+        let mut marker = marker::marker(self.child.compose(), self.signal, self.press);
+        if self.form_control {
+            marker = marker.control(false);
+        }
         if self.open_on_arrow_down {
             marker.on_key(Named::ArrowDown, Signal::Toggle).into()
         } else {
@@ -382,6 +404,16 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
                     autofocus: Initial::Dropdown {
                         keyboard: state.keyboard,
                         scroll,
+                    },
+                    on_move: None,
+                }
+                .boxed()
+            } else if let Some(keyboard) = self.focus_content {
+                List {
+                    content: body,
+                    horizontal: None,
+                    autofocus: Initial::Content {
+                        keyboard: state.keyboard || keyboard,
                     },
                     on_move: None,
                 }

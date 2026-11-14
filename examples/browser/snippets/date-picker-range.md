@@ -1,11 +1,21 @@
 ```rust
-fn label(value:Option<Selection>, placeholder:&str)->String {
-    value.map(|selection|selection.start.format("%B %-d, %Y").to_string()).unwrap_or_else(||placeholder.to_owned())
-}
+use iced::Fill;
+use icedcn::Slot;
+use icedcn::widget::calendar::{Date, Datelike, Duration, Mode, Selection, today};
+use icedcn::widget::{date_picker, field, text};
 
-fn range_preview<'a>()->Element<'a,Message,Theme>{
-    let from=Date::from_ymd_opt(today().year(),1,20).unwrap_or_else(today);
-    field(date_picker().mode(Mode::Range).default_value(Selection::range(from,from+Duration::days(20))).width(288))
-        .label("Date Picker Range").width(288).into()
+pub fn view<M: 'static>(window_width: f32) -> Slot<'static, M>
+where
+    M: Clone,
+{
+    let start = Date::from_ymd_opt(today().year(), 1, 20).expect("January 20 exists");
+    let dates = Selection::range(start, start + Duration::days(20));
+    field(
+        date_picker().mode(Mode::Range).width(Fill).default_value(dates)
+            .stacked(window_width < 768.0),
+    )
+    .label(text::label("Date Picker Range").line_height(1.375))
+    .width(240)
+    .into()
 }
 ```

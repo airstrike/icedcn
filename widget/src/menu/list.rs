@@ -23,6 +23,9 @@ pub(crate) struct List<'a, Message> {
 }
 pub(crate) enum Initial {
     Menu(bool),
+    Content {
+        keyboard: bool,
+    },
     Dropdown {
         keyboard: bool,
         scroll: Id,
@@ -46,6 +49,7 @@ impl Initial {
             Self::Dropdown { scroll, .. } | Self::Choice { scroll, .. } => {
                 focus::reveal(index, scroll, visit)
             }
+            Self::Content { keyboard } => visit(&mut focus::restore(Some(index), *keyboard)),
             Self::Menu(_) => visit(&mut focus::select(Some(index))),
         }
     }
@@ -105,7 +109,9 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
         if !state.initialized {
             state.initialized = true;
             let index = match &self.autofocus {
-                Initial::Menu(true) | Initial::Dropdown { keyboard: true, .. } => Some(0),
+                Initial::Content { .. }
+                | Initial::Menu(true)
+                | Initial::Dropdown { keyboard: true, .. } => Some(0),
                 Initial::Choice { index, .. } => Some(*index),
                 Initial::Menu(false)
                 | Initial::Dropdown {
@@ -157,7 +163,9 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
                             Initial::Choice { labels, .. } => {
                                 state.search.match_prefix(c, count.focused, labels)
                             }
-                            Initial::Menu(_) | Initial::Dropdown { .. } => {
+                            Initial::Content { .. }
+                            | Initial::Menu(_)
+                            | Initial::Dropdown { .. } => {
                                 let mut rows = Rows::default();
                                 visit(&mut rows);
                                 state.search.match_prefix(c, count.focused, &rows.labels)

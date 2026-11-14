@@ -1,12 +1,20 @@
 //! A Calendar in an anchored Popover with a controlled or uncontrolled selection.
 
-use iced_core::Element;
+mod input;
+pub use input::{Input, input, relative};
+
+use crate::icon::Icon;
+use crate::{Weight, row, space, text};
+use iced_core::Length::Fill;
+use iced_core::{Alignment, Element, Length};
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
+use icedcn_core::theme;
+use std::fmt::Write as _;
 use std::rc::Rc;
 
-use crate::calendar::{Mode, Selection};
+use crate::calendar::{Datelike, Mode, Selection};
 use crate::compose::{Compose, Inherited, Slot};
 use crate::{button, calendar, popover};
 
@@ -17,10 +25,15 @@ pub struct DatePicker<'a, Message> {
     value: Option<Option<Selection>>,
     initial: Option<Selection>,
     placeholder: String,
+    format: Option<String>,
     label: Option<Label<'a, Event>>,
+    initial_month: Option<calendar::Date>,
     caption: bool,
     disabled: bool,
-    width: f32,
+    width: Length,
+    chevron: bool,
+    close_on_select: bool,
+    stacked: Option<bool>,
     on_change: Option<Box<dyn Fn(Option<Selection>) -> Message + 'a>>,
 }
 
@@ -30,10 +43,15 @@ pub fn date_picker<'a, Message>() -> DatePicker<'a, Message> {
         value: None,
         initial: None,
         placeholder: "Pick a date".to_owned(),
+        format: None,
         label: None,
+        initial_month: None,
         caption: false,
         disabled: false,
-        width: 208.,
+        width: Length::Fixed(212.),
+        chevron: true,
+        close_on_select: true,
+        stacked: None,
         on_change: None,
     }
 }
@@ -59,8 +77,18 @@ impl<'a, Message> DatePicker<'a, Message> {
         self.placeholder = placeholder.into();
         self
     }
+    /// Format a single day using a strftime pattern.
+    pub fn format(mut self, format: impl Into<String>) -> Self {
+        self.format = Some(format.into());
+        self
+    }
     pub fn label(mut self, f: impl Fn(Option<Selection>) -> Slot<'a, Event> + 'a) -> Self {
         self.label = Some(Rc::new(f));
+        self
+    }
+    /// Month to display when there is no selection.
+    pub fn default_month(mut self, month: calendar::Date) -> Self {
+        self.initial_month = Some(month);
         self
     }
     pub fn caption_dropdown(mut self, enabled: bool) -> Self {
@@ -71,8 +99,24 @@ impl<'a, Message> DatePicker<'a, Message> {
         self.disabled = disabled;
         self
     }
-    pub fn width(mut self, width: impl Into<iced_core::Pixels>) -> Self {
-        self.width = width.into().0.max(1.);
+    /// Show the trailing chevron on the standard single-date trigger.
+    pub fn chevron(mut self, enabled: bool) -> Self {
+        self.chevron = enabled;
+        self
+    }
+    /// Close the single-date picker after choosing a day. Range selections stay open for editing.
+    pub fn close_on_select(mut self, close: bool) -> Self {
+        self.close_on_select = close;
+        self
+    }
+    /// Arrange range months vertically at the application's compact window breakpoint.
+    pub fn stacked(mut self, stacked: bool) -> Self {
+        self.stacked = Some(stacked);
+        self
+    }
+    /// Set the width of the trigger, independently of the open calendar.
+    pub fn width(mut self, width: impl Into<Length>) -> Self {
+        self.width = width.into();
         self
     }
 }
@@ -102,7 +146,7 @@ impl<Message> DatePicker<'_, Message> {
                 if self.value.is_none() {
                     state.selection = Some(selection);
                 }
-                if self.mode == Mode::Single {
+                if self.mode == Mode::Single && self.close_on_select {
                     state.open = false;
                 }
                 self.on_change.as_ref().map(|f| f(selection))
@@ -110,6 +154,21 @@ impl<Message> DatePicker<'_, Message> {
         }
     }
 }
+fn long_date(date: calendar::Date) -> String {
+    let day = date.day();
+    let suffix = if (11..=13).contains(&(day % 100)) {
+        "th"
+    } else {
+        match day % 10 {
+            1 => "st",
+            2 => "nd",
+            3 => "rd",
+            _ => "th",
+        }
+    };
+    format!("{} {day}{suffix}, {}", date.format("%B"), date.year())
+}
+
 impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for DatePicker<'a, Message> {
     type State = State;
     type Event = Event;
@@ -119,48 +178,98 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for DatePicke
     fn view(&self, state: &State) -> impl Widget<Event, Theme, Renderer> + 'a {
         let selected = self.value.or(state.selection).unwrap_or(self.initial);
         let label = self.label.clone();
+        let initial_month = selected.map(|s| s.start).or(self.initial_month);
         let caption = self.caption;
         let disabled = self.disabled;
         let mode = self.mode;
         let width = self.width;
+        let chevron = self.chevron;
+        let stacked = self.stacked;
         let default_text = selected.map_or_else(
             || self.placeholder.clone(),
-            |s| match s.end {
-                Some(end) => format!(
-                    "{} – {}",
+            |s| match (mode, s.end) {
+                (Mode::Range, Some(end)) => format!(
+                    "{} - {}",
                     s.start.format("%b %d, %Y"),
                     end.format("%b %d, %Y")
                 ),
-                None => s.start.format("%B %-d, %Y").to_string(),
+                (Mode::Range, None) => s.start.format("%b %d, %Y").to_string(),
+                _ => self.format.as_ref().map_or_else(
+                    || long_date(s.start),
+                    |f| {
+                        let mut formatted = String::new();
+                        if write!(formatted, "{}", s.start.format(f)).is_ok() {
+                            formatted
+                        } else {
+                            long_date(s.start)
+                        }
+                    },
+                ),
             },
         );
-        let entry =
-            popover(
-                move |p| {
-                    p.trigger(
-                        button(label.as_ref().map_or_else(
-                            || Slot::from(default_text.clone()),
-                            |build| build(selected),
-                        ))
+        let entry = popover(
+            move |p| {
+                let title = if let Some(custom) = &label {
+                    custom(selected)
+                } else {
+                    let title = text::Text::new(default_text.clone());
+                    let mut line = row::Row::new()
+                        .width(Fill)
+                        .align_y(Alignment::Center)
+                        .spacing(6);
+                    if mode == Mode::Range {
+                        line = line.push(Icon::Calendar.boxed().into());
+                    }
+                    let faded = selected.is_none() && chevron && mode == Mode::Single;
+                    line = line
+                        .push(Slot::from(if faded {
+                            title.style(theme::text::Muted)
+                        } else {
+                            title
+                        }))
+                        .push(space::horizontal().into());
+                    if chevron && mode == Mode::Single {
+                        line = line.push(Icon::Chevron.boxed().into());
+                    }
+                    line.into()
+                };
+                p.trigger_with_control(
+                    button(title)
+                        .weight(Weight::Normal)
+                        .translate(false)
                         .style(button::Outline)
                         .width(width)
                         .disabled(disabled),
-                    )
-                },
-                move |_| {
-                    calendar()
-                        .mode(mode)
-                        .selected(selected)
-                        .caption_dropdown(caption)
-                        .number_of_months(if mode == Mode::Range { 2 } else { 1 })
-                        .on_select(Event::Pick)
-                        .into()
-                },
-            )
-            .align(popover::Align::Start)
-            .width(if mode == Mode::Range { 508. } else { 256. })
-            .open(state.open && !disabled)
-            .on_open_change(Event::Open);
+                    !disabled,
+                )
+            },
+            move |_| {
+                let mut calendar = calendar()
+                    .weekday_line_height(18.285715)
+                    .mode(mode)
+                    .selected(selected)
+                    .caption_dropdown(caption)
+                    .number_of_months(if mode == Mode::Range { 2 } else { 1 })
+                    .on_select(Event::Pick);
+                if let Some(month) = initial_month {
+                    calendar = calendar.default_month(month);
+                }
+                if let Some(stacked) = stacked {
+                    calendar = calendar.stacked(stacked);
+                }
+                calendar.into()
+            },
+        )
+        .align(popover::Align::Start)
+        .padding(0)
+        .focus_content(false)
+        .width(if mode == Mode::Range && stacked != Some(true) {
+            424.
+        } else {
+            212.
+        })
+        .open(state.open && !disabled)
+        .on_open_change(Event::Open);
         Element::from(entry)
     }
 }

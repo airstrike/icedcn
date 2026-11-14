@@ -13,7 +13,7 @@ use iced::{Point, Size};
 use iced_test::core::Settings;
 use iced_test::simulator::{self, Simulator};
 use icedcn::Theme;
-use icedcn::widget::calendar::{Datelike, today};
+use icedcn::widget::calendar::{Date, today};
 
 type Preview<'a> = Simulator<'a, Message, Theme, iced::Renderer>;
 
@@ -69,34 +69,30 @@ fn otp_controlled_preview_updates_the_visible_code_and_filters_digits() {
 
 #[test]
 fn date_picker_commits_the_selected_day_and_dismisses_the_popover() {
-    let page = DatePickerPage::new(3);
+    let day = Date::from_ymd_opt(2025, 11, 14).expect("valid November fixture");
+    let page = DatePickerPage::at(3, day);
     let mut ui = preview(&*page, "dob", 375.);
     ui.click("Select date").expect("open DOB picker");
     snapshot(&mut ui, "date-picker-dob-open-375");
-    let base = today();
-    let month = base.format("%B").to_string();
-    ui.click(month).expect("open DOB month choices");
-    let alternate = if base.format("%m").to_string() == "03" {
-        "April"
-    } else {
-        "March"
-    };
-    ui.click(alternate).expect("choose a different DOB month");
-    ui.click(base.format("%Y").to_string())
-        .expect("open DOB years");
+    ui.draw(&Theme::light());
+    ui.click("Nov").expect("open November DOB caption");
+    ui.draw(&Theme::light());
+    ui.click("Mar").expect("switch to March");
+    ui = ui.rebuild(page.preview("dob"));
+    ui.draw(&Theme::light());
+    ui.find("Mar")
+        .expect("March caption after choosing the month");
+    ui.click("2025").expect("open DOB years");
+    ui.draw(&Theme::light());
     snapshot(&mut ui, "date-picker-years-375");
-    ui.click((base.format("%Y").to_string().parse::<i32>().unwrap() - 1).to_string())
-        .expect("choose a DOB year");
+    ui.click("2024").expect("choose 2024");
+    ui = ui.rebuild(page.preview("dob"));
+    ui.draw(&Theme::light());
     snapshot(&mut ui, "date-picker-selected-month");
     ui.click("15").expect("select a day in the visible month");
     // Overlay messages invalidate the widget tree. The application shell rebuilds it.
     ui = ui.rebuild(page.preview("dob"));
-    let expected = format!(
-        "{}/15/{}",
-        if alternate == "March" { 3 } else { 4 },
-        base.year() - 1
-    );
-    ui.find(expected).expect("selected DOB updates the trigger");
+    ui.find("3/15/2024").expect("selection updates the trigger");
     assert!(ui.find("Select date").is_err());
     assert!(ui.find("15").is_err());
 }
