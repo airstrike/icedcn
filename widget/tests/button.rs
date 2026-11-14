@@ -1,14 +1,14 @@
 //! Regressions for Button's public layout and event contract.
 use iced_core::keyboard::key::Named;
-use iced_core::widget::Operation;
 use iced_core::widget::operation::{Outcome, focusable};
-use iced_core::{Element, Event, Point, Size, mouse, window};
+use iced_core::widget::{Id, Operation};
+use iced_core::{Element, Event, Length, Point, Size, mouse, window};
 use iced_test::core::Settings;
 use iced_test::{Simulator, selector, simulator};
 use iced_widget::{Renderer, Space};
 use icedxdy_core::{Theme, theme};
 use icedxdy_widget::Size::{Default, Lg, Sm, Xs};
-use icedxdy_widget::{Inherited, Slot, button};
+use icedxdy_widget::{Inherited, Slot, button, container};
 
 type Preview<'a> = Simulator<'a, (), Theme, Renderer>;
 
@@ -66,6 +66,30 @@ fn stock_style_keeps_legacy_layout_and_square_dimensions_stay_exact() {
         next(&mut ui);
         let bounds = ui.find(selector::is_focused()).expect("square").bounds();
         assert_eq!(bounds.size(), Size::new(size.height(), size.height()));
+    }
+}
+
+#[test]
+fn explicit_width_centers_nova_content_at_roomy_and_narrow_widths() {
+    for available in [300.0, 260.0] {
+        for width in [Length::Fixed(200.0), Length::FillPortion(1)] {
+            let id = Id::unique();
+            let content = container(Space::new().width(20).height(12))
+                .width(20)
+                .height(12)
+                .id(id.clone());
+            let b = button(content).width(width);
+            let mut ui: Preview<'_> = Simulator::with_size(
+                Settings::default(),
+                Size::new(available, 100.0),
+                Element::from(b),
+            );
+            next(&mut ui);
+            let outer = ui.find(selector::is_focused()).expect("button").bounds();
+            let inner = ui.find(id).expect("child").bounds();
+            assert_eq!(inner.size(), Size::new(20.0, 12.0));
+            assert_eq!(inner.center(), outer.center());
+        }
     }
 }
 

@@ -2,11 +2,11 @@
 use icedxdy::widget::{button, row, spinner};
 
 row![
-    button![spinner().bar_height(4.0 / 3.0), "Generating"]
+    button![spinner().circle(), "Generating"]
         .style(button::Outline)
         .icon_start()
         .disabled(true),
-    button!["Downloading", spinner().bar_height(4.0 / 3.0)]
+    button!["Downloading", spinner().circle()]
         .style(button::Secondary)
         .icon_start()
         .disabled(true),
