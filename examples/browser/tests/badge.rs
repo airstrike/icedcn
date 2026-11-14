@@ -122,11 +122,11 @@ fn existing_badge_consumers_keep_their_labels_and_child_interactions() {
         Size::new(600., 500.),
         page.preview("steps"),
     );
-    ui.click("Searched for the checkout build log")
+    ui.click("Searched for Cargo build timings")
         .expect("open Badge consumer disclosure");
     ui = ui.rebuild(page.preview("steps"));
     ui.draw(&docs::theme(false));
-    ui.find("vercel.com")
+    ui.find("rust-lang.org")
         .expect("first Badge mounts inside disclosure");
     ui.find("github.com")
         .expect("second Badge mounts inside disclosure");

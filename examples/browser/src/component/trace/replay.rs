@@ -40,25 +40,25 @@ impl Replay {
     }
     fn question(self) -> &'static str {
         match self {
-            Self::Demo => "Why does pnpm install fail in CI?",
-            Self::Thinking => "Why is the checkout deploy so slow?",
-            Self::Tool => "Which package managers are installed?",
+            Self::Demo => "Why does cargo build --locked fail in CI?",
+            Self::Thinking => "Why is the release build so slow?",
+            Self::Tool => "Which Rust tools are installed?",
         }
     }
     fn answer(self) -> &'static str {
         match self {
             Self::Demo => {
-                "The last commit bumped a version in package.json without updating pnpm-lock.yaml, so the frozen install fails. Run pnpm install locally and commit the lockfile."
+                "The last commit changed Cargo.toml without updating Cargo.lock. Run cargo build locally, review the lockfile changes, and commit them."
             }
             Self::Thinking => {
-                "Image optimization is the bottleneck. Key its cache on the lockfile and the image directory instead of the commit hash."
+                "The timings report puts most of the build time in the final link. The release profile enables fat LTO. Try thin LTO and compare the next build report."
             }
-            Self::Tool => "Node 24 and npm 11 are installed. pnpm is not.",
+            Self::Tool => "rustc and rustfmt are installed. Cargo is missing from PATH.",
         }
     }
 }
-const REASON: &str = "CI installs with a frozen lockfile, so the install stops when package.json and pnpm-lock.yaml disagree. I should check what the last commit changed, then reproduce the install.";
-const SLOW: &str = "The build log shows install and compile finish in under a minute. Image optimization takes almost four, and it reruns on every deploy because the cache key includes the commit hash.";
+const REASON: &str = "CI uses cargo build --locked. I’ll check whether the last commit updated Cargo.toml and Cargo.lock together, then reproduce the build.";
+const SLOW: &str = "Cargo’s timings report shows the final executable takes nearly four minutes after its dependencies finish. Cargo.toml enables fat LTO for the release profile.";
 fn thought(kind: Replay, running: bool) -> Slot<'static, Input> {
     let title = if running {
         "Thinking"
@@ -137,12 +137,12 @@ fn references() -> Slot<'static, Input> {
         || {
             let sources = [
                 (
-                    "pnpm install | pnpm.io",
-                    "https://pnpm.io/cli/install#--frozen-lockfile",
+                    "cargo build | The Cargo Book",
+                    "https://doc.rust-lang.org/cargo/commands/cargo-build.html",
                 ),
                 (
-                    "Continuous Integration | pnpm.io",
-                    "https://pnpm.io/continuous-integration",
+                    "Cargo.toml and Cargo.lock | The Cargo Book",
+                    "https://doc.rust-lang.org/cargo/guide/cargo-toml-vs-cargo-lock.html",
                 ),
             ];
             trace(sources.map(|(title, url)| {
@@ -220,22 +220,22 @@ impl<'a> Component<'a, Message, Theme> for Replay {
             }
             let cmds: &[(&str, &str, bool)] = match kind {
                 Self::Demo => &[
-                    ("pnpm --version", "10.18.0", false),
+                    ("cargo --version", "cargo 1.89.0", false),
                     (
-                        "git diff --stat HEAD~1 -- package.json pnpm-lock.yaml",
-                        " package.json | 2 +-\n 1 file changed, 1 insertion(+), 1 deletion(-)",
+                        "git diff --stat HEAD~1 -- Cargo.toml Cargo.lock",
+                        " Cargo.toml | 2 +-\n 1 file changed, 1 insertion(+), 1 deletion(-)",
                         false,
                     ),
                     (
-                        "pnpm install --frozen-lockfile",
-                        "ERR_PNPM_OUTDATED_LOCKFILE  Cannot install with \"frozen-lockfile\" because pnpm-lock.yaml is not up to date with package.json",
+                        "cargo build --locked",
+                        "error: the lock file Cargo.lock needs to be updated but --locked was passed",
                         true,
                     ),
                 ],
                 Self::Tool => &[
-                    ("node --version", "v24.18.0", false),
-                    ("npm --version", "11.6.2", false),
-                    ("pnpm --version", "command not found: pnpm", true),
+                    ("rustc --version", "rustc 1.89.0", false),
+                    ("rustfmt --version", "rustfmt 1.8.0", false),
+                    ("cargo --version", "command not found: cargo", true),
                 ],
                 Self::Thinking => &[],
             };

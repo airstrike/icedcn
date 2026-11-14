@@ -70,19 +70,19 @@ fn local(title: &'static str, slug: &str, index: usize) -> Slot<'static, Message
     )
 }
 fn static_line() -> Slot<'static, Message> {
-    line("Created branch fix/frozen-lockfile", icon::git_branch).into()
+    line("Created branch fix/cargo-lockfile", icon::git_branch).into()
 }
 fn status() -> Slot<'static, Message> {
     trace([
-        line("Ran pnpm install", icon::circle_check).into(),
-        line("Failed to run pnpm lint", icon::circle_alert)
+        line("Ran cargo fetch", icon::circle_check).into(),
+        line("Failed to run cargo clippy", icon::circle_alert)
             .status(Status::Error)
             .into(),
-        trace::line("Running pnpm build")
+        trace::line("Running cargo build")
             .icon(spinner().size(16.))
             .status(Status::Running)
             .into(),
-        line("Run pnpm test", icon::circle)
+        line("Run cargo test", icon::circle)
             .status(Status::Pending)
             .into(),
     ])
@@ -91,15 +91,15 @@ fn status() -> Slot<'static, Message> {
 fn description() -> Slot<'static, Message> {
     trace([
         line(
-            "Edited components/settings/notification-preferences-form.tsx",
+            "Edited src/settings/notifications.rs",
             icon::file_pen,
         )
         .description("+48 −12")
         .into(),
-        line("Ran pnpm test", icon::terminal)
+        line("Ran cargo test", icon::terminal)
             .description("14s")
             .into(),
-        line("Searched for useChat", icon::search)
+        line("Searched for ChatState", icon::search)
             .description("8 results")
             .into(),
     ])
@@ -107,9 +107,9 @@ fn description() -> Slot<'static, Message> {
 }
 fn collapsible() -> Slot<'static, Message> {
     result(
-        "Ran node --version",
+        "Ran rustc --version",
         icon::terminal,
-        "$ node --version\nv24.18.0",
+        "$ rustc --version\nrustc 1.89.0",
         Status::Complete,
         false,
     )
@@ -127,22 +127,22 @@ impl<'a> Component<'a, Message, Theme> for OpenState {
         Slot::from(
             column![
                 result(
-                    "Ran node --version",
+                    "Ran rustc --version",
                     icon::terminal,
-                    "$ node --version\nv24.18.0",
+                    "$ rustc --version\nrustc 1.89.0",
                     Status::Complete,
                     true
                 ),
                 trace::disclosure(
-                    || line("Ran pnpm --version", icon::terminal),
-                    || output("$ pnpm --version\n10.33.4")
+                    || line("Ran cargo --version", icon::terminal),
+                    || output("$ cargo --version\ncargo 1.89.0")
                 )
                 .open(open)
                 .on_open_change(|next| next),
                 button(if open {
-                    "Hide the pnpm output"
+                    "Hide the Cargo output"
                 } else {
-                    "Show the pnpm output"
+                    "Show the Cargo output"
                 })
                 .size(icedxdy::Size::Sm)
                 .style(button::Outline)
@@ -156,10 +156,10 @@ impl<'a> Component<'a, Message, Theme> for OpenState {
 }
 fn links(index: usize) -> Slot<'static, Message> {
     trace([
-        local("Read apps/v4/lib/docs.ts", "link", index),
+        local("Read examples/browser/src/page.rs", "link", index),
         source(
-            "Install Astro | docs.astro.build",
-            "https://docs.astro.build/en/install-and-setup/",
+            "Getting Started | rust-lang.org",
+            "https://www.rust-lang.org/learn/get-started",
         ),
     ])
     .into()
@@ -168,7 +168,7 @@ fn search_dialog() -> Slot<'static, Message> {
     dialog(
         |d| {
             d.trigger(trace::action(
-                line("Searched the web for cache keys", icon::globe)
+                line("Looked up Cargo build caching", icon::globe)
                     .trailing(icon::chevron_right().size(16)),
                 None,
             ))
@@ -176,21 +176,21 @@ fn search_dialog() -> Slot<'static, Message> {
         |_| {
             column![
                 dialog::header(
-                    "Searched the web for cache keys",
+                    "Looked up Cargo build caching",
                     "Three results were used in the response."
                 ),
                 trace([
                     source(
                         "Caching build outputs",
-                        "https://nextjs.org/docs/app/guides/caching"
+                        "https://doc.rust-lang.org/cargo/reference/build-cache.html"
                     ),
                     source(
-                        "Image optimization reference",
-                        "https://nextjs.org/docs/app/api-reference/components/image"
+                        "Build profiles",
+                        "https://doc.rust-lang.org/cargo/reference/profiles.html"
                     ),
                     source(
-                        "Deploy hooks and cache keys",
-                        "https://vercel.com/docs/deploy-hooks"
+                        "Build scripts",
+                        "https://doc.rust-lang.org/cargo/reference/build-scripts.html"
                     )
                 ])
             ]
@@ -216,10 +216,10 @@ fn files_sheet() -> Slot<'static, Message> {
                     "Files read while preparing the response."
                 ),
                 column![
-                    text("apps/v4/lib/docs.ts"),
-                    text("apps/v4/lib/components.ts"),
-                    text("apps/v4/next.config.mjs"),
-                    text("apps/v4/package.json")
+                    text("examples/browser/src/page.rs"),
+                    text("examples/browser/src/component.rs"),
+                    text("examples/browser/src/main.rs"),
+                    text("Cargo.toml")
                 ]
                 .spacing(8)
                 .padding([0, 16])
@@ -231,9 +231,9 @@ fn files_sheet() -> Slot<'static, Message> {
 }
 fn group() -> Slot<'static, Message> {
     trace([
-        line("Searched for minimumReleaseAge", icon::search).into(),
-        line("Read pnpm-workspace.yaml", icon::file_text).into(),
-        line("Ran pnpm install", icon::terminal).into(),
+        line("Searched for rust-version", icon::search).into(),
+        line("Read Cargo.toml", icon::file_text).into(),
+        line("Ran cargo fetch", icon::terminal).into(),
     ])
     .into()
 }
@@ -243,16 +243,16 @@ fn sources() -> Slot<'static, Message> {
         || {
             trace([
                 source(
-                    "Install Astro | docs.astro.build",
-                    "https://docs.astro.build/en/install-and-setup/",
+                    "Getting Started | rust-lang.org",
+                    "https://www.rust-lang.org/learn/get-started",
                 ),
                 source(
-                    "create-astro | npmjs.com",
-                    "https://www.npmjs.com/package/create-astro",
+                    "Creating a package | The Cargo Book",
+                    "https://doc.rust-lang.org/cargo/guide/creating-a-new-project.html",
                 ),
                 source(
-                    "Settings: minimumReleaseAge | pnpm.io",
-                    "https://pnpm.io/settings#minimumreleaseage",
+                    "Configuration | The Cargo Book",
+                    "https://doc.rust-lang.org/cargo/reference/config.html",
                 ),
             ])
             .into()
@@ -263,14 +263,14 @@ fn sources() -> Slot<'static, Message> {
 }
 fn steps(index: usize) -> Slot<'static, Message> {
     trace::disclosure(
-        || trace::line("Looking into the slow deploy").status(Status::Running),
+        || trace::line("Looking into the slow Cargo build").status(Status::Running),
         move || {
             trace([
                 trace::disclosure(
-                    || line("Searched for the checkout build log", icon::search),
+                    || line("Searched for Cargo build timings", icon::search),
                     || {
                         row![
-                            badge("vercel.com").style(badge::Secondary),
+                            badge("rust-lang.org").style(badge::Secondary),
                             badge("github.com").style(badge::Secondary)
                         ]
                         .spacing(6)
@@ -278,11 +278,11 @@ fn steps(index: usize) -> Slot<'static, Message> {
                     },
                 )
                 .into(),
-                local("Read the last twelve deploys", "steps", index),
+                local("Read the last twelve build reports", "steps", index),
                 result(
-                    "Searching for the cache key",
+                    "Checking the release profile",
                     icon::search,
-                    "cache key image optimization",
+                    "cargo build --release --timings",
                     Status::Running,
                     false,
                 ),
@@ -338,16 +338,16 @@ fn commit() -> Slot<'static, Message> {
         || {
             trace([
                 file_diff(
-                    "app/login/page.tsx",
-                    "Edited app/login/page.tsx",
+                    "src/login.rs",
+                    "Edited src/login.rs",
                     "+2 −2",
                     "2 additions, 2 deletions",
                     LOGIN_DIFF,
                     icon::file_pen,
                 ),
                 file_diff(
-                    "lib/auth/redirect.ts",
-                    "Added lib/auth/redirect.ts",
+                    "src/auth/redirect.rs",
+                    "Added src/auth/redirect.rs",
                     "+7 −0",
                     "7 additions, 0 deletions",
                     AUTH_DIFF,
@@ -363,33 +363,29 @@ fn commit() -> Slot<'static, Message> {
 fn turn(index: usize) -> Slot<'static, Message> {
     trace::disclosure(||trace::line("Worked for 2m 4s, 1 command failed").status(Status::Error),move||column![
         trace([
-            trace::disclosure(||line("Thought",icon::brain).description("12s"),||text("I should check which package managers are installed before I scaffold anything.").into()).into(),
+            trace::disclosure(||line("Thought",icon::brain).description("12s"),||text("I should check which Rust tools are available before creating a project.").into()).into(),
             trace::disclosure(||line("Ran 2 commands, 1 failed",icon::terminal).status(Status::Error),||trace([
-                line("Ran node --version",icon::terminal).into(),result("Failed to run pnpm --version",icon::terminal,"command not found: pnpm",Status::Error,false)
+                line("Ran rustc --version",icon::terminal).into(),result("Failed to run cargo --version",icon::terminal,"command not found: cargo",Status::Error,false)
             ]).into()).default_open(true).into()
         ]),
-        text("Node is installed and pnpm is not. Reading the docs config."),
-        local("Read apps/v4/lib/docs.ts","turn",index)
+        text("Found rustc. Cargo is missing from PATH. Reading the project documentation."),
+        local("Read examples/browser/src/page.rs","turn",index)
     ].spacing(8).into()).default_open(true).into()
 }
 
-const LOGIN_DIFF: &str = r#"@@ -14,7 +14,7 @@ export default async function LoginPage({
-   searchParams,
- }) {
-   const { next } = await searchParams
--  const redirectTo =
--    next && next.startsWith("/") ? next : "/"
-+  const redirectTo = safeRedirect(next)
-+
-   return <LoginForm redirectTo={redirectTo} />
- }"#;
+const LOGIN_DIFF: &str = r#"@@ -14,2 +14,2 @@ fn finish_login(requested: Option<&str>) -> Route {
+-    let destination = requested.unwrap_or("/home");
+-    Route::from_path(destination)
++    let destination = redirect::after_login(requested);
++    Route::from_path(&destination)
+"#;
 const AUTH_DIFF: &str = r#"@@ -0,0 +1,7 @@
-+export function safeRedirect(next: string | undefined) {
-+  if (!next || !next.startsWith("/") || next.startsWith("//")) {
-+    return "/"
-+  }
-+
-+  return next
++pub fn after_login(requested: Option<&str>) -> String {
++    match requested {
++        Some("/settings") => String::from("/settings"),
++        Some("/inbox") => String::from("/inbox"),
++        _ => String::from("/home"),
++    }
 +}"#;
 
 pub static META: page::Meta = page::Meta {
