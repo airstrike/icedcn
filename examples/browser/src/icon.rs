@@ -2,6 +2,7 @@
 // Do not edit manually.
 // 7825f1d5c1bd1dfd85c11135b263337e6b8984ff71631ee60be74c2e5cb0236d
 use iced::widget::text::{self, Text};
+use iced::{Font, font};
 
 pub const FONT: &[u8] = include_bytes!("../fonts/lucide.ttf");
 
@@ -1054,7 +1055,10 @@ pub fn render<'a, Theme>(codepoint: &'a str) -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
 {
-    Text::new(codepoint).font(iced::Font::with_name("lucide"))
+    Text::new(codepoint).font(Font {
+        family: font::Family::Name("lucide"),
+        ..Font::DEFAULT
+    })
 }
 
 fn icon<'a, Theme>(codepoint: &'a str) -> Text<'a, Theme>

@@ -1823,11 +1823,13 @@ dependencies = [
 [[package]]
 name = "iced_lucide"
 version = "0.1.0"
-source = "git+https://github.com/airstrike/iced_lucide#755f2f34b92e84f7f8c88d4c081c2cc54f353d05"
+source = "git+https://github.com/airstrike/iced_lucide?branch=codex%2Fconfigurable-source#85fd2f6c533d0a88512a6a74d7db99b5de00b985"
 dependencies = [
  "serde",
+ "serde_json",
  "sha2",
  "subsetter",
+ "thiserror 2.0.18",
  "toml 0.9.12+spec-1.1.0",
  "ttf-parser",
 ]

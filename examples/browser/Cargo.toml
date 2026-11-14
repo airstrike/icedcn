@@ -19,7 +19,7 @@ fount = { git = "https://github.com/airstrike/fount" }
 tokio = { version = "1", features = ["fs"] }
 
 [build-dependencies]
-iced_lucide = { git = "https://github.com/airstrike/iced_lucide" }
+iced_lucide = { git = "https://github.com/airstrike/iced_lucide", branch = "codex/configurable-source" }
 
 [dev-dependencies]
 iced_test.workspace = true
