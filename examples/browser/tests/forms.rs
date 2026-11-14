@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 use browser::component::calendar::CalendarPage;
 use browser::component::date_picker::DatePickerPage;
+use browser::component::input::InputPage;
 use browser::component::input_otp::InputOtpPage;
 use browser::page::Page;
 use browser::{Message, icon};
@@ -40,6 +41,17 @@ fn hijri_demo_displays_its_fixed_persian_date_and_navigates_months() {
     snapshot(&mut ui, "calendar-persian-375");
     ui.click("›").expect("next Persian month");
     ui.find("تیر ۱۴۰۴").expect("caption changes to Tir");
+}
+
+#[test]
+fn api_key_stays_masked_while_typing_in_the_uncontrolled_input() {
+    let page = InputPage::new(0);
+    let mut ui = preview(&*page, "demo", 375.);
+    ui.click("API Key").expect("focus the input from its label");
+    ui.typewrite("aB90");
+    ui.find("••••")
+        .expect("each typed character is masked before the next rebuild");
+    assert!(ui.find("aB90").is_err());
 }
 
 #[test]

@@ -976,6 +976,8 @@ where
         let (text_layout, _) = layout.iter(&tree.children).next().unwrap();
 
         let update_cache = |state: &mut State<Renderer::Paragraph>, value: &Value| {
+            let masked = self.is_secure.then(|| value.secure());
+            let value = masked.as_ref().unwrap_or(value);
             replace_paragraph(
                 renderer,
                 state,

@@ -12,7 +12,7 @@ use iced::Widget;
 use icedxdy::card;
 use icedxdy::core::{Border, Color};
 use icedxdy::theme::container::Style;
-use icedxdy::widget::{button, collapsible, column, container, input, row, space, text};
+use icedxdy::widget::{button, collapsible, column, container, input, row, space, tabs, text};
 use icedxdy::{Size, Slot, Theme, radius};
 
 use crate::Message;
@@ -155,39 +155,62 @@ const FILE_TREE: &[Entry] = &[
     Entry::File(".gitignore"),
 ];
 
-fn entry(entry: &'static Entry) -> Slot<'static, Message> {
-    match entry {
-        Entry::File(name) => button![icon::file(), *name]
+fn entry(node: &'static Entry) -> Slot<'static, Message> {
+    match node {
+        Entry::File(name) => button(row![icon::file(), *name].spacing(8).width(Fill))
             .size(Size::Sm)
-            .width(Fill)
             .style(button::Link)
+            .width(Fill)
             .into(),
-        Entry::Folder(name, children) => collapsible(move |c| {
+        Entry::Folder(name, children) => collapsible(move |folder| {
+            let chevron = if folder.is_open() {
+                icon::chevron_down()
+            } else {
+                icon::chevron_right()
+            };
+
             column![
-                c.trigger(
-                    button![
-                        if c.is_open() {
-                            icon::chevron_down()
-                        } else {
-                            icon::chevron_right()
-                        },
-                        icon::folder(),
-                        *name
-                    ]
-                    .size(Size::Sm)
-                    .width(Fill)
-                    .style(button::Ghost),
+                folder.trigger(
+                    button(row![chevron, icon::folder(), *name].spacing(8).width(Fill))
+                        .size(Size::Sm)
+                        .style(button::Ghost)
+                        .width(Fill),
                 ),
-                c.content(
-                    container(column(children.iter().map(self::entry)).spacing(4))
-                        .padding(iced::Padding::ZERO.top(4.0).left(20.0)),
+                folder.content(
+                    column(children.iter().map(entry))
+                        .width(Fill)
+                        .spacing(4)
+                        .padding(iced::Padding::ZERO.top(4).left(20)),
                 ),
             ]
+            .width(Fill)
             .into()
         })
         .width(Fill)
         .into(),
     }
+}
+
+fn file_tree() -> iced::Element<'static, Message, Theme> {
+    let header = tabs(|tabs| {
+        tabs.list([
+            tabs.trigger("explorer", "Explorer"),
+            tabs.trigger("settings", "Outline"),
+        ])
+    })
+    .default_value("explorer");
+
+    card(
+        column![
+            card::header(Slot::from(header)),
+            card::content(column(FILE_TREE.iter().map(entry)).width(Fill).spacing(4)).boxed(),
+        ]
+        .width(Fill)
+        .padding([12, 0])
+        .spacing(8),
+    )
+    .width(Fill.max(256.0))
+    .boxed()
 }
 
 impl page::Page for CollapsiblePage {
@@ -348,11 +371,7 @@ impl page::Page for CollapsiblePage {
             .boxed(),
 
             // shadcn `collapsible-file-tree.tsx`.
-            "file-tree" => {
-                card(card::content(column(FILE_TREE.iter().map(entry)).spacing(4)).boxed())
-                    .width(Fill.max(256.0))
-                    .boxed()
-            }
+            "file-tree" => file_tree(),
 
             _ => unreachable!("unknown collapsible preview id: {id}"),
         }

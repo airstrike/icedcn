@@ -1,6 +1,7 @@
 ```rust
-use iced::Fill;
-use icedxdy::widget::{table, text};
+use iced::{Element, Fill};
+use icedxdy::widget::text;
+use sweeten::widget::table;
 
 let rows = &[
     ("Empty", "Overflowing"),
@@ -8,12 +9,12 @@ let rows = &[
     ("Full", "Ecstatic"),
 ];
 
-let header = |label| text::p(label).bold().into();
+let header = |label| Element::from(text::p(label).bold());
 
 let columns = [
-    table::column(Some(header("King's Treasury")), |row: &(_, _)| text::p(row.0))
+    table::column(Some(header("King's Treasury")), |row: &(_, _)| Element::from(text::p(row.0)))
         .width(Fill),
-    table::column(Some(header("People's happiness")), |row: &(_, _)| text::p(row.1))
+    table::column(Some(header("People's happiness")), |row: &(_, _)| Element::from(text::p(row.1)))
         .width(Fill),
 ];
 

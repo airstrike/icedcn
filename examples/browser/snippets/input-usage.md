@@ -8,4 +8,4 @@ use icedxdy::widget::input;
 input("Enter text")
 ```
 
-Pair with `text::small(...).medium()` for a label and `text::muted(...)` for a help description, all stacked in a `column!` with `.spacing(8)` to land the shadcn `Field` layout. Drop `.on_input(...)` to render the input as disabled.
+Use `field(input("Email")).label("Email address")` to give the input a clickable label. Add helper text with `.description(...)`. An uncontrolled input keeps what you type. Use `.on_input(...)` to receive edits and `.disabled(true)` to disable the control.

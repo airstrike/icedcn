@@ -7,5 +7,5 @@ use icedxdy::{radius, Size::Sm};
 // the Text helper sets font + size + weight.
 container(text::inline_code("@radix-ui/react-alert-dialog"))
     .padding([3, 5])
-    .style(CardMuted + radius(Sm))
+    .class(CardMuted + radius(Sm))
 ```

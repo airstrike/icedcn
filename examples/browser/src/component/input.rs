@@ -175,7 +175,7 @@ impl page::Page for InputPage {
         match id {
             // Demo (hero): Field+Label+Input+Description for an "API Key"
             // form. Verbatim shadcn `input-demo.tsx`.
-            "demo" => field(input("sk-...").width(Fill))
+            "demo" => field(input("sk-...").secure(true).width(Fill))
                 .label("API Key")
                 .description("Your API key is encrypted and stored securely.")
                 .width(320)
