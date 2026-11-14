@@ -54,6 +54,8 @@ pub struct Tabs<'a, Message> {
     width: Length,
     orientation: Orientation,
     line: bool,
+    list_width: Length,
+    rounded: bool,
     inherited: Inherited,
 }
 
@@ -65,6 +67,8 @@ type Body<'a, Message> = Box<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
 #[derive(Debug, Clone)]
 pub struct Handle {
     value: String,
+    list_width: Length,
+    rounded: bool,
     orientation: Orientation,
     line: bool,
 }
@@ -104,6 +108,8 @@ pub fn tabs<'a, Message>(body: impl Fn(&Handle) -> Slot<'a, Message> + 'a) -> Ta
         default_value: String::new(),
         on_value_change: None,
         width: Length::Shrink,
+        list_width: Length::Shrink,
+        rounded: false,
         orientation: Orientation::Horizontal,
         line: false,
         inherited: Inherited::default(),
@@ -149,6 +155,18 @@ impl<'a, Message> Tabs<'a, Message> {
         self
     }
 
+    /// Set the tab strip width. Horizontal triggers share any extra width equally.
+    pub fn list_width(mut self, width: impl Into<Length>) -> Self {
+        self.list_width = width.into();
+        self
+    }
+
+    /// Round the list and its triggers into pills.
+    pub fn rounded(mut self) -> Self {
+        self.rounded = true;
+        self
+    }
+
     fn selected<'s>(&'s self, state: &'s State) -> &'s str {
         self.value
             .as_deref()
@@ -171,12 +189,28 @@ impl Handle {
         let gap = if self.line { 4 } else { 0 };
         let children = triggers.into_iter().map(Into::into);
         let content: Slot<'a, Message> = match self.orientation {
-            Orientation::Horizontal => Row::with_children(children).spacing(gap).into(),
-            Orientation::Vertical => Column::with_children(children).spacing(gap).into(),
+            Orientation::Horizontal => Row::with_children(children)
+                .spacing(gap)
+                .width(self.list_width)
+                .into(),
+            Orientation::Vertical => Column::with_children(children)
+                .spacing(gap)
+                .width(self.list_width)
+                .into(),
         };
-        let mut content = Container::new(content).padding(3);
+        let mut content = Container::new(content).width(self.list_width).padding(3);
+        if self.orientation == Orientation::Horizontal && !self.line {
+            content = content.center_y(32);
+        }
         if !self.line {
-            content = content.style(tabs::list);
+            let rounded = self.rounded;
+            content = content.style(move |theme: &Theme| {
+                let mut style = tabs::list(theme);
+                if rounded {
+                    style.border.radius = 18.0.into();
+                }
+                style
+            });
         }
         Slot::from(
             list::List {
@@ -196,10 +230,15 @@ impl Handle {
         let value = value.into();
         let active = value == self.value;
         let line = self.line;
+        let rounded = self.rounded;
         let mut label = label.into();
         label.inherit(&Inherited::default().with_size(Size::Default));
         let style: iced_widget::button::StyleFn<'a, Theme> = Box::new(move |theme, status| {
             let mut style = tabs::trigger(theme, status, active);
+            if rounded {
+                style.shadow = Default::default();
+                style.border.color = icedxdy_core::Color::TRANSPARENT;
+            }
             if line {
                 style.background = None;
                 style.border.width = 0.0;
@@ -207,8 +246,15 @@ impl Handle {
             }
             style.into()
         });
+        let mut button = button(label).size(Size::Xs).translate(false).style(style);
+        if self.list_width != Length::Shrink {
+            button = button.width(Fill);
+        }
+        if self.rounded {
+            button = button.height(25).rounded();
+        }
         Trigger {
-            button: button(label).size(Size::Xs).translate(false).style(style),
+            button,
             value,
             disabled: false,
             active,
@@ -336,6 +382,8 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Tabs<'a, 
     fn view(&self, state: &State) -> impl Widget<Event<Message>, Theme, Renderer> + 'a {
         let handle = Handle {
             value: self.selected(state).to_owned(),
+            list_width: self.list_width,
+            rounded: self.rounded,
             orientation: self.orientation,
             line: self.line,
         };

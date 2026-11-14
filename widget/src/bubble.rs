@@ -1,10 +1,10 @@
 //! Framed conversational content with optional corner reactions.
+use iced_core::Element;
 use iced_core::Length::{Fill, FillPortion};
 use iced_core::alignment::{Horizontal, Vertical};
-use iced_core::{Element, Padding};
 use iced_widget::{Renderer, Widget, stack};
 use icedxdy_core::theme::container::Style;
-use icedxdy_core::{Border, Color, Theme, radius};
+use icedxdy_core::{Border, Color, Padding, Radius, Theme, font_size, radius};
 
 use crate::{Column, Compose, Inherited, Size, Slot, column, container, row, space};
 
@@ -21,10 +21,29 @@ pub enum Variant {
 }
 pub use Variant::{Destructive, Ghost, Muted, Outline, Secondary, Tinted};
 
+/// Draw-time [`crate::Motion::theme`] for a muted bubble on a solid card.
+/// The surface fades with alpha. Its text fades toward the card color so
+/// overlapping text and fill have the same result as fading a single layer.
+pub fn fade_muted_on_card(theme: &Theme, opacity: f32) -> Theme {
+    let mut design = theme.design().clone();
+    design.muted.base = design.muted.base.scale_alpha(opacity);
+    let card: iced_core::Color = design.card.base.into();
+    let ink: iced_core::Color = design.neutral.foreground.into();
+    let channel = |card: f32, ink: f32| card + (ink - card) * opacity;
+    design.neutral.foreground = Color::from_srgb(iced_core::Color::from_rgb(
+        channel(card.r, ink.r),
+        channel(card.g, ink.g),
+        channel(card.b, ink.b),
+    ));
+    Theme::new(design)
+}
+
 pub struct Bubble<'a, Message> {
     content: Slot<'a, Message>,
     variant: Variant,
     align: Option<Horizontal>,
+    padding: Option<Padding>,
+    radius: Option<Radius>,
     reactions: Option<(Slot<'a, Message>, Horizontal, Vertical)>,
 }
 
@@ -33,6 +52,8 @@ pub fn bubble<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Bubble<
         content: content.into(),
         variant: Variant::Primary,
         align: None,
+        padding: None,
+        radius: None,
         reactions: None,
     }
 }
@@ -53,6 +74,16 @@ impl<'a, Message: 'a> Bubble<'a, Message> {
         self.align = Some(align);
         self
     }
+    /// Override the space inside the bubble's one-pixel border.
+    pub fn padding(mut self, padding: impl Into<Padding>) -> Self {
+        self.padding = Some(padding.into());
+        self
+    }
+    /// Override the corner radius of the bubble surface.
+    pub fn radius(mut self, radius: impl Into<Radius>) -> Self {
+        self.radius = Some(radius.into());
+        self
+    }
     pub fn reactions(
         mut self,
         content: impl Into<Slot<'a, Message>>,
@@ -64,7 +95,7 @@ impl<'a, Message: 'a> Bubble<'a, Message> {
     }
 }
 
-fn surface(variant: Variant, theme: &Theme) -> Style {
+fn surface(variant: Variant, radius: Radius, theme: &Theme) -> Style {
     use Variant::*;
     let primary = theme.primary.base;
     let (bg, fg) = match variant {
@@ -93,7 +124,7 @@ fn surface(variant: Variant, theme: &Theme) -> Style {
         background: Some(bg.into()),
         text_color: Some(fg),
         border: Border {
-            radius: radius::XL.into(),
+            radius,
             width: if variant == Outline { 1. } else { 0. },
             color: theme.neutral.border,
         },
@@ -118,12 +149,25 @@ impl<'a, Message: 'a> Compose<Message> for Bubble<'a, Message> {
         let align = self.align.unwrap_or(Horizontal::Left);
         self.content.inherit(
             &Inherited::default()
-                .with_size(Size::Sm)
+                .with_size(font_size::SM)
                 .with_line_height(22.75),
         );
+        let padding = self.padding.unwrap_or_else(|| {
+            if variant == Ghost {
+                Padding::ZERO
+            } else {
+                [8, 12].into()
+            }
+        });
+        let radius = self
+            .radius
+            .unwrap_or_else(|| if variant == Ghost { 0.0 } else { radius::XL }.into());
+        // iced draws its border inside the quad. CSS reserves a pixel on
+        // each edge, including the transparent border on the ghost variant.
         let content = container(self.content)
-            .padding(if variant == Ghost { [0, 0] } else { [8, 12] })
-            .style(move |theme| surface(variant, theme));
+            .fit_content()
+            .padding(padding + Padding::all(1.0))
+            .style(move |theme| surface(variant, radius, theme));
         let body: Slot<'a, Message> = if let Some((mut reaction, edge, side)) = self.reactions {
             reaction.inherit(&Inherited::default().with_size(Size::Sm));
             let chip = container(reaction).padding([2, 6]).style(|theme| Style {

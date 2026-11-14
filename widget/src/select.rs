@@ -35,6 +35,7 @@ use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
 use crate::{Size, column, menu, row, scrollable, text};
 
+pub use iced_widget::anchored::{Align, Side};
 pub use icedxdy_core::theme::select::{Invalid, Variant};
 
 /// A part of a select's list.
@@ -120,6 +121,8 @@ type TriggerPaint<'a> = Rc<dyn Fn(&Theme, widget::Status, bool, bool) -> widget:
 pub struct Select<'a, Message> {
     entries: Vec<Entry>,
     position: Position,
+    side: Side,
+    align: Align,
     placeholder: String,
     value_label: Option<ValueLabel<'a>>,
     value: Option<String>,
@@ -158,6 +161,8 @@ pub fn select<'a, Message>(entries: impl IntoIterator<Item = Entry>) -> Select<'
     Select {
         entries: entries.into_iter().collect(),
         position: Position::ItemAligned,
+        side: Side::Bottom,
+        align: Align::Center,
         placeholder: String::new(),
         value_label: None,
         value: None,
@@ -182,6 +187,18 @@ impl<'a, Message> Select<'a, Message> {
     /// Use selected-row alignment or popper placement.
     pub fn position(mut self, position: Position) -> Self {
         self.position = position;
+        self
+    }
+
+    /// Choose the preferred side for a popper-positioned list.
+    pub fn side(mut self, side: Side) -> Self {
+        self.side = side;
+        self
+    }
+
+    /// Align a popper-positioned list with the start, center, or end of its trigger.
+    pub fn align(mut self, align: Align) -> Self {
+        self.align = align;
         self
     }
 
@@ -229,7 +246,8 @@ impl<'a, Message> Select<'a, Message> {
         self
     }
 
-    pub(crate) fn trigger_style(
+    /// Customize the trigger surface for its button, open, and selection states.
+    pub fn trigger_style(
         mut self,
         paint: impl Fn(&Theme, widget::Status, bool, bool) -> widget::Style + 'a,
     ) -> Self {
@@ -423,7 +441,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
                 .align_offset(-row)
                 .flip(false)
         } else {
-            anchored.side(anchored::Side::Bottom).offset(4)
+            anchored.side(self.side).align(self.align).offset(4)
         };
         anchored
             .width(anchored::Width::AtLeastAnchor)

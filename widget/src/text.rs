@@ -18,6 +18,7 @@ use crate::core::Length::Fill;
 use crate::core::Padding;
 use crate::core::font;
 use crate::core::font::Weight;
+pub use crate::core::text::{Ellipsis, Wrapping};
 use crate::core::text::{Fragment, IntoFragment, LineHeight};
 use iced_widget::Renderer;
 use iced_widget::text::StyleFn;
@@ -51,6 +52,9 @@ pub struct Text<'a> {
     line_height: Option<LineHeight>,
     style: Option<StyleFn<'a, Theme>>,
     width: Option<Length>,
+    height: Length,
+    wrapping: Wrapping,
+    ellipsis: Ellipsis,
     align_x: Option<iced_core::text::Alignment>,
 }
 
@@ -66,6 +70,9 @@ impl<'a> Text<'a> {
             line_height: None,
             style: None,
             width: None,
+            height: Length::Shrink,
+            wrapping: Wrapping::default(),
+            ellipsis: Ellipsis::None,
             align_x: None,
         }
     }
@@ -117,6 +124,24 @@ impl<'a> Text<'a> {
         self
     }
 
+    /// Constrain the paragraph's height, for example to two line heights.
+    pub fn height(mut self, height: impl Into<Length>) -> Self {
+        self.height = height.into();
+        self
+    }
+
+    /// Choose the paragraph's native line-breaking strategy.
+    pub fn wrapping(mut self, wrapping: Wrapping) -> Self {
+        self.wrapping = wrapping;
+        self
+    }
+
+    /// Truncate the last visible line using the paragraph's shaped glyphs.
+    pub fn ellipsis(mut self, ellipsis: Ellipsis) -> Self {
+        self.ellipsis = ellipsis;
+        self
+    }
+
     /// Align the lines within the text's width (`text-center`); pair it
     /// with `.width(Fill)` so there is room to align in.
     pub fn align_x(mut self, alignment: impl Into<iced_core::text::Alignment>) -> Self {
@@ -136,7 +161,10 @@ impl<'a> Text<'a> {
 
     /// Build the iced text widget
     fn build(self) -> iced_widget::Text<'a, Theme> {
-        let mut widget = iced_widget::text(self.fragment);
+        let mut widget = iced_widget::text(self.fragment)
+            .height(self.height)
+            .wrapping(self.wrapping)
+            .ellipsis(self.ellipsis);
 
         if let Some(size) = self.size {
             widget = widget.size(size);

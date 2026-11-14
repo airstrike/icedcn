@@ -64,6 +64,7 @@ where
     horizontal_alignment: alignment::Horizontal,
     vertical_alignment: alignment::Vertical,
     clip: bool,
+    fit_content: bool,
     content: W,
     class: Theme::Class<'a>,
 }
@@ -82,6 +83,7 @@ where
             horizontal_alignment: alignment::Horizontal::Left,
             vertical_alignment: alignment::Vertical::Top,
             clip: false,
+            fit_content: false,
             class: Theme::default(),
             content,
         }
@@ -102,6 +104,11 @@ where
     /// Sets the width of the [`Container`].
     pub fn width(mut self, width: impl Into<Length>) -> Self {
         self.width = width.into();
+        self
+    }
+
+    pub(crate) fn fit_content(mut self, enabled: bool) -> Self {
+        self.fit_content = enabled;
         self
     }
 
@@ -275,6 +282,19 @@ where
             self.horizontal_alignment,
             self.vertical_alignment,
             |tree, limits| {
+                // A fit-content surface fills up to its intrinsic (unwrapped)
+                // width. A normal Shrink pass would wrap first and then
+                // shrink again to the longest line, moving the bubble edge.
+                if self.fit_content && limits.bounds().width.is_finite() {
+                    let mut unbounded = *limits;
+                    unbounded.infinite.width = true;
+                    self.content.layout(tree, renderer, &unbounded);
+                    let width = tree.size.width.min(limits.max.width);
+                    if tree.size.width > width {
+                        self.content.layout(tree, renderer, limits);
+                    }
+                    return Size::new(width, tree.size.height);
+                }
                 self.content.layout(tree, renderer, limits);
                 tree.size
             },

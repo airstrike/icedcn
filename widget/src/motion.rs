@@ -1,79 +1,23 @@
 //! Paint-only entrances for newly mounted content.
+//!
+//! Motion fades inherited text color. Children with their own surface or
+//! text colors can supply draw-time paint tokens with [`Motion::theme`].
+//! iced's clip layers do not provide group opacity or a blur filter.
 
-use std::time::Duration;
-use std::{fmt, slice};
+use std::slice;
+mod preset;
+pub use preset::Preset;
 
+use iced_core::animation::Easing;
 use iced_core::time::Instant;
 use iced_core::widget::{Meta, Operation, Tree, tree};
 use iced_core::{
-    Animation, Element, Event, Layout, Length, Rectangle, Renderer, Shell, Size, Transformation,
-    Vector, Widget, layout, mouse, overlay, renderer, window,
+    Animation, Element, Event, Layout, Length, Rectangle, Renderer, Shell, Size, Vector, Widget,
+    layout, mouse, overlay, renderer, window,
 };
 use icedxdy_core::Theme;
 
 use crate::compose::{Compose, Inherited, Slot};
-
-/// Portable paint transforms for the arrival of a widget.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub enum Preset {
-    /// Move into place from just below.
-    #[default]
-    SlideUp,
-    /// Move into place from the right.
-    SlideSide,
-    /// Scale up from the center while rising slightly.
-    Pop,
-    /// Settle into place with a damped vertical bounce.
-    SpringBounce,
-}
-
-impl fmt::Display for Preset {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(match self {
-            Self::SlideUp => "Slide Up",
-            Self::SlideSide => "Slide Side",
-            Self::Pop => "Pop",
-            Self::SpringBounce => "Spring Bounce",
-        })
-    }
-}
-
-impl Preset {
-    /// All presets in picker order.
-    pub const ALL: [Self; 4] = [
-        Self::SlideUp,
-        Self::SlideSide,
-        Self::Pop,
-        Self::SpringBounce,
-    ];
-
-    fn duration(self) -> Duration {
-        match self {
-            Self::SpringBounce => Duration::from_millis(320),
-            _ => Duration::from_millis(200),
-        }
-    }
-
-    fn transform(self, progress: f32, bounds: Rectangle) -> Transformation {
-        if progress >= 1.0 {
-            return Transformation::IDENTITY;
-        }
-        let remaining = 1.0 - crate::animation::ease_out(progress);
-        let (x, y, scale) = match self {
-            Self::SlideUp => (0.0, 10.0 * remaining, 1.0),
-            Self::SlideSide => (18.0 * remaining, 0.0, 1.0),
-            Self::Pop => (0.0, 6.0 * remaining, 1.0 - 0.06 * remaining),
-            Self::SpringBounce => {
-                let oscillation = (progress * 9.0).cos() * remaining;
-                (0.0, 9.0 * oscillation, 1.0 - 0.08 * oscillation)
-            }
-        };
-        let center = bounds.center();
-        Transformation::translate(center.x + x, center.y + y)
-            * Transformation::scale(scale)
-            * Transformation::translate(-center.x, -center.y)
-    }
-}
 
 /// An entrance that plays once when its content mounts. Layout and input use
 /// the child's final position throughout the transition.
@@ -81,6 +25,7 @@ pub struct Motion<'a, Message> {
     content: Slot<'a, Message>,
     preset: Preset,
     animate: bool,
+    theme: Option<fn(&Theme, f32) -> Theme>,
 }
 
 /// Animate the arrival of a child. In lists, keep stable row keys and use
@@ -90,6 +35,7 @@ pub fn motion<'a, Message>(content: impl Into<Slot<'a, Message>>) -> Motion<'a, 
         content: content.into(),
         preset: Preset::default(),
         animate: true,
+        theme: None,
     }
 }
 
@@ -103,6 +49,14 @@ impl<'a, Message> Motion<'a, Message> {
     /// Set to false for content that should be displayed immediately on mount.
     pub fn animate(mut self, animate: bool) -> Self {
         self.animate = animate;
+        self
+    }
+
+    /// Supply paint tokens for a child that draws its own colors. Receives
+    /// the surrounding theme and the current opacity during the entrance.
+    /// The child's layout and state remain intact.
+    pub fn theme(mut self, theme: fn(&Theme, f32) -> Theme) -> Self {
+        self.theme = Some(theme);
         self
     }
 }
@@ -119,6 +73,7 @@ impl<'a, Message: 'a> Compose<Message> for Motion<'a, Message> {
         Surface {
             content: self.content.compose(),
             entrance: self.animate.then_some(self.preset),
+            theme: self.theme,
         }
         ._boxed()
     }
@@ -138,9 +93,10 @@ impl<'a, Message: 'a> From<Motion<'a, Message>>
     }
 }
 
-struct Surface<W> {
+struct Surface<W, T> {
     content: W,
     entrance: Option<Preset>,
+    theme: Option<fn(&T, f32) -> T>,
 }
 
 struct Playing {
@@ -165,13 +121,13 @@ impl State {
     }
 }
 
-impl<W: Meta> Meta for Surface<W> {
+impl<W: Meta, T> Meta for Surface<W, T> {
     fn is_void(&self) -> bool {
         self.content.is_void()
     }
 }
 
-impl<Message, T, R: Renderer, W: Widget<Message, T, R>> Widget<Message, T, R> for Surface<W> {
+impl<Message, T, R: Renderer, W: Widget<Message, T, R>> Widget<Message, T, R> for Surface<W, T> {
     fn tag(&self) -> tree::Tag {
         tree::Tag::of::<State>()
     }
@@ -181,6 +137,7 @@ impl<Message, T, R: Renderer, W: Widget<Message, T, R>> Widget<Message, T, R> fo
             Playing {
                 preset,
                 timeline: Animation::new(0.0)
+                    .easing(Easing::Linear)
                     .duration(preset.duration())
                     .go(1.0, Instant::now()),
                 progress: 0.0,
@@ -242,13 +199,22 @@ impl<Message, T, R: Renderer, W: Widget<Message, T, R>> Widget<Message, T, R> fo
     ) {
         let child = &tree.children[0];
         if let Some(play) = &tree.state.downcast_ref::<State>().0 {
-            let transform = play.preset.transform(play.progress, layout.bounds());
+            let remaining = play.preset.remaining(play.progress);
+            let opacity = (1.0 - remaining).clamp(0.0, 1.0);
+            if opacity == 0.0 {
+                return;
+            }
+            let transform = play.preset.transform(remaining, layout.bounds());
+            let paint = self.theme.map(|paint| paint(theme, opacity));
+            let style = renderer::Style {
+                text_color: style.text_color.scale_alpha(opacity),
+            };
             renderer.with_transformation(transform, |renderer| {
                 self.content.draw(
                     child,
                     renderer,
-                    theme,
-                    style,
+                    paint.as_ref().unwrap_or(theme),
+                    &style,
                     layout,
                     cursor,
                     &(*viewport * transform.inverse()),
@@ -310,11 +276,13 @@ mod tests {
     use iced_core::shell::{Bus, Waker};
     use iced_core::window::{Headless, RedrawRequest};
     use iced_widget::Space;
+    use std::time::Duration;
 
     fn row(width: f32, preset: Option<Preset>) -> Element<'static, (), (), ()> {
         Surface {
             content: Space::new().width(width).height(28),
             entrance: preset,
+            theme: None,
         }
         ._boxed()
     }
@@ -350,6 +318,7 @@ mod tests {
             .as_mut()
             .unwrap()
             .timeline = Animation::new(0.0)
+            .easing(Easing::Linear)
             .duration(Preset::SlideUp.duration())
             .go(1.0, start);
         assert_eq!(tree.size, Size::new(120.0, 28.0));
@@ -359,7 +328,7 @@ mod tests {
         let mut streamed = row(160.0, Some(Preset::Pop));
         tree.diff(&mut streamed);
         streamed.layout(&mut tree, &(), &limits);
-        let now = start + Duration::from_millis(100);
+        let now = start + Duration::from_millis(130);
         assert_eq!(
             frame(&mut streamed, &mut tree, now),
             RedrawRequest::NextFrame
@@ -386,10 +355,9 @@ mod tests {
         tree.diff(&mut row(160.0, Some(Preset::Pop)));
         assert!(tree.state.downcast_ref::<State>().0.is_none());
 
-        let bounds = Rectangle::new(iced_core::Point::new(8.0, 24.0), Size::new(120.0, 28.0));
         for preset in Preset::ALL {
-            assert_ne!(preset.transform(0.0, bounds), Transformation::IDENTITY);
-            assert_eq!(preset.transform(1.0, bounds), Transformation::IDENTITY);
+            assert_eq!(preset.remaining(0.0), 1.0);
+            assert_eq!(preset.remaining(1.0), 0.0);
         }
     }
 }

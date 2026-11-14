@@ -25,6 +25,7 @@ pub struct Container<'a, Message> {
     align_x: Horizontal,
     align_y: Vertical,
     clip: bool,
+    fit_content: bool,
     style: Option<StyleFn<'static, Theme>>,
 }
 
@@ -39,6 +40,7 @@ impl<'a, Message: 'a> Container<'a, Message> {
             align_x: Horizontal::Left,
             align_y: Vertical::Top,
             clip: false,
+            fit_content: false,
             style: None,
         }
     }
@@ -150,6 +152,12 @@ impl<'a, Message: 'a> Container<'a, Message> {
         self
     }
 
+    /// Resolve the intrinsic width before wrapping a bubble's contents.
+    pub(crate) fn fit_content(mut self) -> Self {
+        self.fit_content = true;
+        self
+    }
+
     /// Center this container horizontally and vertically inside the
     /// available space. Shortcut for `.center_x(Fill).center_y(Fill)`.
     pub fn center(self, length: impl Into<Length>) -> Self {
@@ -187,6 +195,7 @@ impl<'a, Message: 'a> Compose<Message> for Container<'a, Message> {
             .padding(self.padding)
             .align_x(self.align_x)
             .align_y(self.align_y)
+            .fit_content(self.fit_content)
             .clip(self.clip);
 
         if let Some(id) = self.id {

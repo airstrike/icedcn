@@ -2,13 +2,14 @@
 use crate::{Column, Compose, Inherited, Size, Slot, Weight, column, container, row};
 use iced_core::Element;
 use iced_core::Length::Fill;
+use iced_core::Padding;
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
 use icedxdy_core::theme::{
     container::Transparent,
     tweak::{Fg, Token},
 };
+use icedxdy_core::{Theme, font_size};
 
 pub struct Message<'a, Event> {
     content: Slot<'a, Event>,
@@ -16,6 +17,7 @@ pub struct Message<'a, Event> {
     header: Option<Slot<'a, Event>>,
     footer: Option<Slot<'a, Event>>,
     align: Horizontal,
+    metadata_padding: Padding,
 }
 pub fn message<'a, Event: 'a>(content: impl Into<Slot<'a, Event>>) -> Message<'a, Event> {
     Message {
@@ -24,6 +26,7 @@ pub fn message<'a, Event: 'a>(content: impl Into<Slot<'a, Event>>) -> Message<'a
         header: None,
         footer: None,
         align: Horizontal::Left,
+        metadata_padding: [0, 12].into(),
     }
 }
 pub fn group<'a, Event: 'a>(items: impl IntoIterator<Item = Slot<'a, Event>>) -> Column<'a, Event> {
@@ -42,19 +45,30 @@ impl<'a, Event: 'a> Message<'a, Event> {
         self.header = Some(header.into());
         self
     }
+    /// Align the header and footer to the content's inset. A ghost bubble
+    /// has no horizontal padding, so its metadata uses zero as well.
+    pub fn metadata_padding(mut self, padding: impl Into<Padding>) -> Self {
+        self.metadata_padding = padding.into();
+        self
+    }
     pub fn footer(mut self, footer: impl Into<Slot<'a, Event>>) -> Self {
         self.footer = Some(footer.into());
         self
     }
 }
-fn metadata<'a, Event: 'a>(mut content: Slot<'a, Event>, align: Horizontal) -> Slot<'a, Event> {
+fn metadata<'a, Event: 'a>(
+    mut content: Slot<'a, Event>,
+    align: Horizontal,
+    padding: Padding,
+) -> Slot<'a, Event> {
     content.inherit(
         &Inherited::default()
             .with_size(Size::Xs)
+            .with_line_height(16.0)
             .with_weight(Weight::Medium),
     );
     container(content)
-        .padding([0, 12])
+        .padding(padding)
         .width(Fill)
         .align_x(align)
         .class(Transparent + Fg(Token::MutedForeground))
@@ -76,7 +90,7 @@ impl<'a, Event: 'a> Compose<Event> for Message<'a, Event> {
     {
         self.content.inherit(
             &Inherited::default()
-                .with_size(Size::Sm)
+                .with_size(font_size::SM)
                 .with_conversation_alignment(self.align),
         );
         let footer_present = self.footer.is_some();
@@ -85,11 +99,11 @@ impl<'a, Event: 'a> Compose<Event> for Message<'a, Event> {
             .align_x(self.align)
             .spacing(10);
         if let Some(header) = self.header {
-            body = body.push(metadata(header, self.align));
+            body = body.push(metadata(header, self.align, self.metadata_padding));
         }
         body = body.push(self.content);
         if let Some(footer) = self.footer {
-            body = body.push(metadata(footer, self.align));
+            body = body.push(metadata(footer, self.align, self.metadata_padding));
         }
         let Some(avatar) = self.avatar else {
             return body.into();

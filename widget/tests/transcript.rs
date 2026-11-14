@@ -235,3 +235,82 @@ fn keyed_editor_stays_with_its_message_across_a_reorder_and_replacement() {
         "replacement starts with a fresh input"
     );
 }
+
+#[test]
+fn new_turn_uses_the_content_padding_and_peek_but_commands_use_only_padding_and_margin() {
+    let initial = [(1, 113, true), (2, 237, false)];
+    let with_prompt = [(1, 113, true), (2, 237, false), (3, 113, true)];
+    let padded = |rows: &[(u64, u32, bool)],
+                  target: Option<Target>|
+     -> Element<'static, Reader, Theme, Renderer> {
+        scroller(rows.iter().map(|&(key, height, anchor)| {
+            scroller::item(key, Space::new().width(150).height(height)).anchor(anchor)
+        }))
+        .height(349)
+        .spacing(32.)
+        .padding(20.)
+        .previous_item_peek(64.)
+        .scroll_margin(0.)
+        .default_scroll_position(Position::End)
+        .command(target.map(|target| Command {
+            sequence: 1,
+            target,
+        }))
+        .on_reader_change(|reader| reader)
+        .into()
+    };
+    // Same row heights as the live 384px card. The first prompt starts 20px
+    // inside the viewport. The second prompt lands with 20 + 64 visible above.
+    let mut ui = simulator(padded(&initial[..1], None));
+    assert_eq!(offset(&mut ui), 0.);
+    let ui = ui.rebuild(padded(&initial, None));
+    let mut ui = ui.rebuild(padded(&with_prompt, None));
+    assert_eq!(offset(&mut ui), 350.);
+    let mut ui = ui.rebuild(padded(&with_prompt, Some(Target::Item(3))));
+    assert_eq!(offset(&mut ui), 414.);
+}
+
+#[test]
+fn remaining_tail_space_does_not_count_as_an_unread_message() {
+    let rows = [(1, 120, false), (2, 40, true)];
+    let mut ui = simulator(view(
+        &rows,
+        Position::Start,
+        0.,
+        Some(Target::Item(2)),
+        false,
+    ));
+    ui.point_at(Point::new(30., 30.));
+    let _ = ui.simulate(click());
+    ui.tap_key(Named::ArrowUp);
+    assert_eq!(offset(&mut ui), 70.);
+    let _ = ui.simulate([Event::Window(
+        window::Event::RedrawRequested(Instant::now()),
+    )]);
+    let reader = ui.into_messages().last().unwrap();
+    assert!(reader.can_scroll_up);
+    assert!(!reader.can_scroll_down, "only reserved space remains below");
+}
+
+#[test]
+fn a_tall_new_anchor_holds_while_a_short_turn_hands_back_to_following() {
+    for (height, expected) in [(120, 110.), (50, 170.)] {
+        let previous = [(1, 120, true)];
+        let prompt = [(1, 120, true), (2, height, true)];
+        let reply = [(1, 120, true), (2, height, true), (3, 100, false)];
+        let ui = simulator(view(&previous, Position::End, 0., None, false));
+        let mut ui = ui.rebuild(view(&prompt, Position::End, 0., None, false));
+        assert_eq!(offset(&mut ui), 110.);
+        let mut ui = ui.rebuild(view(&reply, Position::End, 0., None, false));
+        assert_eq!(offset(&mut ui), expected);
+    }
+}
+
+#[test]
+fn clicking_to_focus_at_the_end_keeps_the_stream_following() {
+    let mut ui = simulator(view(&[(1, 160, false)], Position::End, 0., None, false));
+    ui.point_at(Point::new(30., 30.));
+    let _ = ui.simulate(click());
+    let mut ui = ui.rebuild(view(&[(1, 200, false)], Position::End, 0., None, false));
+    assert_eq!(offset(&mut ui), 100.);
+}

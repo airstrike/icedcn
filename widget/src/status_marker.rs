@@ -2,13 +2,13 @@
 use iced_core::Length::Fill;
 use iced_core::{Alignment, Element};
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
 use icedxdy_core::theme::{
     container::Transparent,
     tweak::{Fg, Token},
 };
+use icedxdy_core::{Theme, font_size};
 
-use crate::{Compose, Inherited, Size, Slot, column, container, row, separator};
+use crate::{Compose, Inherited, Slot, column, container, row, separator};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum Style {
@@ -64,8 +64,11 @@ impl<'a, Message: 'a> Compose<Message> for StatusMarker<'a, Message> {
     where
         Self: 'b,
     {
-        self.content
-            .inherit(&Inherited::default().with_size(Size::Sm));
+        self.content.inherit(
+            &Inherited::default()
+                .with_size(font_size::SM)
+                .with_line_height(20.0),
+        );
         let icon: Option<Slot<'a, Message>> = self
             .icon
             .take()

@@ -66,14 +66,21 @@ fn saved_thread_can_open_at_the_start_end_or_last_user_turn() {
     let page = scroller::Page::new(0);
     let mut ui = preview(&*page, "opening-position");
     let initial = geometry(&mut ui);
-    assert!(initial.y > 0.);
+    close(initial.y, initial.content - initial.view);
     ui.click("start").unwrap();
     close(geometry(&mut ui).y, 0.);
     ui.click("end").unwrap();
     let end = geometry(&mut ui);
     close(end.y, end.content - end.view);
     ui.click("last-anchor").unwrap();
-    close(geometry(&mut ui).y, initial.y);
+    let last = geometry(&mut ui);
+    assert!(last.y > 0. && last.y < end.y);
+    let label = bounds(
+        &mut ui,
+        "This is the last message the user sent in the conversation.",
+    );
+    // The text sits below its 1px bubble border and 10px vertical padding.
+    close(label.y - last.viewport.y, 20. + 64. + 1. + 10.);
 }
 
 #[test]
@@ -101,9 +108,9 @@ fn adding_turns_anchors_and_streaming_replies_follow_the_live_edge() {
     close(anchored.y, anchored.content - anchored.view);
 
     let mut ui = preview(&*page, "streaming");
-    let mut now = Instant::now();
     for _ in 0..2 {
         ui.click(send).unwrap();
+        let mut now = Instant::now();
         advance(&mut ui, &mut now, 150);
     }
     let streamed = geometry(&mut ui);
@@ -212,33 +219,26 @@ fn preview_controls_use_the_available_card_width() {
             let mut ui = preview_at(&*page, id, width);
             let mut layout = Layout::default();
             ui.operate(&mut layout);
-            let available = width.min(384.);
-            // Commands/visibility have no footer. The visibility outline may reserve one button's width.
+            let available = if id == "visibility" {
+                (width - 48.).min(384.)
+            } else {
+                width.min(384.)
+            };
             let card = layout
                 .containers
                 .iter()
-                .filter(|r| r.height >= 500. && r.height <= 600. && r.y < 1.)
-                .max_by(|a, b| a.width.total_cmp(&b.width))
-                .expect("transcript card");
-            let minimum = if id == "visibility" {
-                available - 40.
-            } else {
-                available
-            };
-            assert!(
-                card.width + 1. >= minimum && card.x + card.width <= width + 1.,
-                "{id} in {width}: {card:?}"
-            );
+                .find(|r| (r.height - 560.).abs() < 1. && (r.width - available).abs() < 1.)
+                .unwrap_or_else(|| panic!("{id} in {width}: card width should be {available}"));
             if !matches!(id, "commands" | "visibility") {
-                let full_width_footer = layout.containers.iter().any(|r| {
+                let footer = layout.containers.iter().find(|r| {
                     r.y > card.center_y()
-                        && (r.y + r.height - card.y - card.height).abs() < 1.
+                        && (r.y + r.height - card.y - card.height + 20.).abs() < 1.
                         && (r.x - card.x).abs() < 1.
                         && (r.width - card.width).abs() < 1.
                 });
                 assert!(
-                    full_width_footer,
-                    "{id} in {width}: footer does not span the card"
+                    footer.is_some(),
+                    "{id} in {width}: footer should span the card above its 20px bottom inset"
                 );
             }
             for b in &layout.buttons {
@@ -251,11 +251,16 @@ fn preview_controls_use_the_available_card_width() {
                 "demo" | "previous-context" | "streaming" | "anchoring" | "animation" => {
                     let send = layout.button_at(bounds(&mut ui, glyph("arrow_up")));
                     let inset = card.x + card.width - send.x - send.width;
-                    assert!(
-                        (0.0..=32.).contains(&inset),
-                        "{id} in {width}: send inset {inset}"
-                    );
-                    if matches!(id, "demo" | "previous-context" | "streaming") {
+                    let has_composer = matches!(id, "demo" | "previous-context" | "streaming");
+                    close(inset, if has_composer { 31. } else { 20. });
+                    close(send.width, 32.);
+                    close(send.height, 32.);
+                    if has_composer {
+                        let group = ui.find(Id::from("transcript-composer")).unwrap().bounds();
+                        close(group.x - card.x, 20.);
+                        close(group.width, card.width - 40.);
+                        close(group.height, 102.);
+                        close(group.y + group.height - send.y - send.height, 9.);
                         let plus = layout.button_at(bounds(&mut ui, glyph("plus")));
                         close(send.center_y(), plus.center_y());
                         assert!(
@@ -275,12 +280,16 @@ fn preview_controls_use_the_available_card_width() {
                         layout.button_at(label)
                     };
                     let inset = b.x - card.x;
-                    assert!((0.0..=24.).contains(&inset), "{id}: leading inset {inset}");
+                    close(inset, 20.);
+                    close(b.height, 32.);
                     close(inset, card.x + card.width - b.x - b.width);
                 }
                 "opening-position" => {
                     let first = layout.button_at(bounds(&mut ui, "start"));
                     let last = layout.button_at(bounds(&mut ui, "last-anchor"));
+                    close(first.x - card.x, 23.);
+                    close(card.x + card.width - last.x - last.width, 23.);
+                    close(first.width, last.width);
                     close((first.x + last.x + last.width) / 2., card.center_x());
                 }
                 _ => {}
@@ -305,7 +314,8 @@ fn wheel_scrolling_up_keeps_the_current_position_while_the_reply_grows() {
     ui.click(send).unwrap();
     advance(&mut ui, &mut now, 150);
     ui.click(send).unwrap();
-    advance(&mut ui, &mut now, 4);
+    now = Instant::now();
+    advance(&mut ui, &mut now, 36);
     let live = geometry(&mut ui);
     ui.point_at(live.viewport.center());
     ui.scroll(ScrollDelta::Pixels { x: 0., y: 95. });
@@ -322,4 +332,98 @@ fn wheel_scrolling_up_keeps_the_current_position_while_the_reply_grows() {
         "further streamed lines lengthened the transcript"
     );
     close(reading.y, done.y);
+}
+
+#[test]
+fn composer_menu_and_animation_picker_open_above_their_triggers() {
+    let page = scroller::Page::new(0);
+    let mut ui = preview(&*page, "demo");
+    let plus = bounds(&mut ui, glyph("plus"));
+    ui.click(glyph("plus")).unwrap();
+    for label in [
+        "Add Photos & Files",
+        "Create Image",
+        "Deep Research",
+        "Web Search",
+    ] {
+        let item = bounds(&mut ui, label);
+        assert!(item.y + item.height < plus.y);
+    }
+    ui.click("Deep Research").unwrap();
+    let mut ui = ui.rebuild(page.preview("demo"));
+    assert!(ui.find("Deep Research").is_err());
+
+    let mut ui = preview(&*page, "animation");
+    let trigger = bounds(&mut ui, "Fade");
+    ui.click("Fade").unwrap();
+    let pop = bounds(&mut ui, "Pop");
+    assert!(pop.y < trigger.y);
+    ui.click("Pop").unwrap();
+    let mut ui = ui.rebuild(page.preview("animation"));
+    close(bounds(&mut ui, "Pop").center_y(), trigger.center_y());
+}
+
+#[test]
+fn ellipsis_uses_the_font_and_only_changes_the_last_overflowing_line() {
+    use iced::mouse;
+    use iced::{Color, Element, Font, Renderer};
+    use iced_test::core::renderer::{Headless, Settings, Style};
+    use iced_test::futures::futures::executor::block_on;
+    use iced_test::runtime::UserInterface;
+    use iced_widget::text::LineHeight;
+    use icedxdy::widget::text::{self, Ellipsis};
+
+    fn pixels(renderer: &mut Renderer, value: &str, lines: u32, ellipsis: Ellipsis) -> Vec<u8> {
+        let height = lines * 20;
+        let size = Size::new(72., height as f32);
+        let label: Element<'_, (), Theme> = text::small(value)
+            .width(72)
+            .height(height as f32)
+            .line_height(LineHeight::Absolute(20.into()))
+            .ellipsis(ellipsis)
+            .into();
+        let mut ui = UserInterface::build(label, size, Default::default(), renderer);
+        ui.draw(
+            renderer,
+            &Theme::light(),
+            &Style::default(),
+            mouse::Cursor::Unavailable,
+        );
+        renderer.screenshot(Size::new(72, height), 1., Color::WHITE)
+    }
+
+    let backend = std::env::var("ICED_TEST_BACKEND").ok();
+    let render = |font| {
+        block_on(Renderer::new(
+            Settings {
+                font,
+                ..Default::default()
+            },
+            backend.as_deref(),
+        ))
+        .expect("headless renderer")
+    };
+    let mut proportional = render(Font::DEFAULT);
+    let mut monospace = render(Font::MONOSPACE);
+    let letters = "iii iii iii iii";
+    assert_eq!(
+        pixels(&mut proportional, letters, 1, Ellipsis::End),
+        pixels(&mut proportional, letters, 1, Ellipsis::None),
+        "the proportional letters fit inside one line"
+    );
+    assert!(
+        pixels(&mut monospace, letters, 1, Ellipsis::End)
+            != pixels(&mut monospace, letters, 1, Ellipsis::None),
+        "the same characters in a wider font require an ellipsis"
+    );
+
+    let copy = "These two lines wrap at the available width, leaving later text undisplayed.";
+    let shown = pixels(&mut proportional, copy, 2, Ellipsis::End);
+    let plain = pixels(&mut proportional, copy, 2, Ellipsis::None);
+    let row = 72 * 20 * 4;
+    assert_eq!(shown[..row], plain[..row], "the first line is intact");
+    assert!(
+        shown[row..] != plain[row..],
+        "the second line ends with an ellipsis"
+    );
 }

@@ -14,6 +14,9 @@ use iced_core::{
 use iced_widget::Renderer;
 use icedxdy_core::Theme;
 
+// The browser controller ignores small edge differences caused by rounding or zoom.
+const EDGE: f32 = 8.0;
+
 #[derive(Debug, Clone, Copy)]
 pub(super) struct Options {
     pub opening: Position,
@@ -69,6 +72,7 @@ struct State {
     rows: Vec<Row>,
     height: f32,
     total: f32,
+    natural: f32,
     last: Option<Command>,
     reported: Option<Reader>,
     measured_at: Option<(f32, f32)>,
@@ -95,10 +99,10 @@ impl State {
             .rows
             .partition_point(|r| r.y + r.height <= offset + margin);
         let end = self.rows.partition_point(|r| r.y < offset + self.height);
-        let top = self.rows.partition_point(|r| r.y <= offset + margin + 1.0);
+        let top = self.rows.partition_point(|r| r.y <= offset + margin + 0.5);
         Reader {
-            can_scroll_up: offset > 1.0,
-            can_scroll_down: offset + self.height < self.total - 1.0,
+            can_scroll_up: offset > EDGE,
+            can_scroll_down: offset + self.height < self.natural - EDGE,
             current_anchor: self.rows[..top]
                 .iter()
                 .rev()
@@ -148,7 +152,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
         let native = &mut tree.children[0];
         let old_y = transcript_offset(native);
         let state = tree.state.downcast_mut::<State>();
-        let was_at_end = old_y + state.height >= state.total - 1.0;
+        let was_at_end = old_y + state.height >= state.natural - EDGE;
         self.child.layout(native, r, limits);
         tree.size = native.size;
         native.translation = Vector::ZERO;
@@ -167,7 +171,11 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
             .collect();
         let natural = content.size.height;
         let end = (natural - view).max(0.0);
-        let inset = self.options.margin + self.options.peek;
+        // CSS aligns to the padded content box. The reading line, in contrast,
+        // is measured from the viewport edge.
+        let padding = rows.first().map_or(0.0, |row| row.y);
+        let margin = padding + self.options.margin;
+        let inset = margin + self.options.peek;
         let previous_first = state.rows.first().map(|r| r.id);
         let first_index = previous_first.and_then(|id| rows.iter().position(|r| r.id == id));
         let previous_last = state.rows.last().map(|r| r.id);
@@ -192,7 +200,8 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
             })
         });
         let prepended = first_index.is_some_and(|i| i > 0);
-        let following = self.options.follow && !state.released && was_at_end;
+        let holding = state.pin.is_some() && !state.released;
+        let following = self.options.follow && !state.released && !holding && was_at_end;
         let fresh = !rows.is_empty()
             && (state.rows.is_empty()
                 || first_index.is_none() && last_index.is_none() && {
@@ -207,7 +216,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
             let current = rows.iter().find(|r| r.id == old.id)?;
             (current.y != old.y).then_some(old_y + current.y - old.y)
         };
-        let requested = |dest: Target| dest.offset(&rows, end, self.options.margin);
+        let requested = |dest: Target| dest.offset(&rows, end, margin);
         let geometry_changed = state.rows != rows || state.height != view;
         let mut target = None;
         let mut smooth = false;
@@ -240,9 +249,20 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
                 state.pin = Some((row.id, inset));
                 target = Some(row.offset(inset));
             }
-        } else if following
-            && (natural > state.total || view != state.height && state.pin.is_none())
+        } else if holding
+            && let Some((id, inset)) = state.pin
+            && let Some(row) = rows.iter().find(|r| r.id == id)
         {
+            let y = row.offset(inset);
+            // Follow resumes when a growing reply consumes its reserved room.
+            // A tall turn anchored without a spacer stays at the reading line.
+            if self.options.follow && state.total > state.natural && natural >= y + view {
+                target = Some(end);
+                state.pin = None;
+            } else {
+                target = Some(y);
+            }
+        } else if following && (natural != state.natural || view != state.height) {
             target = Some(end);
         } else if !prepended {
             target = preserve_visible();
@@ -257,7 +277,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
             state.last = Some(cmd);
             if let Some(y) = requested {
                 state.pin = match cmd.target {
-                    Target::Item(id) => Some((id, self.options.margin)),
+                    Target::Item(id) => Some((id, margin)),
                     _ => None,
                 };
                 state.released = cmd.target != Target::End;
@@ -280,9 +300,10 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
             })
             .unwrap_or(0.0);
         content.size.height = natural.max(extra);
-        if geometry_changed || state.total != content.size.height {
+        if geometry_changed || state.total != content.size.height || state.natural != natural {
             state.measured_at = None;
         }
+        state.natural = natural;
         state.total = content.size.height;
         state.height = view;
         state.rows = rows;
@@ -329,10 +350,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
         let bounds = layout.bounds();
         let inside = c.is_over(bounds) && c.is_over(*v);
         let pointer_intent = match event {
-            Event::Mouse(
-                mouse::Event::ButtonPressed(mouse::Button::Left)
-                | mouse::Event::WheelScrolled { .. },
-            ) => inside,
+            Event::Mouse(mouse::Event::WheelScrolled { .. }) => inside,
             Event::Touch(touch::Event::FingerMoved { position, .. }) => {
                 bounds.contains(*position) && v.contains(*position)
             }
@@ -378,14 +396,28 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
             }
         }
         let after = transcript_offset(t);
+        if state.smooth.is_some()
+            && matches!(event, Event::Mouse(mouse::Event::CursorMoved { .. }))
+            && (after - before).abs() > 0.1
+        {
+            // The reader grabbed the scrollbar during a smooth jump.
+            state.smooth = None;
+        }
         if let Some(dest) = state.smooth {
             let max = (state.total - state.height).max(0.0);
-            let target = dest.offset(&state.rows, max, self.options.margin);
+            let padding = state.rows.first().map_or(0.0, |row| row.y);
+            let target = dest.offset(&state.rows, max, padding + self.options.margin);
             if target.is_none_or(|y| (y - after).abs() <= 1.0) {
                 state.smooth = None;
             }
         } else if (after - before).abs() > 0.1 {
-            state.released = after + state.height < state.total - 1.0;
+            // Scrolling up in the reserved tail remains deliberate reader intent
+            // even when the last real message is still visible.
+            state.released = after < before || after + state.height < state.natural - EDGE;
+            if !state.released && self.options.follow && state.pin.take().is_some() {
+                // Release any reserved room after manually returning to the live edge.
+                shell.invalidate_layout();
+            }
         }
         let margin = self.options.margin + self.options.peek;
         if let Some(on_reader) = &self.on_reader

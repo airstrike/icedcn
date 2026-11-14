@@ -20,8 +20,9 @@ use std::time::Duration;
 
 use iced_core::{Element, Pixels};
 use iced_widget::{Renderer, Widget, anchored};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::popover::content;
+use icedxdy_core::theme::container::Style;
+use icedxdy_core::theme::popover;
+use icedxdy_core::{Padding, Theme};
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
@@ -36,6 +37,8 @@ pub struct HoverCard<'a, Message> {
     open_delay: Duration,
     close_delay: Duration,
     width: f32,
+    padding: Padding,
+    style: fn(&Theme) -> Style,
     open: Option<bool>,
     on_open_change: Option<Box<dyn Fn(bool) -> Message + 'a>>,
 }
@@ -54,12 +57,26 @@ pub fn hover_card<'a, Message>(
         close_delay: Duration::from_millis(300),
         // `w-64`.
         width: 256.0,
+        padding: 10.into(),
+        style: popover::content,
         open: None,
         on_open_change: None,
     }
 }
 
 impl<'a, Message> HoverCard<'a, Message> {
+    /// Space between the panel edge and its content.
+    pub fn padding(mut self, padding: impl Into<Padding>) -> Self {
+        self.padding = padding.into();
+        self
+    }
+
+    /// Set the floating panel's appearance.
+    pub fn style(mut self, style: fn(&Theme) -> Style) -> Self {
+        self.style = style;
+        self
+    }
+
     /// Set how long the pointer rests on the trigger before the card opens
     /// (700ms by default).
     pub fn open_delay(mut self, delay: Duration) -> Self {
@@ -129,12 +146,17 @@ impl<'a, Message: 'a> Compose<Message> for HoverCard<'a, Message> {
             open_delay,
             close_delay,
             width,
+            padding,
+            style,
             open,
             on_open_change,
         } = *self;
 
         // `p-2.5 rounded-lg bg-popover shadow-md ring-1`.
-        let panel = Container::new(body).padding(10).width(width).style(content);
+        let panel = Container::new(body)
+            .padding(padding)
+            .width(width)
+            .style(style);
 
         let mut card = anchored(trigger.compose(), Slot::from(panel).compose())
             .position(position)

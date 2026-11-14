@@ -143,7 +143,7 @@ impl<'a, Message: 'a> Compose<Message> for Scroller<'a, Message> {
             .width(Fill)
             .spacing(self.spacing)
             .padding(self.padding);
-        let scroll = scroll_area(content.boxed()).height(self.height);
+        let scroll = scroll_area(content.boxed()).width(Fill).height(self.height);
         viewport::Viewport {
             child: scroll.into(),
             ids,
