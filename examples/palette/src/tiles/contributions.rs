@@ -1,7 +1,6 @@
 //! Contribution-history heatmap — 7 rows × 24 cols of tinted cells.
 
 use iced::Fill;
-use iced::Widget;
 use iced::widget::space;
 use icedcn::card;
 use icedcn::core::Border;
@@ -44,8 +43,10 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
             .padding([16, 0])
             .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }
 
 fn cell(level: u8) -> Slot<'static, Message> {

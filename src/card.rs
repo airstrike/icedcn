@@ -24,16 +24,17 @@
 //! .width(384.0)
 //! ```
 
-use iced_core::Length;
+use iced_core::Length::Fill;
 use iced_core::text::IntoFragment;
+use iced_core::{Length, Padding};
 use iced_widget::Column;
 use iced_widget::Row;
-use iced_widget::container::Container;
+use iced_widget::container::StyleFn;
 use iced_widget::text::LineHeight;
 use iced_widget::{Renderer, Widget};
 
 use crate::Gap;
-use crate::Padding;
+use crate::Size;
 use crate::Theme;
 use crate::core::{Border, Radius};
 use crate::radius;
@@ -47,19 +48,149 @@ use crate::widget::{self, Compose, Inherited, Slot};
 /// The boxed element a card slot holds.
 type Element<'a, Message> = iced_core::Element<'a, Message, Theme, Renderer>;
 
-/// Wrap content in a rounded card surface and clip it to the card bounds.
-pub fn card<'a, Message>(
-    content: impl Into<Element<'a, Message>>,
-) -> Container<'a, Element<'a, Message>, Theme> {
-    Container::new(content.into())
-        .clip(true)
-        .style(|t| container::card(t).into())
+/// A Card root that retains its children through the Compose cascade.
+pub struct Card<'a, Message> {
+    content: Slot<'a, Message>,
+    size: Size,
+    spacing: Option<f32>,
+    gap: Option<f32>,
+    inherited: Inherited,
+    width: Length,
+    height: Length,
+    padding: Option<Padding>,
+    clip: bool,
+    style: StyleFn<'a, Theme>,
+}
+
+/// Card root with Nova's surface, section spacing and vertical padding.
+pub fn card<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Card<'a, Message> {
+    Card {
+        content: content.into(),
+        size: Size::Default,
+        spacing: None,
+        gap: None,
+        inherited: Inherited::default(),
+        width: Length::Shrink,
+        height: Length::Shrink,
+        padding: None,
+        clip: true,
+        style: Box::new(|t| container::card(t).into()),
+    }
+}
+
+impl<'a, Message: 'a> Card<'a, Message> {
+    /// Small cards use 12px spacing and 14px titles; other sizes use 16px.
+    pub fn size(mut self, size: impl Into<Size>) -> Self {
+        self.size = size.into();
+        self
+    }
+
+    /// Set the section gap, root vertical padding and section insets together.
+    pub fn spacing(mut self, spacing: impl Into<iced_core::Pixels>) -> Self {
+        self.spacing = Some(spacing.into().0.max(0.0));
+        self
+    }
+
+    /// Override only the section gap, keeping the root's section insets.
+    pub fn gap(mut self, gap: impl Into<iced_core::Pixels>) -> Self {
+        self.gap = Some(gap.into().0.max(0.0));
+        self
+    }
+
+    /// Set the root width.
+    pub fn width(mut self, width: impl Into<Length>) -> Self {
+        self.width = width.into();
+        self
+    }
+
+    /// Set the root height.
+    pub fn height(mut self, height: impl Into<Length>) -> Self {
+        self.height = height.into();
+        self
+    }
+
+    /// Override root padding, for example zero for an edge-to-edge image.
+    pub fn padding(mut self, padding: impl Into<crate::Padding>) -> Self {
+        self.padding = Some(padding.into().into());
+        self
+    }
+
+    /// Set overflow clipping (enabled by default).
+    pub fn clip(mut self, clip: bool) -> Self {
+        self.clip = clip;
+        self
+    }
+
+    /// Override the stock-compatible container surface.
+    pub fn style(mut self, style: impl Fn(&Theme) -> iced_widget::container::Style + 'a) -> Self {
+        self.style = Box::new(style);
+        self
+    }
+}
+
+impl<'a, Message: 'a> Compose<Message> for Card<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        self.inherited = self.inherited.or(*from);
+    }
+
+    fn compose<'b>(self: Box<Self>) -> Element<'b, Message>
+    where
+        Self: 'b,
+    {
+        let Card {
+            mut content,
+            size,
+            spacing,
+            gap,
+            inherited,
+            width,
+            height,
+            padding,
+            clip,
+            style,
+        } = *self;
+        let small = size == Size::Sm;
+        let spacing = spacing.unwrap_or(if small { 12.0 } else { 16.0 });
+        let padding = padding.unwrap_or(Padding {
+            top: spacing,
+            bottom: if content.has_card_footer() {
+                0.0
+            } else {
+                spacing
+            },
+            ..Padding::ZERO
+        });
+        let inherited = inherited
+            .with_card(spacing, if small { 14.0 } else { 16.0 })
+            .with_card_gap(gap.unwrap_or(spacing));
+        // The Card's text-sm is local; enclosing control sizes do not resize it.
+        content.inherit(&inherited.with_size(Size::Default).with_line_height(20.0));
+        iced_widget::container(content.compose())
+            .width(width)
+            .height(height)
+            .padding(padding)
+            .clip(clip)
+            .class(style)
+            .boxed()
+    }
+}
+
+impl<'a, Message: 'a> From<Card<'a, Message>> for Slot<'a, Message> {
+    fn from(card: Card<'a, Message>) -> Self {
+        Slot::new(card)
+    }
+}
+
+impl<'a, Message: 'a> From<Card<'a, Message>> for Element<'a, Message> {
+    fn from(card: Card<'a, Message>) -> Self {
+        Box::new(card).compose()
+    }
 }
 
 /// Medium-weight card title. A string passed to [`header`] receives this style automatically.
 pub fn title<'a>(content: impl IntoFragment<'a>) -> text::Text<'a> {
     text::Text::new(content)
-        .size(text::size::BASE)
+        .card_title()
         .medium()
         .line_height(LineHeight::Relative(1.375))
         .style(theme::text::Foreground)
@@ -82,7 +213,8 @@ pub fn action<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a
 /// description and aligns the action to their right.
 pub struct Header<'a, Message> {
     title: Slot<'a, Message>,
-    inset: f32,
+    inset: Option<f32>,
+    inherited: Inherited,
     description: Option<Slot<'a, Message>>,
     action: Option<Slot<'a, Message>>,
 }
@@ -102,7 +234,8 @@ pub struct Header<'a, Message> {
 pub fn header<'a, Message: 'a>(title: impl IntoTitle<'a, Message>) -> Header<'a, Message> {
     Header {
         title: title.into_title(),
-        inset: 16.0,
+        inset: None,
+        inherited: Inherited::default(),
         description: None,
         action: None,
     }
@@ -111,7 +244,7 @@ pub fn header<'a, Message: 'a>(title: impl IntoTitle<'a, Message>) -> Header<'a,
 impl<'a, Message: 'a> Header<'a, Message> {
     /// Horizontal section padding, shared with the card content and footer.
     pub fn inset(mut self, pixels: f32) -> Self {
-        self.inset = pixels.max(0.0);
+        self.inset = Some(pixels.max(0.0));
         self
     }
 
@@ -131,13 +264,7 @@ impl<'a, Message: 'a> Header<'a, Message> {
 
 impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {
-        self.title.inherit(from);
-        if let Some(description) = &mut self.description {
-            description.inherit(from);
-        }
-        if let Some(action) = &mut self.action {
-            action.inherit(from);
-        }
+        self.inherited = self.inherited.or(*from);
     }
 
     fn compose<'b>(self: Box<Self>) -> Element<'b, Message>
@@ -145,15 +272,24 @@ impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
         Self: 'b,
     {
         let Header {
-            title,
+            mut title,
             inset,
-            description,
-            action,
+            inherited,
+            mut description,
+            mut action,
         } = *self;
+        let inset = inset.or(inherited.card_spacing()).unwrap_or(16.0);
+        let inherited = inherited.without_card_gap();
+        title.inherit(&inherited);
+        if let Some(description) = &mut description {
+            description.inherit(&inherited);
+        }
+        if let Some(action) = &mut action {
+            action.inherit(&inherited);
+        }
 
         // Stack title above (optional) description in a column with gap-1.
-        let mut text_col: Column<Element<'a, Message>> =
-            Column::new().spacing(Gap::G1).width(Length::Fill);
+        let mut text_col: Column<Element<'a, Message>> = Column::new().spacing(Gap::G1).width(Fill);
         text_col = text_col.push(title.compose());
         if let Some(d) = description {
             text_col = text_col.push(d.compose());
@@ -164,15 +300,16 @@ impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
             Some(a) => Row::new()
                 .push(text_col.boxed())
                 .push(a.compose())
+                .spacing(Gap::G1)
                 .align_y(iced_core::Alignment::Start)
-                .width(Length::Fill)
+                .width(Fill)
                 .boxed(),
             None => text_col.boxed(),
         };
 
         iced_widget::container(padded_inner)
             .padding([0.0, inset])
-            .width(Length::Fill)
+            .width(Fill)
             .boxed()
     }
 }
@@ -261,45 +398,164 @@ pub fn header_simple<'a, Message: 'a>(title: impl IntoTitle<'a, Message>) -> Hea
     header(title)
 }
 
-/// Card content section (`px-4` only).
-pub fn content<'a, Message: 'a>(
-    child: impl Into<Element<'a, Message>>,
-) -> Container<'a, Element<'a, Message>, Theme> {
-    Container::new(child.into())
-        .padding(Padding::X4)
-        .width(Length::Fill)
+/// Card body with a lazy child and a horizontal inset from its root.
+pub struct Content<'a, Message> {
+    child: Slot<'a, Message>,
+    inherited: Inherited,
+    padding: Option<Padding>,
+    width: Length,
+    height: Length,
 }
 
-/// Card footer section. Caller composes the inner shape (row of buttons,
-/// stacked column, etc.); `footer` applies nova's muted footer surface.
-pub fn footer<'a, Message: 'a>(child: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
-    footer_with_spacing(child, 16.0)
+/// Card content section (`px-(--card-spacing)`).
+pub fn content<'a, Message: 'a>(child: impl Into<Slot<'a, Message>>) -> Content<'a, Message> {
+    Content {
+        child: child.into(),
+        inherited: Inherited::default(),
+        padding: None,
+        width: Length::Fill,
+        height: Length::Shrink,
+    }
 }
 
-/// A footer with a custom card spacing value.
+impl<'a, Message: 'a> Content<'a, Message> {
+    /// Override this section's padding without changing other Card parts.
+    pub fn padding(mut self, padding: impl Into<crate::Padding>) -> Self {
+        self.padding = Some(padding.into().into());
+        self
+    }
+
+    /// Set the section width.
+    pub fn width(mut self, width: impl Into<Length>) -> Self {
+        self.width = width.into();
+        self
+    }
+
+    /// Set the section height.
+    pub fn height(mut self, height: impl Into<Length>) -> Self {
+        self.height = height.into();
+        self
+    }
+}
+
+impl<'a, Message: 'a> Compose<Message> for Content<'a, Message> {
+    fn has_card_footer(&self) -> bool {
+        self.child.has_card_footer()
+    }
+
+    fn inherit(&mut self, from: &Inherited) {
+        self.inherited = self.inherited.or(*from);
+    }
+
+    fn compose<'b>(self: Box<Self>) -> Element<'b, Message>
+    where
+        Self: 'b,
+    {
+        let Content {
+            mut child,
+            inherited,
+            padding,
+            width,
+            height,
+        } = *self;
+        let spacing = inherited.card_spacing().unwrap_or(16.0);
+        child.inherit(&inherited.without_card_gap());
+        iced_widget::container(child.compose())
+            .padding(padding.unwrap_or([0.0, spacing].into()))
+            .width(width)
+            .height(height)
+            .boxed()
+    }
+}
+
+impl<'a, Message: 'a> From<Content<'a, Message>> for Slot<'a, Message> {
+    fn from(content: Content<'a, Message>) -> Self {
+        Slot::new(content)
+    }
+}
+
+impl<'a, Message: 'a> From<Content<'a, Message>> for Element<'a, Message> {
+    fn from(content: Content<'a, Message>) -> Self {
+        Box::new(content).compose()
+    }
+}
+
+/// A Card footer that receives its inset before composing its controls.
+pub struct Footer<'a, Message> {
+    child: Slot<'a, Message>,
+    spacing: Option<f32>,
+    inherited: Inherited,
+}
+
+/// Card footer section with a top border and Nova's muted surface.
+pub fn footer<'a, Message: 'a>(child: impl Into<Slot<'a, Message>>) -> Footer<'a, Message> {
+    Footer {
+        child: child.into(),
+        spacing: None,
+        inherited: Inherited::default(),
+    }
+}
+
+/// A footer with an explicit inset overriding the root's spacing.
 pub fn footer_with_spacing<'a, Message: 'a>(
     child: impl Into<Slot<'a, Message>>,
     spacing: f32,
-) -> Slot<'a, Message> {
-    let line: Element<'a, Message> = rule::horizontal(1).style(footer_rule_style()).boxed();
-
-    let body = widget::container(child)
-        .padding(spacing.max(0.0))
-        .width(Length::Fill)
-        .style(footer_style);
-
-    widget::column([line.into(), body.into()])
-        .spacing(0)
-        .width(Length::Fill)
-        .into()
+) -> Footer<'a, Message> {
+    Footer {
+        spacing: Some(spacing.max(0.0)),
+        ..footer(child)
+    }
 }
 
-/// Card footer as a row of children with 8px (`gap-2`) spacing.
+impl<'a, Message: 'a> Compose<Message> for Footer<'a, Message> {
+    fn has_card_footer(&self) -> bool {
+        true
+    }
+
+    fn inherit(&mut self, from: &Inherited) {
+        self.inherited = self.inherited.or(*from);
+    }
+
+    fn compose<'b>(self: Box<Self>) -> Element<'b, Message>
+    where
+        Self: 'b,
+    {
+        let Footer {
+            mut child,
+            spacing,
+            inherited,
+        } = *self;
+        let spacing = spacing.or(inherited.card_spacing()).unwrap_or(16.0);
+        child.inherit(&inherited.without_card_gap());
+        let line: Element<'a, Message> = rule::horizontal(1).style(footer_rule_style()).boxed();
+        let body = widget::container(child)
+            .padding(spacing)
+            .width(Fill)
+            .style(footer_style);
+        widget::column([line.into(), body.into()])
+            .spacing(0)
+            .width(Fill)
+            .into()
+    }
+}
+
+impl<'a, Message: 'a> From<Footer<'a, Message>> for Slot<'a, Message> {
+    fn from(footer: Footer<'a, Message>) -> Self {
+        Slot::new(footer)
+    }
+}
+
+impl<'a, Message: 'a> From<Footer<'a, Message>> for Element<'a, Message> {
+    fn from(footer: Footer<'a, Message>) -> Self {
+        Box::new(footer).compose()
+    }
+}
+
+/// Card footer as a row of Slots with 8px (`gap-2`) spacing.
 pub fn footer_row<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Element<'a, Message>>,
-) -> Slot<'a, Message> {
-    let row = widget::Row::with_children(children.into_iter().map(Slot::from)).spacing(Gap::G2);
-    footer(row)
+    children: impl IntoIterator<Item = Slot<'a, Message>>,
+) -> Footer<'a, Message> {
+    footer(widget::Row::with_children(children).spacing(Gap::G2))
 }
 
 fn footer_style(theme: &Theme) -> Style {

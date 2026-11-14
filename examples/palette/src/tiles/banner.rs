@@ -1,7 +1,6 @@
 //! Observability preview card.
 
 use iced::Fill;
-use iced::Widget;
 use iced::gradient::Linear;
 use iced::widget::space;
 use icedcn::Theme;
@@ -44,9 +43,11 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
         .height(Fill);
 
     card::card(container(body).padding(16).width(Fill).height(Fill))
+        .gap(0)
+        .padding(0)
         .width(Fill)
         .height(432.0)
-        .boxed()
+        .into()
 }
 
 fn preview_art(_theme: &Theme) -> theme::container::Style {

@@ -1,4 +1,4 @@
-use iced::{Fill, FillPortion, Task, Widget};
+use iced::{Fill, FillPortion, Task};
 
 use icedcn::card;
 use icedcn::widget::{Column, aspect_ratio, column, row, skeleton, space};
@@ -150,8 +150,10 @@ impl page::Page for SkeletonPage {
                 .padding(iced::Padding::ZERO.top(Gap::G4).bottom(Gap::G4))
                 .width(Fill),
             )
+            .gap(0)
+            .padding(0)
             .width(320.0)
-            .boxed(),
+            .into(),
 
             "text" => column![
                 skeleton().width(Fill).height(16),

@@ -1,3 +1,26 @@
 ## Events
 
-With `.on_value_change(Message::SlideChanged)`, the carousel publishes the requested slide index when the user navigates or autoplay advances. To control the carousel, store the index in `update` and pass it back with `.value(index)`.
+`.on_value_change(Message::Selected)` publishes the requested zero-based snap index. Store it in `update` and pass it back to `.value(...)` to control the carousel.
+
+```rust
+use icedcn::Slot;
+use icedcn::widget::{carousel, container, text};
+
+#[derive(Debug, Clone)]
+pub enum Message { Selected(usize) }
+
+#[derive(Default)]
+pub struct Model { current: usize }
+
+impl Model {
+    pub fn update(&mut self, Message::Selected(index): Message) { self.current = index; }
+
+    pub fn view(&self) -> Slot<'static, Message> {
+        carousel(5, |index| container(text::p((index + 1).to_string())).height(160))
+            .width(320)
+            .value(self.current)
+            .on_value_change(Message::Selected)
+            .into()
+    }
+}
+```

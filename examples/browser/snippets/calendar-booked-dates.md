@@ -20,6 +20,7 @@ pub fn example<Message: 'static>() -> Element<'static, Message, Theme> {
             .unavailable(|day| (date(2, 12)..=date(2, 26)).contains(&day))
             .strike_unavailable(true),
     )
-    .boxed()
+    .padding(0)
+    .into()
 }
 ```

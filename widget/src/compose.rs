@@ -20,6 +20,7 @@
 
 use crate::Size;
 use crate::Weight;
+use crate::button::group::Join;
 use crate::text::Text;
 use iced_core::Element;
 use iced_core::alignment::Horizontal;
@@ -34,6 +35,10 @@ use icedcn_core::Theme;
 /// descendant, like a disabled `<fieldset>`.
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct Inherited {
+    card_spacing: Option<f32>,
+    card_title_size: Option<f32>,
+    card_gap: Option<f32>,
+    join: Option<Join>,
     size: Option<Size>,
     weight: Option<Weight>,
     line_height: Option<f32>,
@@ -43,6 +48,54 @@ pub struct Inherited {
 }
 
 impl Inherited {
+    /// Card section inset and title size, scoped by the nearest Card root.
+    pub fn with_card(mut self, spacing: f32, title_size: f32) -> Self {
+        self.card_spacing = Some(spacing);
+        self.card_title_size = Some(title_size);
+        self.card_gap = Some(spacing);
+        self
+    }
+
+    /// The nearest Card root's section inset.
+    pub fn card_spacing(&self) -> Option<f32> {
+        self.card_spacing
+    }
+
+    /// The nearest Card root's title size.
+    pub fn card_title_size(&self) -> Option<f32> {
+        self.card_title_size
+    }
+
+    /// Gap for the Card root's first column, consumed before its descendants.
+    pub fn card_gap(&self) -> Option<f32> {
+        self.card_gap
+    }
+
+    /// Override only the outer Card column's gap.
+    pub fn with_card_gap(mut self, gap: f32) -> Self {
+        self.card_gap = Some(gap);
+        self
+    }
+
+    /// Keep section context without applying the root gap to inner layouts.
+    pub fn without_card_gap(mut self) -> Self {
+        self.card_gap = None;
+        self
+    }
+
+    /// Geometry consumed by the direct child control surface.
+    pub(crate) fn with_join(mut self, join: Join) -> Self {
+        self.join = Some(join);
+        self
+    }
+    pub(crate) fn join(&self) -> Option<Join> {
+        self.join
+    }
+    pub(crate) fn without_join(mut self) -> Self {
+        self.join = None;
+        self
+    }
+
     /// Cascade a [`Size`] (text size, control height).
     pub fn with_size(mut self, size: impl Into<Size>) -> Self {
         self.size = Some(size.into());
@@ -113,6 +166,10 @@ impl Inherited {
     /// `disabled` is the union of both.
     pub fn or(self, fallback: Inherited) -> Inherited {
         Inherited {
+            card_spacing: self.card_spacing.or(fallback.card_spacing),
+            card_title_size: self.card_title_size.or(fallback.card_title_size),
+            card_gap: self.card_gap.or(fallback.card_gap),
+            join: self.join.or(fallback.join),
             size: self.size.or(fallback.size),
             weight: self.weight.or(fallback.weight),
             line_height: self.line_height.or(fallback.line_height),
@@ -132,6 +189,17 @@ impl Inherited {
 /// [`Slot<'a>`]) is covariant in `'a`, like [`Element`]: the produced
 /// element's lifetime is picked by the caller through `Self: 'a`.
 pub trait Compose<Message, T = Theme, R = Renderer> {
+    /// Whether this composition contains a footer belonging to the current Card.
+    /// Nested Card roots stop the search at their own boundary.
+    fn has_card_footer(&self) -> bool {
+        false
+    }
+
+    /// Whether this child starts a nested group with independent joining geometry.
+    fn is_button_group(&self) -> bool {
+        false
+    }
+
     /// Receive the props an ancestor cascades. Implementors keep their own
     /// explicit settings and fill only what is unset; containers forward
     /// `from` to their children.
@@ -151,9 +219,18 @@ pub trait Compose<Message, T = Theme, R = Renderer> {
 pub struct Slot<'a, Message, T = Theme, R = Renderer>(Box<dyn Compose<Message, T, R> + 'a>);
 
 impl<'a, Message: 'a, T: 'a, R: 'a> Slot<'a, Message, T, R> {
+    /// Query Card footer presence before erasing the composition into widgets.
+    pub fn has_card_footer(&self) -> bool {
+        self.0.has_card_footer()
+    }
+
     /// Wrap any [`Compose`] implementor.
     pub fn new(child: impl Compose<Message, T, R> + 'a) -> Self {
         Self(Box::new(child))
+    }
+
+    pub(crate) fn is_button_group(&self) -> bool {
+        self.0.is_button_group()
     }
 
     /// Push cascading props into the child.
@@ -197,6 +274,13 @@ where
     T: 'static,
     R: iced_core::Renderer + 'static,
 {
+    fn has_card_footer(&self) -> bool {
+        self.slot.has_card_footer()
+    }
+
+    fn is_button_group(&self) -> bool {
+        self.slot.is_button_group()
+    }
     fn inherit(&mut self, from: &Inherited) {
         self.slot.inherit(from);
     }

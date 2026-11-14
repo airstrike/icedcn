@@ -1,7 +1,6 @@
 //! Loading card.
 
 use iced::Fill;
-use iced::Widget;
 use icedcn::card;
 use icedcn::widget::{Skeleton, column, row, skeleton};
 use icedcn::{Space, Theme};
@@ -27,10 +26,12 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
     .spacing(Space::U4)
     .width(Fill);
 
-    card::card(card::content(body).boxed())
+    card::card(card::content(body))
+        .gap(0)
+        .padding(0)
         .width(Fill)
         .height(190.0)
-        .boxed()
+        .into()
 }
 
 fn line(width: f32, height: f32) -> Skeleton<'static, Message> {

@@ -19,6 +19,6 @@ card(
     ]
     .spacing(Gap::G4)
     .padding(Padding::ZERO.top(Gap::G4).bottom(Gap::G4)),
-)
+).gap(0).padding(0)
 .width(320.0)
 ```

@@ -2,7 +2,6 @@ use iced::Task;
 
 use crate::icon;
 use icedcn::Theme;
-use icedcn::widget::button::group;
 use icedcn::widget::input_group::Align;
 use icedcn::widget::{
     button, button_group, column, container, input, input_group, kbd, kbd_group, row, text, tooltip,
@@ -119,13 +118,12 @@ impl page::Page for KbdPage {
             "button" => button!["Accept", kbd("⏎")].style(button::Outline).into(),
 
             "tooltip" => button_group![
-                group::decorated(button("Save").style(button::Outline), |button| tooltip(
-                    button,
+                tooltip(
+                    button("Save").style(button::Outline),
                     row![text::xs("Save Changes"), kbd("S").style(kbd::Tooltip)].spacing(4)
-                )
-                .into()),
-                group::decorated(button("Print").style(button::Outline), |button| tooltip(
-                    button,
+                ),
+                tooltip(
+                    button("Print").style(button::Outline),
                     row![
                         text::xs("Print Document"),
                         kbd_group![
@@ -135,7 +133,6 @@ impl page::Page for KbdPage {
                     ]
                     .spacing(4)
                 )
-                .into())
             ]
             .into(),
 

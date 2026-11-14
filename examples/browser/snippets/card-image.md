@@ -4,7 +4,7 @@ Select the light or dark cover when your application theme changes. Prepare the 
 use iced::widget::image;
 use iced::border;
 use iced::{ContentFit, Element, Fill, Widget};
-use icedcn::{card, Gap, Theme, radius};
+use icedcn::{card, Theme, radius};
 use icedcn::widget::{aspect_ratio, badge, button, column};
 
 fn preview(light: image::Handle, dark: image::Handle, theme: &Theme) -> Element<'static, Message, Theme> {
@@ -20,9 +20,9 @@ fn preview(light: image::Handle, dark: image::Handle, theme: &Theme) -> Element<
             .description("A practical talk on component APIs, accessibility, and shipping faster.")
             .action(card::action(badge("Featured").style(badge::Secondary))),
         card::footer(button("View Event").on_press(Message::View).width(Fill)),
-    ].spacing(Gap::G4).width(Fill))
+    ].width(Fill))
+    .padding(0)
     .width(Fill.max(384))
-    .clip(true)
-    .boxed()
+    .into()
 }
 ```

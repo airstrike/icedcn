@@ -46,6 +46,7 @@ pub struct Text<'a> {
     fragment: Fragment<'a>,
     font: Option<iced_core::Font>,
     size: Option<f32>,
+    card_title: bool,
     weight: Option<Weight>,
     italic: bool,
     letter_spacing: Option<iced_core::Em>,
@@ -65,6 +66,7 @@ impl<'a> Text<'a> {
             fragment: content.into_fragment(),
             font: None,
             size: None,
+            card_title: false,
             weight: None,
             italic: false,
             letter_spacing: None,
@@ -81,6 +83,18 @@ impl<'a> Text<'a> {
 
     pub fn size(mut self, size: impl Into<Size>) -> Self {
         self.size = Some(size.into().text_size());
+        self
+    }
+
+    /// Set the font used for this text.
+    pub fn font(mut self, font: iced_core::Font) -> Self {
+        self.font = Some(font);
+        self
+    }
+
+    /// Use Card title sizing from the nearest Card, unless `.size` is explicit.
+    pub fn card_title(mut self) -> Self {
+        self.card_title = true;
         self
     }
 
@@ -175,7 +189,7 @@ impl<'a> Text<'a> {
             .wrapping(self.wrapping)
             .ellipsis(self.ellipsis);
 
-        if let Some(size) = self.size {
+        if let Some(size) = self.size.or(self.card_title.then_some(size::BASE)) {
             widget = widget.size(size);
         }
 
@@ -238,7 +252,11 @@ impl<'a, Message: 'a> From<Text<'a>> for Slot<'a, Message> {
 impl<'a, Message: 'a> Compose<Message> for Text<'a> {
     fn inherit(&mut self, from: &Inherited) {
         self.selectable = self.selectable.or(from.selectable());
-        self.size = self.size.or(from.size().map(Size::text_size));
+        self.size = self.size.or(if self.card_title {
+            from.card_title_size().or(Some(size::BASE))
+        } else {
+            from.size().map(Size::text_size)
+        });
         self.weight = self.weight.or(from.weight().map(Into::into));
         // The inherited value is absolute logical pixels (nova `leading-4` is
         // 16px); `From<f32> for LineHeight` would read it as a relative factor.

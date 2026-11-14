@@ -2,7 +2,6 @@
 
 use iced::Element;
 
-use iced::Widget;
 use iced::widget::{space, stack};
 use iced::{Center, Fill};
 use iced_widget::button::Status;
@@ -280,9 +279,11 @@ fn icon_button<'a>(icon: impl Into<Slot<'a, Message>>) -> Button<'a, Message> {
 
 fn panel<'a>(body: impl Into<Slot<'a, Message>>, height: f32) -> iced::Element<'a, Message, Theme> {
     card::card(container(body.into()).padding(16).width(Fill).height(Fill))
+        .gap(0)
+        .padding(0)
         .width(Fill)
         .height(height)
-        .boxed()
+        .into()
 }
 
 fn skeleton_line(width: f32, height: f32) -> Skeleton<'static, Message> {

@@ -4,7 +4,6 @@
 //! small / xs / lead), container, row, column.
 
 use iced::Fill;
-use iced::Widget;
 use icedcn::Slot;
 use icedcn::Theme;
 use icedcn::card;
@@ -72,9 +71,11 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
         .padding([16, 0])
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
     .height(430.0)
-    .boxed()
+    .into()
 }
 
 fn target_row(t: &'static Target, connected: bool) -> Slot<'static, Message> {

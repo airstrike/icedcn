@@ -1,5 +1,6 @@
 //! Calendar's date navigation, state ownership and installed recipe geometry.
 use browser::component::calendar::CalendarPage;
+use browser::component::calendar::recipes;
 use iced::keyboard::key::Named;
 use iced::widget::Id;
 use iced::{Element, Font, Point, Rectangle, Size};
@@ -190,7 +191,7 @@ fn caption_menus_preserve_the_grid_and_return_to_the_changed_month() {
     ui.click("Jan").unwrap();
     ui.find("15")
         .expect("days stay mounted below the caption menu");
-    ui.click("March").unwrap();
+    ui.click("Mar").unwrap();
     ui = ui.rebuild(view());
     ui.find("Mar").expect("selected month reflected by trigger");
     ui.click("2026").unwrap();
@@ -203,21 +204,59 @@ fn caption_menus_preserve_the_grid_and_return_to_the_changed_month() {
 }
 
 #[test]
+fn caption_controls_match_nova_bounds_and_apply_the_month_formatter_to_options() {
+    #[derive(Default)]
+    struct Controls(Vec<Rectangle>);
+    impl Operation for Controls {
+        fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+            visit(self);
+        }
+        fn focusable(&mut self, _: Option<&Id>, bounds: Rectangle, _: &mut dyn Focusable) {
+            self.0.push(bounds);
+        }
+    }
+    for (long, january, march) in [(false, "Jan", "Mar"), (true, "January", "March")] {
+        let view = || {
+            Element::<Message, Theme>::from(
+                calendar()
+                    .default_month(date(1, 1))
+                    .caption_dropdown(true)
+                    .long_months(long),
+            )
+        };
+        let mut ui = Simulator::new(view());
+        let mut controls = Controls::default();
+        ui.operate(&mut controls);
+        assert_eq!(controls.0.len(), 5);
+        for bounds in &controls.0[1..3] {
+            assert_eq!(bounds.height, 26.);
+            assert_eq!(bounds.center_y(), controls.0[0].center_y());
+        }
+        let month = ui.find(january).unwrap().bounds();
+        assert!((month.x - controls.0[1].x - 7.).abs() < 0.1);
+        ui.click(january).unwrap();
+        ui.click(march).unwrap();
+        ui = ui.rebuild(view());
+        ui.find(march).unwrap();
+        ui.find("15").expect("the changed date grid stays mounted");
+    }
+}
+
+#[test]
 fn caption_escape_restores_the_trigger_for_keyboard_reopening() {
     let view = || {
         Element::<Message, Theme>::from(calendar().default_month(date(1, 1)).caption_dropdown(true))
     };
     let mut ui = Simulator::new(view());
     ui.click("Jan").unwrap();
-    ui.find("March").unwrap();
+    ui.find("Mar").unwrap();
     ui.tap_key(Named::Escape);
     ui = ui.rebuild(view());
-    assert!(ui.find("March").is_err());
+    assert!(ui.find("Mar").is_err());
     assert_eq!(focus(&mut ui).focused, Some(1));
     ui.tap_key(Named::Enter);
     ui = ui.rebuild(view());
-    ui.find("March")
-        .expect("focus returns to the month trigger");
+    ui.find("Mar").expect("focus returns to the month trigger");
     ui.tap_key(Named::Escape);
     ui = ui.rebuild(view());
     ui.click("2026").unwrap();
@@ -338,6 +377,30 @@ fn installed_time_constraints_presets_and_persian_grid() {
 }
 
 #[test]
+fn time_fields_validate_each_clock_boundary_and_accept_empty_edits() {
+    for (typed, accepted) in [
+        ("00:00:00", "00:00:00"),
+        ("23:59:59", "23:59:59"),
+        ("24", "2"),
+        ("09:60", "09:6"),
+        ("09:59:60", "09:59:6"),
+        ("12:34:56:7", "12:34:56"),
+        ("12:34x:56", "12:34:56"),
+    ] {
+        let mut ui = Simulator::new(recipes::time::<Message>());
+        ui.click("10:30:00").unwrap();
+        ui.tap_key(Named::End);
+        for _ in 0..8 {
+            ui.tap_key(Named::Backspace);
+        }
+        ui.find("HH:mm:ss").expect("the start time can be cleared");
+        ui.typewrite(typed);
+        ui.find(accepted).unwrap();
+        ui.find("12:30:00").expect("End Time stays independent");
+    }
+}
+
+#[test]
 fn nested_calendar_caption_can_change_month_and_single_date_picker_still_closes() {
     use icedcn::widget::calendar::today;
     use icedcn::widget::date_picker;
@@ -351,7 +414,7 @@ fn nested_calendar_caption_can_change_month_and_single_date_picker_still_closes(
     let mut ui = Simulator::new(view());
     ui.click("Pick a date").unwrap();
     ui.click(today().format("%b").to_string()).unwrap();
-    ui.click("March")
+    ui.click("Mar")
         .expect("nested month dropdown is actionable");
     ui = ui.rebuild(view());
     ui.find("Mar").unwrap();
@@ -445,4 +508,63 @@ fn constrained_custom_cells_keep_their_requested_width() {
             "window={window}, content={width}: {a:?} {b:?}"
         );
     }
+}
+
+#[test]
+fn installed_range_rejects_future_and_pre_1900_days() {
+    use icedcn::widget::calendar::{Datelike, today};
+    #[derive(Default)]
+    struct Controls(Vec<Rectangle>);
+    impl Operation for Controls {
+        fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+            visit(self);
+        }
+        fn focusable(&mut self, _: Option<&Id>, bounds: Rectangle, _: &mut dyn Focusable) {
+            self.0.push(bounds);
+        }
+    }
+    let mut ui = Simulator::new(recipes::range::<Message>(Some(true)));
+    let mut controls = Controls::default();
+    ui.operate(&mut controls);
+    let previous = controls.0[0].center();
+    let next = controls
+        .0
+        .iter()
+        .find(|bounds| bounds.y == controls.0[0].y && bounds.x > controls.0[0].x)
+        .unwrap()
+        .center();
+    let historic = (today().year() - 1900) * 12 + 2;
+    for (direction, steps) in [(previous, historic), (next, historic)] {
+        for _ in 0..steps {
+            ui.point_at(direction);
+            ui.simulate(simulator::click());
+        }
+        if direction == previous {
+            ui.find("November 1899").unwrap();
+            ui.find("December 1899").unwrap();
+            assert_eq!(focus(&mut ui).total, 2, "only navigation is enabled");
+            ui.click("15").unwrap();
+        }
+    }
+    assert_eq!(
+        tab_to_day(&mut ui, 2),
+        "12",
+        "old dates leave the range intact"
+    );
+    for _ in 0..12 {
+        ui.point_at(next);
+        ui.simulate(simulator::click());
+    }
+    ui.find(format!("January {}", today().year() + 1)).unwrap();
+    assert_eq!(focus(&mut ui).total, 2, "future days are disabled");
+    ui.click("15").unwrap();
+    for _ in 0..12 {
+        ui.point_at(previous);
+        ui.simulate(simulator::click());
+    }
+    assert_eq!(
+        tab_to_day(&mut ui, 2),
+        "12",
+        "future dates leave the range intact"
+    );
 }

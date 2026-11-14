@@ -5,7 +5,6 @@
 // - tabs-rtl — RTL is not in scope (per CLAUDE.md).
 
 use iced::Task;
-use iced::Widget;
 
 use crate::icon;
 use icedcn::card;
@@ -81,13 +80,14 @@ fn panel<'a>(title: &'a str, description: &'a str, body: &'a str) -> Slot<'a, Me
         card(
             column![
                 card::header(title).description(description),
-                Slot::from(card::content(text::muted(body)).boxed()),
+                Slot::from(card::content(text::muted(body))),
             ]
             .spacing(16)
             .padding([16, 0]),
         )
-        .width(iced::Fill)
-        .boxed(),
+        .gap(0)
+        .padding(0)
+        .width(iced::Fill),
     )
 }
 

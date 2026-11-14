@@ -13,7 +13,7 @@ use icedcn::widget::{
     aspect_ratio, badge, button, column, container, field, input, row, scroll_area, separator,
     space, text, toggle_group,
 };
-use icedcn::{Gap, Size, Slot, Theme, radius};
+use icedcn::{Size, Slot, Theme, radius};
 
 use crate::Message;
 use crate::page;
@@ -102,8 +102,7 @@ fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
         column![
             card::header("Login to your account")
                 .description("Enter your email below to login to your account")
-                .action(button("Sign Up").style(button::Link))
-                .inset(spacing),
+                .action(button("Sign Up").style(button::Link)),
             card::content(
                 column![
                     field(input("m@example.com").width(Fill)).label("Email"),
@@ -111,9 +110,8 @@ fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
                 ]
                 .spacing(24)
                 .width(Fill)
-            )
-            .padding([0.0, spacing]),
-            card::footer_with_spacing(
+            ),
+            card::footer(
                 column![
                     button("Login").width(Fill),
                     button("Login with Google")
@@ -121,16 +119,13 @@ fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
                         .width(Fill)
                 ]
                 .spacing(8)
-                .width(Fill),
-                spacing
+                .width(Fill)
             )
         ]
-        .width(Fill)
-        .spacing(spacing)
-        .padding(iced::Padding::ZERO.top(spacing)),
+        .width(Fill),
     )
+    .spacing(spacing)
     .width(Fill.max(384))
-    .boxed()
     .into()
 }
 #[derive(Clone)]
@@ -212,10 +207,9 @@ fn terms<'a>() -> Slot<'a, Message> {
             )
         ]
         .width(Fill)
-        .padding(iced::Padding::ZERO.top(16)),
+        .spacing(0),
     )
     .width(Fill.max(384))
-    .boxed()
     .into()
 }
 
@@ -318,29 +312,27 @@ impl page::Page for CardPage {
 
             "small" => card(
                 column![
-                    card::header(card::title("Small Card").size(14.0))
-                        .inset(12.0)
+                    card::header("Small Card")
                         .description("This card uses the small size variant."),
                     card::content(
-                        text::small("Smaller gaps and padding give this card a compact layout.")
-                            .line_height(iced::Pixels(20.0))
-                    )
-                    .padding([0, 12]),
-                    card::footer_with_spacing(
+                        text::small(
+                            "Use Size::Sm for a compact card with smaller gaps and padding."
+                        )
+                        .line_height(iced::Pixels(20.0))
+                    ),
+                    card::footer(
                         button("Action")
                             .style(button::Outline)
                             .size(Size::Sm)
                             .on_press(Message::Page(pi, page::Message::Noop))
-                            .width(Fill),
-                        12.0
+                            .width(Fill)
                     ),
                 ]
-                .spacing(12)
-                .padding(iced::Padding::ZERO.top(12))
                 .width(Fill),
             )
+            .size(Size::Sm)
             .width(Fill.max(384))
-            .boxed(),
+            .into(),
 
             "image" => {
                 let header: Slot<'_, Message> = card::header("Design systems meetup")
@@ -360,12 +352,11 @@ impl page::Page for CardPage {
                                 .width(Fill)
                         ),
                     ]
-                    .spacing(Gap::G4)
                     .width(Fill),
                 )
+                .padding(0)
                 .width(Fill.max(384))
-                .clip(true)
-                .boxed()
+                .into()
             }
 
             "spacing" => component(Spacing { page: pi }).boxed().into(),

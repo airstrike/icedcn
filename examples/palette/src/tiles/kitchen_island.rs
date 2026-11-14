@@ -1,7 +1,6 @@
 //! Kitchen island card.
 
 use iced::Fill;
-use iced::Widget;
 use icedcn::card;
 use icedcn::core::{Border, Color, oklch};
 use icedcn::theme;
@@ -61,8 +60,10 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
         .padding([16, 0])
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }
 
 const MODES: [(KitchenMode, &str); 3] = [

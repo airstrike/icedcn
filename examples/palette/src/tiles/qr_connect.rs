@@ -1,6 +1,5 @@
 //! Preview 01 QR-connect card.
 
-use iced::Widget;
 use iced::{Center, Color, Fill, Padding};
 use icedcn::card;
 use icedcn::core::{Border, oklch};
@@ -69,8 +68,10 @@ pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
         .padding(iced::Padding::ZERO.top(16.0))
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }
 
 fn qr_shell_style(_theme: &Theme) -> Style {

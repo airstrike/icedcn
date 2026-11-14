@@ -30,7 +30,8 @@ pub fn custom_days<Message: 'static>(wide: bool) -> Element<'static, Message, Th
                 .to_owned()
             }),
     )
-    .boxed()
+    .padding(0)
+    .into()
 }
 
 struct Example { window_width: f32 }

@@ -5,6 +5,5 @@ const FRAMEWORKS: [&str; 5] = ["iced", "egui", "Slint", "GTK", "Druid"];
 
 combobox(FRAMEWORKS)
     .placeholder("Select a framework")
-    .icon(icon::chevron_down)
     .auto_highlight(true)
 ```

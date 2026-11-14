@@ -46,6 +46,8 @@ fn targets_card() -> Slot<'static, Message> {
         .padding(iced::Padding::ZERO.top(16.0))
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
     .into()
 }
@@ -90,6 +92,8 @@ fn buy_card() -> Slot<'static, Message> {
         .padding(iced::Padding::ZERO.top(16.0))
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
     .into()
 }

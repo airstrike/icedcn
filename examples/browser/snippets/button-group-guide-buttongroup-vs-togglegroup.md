@@ -1,3 +1,4 @@
 ## ButtonGroup vs ToggleGroup
 
-Use a button group for independent actions such as previous, next or open menu. Use a toggle group for a persistent selection such as text alignment or font weight.
+- Use `button_group!` when you want to group buttons that perform an action.
+- Use `toggle_group` when you want to group buttons that toggle a state.

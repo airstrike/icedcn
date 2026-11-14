@@ -1,3 +1,3 @@
 ## Size
 
-For a compact card, use a 14px title and 12px for the column gap, top padding, header inset, content inset and footer padding.
+Set `.size(Size::Sm)` on the root. It supplies 12px section gaps, vertical padding and part insets, plus a 14px title. Explicit settings on a part still win.

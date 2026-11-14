@@ -16,7 +16,7 @@ use iced_core::alignment::Horizontal;
 use iced_core::font;
 use iced_core::keyboard::key::Named;
 use iced_core::text::LineHeight;
-use iced_core::{Alignment, Element, Font};
+use iced_core::{Alignment, Element, Font, Padding};
 use iced_widget::button::Style;
 use iced_widget::component::{self, Component};
 use iced_widget::text::StyleFn;
@@ -243,8 +243,28 @@ impl<Message> Calendar<'_, Message> {
     fn choose(&self, old: Option<Selection>, day: Date) -> Option<Selection> {
         match (self.mode, old) {
             (Mode::Single, Some(s)) if s.start == day => None,
-            (Mode::Range, Some(s)) if s.end.is_none() => Some(Selection::range(s.start, day)),
-            _ => Some(Selection::single(day)),
+            (Mode::Single, _) => Some(Selection::single(day)),
+            (Mode::Range, None) => Some(Selection::range(day, day)),
+            (Mode::Range, Some(Selection { start, end: None })) => {
+                (start != day).then(|| Selection::range(start, day))
+            }
+            (
+                Mode::Range,
+                Some(Selection {
+                    start,
+                    end: Some(end),
+                }),
+            ) => {
+                if start == day && end == day {
+                    None
+                } else if day == end {
+                    Some(Selection::range(day, day))
+                } else if day < start {
+                    Some(Selection::range(day, end))
+                } else {
+                    Some(Selection::range(start, day))
+                }
+            }
         }
     }
 
@@ -307,8 +327,18 @@ impl<Message> Calendar<'_, Message> {
                                 .spacing(4),
                             )
                             .style(button::Outline)
-                            .height(24)
-                            .padding([0, 6])
+                            .map_style(|mut style| {
+                                style.background = None;
+                                style.border.radius = 8.0.into();
+                                style
+                            })
+                            .height(26)
+                            .padding(Padding {
+                                top: 1.,
+                                right: 4.,
+                                bottom: 1.,
+                                left: 6.,
+                            })
                             .translate(false)
                             .disabled(disabled),
                         )
@@ -332,18 +362,17 @@ impl<Message> Calendar<'_, Message> {
                 .align(dropdown_menu::Align::Start)
                 .width(144)
             };
-            let label = self.system.month_name(number);
-            let label = if self.long_months || system == System::Persian {
-                label.to_owned()
-            } else {
-                label.chars().take(3).collect()
+            let month_label = |number| {
+                let label = system.month_name(number);
+                if self.long_months || system == System::Persian {
+                    label.to_owned()
+                } else {
+                    label.chars().take(3).collect()
+                }
             };
+            let label = month_label(number);
             let months = (1..=12)
-                .filter_map(|m| {
-                    system
-                        .date(year, m, 1)
-                        .map(|d| (system.month_name(m).to_owned(), d))
-                })
+                .filter_map(|m| system.date(year, m, 1).map(|d| (month_label(m), d)))
                 .collect();
             let current_year = system.parts(today()).0;
             let years = (current_year - 100..=current_year)
@@ -817,17 +846,35 @@ mod tests {
     use super::*;
 
     #[test]
-    fn range_reorders_reversed_endpoints_and_restarts_after_completion() {
-        let start = Date::from_ymd_opt(2025, 12, 31).unwrap();
-        let later = start + Duration::days(3);
-        let range = calendar::<()>().mode(Mode::Range);
-        let first = range.choose(None, later);
-        let complete = range.choose(first, start);
-        assert_eq!(complete, Some(Selection::range(start, later)));
-        assert_eq!(
-            range.choose(complete, start),
-            Some(Selection::single(start))
-        );
+    fn range_allows_one_day_and_edits_existing_endpoints() {
+        let day = |month, day| Date::from_ymd_opt(2026, month, day).unwrap();
+        let start = day(1, 12);
+        let mid = day(1, 20);
+        let end = day(2, 11);
+        let old = Some(Selection::range(start, end));
+        let picker = calendar::<()>().mode(Mode::Range);
+        for (previous, clicked, expected) in [
+            (None, mid, Some(Selection::range(mid, mid))),
+            (Some(Selection::range(mid, mid)), mid, None),
+            (
+                Some(Selection::single(mid)),
+                start,
+                Some(Selection::range(start, mid)),
+            ),
+            (Some(Selection::single(mid)), mid, None),
+            (
+                Some(Selection::single(mid)),
+                end,
+                Some(Selection::range(mid, end)),
+            ),
+            (old, mid, Some(Selection::range(start, mid))),
+            (old, start, Some(Selection::range(start, start))),
+            (old, end, Some(Selection::range(end, end))),
+            (old, day(1, 1), Some(Selection::range(day(1, 1), end))),
+            (old, day(2, 20), Some(Selection::range(start, day(2, 20)))),
+        ] {
+            assert_eq!(picker.choose(previous, clicked), expected);
+        }
     }
     #[test]
     fn keyboard_months_clamp_and_disabled_weeks_keep_the_weekday() {

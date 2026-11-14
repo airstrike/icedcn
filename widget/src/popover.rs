@@ -335,7 +335,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
 
         let panel: Element<'a, Event<Message>, Theme, Renderer> = if handle.is_open {
             let mut body = (self.content)(&handle);
-            body.inherit(&self.inherited);
+            body.inherit(&self.inherited.without_join());
 
             let panel = Container::new(body)
                 .padding(self.padding)

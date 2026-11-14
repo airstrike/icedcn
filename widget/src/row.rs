@@ -115,9 +115,14 @@ impl<'a, Message: 'a> From<Row<'a, Message>> for Slot<'a, Message> {
 }
 
 impl<'a, Message: 'a> Compose<Message> for Row<'a, Message> {
+    fn has_card_footer(&self) -> bool {
+        self.children.iter().any(Slot::has_card_footer)
+    }
+
     fn inherit(&mut self, from: &Inherited) {
+        let from = from.without_card_gap();
         for child in &mut self.children {
-            child.inherit(from);
+            child.inherit(&from);
         }
     }
 

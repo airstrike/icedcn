@@ -77,21 +77,24 @@ impl<'a, Message: 'static> Component<'a, Message, Theme> for Times {
             .addon(input_group::addon(clock().boxed())),
         )
         .label(text::label("End Time").line_height(Pixels(19.25)));
-        card(
-            column![
-                container(
-                    calendar()
-                        .weekday_line_height(18.285715)
-                        .padding(0.)
-                        .default_selected(Selection::single(date(today().month(), 12)))
-                )
-                .padding(12),
-                rule::horizontal(1).boxed(),
-                container(field::group([start.into(), end.into()])).padding(12),
-            ]
-            .width(220),
+        Element::from(
+            card(
+                column![
+                    container(
+                        calendar()
+                            .weekday_line_height(18.285715)
+                            .padding(0.)
+                            .default_selected(Selection::single(date(today().month(), 12)))
+                    )
+                    .padding(12),
+                    rule::horizontal(1).boxed(),
+                    container(field::group([start.into(), end.into()])).padding(12),
+                ]
+                .spacing(0)
+                .width(220),
+            )
+            .padding(0),
         )
-        .boxed()
     }
 }
 

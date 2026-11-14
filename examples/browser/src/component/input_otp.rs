@@ -222,19 +222,23 @@ impl<'a> Component<'a, Message, Theme> for Verification {
             "Verify"
         };
         Element::from(
-            container(card(column![
-                card::header("Verify your login").description(
-                    "Enter the verification code we sent to your email address: m@example.com."
-                ),
-                card::content(code),
-                card::footer(
-                    column![
-                        button(action).on_press(Edit::Verify).width(Fill),
-                        text::muted("Having trouble signing in? Contact support")
-                    ]
-                    .spacing(8)
-                )
-            ]))
+            container(
+                card(column![
+                    card::header("Verify your login").description(
+                        "Enter the verification code we sent to your email address: m@example.com."
+                    ),
+                    card::content(code),
+                    card::footer(
+                        column![
+                            button(action).on_press(Edit::Verify).width(Fill),
+                            text::muted("Having trouble signing in? Contact support")
+                        ]
+                        .spacing(8)
+                    )
+                ])
+                .gap(0)
+                .padding(0),
+            )
             .width(360),
         )
     }

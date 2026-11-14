@@ -1,7 +1,6 @@
 //! Two-factor authentication tile — switch + descriptive copy.
 
 use iced::Fill;
-use iced::Widget;
 use icedcn::Theme;
 use icedcn::card;
 use icedcn::theme;
@@ -43,6 +42,8 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
         .padding([16, 0])
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }

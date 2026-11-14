@@ -1,6 +1,5 @@
 //! Preview 01 contribution history card.
 
-use iced::Widget;
 use iced::{Center, Fill, Padding};
 use icedcn::Theme;
 use icedcn::card;
@@ -54,8 +53,10 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
         .padding(Padding::ZERO.top(16.0))
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }
 
 fn month(label: &'static str) -> Slot<'static, Message> {

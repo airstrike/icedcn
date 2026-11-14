@@ -13,6 +13,7 @@
 //! ```
 
 use crate::Size;
+use crate::button::group::Join;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::text_input;
 use crate::text_input::element::from_core;
@@ -22,18 +23,19 @@ use iced_widget::Renderer;
 use iced_widget::Widget;
 use icedcn_core::Theme;
 use icedcn_core::theme;
-use icedcn_core::theme::text_input::default;
 
 /// A single-line text field. [`default_value`](Self::default_value) initializes text kept by
 /// the widget. Use [`value`](Self::value) and [`on_input`](Self::on_input) to manage the text
 /// in the application. A controlled field without an input handler is read-only.
 pub struct Input<'a, Message> {
+    join: Option<Join>,
     placeholder: Fragment<'a>,
     value: Option<Fragment<'a>>,
     default_value: Fragment<'a>,
     secure: bool,
     disabled: bool,
     size: Option<Size>,
+    text_size: Option<f32>,
     width: Length,
     on_input: Option<Box<dyn Fn(String) -> Message + 'a>>,
     on_submit: Option<Message>,
@@ -49,12 +51,14 @@ pub struct Input<'a, Message> {
 /// outlive (an iced `Component`'s view, for one).
 pub fn input<'a, Message: Clone + 'a>(placeholder: impl IntoFragment<'a>) -> Input<'a, Message> {
     Input {
+        join: None,
         placeholder: placeholder.into_fragment(),
         value: None,
         default_value: Fragment::Borrowed(""),
         secure: false,
         disabled: false,
         size: None,
+        text_size: None,
         width: Length::Shrink,
         on_input: None,
         on_submit: None,
@@ -137,18 +141,12 @@ impl<'a, Message: Clone + 'a> Input<'a, Message> {
         self
     }
 
-    pub(crate) fn group_corners(
-        mut self,
-        corners: impl Fn(iced_core::border::Radius) -> iced_core::border::Radius + 'a,
-    ) -> Self {
-        let paint = self.style.take().unwrap_or_else(|| Box::new(default));
-        self.style = Some(Box::new(move |theme, status| {
-            let mut style = paint(theme, status);
-            style.border.radius = corners(style.border.radius.into()).into();
-            style
-        }));
+    /// Set the text size independently of the control's height.
+    pub fn text_size(mut self, size: f32) -> Self {
+        self.text_size = Some(size);
         self
     }
+
     /// Input height — delegates to `Size::height` so size variants stay in
     /// sync with buttons. Nova `h-8` (32px) is `Size::Default`.
     fn height(&self) -> f32 {
@@ -157,11 +155,12 @@ impl<'a, Message: Clone + 'a> Input<'a, Message> {
 
     /// Text size based on size variant.
     /// Default/Sm: 14px (text-sm), Lg: 16px (text-base)
-    fn text_size(&self) -> f32 {
-        match self.size.unwrap_or_default() {
-            Size::Lg => 16.0,
-            _ => 14.0,
-        }
+    fn font_size(&self) -> f32 {
+        self.text_size
+            .unwrap_or(match self.size.unwrap_or_default() {
+                Size::Lg => 16.0,
+                _ => 14.0,
+            })
     }
 
     /// Padding: nova `px-2.5 py-1` → `{4, 10, 4, 10}`.
@@ -180,8 +179,16 @@ impl<'a, Message: Clone + 'a> From<Input<'a, Message>>
 {
     fn from(input: Input<'a, Message>) -> Self {
         let height = input.height();
-        let text_size = input.text_size();
-        let padding = input.padding();
+        let text_size = input.font_size();
+        let padding = input.join.map_or_else(
+            || input.padding(),
+            |join| {
+                let mut padding = input.padding();
+                padding.left += 1.;
+                padding.right += 1.;
+                join.padding(padding, 1.)
+            },
+        );
 
         let ti: text_input::TextInput<'a, Message, Theme, Renderer> = match &input.value {
             Some(value) => text_input::TextInput::new(&input.placeholder, value),
@@ -194,7 +201,8 @@ impl<'a, Message: Clone + 'a> From<Input<'a, Message>>
             .padding(padding)
             .size(text_size)
             .width(input.width)
-            .height(height);
+            .height(height)
+            .join(input.join);
 
         if let Some(style) = input.style {
             // Wrap the core StyleFn so it produces widget::Style (with ring).
@@ -230,6 +238,7 @@ impl<'a, Message: Clone + 'a> From<Input<'a, Message>> for Slot<'a, Message> {
 
 impl<'a, Message: Clone + 'a> Compose<Message> for Input<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {
+        self.join = self.join.or(from.join());
         self.size = self.size.or(from.size());
         self.disabled |= from.is_disabled();
     }

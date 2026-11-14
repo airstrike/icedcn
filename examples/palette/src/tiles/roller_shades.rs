@@ -1,7 +1,6 @@
 //! Roller shades card.
 
 use iced::Fill;
-use iced::Widget;
 use icedcn::card;
 use icedcn::theme;
 use icedcn::widget::{column, row, switch, text, toggle_group};
@@ -59,8 +58,10 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
         .padding([16, 0])
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }
 
 const POSITIONS: [(ShadePosition, &str); 3] = [

@@ -2,7 +2,7 @@
 // the bottom of BLOCKS.
 //
 // Intentional skips:
-// - combobox-rtl: RTL is not in scope (per CLAUDE.md).
+// - combobox-rtl: RTL is not in scope (per AGENTS.md).
 
 use iced::Task;
 
@@ -10,7 +10,6 @@ use icedcn::Theme;
 use icedcn::widget::combobox;
 
 use crate::Message;
-use crate::icon;
 use crate::page;
 
 pub static META: page::Meta = page::Meta {
@@ -25,83 +24,81 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/combobox-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/combobox-composition.md"),
+    page::Block::Md("examples/browser/snippets/combobox-installation.md"),
+    page::Block::Md("examples/browser/snippets/combobox-usage.md"),
+    page::Block::Group {
+        title: "Composition",
+        children: &[
+            page::Block::Md("examples/browser/snippets/combobox-composition.md"),
+            page::Block::Md("examples/browser/snippets/combobox-composition-chips.md"),
+            page::Block::Md("examples/browser/snippets/combobox-composition-groups.md"),
+        ],
+    },
     page::Block::Md("examples/browser/snippets/combobox-guide-custom-items.md"),
     page::Block::Md("examples/browser/snippets/combobox-guide-multiple-selection.md"),
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "basic",
-                title: "Basic",
-                description: Some("A simple combobox with a list of frameworks."),
-                snippet: "examples/browser/snippets/combobox-demo.md",
-            },
-            page::Block::Example {
-                id: "multiple",
-                title: "Multiple",
-                description: Some(
-                    "Use `.multiple(true)` to show the selected items as removable chips.",
-                ),
-                snippet: "examples/browser/snippets/combobox-multiple.md",
-            },
-            page::Block::Example {
-                id: "clear",
-                title: "Clear Button",
-                description: Some("Use `.clearable(true)` to show a clear button."),
-                snippet: "examples/browser/snippets/combobox-clear.md",
-            },
-            page::Block::Example {
-                id: "groups",
-                title: "Groups",
-                description: Some("Set `.group(label)` on each item to group related results."),
-                snippet: "examples/browser/snippets/combobox-groups.md",
-            },
-            page::Block::Example {
-                id: "custom",
-                title: "Custom Items",
-                description: Some(
-                    "Use `.description(...)` to show more information alongside each item’s label.",
-                ),
-                snippet: "examples/browser/snippets/combobox-custom.md",
-            },
-            page::Block::Example {
-                id: "invalid",
-                title: "Invalid",
-                description: Some("Set `.invalid(true)` to show the invalid state."),
-                snippet: "examples/browser/snippets/combobox-invalid.md",
-            },
-            page::Block::Example {
-                id: "disabled",
-                title: "Disabled",
-                description: None,
-                snippet: "examples/browser/snippets/combobox-disabled.md",
-            },
-            page::Block::Example {
-                id: "auto-highlight",
-                title: "Auto Highlight",
-                description: Some(
-                    "Use `.auto_highlight(true)` to highlight the first matching item when the user types.",
-                ),
-                snippet: "examples/browser/snippets/combobox-auto-highlight.md",
-            },
-            page::Block::Example {
-                id: "popup",
-                title: "Popup",
-                description: Some(
-                    "Use `.popup(true)` to open the search field and results from a separate button.",
-                ),
-                snippet: "examples/browser/snippets/combobox-popup.md",
-            },
-            page::Block::Example {
-                id: "input-group",
-                title: "Input Group",
-                description: Some(
-                    "Use `.leading_icon(...)` to add an icon at the start of the input.",
-                ),
-                snippet: "examples/browser/snippets/combobox-input-group.md",
-            },
-        ],
+    page::Block::Example {
+        id: "basic",
+        title: "Basic",
+        description: Some("A searchable list of Rust GUI libraries."),
+        snippet: "examples/browser/snippets/combobox-demo.md",
+    },
+    page::Block::Example {
+        id: "multiple",
+        title: "Multiple",
+        description: Some("Use `.multiple(true)` to display each selection as a removable chip."),
+        snippet: "examples/browser/snippets/combobox-multiple.md",
+    },
+    page::Block::Example {
+        id: "clear",
+        title: "Clear Button",
+        description: Some("Use `.clearable(true)` to let the user clear the current value."),
+        snippet: "examples/browser/snippets/combobox-clear.md",
+    },
+    page::Block::Example {
+        id: "groups",
+        title: "Groups",
+        description: Some("Assign items to named groups with `.group(...)`."),
+        snippet: "examples/browser/snippets/combobox-groups.md",
+    },
+    page::Block::Example {
+        id: "custom",
+        title: "Custom Items",
+        description: Some(
+            "Add a second line with `.description(...)` to help distinguish similar items.",
+        ),
+        snippet: "examples/browser/snippets/combobox-custom.md",
+    },
+    page::Block::Example {
+        id: "invalid",
+        title: "Invalid",
+        description: Some("Use `.invalid(true)` to mark an invalid selection."),
+        snippet: "examples/browser/snippets/combobox-invalid.md",
+    },
+    page::Block::Example {
+        id: "disabled",
+        title: "Disabled",
+        description: Some("Use `.disabled(true)` to disable the combobox."),
+        snippet: "examples/browser/snippets/combobox-disabled.md",
+    },
+    page::Block::Example {
+        id: "auto-highlight",
+        title: "Auto Highlight",
+        description: Some(
+            "Use `.auto_highlight(true)` to highlight the first matching item as the user types.",
+        ),
+        snippet: "examples/browser/snippets/combobox-auto-highlight.md",
+    },
+    page::Block::Example {
+        id: "popup",
+        title: "Popup",
+        description: Some("Use `.popup(true)` to open a searchable list from a button."),
+        snippet: "examples/browser/snippets/combobox-popup.md",
+    },
+    page::Block::Example {
+        id: "input-group",
+        title: "Input Group",
+        description: Some("Add an icon before the input with `.leading_icon(...)`."),
+        snippet: "examples/browser/snippets/combobox-input-group.md",
     },
     page::Block::Md("examples/browser/snippets/combobox-api-reference.md"),
 ];
@@ -213,12 +210,10 @@ impl page::Page for ComboboxPage {
         match id {
             "demo" | "basic" => combobox(FRAMEWORKS)
                 .placeholder("Select a framework")
-                .icon(icon::chevron_down)
                 .into(),
 
             "disabled" => combobox(FRAMEWORKS)
                 .placeholder("Select a framework")
-                .icon(icon::chevron_down)
                 .disabled(true)
                 .into(),
 
@@ -230,7 +225,6 @@ impl page::Page for ComboboxPage {
                 .into(),
             "clear" => combobox(FRAMEWORKS)
                 .placeholder("Select a framework")
-                .icon(icon::chevron_down)
                 .clearable(true)
                 .default_value("iced")
                 .into(),
@@ -241,7 +235,6 @@ impl page::Page for ComboboxPage {
             }))
             .placeholder("Select a timezone")
             .empty("No timezones found.")
-            .icon(icon::chevron_down)
             .into(),
             "custom" => combobox::options(
                 COUNTRIES
@@ -253,16 +246,13 @@ impl page::Page for ComboboxPage {
             )
             .placeholder("Search countries...")
             .empty("No countries found.")
-            .icon(icon::chevron_down)
             .into(),
             "invalid" => combobox(FRAMEWORKS)
                 .placeholder("Select a framework")
-                .icon(icon::chevron_down)
                 .invalid(true)
                 .into(),
             "auto-highlight" => combobox(FRAMEWORKS)
                 .placeholder("Select a framework")
-                .icon(icon::chevron_down)
                 .auto_highlight(true)
                 .into(),
             "popup" => combobox::options(
@@ -281,8 +271,10 @@ impl page::Page for ComboboxPage {
             }))
             .placeholder("Select a timezone")
             .empty("No timezones found.")
-            .icon(icon::chevron_down)
-            .leading_icon(icon::globe)
+            .leading_icon(combobox::globe)
+            .separators(false)
+            .content_width(240)
+            .align_offset(-28.0)
             .into(),
             _ => unreachable!("unknown combobox preview id: {id}"),
         }

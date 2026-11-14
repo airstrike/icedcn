@@ -7,7 +7,6 @@
 //! destructive variants; the rest are thematic containers).
 
 use iced::Fill;
-use iced::Widget;
 use icedcn::Slot;
 use icedcn::card;
 use icedcn::core::{Border, Color, Palette};
@@ -56,8 +55,10 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
         .padding([16, 0])
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }
 
 /// Build an informational, success, or warning alert with the selected palette.

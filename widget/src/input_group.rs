@@ -16,7 +16,7 @@
 //!
 //! Apply `.style(input::Invalid)` to the group to mark the whole field as invalid.
 
-mod widget;
+pub(crate) mod widget;
 
 use iced_core::Length::Fill;
 use iced_core::alignment::{Horizontal, Vertical};
@@ -110,6 +110,7 @@ pub fn button<'a, Message: Clone + 'a>(
 
 /// A control and its addons in one bordered field.
 pub struct InputGroup<'a, Message> {
+    inherited: Inherited,
     control: Control<'a, Message>,
     addons: Vec<Addon<'a, Message>>,
     disabled: bool,
@@ -121,6 +122,7 @@ pub fn input_group<'a, Message>(
     control: impl Into<Control<'a, Message>>,
 ) -> InputGroup<'a, Message> {
     InputGroup {
+        inherited: Inherited::default(),
         control: control.into(),
         addons: Vec::new(),
         disabled: false,
@@ -150,6 +152,7 @@ impl<'a, Message: 'a> InputGroup<'a, Message> {
 
 impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {
+        self.inherited = self.inherited.or(*from);
         self.disabled |= from.is_disabled();
     }
 
@@ -158,6 +161,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
         Self: 'b,
     {
         let InputGroup {
+            inherited,
             control: field,
             addons,
             disabled,
@@ -174,7 +178,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
                 .style(Box::new(textarea) as text_editor::StyleFn<'a, Theme>)
                 .into(),
         };
-        field.inherit(&Inherited::default().with_disabled(disabled));
+        field.inherit(&inherited.without_join().with_disabled(disabled));
 
         let (mut start, mut end, mut above, mut below) = (vec![], vec![], vec![], vec![]);
 
@@ -182,7 +186,8 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
             // `gap-2 py-1.5 text-sm font-medium text-muted-foreground`,
             // icons at `size-4`; dimmed with a disabled group.
             content.inherit(
-                &Inherited::default()
+                &inherited
+                    .without_join()
                     .with_size(Size::Default)
                     .with_weight(Weight::Medium)
                     .with_disabled(disabled),
@@ -241,6 +246,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
         };
 
         widget::Surface::new(content, style)
+            .join(inherited.join())
             .disabled(disabled)
             .boxed()
     }

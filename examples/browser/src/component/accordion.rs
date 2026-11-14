@@ -1,7 +1,7 @@
 // RTL is omitted under the browser's component scope.
 
 use iced::widget::text::LineHeight;
-use iced::{Fill, Task, Widget};
+use iced::{Fill, Task};
 
 use icedcn::Theme;
 use icedcn::card;
@@ -342,7 +342,7 @@ impl page::Page for AccordionPage {
                 let body = card::content(inner);
                 let stack = column![header, body].spacing(16).padding([16, 0]);
 
-                card(stack).width(Fill.max(384)).boxed()
+                card(stack).gap(0).padding(0).width(Fill.max(384)).into()
             }
 
             _ => unreachable!("unknown accordion preview id: {id}"),

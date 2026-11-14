@@ -122,7 +122,7 @@ impl Example {
             _ => {}
         }
         let result: Slot<'a, Event> = if matches!(id, "validation" | "card") {
-            card::card(Element::from(q)).padding(20).boxed().into()
+            card::card(Element::from(q)).gap(0).padding(20).into()
         } else {
             q.into()
         };

@@ -1,6 +1,5 @@
 //! Traffic-channels bar chart — 12 stylized bars over a baseline.
 
-use iced::Widget;
 use iced::widget::space;
 use iced::{Bottom, Fill};
 use icedcn::card;
@@ -55,9 +54,11 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
         .padding([16, 0])
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
     .height(412.0)
-    .boxed()
+    .into()
 }
 
 fn bar(height: f32) -> Slot<'static, Message> {

@@ -1,6 +1,5 @@
 //! Preview 01 payout-threshold form card.
 
-use iced::Widget;
 use iced::widget::{space, svg};
 use iced::{Bottom, Center, Fill, Padding};
 use icedcn::card;
@@ -89,8 +88,10 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
         .padding(Padding::ZERO.top(Space::U4))
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }
 
 fn close_icon() -> Slot<'static, Message> {

@@ -102,7 +102,7 @@ impl<Message> DatePicker<'_, Message> {
                 if self.value.is_none() {
                     state.selection = Some(selection);
                 }
-                if self.mode == Mode::Single || selection.is_some_and(|s| s.end.is_some()) {
+                if self.mode == Mode::Single {
                     state.open = false;
                 }
                 self.on_change.as_ref().map(|f| f(selection))
@@ -192,7 +192,7 @@ mod tests {
     use crate::calendar::Date;
 
     #[test]
-    fn incomplete_range_stays_open_until_its_second_day_is_picked() {
+    fn range_stays_open_for_endpoint_edits_until_dismissed() {
         let picker = date_picker::<()>().mode(Mode::Range);
         let mut state = State {
             open: true,
@@ -203,7 +203,22 @@ mod tests {
         picker.apply(&mut state, Event::Pick(Some(Selection::single(start))));
         assert!(state.open);
         picker.apply(&mut state, Event::Pick(Some(Selection::range(start, end))));
-        assert!(!state.open);
+        assert!(state.open);
         assert_eq!(state.selection, Some(Some(Selection::range(start, end))));
+        picker.apply(&mut state, Event::Open(false));
+        assert!(!state.open);
+    }
+
+    #[test]
+    fn single_selection_closes_the_picker() {
+        let picker = date_picker::<()>();
+        let mut state = State {
+            open: true,
+            ..State::default()
+        };
+        let day = Date::from_ymd_opt(2026, 3, 8).unwrap();
+        picker.apply(&mut state, Event::Pick(Some(Selection::single(day))));
+        assert!(!state.open);
+        assert_eq!(state.selection, Some(Some(Selection::single(day))));
     }
 }

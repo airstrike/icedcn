@@ -1,43 +1,60 @@
 ```rust
-fn slide(i: usize, size: f32, vertical: bool) -> Slot<'static, Message> {
-    let label = container(text::p((i + 1).to_string()).size(size).semibold()).center(Fill);
-    let face: Slot<'static, Message> = if vertical {
-        card(label.height(120)).width(Fill).boxed().into()
-    } else {
-        aspect_ratio(card(label).width(Fill).height(Fill).boxed(), 1.0).into()
-    };
-    container(face).padding(4).width(Fill).into()
-}
-fn gallery(size: f32, visible: usize, gap: f32, vertical: bool) -> Carousel<'static, Message> {
-    let rotation = if vertical {
-        Orientation::Vertical
-    } else {
-        Orientation::Horizontal
-    };
-    carousel(5, move |i| slide(i, size, vertical))
-        .visible(visible)
-        .spacing(gap)
-        .orientation(rotation)
-        .controls(
-            move || {
-                if vertical {
-                    icon::arrow_up()
-                } else {
-                    icon::arrow_left()
-                }
-            },
-            move || {
-                if vertical {
-                    icon::arrow_down()
-                } else {
-                    icon::arrow_right()
-                }
-            },
+use iced::widget::responsive;
+use iced::{Element, Fill, Shrink, Widget};
+use icedcn::widget::{carousel, container, text};
+use icedcn::{Slot, Theme, card};
+
+
+fn slide<Message: 'static>(
+    index: usize,
+    font_size: f32,
+    line_height: f32,
+    vertical: bool,
+    margin: f32,
+) -> Slot<'static, Message> {
+    let content: Slot<'static, Message> = if vertical {
+        container(
+            text::p((index + 1).to_string())
+                .size(font_size)
+                .semibold()
+                .line_height(iced::Pixels(line_height))
+                .height(line_height),
         )
-}
-fn frame(content: impl Into<Slot<'static, Message>>, width: f32) -> Slot<'static, Message> {
-    container(content).width(Fill).max_width(width).into()
+        .center_x(Fill)
+        .padding(24)
+        .into()
+    } else {
+        responsive(move |bounds| -> Element<'static, Message, Theme> {
+            container(
+                text::p((index + 1).to_string())
+                    .size(font_size)
+                    .semibold()
+                    .line_height(iced::Pixels(line_height))
+                    .height(line_height),
+            )
+            .center_x(Fill)
+            .center_y(bounds.width.max(line_height + 48.0))
+            .padding(24)
+            .into()
+        })
+        .height(Shrink)
+        .boxed()
+        .into()
+    };
+    container(
+        card(container(content).padding([16, 0]).width(Fill))
+            .gap(0)
+            .padding(0)
+            .width(Fill),
+    )
+    .padding(margin)
+    .width(Fill)
+    .into()
 }
 
-frame(gallery(36.0,1,16.0,false),408.0)
+pub fn view<Message: Clone + 'static>(window_width: f32) -> Slot<'static, Message> {
+    carousel(5, |index| slide(index, 36.0, 40.0, false, 4.0))
+        .width(if window_width < 640.0 { 192.0 } else { 320.0 })
+        .into()
+}
 ```

@@ -1,3 +1,3 @@
 ## Spacing
 
-Use the same spacing value for the column, header, content and footer to change the whole card’s density. The example keeps that value in its component state.
+The example keeps one spacing value in its component state and sets `.spacing(spacing)` on the Card root. Selecting the current value again keeps it selected.

@@ -1,6 +1,7 @@
 //! Paints the border, background, and focus ring around the contents of an
 //! [`InputGroup`](super::InputGroup). The group tracks focus on its inner control.
 
+use crate::button::group::{Join, join};
 use std::any::Any;
 
 use iced_widget::Renderer;
@@ -29,6 +30,7 @@ pub struct Surface<'a, Message> {
     content: Element<'a, Message, Theme, Renderer>,
     style: StyleFn<'a, Theme>,
     is_disabled: bool,
+    join: Option<Join>,
 }
 
 impl<'a, Message> Surface<'a, Message> {
@@ -38,7 +40,13 @@ impl<'a, Message> Surface<'a, Message> {
             content,
             style,
             is_disabled: false,
+            join: None,
         }
+    }
+
+    pub(crate) fn join(mut self, join: Option<Join>) -> Self {
+        self.join = join;
+        self
     }
 
     /// Paint the disabled surface.
@@ -148,7 +156,10 @@ impl<Message> Widget<Message, Theme, Renderer> for Surface<'_, Message> {
         };
 
         let surface = (self.style)(theme, status);
-        let border: Border = surface.border.into();
+        let mut border: Border = surface.border.into();
+        if let Some(join) = self.join {
+            border.radius = join.radius(border.radius);
+        }
 
         if let Some(ring) = surface.ring
             && ring.width > 0.0
@@ -164,21 +175,24 @@ impl<Message> Widget<Message, Theme, Renderer> for Surface<'_, Message> {
                     bounds: bounds.expand(ring.width),
                     border: Border {
                         radius,
-                        ..Border::default()
+                        width: ring.width,
+                        color: ring.color.into(),
                     },
                     ..renderer::Quad::default()
                 },
-                Background::Color(ring.color.into()),
+                Background::Color(iced_core::Color::TRANSPARENT),
             );
         }
 
-        renderer.fill_quad(
+        join::paint(
+            renderer,
             renderer::Quad {
                 bounds,
                 border,
                 ..renderer::Quad::default()
             },
             Background::from(surface.background),
+            self.join,
         );
 
         let (child_layout, child_tree) = layout

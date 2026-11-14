@@ -117,6 +117,7 @@ pub enum Position {
 }
 
 type ValueLabel<'a> = Box<dyn Fn(&str, &str) -> String + 'a>;
+type ItemContent<'a> = Box<dyn Fn(&str, &str) -> Slot<'a, Event> + 'a>;
 
 type TriggerPaint<'a> = Rc<dyn Fn(&Theme, widget::Status, bool, bool) -> widget::Style + 'a>;
 /// A field choosing one value from a list.
@@ -126,17 +127,20 @@ pub struct Select<'a, Message> {
     side: Side,
     align: Align,
     placeholder: String,
+    font: Option<iced_core::Font>,
+    item_content: Option<ItemContent<'a>>,
     value_label: Option<ValueLabel<'a>>,
     value: Option<String>,
     default_value: Option<String>,
     on_value_change: Option<Box<dyn Fn(String) -> Message + 'a>>,
     disabled: bool,
     width: Length,
+    min_width: f32,
     padding: Padding,
     size: Size,
     variant: Variant,
     trigger_paint: Option<TriggerPaint<'a>>,
-    icon: Option<Box<dyn Fn() -> iced_widget::Text<'a, Theme> + 'a>>,
+    icon: Option<Box<dyn Fn() -> Slot<'a, Event> + 'a>>,
     inherited: Inherited,
 }
 
@@ -168,11 +172,14 @@ pub fn select<'a, Message>(entries: impl IntoIterator<Item = Entry>) -> Select<'
         align: Align::Center,
         placeholder: String::new(),
         value_label: None,
+        font: None,
+        item_content: None,
         value: None,
         default_value: None,
         on_value_change: None,
         disabled: false,
         width: Length::Shrink,
+        min_width: 144.,
         // Nova's pl-2.5 / pr-2 plus the one-pixel border.
         padding: Padding::default().left(11).right(9),
         size: Size::Default,
@@ -266,15 +273,44 @@ impl<'a, Message> Select<'a, Message> {
         self
     }
 
+    /// Set the selected value's font (for example, a monospace currency symbol).
+    pub fn font(mut self, font: iced_core::Font) -> Self {
+        self.font = Some(font);
+        self
+    }
+
+    /// Compose the option's label while preserving its value and selection behavior.
+    pub fn format_item<Content: Into<Slot<'a, Event>> + 'a>(
+        mut self,
+        content: impl Fn(&str, &str) -> Content + 'a,
+    ) -> Self {
+        self.item_content = Some(Box::new(move |value, label| content(value, label).into()));
+        self
+    }
+
+    /// Set the option panel's minimum width, constrained to the viewport.
+    pub fn min_width(mut self, width: f32) -> Self {
+        self.min_width = width;
+        self
+    }
+
     /// Set the trigger's variant (`.style(select::Invalid)`).
     pub fn style(mut self, variant: impl Into<Variant>) -> Self {
         self.variant = variant.into();
         self
     }
 
-    /// Replace the chevron on the trigger.
-    pub fn icon(mut self, icon: impl Fn() -> iced_widget::Text<'a, Theme> + 'a) -> Self {
-        self.icon = Some(Box::new(icon));
+    /// Replace the chevron with a 16-pixel icon from an icon font.
+    pub fn icon(self, icon: impl Fn() -> iced_widget::Text<'a, Theme> + 'a) -> Self {
+        self.icon_content(move || icon().size(16).line_height(LineHeight::Relative(1.)))
+    }
+
+    /// Replace the trigger chevron with custom content, such as an SVG.
+    pub fn icon_content<Content: Into<Slot<'a, Event>> + 'a>(
+        mut self,
+        icon: impl Fn() -> Content + 'a,
+    ) -> Self {
+        self.icon = Some(Box::new(move || icon().into()));
         self
     }
 
@@ -295,14 +331,16 @@ impl<'a, Message> Select<'a, Message> {
                     disabled,
                 } => {
                     let chosen = current == Some(value.as_str());
+                    let content = self.item_content.as_ref().map_or_else(
+                        || Slot::from(text::small(label.clone())),
+                        |content| content(value, label),
+                    );
                     let value = value.clone();
 
                     Slot::from(
-                        menu::checkbox_item(text::small(label.clone()), chosen, move |_| {
-                            Event::Choose(value.clone())
-                        })
-                        .disabled(*disabled)
-                        .closes(false),
+                        menu::checkbox_item(content, chosen, move |_| Event::Choose(value.clone()))
+                            .disabled(*disabled)
+                            .closes(false),
                     )
                 }
                 Entry::Label(label) => menu::label(label.clone()),
@@ -381,8 +419,22 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
         }
         .line_height(LineHeight::Absolute(20.into()));
 
+        let value = if let Some(font) = self.font {
+            value.font(font)
+        } else {
+            value
+        };
+
         let chevron: Slot<'a, Event> = match &self.icon {
-            Some(icon) => icon().size(16).line_height(LineHeight::Relative(1.)).into(),
+            Some(icon) => {
+                let mut icon = icon();
+                icon.inherit(
+                    &Inherited::default()
+                        .with_size(Size::Default)
+                        .with_line_height(16.),
+                );
+                icon
+            }
             None => text::muted("\u{2304}").into(),
         };
         let chevron = Container::new(chevron).style(|theme| Style {
@@ -393,7 +445,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
             .spacing(6)
             .align_y(Alignment::Center)
             .into();
-        line.inherit(&self.inherited);
+        line.inherit(&self.inherited.without_join());
 
         let variant = self.variant;
         let custom = self.trigger_paint.clone();
@@ -401,7 +453,28 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
         let style: widget::StyleFn<'a, Theme> =
             Box::new(move |theme: &Theme, status: widget::Status| {
                 custom.as_ref().map_or_else(
-                    || trigger(theme, status.into(), variant).into(),
+                    || {
+                        let mut style: widget::Style =
+                            trigger(theme, status.into(), variant).into();
+                        if matches!(status, widget::Status::Focused { .. }) {
+                            let color = match variant {
+                                Variant::Invalid => theme.destructive.base,
+                                _ => theme.neutral.ring,
+                            };
+                            style.border.color = color.into();
+                            let mut radius = style.border.radius;
+                            radius.top_left += 3.;
+                            radius.top_right += 3.;
+                            radius.bottom_left += 3.;
+                            radius.bottom_right += 3.;
+                            style.ring = Some(iced_core::Border {
+                                color: color.alpha(0.5).into(),
+                                width: 3.,
+                                radius,
+                            });
+                        }
+                        style
+                    },
                     |paint| paint(theme, status, opened, has_value),
                 )
             });
@@ -409,15 +482,21 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
         // `h-8` (`h-7` small).
         let height = if self.size == Size::Sm { 28.0 } else { 32.0 };
         let button = Button::new(line.compose())
-            .padding(self.padding)
+            .padding(
+                self.inherited
+                    .join()
+                    .map_or(self.padding, |join| join.padding(self.padding, 1.)),
+            )
             .height(height)
             .width(self.width)
             .translate(false)
-            .disabled(self.disabled)
+            .border_box(true)
+            .join(self.inherited.join())
+            .disabled(self.disabled || self.inherited.is_disabled())
             .on_press(Event::Toggle)
             .style(style);
 
-        let is_open = state.open && !self.disabled;
+        let is_open = state.open && !self.disabled && !self.inherited.is_disabled();
 
         let list: Element<'a, Event, Theme, Renderer> = if is_open {
             let items =
@@ -454,7 +533,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
         };
         anchored
             .width(anchored::Width::AtLeastAnchor)
-            .min_width(144)
+            .min_width(self.min_width)
             .modal(true)
             .open(is_open)
             .on_toggle(Event::Set)

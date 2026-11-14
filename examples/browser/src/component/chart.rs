@@ -165,8 +165,9 @@ impl<'a> Component<'a, Message, Theme> for Visitors {
                 ]
                 .width(Fill),
             )
-            .width(Fill)
-            .boxed(),
+            .gap(0)
+            .padding(0)
+            .width(Fill),
         )
     }
 }

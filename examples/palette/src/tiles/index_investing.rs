@@ -1,7 +1,6 @@
 //! Index investing card.
 
 use iced::Fill;
-use iced::Widget;
 use icedcn::core::Border;
 use icedcn::theme::container::Style;
 use icedcn::widget::{column, container, text};
@@ -29,9 +28,11 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
         .padding([16, 0])
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
     .style(index_card_style)
-    .boxed()
+    .into()
 }
 
 fn index_card_style(theme: &Theme) -> iced_widget::container::Style {

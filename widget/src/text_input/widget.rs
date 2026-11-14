@@ -34,6 +34,7 @@
 use super::cursor::{self, Cursor};
 use super::editor::Editor;
 use super::value::Value;
+use crate::button::group::{Join, join};
 use crate::input_otp::Slots;
 
 use crate::core::Animation;
@@ -110,6 +111,7 @@ where
     /// Requested input height. Defaults to intrinsic sizing.
     height: Length,
     padding: Padding,
+    join: Option<Join>,
     size: Option<Pixels>,
     line_height: Option<text::LineHeight>,
     alignment: alignment::Horizontal,
@@ -149,6 +151,7 @@ where
             width: Length::Fill,
             height: Length::Shrink,
             padding: DEFAULT_PADDING,
+            join: None,
             size: None,
             line_height: None,
             alignment: alignment::Horizontal::Left,
@@ -164,6 +167,11 @@ where
             last_status: None,
             renderer_: PhantomData,
         }
+    }
+
+    pub(crate) fn join(mut self, join: Option<Join>) -> Self {
+        self.join = join;
+        self
     }
 
     /// Sets the [`widget::Id`] of the [`TextInput`].
@@ -676,10 +684,14 @@ where
             focused_style.border.color,
             now,
         );
-        let animated_border = Border {
+        let mut animated_border = Border {
             color: border_color,
             ..style.border
         };
+
+        if let Some(join) = self.join {
+            animated_border.radius = join.radius(animated_border.radius);
+        }
 
         // Ring: instant-on at the moment of focus, instant-off at blur.
         // Drawn as a 3px stroke on a transparent quad whose bounds sit
@@ -695,7 +707,9 @@ where
             && let Some(ring) = focused_style.ring
         {
             let r = ring.width;
-            let mut radius = focused_style.border.radius;
+            let mut radius = self.join.map_or(focused_style.border.radius, |join| {
+                join.radius(focused_style.border.radius)
+            });
             radius.top_left += r;
             radius.top_right += r;
             radius.bottom_right += r;
@@ -719,13 +733,15 @@ where
             );
         }
 
-        renderer.fill_quad(
+        join::paint(
+            renderer,
             renderer::Quad {
                 bounds,
                 border: animated_border,
                 ..renderer::Quad::default()
             },
             style.background,
+            self.join,
         );
 
         if self.icon.is_some() {
@@ -903,6 +919,11 @@ where
 
         let state = tree.state.downcast_mut::<State<Renderer::Paragraph>>();
 
+        if self.is_disabled {
+            state.is_focused = None;
+            state.preedit = None;
+        }
+
         // Stop pasting if input becomes read-only
         if !self.is_editable() {
             state.is_pasting = None;
@@ -938,7 +959,9 @@ where
         let state = tree.state.downcast_mut::<State<Renderer::Paragraph>>();
 
         operation.text_input(self.id.as_ref(), layout.bounds(), state);
-        operation.focusable(self.id.as_ref(), layout.bounds(), state);
+        if !self.is_disabled {
+            operation.focusable(self.id.as_ref(), layout.bounds(), state);
+        }
     }
 
     fn update(

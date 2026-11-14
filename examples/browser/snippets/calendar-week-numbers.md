@@ -19,6 +19,7 @@ pub fn example<Message: 'static>() -> Element<'static, Message, Theme> {
             .default_selected(Selection::single(date(2, 3)))
             .week_numbers(true),
     )
-    .boxed()
+    .padding(0)
+    .into()
 }
 ```

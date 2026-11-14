@@ -25,7 +25,7 @@ pub fn range<Message: 'static>(wide: Option<bool>) -> Element<'static, Message, 
     if let Some(wide) = wide {
         picker = picker.stacked(!wide);
     }
-    card(picker).boxed()
+    card(picker).padding(0).into()
 }
 
 struct Example { window_width: f32 }

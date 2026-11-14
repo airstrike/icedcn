@@ -9,7 +9,6 @@ use icedcn::rich_text;
 use icedcn::theme;
 use icedcn::theme::tweak::Alpha;
 use icedcn::theme::tweak::Token;
-use icedcn::widget::button::group::Item;
 use icedcn::widget::rich_text::span;
 use icedcn::widget::{Slot, badge, button, field, input, row, space, text};
 use icedcn::widget::{button_group, input_group};
@@ -259,10 +258,13 @@ impl page::Page for InputPage {
             .label("Website URL")
             .width(320)
             .into(),
-            "button-group" => field(button_group![
-                Item::Content(input("Type to search...").width(Fill).into()),
-                button("Search").style(button::Outline)
-            ])
+            "button-group" => field(
+                button_group![
+                    input("Type to search...").width(Fill),
+                    button("Search").style(button::Outline)
+                ]
+                .width(Fill),
+            )
             .label("Search")
             .width(320)
             .into(),

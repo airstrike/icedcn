@@ -1,7 +1,6 @@
 //! Invite Team — email + role picker + Invite, plus a small members list.
 
 use iced::Fill;
-use iced::Widget;
 use iced::widget::space;
 use icedcn::card;
 use icedcn::theme;
@@ -63,9 +62,11 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
         .padding([16, 0])
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
     .height(312.0)
-    .boxed()
+    .into()
 }
 
 fn member_row(m: &Member) -> Slot<'static, Message> {

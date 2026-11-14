@@ -1,7 +1,6 @@
 //! Account access card.
 
 use iced::Fill;
-use iced::Widget;
 use icedcn::widget::{button, column, field, input, item};
 use icedcn::{Theme, card};
 
@@ -51,6 +50,8 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
         .padding(iced::Padding::ZERO.top(16.0))
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }

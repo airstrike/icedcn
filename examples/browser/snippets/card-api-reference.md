@@ -2,14 +2,17 @@
 
 The `Card` component is the root container for card content.
 
-`card(content)` accepts an iced `Element` conversion and returns a stock iced `Container` with the card background, foreground/10 border, 14px corners and clipping. It adds no layout padding or section gaps. Compose those explicitly with a column as in Usage.
+`card(content)` accepts `impl Into<Slot>` and returns a `Card` builder implementing `Compose`. It keeps arbitrary children lazy, with the card background, foreground/10 border, 14px corners and clipping. The root supplies its outer column gap and vertical padding; a descendant footer removes the bottom padding. A nested Card starts its own layout context.
 
 | Builder | Type | Default |
 |---|---|---|
 | `.width(width)` | `impl Into<Length>` | content width |
 | `.height(height)` | `impl Into<Length>` | content height |
-| `.padding(padding)` | `impl Into<Padding>` | 0 |
+| `.size(size)` | `impl Into<Size>` | `Size::Default` |
+| `.spacing(pixels)` | `impl Into<Pixels>` | 16; 12 for `Size::Sm` |
+| `.gap(pixels)` | `impl Into<Pixels>` | root spacing |
+| `.padding(padding)` | `impl Into<Padding>` | root spacing vertically; 0 below a footer |
 | `.clip(clip)` | `bool` | true |
 | `.style(style)` | iced container style callback | Card surface |
 
-Use `.width(Fill.max(384))` for the source's full-width card with a 384px maximum. Root `size` and automatic spacing inheritance are not currently exposed; the Size and Spacing recipes apply the corresponding values explicitly.
+Use `.width(Fill.max(384))` to fill the available width up to 384px. Use `.padding(0)` for an image-first composition. Explicit column spacing and section padding override the inherited defaults. Keep children as Slots until the application Element boundary; `.into()` composes there.

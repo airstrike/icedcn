@@ -1,6 +1,5 @@
 //! Placeholder cards listing the widgets a dashboard tile needs.
 
-use iced::Widget;
 use iced::{Center, Fill};
 use icedcn::core::Border;
 use icedcn::theme;
@@ -86,8 +85,10 @@ pub fn missing(
         .padding([16, 0])
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }
 
 fn gap_row(gap: &'static str) -> Slot<'static, Message> {

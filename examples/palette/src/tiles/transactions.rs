@@ -8,7 +8,6 @@
 //! card-bounded list), button (ghost), text variants (p / xs / small),
 //! rule (vertical thin), container, row, column.
 
-use iced::Widget;
 use iced::widget::space;
 use iced::{Center, Fill};
 use icedcn::Slot;
@@ -130,9 +129,11 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
             .padding([16, 0])
             .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
     .height(386.0)
-    .boxed()
+    .into()
 }
 
 fn tx_row(tx: &Tx) -> Slot<'_, Message> {

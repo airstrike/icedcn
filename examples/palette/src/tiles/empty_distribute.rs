@@ -1,7 +1,6 @@
 //! Preview 01 empty-state card for the music distribution flow.
 
 use iced::Fill;
-use iced::Widget;
 use icedcn::Theme;
 use icedcn::card;
 use icedcn::widget::{button, column, empty};
@@ -28,6 +27,8 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
             .padding([CARD_PADDING_Y, 0.0])
             .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }

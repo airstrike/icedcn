@@ -1,6 +1,5 @@
 //! Recent transactions card.
 
-use iced::Widget;
 use iced::{Center, Fill, Right};
 use icedcn::card;
 use icedcn::core::Border;
@@ -86,8 +85,10 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
         .padding(Y4)
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill.max(WIDTH))
-    .boxed()
+    .into()
 }
 
 fn transactions_table() -> Slot<'static, Message> {

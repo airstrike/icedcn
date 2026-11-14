@@ -1,5 +1,3 @@
 ### CardTitle
 
-The `CardTitle` component is used for the card title.
-
-`card::title(content)` returns `Text` with a 16px medium font, 1.375 line height and foreground color. Use `.size(14)` for a small card. Explicit text builders override these defaults.
+`card::title(content)` returns `Text` with a 16px medium font, 1.375 line height and foreground color. A small Card automatically supplies 14px. An explicit `.size(...)` overrides the root. Explicit text builders override these defaults.

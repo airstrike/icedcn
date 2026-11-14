@@ -44,5 +44,4 @@ combobox::options(ZONES.iter().flat_map(|&(group, zones)| {
 }))
 .placeholder("Select a timezone")
 .empty("No timezones found.")
-.icon(icon::chevron_down)
 ```

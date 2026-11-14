@@ -1,6 +1,5 @@
 //! Preview 01 claimable-balance card.
 
-use iced::Widget;
 use iced::widget::space;
 use iced::{Center, Fill};
 use icedcn::card;
@@ -57,8 +56,10 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
         .padding(iced::Padding::ZERO.top(16.0))
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }
 
 fn money_row(label: &'static str, amount: &'static str, strong: bool) -> Slot<'static, Message> {

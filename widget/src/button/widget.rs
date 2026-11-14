@@ -29,6 +29,7 @@
 //!     button("Press me!").on_press(Message::ButtonPressed)
 //! }
 //! ```
+use super::group::{Join, join};
 use crate::core::border::{self, Border};
 use crate::core::keyboard;
 use crate::core::keyboard::key;
@@ -117,6 +118,7 @@ where
     clip: bool,
     translate: bool,
     border_box: bool,
+    join: Option<Join>,
     interaction: Option<mouse::Interaction>,
     class: Theme::Class<'a>,
     decoration: Option<Decoration<'a, Theme>>,
@@ -158,11 +160,17 @@ where
             clip: false,
             translate: true,
             border_box: false,
+            join: None,
             interaction: None,
             class: Theme::default(),
             decoration: None,
             status: None,
         }
+    }
+
+    pub(crate) fn join(mut self, join: Option<Join>) -> Self {
+        self.join = join;
+        self
     }
 
     /// Sets the width of the [`Button`].
@@ -646,7 +654,7 @@ where
         let status = self.status.unwrap_or(Status::Disabled);
         let now = state.frame;
 
-        let style = if status != Status::Disabled && state.hover.is_animating(now) {
+        let mut style = if status != Status::Disabled && state.hover.is_animating(now) {
             // Keep a focused button's ring while its hover colors transition.
             let (active, hovered) = if matches!(status, Status::Focused { .. }) {
                 (
@@ -700,6 +708,18 @@ where
             theme.style(&self.class, status)
         };
 
+        if let Some(join) = self.join {
+            let before = style.border.radius;
+            let after = join.radius(before);
+            style.border.radius = after;
+            if let Some(ring) = &mut style.ring {
+                ring.radius.top_left += after.top_left - before.top_left;
+                ring.radius.top_right += after.top_right - before.top_right;
+                ring.radius.bottom_left += after.bottom_left - before.bottom_left;
+                ring.radius.bottom_right += after.bottom_right - before.bottom_right;
+            }
+        }
+
         let (underline, ring_offset) = self
             .decoration
             .as_ref()
@@ -732,7 +752,8 @@ where
             }
             if style.background.is_some() || style.border.width > 0.0 || style.shadow.color.a > 0.0
             {
-                renderer.fill_quad(
+                join::paint(
+                    renderer,
                     renderer::Quad {
                         bounds: visual_bounds,
                         border: style.border,
@@ -742,6 +763,7 @@ where
                     style
                         .background
                         .unwrap_or(Background::Color(Color::TRANSPARENT)),
+                    self.join,
                 );
             }
 

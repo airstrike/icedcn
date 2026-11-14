@@ -56,6 +56,8 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
 
 fn nav_card<const N: usize>(children: [Slot<'static, Message>; N]) -> Slot<'static, Message> {
     card::card(column(children).spacing(0).width(Fill))
+        .gap(0)
+        .padding(0)
         .width(Fill)
         .into()
 }

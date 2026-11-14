@@ -71,14 +71,17 @@ impl<'a, Message: 'static> Component<'a, Message, Theme> for Presets {
             .spacing(8)
             .into()
         });
-        card(
-            column![
-                container(picker).padding(12).center_x(Fill),
-                card::footer_with_spacing(Column::with_children(actions).spacing(8), 12.),
-            ]
-            .width(300),
+        Element::from(
+            card(
+                column![
+                    container(picker).padding(12).center_x(Fill),
+                    card::footer_with_spacing(Column::with_children(actions).spacing(8), 12.),
+                ]
+                .spacing(0)
+                .width(300),
+            )
+            .padding(0),
         )
-        .boxed()
     }
 }
 ```

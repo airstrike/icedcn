@@ -14,7 +14,7 @@
 | `.number_of_months(usize)` | `1` | Show 1–12 consecutive months. |
 | `.stacked(bool)` | Wrap to available width | Use the application's window breakpoint to choose month direction. |
 | `.caption_dropdown(bool)` | `false` | Open month and year menus while keeping the date grid visible. |
-| `.long_months(bool)` | `false` | Use full month names in dropdown triggers. |
+| `.long_months(bool)` | `false` | Use full month names in both dropdown triggers and menu choices. |
 | `.week_numbers(bool)` | `false` | Show Sunday-first locale week numbers; the week containing January 1 is week 01. |
 | `.fixed_weeks(bool)` | `false` | Keep six week rows visible. |
 | `.cell_size(f32)` | `28` | Set each date cell's width and height in logical pixels. |

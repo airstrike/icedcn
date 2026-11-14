@@ -61,7 +61,7 @@ pub fn range<Message: 'static>(wide: Option<bool>) -> Element<'static, Message, 
     if let Some(wide) = wide {
         picker = picker.stacked(!wide);
     }
-    card(picker).boxed()
+    card(picker).padding(0).into()
 }
 pub fn caption<Message: 'static>() -> Element<'static, Message, Theme> {
     bordered(calendar().caption_dropdown(true))
@@ -74,7 +74,8 @@ pub fn booked_dates<Message: 'static>() -> Element<'static, Message, Theme> {
             .unavailable(|day| (date(2, 12)..=date(2, 26)).contains(&day))
             .strike_unavailable(true),
     )
-    .boxed()
+    .padding(0)
+    .into()
 }
 pub fn custom_days<Message: 'static>(wide: bool) -> Element<'static, Message, Theme> {
     card(
@@ -94,7 +95,8 @@ pub fn custom_days<Message: 'static>(wide: bool) -> Element<'static, Message, Th
                 .to_owned()
             }),
     )
-    .boxed()
+    .padding(0)
+    .into()
 }
 pub fn week_numbers<Message: 'static>() -> Element<'static, Message, Theme> {
     card(
@@ -103,7 +105,8 @@ pub fn week_numbers<Message: 'static>() -> Element<'static, Message, Theme> {
             .default_selected(Selection::single(date(2, 3)))
             .week_numbers(true),
     )
-    .boxed()
+    .padding(0)
+    .into()
 }
 
 pub fn presets<Message: 'static>() -> Element<'static, Message, Theme> {
@@ -165,14 +168,17 @@ impl<'a, Message: 'static> Component<'a, Message, Theme> for Presets {
             .spacing(8)
             .into()
         });
-        card(
-            column![
-                container(picker).padding(12).center_x(Fill),
-                card::footer_with_spacing(Column::with_children(actions).spacing(8), 12.),
-            ]
-            .width(300),
+        Element::from(
+            card(
+                column![
+                    container(picker).padding(12).center_x(Fill),
+                    card::footer_with_spacing(Column::with_children(actions).spacing(8), 12.),
+                ]
+                .spacing(0)
+                .width(300),
+            )
+            .padding(0),
         )
-        .boxed()
     }
 }
 
@@ -241,21 +247,24 @@ impl<'a, Message: 'static> Component<'a, Message, Theme> for Times {
             .addon(input_group::addon(clock().boxed())),
         )
         .label(text::label("End Time").line_height(Pixels(19.25)));
-        card(
-            column![
-                container(
-                    calendar()
-                        .weekday_line_height(18.285715)
-                        .padding(0.)
-                        .default_selected(Selection::single(date(today().month(), 12)))
-                )
-                .padding(12),
-                rule::horizontal(1).boxed(),
-                container(field::group([start.into(), end.into()])).padding(12),
-            ]
-            .width(220),
+        Element::from(
+            card(
+                column![
+                    container(
+                        calendar()
+                            .weekday_line_height(18.285715)
+                            .padding(0.)
+                            .default_selected(Selection::single(date(today().month(), 12)))
+                    )
+                    .padding(12),
+                    rule::horizontal(1).boxed(),
+                    container(field::group([start.into(), end.into()])).padding(12),
+                ]
+                .spacing(0)
+                .width(220),
+            )
+            .padding(0),
         )
-        .boxed()
     }
 }
 

@@ -1,7 +1,6 @@
 //! Receiving method card.
 
 use iced::Fill;
-use iced::Widget;
 use icedcn::widget::{button, column, field, input, radio, text};
 use icedcn::{Slot, Theme, card};
 
@@ -57,8 +56,10 @@ pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
         .padding(iced::Padding::ZERO.top(16.0))
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }
 
 fn method_card(

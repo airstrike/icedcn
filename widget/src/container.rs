@@ -181,6 +181,10 @@ impl<'a, Message: 'a> From<Container<'a, Message>> for Slot<'a, Message> {
 }
 
 impl<'a, Message: 'a> Compose<Message> for Container<'a, Message> {
+    fn has_card_footer(&self) -> bool {
+        self.content.has_card_footer()
+    }
+
     fn inherit(&mut self, from: &Inherited) {
         self.content.inherit(from);
     }

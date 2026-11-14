@@ -41,10 +41,9 @@ fn terms<'a>() -> Slot<'a, Message> {
             )
         ]
         .width(Fill)
-        .padding(iced::Padding::ZERO.top(16)),
+        .spacing(0),
     )
     .width(Fill.max(384))
-    .boxed()
     .into()
 }
 

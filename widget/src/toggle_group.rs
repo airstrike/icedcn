@@ -315,7 +315,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             .collect();
 
         let element: Element<'a, Event<Message>, Theme, Renderer> = if self.spacing == 0.0 {
-            group::group(buttons.into_iter().map(group::Item::from))
+            group::group(buttons.into_iter().map(Slot::from))
                 .orientation(self.orientation)
                 .width(self.width)
                 .into()

@@ -1,7 +1,6 @@
 //! Empty connect bank card.
 
 use iced::Fill;
-use iced::Widget;
 use icedcn::Theme;
 use icedcn::card;
 use icedcn::widget::{button, column, empty};
@@ -20,6 +19,8 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
         .content(button("Set Up Payouts").on_press(Message::Noop));
 
     card::card(column![card::content(content)].padding([16, 0]).width(Fill))
+        .gap(0)
+        .padding(0)
         .width(Fill)
-        .boxed()
+        .into()
 }

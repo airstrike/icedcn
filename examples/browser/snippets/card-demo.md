@@ -26,8 +26,7 @@ fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
         column![
             card::header("Login to your account")
                 .description("Enter your email below to login to your account")
-                .action(button("Sign Up").style(button::Link))
-                .inset(spacing),
+                .action(button("Sign Up").style(button::Link)),
             card::content(
                 column![
                     field(input("m@example.com").width(Fill)).label("Email"),
@@ -35,9 +34,8 @@ fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
                 ]
                 .spacing(24)
                 .width(Fill)
-            )
-            .padding([0.0, spacing]),
-            card::footer_with_spacing(
+            ),
+            card::footer(
                 column![
                     button("Login").width(Fill),
                     button("Login with Google")
@@ -45,16 +43,13 @@ fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
                         .width(Fill)
                 ]
                 .spacing(8)
-                .width(Fill),
-                spacing
+                .width(Fill)
             )
         ]
-        .width(Fill)
-        .spacing(spacing)
-        .padding(iced::Padding::ZERO.top(spacing)),
+        .width(Fill),
     )
+    .spacing(spacing)
     .width(Fill.max(384))
-    .boxed()
     .into()
 }
 

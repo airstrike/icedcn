@@ -1,6 +1,5 @@
 //! Front door card.
 
-use iced::Widget;
 use iced::{Fill, Right};
 use icedcn::core::Border;
 use icedcn::theme::container::Style;
@@ -45,8 +44,10 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
         .padding([16, 0])
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }
 
 fn camera_style(theme: &Theme) -> Style {

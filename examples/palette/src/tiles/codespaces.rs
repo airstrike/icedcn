@@ -1,6 +1,5 @@
 //! Codespaces — empty-state card with a centered CTA.
 
-use iced::Widget;
 use iced::{Center, Fill};
 use icedcn::Theme;
 use icedcn::card;
@@ -39,7 +38,9 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
         .padding([16, 0])
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
     .height(330.0)
-    .boxed()
+    .into()
 }

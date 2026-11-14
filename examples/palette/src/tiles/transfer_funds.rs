@@ -1,6 +1,5 @@
 //! Transfer funds card.
 
-use iced::Widget;
 use iced::widget::space;
 use iced::{Center, Fill};
 use icedcn::widget::{button, column, container, field, input, item, row, rule, text};
@@ -76,8 +75,10 @@ pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
         .padding(iced::Padding::ZERO.top(16.0))
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }
 
 fn money_row<'a>(label: &'static str, value: &'a str, strong: bool) -> Slot<'a, Message> {

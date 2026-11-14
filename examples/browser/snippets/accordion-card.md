@@ -40,7 +40,6 @@ let description = card::description("Common questions about your account, plans,
     .line_height(LineHeight::Absolute(20.into()));
 let header = card::header("Subscription & Billing").description(description);
 
-card(column![header, card::content(inner)].spacing(16).padding([16, 0]))
-    .width(Fill.max(384))
-    .boxed()
+card(column![header, card::content(inner)].spacing(16).padding([16, 0])).gap(0).padding(0)
+    .width(Fill.max(384)).into()
 ```

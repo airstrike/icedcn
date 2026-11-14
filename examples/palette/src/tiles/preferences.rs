@@ -1,6 +1,5 @@
 //! Preferences card.
 
-use iced::Widget;
 use iced::widget::space;
 use iced::{Center, Fill};
 use icedcn::widget::{button, column, field, row, switch};
@@ -59,6 +58,8 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
         .padding(iced::Padding::ZERO.top(16.0))
         .width(Fill),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill)
-    .boxed()
+    .into()
 }

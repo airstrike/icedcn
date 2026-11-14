@@ -45,9 +45,10 @@ where
     Renderer: iced_core::Renderer,
     Theme: iced_widget::button::Catalog,
 {
+    join: Option<super::group::Join>,
     content: Vec<Slot<'a, Message, Theme, Renderer>>,
     size: Option<Size>,
-    weight: crate::Weight,
+    weight: Option<crate::Weight>,
     height: Option<f32>,
     padding: Option<Padding>,
     square: bool,
@@ -73,9 +74,10 @@ pub fn button<'a, Message: Clone + 'a>(
     content: impl Into<Slot<'a, Message>>,
 ) -> Button<'a, Message> {
     Button {
+        join: None,
         content: vec![content.into()],
         size: None,
-        weight: crate::Weight::Medium,
+        weight: None,
         height: None,
         padding: None,
         square: false,
@@ -206,7 +208,7 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
 
     /// Set the font weight
     pub fn weight(mut self, weight: impl Into<crate::Weight>) -> Self {
-        self.weight = weight.into();
+        self.weight = Some(weight.into());
         self
     }
 
@@ -227,14 +229,7 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
         self
     }
 
-    /// The button's size-driven height in pixels. Read by [`button::group`]
-    /// to compute the cluster's tallest button so separators size their
-    /// perpendicular axis to a concrete pixel value rather than `Length::Fill`.
-    ///
-    /// Mirrors the height the button will actually render at — same source
-    /// as [`Size::height`] used inside the `From<Button> for Element` impl.
-    ///
-    /// [`button::group`]: crate::button::group
+    /// The control's height, including any explicit height override.
     pub fn size_height(&self) -> f32 {
         self.height
             .unwrap_or_else(|| self.size.unwrap_or_default().height())
@@ -290,7 +285,7 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
         };
         let mut inherited = Inherited::default()
             .with_size(size)
-            .with_weight(btn.weight)
+            .with_weight(btn.weight.unwrap_or(crate::Weight::Medium))
             .with_selectable(false)
             .with_disabled(btn.disabled);
         if btn.nova {
@@ -329,6 +324,9 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
             padding.left += 1.0;
             padding.right += 1.0;
         }
+        if let Some(join) = btn.join {
+            padding = join.padding(padding, 1.);
+        }
         let mut iced_btn = if btn.square {
             super::widget::Button::new(iced_widget::center(content))
                 .width(h)
@@ -359,7 +357,8 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
         iced_btn = iced_btn
             .translate(btn.translate)
             .inset(btn.inset)
-            .border_box(btn.nova);
+            .border_box(btn.nova)
+            .join(btn.join);
         if let Some(interaction) = btn.interaction {
             iced_btn = iced_btn.interaction(interaction);
         }
@@ -435,6 +434,8 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>> for Slot<'a, Message> {
 
 impl<'a, Message: Clone + 'a> Compose<Message> for Button<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {
+        self.join = self.join.or(from.join());
+        self.weight = self.weight.or(from.weight());
         self.size = self.size.or(from.size());
         self.disabled |= from.is_disabled();
     }

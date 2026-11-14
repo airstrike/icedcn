@@ -34,5 +34,4 @@ combobox::options(
 )
 .placeholder("Search countries...")
 .empty("No countries found.")
-.icon(icon::chevron_down)
 ```
