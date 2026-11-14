@@ -1,7 +1,7 @@
 //! An anchored list for selecting one item.
 //!
 //! A trigger showing the chosen item's label (or a muted placeholder) that
-//! opens a modal list of items anchored below it, at least as wide as the
+//! opens a modal list aligned with the current item, at least as wide as the
 //! trigger, with a check beside the chosen one. An iced `Component` that
 //! owns its open state and, uncontrolled, its value:
 //!
@@ -30,12 +30,20 @@ use icedcn_core::Theme;
 use icedcn_core::theme::container::Style;
 use icedcn_core::theme::popover::content;
 use icedcn_core::theme::select::trigger;
+use icedcn_core::theme::text::{Foreground, Muted};
+use icedcn_core::theme::tweak::Alpha;
 use std::rc::Rc;
 
 use crate::button::widget::{self, Button};
+use crate::combobox::keys::Keys;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
+use crate::icon::Icon;
+use crate::menu::list::{Initial, List, Search};
 use crate::{Size, column, menu, row, scrollable, text};
+use iced_core::keyboard::{Key, key::Named};
+use iced_core::text::Wrapping;
+use iced_core::widget::Id;
 
 pub use iced_widget::anchored::{Align, Side};
 pub use icedcn_core::theme::select::{Invalid, Variant};
@@ -49,7 +57,7 @@ pub enum Entry {
         value: String,
         /// The label shown in the list and in the trigger.
         label: String,
-        /// Whether the item ignores the pointer.
+        /// Whether to skip this item during pointer and keyboard selection.
         disabled: bool,
     },
     /// A `SelectLabel`.
@@ -97,11 +105,13 @@ impl Entry {
         }
     }
 
-    fn items(&self) -> Box<dyn Iterator<Item = (&str, &str)> + '_> {
+    fn items(&self) -> Box<dyn Iterator<Item = (&str, &str, bool)> + '_> {
         match self {
-            Entry::Item { value, label, .. } => {
-                Box::new(std::iter::once((value.as_str(), label.as_str())))
-            }
+            Entry::Item {
+                value,
+                label,
+                disabled,
+            } => Box::new(std::iter::once((value.as_str(), label.as_str(), *disabled))),
             Entry::Group(entries) => Box::new(entries.iter().flat_map(Entry::items)),
             Entry::Label(_) | Entry::Separator => Box::new(std::iter::empty()),
         }
@@ -151,15 +161,32 @@ pub enum Event {
     Toggle,
     /// The list asked to open or close.
     Set(bool),
+    /// Search for a label from the closed trigger.
+    Type(String),
     /// An item was chosen.
     Choose(String),
 }
 
 /// The open state and, uncontrolled, the value of a select.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct State {
+    initialized: bool,
+    scroll: Id,
+    search: Search,
     open: bool,
     value: Option<String>,
+}
+
+impl Default for State {
+    fn default() -> Self {
+        Self {
+            initialized: false,
+            scroll: Id::unique(),
+            search: Search::default(),
+            open: false,
+            value: None,
+        }
+    }
 }
 
 /// Create an uncontrolled [`Select`] over `entries`, showing its
@@ -300,6 +327,13 @@ impl<'a, Message> Select<'a, Message> {
         self
     }
 
+    fn enabled(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.entries
+            .iter()
+            .flat_map(Entry::items)
+            .filter_map(|(value, label, disabled)| (!disabled).then_some((value, label)))
+    }
+
     /// Replace the chevron with a 16-pixel icon from an icon font.
     pub fn icon(self, icon: impl Fn() -> iced_widget::Text<'a, Theme> + 'a) -> Self {
         self.icon_content(move || icon().size(16).line_height(LineHeight::Relative(1.)))
@@ -315,10 +349,7 @@ impl<'a, Message> Select<'a, Message> {
     }
 
     fn current<'s>(&'s self, state: &'s State) -> Option<&'s str> {
-        self.value
-            .as_deref()
-            .or(state.value.as_deref())
-            .or(self.default_value.as_deref())
+        self.value.as_deref().or(state.value.as_deref())
     }
 
     fn list(&self, entries: &[Entry], current: Option<&str>) -> Vec<Slot<'a, Event>> {
@@ -332,7 +363,7 @@ impl<'a, Message> Select<'a, Message> {
                 } => {
                     let chosen = current == Some(value.as_str());
                     let content = self.item_content.as_ref().map_or_else(
-                        || Slot::from(text::small(label.clone())),
+                        || Slot::from(text::small(label.clone()).line_height(20. / 14.)),
                         |content| content(value, label),
                     );
                     let value = value.clone();
@@ -343,9 +374,16 @@ impl<'a, Message> Select<'a, Message> {
                             .closes(false),
                     )
                 }
-                Entry::Label(label) => menu::label(label.clone()),
+                Entry::Label(label) => {
+                    Container::new(text::muted(label.clone()).size(12).line_height(16. / 12.))
+                        .padding([4, 6])
+                        .into()
+                }
                 Entry::Separator => menu::separator(),
-                Entry::Group(entries) => menu::group(self.list(entries, current)),
+                Entry::Group(entries) => Container::new(menu::group(self.list(entries, current)))
+                    .width(Fill)
+                    .padding(4)
+                    .into(),
             })
             .collect()
     }
@@ -361,9 +399,11 @@ fn row_center(entries: &[Entry], selected: &str, y: &mut f32) -> Option<f32> {
             Entry::Label(_) => *y += 24.0,
             Entry::Separator => *y += 9.0,
             Entry::Group(group) => {
+                *y += 4.;
                 if let Some(center) = row_center(group, selected, y) {
                     return Some(center);
                 }
+                *y += 4.;
             }
         }
     }
@@ -374,28 +414,53 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
     type State = State;
     type Event = Event;
 
+    fn diff(&mut self, state: &mut State) {
+        if !state.initialized {
+            state.value = self.default_value.clone();
+            state.initialized = true;
+        }
+        if self.disabled || self.inherited.is_disabled() {
+            state.open = false;
+        }
+    }
+
     fn update(&self, state: &mut State, event: Event, _renderer: &Renderer) -> Option<Message> {
-        match event {
+        let value = match event {
             Event::Toggle => {
                 state.open = !state.open;
-                None
+                state.search = Search::default();
+                return None;
             }
             Event::Set(open) => {
                 state.open = open;
-                None
+                state.search = Search::default();
+                return None;
+            }
+            Event::Type(key) => {
+                let enabled: Vec<_> = self.enabled().collect();
+                let current = enabled
+                    .iter()
+                    .position(|(value, _)| Some(*value) == self.current(state));
+                let labels = enabled
+                    .iter()
+                    .map(|(_, label)| label.to_string())
+                    .collect::<Vec<_>>();
+                let index = state.search.match_prefix(&key, current, &labels)?;
+                enabled[index].0.to_owned()
             }
             Event::Choose(value) => {
                 state.open = false;
-
-                if self.value.is_none() {
-                    state.value = Some(value.clone());
-                }
-
-                self.on_value_change
-                    .as_ref()
-                    .map(|on_change| on_change(value))
+                value
             }
+        };
+        if self.current(state) == Some(&value) {
+            return None;
         }
+        if self.value.is_none() {
+            state.value = Some(value.clone());
+        }
+
+        self.on_value_change.as_ref().map(|changed| changed(value))
     }
 
     fn view(&self, state: &State) -> impl Widget<Event, Theme, Renderer> + 'a {
@@ -404,8 +469,8 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
             self.entries
                 .iter()
                 .flat_map(Entry::items)
-                .find(|(value, _)| *value == current)
-                .map(|(value, label)| {
+                .find(|(value, _, _)| *value == current)
+                .map(|(value, label, _)| {
                     self.value_label
                         .as_ref()
                         .map_or_else(|| label.to_owned(), |f| f(value, label))
@@ -413,11 +478,14 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
         });
 
         let has_value = chosen.is_some();
+        let disabled = self.disabled || self.inherited.is_disabled();
+        let opacity = if disabled { 0.5 } else { 1. };
         let value = match chosen {
-            Some(label) => text::small(label),
-            None => text::muted(self.placeholder.clone()),
+            Some(label) => text::small(label).style(Foreground + Alpha(opacity)),
+            None => text::muted(self.placeholder.clone()).style(Muted + Alpha(opacity)),
         }
-        .line_height(LineHeight::Absolute(20.into()));
+        .line_height(LineHeight::Absolute(20.into()))
+        .wrapping(Wrapping::None);
 
         let value = if let Some(font) = self.font {
             value.font(font)
@@ -435,16 +503,23 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
                 );
                 icon
             }
-            None => text::muted("\u{2304}").into(),
+            None => Icon::Chevron.boxed().into(),
         };
-        let chevron = Container::new(chevron).style(|theme| Style {
-            text_color: Some(theme.muted.foreground),
+        let chevron = Container::new(chevron).style(move |theme| Style {
+            text_color: Some(theme.muted.foreground.scale_alpha(opacity)),
             ..Style::default()
         });
-        let mut line: Slot<'a, Event> = row![Container::new(value).width(Fill), chevron]
-            .spacing(6)
-            .align_y(Alignment::Center)
-            .into();
+        let inner_width = if matches!(self.width, Length::Shrink | Length::Fit) {
+            Length::Shrink
+        } else {
+            Fill
+        };
+        let mut line: Slot<'a, Event> =
+            row![Container::new(value).width(inner_width).clip(true), chevron]
+                .width(inner_width)
+                .spacing(6)
+                .align_y(Alignment::Center)
+                .into();
         line.inherit(&self.inherited.without_join());
 
         let variant = self.variant;
@@ -456,19 +531,29 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
                     || {
                         let mut style: widget::Style =
                             trigger(theme, status.into(), variant).into();
-                        if matches!(status, widget::Status::Focused { .. }) {
+                        if variant == Variant::Invalid
+                            || matches!(status, widget::Status::Focused { .. })
+                        {
                             let color = match variant {
                                 Variant::Invalid => theme.destructive.base,
                                 _ => theme.neutral.ring,
                             };
-                            style.border.color = color.into();
+                            if variant != Variant::Invalid {
+                                style.border.color = color.into();
+                            }
                             let mut radius = style.border.radius;
                             radius.top_left += 3.;
                             radius.top_right += 3.;
                             radius.bottom_left += 3.;
                             radius.bottom_right += 3.;
                             style.ring = Some(iced_core::Border {
-                                color: color.alpha(0.5).into(),
+                                color: color
+                                    .scale_alpha(if variant == Variant::Invalid {
+                                        if theme.neutral.base.l < 0.5 { 0.4 } else { 0.2 }
+                                    } else {
+                                        0.5
+                                    })
+                                    .into(),
                                 width: 3.,
                                 radius,
                             });
@@ -498,16 +583,42 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
 
         let is_open = state.open && !self.disabled && !self.inherited.is_disabled();
 
+        let enabled: Vec<_> = if is_open {
+            self.enabled().collect()
+        } else {
+            vec![]
+        };
+        let active = enabled
+            .iter()
+            .position(|(value, _)| Some(*value) == current)
+            .unwrap_or(0);
+        let root_padding = if self.entries.iter().any(|e| matches!(e, Entry::Group(_))) {
+            0.
+        } else {
+            4.
+        };
         let list: Element<'a, Event, Theme, Renderer> = if is_open {
             let items =
                 column::Column::with_children(self.list(&self.entries, current)).width(Fill);
             let panel = Container::new(
-                scrollable(Container::new(items).width(Fill).padding(4)).width(Fill),
+                scrollable(Container::new(items).width(Fill).padding(root_padding))
+                    .id(state.scroll.clone())
+                    .width(Fill),
             )
             .width(Fill)
             .style(content);
 
-            Slot::from(panel).compose()
+            List {
+                content: Slot::from(panel).compose(),
+                horizontal: Some(false),
+                autofocus: Initial::Choice {
+                    scroll: state.scroll.clone(),
+                    index: active,
+                    labels: enabled.iter().map(|(_, s)| s.to_string()).collect(),
+                },
+                on_move: None,
+            }
+            .boxed()
         } else {
             Space::new().boxed()
         };
@@ -515,16 +626,28 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
         // Use the horizontal side for item alignment. This makes the vertical
         // placement the anchored cross axis, which clamps to the window even
         // when the selected item is near the top or bottom of the screen.
-        let trigger = button.boxed();
+        let trigger = Keys {
+            content: button.boxed(),
+            on_key: Box::new(move |key| match key {
+                Key::Named(Named::ArrowDown | Named::ArrowUp) if !is_open && !disabled => {
+                    Some(Event::Set(true))
+                }
+                Key::Character(c) if !is_open && !disabled => Some(Event::Type(c.to_owned())),
+                _ => None,
+            }),
+        }
+        .boxed();
         let anchored = anchored(trigger, list);
-        let anchored = if self.position == Position::ItemAligned && current.is_some() {
-            let mut y = 4.0;
-            let row = current
+        let anchored = if self.position == Position::ItemAligned && !enabled.is_empty() {
+            let mut y = root_padding;
+            let row = enabled
+                .get(active)
+                .map(|(value, _)| *value)
                 .and_then(|value| row_center(&self.entries, value, &mut y))
                 .unwrap_or(14.0);
             anchored
                 .side(anchored::Side::Right)
-                .at([0.0, height / 2.0])
+                .at([1.0, height / 2.0])
                 .align(anchored::Align::Start)
                 .align_offset(-row)
                 .flip(false)

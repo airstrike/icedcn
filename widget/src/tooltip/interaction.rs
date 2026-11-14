@@ -371,6 +371,7 @@ impl<'a, M: 'a> Widget<M, Theme, Renderer> for Interaction<'a, M> {
                     inner,
                     cell,
                     mode: self.mode,
+                    primary: true,
                     change: self.on_change.as_deref(),
                 }))
             })
@@ -381,6 +382,7 @@ struct Layer<'a, M> {
     inner: overlay::Element<'a, Input<M>, Theme, Renderer>,
     cell: &'a Cell<State>,
     mode: Mode,
+    primary: bool,
     change: Option<&'a dyn Fn(bool) -> M>,
 }
 impl<M> overlay::Overlay<M, Theme, Renderer> for Layer<'_, M> {
@@ -405,7 +407,8 @@ impl<M> overlay::Overlay<M, Theme, Renderer> for Layer<'_, M> {
     ) {
         let mut state = self.cell.get();
         let previous = state.open();
-        if self.mode == Mode::Submenu
+        if self.primary
+            && self.mode == Mode::Submenu
             && matches!(
                 event,
                 Event::Keyboard(keyboard::Event::KeyPressed {
@@ -440,6 +443,15 @@ impl<M> overlay::Overlay<M, Theme, Renderer> for Layer<'_, M> {
                 },
             );
         }
+        // The underlying anchor receives an unavailable cursor over a nested overlay.
+        // Keep its hover intent alive while the pointer is inside a descendant.
+        if self.mode == Mode::Submenu
+            && matches!(event, Event::Mouse(mouse::Event::CursorMoved { .. }))
+            && self.inner.as_overlay().mouse_interaction(cursor, renderer)
+                != mouse::Interaction::None
+        {
+            shell.capture_event();
+        }
         notify(previous, state, self.change, shell);
         self.cell.set(state);
     }
@@ -462,6 +474,7 @@ impl<M> overlay::Overlay<M, Theme, Renderer> for Layer<'_, M> {
                     inner,
                     cell: self.cell,
                     mode: self.mode,
+                    primary: false,
                     change: self.change,
                 }))
             })

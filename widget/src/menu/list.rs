@@ -1,7 +1,9 @@
 use crate::operation::focus;
 use iced_core::keyboard::{self, Key, key::Named};
+use iced_core::time::{Duration, Instant};
+use iced_core::widget::operation::{Focusable, Scrollable, Text};
 use iced_core::widget::{
-    Meta, Operation,
+    Id, Meta, Operation,
     tree::{self, Tree},
 };
 use iced_core::{
@@ -16,13 +18,51 @@ pub(crate) struct List<'a, Message> {
     pub content: Element<'a, Message, Theme, Renderer>,
     /// None manages initial focus only; the input owns its editing keys.
     pub horizontal: Option<bool>,
-    pub autofocus: bool,
+    pub autofocus: Initial,
     pub on_move: Option<Box<dyn Fn(usize) -> Message + 'a>>,
 }
+pub(crate) enum Initial {
+    Menu(bool),
+    Dropdown {
+        keyboard: bool,
+        scroll: Id,
+    },
+    Choice {
+        index: usize,
+        labels: Vec<String>,
+        scroll: Id,
+    },
+}
+
+impl From<bool> for Initial {
+    fn from(autofocus: bool) -> Self {
+        Self::Menu(autofocus)
+    }
+}
+
+impl Initial {
+    fn focus(&self, index: usize, visit: &mut impl FnMut(&mut dyn Operation)) {
+        match self {
+            Self::Dropdown { scroll, .. } | Self::Choice { scroll, .. } => {
+                focus::reveal(index, scroll, visit)
+            }
+            Self::Menu(_) => visit(&mut focus::select(Some(index))),
+        }
+    }
+}
+
 impl<Message> Meta for List<'_, Message> {}
 #[derive(Default)]
 struct State {
     initialized: bool,
+    keyboard: bool,
+    search: Search,
+}
+
+#[derive(Debug, Default)]
+pub(crate) struct Search {
+    search: String,
+    typed: Option<Instant>,
 }
 impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
     fn tag(&self) -> tree::Tag {
@@ -64,31 +104,71 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
         let state = tree.state.downcast_mut::<State>();
         if !state.initialized {
             state.initialized = true;
-            if self.autofocus {
-                visit(&mut focus::select(Some(0)));
+            let index = match &self.autofocus {
+                Initial::Menu(true) | Initial::Dropdown { keyboard: true, .. } => Some(0),
+                Initial::Choice { index, .. } => Some(*index),
+                Initial::Menu(false)
+                | Initial::Dropdown {
+                    keyboard: false, ..
+                } => None,
+            };
+            if let Some(index) = index {
+                state.keyboard = true;
+                self.autofocus.focus(index, &mut visit);
                 shell.request_redraw();
             }
         }
-        if let Event::Keyboard(keyboard::Event::KeyPressed {
-            key: Key::Named(key),
-            ..
-        }) = event
+        let vertical = self.horizontal == Some(false);
+        if vertical
+            && matches!(event, Event::Mouse(mouse::Event::CursorMoved { .. }))
+            && let Some(position) = cursor.position_over(child_layout.bounds())
         {
+            state.keyboard = false;
+            let mut rows = Rows::default();
+            visit(&mut rows);
+            let hovered = rows
+                .items
+                .iter()
+                .position(|bounds| bounds.contains(position + rows.translation));
+            if hovered != rows.focused {
+                visit(&mut focus::restore(hovered, false));
+                shell.request_redraw();
+            }
+        }
+        if let Event::Keyboard(keyboard::Event::KeyPressed { key, modifiers, .. }) = event {
             let count = focus::count(&mut visit);
-            if count.focused.is_some() {
-                let next = match (key, self.horizontal) {
-                    (Named::Home, Some(_)) => Some(0),
-                    (Named::End, Some(_)) => Some(count.total - 1),
-                    (Named::ArrowLeft, Some(true)) | (Named::ArrowUp, Some(false)) => {
-                        focus::adjacent(count, true)
+            if count.total > 0 && (vertical || count.focused.is_some()) {
+                let last = count.total - 1;
+                let next = match (key.as_ref(), self.horizontal) {
+                    (Key::Named(Named::Home), Some(_)) => Some(0),
+                    (Key::Named(Named::End), Some(_)) => Some(last),
+                    (Key::Named(Named::ArrowUp), Some(false)) => {
+                        Some(count.focused.map_or(last, |i| i.saturating_sub(1)))
                     }
-                    (Named::ArrowRight, Some(true)) | (Named::ArrowDown, Some(false)) => {
-                        focus::adjacent(count, false)
+                    (Key::Named(Named::ArrowDown), Some(false)) => {
+                        Some(count.focused.map_or(0, |i| (i + 1).min(last)))
+                    }
+                    (Key::Named(Named::ArrowLeft), Some(true)) => focus::adjacent(count, true),
+                    (Key::Named(Named::ArrowRight), Some(true)) => focus::adjacent(count, false),
+                    (Key::Character(c), Some(false))
+                        if !modifiers.command() && !modifiers.alt() && !modifiers.control() =>
+                    {
+                        match &self.autofocus {
+                            Initial::Choice { labels, .. } => {
+                                state.search.match_prefix(c, count.focused, labels)
+                            }
+                            Initial::Menu(_) | Initial::Dropdown { .. } => {
+                                let mut rows = Rows::default();
+                                visit(&mut rows);
+                                state.search.match_prefix(c, count.focused, &rows.labels)
+                            }
+                        }
                     }
                     _ => None,
                 };
                 if let Some(index) = next {
-                    visit(&mut focus::select(Some(index)));
+                    state.keyboard = true;
+                    self.autofocus.focus(index, &mut visit);
                     if let Some(moved) = &self.on_move {
                         shell.publish(moved(index));
                     }
@@ -98,6 +178,11 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
                 }
             }
         }
+        let cursor = if vertical && state.keyboard && matches!(event, Event::Window(_)) {
+            mouse::Cursor::Unavailable
+        } else {
+            cursor
+        };
         self.content.update(
             child_tree,
             event,
@@ -124,6 +209,12 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
             .next()
             .expect("a keyboard handler has one child");
 
+        let cursor =
+            if self.horizontal == Some(false) && tree.state.downcast_ref::<State>().keyboard {
+                mouse::Cursor::Unavailable
+            } else {
+                cursor
+            };
         self.content.draw(
             child_tree,
             renderer,
@@ -191,5 +282,81 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
             translation,
             window,
         )
+    }
+}
+
+/// Only enabled item bounds participate, including items inside composed groups.
+#[derive(Default)]
+struct Rows {
+    translation: Vector,
+    items: Vec<Rectangle>,
+    labels: Vec<String>,
+    focused: Option<usize>,
+}
+
+impl Operation for Rows {
+    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+        visit(self);
+    }
+    fn scrollable(
+        &mut self,
+        _: Option<&Id>,
+        _: Rectangle,
+        _: Size,
+        offset: Vector,
+        _: &mut dyn Scrollable,
+    ) {
+        self.translation = offset;
+    }
+    fn focusable(&mut self, _: Option<&Id>, bounds: Rectangle, control: &mut dyn Focusable) {
+        if control.is_focused() {
+            self.focused = Some(self.items.len());
+        }
+        self.items.push(bounds);
+        self.labels.push(String::new());
+    }
+    fn text(&mut self, _: Option<&Id>, bounds: Rectangle, text: &mut dyn Text) {
+        if let Some(item) = self.items.last()
+            && let Some(label) = self.labels.last_mut()
+            && label.is_empty()
+            && item.contains(bounds.center())
+        {
+            let content = text.text();
+            if content.chars().any(char::is_alphanumeric) {
+                label.push_str(&content.to_lowercase());
+            }
+        }
+    }
+}
+
+impl Search {
+    pub(crate) fn match_prefix(
+        &mut self,
+        key: &str,
+        focused: Option<usize>,
+        labels: &[String],
+    ) -> Option<usize> {
+        let now = Instant::now();
+        if self
+            .typed
+            .is_none_or(|at| now.duration_since(at) > Duration::from_secs(1))
+        {
+            self.search.clear();
+        }
+        self.typed = Some(now);
+        self.search.push_str(&key.to_lowercase());
+        let repeated = self
+            .search
+            .chars()
+            .all(|c| Some(c) == self.search.chars().next());
+        let prefix = if repeated {
+            key.to_lowercase()
+        } else {
+            self.search.clone()
+        };
+        let start = focused.map_or(0, |i| i + usize::from(repeated));
+        (0..labels.len())
+            .map(|i| (start + i) % labels.len())
+            .find(|&i| labels[i].to_lowercase().starts_with(&prefix))
     }
 }

@@ -9,7 +9,7 @@ use crate::combobox::keys::Keys;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::menu::list::List;
 use crate::{container, popover, row, text};
-use iced_core::keyboard::key::Named;
+use iced_core::keyboard::{Key, key::Named};
 use iced_core::{Alignment, Element, Length, Pixels};
 use iced_widget::button::Status;
 use iced_widget::{
@@ -208,7 +208,8 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                                 Keys {
                                     content: trigger,
                                     on_key: Box::new(move |key| {
-                                        (key == Named::ArrowDown).then_some(Event::Show(i, true))
+                                        (key == Key::Named(Named::ArrowDown))
+                                            .then_some(Event::Show(i, true))
                                     }),
                                 }
                                 .boxed(),
@@ -220,7 +221,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                             List {
                                 content: body.map(Event::App).compose(),
                                 horizontal: Some(false),
-                                autofocus: keyboard,
+                                autofocus: keyboard.into(),
                                 on_move: None,
                             }
                             .boxed()
@@ -261,7 +262,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
         List {
             content: Slot::from(frame).compose(),
             horizontal: Some(true),
-            autofocus: false,
+            autofocus: false.into(),
             on_move: Some(Box::new(Event::Move)),
         }
     }

@@ -4,7 +4,6 @@ use iced_core::alignment::Vertical;
 use iced_core::keyboard::{self, Key, key::Named};
 use iced_core::length::Sizing;
 use iced_core::text::{self, Paragraph as _};
-use iced_core::widget::operation::{self, scrollable};
 use iced_core::widget::{Id, Meta, Operation, Tree, tree};
 use iced_core::{
     Element, Event, Layout, Length, Rectangle, Shell, Size, Vector, Widget, layout, mouse, overlay,
@@ -14,6 +13,7 @@ use iced_widget::Renderer;
 use icedcn_core::Theme;
 
 use crate::operation::focus;
+use crate::operation::scroll::Reveal;
 
 pub(super) struct Behavior<'a, Message> {
     content: Element<'a, Message, Theme, Renderer>,
@@ -345,42 +345,6 @@ impl Operation for Find {
     fn container(&mut self, id: Option<&Id>, bounds: Rectangle, _: &Rectangle) {
         if id == Some(&self.target) {
             self.bounds = Some(bounds);
-        }
-    }
-}
-struct Reveal {
-    scroll: Id,
-    target: Rectangle,
-}
-impl Operation for Reveal {
-    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
-        visit(self);
-    }
-    fn scrollable(
-        &mut self,
-        id: Option<&Id>,
-        bounds: Rectangle,
-        content: Size,
-        translation: Vector,
-        state: &mut dyn scrollable::Scrollable,
-    ) {
-        if id == Some(&self.scroll) {
-            let target = self.target - translation;
-            let delta = if target.y < bounds.y + 4.0 {
-                target.y - bounds.y - 4.0
-            } else if target.y + target.height > bounds.y + bounds.height - 4.0 {
-                target.y + target.height - bounds.y - bounds.height + 4.0
-            } else {
-                0.0
-            };
-            if delta != 0.0 {
-                state.scroll_by(
-                    scrollable::AbsoluteOffset { x: 0.0, y: delta },
-                    operation::Animation::Instant,
-                    bounds,
-                    content,
-                );
-            }
         }
     }
 }

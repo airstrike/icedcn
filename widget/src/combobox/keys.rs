@@ -1,5 +1,5 @@
 use crate::operation::focus;
-use iced_core::keyboard::{self, Key, key::Named};
+use iced_core::keyboard::{self, Key};
 use iced_core::widget::{Meta, Operation, tree::Tree};
 use iced_core::{
     Element, Event, Layout, Length, Rectangle, Shell, Size, Vector, Widget, layout, mouse, overlay,
@@ -8,10 +8,10 @@ use iced_core::{
 use iced_widget::Renderer;
 use icedcn_core::Theme;
 
-/// Listen to named keys only while the wrapped control contains focus.
+/// Listen to keys only while the wrapped control contains focus.
 pub(crate) struct Keys<'a, Message> {
     pub content: Element<'a, Message, Theme, Renderer>,
-    pub on_key: Box<dyn Fn(Named) -> Option<Message> + 'a>,
+    pub on_key: Box<dyn Fn(Key<&str>) -> Option<Message> + 'a>,
 }
 impl<Message> Meta for Keys<'_, Message> {}
 impl<Message> Widget<Message, Theme, Renderer> for Keys<'_, Message> {
@@ -41,11 +41,10 @@ impl<Message> Widget<Message, Theme, Renderer> for Keys<'_, Message> {
             .next()
             .expect("a keyboard handler has one child");
 
-        if let Event::Keyboard(keyboard::Event::KeyPressed {
-            key: Key::Named(key),
-            ..
-        }) = event
-            && let Some(message) = (self.on_key)(*key)
+        if let Event::Keyboard(keyboard::Event::KeyPressed { key, modifiers, .. }) = event
+            && (matches!(key, Key::Named(_))
+                || !(modifiers.command() || modifiers.control() || modifiers.alt()))
+            && let Some(message) = (self.on_key)(key.as_ref())
             && focus::count(|op| {
                 self.content
                     .operate(child_tree, child_layout, viewport, renderer, op)

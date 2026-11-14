@@ -4,7 +4,7 @@ use iced_core::Length::Fill;
 use crate::combobox::keys::Keys;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::{Input, column, container, input, menu, row, scrollable, text};
-use iced_core::keyboard::key::Named;
+use iced_core::keyboard::{Key, key::Named};
 use iced_core::{Element, Length};
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
@@ -233,11 +233,11 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
         let search = Keys {
             content: search.compose(),
             on_key: Box::new(|key| match key {
-                Named::ArrowUp => Some(Event::Step(true)),
-                Named::ArrowDown => Some(Event::Step(false)),
-                Named::Home => Some(Event::First),
-                Named::End => Some(Event::Last),
-                Named::Enter => Some(Event::Submit),
+                Key::Named(Named::ArrowUp) => Some(Event::Step(true)),
+                Key::Named(Named::ArrowDown) => Some(Event::Step(false)),
+                Key::Named(Named::Home) => Some(Event::First),
+                Key::Named(Named::End) => Some(Event::Last),
+                Key::Named(Named::Enter) => Some(Event::Submit),
                 _ => None,
             }),
         };

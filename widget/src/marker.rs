@@ -338,7 +338,7 @@ where
 /// same event.
 pub struct Owner<'a, S, Message, Theme, Renderer> {
     content: Element<'a, Message, Theme, Renderer>,
-    on_signal: Box<dyn Fn(S) -> Message + 'a>,
+    on_signal: Box<dyn Fn(S, &Event) -> Message + 'a>,
 }
 
 /// Wrap `content` in an [`Owner`] publishing `on_signal` for the signals its
@@ -346,6 +346,14 @@ pub struct Owner<'a, S, Message, Theme, Renderer> {
 pub fn owner<'a, S, Message, Theme, Renderer>(
     content: impl Into<Element<'a, Message, Theme, Renderer>>,
     on_signal: impl Fn(S) -> Message + 'a,
+) -> Owner<'a, S, Message, Theme, Renderer> {
+    owner_with_event(content, move |signal, _| on_signal(signal))
+}
+
+/// Let an owner distinguish pointer and keyboard activation of the same marker.
+pub(crate) fn owner_with_event<'a, S, Message, Theme, Renderer>(
+    content: impl Into<Element<'a, Message, Theme, Renderer>>,
+    on_signal: impl Fn(S, &Event) -> Message + 'a,
 ) -> Owner<'a, S, Message, Theme, Renderer> {
     Owner {
         content: content.into(),
@@ -404,7 +412,7 @@ where
             .operate(child_tree, child_layout, viewport, renderer, &mut drain);
 
         for signal in drain.into_signals() {
-            shell.publish((self.on_signal)(signal));
+            shell.publish((self.on_signal)(signal, event));
         }
     }
 

@@ -4,7 +4,7 @@
 //! least 128px) with `p-1`, and it is modal, so the page ignores the
 //! pointer while it is open and a press anywhere outside closes it. Build
 //! the content from [`menu`](crate::menu) parts; selecting an item closes
-//! the menu. A focused trigger also opens with ArrowDown and focuses the first item.
+//! the menu. A focused trigger also opens with ArrowDown and focuses the first item. Pointer opening waits until an item is hovered or a key is pressed.
 //!
 //! ```ignore
 //! use icedcn::widget::{button, column, dropdown_menu, menu};
@@ -48,6 +48,7 @@ pub fn dropdown_menu<'a, Message>(
     DropdownMenu {
         // Match the trigger width with a 128-pixel minimum and four pixels of padding.
         popover: popover::popover(trigger, content)
+            .align(Align::Start)
             .trigger_width(128.0)
             .padding(4)
             .modal(true)

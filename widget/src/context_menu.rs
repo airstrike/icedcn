@@ -170,7 +170,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             List {
                 content: body,
                 horizontal: Some(false),
-                autofocus: true,
+                autofocus: true.into(),
                 on_move: None,
             }
             .boxed()

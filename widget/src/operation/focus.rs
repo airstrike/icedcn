@@ -1,4 +1,5 @@
 //! Scoped focus traversal for controls that own their keyboard navigation.
+use super::scroll::Reveal;
 use iced_core::Rectangle;
 use iced_core::widget::operation::{self, Focusable, Outcome, focusable};
 use iced_core::widget::{Id, Operation};
@@ -38,6 +39,23 @@ pub(crate) fn restore(target: Option<usize>, visible: bool) -> impl Operation {
         current: 0,
         visible,
         bounds: None,
+    }
+}
+
+/// Focus an entry in a scrolled list and bring its bounds into view.
+pub(crate) fn reveal(index: usize, scroll: &Id, mut visit: impl FnMut(&mut dyn Operation)) {
+    let mut target = Select {
+        target: Some(index),
+        current: 0,
+        visible: true,
+        bounds: None,
+    };
+    visit(&mut target);
+    if let Some(bounds) = target.bounds {
+        visit(&mut Reveal {
+            scroll: scroll.clone(),
+            target: bounds,
+        });
     }
 }
 

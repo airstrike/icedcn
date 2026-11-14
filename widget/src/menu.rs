@@ -25,7 +25,7 @@ use std::time::Duration;
 pub(crate) mod list;
 
 use iced_core::Length::Fill;
-use iced_core::text::IntoFragment;
+use iced_core::text::{IntoFragment, LineHeight};
 use iced_core::{Alignment, Element, Padding};
 use iced_widget::{Renderer, Space, Widget, anchored};
 use icedcn_core::Theme;
@@ -35,6 +35,7 @@ use icedcn_core::theme::popover::content;
 use crate::button::widget::{self, Button};
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
+use crate::icon::Icon;
 use crate::marker::{self, Press};
 use crate::popover::Signal;
 use crate::{column, row, text};
@@ -161,6 +162,7 @@ impl<'a, Message> Item<'a, Message> {
 
 impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {
+        self.disabled |= from.is_disabled();
         self.content.inherit(from);
     }
 
@@ -169,7 +171,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
         Self: 'b,
     {
         let Item {
-            content,
+            mut content,
             shortcut,
             on_select,
             disabled,
@@ -180,7 +182,16 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
             closes,
         } = *self;
 
-        let mut line = row![content].spacing(6).align_y(Alignment::Center);
+        content.inherit(
+            &Inherited::default()
+                .with_size(crate::Size::Default)
+                .with_line_height(20.)
+                .with_selectable(false),
+        );
+        let mut line = row![content]
+            .width(Fill)
+            .spacing(6)
+            .align_y(Alignment::Center);
 
         if shortcut.is_some() || indicator != Indicator::None {
             line = line.push(Slot::from(Space::new().width(Fill)));
@@ -188,7 +199,11 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
 
         if let Some(shortcut) = shortcut {
             // `ml-auto text-xs tracking-widest text-muted-foreground`.
-            line = line.push(Slot::from(text::muted(shortcut).size(text::size::XS)));
+            line = line.push(Slot::from(
+                text::muted(shortcut)
+                    .size(text::size::XS)
+                    .letter_spacing(0.1),
+            ));
         }
 
         match indicator {
@@ -196,7 +211,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
             Indicator::Check(checked) => {
                 line = line.push(Slot::from(
                     Container::new(if checked {
-                        Slot::from(text::small("\u{2713}"))
+                        Slot::from(Icon::Check.boxed())
                     } else {
                         Slot::from(Space::new())
                     })
@@ -204,7 +219,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
                 ));
             }
             Indicator::Chevron => {
-                line = line.push(Slot::from(text::small("\u{203a}")));
+                line = line.push(Slot::from(Icon::ChevronRight.boxed()));
             }
         }
 
@@ -257,16 +272,50 @@ impl<'a, Message: Clone + 'a> From<Item<'a, Message>> for Slot<'a, Message> {
 
 /// A `MenuLabel`: a muted `text-xs font-medium` heading.
 pub fn label<'a, Message: 'a>(label: impl IntoFragment<'a>) -> Slot<'a, Message> {
-    Container::new(text::muted(label).size(text::size::XS).medium())
-        .padding([4, 6])
-        .into()
+    Container::new(
+        text::muted(label)
+            .size(text::size::XS)
+            .line_height(LineHeight::Absolute(16.0.into()))
+            .medium(),
+    )
+    .padding([4, 6])
+    .into()
 }
 
 /// A `MenuSeparator`: a 1px rule with `my-1`.
 pub fn separator<'a, Message: 'a>() -> Slot<'a, Message> {
     Container::new(crate::separator::separator())
+        .width(Fill)
         .padding([4, 0])
         .into()
+}
+
+/// A leading icon and its label, aligned like a menu item.
+pub fn caption<'a, Message: 'a>(
+    icon: impl Into<Slot<'a, Message>>,
+    label: impl Into<Slot<'a, Message>>,
+) -> Slot<'a, Message> {
+    let icon = Container::new(icon).center_x(16).center_y(16);
+    row::Row::with_children([icon.into(), label.into()])
+        .spacing(6)
+        .align_y(Alignment::Center)
+        .into()
+}
+
+/// Group menu children of different types.
+#[macro_export]
+macro_rules! menu_group {
+    ($($item:expr),* $(,)?) => {
+        $crate::menu::group([$(Into::<$crate::Slot<'_, _>>::into($item)),*])
+    };
+}
+
+/// Open a submenu containing children of different types.
+#[macro_export]
+macro_rules! menu_sub {
+    ($trigger:expr, $($item:expr),+ $(,)?) => {
+        $crate::menu::sub($trigger, [$(Into::<$crate::Slot<'_, _>>::into($item)),+])
+    };
 }
 
 /// A `MenuGroup`: its children stacked.
@@ -318,14 +367,13 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Sub<'a, Message> {
         let body = list::List {
             content: Slot::from(panel).compose(),
             horizontal: Some(false),
-            autofocus: false,
+            autofocus: false.into(),
             on_move: None,
         }
         .boxed();
         let position = anchored::Position::new(anchored::Side::Right)
             .align(anchored::Align::Start)
-            .offset(4)
-            .align_offset(-4.);
+            .offset(0);
         let sub = Interaction::new(
             Slot::from(self.trigger).compose(),
             body,

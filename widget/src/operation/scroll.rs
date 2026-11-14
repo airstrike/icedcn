@@ -16,7 +16,9 @@
 //! # }
 //! ```
 
-use iced_core::widget::Id;
+use iced_core::widget::operation::scrollable::{AbsoluteOffset, Scrollable};
+use iced_core::widget::{Id, Operation, operation};
+use iced_core::{Rectangle, Size, Vector};
 use iced_runtime::Task;
 use iced_runtime::widget::operation::Animation;
 use iced_runtime::widget::operation::scrollable;
@@ -48,4 +50,41 @@ pub fn scroll_into_view<T: Send + 'static>(
             )
         })
     })
+}
+
+pub(crate) struct Reveal {
+    pub scroll: Id,
+    pub target: Rectangle,
+}
+impl Operation for Reveal {
+    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+        visit(self);
+    }
+    fn scrollable(
+        &mut self,
+        id: Option<&Id>,
+        bounds: Rectangle,
+        content: Size,
+        translation: Vector,
+        state: &mut dyn Scrollable,
+    ) {
+        if id == Some(&self.scroll) {
+            let target = self.target - translation;
+            let delta = if target.y < bounds.y + 4.0 {
+                target.y - bounds.y - 4.0
+            } else if target.y + target.height > bounds.y + bounds.height - 4.0 {
+                target.y + target.height - bounds.y - bounds.height + 4.0
+            } else {
+                0.0
+            };
+            if delta != 0.0 {
+                state.scroll_by(
+                    AbsoluteOffset { x: 0.0, y: delta },
+                    operation::Animation::Instant,
+                    bounds,
+                    content,
+                );
+            }
+        }
+    }
 }

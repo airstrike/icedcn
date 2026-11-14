@@ -19,6 +19,7 @@
 //! pressing the trigger again does too. The panel is built only while open,
 //! so its widgets start with fresh state each time.
 
+use iced_core::Length::Fill;
 use iced_core::keyboard::key::Named;
 use iced_core::{Element, Length, Padding, Pixels};
 use iced_widget::anchored;
@@ -32,8 +33,9 @@ use std::time::Duration;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
 use crate::marker::{self, Press};
-use crate::menu::list::List;
+use crate::menu::list::{Initial, List};
 use crate::{column, text};
+use iced_core::widget::Id;
 
 pub use iced_widget::anchored::{Align, Side};
 
@@ -79,6 +81,8 @@ pub enum Signal {
 pub enum Event<Message> {
     /// A trigger was pressed.
     Toggle,
+    /// A keyboard trigger was activated.
+    KeyboardToggle,
     /// The popover asked to open or close.
     Set(bool),
     /// The content published an app message.
@@ -89,6 +93,7 @@ pub enum Event<Message> {
 #[derive(Debug, Default)]
 pub struct State {
     open: Option<bool>,
+    keyboard: bool,
 }
 
 /// Create a closed, uncontrolled [`Popover`]: `trigger` builds what sits in
@@ -306,7 +311,10 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
     ) -> Option<Message> {
         let next = match event {
             Event::App(message) => return Some(message),
-            Event::Toggle => !self.is_open(state),
+            Event::Toggle | Event::KeyboardToggle => {
+                state.keyboard = matches!(event, Event::KeyboardToggle);
+                !self.is_open(state)
+            }
             Event::Set(open) => open,
         };
 
@@ -331,17 +339,34 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
 
         let mut trigger = (self.trigger)(&handle);
         trigger.inherit(&self.inherited);
-        let trigger = marker::owner(trigger.compose().map(Event::App).boxed(), on_signal);
+        let trigger = marker::owner_with_event(
+            trigger.compose().map(Event::App).boxed(),
+            |signal, event| {
+                if signal == Signal::Toggle && matches!(event, iced_core::Event::Keyboard(_)) {
+                    Event::KeyboardToggle
+                } else {
+                    on_signal(signal)
+                }
+            },
+        );
 
         let panel: Element<'a, Event<Message>, Theme, Renderer> = if handle.is_open {
             let mut body = (self.content)(&handle);
             body.inherit(&self.inherited.without_join());
 
+            let scroll = Id::unique();
+            if self.modal {
+                body = crate::scrollable(body)
+                    .id(scroll.clone())
+                    .width(Fill)
+                    .class(theme::scrollable::Hidden)
+                    .into();
+            }
             let panel = Container::new(body)
                 .padding(self.padding)
                 .width(match self.width {
                     Some(width) => Length::Fixed(width),
-                    None => Length::Fill,
+                    None => Fill,
                 })
                 .style(content);
 
@@ -354,7 +379,10 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
                 List {
                     content: body,
                     horizontal: Some(false),
-                    autofocus: true,
+                    autofocus: Initial::Dropdown {
+                        keyboard: state.keyboard,
+                        scroll,
+                    },
                     on_move: None,
                 }
                 .boxed()

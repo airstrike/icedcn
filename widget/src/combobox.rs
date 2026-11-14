@@ -20,16 +20,16 @@
 //! pointer), and closes on `Escape` or a press outside it.
 
 mod behavior;
-mod icon;
 pub(crate) mod keys;
 use crate::Weight;
 use crate::button::widget;
+use crate::icon::Icon;
 use crate::input_group::widget::Surface;
 use crate::marker::{self, Press};
 use crate::{button, row};
 use behavior::Behavior;
 use iced_core::Length::Fill;
-use iced_core::keyboard::key::Named;
+use iced_core::keyboard::{Key, key::Named};
 use iced_core::widget::Id;
 use iced_core::{Element, Length, Padding, Pixels};
 use iced_widget::button::Status;
@@ -42,7 +42,6 @@ use icedcn_core::theme::menu::item;
 use icedcn_core::theme::popover::content;
 use icedcn_core::theme::text_input::Invalid;
 use icedcn_core::theme::{self, text_input};
-use icon::Icon;
 use keys::Keys;
 use widget::Button;
 
@@ -647,12 +646,12 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             Keys {
                 content: field.compose(),
                 on_key: Box::new(move |key| match key {
-                    Named::ArrowDown => Some(Event::Step(false)),
-                    Named::ArrowUp => Some(Event::Step(true)),
-                    Named::Enter if open => Some(Event::Submit),
-                    Named::Home if open => Some(Event::Edge(false)),
-                    Named::End if open => Some(Event::Edge(true)),
-                    Named::Escape if open => Some(Event::Set(false)),
+                    Key::Named(Named::ArrowDown) => Some(Event::Step(false)),
+                    Key::Named(Named::ArrowUp) => Some(Event::Step(true)),
+                    Key::Named(Named::Enter) if open => Some(Event::Submit),
+                    Key::Named(Named::Home) if open => Some(Event::Edge(false)),
+                    Key::Named(Named::End) if open => Some(Event::Edge(true)),
+                    Key::Named(Named::Escape) if open => Some(Event::Set(false)),
                     _ => None,
                 }),
             }

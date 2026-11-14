@@ -846,6 +846,7 @@ fn fruit<'a>() -> icedcn_widget::Select<'a, Message> {
         select::item("banana", "Banana"),
     ])
     .placeholder("Select a fruit")
+    .position(select::Position::Popper)
     .width(192)
     .on_value_change(Message::Text)
 }

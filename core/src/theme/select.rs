@@ -50,7 +50,7 @@ pub fn trigger(theme: &Theme, status: Status, variant: Variant) -> Style {
         border: Border {
             radius: radius::LG.into(),
             width: 1.0,
-            color: border,
+            color: border.over(background),
         }
         .into(),
         ..Style::default()
@@ -58,6 +58,7 @@ pub fn trigger(theme: &Theme, status: Status, variant: Variant) -> Style {
 
     match status {
         Status::Disabled => Style {
+            background: Some(background.scale_alpha(0.5).into()),
             text_color: style.text_color.scale_alpha(0.5),
             border: iced_core::Border {
                 color: style.border.color.scale_alpha(0.5),
