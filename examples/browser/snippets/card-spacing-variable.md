@@ -1,4 +1,4 @@
-### Card spacing
+### Spacing Variable
 
 Set `.spacing(spacing)` on the Card root, or `.size(Size::Sm)` for 12px defaults. Remove the repeated outer column spacing/padding, header inset, content padding and `footer_with_spacing` argument when those values should follow the root. Keep explicit overrides for custom layouts.
 

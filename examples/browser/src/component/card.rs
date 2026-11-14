@@ -1,10 +1,10 @@
-use iced::Alignment::Center;
+use iced::Alignment::{Center, End, Start};
 use iced::Task;
 use iced::Widget;
 use iced::border;
 use iced::widget::component::{Component, component};
-use iced::widget::image;
-use iced::{ContentFit, Element, Fill};
+use iced::widget::{image, responsive};
+use iced::{ContentFit, Element, Fill, Shrink};
 use icedcn::theme::container::Style;
 use std::sync::LazyLock;
 
@@ -80,24 +80,30 @@ pub static BLOCKS: &[page::Block] = &[
     },
 ];
 
-fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
-    let password_label = row![
-        text::label("Password"),
-        space::horizontal(),
-        button(
-            text::small("Forgot your password?")
-                .weight(icedcn::Weight::Normal)
-                .line_height(iced::Pixels(20.0))
+fn login_card<'a, M: Clone + 'a>(input_size: f32, forgot: M) -> card::Card<'a, M> {
+    let password_label = responsive(move |area| {
+        // The 14px password label and recovery link occupy 211px on one line.
+        let wraps = area.width < 211.;
+        let link = button(text::small("Forgot your password?").weight(icedcn::Weight::Normal))
+            .style(button::Link)
+            .anchor()
+            .translate(false)
+            .height(if wraps { 40 } else { 20 })
+            .padding(0)
+            .on_press(forgot.clone());
+        Element::from(
+            row![
+                text::label("Password"),
+                container(link)
+                    .width(Fill)
+                    .align_x(if wraps { Start } else { End })
+            ]
+            .align_y(Center)
+            .width(Fill),
         )
-        .style(button::Link)
-        .anchor()
-        .translate(false)
-        .height(20)
-        .padding(0)
-        .on_press(forgot)
-    ]
-    .align_y(Center)
-    .width(Fill);
+    })
+    .height(Shrink)
+    .boxed();
     card(
         column![
             card::header("Login to your account")
@@ -105,8 +111,10 @@ fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
                 .action(button("Sign Up").style(button::Link)),
             card::content(
                 column![
-                    field(input("m@example.com").width(Fill)).label("Email"),
-                    field(input("").secure(true).width(Fill)).label(Slot::from(password_label))
+                    field(input("m@example.com").text_size(input_size).width(Fill))
+                        .label(text::label("Email")),
+                    field(input("").secure(true).text_size(input_size).width(Fill))
+                        .label(Slot::from(password_label))
                 ]
                 .spacing(24)
                 .width(Fill)
@@ -124,17 +132,16 @@ fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
         ]
         .width(Fill),
     )
-    .spacing(spacing)
     .width(Fill.max(384))
-    .into()
 }
 #[derive(Clone)]
 enum Event {
-    Spacing(Vec<String>),
+    Spacing(u16),
     Forgot,
 }
 struct Spacing {
     page: usize,
+    input_size: f32,
 }
 impl<'a> Component<'a, Message, Theme> for Spacing {
     type State = Option<u16>;
@@ -142,9 +149,7 @@ impl<'a> Component<'a, Message, Theme> for Spacing {
     fn update(&self, state: &mut Self::State, event: Event, _: &iced::Renderer) -> Option<Message> {
         match event {
             Event::Spacing(value) => {
-                if let Some(n) = value.first().and_then(|v| v.parse::<u16>().ok()) {
-                    *state = Some(n);
-                }
+                *state = Some(value);
                 None
             }
             Event::Forgot => Some(Message::Page(
@@ -161,9 +166,16 @@ impl<'a> Component<'a, Message, Theme> for Spacing {
                     .map(|n| toggle_group::item(n.to_string(), text::small(format!("{n}px")))))
                 .style(toggle_group::Outline)
                 .size(Size::Sm)
+                .spacing(8)
                 .value([spacing.to_string()])
-                .on_value_change(Event::Spacing),
-                login_card(f32::from(spacing), Event::Forgot),
+                .on_value_change(move |selected| {
+                    let value = selected
+                        .first()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(spacing);
+                    Event::Spacing(value)
+                }),
+                login_card(self.input_size, Event::Forgot).spacing(f32::from(spacing)),
             ]
             .spacing(16)
             .width(Fill.max(384)),
@@ -237,12 +249,14 @@ fn cover_image<'a>(theme: &Theme) -> Element<'a, Message, Theme> {
 }
 
 pub struct CardPage {
+    input_size: f32,
     state: page::State,
 }
 
 impl CardPage {
     pub fn new(page_index: usize) -> Box<dyn page::Page> {
         Box::new(Self {
+            input_size: 14.,
             state: page::State::new(page_index, BLOCKS),
         })
     }
@@ -277,9 +291,13 @@ impl page::Page for CardPage {
         self.state.reset_volatile();
     }
 
+    fn window_width(&mut self, width: f32) {
+        self.input_size = if width < 768. { 16. } else { 14. };
+    }
+
     fn backdrop(&self) -> page::Backdrop {
         page::Backdrop {
-            padding: 40.into(),
+            padding: [0, 40].into(),
             ..Default::default()
         }
     }
@@ -293,7 +311,8 @@ impl page::Page for CardPage {
         };
         container(self.themed_preview(id, outer))
             .center_x(Fill)
-            .center_y(height - 80.)
+            .min_height(height)
+            .align_y(Center)
             .into()
     }
 
@@ -305,10 +324,10 @@ impl page::Page for CardPage {
         let pi = self.state.page_index;
         match id {
             "demo" => login_card(
-                16.0,
+                self.input_size,
                 Message::Page(pi, page::Message::LinkClicked("#".into())),
             )
-            .compose(),
+            .into(),
 
             "small" => card(
                 column![
@@ -316,7 +335,7 @@ impl page::Page for CardPage {
                         .description("This card uses the small size variant."),
                     card::content(
                         text::small(
-                            "Use Size::Sm for a compact card with smaller gaps and padding."
+                            "The card component supports a size that can be set to Size::Sm for a more compact appearance."
                         )
                         .line_height(iced::Pixels(20.0))
                     ),
@@ -324,8 +343,7 @@ impl page::Page for CardPage {
                         button("Action")
                             .style(button::Outline)
                             .size(Size::Sm)
-                            .on_press(Message::Page(pi, page::Message::Noop))
-                            .width(Fill)
+                                                        .width(Fill)
                     ),
                 ]
                 .width(Fill),
@@ -335,12 +353,11 @@ impl page::Page for CardPage {
             .into(),
 
             "image" => {
-                let header: Slot<'_, Message> = card::header("Design systems meetup")
+                let header = card::header("Design systems meetup")
                     .description(
                         "A practical talk on component APIs, accessibility, and shipping faster.",
                     )
-                    .action(card::action(badge("Featured").style(badge::Secondary)))
-                    .into();
+                    .action(badge("Featured").style(badge::Secondary));
 
                 card(
                     column![
@@ -348,8 +365,7 @@ impl page::Page for CardPage {
                         header,
                         card::footer(
                             button("View Event")
-                                .on_press(Message::Page(pi, page::Message::Noop))
-                                .width(Fill)
+                                                                .width(Fill)
                         ),
                     ]
                     .width(Fill),
@@ -359,7 +375,7 @@ impl page::Page for CardPage {
                 .into()
             }
 
-            "spacing" => component(Spacing { page: pi }).boxed().into(),
+            "spacing" => component(Spacing { page: pi, input_size: self.input_size }).boxed(),
 
             "edge-to-edge" => terms().into(),
 

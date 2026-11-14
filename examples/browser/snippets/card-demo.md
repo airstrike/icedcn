@@ -1,59 +1,35 @@
 ```rust
-use iced::Alignment::Center;
-use iced::{Element, Fill, Widget};
-use icedcn::{card, Size, Slot, Theme};
-use icedcn::widget::{button, column, field, input, row, space, text};
+use iced::Alignment::{Center, End, Start};
+use iced::widget::responsive;
+use iced::{Element, Fill, Shrink, Widget};
+use icedcn::{card, Slot};
+use icedcn::widget::{button, column, container, field, input, row, text};
 
-fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
-    let password_label = row![
-        text::label("Password"),
-        space::horizontal(),
-        button(
-            text::small("Forgot your password?")
-                .weight(icedcn::Weight::Normal)
-                .line_height(iced::Pixels(20.0))
-        )
-        .style(button::Link)
-        .anchor()
-        .translate(false)
-        .height(20)
-        .padding(0)
-        .on_press(forgot)
-    ]
-    .align_y(Center)
-    .width(Fill);
-    card(
-        column![
-            card::header("Login to your account")
-                .description("Enter your email below to login to your account")
-                .action(button("Sign Up").style(button::Link)),
-            card::content(
-                column![
-                    field(input("m@example.com").width(Fill)).label("Email"),
-                    field(input("").secure(true).width(Fill)).label(Slot::from(password_label))
-                ]
-                .spacing(24)
-                .width(Fill)
-            ),
-            card::footer(
-                column![
-                    button("Login").width(Fill),
-                    button("Login with Google")
-                        .style(button::Outline)
-                        .width(Fill)
-                ]
-                .spacing(8)
-                .width(Fill)
-            )
-        ]
-        .width(Fill),
-    )
-    .spacing(spacing)
+fn login_card<'a, M: Clone + 'a>(input_size: f32, forgot: M) -> card::Card<'a, M> {
+    let password = responsive(move |area| {
+        let wraps = area.width < 211.;
+        let link = button(text::small("Forgot your password?").weight(icedcn::Weight::Normal))
+            .style(button::Link).anchor().translate(false)
+            .height(if wraps { 40 } else { 20 }).padding(0).on_press(forgot.clone());
+        let recovery = container(link).width(Fill).align_x(if wraps { Start } else { End });
+        Element::from(row![text::label("Password"), recovery].align_y(Center).width(Fill))
+    }).height(Shrink).boxed();
+
+    card(column![
+        card::header("Login to your account")
+            .description("Enter your email below to login to your account")
+            .action(button("Sign Up").style(button::Link)),
+        card::content(column![
+            field(input("m@example.com").text_size(input_size).width(Fill)).label(text::label("Email")),
+            field(input("").secure(true).text_size(input_size).width(Fill)).label(Slot::from(password)),
+        ].spacing(24).width(Fill)),
+        card::footer(column![
+            button("Login").width(Fill),
+            button("Login with Google").style(button::Outline).width(Fill),
+        ].spacing(8).width(Fill)),
+    ].width(Fill))
     .width(Fill.max(384))
-    .into()
-}
-
-fn preview() -> Element<'static, Message, Theme> {
-    login_card(16.0, Message::Forgot).into()
 }
 ```
+
+Pass the message for your password-recovery link. The preview uses 14px input text on desktop and 16px below 768px.

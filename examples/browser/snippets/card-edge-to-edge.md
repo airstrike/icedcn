@@ -1,10 +1,10 @@
 ```rust
-use iced::{Fill, Widget};
+use iced::Fill;
 use icedcn::{card, Slot};
 use icedcn::theme::container::Style;
 use icedcn::widget::{button, column, container, row, scroll_area, separator, space, text};
 
-fn terms<'a>() -> Slot<'a, Message> {
+fn terms<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
     const TERMS: [&str; 4] = [
         "These terms govern your use of the workspace, including access to shared documents, project files, and collaboration tools.",
         "You are responsible for the content you upload and for ensuring that your team has the appropriate permissions to view or edit it.",
@@ -45,9 +45,5 @@ fn terms<'a>() -> Slot<'a, Message> {
     )
     .width(Fill.max(384))
     .into()
-}
-
-fn preview() -> Slot<'static, Message> {
-    terms()
 }
 ```

@@ -1,7 +1,7 @@
 ## Usage
 
 ```rust
-use iced::{Element, Fill, Widget};
+use iced::{Element, Fill};
 use icedcn::{card, Theme};
 use icedcn::widget::{column, text};
 

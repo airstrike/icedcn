@@ -7,7 +7,9 @@ use iced::{ContentFit, Element, Fill, Widget};
 use icedcn::{card, Theme, radius};
 use icedcn::widget::{aspect_ratio, badge, button, column};
 
-fn preview(light: image::Handle, dark: image::Handle, theme: &Theme) -> Element<'static, Message, Theme> {
+fn event_card<Message: Clone + 'static>(
+    light: image::Handle, dark: image::Handle, theme: &Theme,
+) -> Element<'static, Message, Theme> {
     let photo = if theme.neutral.is_dark { dark } else { light };
     let photo = image(photo)
         .width(Fill).height(Fill)
@@ -18,8 +20,8 @@ fn preview(light: image::Handle, dark: image::Handle, theme: &Theme) -> Element<
         aspect_ratio(photo.boxed(), 16.0 / 9.0),
         card::header("Design systems meetup")
             .description("A practical talk on component APIs, accessibility, and shipping faster.")
-            .action(card::action(badge("Featured").style(badge::Secondary))),
-        card::footer(button("View Event").on_press(Message::View).width(Fill)),
+            .action(badge("Featured").style(badge::Secondary)),
+        card::footer(button("View Event").width(Fill)),
     ].width(Fill))
     .padding(0)
     .width(Fill.max(384))

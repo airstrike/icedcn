@@ -86,7 +86,7 @@ fn constrained_cards_keep_content_inside_the_declared_frames() {
             let theme = docs::theme(false);
             let mut ui = Simulator::with_size(
                 settings(),
-                Size::new(width, height - 80.),
+                Size::new(width, height),
                 page.docs_preview(id, &theme),
             );
             ui.draw(&theme);
@@ -97,7 +97,7 @@ fn constrained_cards_keep_content_inside_the_declared_frames() {
                     "{width} {id} {label}: {bounds:?}"
                 );
                 assert!(
-                    bounds.y >= 0. && bounds.y + bounds.height <= height - 79.9,
+                    bounds.y >= 0. && bounds.y + bounds.height <= height + 0.1,
                     "{width} {id} {label}: {bounds:?}"
                 );
             }
@@ -290,4 +290,91 @@ fn explicit_part_and_column_overrides_win_over_root_spacing() {
     assert_eq!(body.x, 5.);
     assert!((body.y - title.y - title.height - 3.).abs() < 0.1);
     assert_eq!(foot.x, 9.);
+}
+
+#[test]
+fn the_terms_footer_stays_visible_while_the_last_paragraph_scrolls_into_view() {
+    use iced::Point;
+    use iced::mouse::ScrollDelta;
+
+    let page = CardPage::new(0);
+    let theme = docs::theme(false);
+    let last = "By continuing, you agree to keep your account credentials secure and to follow your organization's acceptable use policies.";
+    for width in [260., 558.] {
+        let mut ui = Simulator::with_size(
+            settings(),
+            Size::new(width, 384.),
+            page.docs_preview("edge-to-edge", &theme),
+        );
+        ui.draw(&theme);
+        let header = ui.find("Terms of Service").unwrap().bounds();
+        let footer = ui.find("Accept").unwrap().visible_bounds().unwrap();
+        assert!(footer.y + footer.height < 384.);
+        assert!(ui.find(last).unwrap().visible_bounds().is_none());
+        ui.point_at(Point::new(width / 2., footer.y - 40.));
+        ui.scroll(ScrollDelta::Pixels { x: 0., y: -1500. });
+        ui.draw(&theme);
+        assert!(ui.find(last).unwrap().visible_bounds().is_some());
+        assert_eq!(ui.find("Terms of Service").unwrap().bounds(), header);
+        assert_eq!(ui.find("Accept").unwrap().visible_bounds(), Some(footer));
+    }
+}
+
+#[test]
+fn the_largest_spacing_keeps_both_actions_inside_the_phone_preview() {
+    let mut page = CardPage::new(0);
+    page.window_width(390.);
+    let theme = docs::theme(false);
+    let mut ui = Simulator::with_size(
+        settings(),
+        Size::new(260., 544.),
+        page.docs_preview("spacing", &theme),
+    );
+    for label in ["20px", "24px", "32px", "16px"] {
+        ui.click(label).unwrap();
+        ui.draw(&theme);
+        if label == "32px" {
+            let link = ui.find("Forgot your password?").unwrap().bounds();
+            assert!(
+                link.height >= 40.,
+                "both recovery-link lines must fit: {link:?}"
+            );
+        }
+        ui.find("Login").unwrap().visible_bounds().unwrap();
+        let google = ui
+            .find("Login with Google")
+            .unwrap()
+            .visible_bounds()
+            .unwrap();
+        assert!(google.y + google.height < 544., "{label} {google:?}");
+    }
+}
+
+#[test]
+fn tab_from_email_reaches_the_recovery_link_and_then_the_password_input() {
+    use iced::keyboard::key::Named;
+    use iced_test::core::widget::operation::{Operation, Outcome, focusable};
+    use iced_test::selector;
+
+    let page = CardPage::new(4);
+    let mut ui = preview(page.as_ref(), "demo", 260.);
+    ui.click("Email").unwrap();
+    ui.typewrite("qa@example.com");
+    let next = |ui: &mut Simulator<'_, Message, Theme>| {
+        let mut next = focusable::focus_next::<()>();
+        ui.operate(&mut next);
+        if let Outcome::Chain(mut op) = next.finish() {
+            ui.operate(op.as_mut());
+        }
+    };
+    next(&mut ui);
+    let focused = ui.find(selector::is_focused()).unwrap().bounds();
+    assert!(focused.contains(ui.find("Forgot your password?").unwrap().bounds().center()));
+    ui.tap_key(Named::Enter);
+    assert!(ui.drain().any(|event| matches!(
+        event, Message::Page(4, page::Message::LinkClicked(link)) if link == "#"
+    )));
+    next(&mut ui);
+    ui.typewrite("secret");
+    ui.find("••••••").unwrap();
 }
