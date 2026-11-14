@@ -86,9 +86,7 @@ impl<'a, Message: 'a> Item<'a, Message> {
         self
     }
 
-    /// Mark this item disabled. Disabled triggers don't toggle and the
-    /// trigger row + body render at 50% opacity per nova's
-    /// `disabled:opacity-50`.
+    /// Disable and dim this item's trigger. Its open content remains interactive.
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
         self
@@ -227,7 +225,7 @@ impl<'a, Message: 'a> From<Accordion<'a, Message>>
             .items
             .into_iter()
             .map(|mut it| {
-                it.trigger.inherit(&label);
+                it.trigger.inherit(&label.with_disabled(it.disabled));
                 let mut body = it.body.unwrap_or_else(|| Slot::from(""));
                 body.inherit(&content);
                 widget::Item {
@@ -277,10 +275,8 @@ impl<'a, Message: 'a> crate::compose::Compose<Message> for Accordion<'a, Message
     fn inherit(&mut self, from: &Inherited) {
         for item in &mut self.items {
             item.disabled |= from.is_disabled();
-            item.trigger
-                .inherit(&Inherited::default().with_disabled(item.disabled));
             if let Some(body) = &mut item.body {
-                body.inherit(&Inherited::default().with_disabled(item.disabled));
+                body.inherit(from);
             }
         }
     }

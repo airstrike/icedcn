@@ -28,8 +28,8 @@
 //!   widget-level rotation animation (shadcn nova ships two icons that
 //!   swap via `group-aria-expanded:hidden` — instantaneous). The body
 //!   height tween supplies the smooth-state-change visual.
-//! - **Disabled**: opacity 50% applied to trigger_text, chevron, body_text
-//!   via `Style::disabled_alpha`. Disabled triggers don't toggle.
+//! - **Disabled**: the trigger label and chevron use `Style::disabled_alpha`.
+//!   An open panel keeps its normal color and interactions.
 //!
 //! # State
 //!
@@ -937,7 +937,7 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
                 let Some(intersected) = body_clip.intersection(viewport) else {
                     continue;
                 };
-                let body_text_color = style.body_text.scale_alpha(alpha);
+                let body_text_color = style.body_text;
                 let body_defaults = renderer::Style {
                     text_color: body_text_color.into(),
                 };
@@ -971,7 +971,7 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
         translation: Vector,
         window: Size,
     ) -> Vec<overlay::Element<'b, Message, Theme, iced_widget::Renderer>> {
-        // Collect overlays from every item (trigger + body).
+        let state = tree.state.downcast_ref::<State>();
         let mut overlays: Vec<overlay::Element<'b, Message, Theme, iced_widget::Renderer>> =
             Vec::new();
 
@@ -994,7 +994,7 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
                 translation,
                 window,
             ));
-            if self.open.contains(&item.id) {
+            if state.open.contains(&item.id) {
                 overlays.extend(item.body.overlay(
                     body_tree,
                     body_layout,

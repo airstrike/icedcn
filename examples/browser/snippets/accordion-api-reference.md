@@ -25,7 +25,7 @@ Constructor for one disclosure item. Takes a stable `id` (matched against the op
 | `.chevron_closed(icon)` | `impl Into<Slot>` | down chevron | Closed-state indicator. |
 | `.chevron_open(icon)` | `impl Into<Slot>` | up chevron | Open-state indicator. |
 | `.inset(pixels)` | `f32` | `0.0` | Horizontal inset for the trigger and its content. The divider spans the item. |
-| `.disabled(bool)` | `bool` | `false` | Disabled triggers don't toggle; trigger row + body render at 50% opacity per nova's `disabled:opacity-50`. |
+| `.disabled(bool)` | `bool` | `false` | A disabled trigger ignores input and renders at 50% opacity. An already-open body remains usable. |
 
 ### `accordion::Mode`
 
