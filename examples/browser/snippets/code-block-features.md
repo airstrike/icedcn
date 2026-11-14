@@ -1,7 +1,7 @@
 ## Features
 
 - Pass a string to display selectable text. Streamed blocks can show the current source prefix as it arrives.
-- Gutter numbers and diff markers stay outside the selectable code. The copy button takes the text to put on the clipboard.
+- Gutter numbers and diff markers stay outside the selectable code. Use `.copyable(true)` to copy the full source.
 - Code stays left to right inside surrounding prose.
 - Set a language for syntax highlighting, or use `code_block::ansi(...)` for a colored terminal transcript.
 - Compose code blocks inside a message, a Markdown fence, a trace, or a tab.

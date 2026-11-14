@@ -1,1 +1,1 @@
-The transcript preserves blank lines and resets styling at each newline. It supports standard and bright ANSI foreground colors, dim text, and resets. `output.as_str()` returns the text without SGR escapes. The copy button shows a check for two seconds after the clipboard confirms the write.
+The transcript preserves blank lines and resets styling at each newline. It supports standard and bright ANSI foreground colors, dim text, and resets. Copy removes the color escapes and keeps every line. A check appears for two seconds after the clipboard confirms the write.

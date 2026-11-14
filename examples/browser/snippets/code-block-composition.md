@@ -3,7 +3,8 @@
 ```text
 CodeBlock
 ├── .title(...) — header title, optionally an icon and code_block::title(...)
-│   └── .actions(...) — header controls, including code_block::copy_button(text)
+│   ├── .actions(...) — custom header controls
+│   └── .copyable(true) — append Copy for the displayed source
 ├── .actions(...) without a title — floating controls
 ├── code_block(source) or CodeBlock::lines(...) — selectable content
 │   └── (LineStyle, Slot) — styled lines; gutter and diff markers are separate

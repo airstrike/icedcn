@@ -1,1 +1,1 @@
-Build a listing with `code_block(source)`. Add a title, actions, or a footer as needed. The copy button handles its clipboard write. The Download example uses an application task to save a file.
+Build a listing with `code_block(source)`. Add a title, actions, or a footer as needed. Use `.copyable(true)` to copy the source. The Download example uses an application task to save a file.
