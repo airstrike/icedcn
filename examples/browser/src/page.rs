@@ -14,8 +14,9 @@ use iced::widget::{Id, column, scrollable, sensor, stack, themer};
 use iced::{Background, Fill, Font, Pixels, Subscription, Task};
 
 use icedxdy::Size::{Lg, Sm};
+use icedxdy::core::{Border, Radius};
 use icedxdy::theme::container::{
-    card, card_preview, code_block, code_block_panel, code_fade_overlay,
+    Style, code_block, code_block_panel, code_fade_overlay, transparent,
 };
 use icedxdy::theme::tweak::Opaque;
 use icedxdy::widget::markdown;
@@ -228,8 +229,16 @@ impl Default for Backdrop {
         Self {
             min_height: PREVIEW_HEIGHT,
             padding: PREVIEW_PADDING.into(),
-            surface: card_preview,
-            border: card,
+            surface: transparent,
+            border: |theme| Style {
+                border: Border {
+                    width: 1.0,
+                    color: theme.neutral.border,
+                    radius: radius::XL2.into(),
+                },
+                snap: true,
+                ..Style::default()
+            },
         }
     }
 }
@@ -443,6 +452,7 @@ fn render_example<'a>(
     viewer: &'a SnippetViewer,
     page: &'a dyn Page,
 ) -> iced::Element<'a, super::Message, Theme> {
+    let backdrop = page.backdrop();
     let code: Option<iced::Element<'_, super::Message, Theme>> =
         (!snippet_path.is_empty()).then(|| {
             let body = st
@@ -451,11 +461,12 @@ fn render_example<'a>(
                 .and_then(|opt| opt.as_ref())
                 .map(|items| snippet(page_index, items, viewer))
                 .unwrap_or_else(|| text("Missing snippet!").into());
-            code_panel(
+            code_panel_with_border(
                 page_index,
                 block_pos,
                 body,
                 st.code_expanded.contains(&block_pos),
+                (backdrop.border)(&viewer.theme).border,
             )
         });
 
@@ -468,7 +479,7 @@ fn render_example<'a>(
         description,
         page.docs_preview(id, &viewer.theme),
         code,
-        page.backdrop(),
+        backdrop,
     )
 }
 
@@ -545,10 +556,41 @@ pub fn code_panel<'a>(
     body: Slot<'a, super::Message>,
     expanded: bool,
 ) -> iced::Element<'a, super::Message, Theme> {
+    code_panel_with_border(
+        page_index,
+        block_pos,
+        body,
+        expanded,
+        Border::default().rounded(radius::XL2).width(1),
+    )
+}
+
+fn code_panel_with_border<'a>(
+    page_index: usize,
+    block_pos: usize,
+    body: Slot<'a, super::Message>,
+    expanded: bool,
+    border: Border,
+) -> iced::Element<'a, super::Message, Theme> {
+    // The container clips to a rectangle. Fit the code surface and fade to the
+    // frame's inner arc so neither paints over the border.
+    let inner_radius = Radius {
+        bottom_left: (border.radius.bottom_left - border.width).max(0.0),
+        bottom_right: (border.radius.bottom_right - border.width).max(0.0),
+        ..Radius::default()
+    };
+    let style = move |base: fn(&Theme) -> Style| {
+        move |theme: &Theme| {
+            let mut panel = base(theme);
+            panel.border.radius = inner_radius;
+            panel.snap = true;
+            panel
+        }
+    };
     let inner = container(body)
         .padding(iced::Padding::default().top(12).bottom(12).left(16))
         .width(Fill)
-        .style(code_block_panel);
+        .style(style(code_block_panel));
 
     if expanded {
         let copy_btn: Slot<'_, super::Message> = button(icon::copy().size(14))
@@ -582,7 +624,7 @@ pub fn code_panel<'a>(
 
         let overlay = container(view_code_btn)
             .center(Fill)
-            .style(code_fade_overlay)
+            .style(style(code_fade_overlay))
             .height(COLLAPSED_CODE_HEIGHT);
         stack![Element::from(truncated), Element::from(overlay)].boxed()
     }

@@ -1,12 +1,10 @@
 // The upstream RTL example is outside this browser’s scope.
 
-use iced::widget::{image, stack};
+use iced::widget::image;
 use iced::{ContentFit, Fill, Task, Widget};
-use icedxdy::core::{Border, Color};
-use icedxdy::theme::container::Style;
 use icedxdy::widget::{aspect_ratio, container};
 use icedxdy::{Theme, radius};
-use std::sync::OnceLock;
+use std::sync::LazyLock;
 
 use crate::Message;
 use crate::page;
@@ -63,39 +61,21 @@ impl AspectRatioPage {
     }
 }
 
-/// Nova uses a grayscale crop of the shadcn1 avatar gradient and a darker
-/// image in dark mode. Both Aspect Ratio and Card use the same cover.
-pub(crate) fn cover<'a>(card: bool) -> iced::Element<'a, Message, Theme> {
-    static COVER: OnceLock<image::Handle> = OnceLock::new();
-    let handle = COVER.get_or_init(|| {
+/// Both galleries crop the same grayscale shadcn1 photo.
+pub(super) fn cover() -> image::Handle {
+    static PHOTO: LazyLock<image::Handle> = LazyLock::new(|| {
         image::Handle::from_bytes(include_bytes!("../../assets/shadcn1.jpg").as_slice())
     });
-    let radius = if card { 0.0 } else { radius::LG };
-    let image = image(handle.clone())
-        .width(Fill)
-        .height(Fill)
-        .content_fit(ContentFit::Cover)
-        .border_radius(radius);
-    let tint = container("")
-        .width(Fill)
-        .height(Fill)
-        .style(move |t: &Theme| {
-            let amount = match (card, t.neutral.is_dark) {
-                (true, true) => 0.74,
-                (true, false) => 0.61,
-                (false, true) => 0.8,
-                (false, false) => 0.0,
-            };
-            Style {
-                background: Some(Color::BLACK.alpha(amount).into()),
-                border: Border {
-                    radius: radius.into(),
-                    ..Default::default()
-                },
-                ..Style::default()
-            }
-        });
-    stack![image, iced::Element::from(tint)].boxed()
+    PHOTO.clone()
+}
+
+// Apply Nova's brightness(0.2) to the source pixels before rounding the image.
+// A separate shade leaves bright image pixels visible around its curved edge.
+fn dark_cover() -> image::Handle {
+    static PHOTO: LazyLock<image::Handle> = LazyLock::new(|| {
+        image::Handle::from_bytes(include_bytes!("../../assets/shadcn1-dark.png").as_slice())
+    });
+    PHOTO.clone()
 }
 
 impl page::Page for AspectRatioPage {
@@ -135,6 +115,21 @@ impl page::Page for AspectRatioPage {
     }
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
+        self.themed_preview(id, &Theme::default())
+    }
+
+    fn themed_preview(&self, id: &str, theme: &Theme) -> iced::Element<'_, Message, Theme> {
+        let photo = if theme.neutral.is_dark {
+            dark_cover()
+        } else {
+            cover()
+        };
+        let photo = image(photo)
+            .width(Fill)
+            .height(Fill)
+            .content_fit(ContentFit::Cover)
+            .border_radius(radius::LG);
+
         // The image stays centered even when it exceeds the space between the
         // frame's vertical padding (the hero is 216px in a 288px frame).
         let (ratio, max_width, frame_height) = match id {
@@ -143,7 +138,7 @@ impl page::Page for AspectRatioPage {
             "portrait" => (9.0 / 16.0, 160, 384),
             _ => unreachable!("unknown aspect_ratio preview id: {id}"),
         };
-        container(aspect_ratio(cover(false), ratio).max_width(max_width))
+        container(aspect_ratio(photo.boxed(), ratio).max_width(max_width))
             .center_x(Fill)
             .center_y(frame_height)
             .into()

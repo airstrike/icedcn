@@ -17,4 +17,4 @@ fn photo(handle: image::Handle) -> Element<'static, (), Theme> {
 }
 ```
 
-Pass a grayscale image handle to the examples below, such as `image::Handle::from_path("assets/shadcn1.jpg")` when running from the browser example directory.
+Pass the image for the active theme into each example. The gallery uses `assets/shadcn1.jpg` in light mode and `assets/shadcn1-dark.png` in dark mode. The dark asset contains the same photo at 20% brightness.

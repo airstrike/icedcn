@@ -13,7 +13,9 @@ use iced::Alignment::Center;
 use iced::Task;
 use iced::Widget;
 use iced::widget::component::{Component, component};
-use iced::{Element, Fill};
+use iced::widget::{image, stack};
+use iced::{ContentFit, Element, Fill};
+use icedxdy::core::Color;
 use icedxdy::theme::container::Style;
 
 use icedxdy::card;
@@ -203,6 +205,24 @@ fn terms<'a>() -> Slot<'a, Message> {
     .into()
 }
 
+fn cover_image<'a>() -> Element<'a, Message, Theme> {
+    let photo = image(cover())
+        .width(Fill)
+        .height(Fill)
+        .content_fit(ContentFit::Cover);
+    let tint = container("")
+        .width(Fill)
+        .height(Fill)
+        .style(|theme: &Theme| {
+            let opacity = if theme.neutral.is_dark { 0.74 } else { 0.61 };
+            Style {
+                background: Some(Color::BLACK.alpha(opacity).into()),
+                ..Style::default()
+            }
+        });
+    stack![photo, Element::from(tint)].boxed()
+}
+
 pub struct CardPage {
     state: page::State,
 }
@@ -286,7 +306,7 @@ impl page::Page for CardPage {
                     .into();
 
                 card(column![
-                    aspect_ratio(cover(true), 16.0 / 9.0),
+                    aspect_ratio(cover_image(), 16.0 / 9.0),
                     header,
                     card::footer(
                         button("View Event")
