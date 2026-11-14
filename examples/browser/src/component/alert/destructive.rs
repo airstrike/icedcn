@@ -1,13 +1,20 @@
-use icedxdy::Slot;
+use iced::Widget;
+use iced::widget::svg;
 use icedxdy::widget::alert;
+use icedxdy::{Slot, Theme};
 
 use crate::Message;
-use crate::icon;
 
 pub fn view<'a>() -> Slot<'a, Message> {
     // shadcn `alert-destructive.tsx` caps the alert at `max-w-md` (448px).
-    alert::alert()
-        .icon(icon::circle_alert())
+    alert()
+        .icon(
+svg(svg::Handle::from_memory(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>"#.as_bytes()))
+                .width(16)
+                .height(16)
+                .style(|theme: &Theme, _| svg::Style { color: Some(theme.destructive.base.into()) })
+                .boxed(),
+)
         .title("Payment failed")
         .description(
             "Your payment could not be processed. Please check your payment method and try again.",

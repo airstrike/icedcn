@@ -8,12 +8,12 @@
 //! ```ignore
 //! use icedxdy::widget::alert;
 //!
-//! alert::alert()
+//! alert()
 //!     .icon(icon::terminal())
 //!     .title("Heads up!")
 //!     .description("You can add components to your app using the cli.")
 //!
-//! alert::alert()
+//! alert()
 //!     .icon(icon::circle_alert())
 //!     .title("Payment failed")
 //!     .description("Your payment could not be processed.")
@@ -27,7 +27,7 @@
 //! `destructive/90` for [`Destructive`]).
 
 use iced_core::alignment::{Horizontal, Vertical};
-use iced_core::text::IntoFragment;
+use iced_core::text::{IntoFragment, LineHeight};
 use iced_core::{Length::*, Padding, Pixels};
 use iced_widget::Renderer;
 use iced_widget::Widget;
@@ -71,14 +71,23 @@ impl<'a, Message: 'a> Alert<'a, Message> {
 
     /// Set the title text. Rendered at `text-sm` with medium weight.
     pub fn title(mut self, title: impl IntoFragment<'a>) -> Self {
-        self.title = Some(text::Text::new(title).size(text::size::SM).medium());
+        self.title = Some(
+            text::Text::new(title)
+                .size(text::size::SM)
+                .line_height(LineHeight::Absolute(Pixels(20.0)))
+                .medium(),
+        );
         self
     }
 
     /// Set the description text, rendered at `text-sm` in the style's
     /// description color.
     pub fn description(mut self, description: impl IntoFragment<'a>) -> Self {
-        self.description = Some(text::Text::new(description).size(text::size::SM));
+        self.description = Some(
+            text::Text::new(description)
+                .size(text::size::SM)
+                .line_height(LineHeight::Absolute(Pixels(20.0))),
+        );
         self
     }
 
@@ -119,6 +128,21 @@ impl<'a, Message: 'a> From<Alert<'a, Message>> for Slot<'a, Message> {
 }
 
 impl<'a, Message: 'a> Compose<Message> for Alert<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        if let Some(icon) = &mut self.icon {
+            icon.inherit(from);
+        }
+        if let Some(title) = &mut self.title {
+            <text::Text<'a> as Compose<Message>>::inherit(title, from);
+        }
+        if let Some(description) = &mut self.description {
+            <text::Text<'a> as Compose<Message>>::inherit(description, from);
+        }
+        if let Some(action) = &mut self.action {
+            action.inherit(from);
+        }
+    }
+
     fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
@@ -142,7 +166,7 @@ impl<'a, Message: 'a> Compose<Message> for Alert<'a, Message> {
         });
 
         let mut text_col: iced_widget::Column<iced_core::Element<'a, Message, Theme, Renderer>> =
-            iced_widget::Column::new().spacing(2);
+            iced_widget::Column::new().spacing(2).width(Fill);
         if let Some(title) = title {
             text_col = text_col.push(title.into());
         }
@@ -168,19 +192,21 @@ impl<'a, Message: 'a> Compose<Message> for Alert<'a, Message> {
 
         let card_style: iced_widget::container::StyleFn<'_, Theme> = style.into();
 
+        // CSS padding starts inside the 1px border; iced container padding
+        // starts at the outer edge. Include that border in the content inset.
         let padding = if action.is_some() {
             Padding {
-                top: 8.0,
-                right: 72.0,
-                bottom: 8.0,
-                left: 10.0,
+                top: 9.0,
+                right: 73.0,
+                bottom: 9.0,
+                left: 11.0,
             }
         } else {
             Padding {
-                top: 8.0,
-                right: 10.0,
-                bottom: 8.0,
-                left: 10.0,
+                top: 9.0,
+                right: 11.0,
+                bottom: 9.0,
+                left: 11.0,
             }
         };
 
@@ -198,8 +224,8 @@ impl<'a, Message: 'a> Compose<Message> for Alert<'a, Message> {
                     .align_x(Horizontal::Right)
                     .align_y(Vertical::Top)
                     .padding(Padding {
-                        top: 8.0,
-                        right: 8.0,
+                        top: 9.0,
+                        right: 9.0,
                         bottom: 0.0,
                         left: 0.0,
                     });

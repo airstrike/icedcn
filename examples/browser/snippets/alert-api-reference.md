@@ -1,6 +1,4 @@
-## API Reference
-
-### `alert()`
+### Alert
 
 Constructor for an `Alert` builder with the default style.
 

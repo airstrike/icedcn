@@ -5,6 +5,6 @@ use icedxdy::widget::{alert, button};
 alert()
     .title("Dark mode is now available")
     .description("Enable it under your profile settings to get started.")
-    .action(button("Enable").size(Size::Xs).on_press(Message::Pressed))
+    .action(button("Enable").size(Size::Xs))
     .max_width(448)
 ```
