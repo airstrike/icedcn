@@ -183,13 +183,11 @@ impl page::Page for ToggleGroupPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `toggle-group-demo.tsx`.
             "demo" => toggle_group(formatting)
                 .mode(toggle_group::Mode::Multiple)
                 .style(toggle_group::Outline)
                 .into(),
 
-            // shadcn `toggle-group-outline.tsx`.
             "outline" => toggle_group(|| {
                 [
                     toggle_group::item("all", "All"),
@@ -200,7 +198,6 @@ impl page::Page for ToggleGroupPage {
             .style(toggle_group::Outline)
             .into(),
 
-            // shadcn `toggle-group-sizes.tsx`.
             "sizes" => column![
                 toggle_group(sides)
                     .default_value(["top"])
@@ -213,7 +210,6 @@ impl page::Page for ToggleGroupPage {
             .spacing(16)
             .into(),
 
-            // shadcn `toggle-group-spacing.tsx`: `spacing={2}` is 8px.
             "spacing" => toggle_group(sides)
                 .default_value(["top"])
                 .size(Size::Sm)
@@ -221,7 +217,6 @@ impl page::Page for ToggleGroupPage {
                 .style(toggle_group::Outline)
                 .into(),
 
-            // shadcn `toggle-group-vertical.tsx`: `spacing={1}` is 4px.
             "vertical" => toggle_group(formatting)
                 .mode(toggle_group::Mode::Multiple)
                 .default_value(["bold", "italic"])
@@ -229,7 +224,6 @@ impl page::Page for ToggleGroupPage {
                 .spacing(4)
                 .into(),
 
-            // shadcn `toggle-group-disabled.tsx`.
             "disabled" => toggle_group(formatting)
                 .mode(toggle_group::Mode::Multiple)
                 .disabled(true)

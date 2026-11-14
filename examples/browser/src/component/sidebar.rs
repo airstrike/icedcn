@@ -1,18 +1,4 @@
-// API Reference is rendered via the `sidebar-api-reference.md` snippet at
-// the bottom of BLOCKS. Live docs API Reference covers the full suite —
-// `SidebarProvider.{defaultOpen, open, onOpenChange}`,
-// `Sidebar.{side, variant, collapsible}`, plus a structural enumeration of
-// `SidebarHeader`/`SidebarFooter`/`SidebarContent`/`SidebarGroup`/
-// `SidebarMenu`/`SidebarMenuItem`/`SidebarMenuButton`/`SidebarMenuAction`/
-// `SidebarMenuBadge`/`SidebarMenuSub*`/`SidebarTrigger`/`SidebarRail`/
-// `SidebarInset` and the `useSidebar()` hook — and the snippet captures
-// the icedxdy-shaped helpers (`sidebar::fixed`/`floating`/`inset`,
-// section helpers, `menu_button` builder, `State`/`Side`/`Collapsible`
-// constants) plus the caller-owns-state model that replaces the React
-// hook.
-//
-// Intentional skips: sidebar-rtl (RTL).
-// Examples shipped: sidebar-menu (demo), sidebar-group, sidebar-header.
+//! Sidebar menus, groups and workspace selection.
 
 use iced::widget::component::{Component, component};
 use iced::{Element, Task, Widget};
@@ -86,7 +72,7 @@ impl SidebarPage {
     }
 }
 
-use crate::component::avatar::shadcn_handle;
+use crate::component::avatar::alex_handle;
 use crate::icon;
 use iced::widget::{Space, Text};
 use iced::{Alignment, Fill};
@@ -328,14 +314,14 @@ fn projects(selected: Option<&'static str>) -> Slot<'static, Choice> {
     .into()
 }
 fn identity(compact: bool) -> Slot<'static, Choice> {
-    let face = avatar(Some(shadcn_handle())).fallback("CN");
+    let face = avatar(Some(alex_handle())).fallback("AC");
     if compact {
         return face.into();
     }
     row![
         face,
         column![
-            text("shadcn").size(14).medium(),
+            text("Alex Chen").size(14).medium(),
             text("m@example.com").size(12)
         ]
         .width(Fill),
@@ -375,7 +361,6 @@ fn account(compact: bool) -> Slot<'static, Choice> {
 }
 
 fn group_example<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
-    // Mirrors `sidebar-group.tsx`: a floating sidebar with a "Help" group.
     sidebar::floating(sidebar::content([sidebar::group([
         sidebar::group_label("Help").into(),
         sidebar::group_content([sidebar::menu([
@@ -392,8 +377,6 @@ fn group_example<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
 }
 
 fn header_example<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
-    // Mirrors `sidebar-header.tsx`: a floating sidebar with a workspace
-    // switcher in the header.
     sidebar::floating(
         column![
             sidebar::header([sidebar::menu([sidebar::menu_item([sidebar::menu_button(

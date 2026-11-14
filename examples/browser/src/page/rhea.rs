@@ -1,4 +1,4 @@
-//! The Radix examples on the live docs use Rhea with the blue registry theme.
+//! Blue preview palette for conversation widgets.
 use super::Backdrop;
 use icedxdy::core::{Border, Radius, oklch};
 use icedxdy::theme::container::Style;

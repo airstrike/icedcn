@@ -1,5 +1,3 @@
-// The upstream RTL example is outside this browser’s scope.
-
 use iced::Alignment::Center;
 use iced::Task;
 use iced::Widget;

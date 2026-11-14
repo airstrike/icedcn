@@ -5,7 +5,7 @@ use icedxdy::widget::input_group::Align;
 use icedxdy::widget::{Column, button, column, input, input_group, popover, text};
 use icedxdy::{Slot, Theme};
 
-const URL: &str = "https://x.com/shadcn";
+const URL: &str = "https://github.com/airstrike/icedxdy";
 
 struct Buttons;
 #[derive(Default)]

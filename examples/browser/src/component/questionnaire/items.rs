@@ -425,7 +425,7 @@ pub(super) fn saved(id: &str) -> Answers {
     answers
 }
 
-/// Format the submitted values in upstream display order, independently of the map's key order.
+/// Format the submitted values in questionnaire order, independently of the map's key order.
 pub(super) fn summary(id: &str, answers: &Answers, shortcuts: Option<&str>) -> String {
     let fields: &[(&str, &str)] = match id {
         "animated" => &[

@@ -7,8 +7,8 @@ use crate::Message;
 use crate::page;
 
 pub static META: page::Meta = page::Meta {
-    title: "Sonner",
-    description: "An opinionated toast component.",
+    title: "Toast",
+    description: "Display a brief notification when an action succeeds, fails, or needs attention.",
 };
 
 pub static BLOCKS: &[page::Block] = &[
@@ -16,9 +16,9 @@ pub static BLOCKS: &[page::Block] = &[
         id: "demo",
         title: "",
         description: None,
-        snippet: "examples/browser/snippets/sonner-demo.md",
+        snippet: "examples/browser/snippets/toast-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/sonner-guide-about.md"),
+    page::Block::Md("examples/browser/snippets/toast-guide-about.md"),
     page::Block::Group {
         title: "Examples",
         children: &[
@@ -26,30 +26,30 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "types",
                 title: "Types",
                 description: Some("Use `.kind(..)` to pick the toast's icon."),
-                snippet: "examples/browser/snippets/sonner-types.md",
+                snippet: "examples/browser/snippets/toast-types.md",
             },
             page::Block::Example {
                 id: "description",
                 title: "Description",
                 description: Some("Use `.description(..)` to add a description to the toast."),
-                snippet: "examples/browser/snippets/sonner-description.md",
+                snippet: "examples/browser/snippets/toast-description.md",
             },
             page::Block::Example {
                 id: "position",
                 title: "Position",
                 description: Some("Use `.position(..)` to change where the toast appears."),
-                snippet: "examples/browser/snippets/sonner-position.md",
+                snippet: "examples/browser/snippets/toast-position.md",
             },
         ],
     },
-    page::Block::Md("examples/browser/snippets/sonner-api-reference.md"),
+    page::Block::Md("examples/browser/snippets/toast-api-reference.md"),
 ];
 
-pub struct SonnerPage {
+pub struct Page {
     state: page::State,
 }
 
-impl SonnerPage {
+impl Page {
     pub fn new(page_index: usize) -> Box<dyn page::Page> {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
@@ -62,12 +62,12 @@ fn raise<'a>(label: &'a str, toast: toast::Toast<Message>) -> Slot<'a, Message> 
     toast::trigger(button(label).style(button::Outline), toast)
 }
 
-/// shadcn's "Event has been created" toast.
+/// "Event has been created" toast.
 fn created() -> toast::Toast<Message> {
     toast::toast("Event has been created")
 }
 
-impl page::Page for SonnerPage {
+impl page::Page for Page {
     fn page_index(&self) -> usize {
         self.state.page_index
     }
@@ -98,7 +98,6 @@ impl page::Page for SonnerPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `sonner-demo.tsx`.
             "demo" => raise(
                 "Show Toast",
                 created()
@@ -110,7 +109,6 @@ impl page::Page for SonnerPage {
             )
             .into(),
 
-            // shadcn `sonner-types.tsx`.
             "types" => row![
                 raise("Default", created()),
                 raise("Success", created().kind(toast::Kind::Success)),
@@ -136,14 +134,12 @@ impl page::Page for SonnerPage {
             .wrap()
             .into(),
 
-            // shadcn `sonner-description.tsx`.
             "description" => raise(
                 "Show Toast",
                 created().description("Monday, January 3rd at 6:00pm"),
             )
             .into(),
 
-            // shadcn `sonner-position.tsx`.
             "position" => column![
                 row![
                     raise("Top Left", created().position(toast::Position::TopLeft)),
@@ -170,7 +166,7 @@ impl page::Page for SonnerPage {
             .spacing(8)
             .into(),
 
-            _ => unreachable!("unknown sonner preview id: {id}"),
+            _ => unreachable!("unknown toast preview id: {id}"),
         }
     }
 }

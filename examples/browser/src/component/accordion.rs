@@ -67,7 +67,7 @@ pub static BLOCKS: &[page::Block] = &[
 ];
 
 /// The accordion page. Each example keeps its own open set in its widget
-/// tree, seeded from shadcn's `defaultValue`.
+/// tree, seeded from `.default_value(...)`.
 pub struct AccordionPage {
     state: page::State,
     wide: bool,
@@ -137,7 +137,7 @@ impl page::Page for AccordionPage {
     }
 
     fn docs_preview(&self, id: &str, outer: &Theme) -> iced::Element<'_, Message, Theme> {
-        // The MDX preview sets a smaller cap than the standalone examples.
+        // The embedded preview has a smaller width cap than the standalone examples.
         let content = container(self.themed_preview(id, outer)).width(Fill.max(384));
         let height = match (id, self.wide) {
             ("multiple", true) => 480,
@@ -148,9 +148,7 @@ impl page::Page for AccordionPage {
             ("card", false) => 512,
             _ => 300,
         };
-        // On narrow windows the browser shell already supplies 32 px of
-        // exterior padding. The upstream page supplies 24 px before its
-        // 40 px preview inset, leaving the same 64 px on each side.
+        // The shell contributes 32 px of exterior padding on narrow windows.
         let gutter = if self.wide { 40 } else { 32 };
         container(content)
             .center_x(Fill)
@@ -313,9 +311,6 @@ impl page::Page for AccordionPage {
             }
 
             "card" => {
-                // Shadcn `accordion-card.tsx`: a Card wraps the accordion.
-                // CardHeader has the title + description; CardContent
-                // holds the accordion itself.
                 let inner = build_accordion(
                     single,
                     &["plans"],

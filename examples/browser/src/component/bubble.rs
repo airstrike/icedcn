@@ -1,6 +1,4 @@
-//! Bubble documentation and nine pinned Nova recipes.
-//! The extra upstream bubble-markdown recipe is not exposed on the docs page;
-//! its Ghost content is covered by Variants.
+//! Message bubble styles, corners and composition.
 
 use crate::page::rhea;
 use crate::{Message, page};
@@ -46,7 +44,7 @@ pub static BLOCKS: &[Block] = &[
     Block::Example {
         id: "variants",
         title: "Variants",
-        description: Some("Use `variant` to change the visual treatment of the bubble."),
+        description: Some("Use `.style(...)` to change the visual treatment of a bubble."),
         snippet: "examples/browser/snippets/bubble-variants.md",
     },
     Block::Md("examples/browser/snippets/bubble-variants-guide.md"),
@@ -54,7 +52,7 @@ pub static BLOCKS: &[Block] = &[
         id: "alignment",
         title: "Alignment",
         description: Some(
-            "Use `align` on `Bubble` to align the bubble to the start or end of the conversation.",
+            "Use `.align(...)` to place a bubble on the left or right of the conversation.",
         ),
         snippet: "examples/browser/snippets/bubble-alignment.md",
     },
@@ -63,7 +61,7 @@ pub static BLOCKS: &[Block] = &[
         id: "group-demo",
         title: "Bubble Group",
         description: Some(
-            "Use `BubbleGroup` to group consecutive bubbles from the same sender. Note the `align` prop should be set on the `Bubble` component itself, not the `BubbleGroup` component.\n\n```text\nBubbleGroup\n├── Bubble\n│   └── BubbleContent\n└── Bubble\n    └── BubbleContent\n```",
+            "Use `bubble::group(...)` for consecutive messages from the same sender. Set `.align(...)` on each bubble.",
         ),
         snippet: "examples/browser/snippets/bubble-group-demo.md",
     },
@@ -71,7 +69,7 @@ pub static BLOCKS: &[Block] = &[
         id: "link-button",
         title: "Links and Buttons",
         description: Some(
-            "You can turn a bubble into a link or button by using the `asChild` prop on `BubbleContent`.",
+            "Use `.interactive(true)` on a bubble to let it act as the trigger for an action.",
         ),
         snippet: "examples/browser/snippets/bubble-link-button.md",
     },
@@ -80,7 +78,7 @@ pub static BLOCKS: &[Block] = &[
         id: "reactions",
         title: "Reactions",
         description: Some(
-            "Use `BubbleReactions` for bubble reactions. You can use it to display reactions or quick action buttons. Use `side` and `align` to position the row — `side=\"top\"` anchors it to the upper edge. Reactions overlap the bubble edge, so leave vertical space between rows — the examples below use a larger `gap` for this reason.",
+            "Pass text, icons, or buttons to `.reactions(...)`. Choose a horizontal and vertical alignment, and leave space between rows for reactions that overlap an edge.",
         ),
         snippet: "examples/browser/snippets/bubble-reactions.md",
     },
@@ -88,7 +86,7 @@ pub static BLOCKS: &[Block] = &[
         id: "collapsible",
         title: "Show More / Collapsible",
         description: Some(
-            "Long bubble content can be composed with [Collapsible](https://ui.shadcn.com/docs/components/collapsible) to allow for a show more or show less interaction. Use the `CollapsibleTrigger` component to trigger the collapsible content.",
+            "Use [Collapsible](icedxdy://component/collapsible) to let the reader expand a long message and collapse it again.",
         ),
         snippet: "examples/browser/snippets/bubble-collapsible.md",
     },
@@ -96,7 +94,7 @@ pub static BLOCKS: &[Block] = &[
         id: "tooltip",
         title: "Tooltip",
         description: Some(
-            "Wrap a bubble in a [Tooltip](https://ui.shadcn.com/docs/components/tooltip) to reveal metadata on hover, such as when a message was read.",
+            "Wrap a bubble in a [Tooltip](icedxdy://component/tooltip) to reveal metadata on hover, such as when a message was read.",
         ),
         snippet: "examples/browser/snippets/bubble-tooltip.md",
     },
@@ -104,7 +102,7 @@ pub static BLOCKS: &[Block] = &[
         id: "popover",
         title: "Popover",
         description: Some(
-            "Pair a bubble with a [Popover](https://ui.shadcn.com/docs/components/popover) to surface more information on demand, such as the full error message for a failed action.",
+            "Pair a bubble with a [Popover](icedxdy://component/popover) to show the full error message for a failed action.",
         ),
         snippet: "examples/browser/snippets/bubble-popover.md",
     },
@@ -416,7 +414,7 @@ fn popover_example() -> Slot<'static, Message> {
                         ),
                         |_| popover::header(
                             "Command failed with exit code 1",
-                            "ENOENT: no such file or directory, open pnpm-lock.yaml"
+                            "Could not open Cargo.lock: No such file or directory"
                         )
                     ),
                     Right,

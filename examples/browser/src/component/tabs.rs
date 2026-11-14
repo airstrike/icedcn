@@ -122,7 +122,6 @@ impl page::Page for TabsPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `tabs-demo.tsx`.
             "demo" => tabs(|t| {
                 column![
                     t.list([

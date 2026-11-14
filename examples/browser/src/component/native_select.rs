@@ -101,7 +101,6 @@ impl page::Page for NativeSelectPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `native-select-demo.tsx`.
             "demo" => native_select([
                 native_select::item("", "Select status"),
                 native_select::item("todo", "Todo"),
@@ -140,10 +139,8 @@ impl page::Page for NativeSelectPage {
             ])
             .into(),
 
-            // shadcn `native-select-disabled.tsx`.
             "disabled" => native_select(fruits("Disabled")).disabled(true).into(),
 
-            // shadcn `native-select-invalid.tsx`.
             "invalid" => native_select(fruits("Error state"))
                 .style(native_select::Invalid)
                 .into(),

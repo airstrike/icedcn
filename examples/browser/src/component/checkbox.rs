@@ -29,7 +29,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "checked-state",
         title: "Checked State",
         description: Some(
-            "Use `defaultChecked` for uncontrolled checkboxes, or `checked` and `onCheckedChange` to control the state.",
+            "Set the initial value with `.default_checked(...)`. To keep the value in your application, use `.checked(...)` and `.on_checked_change(...)`.",
         ),
         snippet: "examples/browser/snippets/checkbox-checked-state.md",
     },
@@ -37,7 +37,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "invalid-state",
         title: "Invalid State",
         description: Some(
-            "Set `aria-invalid` on the checkbox and `data-invalid` on the field wrapper to show the invalid styles.",
+            "Apply `.style(theme::checkbox::Invalid)` to the checkbox and use a destructive text style for the label.",
         ),
         snippet: "examples/browser/snippets/checkbox-invalid-state.md",
     },
@@ -45,21 +45,21 @@ pub static BLOCKS: &[page::Block] = &[
         id: "basic",
         title: "Basic",
         description: Some(
-            "Pair the checkbox with `Field` and `FieldLabel` for proper layout and labeling.",
+            "Give the checkbox an associated label with `field(checkbox()).label(...)`.",
         ),
         snippet: "examples/browser/snippets/checkbox-basic.md",
     },
     page::Block::Example {
         id: "description",
         title: "Description",
-        description: Some("Use `FieldContent` and `FieldDescription` for helper text."),
+        description: Some("Add helper text below the label with `.description(...)`."),
         snippet: "examples/browser/snippets/checkbox-description.md",
     },
     page::Block::Example {
         id: "disabled",
         title: "Disabled",
         description: Some(
-            "Use the `disabled` prop to prevent interaction and add the `data-disabled` attribute to the `<Field>` component for disabled styles.",
+            "Set `.disabled(true)` on the field to disable the control and label together.",
         ),
         snippet: "examples/browser/snippets/checkbox-disabled.md",
     },

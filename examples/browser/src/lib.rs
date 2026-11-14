@@ -2,7 +2,7 @@
 //!
 //! Mirrors the loader-state-machine pattern in `examples/highlight`: a
 //! [`Browser`] state machine handles the splash screen while we parse the
-//! vendored shadcn code themes and kick off the font catalog fetch, then
+//! bundled code themes and kick off the font catalog fetch, then
 //! hands off to [`app::App`] once the first font message arrives.
 //!
 //! `app::App` owns the actual UI. Everything else lives in `lib.rs` only
@@ -27,10 +27,7 @@ use icedxdy::widget::{center, progress, text};
 
 use app::App;
 
-/// Vendored shadcn-flavour code themes (Shiki ships these in shadcn's docs
-/// site). Used verbatim — no overrides — so example renderings match the
-/// shadcn documentation snippets exactly. Loaded synchronously via
-/// `include_str!` and parsed once at startup before [`App`] is constructed.
+/// Bundled GitHub code themes, parsed once during startup.
 const GH_LIGHT: &str = include_str!("../themes/github-light-default.json");
 const GH_DARK: &str = include_str!("../themes/github-dark.json");
 

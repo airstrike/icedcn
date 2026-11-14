@@ -1,9 +1,4 @@
-//! Browser-only palette for the pinned shadcn documentation site.
-//!
-//! Source: shadcn-ui/ui e62c9435fff729a175f38983dee73b2cb4f6a069,
-//! apps/v4/app/globals.css, :root. These overrides differ from the
-//! registry's Neutral theme, which remains the library default. Review
-//! this small second palette when updating the documentation reference.
+//! Light and dark palettes used by the component browser.
 
 use icedxdy::{Color, Design, Theme};
 

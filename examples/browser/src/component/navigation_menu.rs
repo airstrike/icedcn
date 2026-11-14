@@ -5,7 +5,7 @@ use icedxdy::widget::{column, container, menu, navigation_menu, row, text};
 use icedxdy::{Slot, Theme};
 pub static META: page::Meta = page::Meta {
     title: "Navigation Menu",
-    description: "A collection of links for navigating websites.",
+    description: "A collection of links for navigating an application.",
 };
 pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
@@ -49,32 +49,32 @@ const COMPONENTS: &[(&str, &str, &str)] = &[
     (
         "Alert Dialog",
         "A modal dialog that interrupts the user with important content and expects a response.",
-        "https://ui.shadcn.com/docs/components/radix/alert-dialog",
+        "icedxdy://component/alert-dialog",
     ),
     (
         "Hover Card",
         "For sighted users to preview content available behind a link.",
-        "https://ui.shadcn.com/docs/components/radix/hover-card",
+        "icedxdy://component/hover-card",
     ),
     (
         "Progress",
         "Displays an indicator showing the completion progress of a task, typically displayed as a progress bar.",
-        "https://ui.shadcn.com/docs/components/radix/progress",
+        "icedxdy://component/progress",
     ),
     (
-        "Scroll-area",
-        "Visually or semantically separates content.",
-        "https://ui.shadcn.com/docs/components/radix/scroll-area",
+        "Scroll Area",
+        "Scroll through content inside a fixed viewport.",
+        "icedxdy://component/scroll-area",
     ),
     (
         "Tabs",
         "A set of layered sections of content—known as tab panels—that are displayed one at a time.",
-        "https://ui.shadcn.com/docs/components/radix/tabs",
+        "icedxdy://component/tabs",
     ),
     (
         "Tooltip",
         "A popup that displays information related to an element when the element receives keyboard focus or the mouse hovers over it.",
-        "https://ui.shadcn.com/docs/components/radix/tooltip",
+        "icedxdy://component/tooltip",
     ),
 ];
 
@@ -84,18 +84,18 @@ fn navigation(wide: bool) -> Slot<'static, Message> {
             column![
                 doc_link(
                     "Introduction",
-                    "Re-usable components built with Tailwind CSS.",
-                    "https://ui.shadcn.com/docs"
+                    "Reusable widgets for iced applications.",
+                    "https://github.com/airstrike/icedxdy"
                 ),
                 doc_link(
                     "Installation",
                     "How to install dependencies and structure your app.",
-                    "https://ui.shadcn.com/docs/installation"
+                    "https://github.com/airstrike/icedxdy"
                 ),
                 doc_link(
                     "Typography",
                     "Styles for headings, paragraphs, lists...etc",
-                    "https://ui.shadcn.com/docs/components/radix/typography"
+                    "icedxdy://component/typography"
                 )
             ]
             .into()
@@ -121,7 +121,7 @@ fn navigation(wide: bool) -> Slot<'static, Message> {
     }
     entries.push(navigation_menu::link(
         "Docs",
-        Message::OpenUrl("https://ui.shadcn.com/docs"),
+        Message::OpenUrl("https://github.com/airstrike/icedxdy"),
     ));
     navigation_menu(entries).into()
 }

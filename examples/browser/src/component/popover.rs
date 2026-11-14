@@ -120,7 +120,6 @@ impl page::Page for PopoverPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `popover-demo.tsx`.
             "demo" => popover(
                 |p| p.trigger(button("Open popover").style(button::Outline)),
                 |_| {
@@ -145,7 +144,6 @@ impl page::Page for PopoverPage {
             .width(320)
             .into(),
 
-            // shadcn `popover-basic.tsx`.
             "basic" => popover(
                 |p| p.trigger(button("Open Popover").style(button::Outline)),
                 |_| popover::header("Dimensions", "Set the dimensions for the layer."),
@@ -153,7 +151,6 @@ impl page::Page for PopoverPage {
             .align(popover::Align::Start)
             .into(),
 
-            // shadcn `popover-alignments.tsx`.
             "alignments" => row![
                 aligned("Start", popover::Align::Start, "Aligned to start"),
                 aligned("Center", popover::Align::Center, "Aligned to center"),
@@ -162,7 +159,6 @@ impl page::Page for PopoverPage {
             .spacing(24)
             .into(),
 
-            // shadcn `popover-form.tsx`.
             "form" => popover(
                 |p| p.trigger(button("Open Popover").style(button::Outline)),
                 |_| {

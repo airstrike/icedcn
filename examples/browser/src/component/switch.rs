@@ -103,10 +103,6 @@ impl page::Page for SwitchPage {
     }
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
-        // Each preview is wrapped in a center_x container so it renders
-        // horizontally centered within the 288 px card, matching shadcn's
-        // centered demo layout. The page-level container already centers
-        // vertically; this layer handles the horizontal axis explicitly.
         let inner: iced::Element<'_, Message, Theme> = match id {
             "demo" => field(switch())
                 .orientation(Horizontal)

@@ -105,12 +105,11 @@ impl page::Page for HoverCardPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `hover-card-demo.tsx`.
             "demo" => hover_card(
                 button("Hover Here").style(button::Link),
                 column![
-                    text("@nextjs").semibold(),
-                    text("The React Framework – created and maintained by @vercel."),
+                    text("@iced_rs").semibold(),
+                    text("A cross-platform GUI library for Rust."),
                     container(text::muted("Joined December 2021").size(text::size::XS))
                         .padding([4, 0, 0, 0]),
                 ]
@@ -120,7 +119,6 @@ impl page::Page for HoverCardPage {
             .close_delay(Duration::from_millis(100))
             .into(),
 
-            // shadcn `hover-card-sides.tsx`.
             "sides" => row![
                 side("Left", hover_card::Side::Left),
                 side("Top", hover_card::Side::Top),

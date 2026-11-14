@@ -17,30 +17,26 @@ use icedxdy::{Slot, Theme, radius};
 use serde::Deserialize;
 use std::time::Duration;
 
-const GITHUB: &str = "https://github.com/shadcn-ui/ui";
+const GITHUB: &str = "https://github.com/airstrike/icedxdy";
 
 const NAVIGATION: &[(&str, &str)] = &[
-    ("Home", "https://ui.shadcn.com/"),
-    ("Docs", "https://ui.shadcn.com/docs/installation"),
-    ("Components", "https://ui.shadcn.com/docs/components"),
-    ("Blocks", "https://ui.shadcn.com/blocks"),
-    ("Charts", "https://ui.shadcn.com/charts/area"),
-    ("Directory", "https://ui.shadcn.com/docs/directory"),
-    ("Typeset", "https://ui.shadcn.com/typeset"),
-    ("Create", "https://ui.shadcn.com/create"),
+    ("Home", GITHUB),
+    ("Docs", "icedxdy://component/button#installation"),
+    ("Components", "icedxdy://component/accordion"),
+    ("Examples", "https://github.com/airstrike/icedxdy/tree/HEAD/examples"),
+    ("Charts", "icedxdy://component/chart"),
+    ("Typography", "icedxdy://component/typography"),
 ];
 
 pub(super) const GUIDES: &[(&str, &str)] = &[
-    ("Introduction", "https://ui.shadcn.com/docs"),
-    ("Components", "https://ui.shadcn.com/docs/components"),
-    ("AI Elements", "https://ui.shadcn.com/docs/ai-elements"),
-    ("Installation", "https://ui.shadcn.com/docs/installation"),
-    ("Theming", "https://ui.shadcn.com/docs/theming"),
-    ("CLI", "https://ui.shadcn.com/docs/cli"),
-    ("Typeset", "https://ui.shadcn.com/docs/typeset"),
-    ("Skills", "https://ui.shadcn.com/docs/skills"),
-    ("Registry", "https://ui.shadcn.com/docs/registry"),
-    ("Changelog", "https://ui.shadcn.com/docs/changelog"),
+    ("Introduction", GITHUB),
+    ("Components", "icedxdy://component/accordion"),
+    ("Conversations", "icedxdy://component/message-scroller"),
+    ("Installation", "icedxdy://component/button#installation"),
+    ("Theming", "https://github.com/airstrike/icedxdy/tree/HEAD/core/src/theme"),
+    ("Cargo", "https://doc.rust-lang.org/cargo/"),
+    ("Typography", "icedxdy://component/typography"),
+    ("Changelog", "https://github.com/airstrike/icedxdy/commits/HEAD"),
 ];
 
 pub(super) async fn stars() -> Option<u64> {
@@ -49,7 +45,7 @@ pub(super) async fn stars() -> Option<u64> {
         stargazers_count: u64,
     }
     let response = reqwest::Client::new()
-        .get("https://api.github.com/repos/shadcn-ui/ui")
+        .get("https://api.github.com/repos/airstrike/icedxdy")
         .header("User-Agent", "icedxdy-component-browser")
         .timeout(Duration::from_secs(5))
         .send()
@@ -346,14 +342,14 @@ mod tests {
         assert!(
             desktop
                 .drain()
-                .any(|m| matches!(m, Message::OpenUrl("https://ui.shadcn.com/charts/area")))
+                .any(|m| matches!(m, Message::OpenUrl("icedxdy://component/chart")))
         );
         assert!(desktop.find("New").is_err());
-        desktop.click("Create").unwrap();
+        desktop.click("Examples").unwrap();
         assert!(
             desktop
                 .drain()
-                .any(|m| matches!(m, Message::OpenUrl("https://ui.shadcn.com/create")))
+                .any(|m| matches!(m, Message::OpenUrl("https://github.com/airstrike/icedxdy/tree/HEAD/examples")))
         );
         let mut mobile = header(&app, 375.);
         mobile.click("Menu").unwrap();
@@ -361,8 +357,28 @@ mod tests {
         assert!(
             mobile
                 .drain()
-                .any(|m| matches!(m, Message::OpenUrl("https://ui.shadcn.com/charts/area")))
+                .any(|m| matches!(m, Message::OpenUrl("icedxdy://component/chart")))
         );
+    }
+
+    #[test]
+    fn component_links_work_before_the_markdown_finishes_loading() {
+        let mut app = app();
+        for &(_, url) in NAVIGATION.iter().chain(GUIDES) {
+            if let Some(target) = url.strip_prefix("icedxdy://component/") {
+                let _ = app.update(Message::OpenComponent(target.to_owned()));
+                let current = &app.pages[app.current_page];
+                let (name, fragment) = target.split_once('#').unwrap_or((target, ""));
+                assert_eq!(page::slug(current.meta().title), name);
+                assert!(current.state().section(fragment).is_some());
+            }
+        }
+        let _ = app.update(Message::OpenComponent("attachment#trigger".into()));
+        let current = &app.pages[app.current_page];
+        assert_eq!(current.meta().title, "Attachment");
+        assert!(current.state().section("trigger").is_some());
+        let _ = app.update(Message::OpenComponent("missing".into()));
+        assert_eq!(app.pages[app.current_page].meta().title, "Attachment");
     }
 
     #[test]

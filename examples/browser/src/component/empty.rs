@@ -1,4 +1,4 @@
-use super::avatar::{evilrabbit_handle, maxleiter_handle, shadcn_handle};
+use super::avatar::{evilrabbit_handle, maxleiter_handle, alex_handle};
 use iced::mouse::Cursor;
 use iced::widget::{canvas, stack};
 use iced::{Element, Fill, Point, Rectangle, Task, Widget};
@@ -81,7 +81,7 @@ impl EmptyPage {
     }
 }
 
-/// shadcn's muted "Learn More ↗" link button.
+/// muted "Learn More ↗" link button.
 fn learn_more<'a>(label: &'a str, size: Size) -> Slot<'a, Message> {
     button![Slot::from(label), icon::arrow_up_right()]
         .style(button::Link + Fg(Token::MutedForeground))
@@ -154,7 +154,6 @@ impl page::Page for EmptyPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `empty-demo.tsx`.
             "demo" => empty::empty()
                 .media(empty::media(icon::folder_code()).style(empty::Icon))
                 .title("No Projects Yet")
@@ -176,7 +175,6 @@ impl page::Page for EmptyPage {
                 )
                 .into(),
 
-            // shadcn `empty-card.tsx`.
             "card" => empty::empty()
                 .media(empty::media(icon::folder()).style(empty::Icon))
                 .title("No projects yet")
@@ -210,12 +208,12 @@ impl page::Page for EmptyPage {
     .content(button![icon::refresh_ccw(), "Refresh"].style(button::Outline))).width(Fill)
     .style(|theme| Style { background: Some(theme.muted.base.alpha(0.3).into()), ..Style::default() }).into(),
 
-            "avatar" => empty::empty().media(empty::media(avatar(Some(shadcn_handle())).fallback("LR").size(48.0)))
+            "avatar" => empty::empty().media(empty::media(avatar(Some(alex_handle())).fallback("AC").size(48.0)))
     .title("User Offline").description("This user is currently offline. You can leave a message to notify them or try again later.")
     .content(button("Leave Message").size(Size::Sm)).into(),
 
             "avatar-group" => empty::empty().media(empty::media(avatar::group([
-    avatar(Some(shadcn_handle())).fallback("CN").size(48.0), avatar(Some(maxleiter_handle())).fallback("LR").size(48.0), avatar(Some(evilrabbit_handle())).fallback("ER").size(48.0)])))
+    avatar(Some(alex_handle())).fallback("AC").size(48.0), avatar(Some(maxleiter_handle())).fallback("LR").size(48.0), avatar(Some(evilrabbit_handle())).fallback("ER").size(48.0)])))
     .title("No Team Members").description("Invite your team to collaborate on this project.")
     .content(button![icon::plus(), "Invite Members"].size(Size::Sm)).into(),
 

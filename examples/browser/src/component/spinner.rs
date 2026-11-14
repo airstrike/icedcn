@@ -109,7 +109,6 @@ impl page::Page for SpinnerPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `spinner-demo.tsx`.
             "demo" => column![
                 item::item([
                     item::media(spinner()).into(),
@@ -124,7 +123,6 @@ impl page::Page for SpinnerPage {
             .max_width(320.0)
             .into(),
 
-            // shadcn `spinner-size.tsx`: `size-3`, `size-4`, `size-6`, `size-8`.
             "size" => row![
                 spinner().size(12.0),
                 spinner().size(16.0),
@@ -135,7 +133,6 @@ impl page::Page for SpinnerPage {
             .align_y(iced::Center)
             .into(),
 
-            // shadcn `spinner-button.tsx`.
             "button" => column![
                 button![spinner(), "Loading..."]
                     .size(Size::Sm)
@@ -153,7 +150,6 @@ impl page::Page for SpinnerPage {
             .align_x(iced::Center)
             .into(),
 
-            // shadcn `spinner-badge.tsx`.
             "badge" => row![
                 badge![spinner().size(12.0), "Syncing"],
                 badge![spinner().size(12.0), "Updating"].style(badge::Secondary),
@@ -163,7 +159,6 @@ impl page::Page for SpinnerPage {
             .align_y(iced::Center)
             .into(),
 
-            // shadcn `spinner-empty.tsx`.
             "empty" => empty::empty()
                 .media(empty::media(spinner()).style(empty::Icon))
                 .title("Processing your request")

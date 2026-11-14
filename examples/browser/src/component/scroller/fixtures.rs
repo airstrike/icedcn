@@ -1,4 +1,4 @@
-//! Native copies of the scripted conversations in the upstream examples.
+//! Scripted conversations for the message scroller.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Role {
     User,
@@ -22,7 +22,7 @@ pub(super) const DEMO: &[Turn] = &[
     Turn {
         role: Assistant,
         speaker: "",
-        text: "That's the classic streaming scroll problem. Wrap your message list in `MessageScroller` and turn on `autoScroll` — the viewport pins to the bottom as tokens arrive, so users always see the latest text land in place.\n\nThe important part: it only auto-scrolls while the reader is already at the bottom. The moment they scroll up to read something earlier, auto-scroll backs off and their position is preserved. You get smooth streaming without fighting the user's intent.",
+        text: "That's the classic streaming scroll problem. Wrap your message list in `scroller` and turn on `.auto_scroll(true)` — the viewport pins to the bottom as tokens arrive, so users always see the latest text land in place.\n\nThe important part: it only auto-scrolls while the reader is already at the bottom. The moment they scroll up to read something earlier, auto-scroll backs off and their position is preserved. You get smooth streaming without fighting the user's intent.",
     },
     Turn {
         role: User,
@@ -32,7 +32,7 @@ pub(super) const DEMO: &[Turn] = &[
     Turn {
         role: Assistant,
         speaker: "",
-        text: "MessageScrollerItem fixes that with turn anchoring. Set `scrollAnchor` on the turn that should settle near the top instead of blindly snapping to the document bottom.\n\nIt also leaves a small peek of the previous exchange visible above the anchor, so context isn't lost. The reply starts in view without that disorienting jump you get from a plain overflow container.",
+        text: "Apply `.anchor(true)` to the row that starts the new turn. The scroller places that row near the top as the next reply arrives.\n\nSet `.previous_item_peek(...)` to leave part of the previous exchange visible above the anchor.",
     },
     Turn {
         role: User,
@@ -42,17 +42,17 @@ pub(super) const DEMO: &[Turn] = &[
     Turn {
         role: Assistant,
         speaker: "",
-        text: "You won't. Auto-scroll only runs when the viewport is already pinned to the bottom, so scrolling up is a deliberate opt-out — their place in the thread stays put even as new tokens keep arriving below.\n\nWhen there is content they haven't seen yet, `MessageScrollerButton` appears at the bottom of the viewport. One tap jumps them back to the newest message and re-engages auto-scroll. Same pattern as Slack or iMessage: quiet when you're caught up, helpful when you're not.",
+        text: "You won't. Auto-scroll only runs when the viewport is already pinned to the bottom, so scrolling up is a deliberate opt-out — their place in the thread stays put even as new tokens keep arriving below.\n\nWhen there is content they haven't seen yet, the jump button appears at the bottom of the viewport. One tap jumps them back to the newest message and re-engages auto-scroll. Same pattern as Slack or iMessage: quiet when you're caught up, helpful when you're not.",
     },
     Turn {
         role: User,
         speaker: "",
-        text: "Last one — does this work with assistive tech?",
+        text: "Can I offer a keyboard shortcut for jumping to the latest reply?",
     },
     Turn {
         role: Assistant,
         speaker: "",
-        text: "`MessageScrollerContent` sets `role=\"log\"` and `aria-relevant=\"additions\"` by default, so screen readers announce new messages as they stream in.\n\nThe scroll button is a real `<button>` with an sr-only label, and it's removed from the tab order when you're already at the bottom — no ghost focus stops.",
+        text: "Yes. Give the scroller a stable widget ID and have the shortcut send the same message as the jump button. Handle it in update with `scroller::scroll_to` and `Target::End`.",
     },
 ];
 pub(super) const ANCHORING: &[Turn] = &[
@@ -74,7 +74,7 @@ pub(super) const ANCHORING: &[Turn] = &[
     Turn {
         role: Assistant,
         speaker: "",
-        text: "Now each assistant response is the item `MessageScroller` keeps in view. This is useful when the reply is the moment you want readers to land on after each turn.",
+        text: "Now each assistant response is the item `scroller` keeps in view. This is useful when the reply is the moment you want readers to land on after each turn.",
     },
     Turn {
         role: User,
@@ -315,7 +315,7 @@ pub(super) const SCROLLABLE: &[Turn] = &[
     Turn {
         role: Assistant,
         speaker: "",
-        text: "Checkpoint 2 is synced. The scrollable hook updates as the viewport moves.\n\nWhen the reader is at the first message, the footer should only point them down. Once they move into the middle of the transcript, it should explain that both directions are available.\n\nAt the latest message, the footer should switch again and only point them back up.",
+        text: "Checkpoint 2 is synced. The scroller sends a reader update as the viewport moves.\n\nWhen the reader is at the first message, the footer should only point them down. Once they move into the middle of the transcript, it should explain that both directions are available.\n\nAt the latest message, the footer should switch again and only point them back up.",
     },
     Turn {
         role: User,
@@ -325,7 +325,7 @@ pub(super) const SCROLLABLE: &[Turn] = &[
     Turn {
         role: Assistant,
         speaker: "",
-        text: "Checkpoint 4 is synced. The scrollable hook updates as the viewport moves.\n\nWhen the reader is at the first message, the footer should only point them down. Once they move into the middle of the transcript, it should explain that both directions are available.\n\nAt the latest message, the footer should switch again and only point them back up.",
+        text: "Checkpoint 4 is synced. The scroller sends a reader update as the viewport moves.\n\nWhen the reader is at the first message, the footer should only point them down. Once they move into the middle of the transcript, it should explain that both directions are available.\n\nAt the latest message, the footer should switch again and only point them back up.",
     },
     Turn {
         role: User,
@@ -335,7 +335,7 @@ pub(super) const SCROLLABLE: &[Turn] = &[
     Turn {
         role: Assistant,
         speaker: "",
-        text: "Checkpoint 6 is synced. The scrollable hook updates as the viewport moves.\n\nWhen the reader is at the first message, the footer should only point them down. Once they move into the middle of the transcript, it should explain that both directions are available.\n\nAt the latest message, the footer should switch again and only point them back up.",
+        text: "Checkpoint 6 is synced. The scroller sends a reader update as the viewport moves.\n\nWhen the reader is at the first message, the footer should only point them down. Once they move into the middle of the transcript, it should explain that both directions are available.\n\nAt the latest message, the footer should switch again and only point them back up.",
     },
     Turn {
         role: User,
@@ -345,7 +345,7 @@ pub(super) const SCROLLABLE: &[Turn] = &[
     Turn {
         role: Assistant,
         speaker: "",
-        text: "Checkpoint 8 is synced. The scrollable hook updates as the viewport moves.\n\nWhen the reader is at the first message, the footer should only point them down. Once they move into the middle of the transcript, it should explain that both directions are available.\n\nAt the latest message, the footer should switch again and only point them back up.",
+        text: "Checkpoint 8 is synced. The scroller sends a reader update as the viewport moves.\n\nWhen the reader is at the first message, the footer should only point them down. Once they move into the middle of the transcript, it should explain that both directions are available.\n\nAt the latest message, the footer should switch again and only point them back up.",
     },
     Turn {
         role: User,
@@ -355,7 +355,7 @@ pub(super) const SCROLLABLE: &[Turn] = &[
     Turn {
         role: Assistant,
         speaker: "",
-        text: "Checkpoint 10 is synced. The scrollable hook updates as the viewport moves.\n\nWhen the reader is at the first message, the footer should only point them down. Once they move into the middle of the transcript, it should explain that both directions are available.\n\nAt the latest message, the footer should switch again and only point them back up.",
+        text: "Checkpoint 10 is synced. The scroller sends a reader update as the viewport moves.\n\nWhen the reader is at the first message, the footer should only point them down. Once they move into the middle of the transcript, it should explain that both directions are available.\n\nAt the latest message, the footer should switch again and only point them back up.",
     },
     Turn {
         role: User,
@@ -365,6 +365,6 @@ pub(super) const SCROLLABLE: &[Turn] = &[
     Turn {
         role: Assistant,
         speaker: "",
-        text: "Checkpoint 12 is synced. The scrollable hook updates as the viewport moves.\n\nWhen the reader is at the first message, the footer should only point them down. Once they move into the middle of the transcript, it should explain that both directions are available.\n\nAt the latest message, the footer should switch again and only point them back up.",
+        text: "Checkpoint 12 is synced. The scroller sends a reader update as the viewport moves.\n\nWhen the reader is at the first message, the footer should only point them down. Once they move into the middle of the transcript, it should explain that both directions are available.\n\nAt the latest message, the footer should switch again and only point them back up.",
     },
 ];

@@ -117,7 +117,6 @@ impl page::Page for RadioGroupPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `radio-group-demo.tsx`.
             "demo" => radio_group(|g| {
                 column![
                     field(g.item("default"))
@@ -136,7 +135,6 @@ impl page::Page for RadioGroupPage {
             .default_value("comfortable")
             .into(),
 
-            // shadcn `radio-group-description.tsx`.
             "description" => radio_group(|g| {
                 column![
                     described(
@@ -161,7 +159,6 @@ impl page::Page for RadioGroupPage {
             .default_value("comfortable")
             .into(),
 
-            // shadcn `radio-group-disabled.tsx`.
             "disabled" => radio_group(|g| {
                 column![
                     field(g.item("option1").disabled(true))

@@ -84,7 +84,7 @@ impl AlertDialogPage {
     }
 }
 
-/// shadcn's "Show Dialog" outline trigger.
+/// "Show Dialog" outline trigger.
 fn show(a: &alert_dialog::Handle) -> Slot<'static, Message> {
     a.trigger(button("Show Dialog").style(button::Outline))
 }
@@ -128,7 +128,6 @@ impl page::Page for AlertDialogPage {
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         let page_index = self.page_index();
         match id {
-            // shadcn `alert-dialog-demo.tsx`.
             "demo" | "basic" => {
                 let description = if id == "basic" {
                     "This action cannot be undone. This will permanently delete your account and remove your data from our servers."
@@ -149,7 +148,6 @@ impl page::Page for AlertDialogPage {
                 .into()
             }
 
-            // shadcn `alert-dialog-small.tsx`.
             "small" => alert_dialog(show, |a| {
                 column![
                     a.header(
@@ -167,7 +165,6 @@ impl page::Page for AlertDialogPage {
             .size(Size::Sm)
             .into(),
 
-            // shadcn `alert-dialog-media.tsx`.
             "media" => alert_dialog(
                 |a| a.trigger(button("Share Project").style(button::Outline)),
                 |a| {
@@ -192,7 +189,6 @@ impl page::Page for AlertDialogPage {
             )
             .into(),
 
-            // shadcn `alert-dialog-small-media.tsx`.
             "small-media" => alert_dialog(show, |a| {
                 column![
                     a.header(
@@ -215,7 +211,6 @@ impl page::Page for AlertDialogPage {
             .size(Size::Sm)
             .into(),
 
-            // shadcn `alert-dialog-destructive.tsx`.
             "destructive" => alert_dialog(
                 |a| a.trigger(button("Delete Chat").style(button::Destructive)),
                 move |a| {

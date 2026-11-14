@@ -67,7 +67,7 @@ impl Demo {
             Self::Visibility => ("Transcript Outline", "Track the current anchored turn."),
             Self::Scrollable => (
                 "Scroll Status",
-                "Where the reader can go scroll to based on current scroll position.",
+                "See which directions you can scroll from your current position.",
             ),
         }
     }
@@ -78,12 +78,12 @@ impl Demo {
                 "Toggle the anchor role, then send messages to compare where turns settle."
             }
             Self::Group => {
-                "When a user joins, a marker is created. scrollAnchor on the marker marks it as the next turn"
+                "Add Rocky to start a turn anchored at the join marker."
             }
-            Self::Context => "Adjust the slider and send. Observe the previous message peak",
-            Self::Streaming => "Streaming is simulated. autoScroll is enabled.",
+            Self::Context => "Adjust the slider, then send a message to see how much of the previous reply stays visible.",
+            Self::Streaming => "The simulated reply follows the bottom of the viewport while you read there.",
             Self::Opening => {
-                "Toggle the defaultScrollPosition to see where the transcript starts when you open the thread"
+                "Choose where the transcript opens. Try its start, its end, or its last anchored turn."
             }
             Self::History => "Click Load History to load the entire conversation",
             Self::Animation => "Select an animation then click send to see it in action.",

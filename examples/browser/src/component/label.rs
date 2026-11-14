@@ -74,7 +74,6 @@ impl page::Page for LabelPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `label-demo.tsx`: pressing the label toggles the box.
             "demo" => field(checkbox())
                 .orientation(Horizontal)
                 .label("Accept terms and conditions")

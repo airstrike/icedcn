@@ -83,7 +83,6 @@ impl page::Page for PaginationPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `pagination-demo.tsx`.
             "demo" => pagination([
                 pagination::previous().icon(icon::chevron_left()).into(),
                 pagination::link("1").into(),
@@ -94,7 +93,6 @@ impl page::Page for PaginationPage {
             ])
             .into(),
 
-            // shadcn `pagination-simple.tsx`.
             "simple" => pagination([
                 pagination::link("1").into(),
                 pagination::link("2").active(true).into(),

@@ -176,7 +176,6 @@ impl page::Page for SelectPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `select-demo.tsx`.
             "demo" => select([select::group(
                 std::iter::once(select::label("Fruits")).chain(fruits()),
             )])
@@ -185,7 +184,6 @@ impl page::Page for SelectPage {
             .width(192)
             .into(),
 
-            // shadcn `select-groups.tsx`.
             "groups" => select([
                 select::group([
                     select::label("Fruits"),
@@ -206,7 +204,6 @@ impl page::Page for SelectPage {
             .width(192)
             .into(),
 
-            // shadcn `select-scrollable.tsx`.
             "scrollable" => select([
                 zone(
                     "North America",
@@ -266,7 +263,6 @@ impl page::Page for SelectPage {
             .width(256)
             .into(),
 
-            // shadcn `select-disabled.tsx`.
             "disabled" => select([select::group([
                 select::item("apple", "Apple"),
                 select::item("banana", "Banana"),
@@ -280,7 +276,6 @@ impl page::Page for SelectPage {
             .width(192)
             .into(),
 
-            // shadcn `select-invalid.tsx`.
             "invalid" => field(
                 select([select::group([
                     select::item("apple", "Apple"),

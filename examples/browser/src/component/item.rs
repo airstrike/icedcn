@@ -1,4 +1,4 @@
-use super::avatar::{evilrabbit_handle, maxleiter_handle, shadcn_handle};
+use super::avatar::{evilrabbit_handle, maxleiter_handle, alex_handle};
 use iced::widget::image;
 use iced::{ContentFit, Fill, Shrink, Task, Widget};
 use std::sync::OnceLock;
@@ -124,9 +124,9 @@ fn stack<'a>(
 
 fn people() -> [(&'static str, &'static str, image::Handle); 3] {
     [
-        ("shadcn", "shadcn@vercel.com", shadcn_handle()),
-        ("maxleiter", "maxleiter@vercel.com", maxleiter_handle()),
-        ("evilrabbit", "evilrabbit@vercel.com", evilrabbit_handle()),
+        ("Alex Chen", "alex@example.com", alex_handle()),
+        ("maxleiter", "maxleiter@example.com", maxleiter_handle()),
+        ("evilrabbit", "evilrabbit@example.com", evilrabbit_handle()),
     ]
 }
 
@@ -174,7 +174,6 @@ impl page::Page for ItemPage {
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         let top = Message::Page(self.page_index(), page::Message::LinkClicked("#".into()));
         match id {
-            // shadcn `item-demo.tsx`.
             "demo" => stack([
                 item::item([
                     item::content([
@@ -199,7 +198,6 @@ impl page::Page for ItemPage {
                 .on_press(top.clone()),
             ]),
 
-            // shadcn `item-variant.tsx`.
             "variant" => stack([
                 inbox("Default Variant", "Transparent background with no border.").into(),
                 inbox("Outline Variant", "Outlined style with a visible border.")
@@ -210,7 +208,6 @@ impl page::Page for ItemPage {
                     .into(),
             ]),
 
-            // shadcn `item-size.tsx`.
             "size" => stack([
                 inbox("Default Size", "The standard size for most use cases.")
                     .style(item::Outline)
@@ -225,7 +222,6 @@ impl page::Page for ItemPage {
                     .into(),
             ]),
 
-            // shadcn `item-icon.tsx`.
             "icon" => column![
                 item::item([
                     item::media(icon::shield_alert()).style(item::Icon).into(),
@@ -269,7 +265,7 @@ impl page::Page for ItemPage {
                 .into(),
                 item::item([
                     item::media(avatar::group([
-                        avatar(Some(shadcn_handle())).fallback("CN"),
+                        avatar(Some(alex_handle())).fallback("AC"),
                         avatar(Some(maxleiter_handle())).fallback("LR"),
                         avatar(Some(evilrabbit_handle())).fallback("ER"),
                     ]))
@@ -412,14 +408,14 @@ impl page::Page for ItemPage {
                 item::item([
                     item::content([
                         item::title("External resource").into(),
-                        item::description("Opens in a new tab with security attributes.").into()
+                        item::description("Opens the project in your browser.").into()
                     ])
                     .into(),
                     item::actions([icon::external_link().size(16).into()])
                 ])
                 .style(item::Outline)
                 .on_press(Message::OpenUrl(
-                    "https://ui.shadcn.com/docs/components/radix/item"
+                    "https://github.com/airstrike/icedxdy"
                 ))
             ]
             .spacing(16)

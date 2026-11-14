@@ -99,7 +99,6 @@ impl page::Page for KbdPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `kbd-demo.tsx`.
             "demo" => column![
                 kbd_group![kbd("⌘"), kbd("⇧"), kbd("⌥"), kbd("⌃")],
                 kbd_group![kbd("Ctrl"), text::small("+"), kbd("B")],
@@ -108,7 +107,6 @@ impl page::Page for KbdPage {
             .align_x(iced::Center)
             .into(),
 
-            // shadcn `kbd-group.tsx`.
             "group" => row![
                 text::muted("Use"),
                 kbd_group![kbd("Ctrl + B"), kbd("Ctrl + K")],
@@ -118,7 +116,6 @@ impl page::Page for KbdPage {
             .align_y(iced::Center)
             .into(),
 
-            // shadcn `kbd-button.tsx`.
             "button" => button!["Accept", kbd("⏎")].style(button::Outline).into(),
 
             "tooltip" => button_group![

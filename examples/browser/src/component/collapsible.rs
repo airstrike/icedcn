@@ -1,4 +1,4 @@
-//! Pinned Radix Nova Collapsible examples. RTL is excluded by project policy.
+//! Collapsible sections, controls and a file explorer.
 
 mod chevron;
 
@@ -46,7 +46,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "file-tree",
         title: "File Tree",
         description: Some(
-            "Use nested collapsibles to build a file tree. In a conversation, this is the [File Tree](https://ui.shadcn.com/docs/ai-elements/radix/file-tree) pattern.",
+            "Open a folder to reveal its files and nested folders.",
         ),
         snippet: "examples/browser/snippets/collapsible-file-tree.md",
     },
@@ -261,37 +261,37 @@ const FILE_TREE: &[Entry] = &[
             Entry::Folder(
                 "ui",
                 &[
-                    Entry::File("button.tsx"),
-                    Entry::File("card.tsx"),
-                    Entry::File("dialog.tsx"),
-                    Entry::File("input.tsx"),
-                    Entry::File("select.tsx"),
-                    Entry::File("table.tsx"),
+                    Entry::File("button.rs"),
+                    Entry::File("card.rs"),
+                    Entry::File("dialog.rs"),
+                    Entry::File("input.rs"),
+                    Entry::File("select.rs"),
+                    Entry::File("table.rs"),
                 ],
             ),
-            Entry::File("login-form.tsx"),
-            Entry::File("register-form.tsx"),
+            Entry::File("login_form.rs"),
+            Entry::File("register_form.rs"),
         ],
     ),
     Entry::Folder(
         "lib",
         &[
-            Entry::File("utils.ts"),
-            Entry::File("cn.ts"),
-            Entry::File("api.ts"),
+            Entry::File("util.rs"),
+            Entry::File("style.rs"),
+            Entry::File("api.rs"),
         ],
     ),
     Entry::Folder(
-        "hooks",
+        "state",
         &[
-            Entry::File("use-media-query.ts"),
-            Entry::File("use-debounce.ts"),
-            Entry::File("use-local-storage.ts"),
+            Entry::File("window_size.rs"),
+            Entry::File("debounce.rs"),
+            Entry::File("storage.rs"),
         ],
     ),
     Entry::Folder(
         "types",
-        &[Entry::File("index.d.ts"), Entry::File("api.d.ts")],
+        &[Entry::File("types.rs"), Entry::File("request.rs")],
     ),
     Entry::Folder(
         "public",
@@ -301,11 +301,11 @@ const FILE_TREE: &[Entry] = &[
             Entry::File("images"),
         ],
     ),
-    Entry::File("app.tsx"),
-    Entry::File("layout.tsx"),
-    Entry::File("globals.css"),
-    Entry::File("package.json"),
-    Entry::File("tsconfig.json"),
+    Entry::File("main.rs"),
+    Entry::File("layout.rs"),
+    Entry::File("theme.rs"),
+    Entry::File("Cargo.toml"),
+    Entry::File("rustfmt.toml"),
     Entry::File("README.md"),
     Entry::File(".gitignore"),
 ];

@@ -153,14 +153,14 @@ fn nested_folders_are_independent_and_remount_closed_with_full_fixture() {
     for label in [
         "components",
         "lib",
-        "hooks",
+        "state",
         "types",
         "public",
-        "app.tsx",
-        "layout.tsx",
-        "globals.css",
-        "package.json",
-        "tsconfig.json",
+        "main.rs",
+        "layout.rs",
+        "theme.rs",
+        "Cargo.toml",
+        "rustfmt.toml",
         "README.md",
         ".gitignore",
     ] {
@@ -171,14 +171,14 @@ fn nested_folders_are_independent_and_remount_closed_with_full_fixture() {
     ui.click("ui").unwrap();
     frame(&mut ui);
     for file in [
-        "button.tsx",
-        "card.tsx",
-        "dialog.tsx",
-        "input.tsx",
-        "select.tsx",
-        "table.tsx",
-        "login-form.tsx",
-        "register-form.tsx",
+        "button.rs",
+        "card.rs",
+        "dialog.rs",
+        "input.rs",
+        "select.rs",
+        "table.rs",
+        "login_form.rs",
+        "register_form.rs",
     ] {
         ui.find(file).unwrap();
     }
@@ -187,20 +187,20 @@ fn nested_folders_are_independent_and_remount_closed_with_full_fixture() {
     near(child.x - parent.x, 20.);
     ui.click("lib").unwrap();
     frame(&mut ui);
-    for file in ["utils.ts", "cn.ts", "api.ts", "button.tsx"] {
+    for file in ["util.rs", "style.rs", "api.rs", "button.rs"] {
         ui.find(file).unwrap();
     }
     ui.click("components").unwrap();
     frame(&mut ui);
-    assert!(ui.find("button.tsx").is_err());
+    assert!(ui.find("button.rs").is_err());
     ui.click("components").unwrap();
     frame(&mut ui);
     ui.find("ui").unwrap();
-    assert!(ui.find("button.tsx").is_err());
-    ui.find("utils.ts").unwrap();
+    assert!(ui.find("button.rs").is_err());
+    ui.find("util.rs").unwrap();
     ui.click("Outline").unwrap();
     frame(&mut ui);
-    ui.find("utils.ts").unwrap();
+    ui.find("util.rs").unwrap();
     ui.click("Explorer").unwrap();
     frame(&mut ui);
     ui.find(".gitignore").unwrap();

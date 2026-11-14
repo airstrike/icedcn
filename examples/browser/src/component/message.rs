@@ -140,7 +140,7 @@ fn group_example() -> Slot<'static, Message> {
         message(
             bubble("The component and example JSON now live under the UI registry.").style(Muted),
         )
-        .avatar(portrait(0, "CN"))
+        .avatar(portrait(0, "AC"))
         .into(),
     ]))
 }
@@ -150,7 +150,7 @@ fn header_footer_example() -> Slot<'static, Message> {
         column![
             message(bubble("I already checked the logs.").style(Muted)).header("Olivia"),
             message(bubble(
-                "Send the report to the team. Ping @shadcn if you need help."
+                "Send the report to the team. Ping @alex if you need help."
             ))
             .align(Right)
             .footer(

@@ -138,7 +138,6 @@ impl page::Page for DialogPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `dialog-demo.tsx`.
             "demo" => dialog(
                 |d| d.trigger(button("Open Dialog").style(button::Outline)),
                 |d| {
@@ -163,7 +162,6 @@ impl page::Page for DialogPage {
             )
             .into(),
 
-            // shadcn `dialog-close-button.tsx`.
             "close-button" => dialog(
                 |d| d.trigger(button("Share").style(button::Outline)),
                 |d| {
@@ -173,7 +171,7 @@ impl page::Page for DialogPage {
                             "Anyone who has this link will be able to view this.",
                         ),
                         input("")
-                            .default_value("https://ui.shadcn.com/docs/installation")
+                            .default_value("https://github.com/airstrike/icedxdy")
                             .width(iced::Fill),
                         dialog::footer([d.close(button("Close"))]),
                     ]
@@ -183,7 +181,6 @@ impl page::Page for DialogPage {
             )
             .into(),
 
-            // shadcn `dialog-no-close-button.tsx`.
             "no-close-button" => dialog(
                 |d| d.trigger(button("No Close Button").style(button::Outline)),
                 |_| {

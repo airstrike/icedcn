@@ -101,10 +101,8 @@ impl page::Page for TextareaPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `textarea-demo.tsx`.
             "demo" => full(textarea("Type your message here.")),
 
-            // shadcn `textarea-field.tsx`.
             "field" => full(
                 field(textarea("Type your message here."))
                     .label("Message")
@@ -112,21 +110,18 @@ impl page::Page for TextareaPage {
                     .description_above(),
             ),
 
-            // shadcn `textarea-disabled.tsx`.
             "disabled" => full(
                 field(textarea("Type your message here."))
                     .disabled(true)
                     .label(text::label("Message").style(theme::text::Foreground + Alpha(0.5))),
             ),
 
-            // shadcn `textarea-invalid.tsx`.
             "invalid" => full(
                 field(textarea("Type your message here.").style(textarea::Invalid))
                     .label(text::label("Message").style(theme::text::Destructive))
                     .description("Please enter a valid message."),
             ),
 
-            // shadcn `textarea-button.tsx`.
             "button" => full(
                 column![
                     textarea("Type your message here."),

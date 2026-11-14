@@ -286,8 +286,8 @@ fn tiles(state: &FilesState) -> Slot<'static, Edit> {
             icon::table().size(16).selectable(false).into(),
         ),
         (
-            "renderer.tsx",
-            "TSX · 12 KB",
+            "renderer.rs",
+            "Rust · 12 KB",
             icon::file_code().size(16).selectable(false).into(),
         ),
     ];
@@ -340,7 +340,7 @@ impl<'a> Component<'a, Message, Theme> for Files {
             Edit::Open(url) => return Some(Message::OpenUrl(url)),
             Edit::Copy => {
                 return Some(Message::CopyText(
-                    "https://ui.shadcn.com/docs/components/radix/attachment#trigger".into(),
+                    "icedxdy://component/attachment#trigger".into(),
                 ));
             }
         }
@@ -359,10 +359,10 @@ impl<'a> Component<'a, Message, Theme> for Files {
                         spinner().size(16.).into(),
                     ));
                 }
-                if !state.removed.contains("message-renderer.tsx") {
+                if !state.removed.contains("message_renderer.rs") {
                     list.push(status_card(
-                        "message-renderer.tsx",
-                        "TypeScript · 12 KB",
+                        "message_renderer.rs",
+                        "Rust · 12 KB",
                         State::Done,
                         icon::file_code().size(16).selectable(false).into(),
                     ));

@@ -30,13 +30,13 @@ use crate::font;
 use crate::icon;
 use icedxdy::widget::scroller;
 
-/// Height for preview containers (shadcn uses h-72 = 288px). Per-example
+/// Height for preview containers, in logical pixels. Per-example
 /// cards stay at this fixed height; tall content (the typography
 /// article) lives in a `Block::Inline` instead, which has no card chrome
 /// and grows naturally.
 const PREVIEW_HEIGHT: f32 = 288.0;
 
-/// Card preview padding — shadcn uses `p-6` = 24px.
+/// Padding around the live preview, in logical pixels.
 const PREVIEW_PADDING: f32 = 24.0;
 
 /// Collapsed code-snippet height when not expanded by the user (px).
@@ -60,7 +60,7 @@ pub struct Meta {
 ///   is extracted as the section title for the right-side TOC and
 ///   rendered with the depth-aware heading style.
 /// - [`Block::Example`] is a live preview rendered by `Page::preview(id)`
-///   wrapped in shadcn's card chrome (288px-tall preview area + collapsible
+///   wrapped in card chrome (288px-tall preview area + collapsible
 ///   code block underneath). Empty `title` skips the heading + TOC entry —
 ///   used for the page hero.
 /// - [`Block::Inline`] is a live preview rendered into the page flow with
@@ -483,7 +483,7 @@ fn render_example<'a>(
     )
 }
 
-/// Render shadcn's example-card chrome: an optional depth-aware heading
+/// Render example-card chrome: an optional depth-aware heading
 /// (`h2`/`h3`) and muted description, then the bordered card — a preview at least
 /// 288px tall over an optional collapsible code block. Tall previews grow
 /// with their content. An empty `title` omits the heading.
@@ -632,26 +632,8 @@ fn code_panel_with_border<'a>(
 
 /// Right-side "On This Page" navigation.
 ///
-/// Per `.claude/research/SIDEBARS.md`: NOT a `SidebarMenuButton`. shadcn's
-/// docs-toc uses plain `<a>` tags with `text-muted-foreground` (inactive),
-/// `hover:text-foreground` (hover), and
-/// `data-[active=true]:font-medium data-[active=true]:text-foreground` for
-/// the currently-viewed section. No backgrounds at any state — text color
-/// only.
-///
-/// **Design gloss on top of shadcn:** a viewport-driven rank-alpha
-/// gradient on INACTIVE entries. Items already in the visible set hold
-/// at full `muted_foreground` opacity at rank-center and fade linearly
-/// toward the edges of the visible set; items not visible at all sit at
-/// the floor alpha so they stay legible-but-recessive. The floor is
-/// generous (`TOC_ALPHA_FLOOR`) — earlier iterations dropped to 0.25
-/// which pulled distant entries below readable contrast against
-/// `muted_foreground` (already a low-contrast color).
-///
-/// The active entry is exempt from the gradient: it always paints at
-/// full `foreground` + `Weight::Medium`, mirroring shadcn's active-state
-/// promotion. "Active" is still computed from the rank-center of the
-/// sensor-visible set so it tracks the reader's scroll position.
+/// Visible headings brighten toward the center of the viewport. The active
+/// heading uses the foreground color and medium weight.
 fn toc<'a>(page: &'a dyn Page) -> Slot<'a, super::Message> {
     /// Keep off-screen links legible against both documentation surfaces.
     const TOC_ALPHA_FLOOR: f32 = 0.9;
@@ -751,11 +733,6 @@ fn toc<'a>(page: &'a dyn Page) -> Slot<'a, super::Message> {
 
     let header = container(text::muted("On This Page").selectable(false)).padding([0, 8]);
 
-    // Outer spacing(16) = gap between header and item list. Inner items
-    // stack with their natural Sm-button height (28px) — shadcn's TOC
-    // entries hit ~28-30px line height with `text-sm` + `gap-2`, so the
-    // raw button stack already lands in the right ballpark without an
-    // extra inter-item spacing nudge.
     let items = scrollable(column(nav_items).width(Fill).spacing(2))
         .width(Fill)
         .height(Fill);
@@ -775,8 +752,6 @@ pub fn snippet<'a>(
 ) -> Slot<'a, super::Message> {
     let mut settings = markdown::Settings {
         code_size: Pixels(13.0),
-        // shadcn's `prose` body uses `leading-7` (28px on 16px body) — match
-        // for nova fidelity.
         line_height: markdown::LineHeight::Relative(1.75),
         ..markdown::Settings::with_style(viewer.style)
     };
@@ -793,29 +768,19 @@ pub fn snippet<'a>(
 }
 
 /// Build a [`markdown::Style`] whose inline-code chip pulls from the
-/// active [`Theme`]. Mirrors shadcn's `--color-code` / `--color-code-foreground`
+/// active [`Theme`]. Mirrors `--color-code` / `--color-code-foreground`
 /// pair: light-mode chip is a near-white bg with body fg; dark-mode chip
 /// is a dark gray bg with a desaturated fg. Both flavors hand off via the
 /// same field and stay in sync with the page's `code_block` container.
 fn inline_style_from_theme(theme: &Theme) -> markdown::Style {
     markdown::Style {
         font: Font::default(),
-        // shadcn's inline `<code>` uses `bg-muted` — there's no dedicated
-        // `--color-code` token in nova; the muted surface is the canonical
-        // inline-chip background, with foreground text inheriting body color.
         inline_code_color: theme.neutral.foreground.into(),
         inline_code_highlight: Highlight {
             background: Background::Color(theme.muted.base.into()),
             border: border::rounded(4),
         },
-        // shadcn squeezes inline code with `px-[0.3rem] py-[0.2rem]`. iced
-        // expresses chip padding in pixels of font-size; 1px on the sides
-        // stays compact without overlapping adjacent words.
         inline_code_padding: iced::Padding::default().left(2).right(2),
-        // Bundled Geist Mono — matches shadcn nova's monospace surface
-        // on the live docs site. Loaded at startup in `main.rs`; falls
-        // back to cosmic-text's default monospace if the registration
-        // fails for any reason.
         inline_code_font: Font::new(font::GEIST_MONO_NAME),
         // Baseline matching body=16; `markdown::Settings::with_text_size`
         // overwrites this to `text_size * 0.875` when the snippet renders,
@@ -963,6 +928,25 @@ impl State {
         self.code_expanded.clear();
     }
 
+    pub(crate) fn section(&self, fragment: &str) -> Option<usize> {
+        if fragment.is_empty() {
+            return Some(0);
+        }
+        flatten(self.blocks).iter().position(|(block, _)| {
+            if block.toc_title(self).is_some_and(|title| slug(title) == fragment) {
+                return true;
+            }
+            match block {
+                Block::Example { id, .. } => *id == fragment,
+                Block::Md(path) => Path::new(path)
+                    .file_stem()
+                    .and_then(|stem| stem.to_str())
+                    .is_some_and(|stem| stem.strip_suffix(fragment).is_some_and(|p| p.ends_with('-'))),
+                _ => false,
+            }
+        })
+    }
+
     pub fn init(&self) -> Task<super::Message> {
         let pi = self.page_index;
         let mut paths: Vec<&'static str> = Vec::new();
@@ -1028,23 +1012,7 @@ impl State {
             Message::FileSelected(_) | Message::CodeBlock(_) => Task::none(),
             Message::LinkClicked(url) => {
                 if let Some(fragment) = url.strip_prefix('#') {
-                    let index = if fragment.is_empty() {
-                        Some(0)
-                    } else {
-                        flatten(self.blocks).iter().position(|(block, _)| {
-                            let matches_title = block.toc_title(self).is_some_and(|title| {
-                                let anchor = title
-                                    .split_whitespace()
-                                    .map(str::to_lowercase)
-                                    .collect::<Vec<_>>()
-                                    .join("-");
-                                anchor == fragment
-                            });
-                            matches_title
-                                || matches!(block, Block::Example { id, .. } if *id == fragment)
-                        })
-                    };
-                    return index
+                    return self.section(fragment)
                         .map_or_else(Task::none, |index| self.update(&Message::ScrollTo(index)));
                 }
                 open_link(url)
@@ -1088,8 +1056,15 @@ impl State {
     }
 }
 
-/// Open a documentation or demo link in the user's default browser.
+pub(crate) fn slug(title: &str) -> String {
+    title.to_lowercase().replace(' ', "-")
+}
+
+/// Route component links to the installed browser page and external URLs to the system handler.
 pub fn open_link(url: &str) -> Task<super::Message> {
+    if let Some(target) = url.strip_prefix("icedxdy://component/") {
+        return Task::done(super::Message::OpenComponent(target.to_owned()));
+    }
     if url.starts_with("https://") || url.starts_with("http://") || url.starts_with("mailto:") {
         let url = url.to_owned();
         return Task::perform(async move { open::that_detached(url) }, |result| {

@@ -19,7 +19,7 @@ text::small("Small text")     // 14px, normal
 text::muted("Secondary text") // 14px, muted color
 
 text::blockquote("Quote text")
-text::inline_code("icedxdy::widget::alert_dialog")
+text::inline_code("widget::alert_dialog")
 ```
 
 Chain `.medium()`, `.semibold()`, `.bold()`, or `.italic()` to override the default weight/style. For an underlined heading, use `column![text::h2(...), rule::horizontal(1)].spacing(8)`.

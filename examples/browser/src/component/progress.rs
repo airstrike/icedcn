@@ -41,15 +41,10 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Md("examples/browser/snippets/progress-api-reference.md"),
 ];
 
-/// Initial value before the delay fires (matches the 13 the shadcn demo
-/// starts at).
 const INITIAL_VALUE: f32 = 13.0;
 
-/// Target value after the 500ms delay (matches the demo's 66 target).
 const TARGET_VALUE: f32 = 66.0;
 
-/// Delay before the indicator jumps to the target — mirrors the 500ms
-/// timeout in `progress-demo.tsx`.
 const DELAY_MS: u64 = 500;
 
 pub struct ProgressPage {
@@ -75,9 +70,7 @@ impl ProgressPage {
     }
 }
 
-/// shadcn `progress-controlled.tsx`: a slider driving a progress bar. The
-/// value is UI state shared by two widgets, so the pair is a user
-/// `Component` holding it, rather than app state.
+/// The slider and progress bar share their value in this component.
 struct Controlled;
 
 impl<'a> Component<'a, Message, Theme> for Controlled {

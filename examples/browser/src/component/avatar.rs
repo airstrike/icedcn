@@ -12,11 +12,11 @@ use icedxdy::{Color, Theme, theme};
 use crate::Message;
 use crate::page;
 
-pub(crate) fn shadcn_handle() -> image::Handle {
+pub(crate) fn alex_handle() -> image::Handle {
     static IMAGE: OnceLock<image::Handle> = OnceLock::new();
     IMAGE
         .get_or_init(|| {
-            image::Handle::from_bytes(include_bytes!("../../assets/avatars/shadcn.png").as_slice())
+            image::Handle::from_bytes(include_bytes!("../../assets/avatars/02.png").as_slice())
         })
         .clone()
 }
@@ -56,7 +56,7 @@ pub(crate) fn pranathip_handle() -> image::Handle {
 
 pub static META: page::Meta = page::Meta {
     title: "Avatar",
-    description: "An image element with a fallback for representing the user.",
+    description: "An image with a text fallback for a user’s avatar.",
 };
 
 pub static BLOCKS: &[page::Block] = &[
@@ -79,7 +79,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "badge",
         title: "Badge",
         description: Some(
-            "Use the `AvatarBadge` component to add a badge to the avatar. The badge is positioned at the bottom right of the avatar.",
+            "Place a status dot at the lower right with `avatar::badge(avatar, avatar::dot())`.",
         ),
         snippet: "examples/browser/snippets/avatar-badge.md",
     },
@@ -87,31 +87,31 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "badge-icon",
         title: "Badge with Icon",
-        description: Some("You can also use an icon inside `<AvatarBadge>`."),
+        description: Some("Pass an icon as the second argument to `avatar::badge(...)`."),
         snippet: "examples/browser/snippets/avatar-badge-icon.md",
     },
     page::Block::Example {
         id: "group",
         title: "Avatar Group",
-        description: Some("Use the `AvatarGroup` component to add a group of avatars."),
+        description: Some("Pass the avatars to `avatar::group(...)` to overlap them."),
         snippet: "examples/browser/snippets/avatar-group.md",
     },
     page::Block::Example {
         id: "group-count",
         title: "Avatar Group Count",
-        description: Some("Use `<AvatarGroupCount>` to add a count to the group."),
+        description: Some("Use `.count(\"+3\")` to show how many more people belong to the group."),
         snippet: "examples/browser/snippets/avatar-group-count.md",
     },
     page::Block::Example {
         id: "group-count-icon",
         title: "Avatar Group with Icon",
-        description: Some("You can also use an icon inside `<AvatarGroupCount>`."),
+        description: Some("Pass an icon to the avatar group’s `.count(...)` builder."),
         snippet: "examples/browser/snippets/avatar-group-count-icon.md",
     },
     page::Block::Example {
         id: "size",
         title: "Sizes",
-        description: Some("Use the `size` prop to change the size of the avatar."),
+        description: Some("Use `.size(avatar::Sm)` or `.size(avatar::Lg)` to change the avatar size."),
         snippet: "examples/browser/snippets/avatar-size.md",
     },
     page::Block::Example {
@@ -185,16 +185,16 @@ impl page::Page for AvatarPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // The viewport controls md:gap-12; available content width controls wrapping.
+            // The viewport sets the gap. The available content width controls wrapping.
             "demo" => row![
-                avatar(Some(shadcn_handle())).fallback("CN"),
+                avatar(Some(alex_handle())).fallback("AC"),
                 avatar::badge(
                     avatar(Some(evilrabbit_handle())).fallback("ER"),
                     avatar::dot(),
                 )
                 .badge_style(presence),
                 avatar::group([
-                    avatar(Some(shadcn_handle())).fallback("CN"),
+                    avatar(Some(alex_handle())).fallback("AC"),
                     avatar(Some(maxleiter_handle())).fallback("LR"),
                     avatar(Some(evilrabbit_handle())).fallback("ER"),
                 ])
@@ -205,19 +205,15 @@ impl page::Page for AvatarPage {
             .align_y(iced::Center)
             .into(),
 
-            // Basic (avatar-basic.tsx): single avatar — image + fallback.
-            "basic" => avatar(Some(shadcn_handle())).fallback("CN").into(),
+            "basic" => avatar(Some(alex_handle())).fallback("AC").into(),
 
-            // Badge (avatar-badge.tsx): avatar + corner status dot.
             "badge" => avatar::badge(
-                avatar(Some(shadcn_color_handle())).fallback("CN"),
+                avatar(Some(alex_handle())).fallback("AC"),
                 avatar::dot(),
             )
             .badge_style(presence)
             .into(),
 
-            // Badge with Icon (avatar-badge-icon.tsx): avatar + corner badge
-            // containing a `+` icon (lucide PlusIcon).
             "badge-icon" => avatar::badge(
                 avatar(Some(pranathip_handle())).fallback("PP"),
                 plus(8.0).style(|theme: &Theme, _| svg::Style {
@@ -226,28 +222,23 @@ impl page::Page for AvatarPage {
             )
             .into(),
 
-            // Avatar Group (avatar-group.tsx): three overlapping avatars.
             "group" => avatar::group([
-                avatar(Some(shadcn_handle())).fallback("CN"),
+                avatar(Some(alex_handle())).fallback("AC"),
                 avatar(Some(maxleiter_handle())).fallback("LR"),
                 avatar(Some(evilrabbit_handle())).fallback("ER"),
             ])
             .into(),
 
-            // Avatar Group Count (avatar-group-count.tsx): three avatars +
-            // a `+3` text count chip on the right.
             "group-count" => avatar::group([
-                avatar(Some(shadcn_handle())).fallback("CN"),
+                avatar(Some(alex_handle())).fallback("AC"),
                 avatar(Some(maxleiter_handle())).fallback("LR"),
                 avatar(Some(evilrabbit_handle())).fallback("ER"),
             ])
             .count("+3")
             .into(),
 
-            // Avatar Group with Icon (avatar-group-count-icon.tsx): three
-            // avatars + a `+` icon count chip on the right.
             "group-count-icon" => avatar::group([
-                avatar(Some(shadcn_handle())).fallback("CN"),
+                avatar(Some(alex_handle())).fallback("AC"),
                 avatar(Some(maxleiter_handle())).fallback("LR"),
                 avatar(Some(evilrabbit_handle())).fallback("ER"),
             ])
@@ -256,16 +247,13 @@ impl page::Page for AvatarPage {
             }))
             .into(),
 
-            // Sizes (avatar-size.tsx): three avatars at sm / default / lg in
-            // a row at gap-2 (8px). Same persona at three sizes mirrors the
-            // shadcn example (which uses the same avatar three times).
             "size" => row![
-                avatar(Some(shadcn_handle()))
-                    .fallback("CN")
+                avatar(Some(alex_handle()))
+                    .fallback("AC")
                     .size(avatar::Sm),
-                avatar(Some(shadcn_handle())).fallback("CN"),
-                avatar(Some(shadcn_handle()))
-                    .fallback("CN")
+                avatar(Some(alex_handle())).fallback("AC"),
+                avatar(Some(alex_handle()))
+                    .fallback("AC")
                     .size(avatar::Lg),
             ]
             .spacing(8)
@@ -276,7 +264,7 @@ impl page::Page for AvatarPage {
             "dropdown" => dropdown_menu(
                 |m| {
                     m.trigger(
-                        button(avatar(Some(shadcn_color_handle())).fallback("CN"))
+                        button(avatar(Some(alex_handle())).fallback("AC"))
                             .style(button::Ghost)
                             .square()
                             .rounded(),
@@ -302,16 +290,7 @@ impl page::Page for AvatarPage {
     }
 }
 
-fn shadcn_color_handle() -> image::Handle {
-    static IMAGE: OnceLock<image::Handle> = OnceLock::new();
-    IMAGE
-        .get_or_init(|| {
-            image::Handle::from_bytes(
-                include_bytes!("../../assets/avatars/shadcn-color.jpg").as_slice(),
-            )
-        })
-        .clone()
-}
+
 
 fn presence(theme: &Theme) -> theme::container::Style {
     let mut style = badge_style(theme);

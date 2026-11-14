@@ -68,7 +68,7 @@ impl Demo {
         let panel: Slot<'static, Event> = if state.count == 0 {
             let (title, desc) = match self {
                 Self::Chat => (
-                    "Morning, shadcn!",
+                    "Morning, Alex!",
                     "What are we working on today? Press send to start a new conversation",
                 ),
                 Self::Anchoring => (

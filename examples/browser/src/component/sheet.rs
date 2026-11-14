@@ -61,7 +61,7 @@ impl SheetPage {
     }
 }
 
-/// shadcn's "Edit profile" sheet, opened by an outline button.
+/// "Edit profile" sheet, opened by an outline button.
 fn profile<'a>(
     side: sheet::Side,
     label: &'static str,
@@ -126,10 +126,8 @@ impl page::Page for SheetPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `sheet-demo.tsx`.
             "demo" => profile(sheet::Side::Right, "Open", true).into(),
 
-            // shadcn `sheet-side.tsx`.
             "side" => row![
                 profile(sheet::Side::Top, "Top", true),
                 profile(sheet::Side::Right, "Right", true),
@@ -139,7 +137,6 @@ impl page::Page for SheetPage {
             .spacing(8)
             .into(),
 
-            // shadcn `sheet-no-close-button.tsx`.
             "no-close-button" => column![
                 profile(sheet::Side::Right, "Open Sheet", false),
                 text::muted("Dismiss with Escape, a press outside, or the footer buttons."),

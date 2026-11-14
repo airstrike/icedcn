@@ -152,7 +152,6 @@ impl page::Page for TextPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // Article hero — verbatim shadcn `typography-demo.tsx`.
             "demo" => column![
                 Element::from(text::h1("Taxing Laughter: The Joke Tax Chronicles")),
                 Element::from(text::lead(
@@ -219,12 +218,10 @@ impl page::Page for TextPage {
             .width(Fill)
             .boxed(),
 
-            // h1 — `text-center` per nova `typography-h1.tsx`
             "h1" => container(text::h1("Taxing Laughter: The Joke Tax Chronicles"))
                 .center_x(Fill)
                 .into(),
 
-            // h2 — `border-b pb-2` per nova `typography-h2.tsx`
             "h2" => h2_with_border("The People of the Kingdom"),
 
             "h3" => text::h3("The Joke Tax").into(),
@@ -251,7 +248,7 @@ impl page::Page for TextPage {
             ])
             .into(),
 
-            "inline-code" => inline_code_card("@radix-ui/react-alert-dialog"),
+            "inline-code" => inline_code_card("widget::alert_dialog"),
 
             "lead" => text::lead(
                 "A modal dialog that interrupts the user with important content and \
@@ -268,16 +265,14 @@ impl page::Page for TextPage {
     }
 }
 
-/// Wrap an h2 with a 1px horizontal rule underneath — the iced equivalent
-/// of nova's `border-b pb-2 ...` cascade on `<h2>`.
+/// Place a horizontal rule below the heading.
 fn h2_with_border<'a>(content: &'a str) -> iced::Element<'a, Message, Theme> {
     column![Element::from(text::h2(content)), rule::horizontal(1)]
         .spacing(8)
         .boxed()
 }
 
-/// Wrap inline_code in a small container with bg-muted + padding + small
-/// rounded corners — matches `bg-muted px-[0.3rem] py-[0.2rem] rounded`.
+/// Draw inline code on a padded, muted background.
 fn inline_code_card<'a>(code: &'a str) -> iced::Element<'a, Message, Theme> {
     container(text::inline_code(code))
         .padding([3, 5])
@@ -285,7 +280,7 @@ fn inline_code_card<'a>(code: &'a str) -> iced::Element<'a, Message, Theme> {
         .into()
 }
 
-/// Render the two-column nova typography-table.
+/// Render the two-column typography example.
 fn table_card<'a>() -> iced::Element<'a, Message, Theme> {
     let rows = &[
         ("Empty", "Overflowing"),

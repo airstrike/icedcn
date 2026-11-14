@@ -1,4 +1,3 @@
-// shadcn's skeleton pulses (`animate-pulse`); icedxdy's is static.
 
 use iced::{Fill, FillPortion, Task, Widget};
 
@@ -116,7 +115,6 @@ impl page::Page for SkeletonPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `skeleton-demo.tsx`.
             "demo" => row![
                 skeleton().width(48).height(48).radius(FULL),
                 column![
@@ -129,7 +127,6 @@ impl page::Page for SkeletonPage {
             .align_y(iced::Center)
             .into(),
 
-            // shadcn `skeleton-avatar.tsx`.
             "avatar" => row![
                 skeleton().width(40).height(40).radius(FULL),
                 column![
@@ -142,7 +139,6 @@ impl page::Page for SkeletonPage {
             .align_y(iced::Center)
             .into(),
 
-            // shadcn `skeleton-card.tsx`.
             "card" => card(
                 column![
                     card::header(line(2, 3)).description(line(1, 2)),
@@ -158,7 +154,6 @@ impl page::Page for SkeletonPage {
             .width(320.0)
             .boxed(),
 
-            // shadcn `skeleton-text.tsx`.
             "text" => column![
                 skeleton().width(Fill).height(16),
                 skeleton().width(Fill).height(16),
@@ -169,7 +164,6 @@ impl page::Page for SkeletonPage {
             .max_width(320.0)
             .into(),
 
-            // shadcn `skeleton-form.tsx`.
             "form" => column![
                 column![
                     skeleton().width(80).height(16),
@@ -190,7 +184,6 @@ impl page::Page for SkeletonPage {
             .max_width(320.0)
             .into(),
 
-            // shadcn `skeleton-table.tsx`.
             "table" => Column::with_children((0..5).map(|_| {
                 row![
                     skeleton().width(Fill).height(16),

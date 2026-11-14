@@ -38,7 +38,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "size",
         title: "Size",
         description: Some(
-            "Use the `size` prop to change the size of the button. In Rust, use `.size(...)`.",
+            "Choose a button size with `.size(...)`.",
         ),
         snippet: "examples/browser/snippets/button-size.md",
     },
@@ -88,7 +88,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "with-icon",
         title: "With Icon",
         description: Some(
-            "Remember to add the `data-icon=\"inline-start\"` or `data-icon=\"inline-end\"` attribute to the icon for the correct spacing. In Rust, use `.icon_start()` or `.icon_end()`.",
+            "Use `.icon_start()` or `.icon_end()` to keep the icon and label evenly spaced.",
         ),
         snippet: "examples/browser/snippets/button-with-icon.md",
     },
@@ -96,7 +96,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "rounded",
         title: "Rounded",
         description: Some(
-            "Use the `rounded-full` class to make the button rounded. In Rust, use `.rounded()`.",
+            "Call `.rounded()` for a pill-shaped button.",
         ),
         snippet: "examples/browser/snippets/button-rounded.md",
     },
@@ -104,7 +104,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "spinner",
         title: "Spinner",
         description: Some(
-            "Render a `<Spinner />` component inside the button to show a loading state. Remember to add the `data-icon=\"inline-start\"` or `data-icon=\"inline-end\"` attribute to the spinner for the correct spacing. In Rust, use `.icon_start()` or `.icon_end()`.",
+            "Place `spinner()` next to the label. Use `.icon_start()` or `.icon_end()` for spacing.",
         ),
         snippet: "examples/browser/snippets/button-spinner.md",
     },
@@ -112,17 +112,17 @@ pub static BLOCKS: &[page::Block] = &[
         id: "button-group",
         title: "Button Group",
         description: Some(
-            "To create a button group, use the `ButtonGroup` component. See the [Button Group](https://ui.shadcn.com/docs/components/radix/button-group) documentation for more details.",
+            "Arrange related actions with [Button Group](icedxdy://component/button-group).",
         ),
         snippet: "examples/browser/snippets/button-mail-actions.md",
     },
     page::Block::Example {
-        id: "aschild",
-        title: "As Child",
+        id: "link-button",
+        title: "Link Button",
         description: Some(
-            "You can use the `asChild` prop on `<Button />` to make another component look like a button. Here's an example of a link that looks like a button. In Rust, `.anchor()` provides link styling and `on_press` publishes the navigation message.",
+            "Call `.anchor()` for link styling and use `.on_press(...)` to send a navigation message.",
         ),
-        snippet: "examples/browser/snippets/button-aschild.md",
+        snippet: "examples/browser/snippets/button-link-button.md",
     },
     page::Block::Group {
         title: "API Reference",
@@ -147,9 +147,6 @@ impl ButtonPage {
 }
 
 fn demo() -> Slot<'static, crate::Message> {
-    // Verbatim shadcn `button-demo.tsx`:
-    //   <Button variant="outline">Button</Button>
-    //   <Button variant="outline" size="icon"><ArrowUpIcon /></Button>
     row![
         button("Button").style(button::Outline),
         button(icons::arrow_up(16.0))
@@ -175,9 +172,9 @@ fn view(id: &str, wide: bool) -> Slot<'static, crate::Message> {
         "spinner" => spinner::view(),
         "button-group" => super::button_group::demo(),
 
-        "aschild" => button("Login")
+        "link-button" => button("Login")
             .anchor()
-            .on_press(crate::Message::OpenUrl("https://ui.shadcn.com/login"))
+            .on_press(crate::Message::OpenUrl("https://github.com/login"))
             .into(),
 
         _ => unreachable!("unknown button preview id: {id}"),

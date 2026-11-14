@@ -1,5 +1,3 @@
-// The upstream RTL example is outside this browser’s scope.
-
 use iced::widget::image;
 use iced::{ContentFit, Fill, Task, Widget};
 use icedxdy::widget::{aspect_ratio, container};
@@ -27,8 +25,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "square",
         title: "Square",
         description: Some(
-            "A square aspect ratio component using the `ratio={1 / 1}` prop. \
-             This is useful for displaying images in a square format.",
+            "Pass `1.0` for a square crop.",
         ),
         snippet: "examples/browser/snippets/aspect-ratio-square.md",
     },
@@ -36,8 +33,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "portrait",
         title: "Portrait",
         description: Some(
-            "A portrait aspect ratio component using the `ratio={9 / 16}` prop. \
-             This is useful for displaying images in a portrait format.",
+            "Pass `9.0 / 16.0` for a portrait crop.",
         ),
         snippet: "examples/browser/snippets/aspect-ratio-portrait.md",
     },
@@ -61,19 +57,19 @@ impl AspectRatioPage {
     }
 }
 
-/// Both galleries crop the same grayscale shadcn1 photo.
+/// Both galleries crop the same landscape photo.
 pub(super) fn cover() -> image::Handle {
     static PHOTO: LazyLock<image::Handle> = LazyLock::new(|| {
-        image::Handle::from_bytes(include_bytes!("../../assets/shadcn1.jpg").as_slice())
+        image::Handle::from_bytes(include_bytes!("../../assets/landscape.jpg").as_slice())
     });
     PHOTO.clone()
 }
 
-// Apply Nova's brightness(0.2) to the source pixels before rounding the image.
+// Darken source pixels before rounding the image corners.
 // A separate shade leaves bright image pixels visible around its curved edge.
 fn dark_cover() -> image::Handle {
     static PHOTO: LazyLock<image::Handle> = LazyLock::new(|| {
-        image::Handle::from_bytes(include_bytes!("../../assets/shadcn1-dark.png").as_slice())
+        image::Handle::from_bytes(include_bytes!("../../assets/landscape-dark.png").as_slice())
     });
     PHOTO.clone()
 }

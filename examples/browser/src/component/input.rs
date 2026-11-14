@@ -173,17 +173,12 @@ impl page::Page for InputPage {
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         let pi = self.state.page_index;
         match id {
-            // Demo (hero): Field+Label+Input+Description for an "API Key"
-            // form. Verbatim shadcn `input-demo.tsx`.
             "demo" => field(input("sk-...").secure(true).width(Fill))
                 .label("API Key")
                 .description("Your API key is encrypted and stored securely.")
                 .width(320)
                 .into(),
 
-            // Basic: simple input with placeholder. Width 320 matches nova's
-            // form input width — Input now defaults to Length::Shrink, so set
-            // it explicitly here.
             "basic" => input("Enter text").width(320).into(),
 
             // Field: input with label "Username" and description.
@@ -193,15 +188,12 @@ impl page::Page for InputPage {
                 .width(320)
                 .into(),
 
-            // Disabled: nova `disabled` on the input.
             "disabled" => field(input("Email").width(Fill).disabled(true))
                 .label(text::label("Email").style(theme::text::Foreground + Alpha(0.5)))
                 .description("This field is currently disabled.")
                 .width(320)
                 .into(),
 
-            // Invalid: destructive border + destructive focus ring
-            // (aria-invalid). First-class `theme::text_input::Invalid`.
             "invalid" => field(input("Error").width(Fill).style(theme::text_input::Invalid))
                 .label(text::label("Invalid Input").style(theme::text::Destructive))
                 .description("This field contains validation errors.")
@@ -227,8 +219,6 @@ impl page::Page for InputPage {
                 .width(320)
                 .into(),
 
-            // Badge: a label with a trailing `Beta` badge pushed flush right
-            // (shadcn `ml-auto`). Verbatim shadcn `input-badge.tsx`.
             "badge" => field(input("https://api.example.com/webhook").width(Fill))
                 .label(Slot::from(
                     row![

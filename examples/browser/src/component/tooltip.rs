@@ -1,5 +1,3 @@
-// The tooltip's arrow is drawn in half-pixel rows: iced cannot rotate the
-// `size-2.5` square shadcn uses.
 
 use iced::Task;
 
@@ -99,10 +97,8 @@ impl page::Page for TooltipPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `tooltip-demo.tsx`.
             "demo" => tooltip(button("Hover").style(button::Outline), "Add to library").into(),
 
-            // shadcn `tooltip-sides.tsx`.
             "sides" => row![
                 side("Left", tooltip::Side::Left),
                 side("Top", tooltip::Side::Top),
@@ -112,7 +108,6 @@ impl page::Page for TooltipPage {
             .spacing(8)
             .into(),
 
-            // shadcn `tooltip-keyboard.tsx`.
             "keyboard" => tooltip(
                 button(icon::save())
                     .size(Size::Sm)
@@ -127,7 +122,6 @@ impl page::Page for TooltipPage {
             )
             .into(),
 
-            // shadcn `tooltip-disabled.tsx`.
             "disabled" => tooltip(
                 button("Disabled").style(button::Outline).disabled(true),
                 "This feature is currently unavailable",

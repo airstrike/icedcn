@@ -230,7 +230,7 @@ fn translated_tooltip_and_popover_triggers_remain_reachable() {
             );
         }
         ui.find("Command failed with exit code 1").unwrap();
-        ui.find("ENOENT: no such file or directory, open pnpm-lock.yaml")
+        ui.find("Could not open Cargo.lock: No such file or directory")
             .unwrap();
         ui.tap_key(Named::Escape);
         ui = ui.rebuild(Element::from(toaster(

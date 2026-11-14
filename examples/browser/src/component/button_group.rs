@@ -267,8 +267,6 @@ fn view(id: &str, pi: usize) -> Slot<'static, Message> {
 
     match id {
         "demo" => demo(),
-        // Orientation. shadcn `button-group-orientation.tsx`: vertical
-        // group of two icon buttons (plus, minus).
         "orientation" => button_group![
             button(icon::plus())
                 .square()
@@ -282,15 +280,6 @@ fn view(id: &str, pi: usize) -> Slot<'static, Message> {
         .orientation(group::Vertical)
         .into(),
 
-        // Size. shadcn `button-group-size.tsx`: three groups stacked
-        // vertically, each with three text buttons + one icon button.
-        // Sizes: sm / default / lg respectively. icon-sm/icon/icon-lg map
-        // to a `square()` icon button at the matching text size, since our
-        // Size enum drives both the height and the icon-cell width.
-        //
-        // Each row is wrapped in a center-x container so the size-varying
-        // clusters align on a center line rather than a left edge — gives
-        // the column a balanced, calibrated look in the preview card.
         "size" => column([
             container(button_group![
                 button("Small")
@@ -360,8 +349,6 @@ fn view(id: &str, pi: usize) -> Slot<'static, Message> {
         .align_y(iced::Center)
         .into(),
 
-        // Separator. shadcn `button-group-separator.tsx`: two secondary
-        // buttons with a `ButtonGroupSeparator` between them.
         "separator" => button_group![
             button("Copy")
                 .style(button::Secondary)

@@ -1,5 +1,3 @@
-// Intentional skips: toggle-rtl (RTL). shadcn's demo fills its bookmark
-// icon while on; lucide's font glyphs are outlines only.
 
 use iced::widget::component::{Component, component};
 use iced::widget::svg;
@@ -131,10 +129,8 @@ impl page::Page for TogglePage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `toggle-demo.tsx`.
             "demo" => component(Bookmark).boxed(),
 
-            // shadcn `toggle-outline.tsx`.
             "outline" => row![
                 toggle![italic, "Italic"].style(toggle::Outline),
                 toggle![bold, "Bold"].style(toggle::Outline),
@@ -143,10 +139,8 @@ impl page::Page for TogglePage {
             .align_y(iced::Center)
             .into(),
 
-            // shadcn `toggle-text.tsx`.
             "text" => toggle![italic, "Italic"].into(),
 
-            // shadcn `toggle-sizes.tsx`.
             "sizes" => row![
                 toggle("Small").size(Size::Sm).style(toggle::Outline),
                 toggle("Default").style(toggle::Outline),
@@ -156,7 +150,6 @@ impl page::Page for TogglePage {
             .align_y(iced::Center)
             .into(),
 
-            // shadcn `toggle-disabled.tsx`.
             "disabled" => row![
                 toggle("Disabled").disabled(true),
                 toggle("Disabled").style(toggle::Outline).disabled(true),

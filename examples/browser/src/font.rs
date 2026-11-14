@@ -1,8 +1,6 @@
 //! Bundled monospace font for inline and fenced code rendering.
 //!
-//! Ships [Geist Mono] (1.8.0, SIL OFL 1.1) so the browser example
-//! renders code with the same family shadcn nova uses on the live
-//! docs site, instead of falling back to the system [`Font::MONOSPACE`].
+//! Ships [Geist Mono] (1.8.0, SIL OFL 1.1) for consistent code rendering.
 //!
 //! Wired into the iced application via `.font(font::GEIST_MONO)` in
 //! `main.rs`, and consumed by `page::inline_style_from_palette` to

@@ -162,7 +162,6 @@ impl page::Page for InputGroupPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `input-group-demo.tsx`.
             "demo" => Column::with_children([input_group(input("Search..."))
                 .addon(input_group::addon(icon::search()))
                 .addon(end("12 results"))
@@ -171,7 +170,6 @@ impl page::Page for InputGroupPage {
             .max_width(320.)
             .into(),
 
-            // shadcn `input-group-icon.tsx`.
             "icon" => stack([
                 input_group(input("Search..."))
                     .addon(input_group::addon(icon::search()))
@@ -188,7 +186,6 @@ impl page::Page for InputGroupPage {
                     .into(),
             ]),
 
-            // shadcn `input-group-text.tsx`.
             "text" => stack([
                 input_group(input("0.00"))
                     .addon(input_group::addon(input_group::text("$")))
@@ -211,7 +208,6 @@ impl page::Page for InputGroupPage {
 
             "button" => buttons::preview(),
 
-            // shadcn `input-group-kbd.tsx`.
             "kbd" => stack([input_group(input("Search..."))
                 .addon(input_group::addon(icon::search()))
                 .addon(end(kbd("⌘K")))
@@ -241,7 +237,7 @@ impl page::Page for InputGroupPage {
                         input_group::addon(
                             row![
                                 icon::file_code(),
-                                input_group::text("script.js"),
+                                input_group::text("main.rs"),
                                 space::horizontal(),
                                 input_group::button(icon::copy()).square()
                             ]
@@ -330,7 +326,7 @@ impl page::Page for InputGroupPage {
                             input_group::addon(
                                 row![
                                     icon::file_code(),
-                                    input_group::text("script.js"),
+                                    input_group::text("main.rs"),
                                     space::horizontal(),
                                     input_group::button(icon::refresh_ccw()).square(),
                                     input_group::button(icon::copy()).square()

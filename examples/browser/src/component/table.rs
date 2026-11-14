@@ -43,7 +43,7 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Md("examples/browser/snippets/table-api-reference.md"),
 ];
 
-/// shadcn's invoices: number, status, method and amount.
+/// invoices: number, status, method and amount.
 const INVOICES: [[&str; 4]; 7] = [
     ["INV001", "Paid", "Credit Card", "$250.00"],
     ["INV002", "Pending", "PayPal", "$150.00"],
@@ -175,10 +175,8 @@ impl page::Page for TablePage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `table-demo.tsx`.
             "demo" => invoices(INVOICES.len()),
 
-            // shadcn `table-footer.tsx`: the first three invoices.
             "footer" => invoices(3),
 
             "actions" => actions(),

@@ -451,10 +451,8 @@ impl page::Page for ContextMenuPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `context-menu-demo.tsx`.
             "demo" => component(Demo::Browser).boxed(),
 
-            // shadcn `context-menu-basic.tsx`.
             "basic" => context_menu(
                 |_| area(),
                 |_| {

@@ -106,7 +106,7 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Md("examples/browser/snippets/combobox-api-reference.md"),
 ];
 
-const FRAMEWORKS: [&str; 5] = ["Next.js", "SvelteKit", "Nuxt.js", "Remix", "Astro"];
+const FRAMEWORKS: [&str; 5] = ["iced", "egui", "Slint", "GTK", "Druid"];
 
 const COUNTRIES: &[(&str, &str, &str)] = &[
     ("", "Select country", ""),
@@ -211,13 +211,11 @@ impl page::Page for ComboboxPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `combobox-demo.tsx` / `combobox-basic.tsx`.
             "demo" | "basic" => combobox(FRAMEWORKS)
                 .placeholder("Select a framework")
                 .icon(icon::chevron_down)
                 .into(),
 
-            // shadcn `combobox-disabled.tsx`.
             "disabled" => combobox(FRAMEWORKS)
                 .placeholder("Select a framework")
                 .icon(icon::chevron_down)
@@ -227,14 +225,14 @@ impl page::Page for ComboboxPage {
             "multiple" => combobox(FRAMEWORKS)
                 .multiple(true)
                 .auto_highlight(true)
-                .default_values(["Next.js"])
+                .default_values(["iced"])
                 .width(320)
                 .into(),
             "clear" => combobox(FRAMEWORKS)
                 .placeholder("Select a framework")
                 .icon(icon::chevron_down)
                 .clearable(true)
-                .default_value("Next.js")
+                .default_value("iced")
                 .into(),
             "groups" => combobox::options(ZONES.iter().flat_map(|&(group, zones)| {
                 zones

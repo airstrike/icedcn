@@ -161,8 +161,8 @@ fn profile() -> Slot<'static, Message> {
     let trigger = |d: &dialog::Handle| d.trigger(button("Edit Profile").style(button::Outline));
     let form = |d: &dialog::Handle| {
         column![
-            field(input("").default_value("shadcn@example.com")).label("Email"),
-            field(input("").default_value("@shadcn")).label("Username"),
+            field(input("").default_value("alex@example.com")).label("Email"),
+            field(input("").default_value("@alex")).label("Username"),
             d.close(button("Save changes").width(Fill))
         ]
         .spacing(24)

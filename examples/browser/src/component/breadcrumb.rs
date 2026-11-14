@@ -1,4 +1,4 @@
-//! Breadcrumb component page — mirrors the Radix Nova documentation.
+//! Breadcrumb navigation examples.
 //! RTL is intentionally excluded by project policy.
 
 use crate::page;
@@ -29,14 +29,14 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "basic",
         title: "Basic",
-        description: Some("A basic breadcrumb with a home link and a components link."),
+        description: Some("A path with links to Home and Components."),
         snippet: "examples/browser/snippets/breadcrumb-basic.md",
     },
     page::Block::Example {
         id: "separator",
         title: "Custom separator",
         description: Some(
-            "Use a custom component as `children` for `<BreadcrumbSeparator />` to create a custom separator.",
+            "Use `.separator(...)` to draw a custom separator.",
         ),
         snippet: "examples/browser/snippets/breadcrumb-separator.md",
     },
@@ -44,7 +44,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "dropdown",
         title: "Dropdown",
         description: Some(
-            "You can compose `<BreadcrumbItem />` with a `<DropdownMenu />` to create a dropdown in the breadcrumb.",
+            "Use a dropdown menu as a breadcrumb item to offer related destinations.",
         ),
         snippet: "examples/browser/snippets/breadcrumb-dropdown.md",
     },
@@ -52,7 +52,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "ellipsis",
         title: "Collapsed",
         description: Some(
-            "We provide a `<BreadcrumbEllipsis />` component to show a collapsed state when the breadcrumb is too long.",
+            "Use `breadcrumb::ellipsis(None)` to represent hidden levels in a long path.",
         ),
         snippet: "examples/browser/snippets/breadcrumb-ellipsis.md",
     },
@@ -60,7 +60,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "link",
         title: "Link component",
         description: Some(
-            "To use a custom link component from your routing library, you can use the `asChild` prop on `<BreadcrumbLink />`.",
+            "Pass a navigation message to `breadcrumb::link(...)` to open a destination in your application.",
         ),
         snippet: "examples/browser/snippets/breadcrumb-link.md",
     },
@@ -272,7 +272,7 @@ impl page::Page for BreadcrumbPage {
         let padding = if matches!(id, "demo" | "ellipsis") {
             8
         } else if !self.wide {
-            // The native shell contributes 32px; upstream contributes 24px.
+            // The shell supplies 32 px of exterior padding.
             // Together with this inset, both leave 64px before the content.
             32
         } else {

@@ -138,13 +138,11 @@ impl page::Page for SliderPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `slider-demo.tsx`: `mx-auto w-full max-w-xs`.
             "demo" => container(slider(0.0..=100.0).default_value(75.0).step(1.0))
                 .width(Fill)
                 .max_width(320.0)
                 .into(),
 
-            // shadcn `slider-disabled.tsx`.
             "disabled" => container(
                 slider(0.0..=100.0)
                     .default_value(50.0)

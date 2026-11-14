@@ -11,7 +11,7 @@ use icedxdy::widget::{avatar, button, column, dropdown_menu, menu, row, text};
 use icedxdy::{Slot, Theme};
 
 use crate::Message;
-use crate::component::avatar::shadcn_handle;
+use crate::component::avatar::alex_handle;
 use crate::icon;
 use crate::page;
 
@@ -180,8 +180,7 @@ impl<'a> Component<'a, Message, Theme> for PreferencesMenu {
         }
     }
 }
-/// shadcn `dropdown-menu-checkboxes.tsx`: three toggles the menu shows and
-/// flips, held by a user `Component` rather than app state.
+/// Keeps the three visibility toggles in the menu’s local state.
 struct Appearance;
 
 impl<'a> Component<'a, Message, Theme> for Appearance {
@@ -219,8 +218,7 @@ impl<'a> Component<'a, Message, Theme> for Appearance {
     }
 }
 
-/// shadcn `dropdown-menu-radio-group.tsx`: the panel position, held by a
-/// user `Component`.
+/// Keeps the selected panel position in the menu’s local state.
 struct Position;
 
 impl<'a> Component<'a, Message, Theme> for Position {
@@ -343,7 +341,7 @@ fn avatar_menu() -> Element<'static, Message, Theme> {
     dropdown_menu(
         |m| {
             m.trigger(
-                button(avatar(Some(shadcn_handle())).fallback("LR"))
+                button(avatar(Some(alex_handle())).fallback("AC"))
                     .square()
                     .rounded()
                     .translate(false)
@@ -548,7 +546,6 @@ impl page::Page for DropdownMenuPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `dropdown-menu-demo.tsx`.
             "demo" => dropdown_menu(open(), |_| {
                 column![
                     menu::group([
@@ -587,7 +584,6 @@ impl page::Page for DropdownMenuPage {
             .width(160)
             .into(),
 
-            // shadcn `dropdown-menu-basic.tsx`.
             "basic" => dropdown_menu(open(), |_| {
                 column![
                     menu::group([
@@ -606,7 +602,6 @@ impl page::Page for DropdownMenuPage {
             })
             .into(),
 
-            // shadcn `dropdown-menu-submenu.tsx`.
             "submenu" => dropdown_menu(open(), |_| {
                 menu::group([
                     menu::item("Team").into(),
@@ -633,7 +628,6 @@ impl page::Page for DropdownMenuPage {
             })
             .into(),
 
-            // shadcn `dropdown-menu-shortcuts.tsx`.
             "shortcuts" => dropdown_menu(open(), |_| {
                 column![
                     menu::group([
@@ -654,7 +648,6 @@ impl page::Page for DropdownMenuPage {
 
             "radio-group" => component(Position).boxed(),
 
-            // shadcn `dropdown-menu-destructive.tsx`.
             "destructive" => dropdown_menu(
                 |m| m.trigger(button("Actions").style(button::Outline)),
                 |_| {

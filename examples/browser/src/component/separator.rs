@@ -11,7 +11,7 @@ use crate::page;
 
 pub static META: page::Meta = page::Meta {
     title: "Separator",
-    description: "Visually or semantically separates content.",
+    description: "Scroll through content inside a fixed viewport.",
 };
 
 pub static BLOCKS: &[page::Block] = &[
@@ -116,10 +116,9 @@ impl page::Page for SeparatorPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `separator-demo.tsx`.
             "demo" => column![
                 column![
-                    text::label("shadcn/ui").height(14),
+                    text::label("icedxdy").height(14),
                     text::muted("The Foundation for your Design System").line_height(Pixels(20.0)),
                 ]
                 .spacing(6),
@@ -135,7 +134,6 @@ impl page::Page for SeparatorPage {
             .max_width(384.0)
             .into(),
 
-            // shadcn `separator-vertical.tsx`: `flex h-5 items-center gap-4`.
             "vertical" => row![
                 text::small("Blog").line_height(Pixels(20.0)),
                 separator().orientation(Vertical),
@@ -179,7 +177,6 @@ impl page::Page for SeparatorPage {
                 .boxed()
             }
 
-            // shadcn `separator-list.tsx`.
             "list" => column![
                 list_item("Item 1", "Value 1"),
                 separator(),

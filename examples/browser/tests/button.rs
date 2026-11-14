@@ -101,12 +101,12 @@ fn spinner_spacing_fits_narrow_frame_and_loading_controls_are_not_focusable() {
 #[test]
 fn anchor_and_handlerless_examples_preserve_the_public_action_contract() {
     let page = ButtonPage::new(0);
-    let mut ui = preview(&*page, "aschild", 260.);
+    let mut ui = preview(&*page, "link-button", 260.);
     ui.point_at(Point::new(12., 12.));
     ui.simulate(simulator::click());
     assert!(matches!(
         ui.drain().next(),
-        Some(Message::OpenUrl("https://ui.shadcn.com/login"))
+        Some(Message::OpenUrl("https://github.com/login"))
     ));
     ui.point_at(Point::new(220., 200.));
     ui.simulate(simulator::click());
@@ -114,7 +114,7 @@ fn anchor_and_handlerless_examples_preserve_the_public_action_contract() {
     ui.tap_key(Named::Enter);
     assert!(matches!(
         ui.drain().next(),
-        Some(Message::OpenUrl("https://ui.shadcn.com/login"))
+        Some(Message::OpenUrl("https://github.com/login"))
     ));
     for id in [
         "demo",
