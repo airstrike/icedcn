@@ -61,6 +61,28 @@ fn accordion_header_keeps_its_height_below_a_scrollable_viewport() {
 }
 
 #[test]
+fn accordion_fill_trigger_uses_its_intrinsic_height_below_a_scrollable_viewport() {
+    use iced_core::Length::Fill;
+    use iced_core::widget::Id;
+    use iced_widget::Space;
+    use icedxdy_widget::{container, scrollable};
+
+    let id = Id::unique();
+    let trigger = container(Space::new().width(80).height(20))
+        .height(Fill)
+        .id(id.clone());
+    let disclosure = accordion([accordion::item("custom", trigger)]);
+    let content = column![Space::new().height(500), disclosure];
+    let mut ui: Simulator<'_> =
+        simulator(Element::from(scrollable::scrollable(content).height(200)));
+    let bounds = ui
+        .find(id)
+        .expect("public custom trigger is mounted")
+        .bounds();
+    assert_eq!(bounds.height, 20.);
+}
+
+#[test]
 fn accordion_arrows_skip_disabled_headers_and_activate_the_selected_item() {
     let content: Element<'_, Message, Theme, Renderer> = accordion([
         accordion::item("one", "One"),

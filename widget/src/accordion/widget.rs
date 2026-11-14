@@ -316,7 +316,12 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
         // Scrollable columns keep a finite remaining-height hint even when
         // their children can grow vertically. Below the first viewport that
         // hint can be zero; the trigger and its icons still need their height.
-        let trigger_height_limit = inner_limits.bounds().height;
+        let trigger_limits = layout::Limits::with_flags(
+            Size::ZERO,
+            inner_max,
+            Size::new(false, inner_limits.compression.height),
+            Size::new(false, inner_limits.infinite.height),
+        );
         let mut cursor_y = 0.0_f32;
         let mut max_width = 0.0_f32;
 
@@ -344,12 +349,10 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
 
             // ----- chevrons (laid out first so we know their size for the
             // trigger row's width budget) ------------------------------
-            let chevron_limits =
-                layout::Limits::new(Size::ZERO, Size::new(inner_max.width, trigger_height_limit));
             item.chevron_closed
-                .layout(chevron_closed_tree, renderer, &chevron_limits);
+                .layout(chevron_closed_tree, renderer, &trigger_limits);
             item.chevron_open
-                .layout(chevron_open_tree, renderer, &chevron_limits);
+                .layout(chevron_open_tree, renderer, &trigger_limits);
             let chevron_closed_size = chevron_closed_tree.size;
             let chevron_open_size = chevron_open_tree.size;
             let chevron_w = chevron_closed_size.width.max(chevron_open_size.width);
@@ -360,9 +363,11 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
             let item_inset = item.inset.min(inner_max.width / 2.0);
             let content_w = (inner_max.width - 2.0 * item_inset).max(0.0);
             let trigger_max_w = (content_w - chevron_w - 2.0 * TRIGGER_BORDER).max(0.0);
-            let trigger_limits =
-                layout::Limits::new(Size::ZERO, Size::new(trigger_max_w, trigger_height_limit));
-            item.trigger.layout(trigger_tree, renderer, &trigger_limits);
+            let label_limits = layout::Limits {
+                max: Size::new(trigger_max_w, inner_max.height),
+                ..trigger_limits
+            };
+            item.trigger.layout(trigger_tree, renderer, &label_limits);
 
             let trigger_label_h = trigger_tree.size.height;
             let trigger_inner_h = trigger_label_h.max(chevron_h);
