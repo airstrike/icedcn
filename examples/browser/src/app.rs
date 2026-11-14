@@ -2,6 +2,7 @@ mod header;
 
 use iced::Element;
 use iced::Widget;
+use iced::font::set_defaults;
 use iced::mouse::Interaction;
 use iced::widget::{column, combo_box, operation, row, space, stack};
 use iced::{clipboard, window};
@@ -21,10 +22,10 @@ use icedcn::{Size, Theme, Weight, theme};
 
 use crate::component;
 use crate::docs;
-use crate::fonts;
 use crate::icon;
 use crate::page::{self, SnippetViewer};
 use crate::sleep;
+use crate::{font, fonts};
 
 const PINNED_FONTS: &[&str] = &["Geist", "Inter"];
 
@@ -170,7 +171,7 @@ impl App {
         );
         tasks.push(Task::future(header::stars()).map(Message::Stars));
 
-        let default_font = "Geist".to_string();
+        let default_font = font::BODY.to_owned();
 
         let dark_mode = theme::is_dark_mode();
         let active_theme = docs::theme(dark_mode);
@@ -240,7 +241,7 @@ impl App {
                     self.gh_light.clone()
                 };
                 let active_theme = docs::theme(self.dark_mode);
-                self.snippet_viewer = SnippetViewer::new(map, &active_theme);
+                self.snippet_viewer.set_theme(map, active_theme);
                 Task::none()
             }
             Message::OpenUrl(url) => {
@@ -316,8 +317,7 @@ impl App {
                 self.current_font = name.clone();
 
                 if self.fount.system_families().contains(&name) {
-                    let name: &'static str = Box::leak(name.into_boxed_str());
-                    iced::font::set_defaults(Font::new(name), Pixels(14.0))
+                    self.apply_font(name)
                 } else {
                     #[cfg(not(target_arch = "wasm32"))]
                     let task = fonts::load(name, self.fount.google_catalog());
@@ -395,12 +395,15 @@ impl App {
                     Task::none()
                 }
                 fonts::Message::Loaded(name, Ok(())) if name != self.current_font => Task::none(),
-                fonts::Message::Loaded(name, Ok(())) => {
-                    let name: &'static str = Box::leak(name.into_boxed_str());
-                    iced::font::set_defaults(Font::new(name), Pixels(14.0))
-                }
+                fonts::Message::Loaded(name, Ok(())) => self.apply_font(name),
             },
         }
+    }
+
+    fn apply_font(&mut self, name: String) -> Task<Message> {
+        let body = Font::new(Box::leak(name.into_boxed_str()));
+        self.snippet_viewer.set_font(body);
+        set_defaults(body, Pixels(14.0))
     }
 
     fn rebuild_font_list(&mut self) {

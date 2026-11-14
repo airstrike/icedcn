@@ -168,6 +168,6 @@ pub fn run() -> iced::Result {
         // A canvas cannot switch to 2D after an unsuccessful WebGPU probe.
         .backend(iced::Backend::Software)
         .fonts([include_bytes!("../fonts/Geist.ttf").as_slice()])
-        .font(iced::Font::new("Geist"));
+        .font(iced::Font::new(font::BODY));
     application.run()
 }

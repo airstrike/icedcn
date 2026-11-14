@@ -12,6 +12,9 @@
 //!
 //! [Geist Mono]: https://github.com/vercel/geist-font
 
+/// Sans family shared by the browser controls and documentation prose.
+pub const BODY: &str = "Geist";
+
 /// Embedded TTF bytes for Geist Mono Regular. Pass directly to iced's
 /// `Application::font(...)` builder so cosmic-text registers the family
 /// at startup; afterwards any [`iced::Font`] whose family matches

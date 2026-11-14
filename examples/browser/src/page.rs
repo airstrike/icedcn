@@ -777,9 +777,9 @@ pub fn snippet<'a>(
 /// pair: light-mode chip is a near-white bg with body fg; dark-mode chip
 /// is a dark gray bg with a desaturated fg. Both flavors hand off via the
 /// same field and stay in sync with the page's `code_block` container.
-fn inline_style_from_theme(theme: &Theme) -> markdown::Style {
+fn inline_style_from_theme(theme: &Theme, body: Font) -> markdown::Style {
     markdown::Style {
-        font: Font::default(),
+        font: body,
         inline_code_color: theme.neutral.foreground.into(),
         inline_code_highlight: Highlight {
             background: Background::Color(theme.muted.base.into()),
@@ -832,8 +832,18 @@ impl SnippetViewer {
         Self {
             map,
             theme: theme.clone(),
-            style: inline_style_from_theme(theme),
+            style: inline_style_from_theme(theme, Font::new(font::BODY)),
         }
+    }
+
+    pub(crate) fn set_font(&mut self, body: Font) {
+        self.style.font = body;
+    }
+
+    pub(crate) fn set_theme(&mut self, map: markdown::highlighter::Map, theme: Theme) {
+        self.style = inline_style_from_theme(&theme, self.style.font);
+        self.theme = theme;
+        self.map = map;
     }
 }
 
