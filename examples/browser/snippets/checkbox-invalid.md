@@ -1,13 +1,14 @@
 ```rust
+use iced::Pixels;
 use icedxdy::theme;
-use icedxdy::widget::{checkbox, row, text};
+use icedxdy::widget::{checkbox, field, text};
 
-row![
-    checkbox()
-        .style(theme::checkbox::Invalid),
-    text::label("Accept terms and conditions")
-        .style(theme::text::Destructive),
-]
-.spacing(8)
-.width(224)
+field(checkbox().style(theme::checkbox::Invalid))
+    .orientation(field::Horizontal)
+    .label(
+        text::label("Accept terms and conditions")
+            .line_height(Pixels(19.25))
+            .style(theme::text::Destructive),
+    )
+    .width(224)
 ```

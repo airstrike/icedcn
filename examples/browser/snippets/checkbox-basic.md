@@ -1,8 +1,9 @@
 ```rust
-use icedxdy::widget::{checkbox, field};
+use iced::Pixels;
+use icedxdy::widget::{checkbox, field, text};
 
 field(checkbox())
     .orientation(field::Horizontal)
-    .label("Accept terms and conditions")
+    .label(text::label("Accept terms and conditions").line_height(Pixels(19.25)))
     .width(224)
 ```

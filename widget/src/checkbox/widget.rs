@@ -1,7 +1,7 @@
 //! Checkboxes can be used to let users make binary (or tri-state) choices.
 //!
 //! This is a sweetened version of `iced`'s [`checkbox`], vendored from
-//! sweeten with two additions on top of sweeten's animated mark fade:
+//! sweeten with these additions on top of sweeten's animated mark fade:
 //!
 //! - **Indeterminate state** via the [`State`] domain enum. Stock iced's
 //!   `is_checked: bool` lacks the `data-state="indeterminate"` flavor that
@@ -11,12 +11,16 @@
 //!   colored halo is rendered behind the box bounds. Stock iced's
 //!   `checkbox::Style` has no ring field; we add it here so our nova-correct
 //!   focus-visible halo (`focus-visible:ring-3 ring-ring/50`) renders.
+//! - **Native input state** — focus operations, Space release activation,
+//!   an expanded pointer target, and canceled-gesture handling. The focus
+//!   ring follows keyboard modality; disabled controls leave focus traversal.
 //!
 //! [`checkbox`]: https://docs.iced.rs/iced/widget/checkbox/
 use crate::animation::cubic_bezier;
 use crate::core::alignment;
 use crate::core::animation::Easing;
 use crate::core::font;
+use crate::core::keyboard::{self, Key, key::Named};
 use crate::core::layout;
 use crate::core::mouse;
 use crate::core::renderer;
@@ -25,6 +29,7 @@ use crate::core::text::paragraph;
 use crate::core::time::Instant;
 use crate::core::touch;
 use crate::core::widget;
+use crate::core::widget::operation::Focusable;
 use crate::core::widget::tree::{self, Tree};
 use crate::core::window;
 use crate::core::{
@@ -32,8 +37,10 @@ use crate::core::{
     Rectangle, Shell, Size, Theme, Widget,
 };
 use crate::operation::control::Control;
+use crate::operation::focus;
 
 use std::marker::PhantomData;
+use std::time::Duration;
 
 // Iced's widget crate re-exports `core::widget::text::*` at `crate::text`. We
 // can't reuse that path (our `crate::text` is the icedxdy typography helpers,
@@ -281,6 +288,25 @@ struct Internal<P: text::Paragraph> {
     /// outside and dragging in (or pressing in and dragging out before
     /// release) must not toggle.
     is_pressed: bool,
+    is_focused: bool,
+    indicator: focus::Visible,
+    space_pressed: bool,
+}
+
+impl<P: text::Paragraph> Focusable for Internal<P> {
+    fn is_focused(&self) -> bool {
+        self.is_focused
+    }
+
+    fn focus(&mut self) {
+        self.is_focused = true;
+        self.indicator.0 = true;
+    }
+
+    fn unfocus(&mut self) {
+        self.is_focused = false;
+        self.space_pressed = false;
+    }
 }
 
 impl<Message, Theme, Renderer> Checkbox<'_, Message, Theme, Renderer>
@@ -340,13 +366,14 @@ where
             value: self.state,
             control: Control::new(self.state.is_marked()),
             animation: Animation::new(self.state.is_marked())
-                .very_quick()
-                // cubic-bezier(0, 0, 0.2, 1) — Tailwind v4's
-                // `--ease-out`. Same curve the switch (toggler) uses.
-                .easing(Easing::Custom(|t| cubic_bezier(0.0, 0.0, 0.2, 1.0, t))),
+                .duration(Duration::from_millis(150))
+                .easing(Easing::Custom(|t| cubic_bezier(0.4, 0.0, 0.2, 1.0, t))),
             now: None,
             last_is_marked: self.state.is_marked(),
             is_pressed: false,
+            is_focused: false,
+            indicator: focus::Visible::default(),
+            space_pressed: false,
         })
     }
 
@@ -368,6 +395,10 @@ where
             internal.value = self.state;
         } else {
             self.state = internal.value;
+        }
+        if self.is_disabled {
+            internal.unfocus();
+            internal.is_pressed = false;
         }
     }
 
@@ -421,93 +452,110 @@ where
         cursor: mouse::Cursor,
         _renderer: &Renderer,
         shell: &mut Shell<'_, Message>,
-        _viewport: &Rectangle,
+        viewport: &Rectangle,
     ) {
         let internal = tree.state.downcast_mut::<Internal<Renderer::Paragraph>>();
+        let was_focused = (internal.is_focused, internal.indicator.0);
+        // Nova's pseudo-element enlarges the target without changing layout.
+        let is_over =
+            cursor.is_over(layout.bounds().expand([8.0, 12.0])) && cursor.is_over(*viewport);
 
-        // A linked label (Field) pressed this checkbox through the
-        // `activate` operation; act on it like a click.
         if internal.control.take_activation() && !self.is_disabled {
+            internal.is_focused = true;
+            internal.indicator.0 = false;
             self.toggle(internal, shell);
         }
 
-        // Animation bookkeeping — runs regardless of whether the widget is
-        // enabled, so that in-flight animations complete even if the
-        // checkbox becomes disabled.
+        if self.is_disabled {
+            internal.unfocus();
+            internal.is_pressed = false;
+        } else {
+            match event {
+                Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left))
+                | Event::Touch(touch::Event::FingerPressed { .. }) => {
+                    internal.space_pressed = false;
+                    internal.is_pressed = is_over && !shell.is_event_captured();
+                    internal.is_focused = internal.is_pressed;
+                    internal.indicator.0 = false;
+                    if internal.is_pressed {
+                        shell.capture_event();
+                    }
+                }
+                Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
+                | Event::Touch(touch::Event::FingerLifted { .. }) => {
+                    if std::mem::take(&mut internal.is_pressed) {
+                        if is_over && !shell.is_event_captured() {
+                            self.toggle(internal, shell);
+                        }
+                        shell.capture_event();
+                    }
+                }
+                Event::Touch(touch::Event::FingerLost { .. }) => {
+                    internal.is_pressed = false;
+                }
+                Event::Keyboard(keyboard::Event::KeyPressed { key, .. })
+                    if internal.is_focused && !shell.is_event_captured() =>
+                {
+                    internal.indicator.0 = true;
+                    if matches!(key, Key::Named(Named::Space)) {
+                        internal.space_pressed = true;
+                        shell.capture_event();
+                    } else if matches!(key, Key::Named(Named::Enter)) {
+                        // Radix suppresses the native button's Enter activation.
+                        shell.capture_event();
+                    }
+                }
+                Event::Keyboard(keyboard::Event::KeyReleased { key, .. })
+                    if matches!(key, Key::Named(Named::Space)) =>
+                {
+                    if std::mem::take(&mut internal.space_pressed)
+                        && internal.is_focused
+                        && !shell.is_event_captured()
+                    {
+                        self.toggle(internal, shell);
+                    }
+                }
+                Event::Window(window::Event::Unfocused) => {
+                    internal.unfocus();
+                    internal.is_pressed = false;
+                }
+                _ => {}
+            }
+        }
+
+        if was_focused != (internal.is_focused, internal.indicator.0) {
+            shell.request_redraw();
+        }
         if let Event::Window(window::Event::RedrawRequested(now)) = event {
             internal.now = Some(*now);
-
             if internal.animation.is_animating(*now) {
                 shell.request_redraw();
             }
         }
-
-        // Animation tracks `is_marked()` — Checked and Indeterminate are both
-        // "marked" surfaces, Unchecked is the empty surface. This means
-        // Indeterminate ↔ Unchecked toggles still cross-fade bg/border, but
-        // Indeterminate ↔ Checked is a no-op transition (the surface stays
-        // marked; only the inner glyph changes — which we snap, not animate,
-        // matching shadcn's `transition-none` on the indicator).
-        let is_marked = self.state.is_marked();
-        if is_marked != internal.last_is_marked {
-            internal.last_is_marked = is_marked;
-
-            if let Some(now) = internal.now {
-                internal.animation.go_mut(is_marked, now);
-                shell.request_redraw();
-            }
-        }
-
-        // Toggle on release, but only when *both* press and release
-        // happened inside the bounds — pressing outside and dragging
-        // in, or pressing inside and dragging out before release, must
-        // not toggle. We track press-inside in `internal.is_pressed` and
-        // gate the publish on a fresh "still inside" bounds check.
-        match event {
-            Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left))
-            | Event::Touch(touch::Event::FingerPressed { .. })
-                if !self.is_disabled && cursor.is_over(layout.bounds()) =>
-            {
-                internal.is_pressed = true;
-                shell.capture_event();
-            }
-            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
-            | Event::Touch(touch::Event::FingerLifted { .. })
-            | Event::Touch(touch::Event::FingerLost { .. }) => {
-                let was_pressed = std::mem::replace(&mut internal.is_pressed, false);
-
-                if was_pressed && cursor.is_over(layout.bounds()) {
-                    self.toggle(internal, shell);
-                }
-            }
-            _ => {}
-        }
-
-        let current_status = {
-            let is_mouse_over = cursor.is_over(layout.bounds());
-            let is_disabled = self.is_disabled;
-            // For status purposes, Indeterminate paints with the "checked"
-            // surface (the icon shows; nova styles `data-state=indeterminate`
-            // and `data-state=checked` identically).
-            let is_checked = is_marked;
-
-            if is_disabled {
-                Status::Disabled { is_checked }
-            } else if is_mouse_over {
-                Status::Hovered { is_checked }
-            } else {
-                Status::Active { is_checked }
-            }
-        };
-
-        if let Event::Window(window::Event::RedrawRequested(_now)) = event {
-            self.last_status = Some(current_status);
-        } else if self
-            .last_status
-            .is_some_and(|status| status != current_status)
-        {
+        let is_checked = self.state.is_marked();
+        if is_checked != internal.last_is_marked {
+            internal.last_is_marked = is_checked;
+            // Input can follow a long idle with no redraw. Start at this event,
+            // not the timestamp of the last rendered frame.
+            let now = match event {
+                Event::Window(window::Event::RedrawRequested(now)) => *now,
+                _ => Instant::now(),
+            };
+            internal.now = Some(now);
+            internal.animation.go_mut(is_checked, now);
             shell.request_redraw();
         }
+        let status = if self.is_disabled {
+            Status::Disabled { is_checked }
+        } else if is_over {
+            Status::Hovered { is_checked }
+        } else {
+            Status::Active { is_checked }
+        };
+        if self.last_status != Some(status) {
+            shell.request_redraw();
+        }
+        self.last_status = Some(status);
     }
 
     fn mouse_interaction(
@@ -515,11 +563,14 @@ where
         _tree: &Tree,
         layout: Layout,
         cursor: mouse::Cursor,
-        _viewport: &Rectangle,
+        viewport: &Rectangle,
         _renderer: &Renderer,
     ) -> mouse::Interaction {
-        if cursor.is_over(layout.bounds()) && !self.is_disabled {
-            mouse::Interaction::Pointer
+        if self.is_disabled
+            && cursor.is_over(layout.bounds().expand([8.0, 12.0]))
+            && cursor.is_over(*viewport)
+        {
+            mouse::Interaction::NotAllowed
         } else {
             mouse::Interaction::default()
         }
@@ -539,8 +590,14 @@ where
 
         let mut children = layout.iter(&tree.children);
 
-        let current_status = self.last_status.unwrap_or(Status::Disabled {
-            is_checked: self.state.is_marked(),
+        let current_status = self.last_status.unwrap_or(if self.is_disabled {
+            Status::Disabled {
+                is_checked: self.state.is_marked(),
+            }
+        } else {
+            Status::Active {
+                is_checked: self.state.is_marked(),
+            }
         });
 
         // While the checkbox is animating, interpolate ONLY background and
@@ -584,8 +641,7 @@ where
 
                 // Snap to the on/off target for everything not interpolated
                 // (icon_color, ring, text_color). `transition-none` on the
-                // indicator means the icon flips identity at the moment the
-                // animation crosses the midpoint of `is_marked`.
+                // indicator means the icon changes immediately with the target.
                 let target = if internal.animation.value() { on } else { off };
                 Style {
                     background,
@@ -596,8 +652,14 @@ where
             _ => theme.style(&self.class, current_status),
         };
 
+        let style = if internal.is_focused && internal.indicator.0 && !self.is_disabled {
+            theme.focused(style)
+        } else {
+            style
+        };
+
         {
-            let (checkbox_layout, _) = children.next().unwrap();
+            let (checkbox_layout, _) = children.next().expect("checkbox box");
             let bounds = checkbox_layout.bounds();
 
             // Ring: paint a halo *outside* the box bounds, behind the main
@@ -648,7 +710,7 @@ where
                 line_height,
                 shaping,
             } = &self.icon;
-            let size = size.unwrap_or(Pixels(bounds.height * 0.7));
+            let size = size.unwrap_or(Pixels(bounds.height * 0.875));
 
             match self.state {
                 State::Checked => {
@@ -704,7 +766,7 @@ where
         }
 
         {
-            let (label_layout, _) = children.next().unwrap();
+            let (label_layout, _) = children.next().expect("checkbox child");
 
             text_helpers::draw(
                 renderer,
@@ -731,6 +793,10 @@ where
     ) {
         let internal = tree.state.downcast_mut::<Internal<Renderer::Paragraph>>();
 
+        if !self.is_disabled {
+            operation.focusable(None, layout.bounds(), internal);
+            operation.custom(None, layout.bounds(), &mut internal.indicator);
+        }
         internal.control.set_checked(self.state.is_marked());
         operation.custom(None, layout.bounds(), &mut internal.control);
 
@@ -741,7 +807,7 @@ where
         let paragraph = &mut internal.paragraph;
 
         let mut children = layout.iter(&tree.children);
-        let (layout, _) = children.next().unwrap();
+        let (layout, _) = children.next().expect("checkbox child");
 
         operation.text(
             None,
@@ -881,6 +947,19 @@ pub trait Catalog: Sized {
     /// The [`Style`] of a class with the given status.
     fn style(&self, class: &Self::Class<'_>, status: Status) -> Style;
 
+    /// Add keyboard focus styling. Existing invalid rings take precedence.
+    fn focused(&self, mut style: Style) -> Style {
+        if style.ring.is_none() {
+            let color = self.selection();
+            style.border.color = color;
+            style.ring = Some(Ring {
+                color: color.scale_alpha(0.5),
+                width: 3.0,
+            });
+        }
+        style
+    }
+
     /// The global selection [`Color`].
     fn selection(&self) -> Color;
 }
@@ -936,4 +1015,99 @@ pub fn default(theme: &Theme, status: Status) -> Style {
         status,
     );
     iced.into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Checkbox, Internal};
+    use iced_core::shell::{Bus, Waker};
+    use iced_core::time::{Duration, Instant};
+    use iced_core::widget::Tree;
+    use iced_core::{Event, Layout, Point, Rectangle, Shell, Size, Widget, mouse, window};
+    use icedxdy_core::Theme;
+
+    fn step(checkbox: &mut Checkbox<'_, (), Theme, ()>, tree: &mut Tree, event: Event) {
+        let mut messages = Bus::new();
+        let mut shell = Shell::new(&window::Headless, Waker::noop(), &mut messages);
+        checkbox.update(
+            tree,
+            &event,
+            Layout::new(Size::new(16.0, 16.0)),
+            mouse::Cursor::Available(Point::new(8.0, 8.0)),
+            &(),
+            &mut shell,
+            &Rectangle::with_size(Size::new(100.0, 100.0)),
+        );
+    }
+
+    #[test]
+    fn color_transition_starts_after_idle_instead_of_using_old_frame_time() {
+        let mut checkbox = Checkbox::new(false).uncontrolled(false);
+        let mut tree = Tree::new(&checkbox);
+        let idle = Instant::now() - Duration::from_secs(10);
+        step(
+            &mut checkbox,
+            &mut tree,
+            Event::Window(window::Event::RedrawRequested(idle)),
+        );
+        let input = Instant::now();
+        step(
+            &mut checkbox,
+            &mut tree,
+            Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
+        );
+        step(
+            &mut checkbox,
+            &mut tree,
+            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)),
+        );
+        let state = tree.state.downcast_ref::<Internal<()>>();
+        let start = state.now.expect("input starts a transition");
+        assert!(start >= input);
+        assert!(state.animation.is_animating(start));
+        assert!(state.animation.interpolate(0.0, 1.0, start) < 0.001);
+        let halfway = start + Duration::from_millis(75);
+        assert!((state.animation.interpolate(0.0, 1.0, halfway) - 0.7756_f32).abs() < 0.01);
+        assert!(
+            !state
+                .animation
+                .is_animating(start + Duration::from_millis(151))
+        );
+    }
+
+    #[test]
+    fn controlled_rebuild_reverses_color_transition_without_a_jump() {
+        let mut checkbox = Checkbox::new(false);
+        let mut tree = Tree::new(&checkbox);
+        let start = Instant::now();
+        checkbox = Checkbox::new(true);
+        tree.diff(&mut checkbox);
+        step(
+            &mut checkbox,
+            &mut tree,
+            Event::Window(window::Event::RedrawRequested(start)),
+        );
+        let halfway = start + Duration::from_millis(75);
+        let before = tree
+            .state
+            .downcast_ref::<Internal<()>>()
+            .animation
+            .interpolate(0.0, 1.0, halfway);
+        checkbox = Checkbox::new(false);
+        tree.diff(&mut checkbox);
+        step(
+            &mut checkbox,
+            &mut tree,
+            Event::Window(window::Event::RedrawRequested(halfway)),
+        );
+        let state = tree.state.downcast_ref::<Internal<()>>();
+        assert!((state.animation.interpolate(0.0, 1.0, halfway) - before).abs() < 0.001);
+        assert!(!state.animation.value());
+        assert!(
+            state
+                .animation
+                .interpolate(0.0, 1.0, halfway + Duration::from_millis(151))
+                < 0.001
+        );
+    }
 }

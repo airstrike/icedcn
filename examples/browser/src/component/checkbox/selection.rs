@@ -1,7 +1,10 @@
 use iced::widget::component::{Component, component};
-use iced::{Element, Length, Widget};
+use iced::widget::scrollable;
+use iced::widget::scrollable::{Direction, Scrollbar};
+use iced::{Element, Fill, Pixels, Widget};
+use icedxdy::Theme;
+use icedxdy::widget::table::Track;
 use icedxdy::widget::{checkbox, table, text};
-use icedxdy::{Slot, Theme};
 
 use crate::Message;
 
@@ -51,10 +54,10 @@ impl<'a> Component<'a, Message, Theme> for Selection {
                     .checked(state.0.iter().all(|checked| *checked))
                     .on_checked_change(Change::All),
             )
-            .width(32),
-            table::head("Name").width(Length::FillPortion(3)),
-            table::head("Email").width(Length::FillPortion(5)),
-            table::head("Role").width(Length::FillPortion(2)),
+            .padding([0, 0, 0, 8]),
+            table::head(text::small("Name").medium().line_height(Pixels(20.0))),
+            table::head(text::small("Email").medium().line_height(Pixels(20.0))),
+            table::head(text::small("Role").medium().line_height(Pixels(20.0))),
         ])]);
         let body = table::body(USERS.iter().enumerate().map(|(i, &(name, email, role))| {
             let selected = state.0[i];
@@ -64,13 +67,17 @@ impl<'a> Component<'a, Message, Theme> for Selection {
                         .checked(selected)
                         .on_checked_change(move |checked| Change::Row(i, checked)),
                 )
-                .width(32),
-                table::cell(text::small(name).medium()).width(Length::FillPortion(3)),
-                table::cell(email).width(Length::FillPortion(5)),
-                table::cell(role).width(Length::FillPortion(2)),
+                .padding([8, 0, 8, 8]),
+                table::cell(text::small(name).medium().line_height(Pixels(20.0))),
+                table::cell(text::small(email).line_height(Pixels(20.0))),
+                table::cell(text::small(role).line_height(Pixels(20.0))),
             ])
             .selected(selected)
         }));
-        Element::from(table([Slot::from(header), Slot::from(body)]))
+        scrollable(Element::from(
+            table::grid([Track::Auto; 4]).header(header).body(body),
+        ))
+        .width(Fill)
+        .direction(Direction::Horizontal(Scrollbar::default()))
     }
 }

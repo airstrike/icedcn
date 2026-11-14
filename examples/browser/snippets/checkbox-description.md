@@ -1,9 +1,13 @@
 ```rust
-use icedxdy::widget::{checkbox, field};
+use iced::Pixels;
+use icedxdy::widget::{checkbox, container, field, text};
 
-field(checkbox().default_checked(true))
+field(container(checkbox().default_checked(true)).padding([1, 0, 0, 0]))
     .orientation(field::Horizontal)
-    .label("Accept terms and conditions")
-    .description("By clicking this checkbox, you agree to the terms and conditions.")
+    .label(text::label("Accept terms and conditions").line_height(Pixels(19.25)))
+    .description(
+        text::muted("By clicking this checkbox, you agree to the terms and conditions.")
+            .line_height(Pixels(21.0)),
+    )
     .width(288)
 ```

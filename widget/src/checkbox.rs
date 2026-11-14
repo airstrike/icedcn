@@ -21,6 +21,7 @@
 pub(crate) mod element;
 pub mod widget;
 
+pub use icedxdy_core::theme::checkbox::{Default, Disabled, Invalid};
 pub use widget::{Catalog, Ring, State, Status, Style, StyleFn};
 
 use crate::compose::{Compose, Inherited, Slot};

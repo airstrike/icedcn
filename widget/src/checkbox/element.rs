@@ -55,6 +55,17 @@ impl widget::Catalog for Theme {
         class(self, status)
     }
 
+    fn focused(&self, mut style: widget::Style) -> widget::Style {
+        if style.ring.is_none() {
+            style.border.color = self.neutral.ring.into();
+            style.ring = Some(widget::Ring {
+                color: self.neutral.ring.alpha(0.5).into(),
+                width: 3.0,
+            });
+        }
+        style
+    }
+
     fn selection(&self) -> iced_core::Color {
         Theme::selection(self)
     }

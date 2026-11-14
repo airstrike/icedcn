@@ -1,11 +1,12 @@
+// Intentional skip per AGENTS.md: checkbox-rtl (RTL).
 mod selection;
 
-use iced::Task;
+use iced::{Fill, Pixels, Shrink, Task};
 
 use icedxdy::Theme;
 use icedxdy::theme;
 use icedxdy::theme::tweak::Alpha;
-use icedxdy::widget::{checkbox, column, field, text};
+use icedxdy::widget::{Slot, checkbox, column, container, field, text};
 
 use crate::Message;
 use crate::page;
@@ -16,74 +17,77 @@ pub static META: page::Meta = page::Meta {
 };
 
 pub static BLOCKS: &[page::Block] = &[
-    // Hero demo
     page::Block::Example {
         id: "demo",
         title: "",
         description: None,
         snippet: "examples/browser/snippets/checkbox-demo.md",
     },
-    // Preamble: Checked State — interactive demo showing the checked visual.
+    page::Block::Md("examples/browser/snippets/checkbox-installation.md"),
+    page::Block::Md("examples/browser/snippets/checkbox-usage.md"),
     page::Block::Example {
         id: "checked-state",
         title: "Checked State",
-        description: None,
+        description: Some(
+            "Use `defaultChecked` for uncontrolled checkboxes, or `checked` and `onCheckedChange` to control the state.",
+        ),
         snippet: "examples/browser/snippets/checkbox-checked-state.md",
     },
-    // Preamble: Invalid State — interactive demo showing the destructive border.
     page::Block::Example {
         id: "invalid-state",
         title: "Invalid State",
-        description: None,
+        description: Some(
+            "Set `aria-invalid` on the checkbox and `data-invalid` on the field wrapper to show the invalid styles.",
+        ),
         snippet: "examples/browser/snippets/checkbox-invalid-state.md",
     },
-    // Examples group
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "basic",
-                title: "Basic",
-                description: None,
-                snippet: "examples/browser/snippets/checkbox-basic.md",
-            },
-            page::Block::Example {
-                id: "description",
-                title: "Description",
-                description: None,
-                snippet: "examples/browser/snippets/checkbox-description.md",
-            },
-            page::Block::Example {
-                id: "disabled",
-                title: "Disabled",
-                description: None,
-                snippet: "examples/browser/snippets/checkbox-disabled.md",
-            },
-            page::Block::Example {
-                id: "group",
-                title: "Group",
-                description: None,
-                snippet: "examples/browser/snippets/checkbox-group.md",
-            },
-            page::Block::Example {
-                id: "table",
-                title: "Table",
-                description: None,
-                snippet: "examples/browser/snippets/checkbox-table.md",
-            },
-        ],
+    page::Block::Example {
+        id: "basic",
+        title: "Basic",
+        description: Some(
+            "Pair the checkbox with `Field` and `FieldLabel` for proper layout and labeling.",
+        ),
+        snippet: "examples/browser/snippets/checkbox-basic.md",
+    },
+    page::Block::Example {
+        id: "description",
+        title: "Description",
+        description: Some("Use `FieldContent` and `FieldDescription` for helper text."),
+        snippet: "examples/browser/snippets/checkbox-description.md",
+    },
+    page::Block::Example {
+        id: "disabled",
+        title: "Disabled",
+        description: Some(
+            "Use the `disabled` prop to prevent interaction and add the `data-disabled` attribute to the `<Field>` component for disabled styles.",
+        ),
+        snippet: "examples/browser/snippets/checkbox-disabled.md",
+    },
+    page::Block::Example {
+        id: "group",
+        title: "Group",
+        description: Some("Use multiple fields to create a checkbox list."),
+        snippet: "examples/browser/snippets/checkbox-group.md",
+    },
+    page::Block::Example {
+        id: "table",
+        title: "Table",
+        description: None,
+        snippet: "examples/browser/snippets/checkbox-table.md",
     },
     page::Block::Md("examples/browser/snippets/checkbox-api-reference.md"),
 ];
 
 pub struct CheckboxPage {
     state: page::State,
+    wide: bool,
 }
 
 impl CheckboxPage {
     pub fn new(page_index: usize) -> Box<dyn page::Page> {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
+            wide: true,
         })
     }
 }
@@ -117,97 +121,136 @@ impl page::Page for CheckboxPage {
         self.state.reset_volatile();
     }
 
-    fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
-        let preview: iced::Element<'_, Message, Theme> = match id {
-            // Demo (hero): 4 stacked horizontal Fields. Verbatim from
-            // `.nova/apps/v4/examples/radix/checkbox-demo.tsx` — every row
-            // uses horizontal Field orientation (row 4 wrapped in
-            // FieldLabel-as-card, expressed via `.card(...)`).
-            "demo" => {
-                column![
-                    // Row 1: simple Field with Label.
-                    field(checkbox())
-                        .orientation(field::Horizontal)
-                        .label("Accept terms and conditions"),
-                    // Row 2: Field with FieldContent (label + description).
-                    field(checkbox().default_checked(true))
-                        .orientation(field::Horizontal)
-                        .label("Accept terms and conditions")
-                        .description("By clicking this checkbox, you agree to the terms."),
-                    // Row 3: disabled. Label rendered muted to approximate
-                    // shadcn's `data-disabled:opacity-50` cascade on the
-                    // FieldLabel (color shift, not a true alpha overlay).
-                    field(checkbox().disabled(true))
-                        .orientation(field::Horizontal)
-                        .label(
-                            text::label("Enable notifications")
-                                .style(theme::text::Foreground + Alpha(0.5))
-                        ),
-                    // Row 4: FieldLabel-as-card — bordered + padded card,
-                    // primary tint while checked; pressing anywhere on it
-                    // toggles the checkbox.
-                    field(checkbox())
-                        .orientation(field::Horizontal)
-                        .label("Enable notifications")
-                        .description("You can enable or disable notifications at any time.")
-                        .card(),
-                ]
-                .spacing(20)
-                // nova uses `max-w-sm` (max-width 384px, not fixed). iced
-                // Column lacks max_width; using fixed 384 as the nearest
-                // approximation until our Column gains a max_width builder.
-                .width(384)
-                .into()
-            }
+    fn window_width(&mut self, width: f32) {
+        self.wide = width >= 768.0;
+    }
 
-            // Checked State preamble: interactive checkbox pre-checked to
-            // show the primary-filled state. Width 224 matches `w-56`.
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: 0.into(),
+            ..page::Backdrop::default()
+        }
+    }
+
+    fn docs_preview(&self, id: &str, theme: &Theme) -> iced::Element<'_, Message, Theme> {
+        let padding = if id == "table" {
+            if self.wide { 32 } else { 16 }
+        } else {
+            40
+        };
+        container(self.themed_preview(id, theme))
+            .center_x(Fill)
+            .center_y(if id == "demo" { 320 } else { 288 })
+            .padding([0, padding])
+            .into()
+    }
+
+    fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
+        match id {
+            "demo" => column![
+                field(checkbox())
+                    .orientation(field::Horizontal)
+                    .label(Slot::from(
+                        container(text::label("Accept terms and conditions")).height(14)
+                    )),
+                field(container(checkbox().default_checked(true)).padding([1, 0, 0, 0]))
+                    .orientation(field::Horizontal)
+                    .label(text::label("Accept terms and conditions").line_height(Pixels(19.25)))
+                    .description(
+                        text::muted("By clicking this checkbox, you agree to the terms.")
+                            .line_height(Pixels(21.0))
+                    ),
+                field(checkbox().disabled(true))
+                    .orientation(field::Horizontal)
+                    .disabled(true)
+                    .label(
+                        text::label("Enable notifications")
+                            .line_height(Pixels(19.25))
+                            .style(theme::text::Foreground + Alpha(0.5))
+                    ),
+                field(container(checkbox()).padding([1, 0, 0, 0]))
+                    .orientation(field::Horizontal)
+                    .label(text::label("Enable notifications").line_height(Pixels(20.0)))
+                    .description(
+                        text::muted("You can enable or disable notifications at any time.")
+                            .line_height(Pixels(21.0))
+                    )
+                    .card(),
+            ]
+            .spacing(20)
+            .width(Fill)
+            .max_width(384.0)
+            .into(),
             "checked-state" => field(checkbox().default_checked(true))
                 .orientation(field::Horizontal)
-                .label("Accept terms and conditions")
+                .label(text::label("Accept terms and conditions").line_height(Pixels(19.25)))
                 .width(224)
                 .into(),
-
-            // Invalid State preamble: destructive border via
-            // `theme::checkbox::Invalid`; label tinted destructive to mirror
-            // shadcn's `data-invalid:text-destructive` cascade on FieldLabel.
             "invalid-state" => field(checkbox().style(theme::checkbox::Invalid))
                 .orientation(field::Horizontal)
-                .label(text::label("Accept terms and conditions").style(theme::text::Destructive))
-                .width(224)
-                .into(),
-
-            // Basic: single Field with Label. Width 224 matches `w-56`.
-            "basic" => field(checkbox())
-                .orientation(field::Horizontal)
-                .label("Accept terms and conditions")
-                .width(224)
-                .into(),
-
-            // Description: pre-checked Field with FieldContent (label +
-            // description). Width 288 matches `w-72`. Field's horizontal mode
-            // top-aligns automatically when description is present (mirroring
-            // shadcn's `has-[>[data-slot=field-content]]:items-start`).
-            "description" => field(checkbox().default_checked(true))
-                .orientation(field::Horizontal)
-                .label("Accept terms and conditions")
-                .description("By clicking this checkbox, you agree to the terms and conditions.")
-                .width(288)
-                .into(),
-
-            "disabled" => field(checkbox().disabled(true))
-                .orientation(field::Horizontal)
                 .label(
-                    text::label("Enable notifications").style(theme::text::Foreground + Alpha(0.5)),
+                    text::label("Accept terms and conditions")
+                        .line_height(Pixels(19.25))
+                        .style(theme::text::Destructive),
                 )
                 .width(224)
                 .into(),
-
-            "group" => super::field::desktop_items(true).compose(),
+            "basic" => field(checkbox())
+                .orientation(field::Horizontal)
+                .label(text::label("Accept terms and conditions").line_height(Pixels(19.25)))
+                .width(224)
+                .into(),
+            "description" => {
+                field(container(checkbox().default_checked(true)).padding([1, 0, 0, 0]))
+                    .orientation(field::Horizontal)
+                    .label(text::label("Accept terms and conditions").line_height(Pixels(19.25)))
+                    .description(
+                        text::muted(
+                            "By clicking this checkbox, you agree to the terms and conditions.",
+                        )
+                        .line_height(Pixels(21.0)),
+                    )
+                    .width(288)
+                    .into()
+            }
+            "disabled" => field(checkbox().disabled(true))
+                .orientation(field::Horizontal)
+                .disabled(true)
+                .label(
+                    text::label("Enable notifications")
+                        .line_height(Pixels(19.25))
+                        .style(theme::text::Foreground + Alpha(0.5)),
+                )
+                .width(224)
+                .into(),
+            "group" => {
+                let choices = [
+                    "Hard disks",
+                    "External disks",
+                    "CDs, DVDs, and iPods",
+                    "Connected servers",
+                ];
+                field::set(
+                    column![
+                        text::label("Show these items on the desktop:").line_height(Pixels(20.0)),
+                        text::muted("Select the items you want to show on the desktop.")
+                            .line_height(Pixels(21.0)),
+                    ]
+                    .spacing(2),
+                    None,
+                    field::group(choices.into_iter().enumerate().map(|(index, label)| {
+                        field(checkbox().default_checked(index < 2))
+                            .orientation(field::Horizontal)
+                            .label(text::small(label).line_height(Pixels(19.25)))
+                            .into()
+                    }))
+                    .spacing(12),
+                )
+                .width(Shrink)
+                .into()
+            }
             "table" => selection::preview(),
             _ => unreachable!("unknown checkbox preview id: {id}"),
-        };
-
-        preview
+        }
     }
 }
