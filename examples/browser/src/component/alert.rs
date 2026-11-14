@@ -7,7 +7,7 @@ mod destructive;
 use iced::widget::svg;
 use iced::{Fill, Task, Widget};
 
-use icedxdy::widget::{alert, column};
+use icedxdy::widget::{alert, column, text};
 use icedxdy::{Slot, Theme};
 
 use crate::page;
@@ -61,6 +61,7 @@ pub static BLOCKS: &[page::Block] = &[
 pub struct AlertPage {
     state: page::State,
     wide: bool,
+    description_wrapping: text::Wrapping,
 }
 
 impl AlertPage {
@@ -68,35 +69,44 @@ impl AlertPage {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
             wide: true,
+            description_wrapping: text::Wrapping::Word,
         })
     }
 }
 
-fn demo<'a>() -> Slot<'a, crate::Message> {
+fn demo<'a>(wrapping: text::Wrapping) -> Slot<'a, crate::Message> {
+    const CHECK: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>"#;
+    const INFO: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>"#;
     // Verbatim shadcn `alert-demo.tsx`: two stacked alerts capped at
     // max-w-md (448px). Each alert self-caps via `.max_width(448)`.
     column![
         alert()
+            .description_wrapping(wrapping)
             .icon(
-svg(svg::Handle::from_memory(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>"#.as_bytes()))
-                .width(16)
-                .height(16)
-                .style(|theme: &Theme, _| svg::Style { color: Some(theme.card.foreground.into()) })
-                .boxed(),
-)
+                svg(svg::Handle::from_memory(CHECK.as_bytes()))
+                    .width(16)
+                    .height(16)
+                    .style(|theme: &Theme, _| svg::Style {
+                        color: Some(theme.card.foreground.into()),
+                    })
+                    .boxed(),
+            )
             .title("Payment successful")
             .description(
                 "Your payment of $29.99 has been processed. A receipt has been sent to your email address.",
             )
             .max_width(448),
         alert()
+            .description_wrapping(wrapping)
             .icon(
-svg(svg::Handle::from_memory(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>"#.as_bytes()))
-                .width(16)
-                .height(16)
-                .style(|theme: &Theme, _| svg::Style { color: Some(theme.card.foreground.into()) })
-                .boxed(),
-)
+                svg(svg::Handle::from_memory(INFO.as_bytes()))
+                    .width(16)
+                    .height(16)
+                    .style(|theme: &Theme, _| svg::Style {
+                        color: Some(theme.card.foreground.into()),
+                    })
+                    .boxed(),
+            )
             .title("New feature available")
             .description(
                 "We've added dark mode support. You can enable it in your account settings.",
@@ -139,6 +149,11 @@ impl page::Page for AlertPage {
 
     fn window_width(&mut self, width: f32) {
         self.wide = width >= 640.0;
+        self.description_wrapping = if width < 768.0 {
+            text::Wrapping::Balanced
+        } else {
+            text::Wrapping::Word
+        };
     }
 
     fn backdrop(&self) -> page::Backdrop {
@@ -150,10 +165,10 @@ impl page::Page for AlertPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, crate::Message, Theme> {
         let view: Slot<'_, crate::Message> = match id {
-            "demo" => demo(),
-            "basic" => default::view(),
-            "destructive" => destructive::view(),
-            "action" => action::view(),
+            "demo" => demo(self.description_wrapping),
+            "basic" => default::view(self.description_wrapping),
+            "destructive" => destructive::view(self.description_wrapping),
+            "action" => action::view(self.description_wrapping),
             _ => unreachable!("unknown alert preview id: {id}"),
         };
         view.into()

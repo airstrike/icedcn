@@ -27,7 +27,7 @@
 //! `destructive/90` for [`Destructive`]).
 
 use iced_core::alignment::{Horizontal, Vertical};
-use iced_core::text::{IntoFragment, LineHeight};
+use iced_core::text::{IntoFragment, LineHeight, Wrapping};
 use iced_core::{Length::*, Padding, Pixels};
 use iced_widget::Renderer;
 use iced_widget::Widget;
@@ -45,6 +45,7 @@ pub struct Alert<'a, Message> {
     icon: Option<Slot<'a, Message>>,
     title: Option<text::Text<'a>>,
     description: Option<text::Text<'a>>,
+    description_wrapping: Wrapping,
     action: Option<Slot<'a, Message>>,
     style: Spec,
     max_width: f32,
@@ -56,6 +57,7 @@ pub fn alert<'a, Message: 'a>() -> Alert<'a, Message> {
         icon: None,
         title: None,
         description: None,
+        description_wrapping: Wrapping::Word,
         action: None,
         style: Default.into(),
         max_width: f32::INFINITY,
@@ -88,6 +90,14 @@ impl<'a, Message: 'a> Alert<'a, Message> {
                 .size(text::size::SM)
                 .line_height(LineHeight::Absolute(Pixels(20.0))),
         );
+        self
+    }
+
+    /// Set description wrapping. Defaults to word wrapping. Use
+    /// [`Wrapping::Balanced`] for Nova's description below the 768px
+    /// window breakpoint; the application owns its window size.
+    pub fn description_wrapping(mut self, wrapping: Wrapping) -> Self {
+        self.description_wrapping = wrapping;
         self
     }
 
@@ -151,6 +161,7 @@ impl<'a, Message: 'a> Compose<Message> for Alert<'a, Message> {
             icon,
             title,
             description,
+            description_wrapping,
             action,
             style,
             max_width,
@@ -162,7 +173,7 @@ impl<'a, Message: 'a> Compose<Message> for Alert<'a, Message> {
                 color: Some(style.description(theme).into()),
                 ..Style::default()
             });
-            t.style(style)
+            t.wrapping(description_wrapping).style(style)
         });
 
         let mut text_col: iced_widget::Column<iced_core::Element<'a, Message, Theme, Renderer>> =
