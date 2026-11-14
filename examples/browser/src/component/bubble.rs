@@ -1,8 +1,14 @@
-use crate::font::GEIST_MONO_NAME;
-use crate::icon;
+//! Bubble documentation and nine pinned Nova recipes.
+//! The extra upstream bubble-markdown recipe is not exposed on the docs page;
+//! its Ghost content is covered by Variants.
+
+use crate::page::rhea;
 use crate::{Message, page};
-use iced::Font;
+use iced::border;
+use iced::font::Weight;
 use iced::widget::Id;
+use iced::widget::text::LineHeight;
+use iced::widget::{rich_text, svg, text::Span, themer};
 use iced::{Element, Task};
 use iced::{
     Fill,
@@ -11,10 +17,12 @@ use iced::{
         Vertical::{Bottom, Top},
     },
 };
+use iced::{Font, Widget};
 use icedxdy::Size;
+use icedxdy::theme::tweak::{Fg, Token};
 use icedxdy::widget::bubble::{Destructive, Ghost, Muted, Outline, Secondary, Tinted};
 use icedxdy::widget::{
-    bubble, button, collapsible, column, container, popover, rich_text, span, text, toast, tooltip,
+    bubble, button, collapsible, column, container, popover, row, text, toast, tooltip,
 };
 use icedxdy::{Slot, Theme};
 use page::Block;
@@ -30,57 +38,94 @@ pub static BLOCKS: &[Block] = &[
         description: None,
         snippet: "examples/browser/snippets/bubble-demo.md",
     },
+    Block::Md("examples/browser/snippets/bubble-intro.md"),
+    Block::Md("examples/browser/snippets/bubble-installation.md"),
     Block::Md("examples/browser/snippets/bubble-usage.md"),
     Block::Md("examples/browser/snippets/bubble-composition.md"),
+    Block::Md("examples/browser/snippets/bubble-features.md"),
     Block::Example {
         id: "variants",
         title: "Variants",
-        description: None,
+        description: Some("Use `variant` to change the visual treatment of the bubble."),
         snippet: "examples/browser/snippets/bubble-variants.md",
     },
+    Block::Md("examples/browser/snippets/bubble-variants-guide.md"),
     Block::Example {
         id: "alignment",
         title: "Alignment",
-        description: None,
+        description: Some(
+            "Use `align` on `Bubble` to align the bubble to the start or end of the conversation.",
+        ),
         snippet: "examples/browser/snippets/bubble-alignment.md",
     },
+    Block::Md("examples/browser/snippets/bubble-alignment-guide.md"),
     Block::Example {
         id: "group-demo",
         title: "Bubble Group",
-        description: None,
+        description: Some(
+            "Use `BubbleGroup` to group consecutive bubbles from the same sender. Note the `align` prop should be set on the `Bubble` component itself, not the `BubbleGroup` component.\n\n```text\nBubbleGroup\n├── Bubble\n│   └── BubbleContent\n└── Bubble\n    └── BubbleContent\n```",
+        ),
         snippet: "examples/browser/snippets/bubble-group-demo.md",
     },
     Block::Example {
         id: "link-button",
         title: "Links and Buttons",
-        description: None,
+        description: Some(
+            "You can turn a bubble into a link or button by using the `asChild` prop on `BubbleContent`.",
+        ),
         snippet: "examples/browser/snippets/bubble-link-button.md",
     },
+    Block::Md("examples/browser/snippets/bubble-link-button-guide.md"),
     Block::Example {
         id: "reactions",
         title: "Reactions",
-        description: None,
+        description: Some(
+            "Use `BubbleReactions` for bubble reactions. You can use it to display reactions or quick action buttons. Use `side` and `align` to position the row — `side=\"top\"` anchors it to the upper edge. Reactions overlap the bubble edge, so leave vertical space between rows — the examples below use a larger `gap` for this reason.",
+        ),
         snippet: "examples/browser/snippets/bubble-reactions.md",
     },
     Block::Example {
         id: "collapsible",
         title: "Show More / Collapsible",
-        description: None,
+        description: Some(
+            "Long bubble content can be composed with [Collapsible](https://ui.shadcn.com/docs/components/collapsible) to allow for a show more or show less interaction. Use the `CollapsibleTrigger` component to trigger the collapsible content.",
+        ),
         snippet: "examples/browser/snippets/bubble-collapsible.md",
     },
     Block::Example {
         id: "tooltip",
         title: "Tooltip",
-        description: None,
+        description: Some(
+            "Wrap a bubble in a [Tooltip](https://ui.shadcn.com/docs/components/tooltip) to reveal metadata on hover, such as when a message was read.",
+        ),
         snippet: "examples/browser/snippets/bubble-tooltip.md",
     },
     Block::Example {
         id: "popover",
         title: "Popover",
-        description: None,
+        description: Some(
+            "Pair a bubble with a [Popover](https://ui.shadcn.com/docs/components/popover) to surface more information on demand, such as the full error message for a failed action.",
+        ),
         snippet: "examples/browser/snippets/bubble-popover.md",
     },
-    Block::Md("examples/browser/snippets/bubble-api-reference.md"),
+    Block::Group {
+        title: "Accessibility",
+        children: &[
+            Block::Md("examples/browser/snippets/bubble-accessibility.md"),
+            Block::Md("examples/browser/snippets/bubble-accessibility-reactions.md"),
+            Block::Md("examples/browser/snippets/bubble-accessibility-interactive.md"),
+            Block::Md("examples/browser/snippets/bubble-accessibility-color.md"),
+        ],
+    },
+    Block::Group {
+        title: "API Reference",
+        children: &[
+            Block::Md("examples/browser/snippets/bubble-api-reference.md"),
+            Block::Md("examples/browser/snippets/bubble-api-content.md"),
+            Block::Md("examples/browser/snippets/bubble-api-reactions.md"),
+            Block::Md("examples/browser/snippets/bubble-api-group.md"),
+        ],
+    },
 ];
 pub struct BubblePage {
     state: page::State,
@@ -102,11 +147,34 @@ fn frame(body: impl Into<Slot<'static, Message>>) -> Slot<'static, Message> {
 }
 fn suggestion(label: &'static str, notice: &'static str) -> Slot<'static, Message> {
     toast::trigger(
-        button(label).style(button::Ghost).inset(0),
+        bubble(label).style(Tinted).align(Right).interactive(true),
         toast::toast(notice),
     )
-    .into()
 }
+
+fn glyph(path: &'static str, muted: bool, destructive: bool) -> Slot<'static, Message> {
+    let source = format!(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{path}</svg>"#
+    );
+    svg(svg::Handle::from_memory(source.into_bytes()))
+        .width(16)
+        .height(16)
+        .style(move |theme: &Theme, _| svg::Style {
+            color: Some(
+                if destructive {
+                    theme.destructive.base
+                } else if muted {
+                    theme.muted.foreground
+                } else {
+                    theme.neutral.foreground
+                }
+                .into(),
+            ),
+        })
+        .boxed()
+        .into()
+}
+
 fn review() -> Slot<'static, Message> {
     const REVIEW: &str = "The accessibility review found two focus states that were visually too subtle in dark mode.\n\nI checked the dialog, menu, and drawer paths because each one renders focusable controls inside a layered surface.\n\nThe dialog and drawer are fine. The menu needs the hover and focus tokens split so keyboard focus stays visible when the pointer is not involved.\n\nI also recommend keeping the change in the style file instead of the primitive so the other themes can choose their own focus treatment later.";
     collapsible(|c| {
@@ -115,29 +183,47 @@ fn review() -> Slot<'static, Message> {
         } else {
             format!("{}...", &REVIEW[..180])
         };
+        let open = c.is_open();
+        let chevron = if open {
+            r#"<path d="m18 15-6-6-6 6"/>"#
+        } else {
+            r#"<path d="m6 9 6 6 6-6"/>"#
+        };
         column![
             text(description),
             c.trigger(
-                button(if c.is_open() {
-                    "Show less  ⌃"
-                } else {
-                    "Show more  ⌄"
-                })
-                .style(button::Link)
+                button(
+                    row![
+                        text(if open { "Show less" } else { "Show more" }),
+                        glyph(chevron, true, false)
+                    ]
+                    .spacing(4)
+                )
+                .style(button::Link + Fg(Token::MutedForeground))
+                .padding(0)
                 .inset(0)
             )
         ]
-        .spacing(4)
         .into()
     })
     .into()
 }
-fn ghost_text() -> Slot<'static, Message> {
+fn ghost_text(theme: &Theme) -> Slot<'static, Message> {
+    let bold = Font::DEFAULT.weight(Weight::Bold);
+    let code = Span::<()>::new("code")
+        .font(Font::new("Geist Mono"))
+        .size(12.25)
+        .color(theme.neutral.foreground)
+        .background(iced::Color::from(theme.muted.base))
+        .border(border::rounded(4))
+        .padding([1, 4]);
     column![
-        rich_text([span("Ghost bubbles work for assistant text, "),span("markdown").bold(),span(", and other content that should not be framed.")]),
-        rich_text([span("This is perfect for assistant messages that should not have a frame and can take the full width of the container. You can also render "),span("code").font(Font::new(GEIST_MONO_NAME)),span(" in it.")]),
+        rich_text([Span::<()>::new("Ghost bubbles work for assistant text, "), Span::<()>::new("markdown").font(bold), Span::<()>::new(", and other content that should not be framed.")])
+            .size(14).line_height(LineHeight::Absolute(22.75.into())).boxed(),
+        rich_text([Span::<()>::new("This is perfect for assistant messages that should not have a frame and can take the full width of the container. You can also render "), code, Span::<()>::new(" in it.")])
+            .size(14).line_height(LineHeight::Absolute(22.75.into())).boxed(),
         text("Ghost bubbles are full width and can take the full width of the container.")
-    ].spacing(12).into()
+    ].spacing(16).into()
 }
 fn demo() -> Slot<'static, Message> {
     frame(
@@ -155,14 +241,14 @@ fn demo() -> Slot<'static, Message> {
             bubble("Sure. Hit me with your best demo.").align(Right),
             bubble("Yes. You are reading a demo that is demoing itself. Very meta. Very on-brand.")
                 .style(Muted)
-                .reactions("👍 🔥 👀 +2", Right, Bottom)
+                .reactions(row!["👍", "🔥", "👀", "+2"].spacing(4), Right, Bottom)
         ]
         .spacing(32)
         .width(Fill),
     )
 }
 
-fn variants() -> Slot<'static, Message> {
+fn variants(theme: &Theme) -> Slot<'static, Message> {
     frame(
         column![
             bubble("This is the default primary bubble."),
@@ -182,7 +268,7 @@ fn variants() -> Slot<'static, Message> {
                 .style(Destructive)
                 .align(Right)
                 .reactions("🔥", Right, Bottom),
-            bubble(ghost_text()).style(Ghost)
+            bubble(ghost_text(theme)).style(Ghost)
         ]
         .spacing(48)
         .width(Fill),
@@ -228,27 +314,15 @@ fn link_button() -> Slot<'static, Message> {
         column![
             bubble("How can I help you today?").style(Muted),
             bubble::group([
-                bubble(suggestion(
-                    "I forgot my password",
-                    "You clicked forgot password"
-                ))
-                .style(Tinted)
-                .align(Right)
-                .into(),
-                bubble(suggestion(
+                suggestion("I forgot my password", "You clicked forgot password"),
+                suggestion(
                     "I need help with my subscription",
                     "You clicked help with subscription"
-                ))
-                .style(Tinted)
-                .align(Right)
-                .into(),
-                bubble(suggestion(
+                ),
+                suggestion(
                     "Something else. Talk to a human.",
                     "You clicked something else. Talk to a human."
-                ))
-                .style(Tinted)
-                .align(Right)
-                .into()
+                ),
             ])
         ]
         .spacing(32)
@@ -262,13 +336,13 @@ fn reactions() -> Slot<'static, Message> {
             bubble("I don't need tests, I know my code works.")
                 .style(Muted)
                 .align(Right)
-                .reactions("👍 😮", Left, Bottom),
+                .reactions(row!["👍", "😮"].spacing(4), Left, Bottom),
             bubble("Bold. Fine I'll add some tests. I'll let you know when they're done.")
                 .style(Muted)
-                .reactions("👀 🚀 +2", Right, Bottom),
+                .reactions(row!["👀", "🚀", "+2"].spacing(4), Right, Bottom),
             bubble("Tests passed on the first try. All 142 of them. Looking good!")
                 .align(Right)
-                .reactions("🎉 👏", Left, Top),
+                .reactions(row!["🎉", "👏"].spacing(4), Left, Top),
             bubble("Are you sure I can run this command?")
                 .style(Destructive)
                 .reactions(
@@ -280,6 +354,7 @@ fn reactions() -> Slot<'static, Message> {
                     Right,
                     Bottom
                 )
+                .reaction_padding(0)
         ]
         .spacing(48)
         .width(Fill),
@@ -305,7 +380,7 @@ fn tooltip_example() -> Slot<'static, Message> {
                 .align(Right)
                 .reactions(
                     tooltip(
-                        button(icon::check())
+                        button(glyph(r#"<path d="m20 6-11 11-5-5"/>"#, false, false))
                             .size(Size::Xs)
                             .square()
                             .style(button::Ghost),
@@ -314,6 +389,7 @@ fn tooltip_example() -> Slot<'static, Message> {
                     Right,
                     Bottom
                 )
+                .reaction_padding(0)
         ]
         .spacing(16)
         .width(Fill),
@@ -329,10 +405,14 @@ fn popover_example() -> Slot<'static, Message> {
                 .reactions(
                     popover(
                         |p| p.trigger(
-                            button(icon::info())
-                                .size(Size::Xs)
-                                .square()
-                                .style(button::Ghost)
+                            button(glyph(
+                                r#"<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>"#,
+                                false,
+                                p.is_open()
+                            ))
+                            .size(Size::Xs)
+                            .square()
+                            .style(button::Ghost)
                         ),
                         |_| popover::header(
                             "Command failed with exit code 1",
@@ -342,6 +422,7 @@ fn popover_example() -> Slot<'static, Message> {
                     Right,
                     Bottom
                 )
+                .reaction_padding(0)
         ]
         .spacing(16)
         .width(Fill),
@@ -373,10 +454,31 @@ impl page::Page for BubblePage {
     fn reset_volatile(&mut self) {
         self.state.reset_volatile();
     }
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            min_height: 0.0,
+            padding: 40.into(),
+            ..page::Backdrop::default()
+        }
+    }
+    fn preview_theme(&self, outer: &Theme) -> Option<Theme> {
+        Some(rhea::theme(outer))
+    }
+    fn themed_preview(&self, id: &str, outer: &Theme) -> Element<'_, Message, Theme> {
+        let theme = rhea::theme(outer);
+        let content = if id == "variants" {
+            variants(&theme).into()
+        } else {
+            self.preview(id)
+        };
+        themer(Some(theme), content)
+            .text_color(|theme| theme.neutral.foreground.into())
+            .boxed()
+    }
     fn preview(&self, id: &str) -> Element<'_, Message, Theme> {
         match id {
             "demo" => demo().into(),
-            "variants" => variants().into(),
+            "variants" => variants(&Theme::light()).into(),
             "alignment" => alignment().into(),
             "group-demo" => group_demo().into(),
             "link-button" => link_button().into(),

@@ -1,13 +1,18 @@
 //! Framed conversational content with optional corner reactions.
-use iced_core::Element;
 use iced_core::Length::{Fill, FillPortion};
 use iced_core::alignment::{Horizontal, Vertical};
-use iced_widget::{Renderer, Widget, stack};
-use icedxdy_core::theme::container::Style;
+use iced_core::{Element, Vector};
+use iced_widget::{Renderer, Widget, float, stack};
 use icedxdy_core::{Border, Color, Padding, Radius, Theme, font_size, radius};
 
-use crate::{Column, Compose, Inherited, Size, Slot, column, container, row, space};
+use crate::button::widget::Button;
+use crate::container::widget::Container;
+use crate::{Column, Compose, Inherited, Size, Slot, button, column, container, row, space};
 
+pub use crate::button::widget::Status;
+pub use icedxdy_core::theme::container::Style;
+
+/// The seven Nova bubble surfaces.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum Variant {
     #[default]
@@ -38,6 +43,7 @@ pub fn fade_muted_on_card(theme: &Theme, opacity: f32) -> Theme {
     Theme::new(design)
 }
 
+/// Conversational content with optional overlapping reactions and surface actions.
 pub struct Bubble<'a, Message> {
     content: Slot<'a, Message>,
     variant: Variant,
@@ -45,8 +51,14 @@ pub struct Bubble<'a, Message> {
     padding: Option<Padding>,
     radius: Option<Radius>,
     reactions: Option<(Slot<'a, Message>, Horizontal, Vertical)>,
+    reaction_padding: Padding,
+    interactive: bool,
+    on_press: Option<Message>,
+    disabled: bool,
+    paint: Option<Box<dyn Fn(&Theme, Status, Style) -> Style + 'a>>,
 }
 
+/// Frame content in a primary, start-aligned bubble.
 pub fn bubble<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Bubble<'a, Message> {
     Bubble {
         content: content.into(),
@@ -55,6 +67,11 @@ pub fn bubble<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Bubble<
         padding: None,
         radius: None,
         reactions: None,
+        reaction_padding: [2, 6].into(),
+        interactive: false,
+        on_press: None,
+        disabled: false,
+        paint: None,
     }
 }
 
@@ -66,10 +83,12 @@ pub fn group<'a, Message: 'a>(
 }
 
 impl<'a, Message: 'a> Bubble<'a, Message> {
+    /// Select a surface variant, retaining its hover and focus treatment.
     pub fn style(mut self, style: Variant) -> Self {
         self.variant = style;
         self
     }
+    /// Align the bubble within its row; otherwise inherit the Message alignment.
     pub fn align(mut self, align: Horizontal) -> Self {
         self.align = Some(align);
         self
@@ -84,6 +103,7 @@ impl<'a, Message: 'a> Bubble<'a, Message> {
         self.radius = Some(radius.into());
         self
     }
+    /// Attach content to a bubble edge, overlapping it by one quarter of its height.
     pub fn reactions(
         mut self,
         content: impl Into<Slot<'a, Message>>,
@@ -93,12 +113,48 @@ impl<'a, Message: 'a> Bubble<'a, Message> {
         self.reactions = Some((content.into(), align, side));
         self
     }
+
+    /// Override reaction padding. Use zero when the reaction contains a button.
+    pub fn reaction_padding(mut self, padding: impl Into<Padding>) -> Self {
+        self.reaction_padding = padding.into();
+        self
+    }
+
+    /// Make the entire surface focusable and pressable, including without a handler.
+    /// This is useful when a toast or other marker observes the activation.
+    pub fn interactive(mut self, interactive: bool) -> Self {
+        self.interactive = interactive;
+        self
+    }
+
+    /// Make the surface interactive and publish a message when activated.
+    pub fn on_press(mut self, message: Message) -> Self {
+        self.interactive = true;
+        self.on_press = Some(message);
+        self
+    }
+
+    /// Suppress pointer/keyboard interaction and disable descendants.
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled |= disabled;
+        self
+    }
+
+    /// Adjust resolved surface paint without losing the selected variant's geometry.
+    pub fn map_style(mut self, paint: impl Fn(&Theme, Status, Style) -> Style + 'a) -> Self {
+        let previous = self.paint.take();
+        self.paint = Some(Box::new(move |theme, status, style| {
+            let style = previous.as_ref().map_or(style, |f| f(theme, status, style));
+            paint(theme, status, style)
+        }));
+        self
+    }
 }
 
-fn surface(variant: Variant, radius: Radius, theme: &Theme) -> Style {
+fn surface(variant: Variant, radius: Radius, theme: &Theme, status: Status) -> Style {
     use Variant::*;
     let primary = theme.primary.base;
-    let (bg, fg) = match variant {
+    let (mut bg, fg) = match variant {
         Primary => (primary, theme.primary.foreground),
         Secondary => (theme.secondary.base, theme.secondary.foreground),
         Muted => (theme.muted.base, theme.neutral.foreground),
@@ -120,20 +176,50 @@ fn surface(variant: Variant, radius: Radius, theme: &Theme) -> Style {
             theme.destructive.base,
         ),
     };
+    let hovered = matches!(
+        status,
+        Status::Hovered | Status::Pressed | Status::Focused { is_hovered: true }
+    );
+    if hovered {
+        bg = match variant {
+            Primary => primary.scale_alpha(0.8),
+            Secondary | Muted => bg.blend(theme.neutral.foreground, 0.05),
+            Tinted => Color::new(
+                if theme.neutral.is_dark { 0.35 } else { 0.88 },
+                primary.c * 0.5,
+                primary.h,
+            ),
+            Outline if theme.neutral.is_dark => theme.input.scale_alpha(0.3),
+            Ghost if theme.neutral.is_dark => theme.muted.base.scale_alpha(0.5),
+            Outline | Ghost => theme.muted.base,
+            Destructive => theme
+                .destructive
+                .base
+                .scale_alpha(if theme.neutral.is_dark { 0.3 } else { 0.2 }),
+        };
+    }
+    let focused = matches!(status, Status::Focused { .. });
     Style {
         background: Some(bg.into()),
         text_color: Some(fg),
         border: Border {
             radius,
-            width: if variant == Outline { 1. } else { 0. },
-            color: theme.neutral.border,
+            width: 1.,
+            color: if focused {
+                theme.neutral.ring
+            } else if variant == Outline {
+                theme.neutral.border
+            } else {
+                Color::TRANSPARENT
+            },
         },
         ..Style::default()
     }
 }
 
-impl<'a, Message: 'a> Compose<Message> for Bubble<'a, Message> {
+impl<'a, Message: Clone + 'a> Compose<Message> for Bubble<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {
+        self.disabled |= from.is_disabled();
         self.align = self.align.or(from.conversation_alignment());
         self.content.inherit(from);
         if let Some((slot, ..)) = &mut self.reactions {
@@ -150,8 +236,13 @@ impl<'a, Message: 'a> Compose<Message> for Bubble<'a, Message> {
         self.content.inherit(
             &Inherited::default()
                 .with_size(font_size::SM)
-                .with_line_height(22.75),
+                .with_line_height(22.75)
+                .with_disabled(self.disabled),
         );
+        if self.interactive {
+            self.content
+                .inherit(&Inherited::default().with_selectable(false));
+        }
         let padding = self.padding.unwrap_or_else(|| {
             if variant == Ghost {
                 Padding::ZERO
@@ -164,38 +255,108 @@ impl<'a, Message: 'a> Compose<Message> for Bubble<'a, Message> {
             .unwrap_or_else(|| if variant == Ghost { 0.0 } else { radius::XL }.into());
         // iced draws its border inside the quad. CSS reserves a pixel on
         // each edge, including the transparent border on the ghost variant.
-        let content = container(self.content)
-            .fit_content()
-            .padding(padding + Padding::all(1.0))
-            .style(move |theme| surface(variant, radius, theme));
-        let body: Slot<'a, Message> = if let Some((mut reaction, edge, side)) = self.reactions {
-            reaction.inherit(&Inherited::default().with_size(Size::Sm));
-            let chip = container(reaction).padding([2, 6]).style(|theme| Style {
-                background: Some(theme.muted.base.into()),
-                text_color: Some(theme.neutral.foreground),
-                border: Border {
-                    radius: 100.0.into(),
-                    width: 3.,
-                    color: theme.card.base,
-                },
-                ..Style::default()
+        let paint = self.paint.take();
+        let resolve = move |theme: &Theme, status| {
+            let style = surface(variant, radius, theme, status);
+            paint.as_ref().map_or(style, |f| f(theme, status, style))
+        };
+        let padding = padding + Padding::all(1.0);
+        let content: Element<'a, Message, Theme, Renderer> = if self.interactive {
+            let style: button::widget::StyleFn<'a, Theme> = Box::new(move |theme, status| {
+                let style = resolve(theme, status);
+                let ring = matches!(status, Status::Focused { .. }).then(|| {
+                    let mut ring = iced_core::Border::default();
+                    ring.width = 3.0;
+                    ring.color = theme.neutral.ring.scale_alpha(0.5).into();
+                    let r: iced_core::border::Radius = style.border.radius.into();
+                    ring.radius = iced_core::border::Radius {
+                        top_left: r.top_left + 3.0,
+                        top_right: r.top_right + 3.0,
+                        bottom_left: r.bottom_left + 3.0,
+                        bottom_right: r.bottom_right + 3.0,
+                    };
+                    ring
+                });
+                button::widget::Style {
+                    background: style.background.map(Into::into),
+                    text_color: style.text_color.unwrap_or(theme.neutral.foreground).into(),
+                    border: style.border.into(),
+                    shadow: style.shadow.into(),
+                    snap: style.snap,
+                    ring,
+                }
             });
-            let mut gutter = Padding::ZERO;
-            if side == Vertical::Top {
-                gutter.top = 16.;
-            } else {
-                gutter.bottom = 16.;
-            }
-            let base: Element<'a, Message, Theme, Renderer> =
-                container(content).padding(gutter).into();
+            Button::new(self.content.compose())
+                .padding(padding)
+                .translate(false)
+                .disabled(self.disabled)
+                .on_press_maybe(self.on_press)
+                .style(style)
+                .boxed()
+        } else {
+            let style: container::widget::StyleFn<'a, Theme> = Box::new(move |theme| {
+                let paint: iced_widget::container::Style = resolve(theme, Status::Active).into();
+                paint.into()
+            });
+            Container::new(self.content.compose())
+                .fit_content(true)
+                .padding(padding)
+                .class(style)
+                .boxed()
+        };
+        let body: Slot<'a, Message> = if let Some((mut reaction, edge, side)) = self.reactions {
+            reaction.inherit(
+                &Inherited::default()
+                    .with_size(Size::Sm)
+                    .with_line_height(20.0)
+                    .with_disabled(self.disabled),
+            );
+            let chip = container(reaction)
+                .fit_content()
+                .padding(self.reaction_padding)
+                .style(|theme| Style {
+                    background: Some(theme.muted.base.into()),
+                    text_color: Some(theme.neutral.foreground),
+                    border: Border {
+                        radius: 100.0.into(),
+                        ..Border::default()
+                    },
+                    ..Style::default()
+                });
+            // The outer three pixels paint CSS's external ring. They do not
+            // participate in either the 75% chip translation or the 12px inset.
+            let ring: Element<'a, Message, Theme, Renderer> = container(chip)
+                .padding(3)
+                .style(|theme| Style {
+                    background: Some(theme.card.base.into()),
+                    border: Border {
+                        radius: 100.0.into(),
+                        ..Border::default()
+                    },
+                    ..Style::default()
+                })
+                .into();
+            let chip = float(ring)
+                .translate(move |bounds, _| {
+                    let distance = (bounds.height - 6.0) * 0.75 + 3.0;
+                    Vector::new(
+                        0.0,
+                        if side == Vertical::Top {
+                            -distance
+                        } else {
+                            distance
+                        },
+                    )
+                })
+                .boxed();
             let overlay: Element<'a, Message, Theme, Renderer> = container(chip)
-                .padding([0, 12])
+                .padding([0, 9])
                 .width(Fill)
                 .height(Fill)
                 .align_x(edge)
                 .align_y(side)
                 .into();
-            stack![base, overlay].boxed().into()
+            stack![content, overlay].boxed().into()
         } else {
             content.into()
         };
@@ -217,12 +378,12 @@ impl<'a, Message: 'a> Compose<Message> for Bubble<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Bubble<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Bubble<'a, Message>> for Slot<'a, Message> {
     fn from(bubble: Bubble<'a, Message>) -> Self {
         Slot::new(bubble)
     }
 }
-impl<'a, Message: 'a> From<Bubble<'a, Message>> for Element<'a, Message, Theme, Renderer> {
+impl<'a, Message: Clone + 'a> From<Bubble<'a, Message>> for Element<'a, Message, Theme, Renderer> {
     fn from(bubble: Bubble<'a, Message>) -> Self {
         Box::new(bubble).compose()
     }
