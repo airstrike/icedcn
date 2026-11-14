@@ -17,7 +17,7 @@
 //! verbatim where possible so future re-vendoring stays mechanical.
 
 #[cfg(feature = "highlighter")]
-pub mod highlighter;
+pub use crate::highlighter;
 pub mod widget;
 
 pub use widget::{

@@ -76,11 +76,14 @@ fn full_sources_and_diff_decoration_survive_recipe_transforms() {
     let page = State::new();
     assert_eq!(page.logs.lines().count(), 40);
     assert!(page.logs.ends_with("[40] Indexed notebook in 45ms"));
-    assert_eq!(diff_style("+added"), LineStyle::Added);
-    assert_eq!(diff_style("-removed"), LineStyle::Removed);
-    assert_eq!(diff_style(" unchanged"), LineStyle::Default);
+    assert_eq!(
+        code_block::diff_text("+added\n-removed\n unchanged"),
+        "added\nremoved\nunchanged"
+    );
     assert!(SHOW_MORE.lines().count() > 20);
-    let (_, copy) = highlight::ansi::<Message>(false);
+    use code_block::ansi;
+    let output = ansi::parse(ANSI);
+    let copy = output.as_str();
     assert_eq!(copy.lines().count(), 8);
     assert!(!copy.contains('\x1b'));
     assert!(copy.ends_with("test result: FAILED. 2 passed; 1 failed; 0 ignored"));
@@ -149,27 +152,7 @@ fn chevron_rotates_reverses_continuously_and_settles() {
     assert!(turn.start.is_none());
 }
 #[test]
-fn ansi_fixture_retains_source_and_pinned_alpha() {
-    use super::super::tokens;
-    let mut plain = String::new();
-    let mut escape = false;
-    for ch in ANSI.chars() {
-        if ch == '\x1b' {
-            escape = true;
-        } else if escape {
-            if ch == 'm' {
-                escape = false;
-            }
-        } else {
-            plain.push(ch);
-        }
-    }
-    assert_eq!(plain, tokens::ANSI_PLAIN);
-    let row = tokens::row(tokens::ANSI_PLAIN, 1, usize::MAX, false).expect("retained ANSI tokens");
-    assert!(
-        row.iter()
-            .any(|(_, light, dark)| light & 255 == 128 && dark & 255 == 128)
-    );
+fn markdown_and_typeset_prose_remain_paragraphs() {
     for items in [
         &State::new().typeset_before,
         &State::new().typeset_after,
@@ -210,16 +193,7 @@ fn local_timer_requests_the_next_frame_after_a_published_tick() {
 }
 
 #[test]
-fn repeated_fixture_text_uses_streaming_tail_tokens() {
-    use super::super::tokens;
-    assert_eq!(CHAT, STREAMING_3);
-    assert_eq!(TABS_2, STREAMING_4);
-    assert_eq!(
-        tokens::row(STREAMING_3, 0, 1, true),
-        Some([(1, 0x24292eff, 0xe1e4e8ff)].as_slice())
-    );
-    assert_eq!(
-        tokens::row(STREAMING_4, 0, 1, true),
-        Some([(1, 0xb31d28ff, 0xfdaeb7ff)].as_slice())
-    );
+fn streaming_lists_keep_their_source_language() {
+    assert_eq!(STREAMS[1], ("Terminal", "sh", STREAMING_1));
+    assert_eq!(STREAMS[4], (".cargo/config.toml", "toml", STREAMING_4));
 }

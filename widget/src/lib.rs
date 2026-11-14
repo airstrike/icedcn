@@ -35,6 +35,9 @@ pub mod input_group;
 pub mod input_otp;
 pub mod item;
 pub mod kbd;
+#[cfg(feature = "highlighter")]
+#[path = "markdown/highlighter.rs"]
+pub mod highlighter;
 #[cfg(feature = "markdown")]
 pub mod markdown;
 pub mod marker;

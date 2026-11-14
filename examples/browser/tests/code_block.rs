@@ -176,3 +176,78 @@ fn show_more_state_stays_local_across_theme_and_width_rebuilds() {
     assert!(ui.find("Show more").is_ok());
     assert_eq!(ui.drain().count(), 0);
 }
+
+#[test]
+fn ansi_matches_explicit_terminal_spans_at_both_scales_and_themes() {
+    use iced::widget::text::{LineHeight, Wrapping};
+    use iced::{Fill, Font, Renderer, mouse};
+    use iced_test::core::renderer::{Headless, Style};
+    use iced_test::futures::futures::executor::block_on;
+    use iced_test::runtime::UserInterface;
+
+    let mut renderer =
+        block_on(Renderer::new(Default::default(), Some("wgpu"))).expect("headless renderer");
+    for theme in [Theme::light(), Theme::dark()] {
+        for scale in [1, 2] {
+            let screenshot = |renderer: &mut Renderer, block: CodeBlock<'_, ()>| {
+                let element: Element<'_, (), Theme> = block.into();
+                let mut ui = UserInterface::build(
+                    element,
+                    Size::new(160., 104.),
+                    Default::default(),
+                    renderer,
+                );
+                ui.draw(
+                    renderer,
+                    &theme,
+                    &Style::default(),
+                    mouse::Cursor::Unavailable,
+                );
+                renderer.screenshot(
+                    Size::new(160 * scale, 104 * scale),
+                    scale as f32,
+                    theme.neutral.base.into(),
+                )
+            };
+            let color = |light, dark, alpha| {
+                let rgb = if theme.neutral.is_dark { dark } else { light };
+                icedxdy::Color::from(iced::Color::from_packed_rgba8(rgb, alpha))
+            };
+            let row = |spans| {
+                let text = rich_text(spans)
+                    .font(Font::MONOSPACE)
+                    .size(14)
+                    .line_height(LineHeight::Absolute(22.75.into()))
+                    .wrapping(Wrapping::WordOrGlyph)
+                    .width(Fill);
+                (LineStyle::Default, text.into())
+            };
+            let normal = color(0x24292e, 0xe1e4e8, 1.);
+            let red = color(0xd73a49, 0xea4a5a, 1.);
+            let green = color(0x28a745, 0x34d058, 1.);
+            let dim = color(0x24292e, 0xe1e4e8, 128. / 255.);
+            let reference = CodeBlock::lines([
+                row(vec![
+                    span("Cargo ").color(normal),
+                    span("FAILED").color(red),
+                ]),
+                row(vec![span("")]),
+                row(vec![span("tests ").color(dim), span("ok").color(green)]),
+            ])
+            .wrap(true);
+            let output = code_block::ansi("Cargo \x1b[31mFAILED\n\n\x1b[2mtests \x1b[22;32mok");
+            let expected = screenshot(&mut renderer, reference);
+            let actual = screenshot(&mut renderer, output);
+            let different = expected
+                .iter()
+                .zip(actual)
+                .filter(|(l, r)| **l != *r)
+                .count();
+            assert_eq!(
+                different, 0,
+                "terminal text pixels at {scale}×, dark={}",
+                theme.neutral.is_dark
+            );
+        }
+    }
+}

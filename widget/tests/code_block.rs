@@ -201,3 +201,45 @@ fn header_actions_stay_at_the_end_at_both_widths() {
         }
     }
 }
+
+#[cfg(feature = "highlighter")]
+#[test]
+fn highlighted_patch_rebuilds_with_incoming_source_and_preserves_rows() {
+    use iced_core::widget::operation::Text;
+    use icedxdy_widget::code_block;
+
+    #[derive(Default)]
+    struct Rows(Vec<String>);
+    impl Operation for Rows {
+        fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+            visit(self);
+        }
+        fn text(&mut self, _: Option<&Id>, _: Rectangle, text: &mut dyn Text) {
+            self.0.push(text.text().to_string());
+        }
+    }
+    fn rendered(view: &mut Ui, theme: &Theme) -> Vec<String> {
+        view.draw(theme);
+        let mut text = Rows::default();
+        view.operate(&mut text);
+        text.0
+    }
+    let listing = |source: &str| {
+        code_block(source.to_owned())
+            .language("rust")
+            .diff()
+            .line_style(2, LineStyle::Highlighted)
+            .into()
+    };
+    let mut view = ui(listing(" let name = \"café\";\n+na"), 400.);
+    assert!(rendered(&mut view, &Theme::light()).contains(&"na".to_owned()));
+    let source = " let name = \"café\";\n+name.len()\n-0";
+    view = view.rebuild(listing(source));
+    let rows = rendered(&mut view, &Theme::dark());
+    for line in code_block::diff_text(source).lines() {
+        assert!(
+            rows.iter().any(|text| text == line),
+            "missing {line:?} in {rows:?}"
+        );
+    }
+}

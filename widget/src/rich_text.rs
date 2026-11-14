@@ -69,7 +69,7 @@ pub struct Span<'a> {
     weight: Option<font::Weight>,
     font: Option<iced_core::Font>,
     italic: bool,
-    color: Option<Token>,
+    color: Option<(Token, Token)>,
     letter_spacing: Option<Em>,
 }
 
@@ -144,7 +144,14 @@ impl<'a> Span<'a> {
     /// Resolves against the active palette at draw time, so the same
     /// span renders correctly in both light and dark modes.
     pub fn color(mut self, color: impl Into<Token>) -> Self {
-        self.color = Some(color.into());
+        let color = color.into();
+        self.color = Some((color, color));
+        self
+    }
+
+    /// Use different span colors for light and dark themes.
+    pub fn color_pair(mut self, light: impl Into<Token>, dark: impl Into<Token>) -> Self {
+        self.color = Some((light.into(), dark.into()));
         self
     }
 
@@ -477,9 +484,12 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
             .bounds()
             .anchor(paragraph.min_bounds(), self.align_x, self.align_y);
         let colors = || {
-            self.spans
-                .iter()
-                .map(|span| span.color.map(|token| token.resolve(theme).into()))
+            self.spans.iter().map(|span| {
+                span.color.map(|(light, dark)| {
+                    let color = if theme.neutral.is_dark { dark } else { light };
+                    color.resolve(theme).into()
+                })
+            })
         };
         let mut colored = state.colored.borrow_mut();
         let ink = if self.spans.iter().any(|span| span.color.is_some()) {

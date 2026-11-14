@@ -1,1 +1,1 @@
-ANSI colors do not carry from one line to the next. The complete recipe strips the supported reset, dim, red and green sequences from the copy payload while applying their colors to the displayed spans.
+The transcript preserves blank lines and resets styling at each newline. It supports standard and bright ANSI foreground colors, dim text, and resets. `output.as_str()` returns the text without SGR escapes. The copy button shows a check for two seconds after the clipboard confirms the write.

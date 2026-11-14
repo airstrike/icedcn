@@ -12,6 +12,7 @@ keywords.workspace = true
 
 [features]
 default = []
+highlighter = ["icedxdy_widget/highlighter"]
 markdown = ["icedxdy_core/markdown", "icedxdy_widget/markdown"]
 spinner = ["icedxdy_widget/spinner"]
 svg = ["icedxdy_core/svg", "icedxdy_widget/svg"]
@@ -51,6 +52,7 @@ icedxdy_widget = { path = "./widget" }
 iced = "0.15.0-dev"
 iced_core = "0.15.0-dev"
 iced_runtime = "0.15.0-dev"
+iced_highlighter = "0.15.0-dev"
 iced_selector = "0.15.0-dev"
 iced_test = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
 iced_widget = { version = "0.15.0-dev", features = ["qr_code"] }

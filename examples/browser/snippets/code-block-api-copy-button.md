@@ -1,9 +1,5 @@
 ### Copy button
 
-The native recipe composes a ghost icon button, a tooltip, and the application clipboard task. The complete Header snippet shows all state and messages.
+Pass `code_block::copy_button(text)` to `.actions(...)` or put it in a row with other controls. It copies the complete text and shows a check and “Copied” tooltip for two seconds after a successful write. Each subsequent successful copy restarts that interval.
 
-| API | Type | Default | Behavior |
-| --- | --- | --- | --- |
-| `Message::Copy(id, value)` | `String` | required | Exact text to copy; independent of visible clipping. |
-| `button(...).disabled(bool)` | `bool` | `false` | Use while the source is incomplete. |
-| `Message::Copied(id, at)` | `Instant` | on success | Show a check for two seconds; stale resets cannot clear a newer copy. |
+Use `.disabled(true)` to disable the button while a transcript is incomplete. For ANSI output, copy `output.as_str()` to omit color escapes.

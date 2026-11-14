@@ -1,5 +1,13 @@
 //! A Nova code panel with selectable output, a keyboard viewport and optional slots.
+pub mod ansi;
+mod copy;
 mod floating;
+mod glyph;
+mod listing;
+#[cfg(feature = "highlighter")]
+mod syntax;
+
+pub use copy::{CopyButton, copy_button};
 mod frame;
 mod lines;
 mod selection;
@@ -19,10 +27,10 @@ use icedxdy_core::{Border, Theme, radius};
 use crate::compose::{Compose, Inherited, Slot};
 use crate::scrollable::{Direction, scrollbar};
 use crate::text::Ellipsis;
-use crate::{Column, Weight, column, container, row, scrollable};
+use crate::{Weight, column, container, row, scrollable};
 
 /// Presentation of a line. Added/removed markers are separate from selectable code.
-#[derive(Debug, Clone, Copy, Default, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash)]
 pub enum LineStyle {
     #[default]
     Default,
@@ -69,6 +77,7 @@ fn surface(theme: &Theme) -> Style {
 
 enum Content<'a, Message> {
     Text(Cow<'a, str>),
+    Ansi(ansi::Output),
     Lines(Vec<(LineStyle, Slot<'a, Message>)>),
 }
 
@@ -76,6 +85,8 @@ enum Content<'a, Message> {
 pub fn code_block<'a, Message>(source: impl Into<Cow<'a, str>>) -> CodeBlock<'a, Message> {
     CodeBlock {
         content: Content::Text(source.into()),
+        listing: listing::Options::default(),
+        listing_view: None,
         title: None,
         actions: None,
         footer: None,
@@ -92,6 +103,29 @@ pub fn code_block<'a, Message>(source: impl Into<Cow<'a, str>>) -> CodeBlock<'a,
     }
 }
 
+/// Render ANSI-colored terminal output. Use [`ansi::parse`] to retain a frequently displayed transcript.
+pub fn ansi<'a, Message: 'a>(source: &str) -> CodeBlock<'a, Message> {
+    ansi::parse(source).view()
+}
+
+/// A terminal glyph and a truncating title for a command transcript.
+pub fn terminal_title<'a, Message: 'a>(
+    value: impl iced_core::text::IntoFragment<'a>,
+) -> Slot<'a, Message> {
+    row![glyph::Glyph::Terminal.view(), title(value)]
+        .spacing(6)
+        .into()
+}
+
+/// Return the selectable text of a patch body, with each row's diff marker removed.
+pub fn diff_text(source: &str) -> String {
+    source
+        .split('\n')
+        .map(|row| listing::diff_line(row).1)
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 /// A title that truncates within the available header width.
 pub fn title<'a>(value: impl iced_core::text::IntoFragment<'a>) -> crate::Text<'a> {
     crate::text(value)
@@ -104,6 +138,8 @@ pub fn title<'a>(value: impl iced_core::text::IntoFragment<'a>) -> crate::Text<'
 /// Builder for the surface, header, selectable content and footer.
 pub struct CodeBlock<'a, Message> {
     content: Content<'a, Message>,
+    listing: listing::Options<'a>,
+    listing_view: Option<listing::View<'a, Message>>,
     title: Option<Slot<'a, Message>>,
     actions: Option<Slot<'a, Message>>,
     footer: Option<Slot<'a, Message>>,
@@ -120,6 +156,39 @@ pub struct CodeBlock<'a, Message> {
 }
 
 impl<'a, Message: 'a> CodeBlock<'a, Message> {
+    /// Highlight the source using a language name or extension. Unknown languages show plain text.
+    /// Enable the `highlighter` or `markdown` feature to use syntax highlighting.
+    #[cfg(feature = "highlighter")]
+    pub fn language(mut self, language: impl Into<Cow<'a, str>>) -> Self
+    where
+        Message: 'static,
+    {
+        self.listing_view = Some(listing::Options::view);
+        self.listing.language = Some(language.into());
+        self
+    }
+
+    /// Decorate a one-based source line, independent of the displayed line numbers.
+    pub fn line_style(mut self, line: usize, style: LineStyle) -> Self
+    where
+        Message: 'static,
+    {
+        self.listing_view = Some(listing::Options::view);
+        self.listing.styles.insert(line, style);
+        self
+    }
+
+    /// Display a patch body. A leading `+`, `-`, or space identifies each row and is
+    /// excluded from its selectable text. Can be combined with syntax highlighting.
+    pub fn diff(mut self) -> Self
+    where
+        Message: 'static,
+    {
+        self.listing_view = Some(listing::Options::view);
+        self.listing.diff = true;
+        self
+    }
+
     /// Supply styled content for each line. Do not include diff markers in the slots.
     pub fn lines(lines: impl IntoIterator<Item = (LineStyle, Slot<'a, Message>)>) -> Self {
         Self {
@@ -221,6 +290,8 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
     {
         let Self {
             content,
+            listing,
+            listing_view,
             mut title,
             mut actions,
             mut footer,
@@ -281,81 +352,20 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
             );
         }
         let content_width = if wrap { Fill } else { Shrink };
-        let render_lines = |lines: Vec<(LineStyle, Slot<'a, Message>)>| {
-            let last = start_line
-                .unwrap_or(1)
-                .saturating_add(lines.len().saturating_sub(1));
-            let gutter = (last.to_string().len() as f32 * size * 0.61).max(24.);
-            let styles = lines.iter().map(|(style, _)| *style).collect();
-            let column = Column::with_children(lines.into_iter().enumerate().map(
-                |(index, (variant, mut line))| {
-                    line.inherit(
-                        &Inherited::default()
-                            .with_size(size)
-                            .with_line_height(line_height),
-                    );
-                    let mut entry = row![].spacing(12);
-                    if let Some(first) = start_line {
-                        entry = entry.push(
-                            text(first.saturating_add(index).to_string())
-                                .size(size)
-                                .font(font)
-                                .line_height(LineHeight::Absolute(line_height.into()))
-                                .width(gutter)
-                                .align_x(Horizontal::Right)
-                                .selectable(false)
-                                .style(|theme: &Theme| iced_widget::text::Style {
-                                    color: Some(theme.muted.foreground.into()),
-                                    ..Default::default()
-                                })
-                                .into(),
-                        );
-                    }
-                    let row = container(entry.push(line).width(content_width))
-                        .width(content_width)
-                        .min_height(line_height)
-                        .padding([0., padding]);
-                    let glyph = match variant {
-                        LineStyle::Added => Some("+"),
-                        LineStyle::Removed => Some("−"),
-                        _ => None,
-                    };
-                    if let Some(glyph) = glyph {
-                        let mark: Element<'_, Message, Theme, Renderer> = container(
-                            text(glyph)
-                                .size(size)
-                                .font(font)
-                                .line_height(LineHeight::Absolute(line_height.into()))
-                                .selectable(false)
-                                .style(move |t: &Theme| iced_widget::text::Style {
-                                    color: Some(
-                                        if variant == LineStyle::Removed {
-                                            t.destructive.base
-                                        } else {
-                                            t.muted.foreground
-                                        }
-                                        .into(),
-                                    ),
-                                    ..Default::default()
-                                }),
-                        )
-                        .padding([0, 0, 0, 4])
-                        .into();
-                        Slot::from(iced_widget::stack![Element::from(row), mark].boxed())
-                    } else {
-                        row.into()
-                    }
-                },
-            ))
-            .width(content_width);
-            lines::Lines::new(column.into(), styles).boxed()
+        let metrics = listing::Layout {
+            font,
+            wrap,
+            compact,
+            start_line,
         };
-        let body: Slot<'_, Message> = match content {
-            Content::Text(value) if start_line.is_none() => container(plain(value))
+        let render_lines = |lines| metrics.render(lines);
+        let body: Slot<'_, Message> = match (content, listing_view) {
+            (Content::Text(source), Some(view)) => view(listing, source, metrics),
+            (Content::Text(value), _) if start_line.is_none() => container(plain(value))
                 .width(content_width)
                 .padding([0., padding])
                 .into(),
-            Content::Text(value) => render_lines(
+            (Content::Text(value), _) => render_lines(
                 value
                     .strip_suffix('\n')
                     .unwrap_or(&value)
@@ -364,7 +374,10 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
                     .collect(),
             )
             .into(),
-            Content::Lines(lines) => render_lines(lines).into(),
+            (Content::Lines(lines), _) => render_lines(lines).into(),
+            (Content::Ansi(output), _) => {
+                render_lines(output.lines(font, wrapping, content_width, size)).into()
+            }
         };
         let body = container(body)
             .padding(Padding {

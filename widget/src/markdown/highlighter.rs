@@ -183,7 +183,7 @@ where
     Ok(())
 }
 
-fn config_for(language: &str) -> Option<&'static HighlightConfiguration> {
+pub(crate) fn config_for(language: &str) -> Option<&'static HighlightConfiguration> {
     REGISTRY
         .read()
         .expect("highlighter registry poisoned")

@@ -8,8 +8,16 @@ error: writing `&String` instead of `&str` involves a new object where a slice w
 4 | fn matches(query: &String, title: &str) -> bool {
   |                   ^^^^^^^ help: change this to: `&str`"##;
 
-#[cfg(test)]
-pub const ANSI: &str = "$ cargo test --color always\n    \x1b[2mRunning tests/search.rs\x1b[22m\nrunning 3 tests\ntest blank_query ... \x1b[32mok\x1b[39m\ntest exact_match ... \x1b[32mok\x1b[39m\ntest mixed_case ... \x1b[31mFAILED\x1b[39m\n\ntest result: \x1b[31mFAILED\x1b[39m. 2 passed; 1 failed; 0 ignored";
+pub const ANSI: &str = concat!(
+    "$ cargo test --color always\n",
+    "    \x1b[2mRunning tests/search.rs\x1b[22m\n",
+    "running 3 tests\n",
+    "test blank_query ... \x1b[32mok\x1b[39m\n",
+    "test exact_match ... \x1b[32mok\x1b[39m\n",
+    "test mixed_case ... \x1b[31mFAILED\x1b[39m\n",
+    "\n",
+    "test result: \x1b[31mFAILED\x1b[39m. 2 passed; 1 failed; 0 ignored",
+);
 
 pub const BASIC: &str = r##"$ cargo build --release
    Compiling icedxdy_core v0.1.0
@@ -236,3 +244,11 @@ fn search<'a>(query: &str, titles: &[&'a str]) -> Vec<&'a str> {
 
 pub const STREAMING_4: &str = r##"[env]
 RUST_LOG = "notebook=debug""##;
+
+pub const STREAMS: &[(&str, &str, &str)] = &[
+    ("src/matcher.rs", "rust", STREAMING_0),
+    ("Terminal", "sh", STREAMING_1),
+    ("src/search.rs", "rust", STREAMING_2),
+    ("src/search.rs", "rust", STREAMING_3),
+    (".cargo/config.toml", "toml", STREAMING_4),
+];

@@ -11,6 +11,7 @@ default = []
 canvas = ["iced_widget/canvas"]
 crisp = []
 highlighter = [
+    "dep:iced_highlighter",
     "dep:log",
     "dep:serde",
     "dep:serde_json",
@@ -26,6 +27,7 @@ sweeten = ["dep:sweeten", "icedxdy_core/sweeten"]
 [dependencies]
 icedxdy_core.workspace = true
 iced_core.workspace = true
+iced_highlighter = { workspace = true, optional = true }
 iced_runtime = { workspace = true, features = ["selector"] }
 iced_widget = { workspace = true, features = ["image"] }
 log = { workspace = true, optional = true }

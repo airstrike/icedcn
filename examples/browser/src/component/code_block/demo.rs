@@ -1,6 +1,5 @@
-use iced::widget::text::LineHeight;
-use std::collections::BTreeMap;
 use iced::time::{Duration, Instant};
+use std::collections::BTreeMap;
 
 use iced::alignment::Horizontal;
 use iced::widget::button::Style;
@@ -14,9 +13,8 @@ use icedxdy::widget::{
 };
 use icedxdy::{Size, Slot, Theme, radius, theme};
 
-use super::{highlight, samples::*};
+use super::samples::*;
 use crate::{font, icon, page};
-use highlight::{STREAMS, listing};
 use iced::widget::{Action, Component, component};
 use iced::{mouse, window};
 use icedxdy::theme::button::{Status, ghost};
@@ -263,27 +261,31 @@ impl State {
             .on_press(self.event(Message::Replay(id)))
             .into()
     }
-    fn streaming(&self, dark: bool) -> Slot<'static, Message> {
+    fn streaming(&self) -> Slot<'static, Message> {
         let mut remaining = self
             .streaming
             .get("streaming")
             .and_then(|_| self.progress.get("streaming").copied())
             .unwrap_or(usize::MAX);
         let mut output = column![].width(Fill).spacing(16);
-        for &(title, _, source) in STREAMS {
+        for &(title, language, source) in STREAMS {
             if remaining == 0 {
                 break;
             }
             let count = remaining.min(source.len());
-            let mut block = listing(dark, source, count, false, |index, line| {
-                if source == STREAMING_2 {
-                    diff_style(line)
-                } else if source == STREAMING_3 && (5..=8).contains(&index) {
-                    LineStyle::Highlighted
-                } else {
-                    LineStyle::Default
+            let mut end = count;
+            while !source.is_char_boundary(end) {
+                end -= 1;
+            }
+            let visible = &source[..end];
+            let mut block = terminal(visible).language(language);
+            if source == STREAMING_2 {
+                block = block.diff();
+            } else if source == STREAMING_3 {
+                for line in 6..=9 {
+                    block = block.line_style(line, LineStyle::Highlighted);
                 }
-            });
+            }
             if title != "Terminal" {
                 let copied = self.copied.contains_key(title);
                 block = block.title(code_block::title(title)).actions(tooltip(
@@ -299,11 +301,7 @@ impl State {
                     .on_press(self.event(Message::Copy(
                         title,
                         if source == STREAMING_2 {
-                            source
-                                .lines()
-                                .map(|s| s.get(1..).unwrap_or(""))
-                                .collect::<Vec<_>>()
-                                .join("\n")
+                            code_block::diff_text(source)
                         } else {
                             source.to_owned()
                         },
@@ -337,28 +335,23 @@ impl State {
             let complete = fenced.contains("```");
             let copied = self.copied.contains_key("markdown");
             reply = reply.push(
-                listing(
-                    dark,
-                    STREAMING_0,
-                    code.trim_end_matches('\n').len(),
-                    false,
-                    |_, _| LineStyle::Default,
-                )
-                .title(code_block::title("rust"))
-                .actions(tooltip(
-                    button(if copied {
-                        icon::check().size(14)
-                    } else {
-                        icon::copy().size(14)
-                    })
-                    .square()
-                    .size(Size::Xs)
-                    .style(button::Ghost)
-                    .disabled(!complete)
-                    .on_press(self.event(Message::Copy("markdown", code.to_owned()))),
-                    if copied { "Copied" } else { "Copy" },
-                ))
-                .into(),
+                terminal(code.trim_end_matches('\n'))
+                    .language("rust")
+                    .title(code_block::title("rust"))
+                    .actions(tooltip(
+                        button(if copied {
+                            icon::check().size(14)
+                        } else {
+                            icon::copy().size(14)
+                        })
+                        .square()
+                        .size(Size::Xs)
+                        .style(button::Ghost)
+                        .disabled(!complete)
+                        .on_press(self.event(Message::Copy("markdown", code.to_owned()))),
+                        if copied { "Copied" } else { "Copy" },
+                    ))
+                    .into(),
             );
         }
         let noop = self.event(Message::Idle);
@@ -386,18 +379,13 @@ impl State {
             .into()
     }
     fn example(&self, id: &str, dark: bool) -> Slot<'static, Message> {
-        let normal = |_, _: &str| LineStyle::Default;
         match id {
             "demo" => {
                 let wrap = *self.wraps.get("demo").unwrap_or(&false);
-                let block = listing(dark, DEMO, usize::MAX, wrap, |i, _| {
-                    if (5..=9).contains(&i) {
-                        LineStyle::Highlighted
-                    } else {
-                        LineStyle::Default
-                    }
-                })
-                .start_line(1);
+                let mut block = terminal(DEMO).language("rust").wrap(wrap).start_line(1);
+                for line in 6..=10 {
+                    block = block.line_style(line, LineStyle::Highlighted);
+                }
                 self.header("demo", "src/view.rs", DEMO, "view.rs", block)
             }
             "basic" => terminal(BASIC).into(),
@@ -431,25 +419,24 @@ impl State {
                 )
                 .into(),
             "line-numbers" => terminal(LINE_NUMBERS).start_line(1).into(),
-            "start-line" => listing(dark, START_LINE, usize::MAX, false, normal)
+            "start-line" => terminal(START_LINE)
+                .language("rust")
                 .title(code_block::title("src/notebooks.rs"))
                 .start_line(995)
                 .into(),
             "wrap" => column![terminal(WRAP), terminal(WRAP).wrap(true)]
                 .spacing(16)
                 .into(),
-            "highlighted-lines" => plain_lines(HIGHLIGHTED_LINES, |i, _| {
-                if [2, 3].contains(&i) {
-                    LineStyle::Highlighted
-                } else {
-                    LineStyle::Default
-                }
-            })
-            .start_line(1)
-            .into(),
-            "diff" => listing(dark, DIFF, usize::MAX, false, |_, line| diff_style(line))
+            "highlighted-lines" => terminal(HIGHLIGHTED_LINES)
+                .line_style(3, LineStyle::Highlighted)
+                .line_style(4, LineStyle::Highlighted)
+                .start_line(1)
+                .into(),
+            "diff" => terminal(DIFF)
+                .language("rust")
+                .diff()
                 .title(code_block::title("src/search.rs"))
-                .actions(self.copy("diff", DIFF))
+                .actions(self.copy("diff", &code_block::diff_text(DIFF)))
                 .into(),
             "height" => terminal(self.logs.clone())
                 .max_height(192.)
@@ -463,7 +450,8 @@ impl State {
                     "show-more-scroll"
                 };
                 let expanded = *self.expanded.get(id).unwrap_or(&false);
-                let mut block = listing(dark, SHOW_MORE, usize::MAX, false, normal)
+                let mut block = terminal(SHOW_MORE)
+                    .language("rust")
                     .title(code_block::title("src/notebook.rs"))
                     .start_line(1)
                     .actions(self.copy(id, SHOW_MORE))
@@ -526,15 +514,16 @@ impl State {
                         t.trigger("config", "config.toml")
                     ])]
                     .spacing(8);
-                    for (id, title, source) in [
-                        ("view", "src/view.rs", TABS_0),
-                        ("search", "src/search.rs", TABS_1),
-                        ("config", ".cargo/config.toml", TABS_2),
+                    for (id, title, language, source) in [
+                        ("view", "src/view.rs", "rust", TABS_0),
+                        ("search", "src/search.rs", "rust", TABS_1),
+                        ("config", ".cargo/config.toml", "toml", TABS_2),
                     ] {
                         body = body.push(
                             t.content(
                                 id,
-                                listing(dark, source, usize::MAX, false, normal)
+                                terminal(source)
+                                    .language(language)
                                     .start_line(1)
                                     .title(code_block::title(title))
                                     .actions(copy_action(
@@ -556,7 +545,8 @@ impl State {
                 message(
                     column![
                         text::p("Compare the query and each title in lowercase."),
-                        listing(dark, CHAT, usize::MAX, false, normal)
+                        terminal(CHAT)
+                            .language("rust")
                             .title("src/search.rs")
                             .actions(self.copy("chat-sample", CHAT)),
                         text::p("The result borrows the matching titles from the original list.")
@@ -569,7 +559,8 @@ impl State {
             "typeset" => column![
                 text::h3("Read a notebook index"),
                 prose(&self.typeset_before, dark, self.event(Message::Idle)),
-                listing(dark, TYPESET, usize::MAX, false, normal)
+                terminal(TYPESET)
+                    .language("rust")
                     .start_line(1)
                     .title(
                         row![
@@ -583,18 +574,20 @@ impl State {
             ]
             .spacing(12)
             .into(),
-            "highlighting" => listing(dark, HIGHLIGHTING, usize::MAX, false, normal)
+            "highlighting" => terminal(HIGHLIGHTING)
+                .language("rust")
                 .title("src/notebook.rs")
                 .into(),
             "languages" => {
                 let mut samples = column![].spacing(16);
-                for (title, source) in [
-                    ("Cargo.toml", LANGUAGES_0),
-                    ("src/main.rs", LANGUAGES_1),
-                    ("notes.txt", LANGUAGES_2),
+                for (title, language, source) in [
+                    ("Cargo.toml", "toml", LANGUAGES_0),
+                    ("src/main.rs", "rust", LANGUAGES_1),
+                    ("notes.txt", "txt", LANGUAGES_2),
                 ] {
                     samples = samples.push(
-                        listing(dark, source, usize::MAX, false, normal)
+                        terminal(source)
+                            .language(language)
                             .title(code_block::title(title))
                             .into(),
                     );
@@ -602,15 +595,17 @@ impl State {
                 samples.into()
             }
             "ansi" => {
-                let (listing, plain) = highlight::ansi(dark);
-                listing
-                    .title(
-                        row![icon::terminal().size(14), code_block::title("Terminal")].spacing(6),
-                    )
-                    .actions(self.copy("ansi", &plain))
+                use code_block::ansi;
+                use std::sync::LazyLock;
+                static OUTPUT: LazyLock<ansi::Output> = LazyLock::new(|| ansi::parse(ANSI));
+                OUTPUT
+                    .view()
+                    .font(Font::new(font::GEIST_MONO_NAME))
+                    .title(code_block::terminal_title("Terminal"))
+                    .actions(code_block::copy_button(OUTPUT.as_str()))
                     .into()
             }
-            "streaming" => self.streaming(dark),
+            "streaming" => self.streaming(),
             "markdown" => self.markdown(dark),
             _ => unreachable!("unknown Code Block example {id}"),
         }
@@ -622,23 +617,6 @@ fn terminal<'a>(source: impl Into<std::borrow::Cow<'a, str>>) -> CodeBlock<'a, M
 }
 fn error_block(source: &str) -> CodeBlock<'_, Message> {
     terminal(source).wrap(true).style(code_block::Destructive)
-}
-fn plain_lines(
-    source: &'static str,
-    style: impl Fn(usize, &str) -> LineStyle,
-) -> CodeBlock<'static, Message> {
-    CodeBlock::lines(source.split('\n').enumerate().map(|(i, line)| {
-        (
-            style(i, line),
-            iced_widget::text(line)
-                .selectable(true)
-                .font(Font::new(font::GEIST_MONO_NAME))
-                .size(14)
-                .line_height(LineHeight::Absolute(22.75.into()))
-                .into(),
-        )
-    }))
-    .font(Font::new(font::GEIST_MONO_NAME))
 }
 fn trace_output(title: &'static str, source: &'static str, error: bool) -> Slot<'static, Message> {
     trace::disclosure(
@@ -678,15 +656,6 @@ fn action(
         label,
     )
     .into()
-}
-fn diff_style(line: &str) -> LineStyle {
-    if line.starts_with('+') {
-        LineStyle::Added
-    } else if line.starts_with('-') {
-        LineStyle::Removed
-    } else {
-        LineStyle::Default
-    }
 }
 fn total_length(id: &str) -> usize {
     if id == "markdown" {

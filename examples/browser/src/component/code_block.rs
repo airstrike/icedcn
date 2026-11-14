@@ -1,8 +1,6 @@
 mod demo;
-mod highlight;
 mod samples;
 mod sections;
-mod tokens;
 use crate::{Message, page};
 use iced::widget::Id;
 use iced::{Element, Fill, Task, clipboard};
