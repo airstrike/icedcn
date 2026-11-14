@@ -1,3 +1,5 @@
+# The default iced_lucide font and icon list come from https://lucide.dev/guide/static.
+# See ../../../assets/Lucide-LICENSE for the license of the generated font subset.
 module = "icon"
 
 [icons]
@@ -14,7 +16,6 @@ car         = "car"
 coffee      = "coffee"
 copy        = "copy"
 ellipsis    = "ellipsis"
-github      = "github"
 menu        = "menu"
 minus       = "minus"
 moon        = "moon"

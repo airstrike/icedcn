@@ -194,7 +194,7 @@ impl App {
         .margin(16. - f32::from(search::RIM))
         .backdrop(false)
         .style(search::panel);
-        let github = symbol(include_bytes!("../../assets/navigation/github.svg"), 16.);
+        let github = symbol(include_bytes!("../../../../assets/github.svg"), 16.);
         let mut repo = row![github].spacing(6);
         if let Some(stars) = self.stars {
             let count = if stars >= 1000 {

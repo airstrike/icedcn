@@ -1,7 +1,7 @@
 use super::demo::{Demo, Event, Model};
 use super::fixtures::Role;
 use super::skin;
-use crate::{font, icon};
+use crate::icon;
 use iced::Alignment::Center;
 use iced::alignment::Vertical::Bottom;
 use iced::widget::button::StyleFn;
@@ -87,7 +87,7 @@ impl Demo {
                     "Click the button below to send the first message.",
                 ),
             };
-            let tile = container(font::message_circle_dashed().size(20))
+            let tile = container(icon::message_circle_dashed().size(20))
                 .center_x(40)
                 .center_y(40)
                 .style(skin::tile);

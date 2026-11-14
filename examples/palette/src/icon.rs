@@ -1,6 +1,6 @@
 // Generated automatically by iced_lucide at build time.
 // Do not edit manually.
-// 55eddfaf9c2cd8fe35c765d65de57f261cb170b18d8622044f352f7ec5b2f12c
+// e1535bea20559e2c5f39d00097f68c1713f98aa2dd82da46f19176a3eeed7e77
 use iced::widget::text::{self, Text};
 
 pub const FONT: &[u8] = include_bytes!("../fonts/lucide.ttf");
@@ -22,7 +22,6 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("coffee", "\u{E096}"),
     ("copy", "\u{E09E}"),
     ("ellipsis", "\u{E0B6}"),
-    ("github", "\u{E0E6}"),
     ("menu", "\u{E115}"),
     ("minus", "\u{E11C}"),
     ("moon", "\u{E11E}"),
@@ -131,13 +130,6 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E0B6}")
-}
-
-pub fn github<'a, Theme>() -> Text<'a, Theme>
-where
-    Theme: text::Catalog + 'a,
-{
-    icon("\u{E0E6}")
 }
 
 pub fn menu<'a, Theme>() -> Text<'a, Theme>
@@ -270,7 +262,7 @@ pub fn render<'a, Theme>(codepoint: &'a str) -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
 {
-    Text::new(codepoint).font("lucide")
+    Text::new(codepoint).font(iced::Font::with_name("lucide"))
 }
 
 fn icon<'a, Theme>(codepoint: &'a str) -> Text<'a, Theme>

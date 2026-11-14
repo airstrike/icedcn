@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use browser::component::scroller;
 use browser::page::Page;
-use browser::{Message, font, icon};
+use browser::{Message, icon};
 use iced::time::Instant;
 use iced::{Event, Rectangle, Size, Vector, window};
 use iced_test::core::Settings;
@@ -20,9 +20,7 @@ fn preview<'a>(page: &'a dyn Page, id: &str) -> Preview<'a> {
 
 fn preview_at<'a>(page: &'a dyn Page, id: &str, width: f32) -> Preview<'a> {
     let mut settings = Settings::default();
-    settings
-        .fonts
-        .extend([icon::FONT, font::LUCIDE].map(Cow::Borrowed));
+    settings.fonts.push(Cow::Borrowed(icon::FONT));
     Simulator::with_size(settings, Size::new(width, 800.), page.preview(id))
 }
 

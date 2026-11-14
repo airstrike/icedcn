@@ -12,6 +12,8 @@ use icedxdy::{Theme, theme};
 
 use crate::{Message, Mode, State, icon};
 
+const GITHUB: &[u8] = include_bytes!("../../../assets/github.svg");
+
 const LOGO_BYTES: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../assets/logo.svg"
@@ -75,7 +77,12 @@ pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
     };
 
     let github = row![
-        icon::github().size(14),
+        svg(svg::Handle::from_memory(GITHUB))
+            .width(14)
+            .height(14)
+            .style(|theme: &Theme, _| svg::Style {
+                color: Some(theme.neutral.foreground.into()),
+            }),
         text::small(state.github_stars.as_deref().unwrap_or("...")),
     ]
     .spacing(6)
