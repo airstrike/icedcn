@@ -1,4 +1,5 @@
 //! Navigate the same transcript fixtures that the component browser installs.
+use std::any::Any;
 use std::borrow::Cow;
 use std::time::Duration;
 
@@ -11,6 +12,7 @@ use iced_test::core::Settings;
 use iced_test::simulator::Simulator;
 use iced_widget::core::widget::{Id, Operation, operation};
 use icedcn::Theme;
+use icedcn::widget::operation::control::Control;
 
 type Preview<'a> = Simulator<'a, Message, Theme, iced::Renderer>;
 
@@ -106,7 +108,7 @@ fn saved_thread_can_open_at_the_start_end_or_last_user_turn() {
     close(last.viewport.y + last.view - button.y - button.height, 16.);
     for title in ["start", "end", "last-anchor"] {
         let label = bounds(&mut ui, title);
-        let tab = nodes.button_at(label);
+        let tab = nodes.tab_at(label);
         close(tab.height, 25.);
         close(label.height, 20.);
         close(label.center_y(), tab.center_y());
@@ -240,6 +242,7 @@ fn hovering_the_outline_preserves_position_and_selecting_a_turn_scrolls_to_its_k
 #[derive(Default)]
 struct Layout {
     buttons: Vec<Rectangle>,
+    controls: Vec<Rectangle>,
     containers: Vec<Rectangle>,
 }
 impl Operation for Layout {
@@ -254,8 +257,23 @@ impl Operation for Layout {
     fn focusable(&mut self, _: Option<&Id>, bounds: Rectangle, _: &mut dyn operation::Focusable) {
         self.buttons.push(bounds);
     }
+
+    fn custom(&mut self, _: Option<&Id>, bounds: Rectangle, state: &mut dyn Any) {
+        if state.is::<Control>() {
+            self.controls.push(bounds);
+        }
+    }
 }
 impl Layout {
+    // Every tab exposes its full trigger rectangle through its control marker.
+    fn tab_at(&self, label: Rectangle) -> Rectangle {
+        self.controls
+            .iter()
+            .copied()
+            .find(|tab| tab.contains(label.center()))
+            .expect("tab label is inside its control")
+    }
+
     fn button_at(&self, label: Rectangle) -> Rectangle {
         self.buttons
             .iter()
@@ -366,8 +384,8 @@ fn preview_controls_use_the_available_card_width() {
                     close(inset, card.x + card.width - b.x - b.width);
                 }
                 "opening-position" => {
-                    let first = layout.button_at(bounds(&mut ui, "start"));
-                    let last = layout.button_at(bounds(&mut ui, "last-anchor"));
+                    let first = layout.tab_at(bounds(&mut ui, "start"));
+                    let last = layout.tab_at(bounds(&mut ui, "last-anchor"));
                     close(first.x - card.x, 23.);
                     close(card.x + card.width - last.x - last.width, 23.);
                     close(first.width, last.width);
