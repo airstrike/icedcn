@@ -1,12 +1,12 @@
 use super::fixtures::{self, Role, Turn};
 use crate::page;
 use iced::time::{Duration, Instant};
-use iced::widget::Action;
 use iced::widget::component::Component;
+use iced::widget::{Action, Id};
 use iced::{Rectangle, Widget, mouse, window};
 use icedxdy::Theme;
 use icedxdy::widget::motion;
-use icedxdy::widget::scroller::{Command, Position, Reader, Target};
+use icedxdy::widget::scroller::{Animation, Position, Reader, Target};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Demo {
@@ -92,43 +92,45 @@ impl Demo {
             Self::Scrollable => "Scroll the transcript to see the footer update.",
         }
     }
-    pub(super) fn initial(self) -> Model {
-        let total = self.turns().len();
-        let count = match self {
+    pub(super) fn initial_first(self) -> usize {
+        if self == Self::History {
+            self.turns().len().saturating_sub(5)
+        } else {
+            0
+        }
+    }
+
+    pub(super) fn initial_count(self) -> usize {
+        match self {
             Self::Chat | Self::Anchoring | Self::Streaming | Self::Animation => 0,
             Self::Group => 3,
             Self::Context => 2,
-            _ => total,
-        };
-        let mut model = Model {
+            _ => self.turns().len(),
+        }
+    }
+
+    fn initial(self) -> Model {
+        Model {
             initialized: true,
-            count,
-            first: if self == Self::History {
-                total.saturating_sub(5)
-            } else {
-                0
-            },
+            id: Id::unique(),
+            count: self.initial_count(),
+            first: self.initial_first(),
             peek: 64,
             preset: if self == Self::Animation {
                 motion::Preset::Fade
             } else {
                 motion::Preset::SlideUp
             },
-            opening: if self == Self::Scrollable {
-                Position::Start
-            } else {
-                Position::End
+            opening: match self {
+                Self::Opening => Position::LastAnchor,
+                Self::Scrollable => Position::Start,
+                _ => Position::End,
             },
-            ..Model::default()
-        };
-        if self == Self::Opening {
-            // The example first mounts below the fold. Chromium clamps its
-            // provisional item jump to the real end as the rows become visible.
-            // Selecting the tab again jumps to the measured user turn.
-            model.opening = Position::LastAnchor;
-            model.jump(Target::End, false);
+            reader: Reader::default(),
+            reply: None,
+            assistant_anchor: false,
+            newest: None,
         }
-        model
     }
     fn interval(self) -> Option<Duration> {
         let millis = match self {
@@ -168,7 +170,6 @@ pub(super) enum Event {
     Preset(motion::Preset),
     Jump(Target),
 }
-#[derive(Default)]
 pub(super) struct Model {
     initialized: bool,
     pub(super) first: usize,
@@ -177,10 +178,9 @@ pub(super) struct Model {
     pub(super) assistant_anchor: bool,
     pub(super) preset: motion::Preset,
     pub(super) opening: Position,
-    pub(super) command: Option<Command>,
+    pub(super) id: Id,
     pub(super) reader: Reader,
     reply: Option<Reply>,
-    pub(super) smooth: bool,
     pub(super) newest: Option<usize>,
 }
 struct Reply {
@@ -188,6 +188,15 @@ struct Reply {
     interval: Duration,
     // The transport waits before it even mounts the assistant row.
     written: Option<usize>,
+}
+
+impl Default for Model {
+    fn default() -> Self {
+        Self {
+            initialized: false,
+            ..Demo::Chat.initial()
+        }
+    }
 }
 
 impl Model {
@@ -252,22 +261,15 @@ impl Model {
         }
     }
 
-    fn open_at(&mut self, demo: Demo, position: Position) {
+    fn open_at(&mut self, demo: Demo, position: Position) -> Target {
         self.opening = position;
-        let target = match position {
+        match position {
             Position::Start => Target::Start,
             Position::End => Target::End,
             Position::LastAnchor => (self.first..self.count)
                 .rfind(|&i| demo.anchor(self, i))
                 .map_or(Target::End, |i| Target::Item(i as u64)),
-        };
-        self.jump(target, false);
-    }
-
-    fn jump(&mut self, target: Target, smooth: bool) {
-        self.smooth = smooth;
-        let sequence = self.command.map_or(1, |cmd| cmd.sequence.wrapping_add(1));
-        self.command = Some(Command { sequence, target });
+        }
     }
 }
 impl<'a> Component<'a, page::Message, Theme> for Demo {
@@ -284,12 +286,15 @@ impl<'a> Component<'a, page::Message, Theme> for Demo {
                 let mut reset = self.initial();
                 reset.assistant_anchor = state.assistant_anchor;
                 reset.preset = state.preset;
-                if matches!(self, Self::Context | Self::Group | Self::History) {
-                    // The upstream reset remounts its populated transcript at the end.
-                    reset.command = state.command;
-                    reset.jump(Target::End, false);
-                }
+                reset.id = state.id.clone();
                 *state = reset;
+                if matches!(self, Self::Context | Self::Group | Self::History) {
+                    return Some(page::Message::ScrollTranscript(
+                        state.id.clone(),
+                        Target::End,
+                        Animation::Instant,
+                    ));
+                }
             }
             Event::Reset => {}
             Event::Send if *self == Demo::History => {
@@ -317,9 +322,20 @@ impl<'a> Component<'a, page::Message, Theme> for Demo {
                     "end" => Position::End,
                     _ => Position::LastAnchor,
                 };
-                state.open_at(*self, position);
+                let target = state.open_at(*self, position);
+                return Some(page::Message::ScrollTranscript(
+                    state.id.clone(),
+                    target,
+                    Animation::Instant,
+                ));
             }
-            Event::Jump(target) => state.jump(target, true),
+            Event::Jump(target) => {
+                return Some(page::Message::ScrollTranscript(
+                    state.id.clone(),
+                    target,
+                    Animation::Smooth,
+                ));
+            }
         }
         None
     }
@@ -440,10 +456,8 @@ mod tests {
             if demo == Demo::History {
                 assert_eq!(model.first, 5);
             } else if demo == Demo::Opening {
-                assert_eq!(model.command.map(|c| c.target), Some(Target::End));
                 let mut model = model;
-                model.open_at(demo, Position::LastAnchor);
-                assert_eq!(model.command.map(|c| c.target), Some(Target::Item(2)));
+                assert_eq!(model.open_at(demo, Position::LastAnchor), Target::Item(2));
             }
         }
     }

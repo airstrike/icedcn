@@ -1,9 +1,13 @@
 //! A transcript viewport with keyed rows, turn anchoring, live-edge following
 //! and stable scroll position when earlier history is inserted.
+mod button;
 mod viewport;
 use crate::{Compose, Inherited, Slot, scroll_area};
 use iced_core::Length::Fill;
+use iced_core::widget::Id;
+pub use iced_core::widget::operation::Animation;
 use iced_core::{Element, Length};
+use iced_runtime::{Action, Task, task};
 use iced_widget::{Renderer, Widget, column};
 use icedxdy_core::Theme;
 
@@ -22,11 +26,18 @@ pub enum Target {
     End,
     Item(u64),
 }
-/// A new sequence number requests another navigation, including to the same target.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Command {
-    pub sequence: u64,
-    pub target: Target,
+/// Scroll an identified viewport to an edge or a stable item key.
+/// Return this task from `update` each time the user requests a jump.
+pub fn scroll_to<Message>(
+    id: impl Into<Id>,
+    target: Target,
+    animation: Animation,
+) -> Task<Message> {
+    task::effect(Action::widget(viewport::navigate(
+        id.into(),
+        target,
+        animation,
+    )))
 }
 /// The measured viewport state, with intersecting rows in visual order.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -64,7 +75,8 @@ pub struct Scroller<'a, Message> {
     spacing: f32,
     padding: f32,
     options: viewport::Options,
-    command: Option<Command>,
+    end: Option<Element<'a, Message, Theme, Renderer>>,
+    id: Option<Id>,
     on_reader: Option<Box<dyn Fn(Reader) -> Message + 'a>>,
 }
 /// Mount keyed rows in a transcript that defaults to the last anchored turn.
@@ -77,7 +89,8 @@ pub fn scroller<'a, Message>(
         spacing: 12.0,
         padding: 16.0,
         options: viewport::Options::default(),
-        command: None,
+        end: None,
+        id: None,
         on_reader: None,
     }
 }
@@ -114,17 +127,32 @@ impl<'a, Message> Scroller<'a, Message> {
         self.options.peek = px.max(0.0);
         self
     }
-    /// Animate explicit navigation to a conversation item, the start, or the end.
-    pub fn smooth_commands(mut self, smooth: bool) -> Self {
-        self.options.smooth_commands = smooth;
+    /// Fade unread content into the supplied background at the bottom edge.
+    pub fn fade_to(mut self, background: fn(&Theme) -> iced_core::Color) -> Self {
+        self.options.fade = Some(background);
         self
     }
-    pub fn command(mut self, command: Option<Command>) -> Self {
-        self.command = command;
+    /// Show a floating end button while the reader can scroll down.
+    /// Supply the icon and handle its press in `update` with [`scroll_to`].
+    pub fn end_button<Icon: Into<Slot<'a, Message>>>(
+        mut self,
+        visible: bool,
+        icon: impl Fn(f32) -> Icon + 'a,
+        press: Message,
+    ) -> Self
+    where
+        Message: Clone + 'a,
+    {
+        self.end = Some(button::end(visible, icon, press));
         self
     }
-    pub fn on_reader_change(mut self, callback: impl Fn(Reader) -> Message + 'a) -> Self {
-        self.on_reader = Some(Box::new(callback));
+    /// Identify this scroller for [`scroll_to`] and focus operations.
+    pub fn id(mut self, id: impl Into<Id>) -> Self {
+        self.id = Some(id.into());
+        self
+    }
+    pub fn on_reader_change(mut self, on_change: impl Fn(Reader) -> Message + 'a) -> Self {
+        self.on_reader = Some(Box::new(on_change));
         self
     }
 }
@@ -144,14 +172,22 @@ impl<'a, Message: 'a> Compose<Message> for Scroller<'a, Message> {
             .spacing(self.spacing)
             .padding(self.padding);
         let scroll = scroll_area(content.boxed()).width(Fill).height(self.height);
-        viewport::Viewport {
+        let viewport = viewport::Viewport {
             child: scroll.into(),
             ids,
             options: self.options,
-            command: self.command,
+            id: self.id,
             on_reader: self.on_reader,
         }
-        .boxed()
+        .boxed();
+        if let Some(end) = self.end {
+            let layers = iced_widget::stack([viewport, end])
+                .width(Fill)
+                .height(self.height);
+            iced_widget::container(layers).clip(true).boxed()
+        } else {
+            viewport
+        }
     }
 }
 impl<'a, Message: 'a> From<Scroller<'a, Message>> for Slot<'a, Message> {

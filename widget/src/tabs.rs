@@ -232,7 +232,12 @@ impl Handle {
         let line = self.line;
         let rounded = self.rounded;
         let mut label = label.into();
-        label.inherit(&Inherited::default().with_size(Size::Default));
+        let inherited = Inherited::default().with_size(Size::Default);
+        label.inherit(&if self.rounded {
+            inherited.with_line_height(20.0)
+        } else {
+            inherited
+        });
         let style: iced_widget::button::StyleFn<'a, Theme> = Box::new(move |theme, status| {
             let mut style = tabs::trigger(theme, status, active);
             if rounded {
@@ -251,7 +256,7 @@ impl Handle {
             button = button.width(Fill);
         }
         if self.rounded {
-            button = button.height(25).rounded();
+            button = button.height(25).padding([2, 6]).rounded();
         }
         Trigger {
             button,

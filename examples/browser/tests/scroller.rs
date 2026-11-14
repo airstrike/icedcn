@@ -61,20 +61,56 @@ fn close(a: f32, b: f32) {
     assert!((a - b).abs() < 1., "{a} differs from {b}");
 }
 
+fn dispatch(page: &mut dyn Page, ui: &mut Preview<'_>) {
+    use iced::futures::{StreamExt, executor::block_on};
+    use iced_test::runtime::{Action, task};
+    let messages: Vec<_> = ui.drain().collect();
+    for message in messages {
+        if let Message::Page(_, event) = message
+            && let Some(mut actions) = task::into_stream(page.update(event))
+        {
+            while let Some(action) = block_on(actions.next()) {
+                if let Action::Widget(mut operation) = action {
+                    ui.operate(&mut operation);
+                }
+            }
+        }
+    }
+}
+
 #[test]
 fn saved_thread_can_open_at_the_start_end_or_last_user_turn() {
     let page = scroller::Page::new(0);
     let mut ui = preview(&*page, "opening-position");
+    let mut app_page = scroller::Page::new(0);
     let initial = geometry(&mut ui);
-    close(initial.y, initial.content - initial.view);
+    assert!(initial.y > 0. && initial.y < initial.content - initial.view);
     ui.click("start").unwrap();
+    dispatch(&mut *app_page, &mut ui);
     close(geometry(&mut ui).y, 0.);
     ui.click("end").unwrap();
+    dispatch(&mut *app_page, &mut ui);
     let end = geometry(&mut ui);
     close(end.y, end.content - end.view);
     ui.click("last-anchor").unwrap();
+    dispatch(&mut *app_page, &mut ui);
     let last = geometry(&mut ui);
     assert!(last.y > 0. && last.y < end.y);
+    let mut clock = Instant::now();
+    advance(&mut ui, &mut clock, 12);
+    let arrow = bounds(&mut ui, glyph("arrow_down"));
+    let mut nodes = Layout::default();
+    ui.operate(&mut nodes);
+    let button = nodes.button_at(arrow);
+    close(button.height, 28.);
+    close(last.viewport.y + last.view - button.y - button.height, 16.);
+    for title in ["start", "end", "last-anchor"] {
+        let label = bounds(&mut ui, title);
+        let tab = nodes.button_at(label);
+        close(tab.height, 25.);
+        close(label.height, 20.);
+        close(label.center_y(), tab.center_y());
+    }
     let label = bounds(
         &mut ui,
         "This is the last message the user sent in the conversation.",
@@ -136,6 +172,7 @@ fn jump_menu_targets_a_named_turn_and_keyboard_status_tracks_scroll() {
     // The enclosing application processes the overlay's invalidation, then
     // the native scroll animation advances on redraws.
     let mut ui = ui.rebuild(page.preview("commands"));
+    dispatch(&mut *scroller::Page::new(0), &mut ui);
     let start = Instant::now();
     for step in 0..30 {
         let _ = ui.simulate([Event::Window(window::Event::RedrawRequested(
@@ -154,6 +191,49 @@ fn jump_menu_targets_a_named_turn_and_keyboard_status_tracks_scroll() {
     ui.tap_key(Named::End);
     ui.find("You are at the bottom. You can only scroll up.")
         .unwrap();
+}
+
+#[test]
+fn hovering_the_outline_preserves_position_and_selecting_a_turn_scrolls_to_its_key() {
+    use iced::mouse;
+    use iced_test::simulator::click;
+    let page = scroller::Page::new(0);
+    let mut ui = preview_at(&*page, "visibility", 480.);
+    let end = geometry(&mut ui);
+    close(end.y, end.content - end.view);
+    let mut nodes = Layout::default();
+    ui.operate(&mut nodes);
+    let trigger = nodes
+        .buttons
+        .iter()
+        .find(|b| b.size() == Size::new(36., 36.))
+        .unwrap()
+        .center();
+    ui.point_at(trigger);
+    let _ = ui.simulate([Event::Mouse(mouse::Event::CursorMoved {
+        position: trigger,
+    })]);
+    let mut clock = Instant::now();
+    advance(&mut ui, &mut clock, 4);
+    let mut nodes = Layout::default();
+    ui.operate(&mut nodes);
+    let entries: Vec<_> = nodes
+        .buttons
+        .into_iter()
+        .filter(|b| b.size() == Size::new(248., 32.))
+        .collect();
+    assert_eq!(entries.len(), 4);
+    close(entries[1].y - entries[0].y, 36.);
+    let third = entries[2].center();
+    ui.point_at(third);
+    let _ = ui.simulate([Event::Mouse(mouse::Event::CursorMoved { position: third })]);
+    advance(&mut ui, &mut clock, 8);
+    close(geometry(&mut ui).y, end.y);
+    let _ = ui.simulate(click());
+    dispatch(&mut *scroller::Page::new(0), &mut ui);
+    advance(&mut ui, &mut clock, 32);
+    let position = geometry(&mut ui);
+    assert!(position.y > 0. && position.y < end.y);
 }
 
 /// Buttons report their interactive bounds, independent of the width of the text or icon.
@@ -180,7 +260,8 @@ impl Layout {
         self.buttons
             .iter()
             .copied()
-            .find(|button| button.contains(label.center()))
+            .filter(|button| button.contains(label.center()))
+            .min_by(|a, b| a.area().total_cmp(&b.area()))
             .expect("label is inside an enabled button")
     }
 }

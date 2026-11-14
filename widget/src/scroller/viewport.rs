@@ -1,12 +1,12 @@
 use std::collections::{HashMap, HashSet};
 
-use super::{Command, Position, Reader, Target};
+use super::{Animation, Position, Reader, Target};
 use crate::scrollable::widget::{
     animate_transcript_offset, set_transcript_offset, transcript_offset,
 };
 use iced_core::keyboard::{Key, key::Named};
 use iced_core::widget::operation::Focusable;
-use iced_core::widget::{Meta, Operation, Tree, tree};
+use iced_core::widget::{Id, Meta, Operation, Tree, tree};
 use iced_core::{
     Element, Event, Layout, Length, Rectangle, Shell, Size, Vector, Widget, keyboard, layout,
     mouse, overlay, renderer, touch,
@@ -22,9 +22,9 @@ pub(super) struct Options {
     pub opening: Position,
     pub follow: bool,
     pub preserve: bool,
-    pub smooth_commands: bool,
     pub margin: f32,
     pub peek: f32,
+    pub fade: Option<fn(&Theme) -> iced_core::Color>,
 }
 impl Default for Options {
     fn default() -> Self {
@@ -32,9 +32,9 @@ impl Default for Options {
             opening: Position::LastAnchor,
             follow: false,
             preserve: true,
-            smooth_commands: false,
             margin: 16.0,
             peek: 0.0,
+            fade: None,
         }
     }
 }
@@ -42,9 +42,37 @@ pub(super) struct Viewport<'a, Message> {
     pub child: Element<'a, Message, Theme, Renderer>,
     pub ids: Vec<(u64, bool)>,
     pub options: Options,
-    pub command: Option<Command>,
+    pub id: Option<Id>,
     pub on_reader: Option<Box<dyn Fn(Reader) -> Message + 'a>>,
 }
+struct Navigation(Option<(Target, Animation)>);
+
+pub(super) fn navigate(id: Id, target: Target, animation: Animation) -> impl Operation {
+    struct Jump {
+        id: Id,
+        target: Target,
+        animation: Animation,
+    }
+    impl Operation for Jump {
+        fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+            visit(self);
+        }
+
+        fn custom(&mut self, id: Option<&Id>, _: Rectangle, state: &mut dyn std::any::Any) {
+            if id == Some(&self.id)
+                && let Some(navigation) = state.downcast_mut::<Navigation>()
+            {
+                navigation.0 = Some((self.target, self.animation));
+            }
+        }
+    }
+    Jump {
+        id,
+        target,
+        animation,
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct Row {
     id: u64,
@@ -73,7 +101,7 @@ struct State {
     height: f32,
     total: f32,
     natural: f32,
-    last: Option<Command>,
+    pending: Option<(Target, Animation)>,
     reported: Option<Reader>,
     measured_at: Option<(f32, f32)>,
     focused: bool,
@@ -94,6 +122,35 @@ impl Focusable for State {
     }
 }
 impl State {
+    fn navigate(&mut self, native: &mut Tree, target: Target, animation: Animation, margin: f32) {
+        let end = (self.natural - self.height).max(0.0);
+        let inset = self.rows.first().map_or(0.0, |row| row.y) + margin;
+        let Some(y) = target.offset(&self.rows, end, inset) else {
+            return;
+        };
+        self.pin = match target {
+            Target::Item(id) => Some((id, inset)),
+            _ => None,
+        };
+        self.released = target != Target::End;
+        self.total = if self.pin.is_some() {
+            self.natural.max(y + self.height)
+        } else {
+            self.natural
+        };
+        native.children[0].size.height = self.total;
+        self.measured_at = None;
+        self.smooth = match animation {
+            Animation::Instant => {
+                set_transcript_offset(native, y);
+                None
+            }
+            Animation::Smooth | Animation::Auto => {
+                animate_transcript_offset(native, y);
+                Some(target)
+            }
+        };
+    }
     fn reader(&self, offset: f32, margin: f32) -> Reader {
         let first = self
             .rows
@@ -224,7 +281,6 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
             state.pin = None;
             state.smooth = None;
             state.released = false;
-            state.last = None;
             target = Some(match self.options.opening {
                 Position::Start => 0.0,
                 Position::End => end,
@@ -267,25 +323,6 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
         } else if !prepended {
             target = preserve_visible();
         }
-        if let Some(cmd) = self.command
-            && state.last != Some(cmd)
-            && !rows.is_empty()
-        {
-            let requested = requested(cmd.target);
-            // A request may precede the transcript. Once mounted, a missing
-            // key is unavailable: a later unrelated append must not steal the view.
-            state.last = Some(cmd);
-            if let Some(y) = requested {
-                state.pin = match cmd.target {
-                    Target::Item(id) => Some((id, margin)),
-                    _ => None,
-                };
-                state.released = cmd.target != Target::End;
-                target = Some(y);
-                smooth = self.options.smooth_commands;
-                state.smooth = smooth.then_some(cmd.target);
-            }
-        }
         if geometry_changed && let Some(dest) = state.smooth {
             // A prepend or streaming chunk can arrive before a smooth jump settles.
             target = requested(dest);
@@ -318,6 +355,11 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
         } else if old_y > max {
             set_transcript_offset(native, max);
         }
+        if !state.rows.is_empty()
+            && let Some((target, animation)) = state.pending.take()
+        {
+            state.navigate(native, target, animation, self.options.margin);
+        }
     }
     fn operate(
         &mut self,
@@ -327,7 +369,22 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
         r: &Renderer,
         op: &mut dyn Operation,
     ) {
-        op.focusable(None, layout.bounds(), tree.state.downcast_mut::<State>());
+        let state = tree.state.downcast_mut::<State>();
+        op.focusable(self.id.as_ref(), layout.bounds(), state);
+        let mut navigation = Navigation(None);
+        op.custom(self.id.as_ref(), layout.bounds(), &mut navigation);
+        if let Some((target, animation)) = navigation.0 {
+            if state.rows.is_empty() {
+                state.pending = Some((target, animation));
+            } else {
+                state.navigate(
+                    &mut tree.children[0],
+                    target,
+                    animation,
+                    self.options.margin,
+                );
+            }
+        }
         if let Some((l, t)) = layout.iter_mut(&mut tree.children).next() {
             self.child.operate(t, l, v, r, op);
         }
@@ -443,6 +500,39 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
     ) {
         if let Some((l, t)) = layout.iter(&tree.children).next() {
             self.child.draw(t, r, theme, s, l, c, v);
+            if let Some(background) = self.options.fade {
+                use crate::animation::cubic_bezier;
+                use iced_core::Renderer as _;
+                use iced_core::gradient::Linear;
+                use std::f32::consts::PI;
+
+                let state = tree.state.downcast_ref::<State>();
+                let remaining = state.total - state.height - transcript_offset(t);
+                let length = (state.height * 0.12).min(40.0)
+                    * cubic_bezier(0.42, 0.0, 0.58, 1.0, (remaining / 96.0).clamp(0.0, 1.0));
+                if length > 0.0
+                    && let Some(clip) = l.bounds().intersection(v)
+                {
+                    let bounds = Rectangle {
+                        y: l.bounds().y + state.height - length,
+                        height: length,
+                        ..l.bounds()
+                    };
+                    let color = background(theme);
+                    let gradient = Linear::new(PI)
+                        .add_stop(0., color.scale_alpha(0.))
+                        .add_stop(1., color);
+                    r.with_layer(clip, |r| {
+                        r.fill_quad(
+                            renderer::Quad {
+                                bounds,
+                                ..renderer::Quad::default()
+                            },
+                            gradient,
+                        )
+                    });
+                }
+            }
         }
     }
     fn mouse_interaction(

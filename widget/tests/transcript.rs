@@ -3,20 +3,29 @@ use iced_core::keyboard::key::Named;
 use iced_core::time::{Duration, Instant};
 use iced_core::widget::{Id, Operation, operation};
 use iced_core::{Element, Event, Point, Rectangle, Size, Vector, touch, window};
+use iced_runtime::task;
 use iced_test::simulator::{Simulator, click, simulator};
 use iced_widget::{Renderer, Space};
 use icedxdy_core::Theme;
 use icedxdy_widget::scroller;
-use icedxdy_widget::scroller::{Command, Position, Reader, Target};
+use icedxdy_widget::scroller::{Animation, Position, Reader, Target};
 
 type Preview = Simulator<'static, Reader, Theme, Renderer>;
 
+fn jump(ui: &mut Preview, target: Target, animation: Animation) {
+    use iced_runtime::futures::futures::StreamExt;
+    use iced_runtime::futures::futures::executor::block_on;
+    let task = scroller::scroll_to("chat", target, animation);
+    let mut actions = task::into_stream(task).unwrap();
+    let Some(iced_runtime::Action::<()>::Widget(mut op)) = block_on(actions.next()) else {
+        panic!("expected scroll operation")
+    };
+    ui.operate(&mut op);
+}
 fn view(
     rows: &[(u64, u32, bool)],
     position: Position,
     peek: f32,
-    command: Option<Target>,
-    smooth: bool,
 ) -> Element<'static, Reader, Theme, Renderer> {
     scroller(rows.iter().map(|&(id, height, anchor)| {
         scroller::item(id, Space::new().width(150).height(height)).anchor(anchor)
@@ -28,11 +37,7 @@ fn view(
     .scroll_margin(10.)
     .previous_item_peek(peek)
     .auto_scroll(true)
-    .command(command.map(|target| Command {
-        sequence: 1,
-        target,
-    }))
-    .smooth_commands(smooth)
+    .id("chat")
     .on_reader_change(|reader| reader)
     .into()
 }
@@ -63,7 +68,7 @@ fn offset(ui: &mut Preview) -> f32 {
 #[test]
 fn opening_a_short_last_turn_uses_the_real_end_even_with_previous_context() {
     let rows = [(1, 200, false), (2, 95, true)];
-    let mut ui = simulator(view(&rows, Position::LastAnchor, 20., None, false));
+    let mut ui = simulator(view(&rows, Position::LastAnchor, 20.));
     assert_eq!(offset(&mut ui), 195.);
 }
 
@@ -78,8 +83,8 @@ fn a_batch_of_new_turns_keeps_a_follower_at_the_end_and_otherwise_anchors_the_fi
         (5, 110, false),
     ];
     for (position, expected) in [(Position::End, 410.), (Position::Start, 130.)] {
-        let ui = simulator(view(&initial, position, 0., None, false));
-        let mut ui = ui.rebuild(view(&batch, position, 0., None, false));
+        let ui = simulator(view(&initial, position, 0.));
+        let mut ui = ui.rebuild(view(&batch, position, 0.));
         assert_eq!(offset(&mut ui), expected);
     }
 }
@@ -87,8 +92,8 @@ fn a_batch_of_new_turns_keeps_a_follower_at_the_end_and_otherwise_anchors_the_fi
 #[test]
 fn prepending_preserves_the_visible_key_while_older_rows_rewrap_and_a_new_turn_arrives() {
     let initial = [(1, 100, false), (2, 100, true), (3, 100, true)];
-    let cmd = Some(Target::Item(3));
-    let ui = simulator(view(&initial, Position::Start, 0., cmd, false));
+    let mut ui = simulator(view(&initial, Position::Start, 0.));
+    jump(&mut ui, Target::Item(3), Animation::Instant);
     let next = [
         (0, 30, false),
         (1, 180, false),
@@ -96,20 +101,15 @@ fn prepending_preserves_the_visible_key_while_older_rows_rewrap_and_a_new_turn_a
         (3, 100, true),
         (4, 50, true),
     ];
-    let mut ui = ui.rebuild(view(&next, Position::Start, 0., cmd, false));
+    let mut ui = ui.rebuild(view(&next, Position::Start, 0.));
     assert_eq!(offset(&mut ui), 300.);
 }
 
 #[test]
 fn an_explicit_item_jump_uses_margin_and_visibility_excludes_rows_above_the_reading_line() {
     let rows = [(1, 100, true), (2, 100, true), (3, 100, false)];
-    let mut ui = simulator(view(
-        &rows,
-        Position::Start,
-        20.,
-        Some(Target::Item(2)),
-        false,
-    ));
+    let mut ui = simulator(view(&rows, Position::Start, 20.));
+    jump(&mut ui, Target::Item(2), Animation::Instant);
     assert_eq!(offset(&mut ui), 90.);
     let _ = ui.simulate([Event::Window(
         window::Event::RedrawRequested(Instant::now()),
@@ -122,14 +122,8 @@ fn an_explicit_item_jump_uses_margin_and_visibility_excludes_rows_above_the_read
 #[test]
 fn a_smooth_jump_keeps_its_key_when_history_arrives_before_it_settles() {
     let rows = [(1, 120, false), (2, 120, true), (3, 120, false)];
-    let ui = simulator(view(&rows, Position::Start, 0., None, true));
-    let mut ui = ui.rebuild(view(
-        &rows,
-        Position::Start,
-        0.,
-        Some(Target::Item(2)),
-        true,
-    ));
+    let mut ui = simulator(view(&rows, Position::Start, 0.));
+    jump(&mut ui, Target::Item(2), Animation::Smooth);
     assert!(offset(&mut ui) < 110.);
     let added = [
         (0, 80, false),
@@ -137,13 +131,7 @@ fn a_smooth_jump_keeps_its_key_when_history_arrives_before_it_settles() {
         (2, 120, true),
         (3, 120, false),
     ];
-    let mut ui = ui.rebuild(view(
-        &added,
-        Position::Start,
-        0.,
-        Some(Target::Item(2)),
-        true,
-    ));
+    let mut ui = ui.rebuild(view(&added, Position::Start, 0.));
     let start = Instant::now();
     for n in 1..30 {
         let _ = ui.simulate([Event::Window(window::Event::RedrawRequested(
@@ -156,7 +144,7 @@ fn a_smooth_jump_keeps_its_key_when_history_arrives_before_it_settles() {
 #[test]
 fn touch_intent_at_the_live_edge_holds_position_before_the_next_chunk() {
     let before = [(1, 120, false), (2, 100, false)];
-    let mut ui = simulator(view(&before, Position::End, 0., None, false));
+    let mut ui = simulator(view(&before, Position::End, 0.));
     let position = Point::new(30., 30.);
     let _ = ui.simulate([
         Event::Touch(touch::Event::FingerPressed {
@@ -168,13 +156,7 @@ fn touch_intent_at_the_live_edge_holds_position_before_the_next_chunk() {
             position,
         }),
     ]);
-    let mut ui = ui.rebuild(view(
-        &[(1, 120, false), (2, 200, false)],
-        Position::End,
-        0.,
-        None,
-        false,
-    ));
+    let mut ui = ui.rebuild(view(&[(1, 120, false), (2, 200, false)], Position::End, 0.));
     assert_eq!(offset(&mut ui), 120.);
 }
 
@@ -184,23 +166,21 @@ fn a_placeholder_replaced_by_a_turn_of_the_same_length_is_anchored_once() {
         &[(1, 100, false), (2, 100, false)],
         Position::Start,
         20.,
-        None,
-        false,
     ));
     let rows = [(1, 100, false), (3, 100, true)];
-    let mut ui = ui.rebuild(view(&rows, Position::Start, 20., None, false));
+    let mut ui = ui.rebuild(view(&rows, Position::Start, 20.));
     assert_eq!(offset(&mut ui), 70.);
     ui.point_at(Point::new(30., 30.));
     let _ = ui.simulate(click());
     ui.tap_key(Named::Home);
-    let mut ui = ui.rebuild(view(&rows, Position::Start, 20., None, false));
+    let mut ui = ui.rebuild(view(&rows, Position::Start, 20.));
     assert_eq!(offset(&mut ui), 0.);
 }
 
 #[test]
 fn keyboard_space_pages_the_focused_transcript() {
     let rows = [(1, 200, false), (2, 180, false)];
-    let mut ui = simulator(view(&rows, Position::Start, 0., None, false));
+    let mut ui = simulator(view(&rows, Position::Start, 0.));
     ui.point_at(Point::new(30., 30.));
     let _ = ui.simulate(click());
     ui.tap_key(Named::Space);
@@ -240,9 +220,7 @@ fn keyed_editor_stays_with_its_message_across_a_reorder_and_replacement() {
 fn new_turn_uses_the_content_padding_and_peek_but_commands_use_only_padding_and_margin() {
     let initial = [(1, 113, true), (2, 237, false)];
     let with_prompt = [(1, 113, true), (2, 237, false), (3, 113, true)];
-    let padded = |rows: &[(u64, u32, bool)],
-                  target: Option<Target>|
-     -> Element<'static, Reader, Theme, Renderer> {
+    let padded = |rows: &[(u64, u32, bool)]| -> Element<'static, Reader, Theme, Renderer> {
         scroller(rows.iter().map(|&(key, height, anchor)| {
             scroller::item(key, Space::new().width(150).height(height)).anchor(anchor)
         }))
@@ -252,34 +230,26 @@ fn new_turn_uses_the_content_padding_and_peek_but_commands_use_only_padding_and_
         .previous_item_peek(64.)
         .scroll_margin(0.)
         .default_scroll_position(Position::End)
-        .command(target.map(|target| Command {
-            sequence: 1,
-            target,
-        }))
+        .id("chat")
         .on_reader_change(|reader| reader)
         .into()
     };
     // Same row heights as the live 384px card. The first prompt starts 20px
     // inside the viewport. The second prompt lands with 20 + 64 visible above.
-    let mut ui = simulator(padded(&initial[..1], None));
+    let mut ui = simulator(padded(&initial[..1]));
     assert_eq!(offset(&mut ui), 0.);
-    let ui = ui.rebuild(padded(&initial, None));
-    let mut ui = ui.rebuild(padded(&with_prompt, None));
+    let ui = ui.rebuild(padded(&initial));
+    let mut ui = ui.rebuild(padded(&with_prompt));
     assert_eq!(offset(&mut ui), 350.);
-    let mut ui = ui.rebuild(padded(&with_prompt, Some(Target::Item(3))));
+    jump(&mut ui, Target::Item(3), Animation::Instant);
     assert_eq!(offset(&mut ui), 414.);
 }
 
 #[test]
 fn remaining_tail_space_does_not_count_as_an_unread_message() {
     let rows = [(1, 120, false), (2, 40, true)];
-    let mut ui = simulator(view(
-        &rows,
-        Position::Start,
-        0.,
-        Some(Target::Item(2)),
-        false,
-    ));
+    let mut ui = simulator(view(&rows, Position::Start, 0.));
+    jump(&mut ui, Target::Item(2), Animation::Instant);
     ui.point_at(Point::new(30., 30.));
     let _ = ui.simulate(click());
     ui.tap_key(Named::ArrowUp);
@@ -298,19 +268,19 @@ fn a_tall_new_anchor_holds_while_a_short_turn_hands_back_to_following() {
         let previous = [(1, 120, true)];
         let prompt = [(1, 120, true), (2, height, true)];
         let reply = [(1, 120, true), (2, height, true), (3, 100, false)];
-        let ui = simulator(view(&previous, Position::End, 0., None, false));
-        let mut ui = ui.rebuild(view(&prompt, Position::End, 0., None, false));
+        let ui = simulator(view(&previous, Position::End, 0.));
+        let mut ui = ui.rebuild(view(&prompt, Position::End, 0.));
         assert_eq!(offset(&mut ui), 110.);
-        let mut ui = ui.rebuild(view(&reply, Position::End, 0., None, false));
+        let mut ui = ui.rebuild(view(&reply, Position::End, 0.));
         assert_eq!(offset(&mut ui), expected);
     }
 }
 
 #[test]
 fn clicking_to_focus_at_the_end_keeps_the_stream_following() {
-    let mut ui = simulator(view(&[(1, 160, false)], Position::End, 0., None, false));
+    let mut ui = simulator(view(&[(1, 160, false)], Position::End, 0.));
     ui.point_at(Point::new(30., 30.));
     let _ = ui.simulate(click());
-    let mut ui = ui.rebuild(view(&[(1, 200, false)], Position::End, 0., None, false));
+    let mut ui = ui.rebuild(view(&[(1, 200, false)], Position::End, 0.));
     assert_eq!(offset(&mut ui), 100.);
 }

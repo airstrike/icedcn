@@ -37,6 +37,8 @@ pub(super) fn tile(theme: &Theme) -> Style {
 pub(super) fn outline(theme: &Theme) -> Style {
     let mut style = popover::content(theme);
     style.border.radius = 18.0.into();
+    style.shadow.offset = Vector::new(0., 10.);
+    style.shadow.blur_radius = 15.;
     style
 }
 
@@ -59,6 +61,26 @@ pub(super) fn outlined() -> StyleFn<'static, Theme> {
                 border
             };
         }
+        style.into()
+    })
+}
+
+pub(super) fn entry() -> StyleFn<'static, Theme> {
+    Box::new(|theme, status| {
+        let mut style = button::ghost(theme, status);
+        if matches!(status, Status::Hovered | Status::Pressed) {
+            style.background = Some(theme.accent.base.into());
+            style.text_color = theme.accent.foreground;
+        }
+        style.border.radius = 14.0.into();
+        style.into()
+    })
+}
+
+pub(super) fn trigger() -> StyleFn<'static, Theme> {
+    Box::new(|theme, status| {
+        let mut style = button::ghost(theme, status);
+        style.background = None;
         style.into()
     })
 }

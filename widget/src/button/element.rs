@@ -45,6 +45,7 @@ where
     size: Option<Size>,
     weight: crate::Weight,
     height: Option<f32>,
+    padding: Option<Padding>,
     square: bool,
     rounded: bool,
     translate: bool,
@@ -66,6 +67,7 @@ pub fn button<'a, Message: Clone + 'a>(
         size: None,
         weight: crate::Weight::Medium,
         height: None,
+        padding: None,
         square: false,
         rounded: false,
         translate: true,
@@ -89,6 +91,12 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     /// Override the control height while keeping the variant's text size.
     pub fn height(mut self, height: impl Into<iced_core::Pixels>) -> Self {
         self.height = Some(height.into().0);
+        self
+    }
+
+    /// Override the space around non-square button content.
+    pub fn padding(mut self, padding: impl Into<Padding>) -> Self {
+        self.padding = Some(padding.into());
         self
     }
 
@@ -253,7 +261,9 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
                 } else {
                     content
                 };
-            widget::Button::new(inner).height(h).padding(size.padding())
+            widget::Button::new(inner)
+                .height(h)
+                .padding(btn.padding.unwrap_or_else(|| size.padding()))
         };
 
         iced_btn = iced_btn.translate(btn.translate).inset(btn.inset);

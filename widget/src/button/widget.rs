@@ -37,6 +37,7 @@ use crate::core::mouse;
 use crate::core::overlay;
 use crate::core::renderer;
 use crate::core::theme::palette;
+use crate::core::time::Instant;
 use crate::core::touch;
 use crate::core::widget;
 use crate::core::widget::Operation;
@@ -304,6 +305,7 @@ struct State {
     was_focused: bool,
     is_pressed: bool,
     hover: crate::core::Animation<bool>,
+    frame: Instant,
 }
 
 impl Default for State {
@@ -313,6 +315,7 @@ impl Default for State {
             indicator: focus::Visible::default(),
             was_focused: false,
             is_pressed: false,
+            frame: Instant::now(),
             hover: crate::core::Animation::new(false)
                 .easing(crate::core::animation::Easing::Custom(
                     // cubic-bezier(0.4, 0, 0.2, 1) — shadcn's transition-all
@@ -394,7 +397,12 @@ where
 
                 tree.size
             },
-            |_, _| Vector::new(0.0, self.inset.top - clearance.top),
+            |content, available| {
+                Vector::new(
+                    0.0,
+                    (available.height - content.height) / 2.0 + self.inset.top - clearance.top,
+                )
+            },
         );
     }
 
@@ -536,6 +544,7 @@ where
 
         // Animate hover transitions
         if let Event::Window(window::Event::RedrawRequested(now)) = event {
+            state.frame = *now;
             let should_hover = is_hovered && !self.disabled;
             if should_hover != state.hover.value() {
                 state.hover.go_mut(should_hover, *now);
@@ -579,7 +588,7 @@ where
         let state = tree.state.downcast_ref::<State>();
 
         let status = self.status.unwrap_or(Status::Disabled);
-        let now = crate::core::time::Instant::now();
+        let now = state.frame;
 
         let style = if state.hover.is_animating(now) {
             // Keep a focused button's ring while its hover colors transition.

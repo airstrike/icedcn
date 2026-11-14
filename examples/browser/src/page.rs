@@ -27,6 +27,7 @@ use icedxdy::{Slot, Theme, Weight, radius, theme};
 use crate::component::code_block;
 use crate::font;
 use crate::icon;
+use icedxdy::widget::scroller;
 
 /// Height for preview containers (shadcn uses h-72 = 288px). Per-example
 /// cards stay at this fixed height; tall content (the typography
@@ -207,6 +208,7 @@ pub enum Message {
     BlockShown(usize),
     BlockHidden(usize),
     ScrollTo(usize),
+    ScrollTranscript(Id, scroller::Target, scroller::Animation),
     ExpandCode(usize),
     CopyCode(usize),
     Noop,
@@ -950,6 +952,9 @@ impl State {
                         .insert(*path, Some(markdown::parse(&body).collect()));
                 }
                 Task::none()
+            }
+            Message::ScrollTranscript(id, target, animation) => {
+                scroller::scroll_to(id.clone(), *target, *animation)
             }
             Message::Notice(title, detail) => {
                 toast::show(toast::toast::<super::Message>(title).description(detail))

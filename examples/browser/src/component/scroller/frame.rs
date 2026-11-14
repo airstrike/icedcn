@@ -3,18 +3,15 @@ use super::fixtures::Role;
 use super::skin;
 use crate::icon;
 use iced::Alignment::Center;
-use iced::alignment::Vertical::Bottom;
-use iced::widget::button::StyleFn;
-use iced::widget::stack;
 use iced::widget::text::{Ellipsis, LineHeight, Wrapping};
-use iced::{Element, Fill, Widget};
+use iced::{Element, Fill};
 use icedxdy::theme::container::Style;
 use icedxdy::widget::scroller::Target;
 use icedxdy::widget::{
     button, column, container, hover_card, motion, row, scroller, separator, space, status_marker,
     text, tooltip,
 };
-use icedxdy::{Size, Slot, Theme};
+use icedxdy::{Slot, Theme};
 use std::time::Duration;
 
 impl Demo {
@@ -56,8 +53,8 @@ impl Demo {
                 .style(skin::outlined())
                 .disabled(match self {
                     Self::Chat | Self::Context => state.busy(),
-                    Self::History => state.first == self.initial().first,
-                    Self::Group => state.count == self.initial().count,
+                    Self::History => state.first == self.initial_first(),
+                    Self::Group => state.count == self.initial_count(),
                     _ => state.count == 0 || state.busy(),
                 })
                 .on_press(Event::Reset);
@@ -146,7 +143,7 @@ impl Demo {
                     status_marker("End of Conversation").style(status_marker::Separator),
                 )
             });
-            let transcript = scroller(items.chain(history_end))
+            scroller(items.chain(history_end))
                 .height(Fill)
                 .padding(20.0)
                 .spacing(if self == Self::Scrollable { 16.0 } else { 32.0 })
@@ -157,30 +154,21 @@ impl Demo {
                     Self::Visibility => 12.0,
                     _ => 0.0,
                 })
-                .previous_item_peek(f32::from(state.peek))
+                .previous_item_peek(if self == Self::Opening {
+                    0.0
+                } else {
+                    f32::from(state.peek)
+                })
                 .default_scroll_position(state.opening)
-                .smooth_commands(state.smooth)
-                .command(state.command)
-                .on_reader_change(Event::Reader);
-            let mut layers = vec![Element::from(transcript)];
-            if state.reader.can_scroll_down {
-                layers.push(
-                    container(
-                        button(icon::arrow_down().size(16))
-                            .style(skin::outlined())
-                            .rounded()
-                            .height(28)
-                            .square()
-                            .on_press(Event::Jump(Target::End)),
-                    )
-                    .center_x(Fill)
-                    .align_y(Bottom)
-                    .height(Fill)
-                    .padding(16)
-                    .into(),
-                );
-            }
-            stack(layers).width(Fill).height(Fill).boxed().into()
+                .id(state.id.clone())
+                .fade_to(|theme| theme.card.base.into())
+                .on_reader_change(Event::Reader)
+                .end_button(
+                    state.reader.can_scroll_down,
+                    |size| icon::arrow_down().size(size),
+                    Event::Jump(Target::End),
+                )
+                .into()
         };
         let mut body = column![header, separator(), panel]
             .spacing(0)
@@ -214,12 +202,6 @@ impl Demo {
                     .enumerate()
                     .filter(|(_, t)| t.role == Role::User)
                     .map(|(i, t)| {
-                        let style: StyleFn<'static, Theme> =
-                            if state.reader.current_anchor == Some(i as u64) {
-                                (button::Secondary + icedxdy::radius(14)).into()
-                            } else {
-                                (button::Ghost + icedxdy::radius(14)).into()
-                            };
                         button(
                             text(t.short())
                                 .size(14)
@@ -228,9 +210,12 @@ impl Demo {
                                 .line_height(LineHeight::Absolute(20.into()))
                                 .ellipsis(Ellipsis::End),
                         )
-                        .size(Size::Sm)
+                        .translate(false)
+                        .weight(icedxdy::Weight::Normal)
+                        .height(32)
+                        .padding([6, 8])
                         .width(Fill)
-                        .style(style)
+                        .style(skin::entry())
                         .on_press(Event::Jump(Target::Item(i as u64)))
                         .into()
                     }),
@@ -262,7 +247,11 @@ impl Demo {
                     }),
             )
             .spacing(4);
-            let trigger = button(ticks).height(36).square().style(button::Ghost);
+            let trigger = button(ticks)
+                .height(36)
+                .square()
+                .translate(false)
+                .style(skin::trigger());
             let nav = hover_card(trigger, outline)
                 .side(hover_card::Side::Left)
                 .side_offset(-28.0)
