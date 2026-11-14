@@ -5,12 +5,11 @@ Wrap the opening control with the handle’s `trigger`. Build the popup from `me
 ```text
 dropdown_menu(trigger, content)
 ├── m.trigger(button)
-└── column!
-    ├── menu::group(items)
-    │   ├── menu::label(label)
-    │   └── menu::item(label)
+└── menu_group![...]
+    ├── menu::label(label)
+    ├── menu::item(label)
     ├── menu::separator()
     ├── menu::checkbox_item(label, checked, on_toggle)
     ├── menu::radio_item(label, value, selected, on_select)
-    └── menu::sub(label, items)
+    └── menu_sub![label, ...]
 ```

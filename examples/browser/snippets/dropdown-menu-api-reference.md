@@ -10,7 +10,7 @@ A `Popover` holding a menu: as wide as its trigger (at least 128px) unless given
 | `.open(bool)` | `bool` | uncontrolled | Control the menu. |
 | `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Publish a message with the requested open state. |
 | `.side(side)` | `Side` | `Bottom` | The side of the trigger the menu prefers. |
-| `.align(align)` | `Align` | `Center` | `Start`, `Center` or `End`. |
+| `.align(align)` | `Align` | `Start` | `Start`, `Center` or `End`. |
 | `.side_offset(px)` | `f32` | `4.0` | The gap between the trigger and the menu. |
 | `.width(px)` | `f32` | trigger width | A fixed menu width. |
 
@@ -26,4 +26,6 @@ A `Popover` holding a menu: as wide as its trigger (at least 128px) unless given
 | `menu::group(children)` | `DropdownMenuGroup`. |
 | `menu::sub(content, items)` | `DropdownMenuSub`: opens `items` (like `group`'s) to the right while hovered; selecting inside closes the whole menu. |
 
-Give a top-level `column![..]` `.width(Fill)` so every row spans the menu (`menu::group` already does). No keyboard navigation between items and no typeahead yet.
+Use `menu_group![...]` and `menu_sub![trigger, ...]` to combine different item types. `menu::caption(icon, label)` aligns a leading icon with its label.
+
+Press Enter, Space or Down Arrow on the focused trigger to open the menu at its first item. Pointer opening leaves the items unselected until you point at one or use the keyboard. Up and Down Arrow move between enabled items. Home and End jump to the first and last. Type a label prefix to focus a match. Right Arrow opens the focused submenu, and Left Arrow returns to its parent.

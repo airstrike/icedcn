@@ -1,19 +1,23 @@
 ```rust
-use icedcn::widget::{button, dropdown_menu, menu};
+use icedcn::widget::{button, dropdown_menu, menu, menu_group};
+use icedcn::Slot;
 
-// `status`, `activity` and `panel` live in your state.
-dropdown_menu(
-    |m| m.trigger(button("Open").style(button::Outline)),
-    move |_| {
-        menu::group([
+pub fn view(checked: [bool; 3]) -> Slot<'static, [bool; 3]> {
+    let toggle = move |i: usize, value| {
+        let mut next = checked;
+        next[i] = value;
+        next
+    };
+    dropdown_menu(
+        |m| m.trigger(button("Open").style(button::Outline)),
+        move |_| menu_group![
             menu::label("Appearance"),
-            menu::checkbox_item("Status Bar", status, Message::StatusBar).into(),
-            menu::checkbox_item("Activity Bar", activity, Message::ActivityBar)
-                .disabled(true)
-                .into(),
-            menu::checkbox_item("Panel", panel, Message::Panel).into(),
-        ])
-    },
-)
-.width(160)
+            menu::checkbox_item("Status Bar", checked[0], |v| toggle(0, v)),
+            menu::checkbox_item("Activity Bar", checked[1], |v| toggle(1, v)).disabled(true),
+            menu::checkbox_item("Panel", checked[2], |v| toggle(2, v)),
+        ],
+    ).width(160).into()
+}
 ```
+
+Initialize the application value to `[true, false, false]`. Keep the value this menu publishes when an item is selected.

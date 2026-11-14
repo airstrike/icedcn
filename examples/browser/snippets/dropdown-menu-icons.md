@@ -1,18 +1,23 @@
 ```rust
-use icedcn::widget::{button, dropdown_menu, menu};
+use crate::icon;
+use iced::widget::Text;
+use icedcn::widget::{button, dropdown_menu, menu, menu_group};
+use icedcn::{Slot, Theme};
 
-dropdown_menu(
-    |m| m.trigger(button("Open").style(button::Outline)),
-    |_| {
-        menu::group([
-            menu::item(with_icon(icon::user(), "Profile")).into(),
-            menu::item(with_icon(icon::credit_card(), "Billing")).into(),
-            menu::item(with_icon(icon::settings(), "Settings")).into(),
+pub fn view<Message: Clone + 'static>() -> Slot<'static, Message> {
+    let caption = |glyph: Text<'static, Theme>, label: &'static str| {
+        menu::caption(glyph.size(16).line_height(1.0), label)
+    };
+    let item = move |glyph, label| menu::item(caption(glyph, label));
+    dropdown_menu(
+        |m| m.trigger(button("Open").style(button::Outline)),
+        move |_| menu_group![
+            item(icon::user(), "Profile"),
+            item(icon::credit_card(), "Billing"),
+            item(icon::settings(), "Settings"),
             menu::separator(),
-            menu::item(with_icon(icon::log_out(), "Log out"))
-                .style(menu::Destructive)
-                .into(),
-        ])
-    },
-)
+            item(icon::log_out(), "Log out").style(menu::Destructive),
+        ],
+    ).into()
+}
 ```

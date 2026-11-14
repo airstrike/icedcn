@@ -1,31 +1,28 @@
 ```rust
-use icedcn::widget::{button, dropdown_menu, menu};
+use crate::icon;
+use iced::widget::Text;
+use icedcn::widget::{button, dropdown_menu, menu, menu_group};
+use icedcn::{Slot, Theme};
 
-dropdown_menu(
-    |m| m.trigger(button("Notifications").style(button::Outline)),
-    move |_| {
-        menu::group([menu::group([
+pub fn view(checked: [bool; 3]) -> Slot<'static, [bool; 3]> {
+    let caption = |glyph: Text<'static, Theme>, label: &'static str| {
+        menu::caption(glyph.size(16).line_height(1.0), label)
+    };
+    let toggle = move |i: usize, value| {
+        let mut next = checked;
+        next[i] = value;
+        next
+    };
+    dropdown_menu(
+        |m| m.trigger(button("Notifications").style(button::Outline)),
+        move |_| menu_group![
             menu::label("Notification Preferences"),
-            menu::checkbox_item(
-                with_icon(icon::mail(), "Email notifications"),
-                state.checked[0],
-                |v| Choice::Checked(0, v),
-            )
-            .into(),
-            menu::checkbox_item(
-                with_icon(icon::message_square(), "SMS notifications"),
-                state.checked[1],
-                |v| Choice::Checked(1, v),
-            )
-            .into(),
-            menu::checkbox_item(
-                with_icon(icon::bell(), "Push notifications"),
-                state.checked[2],
-                |v| Choice::Checked(2, v),
-            )
-            .into(),
-        ])])
-    },
-)
-.width(192)
+            menu::checkbox_item(caption(icon::mail(), "Email notifications"), checked[0], |v| toggle(0, v)),
+            menu::checkbox_item(caption(icon::message_square(), "SMS notifications"), checked[1], |v| toggle(1, v)),
+            menu::checkbox_item(caption(icon::bell(), "Push notifications"), checked[2], |v| toggle(2, v)),
+        ],
+    ).width(192).into()
+}
 ```
+
+Initialize the application value to `[true, false, true]`. Keep the value this menu publishes when an item is selected.

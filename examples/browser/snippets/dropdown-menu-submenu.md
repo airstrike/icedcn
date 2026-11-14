@@ -1,31 +1,17 @@
 ```rust
-use icedcn::widget::{button, dropdown_menu, menu};
+use icedcn::widget::{button, dropdown_menu, menu, menu_group, menu_sub};
 
 dropdown_menu(
     |m| m.trigger(button("Open").style(button::Outline)),
-    |_| {
-        menu::group([
-            menu::item("Team").into(),
-            menu::sub(
-                "Invite users",
-                [
-                    menu::item("Email").into(),
-                    menu::item("Message").into(),
-                    menu::sub(
-                        "More options",
-                        [
-                            menu::item("Calendly").into(),
-                            menu::item("Slack").into(),
-                            menu::separator(),
-                            menu::item("Webhook").into(),
-                        ],
-                    ),
-                    menu::separator(),
-                    menu::item("Advanced...").into(),
-                ],
-            ),
-            menu::item("New Team").shortcut("⌘+T").into(),
-        ])
-    },
+    move |_| menu_group![
+        menu::item("Team"),
+        menu_sub!["Invite users",
+            menu::item("Email"), menu::item("Message"),
+            menu_sub!["More options", menu::item("Calendly"), menu::item("Slack"),
+                menu::separator(), menu::item("Webhook")],
+            menu::separator(), menu::item("Advanced..."),
+        ],
+        menu::item("New Team").shortcut("⌘+T"),
+    ],
 )
 ```
