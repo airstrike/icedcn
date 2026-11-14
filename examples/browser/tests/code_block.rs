@@ -28,6 +28,27 @@ impl Operation for Viewports {
 }
 
 #[test]
+fn streaming_and_markdown_use_the_available_preview_width() {
+    let page = CodeBlockPage::new(0);
+    let theme = Theme::light();
+    for id in ["streaming", "markdown"] {
+        for width in [558.0_f32, 260.0] {
+            let mut ui = Simulator::with_size(
+                Default::default(),
+                Size::new(width, 1600.),
+                page.docs_preview(id, &theme),
+            );
+            let mut viewports = Viewports::default();
+            ui.operate(&mut viewports);
+            assert!(!viewports.0.is_empty());
+            for (bounds, _) in viewports.0 {
+                assert_eq!(bounds.width, width.min(448.0) - 2.0, "{id}");
+            }
+        }
+    }
+}
+
+#[test]
 fn demo_and_wrap_keep_their_bounds_at_two_widths_without_truncating_source() {
     let page = CodeBlockPage::new(0);
     for width in [558., 260.] {

@@ -269,7 +269,7 @@ impl State {
             .get("streaming")
             .and_then(|_| self.progress.get("streaming").copied())
             .unwrap_or(usize::MAX);
-        let mut output = column![].spacing(16);
+        let mut output = column![].width(Fill).spacing(16);
         for &(title, _, source) in STREAMS {
             if remaining == 0 {
                 break;
@@ -329,7 +329,9 @@ impl State {
         let body = &MARKDOWN[..end];
         let (_, fenced) = body.split_once("```tsx\n").unwrap_or((body, ""));
         let noop = self.event(Message::Idle);
-        let mut reply = column![prose(&self.markdown_before, dark, noop)].spacing(12);
+        let mut reply = column![prose(&self.markdown_before, dark, noop)]
+            .width(Fill)
+            .spacing(12);
         if !fenced.is_empty() {
             let (code, _) = fenced.split_once("```").unwrap_or((fenced, ""));
             let complete = fenced.contains("```");
@@ -368,6 +370,7 @@ impl State {
             .align(Horizontal::Right),
             message(reply),
         ]
+        .width(Fill)
         .spacing(16);
         if !self.streaming.contains_key("markdown") {
             items = items.push(
@@ -709,7 +712,7 @@ fn markdown_parts(end: usize) -> (Vec<markdown::Item>, Vec<markdown::Item>) {
 }
 
 fn prose(items: &[markdown::Item], dark: bool, noop: Message) -> Slot<'static, Message> {
-    let mut output = column![].spacing(12);
+    let mut output = column![].width(Fill).spacing(12);
     for item in items {
         if let markdown::Item::Paragraph(text) = item {
             let noop = noop.clone();

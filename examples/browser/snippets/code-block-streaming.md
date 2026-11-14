@@ -102,7 +102,7 @@ impl Demo {
             .get("streaming")
             .map(|s| visible_bytes(*s))
             .unwrap_or(usize::MAX);
-        let mut output = column![].spacing(16);
+        let mut output = column![].width(Fill).spacing(16);
         for &(title, _, source) in STREAMS {
             if remaining == 0 {
                 break;

@@ -113,6 +113,7 @@ impl Demo {
                 .map(move |_| noop.clone())
                 .boxed()
         ]
+        .width(Fill)
         .spacing(12);
         if !fenced.is_empty() {
             let (code, _) = fenced.split_once("```").unwrap_or((fenced, ""));
@@ -153,6 +154,7 @@ impl Demo {
             .align(Horizontal::Right),
             message(reply),
         ]
+        .width(Fill)
         .spacing(16);
         if !self.streaming.contains_key("markdown") {
             items = items.push(
