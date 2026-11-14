@@ -1,6 +1,8 @@
 ```rust
+use iced::widget::text::LineHeight;
+use iced::{Fill, Widget};
 use icedxdy::card;
-use icedxdy::widget::{accordion, column, text};
+use icedxdy::widget::{accordion, column};
 
 let items = [
     (
@@ -29,15 +31,16 @@ let items = [
 ];
 
 let inner = accordion(items.into_iter().map(|(id, trigger, body)| {
-    accordion::item(id, text::small(trigger).medium())
-        .content(text::small(body))
+    accordion::item(id, trigger).content(body)
 }))
 .mode(accordion::Mode::Single { collapsible: true })
 .default_value(["plans"]);
 
-let header = card::header("Subscription & Billing")
-    .description("Common questions about your account, plans, payments and cancellations.");
+let description = card::description("Common questions about your account, plans, payments and cancellations.")
+    .line_height(LineHeight::Absolute(20.into()));
+let header = card::header("Subscription & Billing").description(description);
 
-card(column![header, card::content(inner)])
-    .max_width(384)
+card(column![header, card::content(inner)].spacing(16).padding([16, 0]))
+    .width(Fill.max(384))
+    .boxed()
 ```

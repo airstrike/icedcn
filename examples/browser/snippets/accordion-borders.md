@@ -1,7 +1,9 @@
 ```rust
+use iced::Fill;
+use icedxdy::core::Border;
 use icedxdy::theme::container::Style;
-use icedxdy::widget::{accordion, container, text};
-use icedxdy::{Border, Theme, radius};
+use icedxdy::widget::{accordion, container};
+use icedxdy::{Theme, radius};
 
 let items = [
     (
@@ -29,20 +31,19 @@ let items = [
 ];
 
 let inner = accordion(items.into_iter().map(|(id, trigger, body)| {
-    accordion::item(id, text::small(trigger).medium())
-        .content(text::small(body))
+    accordion::item(id, trigger).content(body).inset(16.0)
 }))
 .mode(accordion::Mode::Single { collapsible: true })
 .default_value(["billing"]);
 
 container(inner)
     .max_width(512)
-    .width(iced::Fill)
-    .padding([0, 16])
+    .width(Fill)
+    .padding(1)
     .style(|theme: &Theme| Style {
         border: Border {
             width: 1.0,
-            color: theme.palette().border,
+            color: theme.neutral.border,
             radius: radius::LG.into(),
         },
         ..Style::default()

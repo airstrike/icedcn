@@ -1,5 +1,7 @@
 ## API Reference
 
+See the [Radix Accordion documentation](https://www.radix-ui.com/primitives/docs/components/accordion) for the upstream parts and keyboard interactions.
+
 ### `accordion()`
 
 Constructor for an `Accordion` from any `IntoIterator<Item = accordion::Item>`.
@@ -20,8 +22,9 @@ Constructor for one disclosure item. Takes a stable `id` (matched against the op
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
 | `.content(body)` | `impl Into<Slot>` | `None` | Body revealed when the item is open. Required for the item to render anything useful below the trigger. |
-| `.chevron_closed(icon)` | `impl Into<Slot>` | text glyph `>` | Closed-state chevron icon. Browser callers wire this to `icon::chevron_down()`. |
-| `.chevron_open(icon)` | `impl Into<Slot>` | text glyph `v` | Open-state chevron icon. Browser callers wire this to `icon::chevron_up()`. |
+| `.chevron_closed(icon)` | `impl Into<Slot>` | down chevron | Closed-state indicator. |
+| `.chevron_open(icon)` | `impl Into<Slot>` | up chevron | Open-state indicator. |
+| `.inset(pixels)` | `f32` | `0.0` | Horizontal inset for the trigger and its content. The divider spans the item. |
 | `.disabled(bool)` | `bool` | `false` | Disabled triggers don't toggle; trigger row + body render at 50% opacity per nova's `disabled:opacity-50`. |
 
 ### `accordion::Mode`

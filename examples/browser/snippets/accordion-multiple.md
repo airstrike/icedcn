@@ -1,5 +1,6 @@
 ```rust
-use icedxdy::widget::{accordion, text};
+use iced::Fill;
+use icedxdy::widget::{accordion, container};
 
 let items = [
     (
@@ -25,10 +26,11 @@ let items = [
     ),
 ];
 
-accordion(items.into_iter().map(|(id, trigger, body)| {
-    accordion::item(id, text::small(trigger).medium())
-        .content(text::small(body))
+let items = accordion(items.into_iter().map(|(id, trigger, body)| {
+    accordion::item(id, trigger).content(body)
 }))
 .mode(accordion::Mode::Multiple)
-.default_value(["notifications"])
+.default_value(["notifications"]);
+
+container(items).width(Fill).max_width(512)
 ```

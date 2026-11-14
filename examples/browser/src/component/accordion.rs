@@ -1,24 +1,15 @@
-// API Reference is rendered via the `accordion-api-reference.md` snippet
-// at the bottom of BLOCKS. The live shadcn docs page lists the Radix
-// primitives (Accordion / AccordionItem / AccordionTrigger /
-// AccordionContent) but defers the prop matrix to Radix's own docs —
-// the snippet captures the icedxdy-shaped builder API for `accordion(...)`
-// and `accordion::item(...)` plus the parent-owned-state model.
-//
-// Intentional skips per CLAUDE.md: accordion-rtl (RTL not applicable to
-// iced).
+// RTL is omitted under the browser's component scope.
 
-use iced::Widget;
-
-use iced::Task;
+use iced::widget::text::LineHeight;
+use iced::{Fill, Task, Widget};
 
 use icedxdy::Theme;
 use icedxdy::card;
-use icedxdy::theme;
-use icedxdy::widget::{accordion, container, text};
+use icedxdy::core::Border;
+use icedxdy::theme::container::Style;
+use icedxdy::widget::{accordion, column, container};
 
 use crate::Message;
-use crate::icon;
 use crate::page;
 
 pub static META: page::Meta = page::Meta {
@@ -33,49 +24,44 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/accordion-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/accordion-installation.md"),
+    page::Block::Md("examples/browser/snippets/accordion-usage.md"),
     page::Block::Md("examples/browser/snippets/accordion-composition.md"),
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "basic",
-                title: "Basic",
-                description: Some(
-                    "A basic accordion that shows one item at a time. The first item is open by default.",
-                ),
-                snippet: "examples/browser/snippets/accordion-basic.md",
-            },
-            page::Block::Example {
-                id: "multiple",
-                title: "Multiple",
-                description: Some(
-                    "Use `.mode(accordion::Mode::Multiple)` to keep several items open at once.",
-                ),
-                snippet: "examples/browser/snippets/accordion-multiple.md",
-            },
-            page::Block::Example {
-                id: "disabled",
-                title: "Disabled",
-                description: Some("Set `.disabled(true)` on an item to disable its trigger."),
-                snippet: "examples/browser/snippets/accordion-disabled.md",
-            },
-            page::Block::Example {
-                id: "borders",
-                title: "Borders",
-                description: Some(
-                    "Wrap the accordion in a bordered `container`. The accordion draws the dividers between items.",
-                ),
-                snippet: "examples/browser/snippets/accordion-borders.md",
-            },
-            page::Block::Example {
-                id: "card",
-                title: "Card",
-                description: Some(
-                    "Place the accordion in `card::content(...)` below the card header.",
-                ),
-                snippet: "examples/browser/snippets/accordion-card.md",
-            },
-        ],
+    page::Block::Example {
+        id: "basic",
+        title: "Basic",
+        description: Some(
+            "A basic accordion that shows one item at a time. The first item is open by default.",
+        ),
+        snippet: "examples/browser/snippets/accordion-basic.md",
+    },
+    page::Block::Example {
+        id: "multiple",
+        title: "Multiple",
+        description: Some(
+            "Use `.mode(accordion::Mode::Multiple)` to keep several items open at once.",
+        ),
+        snippet: "examples/browser/snippets/accordion-multiple.md",
+    },
+    page::Block::Example {
+        id: "disabled",
+        title: "Disabled",
+        description: Some("Set `.disabled(true)` on an item to disable its trigger."),
+        snippet: "examples/browser/snippets/accordion-disabled.md",
+    },
+    page::Block::Example {
+        id: "borders",
+        title: "Borders",
+        description: Some(
+            "Add a border to the accordion and inset each item to keep its divider edge to edge.",
+        ),
+        snippet: "examples/browser/snippets/accordion-borders.md",
+    },
+    page::Block::Example {
+        id: "card",
+        title: "Card",
+        description: Some("Place the accordion in `card::content(...)` below the card header."),
+        snippet: "examples/browser/snippets/accordion-card.md",
     },
     page::Block::Md("examples/browser/snippets/accordion-api-reference.md"),
 ];
@@ -94,41 +80,18 @@ impl AccordionPage {
     }
 }
 
-/// Helper: build a chevron-down icon at 16px, sized to nova's `size-4`.
-/// Lives here rather than in the page state because the icon is used at
-/// view time only (no per-frame allocation).
-fn chevron_closed<'a>() -> icedxdy::Slot<'a, Message> {
-    icon::chevron_down().size(16).into()
-}
-
-/// Helper: build a chevron-up icon at 16px.
-fn chevron_open<'a>() -> icedxdy::Slot<'a, Message> {
-    icon::chevron_up().size(16).into()
-}
-
-/// Build the accordion preview for a single example: `mode` and `open`
-/// mirror shadcn's `type` and `defaultValue`. Bundling here keeps each
-/// `preview()` arm to a single `accordion(...)` call.
 fn build_accordion<'a>(
     mode: accordion::Mode,
     open: &[&'a str],
     items: impl IntoIterator<Item = (&'a str, &'a str, &'a str, bool)>,
-) -> icedxdy::Slot<'a, Message> {
-    let items: Vec<_> = items
-        .into_iter()
-        .map(|(id, trigger, body, disabled)| {
-            accordion::item(id.to_owned(), text::small(trigger).medium())
-                .content(text::small(body).style(theme::text::Muted))
-                .chevron_closed(chevron_closed())
-                .chevron_open(chevron_open())
-                .disabled(disabled)
-        })
-        .collect();
-
-    accordion(items)
-        .mode(mode)
-        .default_value(open.iter().copied())
-        .into()
+) -> accordion::Accordion<'a, Message> {
+    accordion(items.into_iter().map(|(id, trigger, body, disabled)| {
+        accordion::item(id, trigger)
+            .content(body)
+            .disabled(disabled)
+    }))
+    .mode(mode)
+    .default_value(open.iter().copied())
 }
 
 impl page::Page for AccordionPage {
@@ -190,7 +153,7 @@ impl page::Page for AccordionPage {
                 ],
             ))
             .max_width(512.0)
-            .width(iced::Fill)
+            .width(Fill)
             .into(),
 
             "basic" => container(build_accordion(
@@ -218,7 +181,7 @@ impl page::Page for AccordionPage {
                 ],
             ))
             .max_width(512.0)
-            .width(iced::Fill)
+            .width(Fill)
             .into(),
 
             "multiple" => container(build_accordion(
@@ -246,7 +209,7 @@ impl page::Page for AccordionPage {
                 ],
             ))
             .max_width(512.0)
-            .width(iced::Fill)
+            .width(Fill)
             .into(),
 
             "disabled" => container(build_accordion(
@@ -273,55 +236,45 @@ impl page::Page for AccordionPage {
                     ),
                 ],
             ))
-            .width(iced::Fill)
+            .width(Fill)
             .into(),
 
             "borders" => {
-                // Shadcn `accordion-borders.tsx`: outer `rounded-lg border`
-                // wraps the accordion and each item adds `px-4`. We supply
-                // both via the wrapping container + `accordion::padding(...)`.
-                let inner = build_accordion(
-                    single,
-                    &["billing"],
-                    [
-                        (
-                            "billing",
-                            "How does billing work?",
-                            "We offer monthly and annual subscription plans. Billing is charged at the beginning of each cycle, and you can cancel anytime. All plans include automatic backups, 24/7 support, and unlimited team members.",
-                            false,
-                        ),
-                        (
-                            "security",
-                            "Is my data secure?",
-                            "Yes. We use end-to-end encryption, SOC 2 Type II compliance, and regular third-party security audits. All data is encrypted at rest and in transit using industry-standard protocols.",
-                            false,
-                        ),
-                        (
-                            "integration",
-                            "What integrations do you support?",
-                            "We integrate with 500+ popular tools including Slack, Zapier, Salesforce, HubSpot, and more. You can also build custom integrations using our REST API and webhooks.",
-                            false,
-                        ),
-                    ],
-                );
+                let items = [
+                    (
+                        "billing",
+                        "How does billing work?",
+                        "We offer monthly and annual subscription plans. Billing is charged at the beginning of each cycle, and you can cancel anytime. All plans include automatic backups, 24/7 support, and unlimited team members.",
+                    ),
+                    (
+                        "security",
+                        "Is my data secure?",
+                        "Yes. We use end-to-end encryption, SOC 2 Type II compliance, and regular third-party security audits. All data is encrypted at rest and in transit using industry-standard protocols.",
+                    ),
+                    (
+                        "integration",
+                        "What integrations do you support?",
+                        "We integrate with 500+ popular tools including Slack, Zapier, Salesforce, HubSpot, and more. You can also build custom integrations using our REST API and webhooks.",
+                    ),
+                ];
+                let inner = accordion(items.into_iter().map(|(id, trigger, body)| {
+                    accordion::item(id, trigger).content(body).inset(16.0)
+                }))
+                .mode(single)
+                .default_value(["billing"]);
 
                 container(inner)
                     .max_width(512.0)
-                    .width(iced::Fill)
-                    .padding([0, 16])
-                    .style(|theme: &Theme| {
-                        use icedxdy::core::Border;
-                        use icedxdy::theme::container::Style;
-                        let p = theme;
-                        Style {
+                    .width(Fill)
+                    .padding(1)
+                    .style(|theme: &Theme| Style {
                             background: None,
                             border: Border {
                                 width: 1.0,
-                                color: p.neutral.border,
+                                color: theme.neutral.border,
                                 radius: icedxdy::radius::LG.into(),
                             },
                             ..Style::default()
-                        }
                     })
                     .into()
             }
@@ -355,14 +308,13 @@ impl page::Page for AccordionPage {
                     ],
                 );
 
-                let header = card::header("Subscription & Billing").description(
-                    "Common questions about your account, plans, payments and cancellations.",
-                );
+                let description = card::description("Common questions about your account, plans, payments and cancellations.")
+                    .line_height(LineHeight::Absolute(20.into()));
+                let header = card::header("Subscription & Billing").description(description);
                 let body = card::content(inner);
-                use icedxdy::widget::column;
-                let stack = column![header, body];
+                let stack = column![header, body].spacing(16).padding([16, 0]);
 
-                card(stack).width(iced::Fill.max(384.0)).boxed()
+                card(stack).width(Fill.max(384)).boxed()
             }
 
             _ => unreachable!("unknown accordion preview id: {id}"),

@@ -32,17 +32,21 @@
 //! applies the [`Mode`] rules itself and publishes the complete new open
 //! set.
 
+#[cfg(feature = "svg")]
+mod chevron;
 pub(crate) mod element;
 pub mod widget;
 
 pub use widget::{Catalog, Mode, StyleFn};
 
 use iced_core::Padding;
+#[cfg(not(feature = "svg"))]
+use iced_core::text::Renderer as _;
 use iced_widget::Renderer;
 use icedxdy_core::Theme;
 use icedxdy_core::theme;
 
-use crate::Slot;
+use crate::{Inherited, Slot, Weight};
 
 /// Builder for one disclosure item. Constructed via [`item`].
 pub struct Item<'a, Message> {
@@ -52,6 +56,7 @@ pub struct Item<'a, Message> {
     chevron_open: Option<Slot<'a, Message>>,
     body: Option<Slot<'a, Message>>,
     disabled: bool,
+    inset: f32,
 }
 
 impl<'a, Message: 'a> Item<'a, Message> {
@@ -63,19 +68,21 @@ impl<'a, Message: 'a> Item<'a, Message> {
         self
     }
 
-    /// Override the closed-state chevron icon. Defaults to a small text
-    /// glyph (`>`) when unset; browser callers wire this to
-    /// `icon::chevron_down()`.
+    /// Override the default downward chevron.
     pub fn chevron_closed(mut self, icon: impl Into<Slot<'a, Message>>) -> Self {
         self.chevron_closed = Some(icon.into());
         self
     }
 
-    /// Override the open-state chevron icon. Defaults to a small text
-    /// glyph (`v`) when unset; browser callers wire this to
-    /// `icon::chevron_up()`.
+    /// Override the default upward chevron.
     pub fn chevron_open(mut self, icon: impl Into<Slot<'a, Message>>) -> Self {
         self.chevron_open = Some(icon.into());
+        self
+    }
+
+    /// Inset the trigger and content horizontally while keeping the divider full width.
+    pub fn inset(mut self, pixels: f32) -> Self {
+        self.inset = pixels.max(0.0);
         self
     }
 
@@ -91,7 +98,7 @@ impl<'a, Message: 'a> Item<'a, Message> {
 /// Construct a single accordion item with the given stable id and trigger
 /// label content.
 ///
-/// `id` is matched against the open-set passed via [`Accordion::open`] to
+/// `id` is matched against the open-set passed via [`Accordion::value`] to
 /// determine open/closed state. Animation state in the widget tree is
 /// keyed by id too — reordering items between renders preserves their
 /// in-flight transitions.
@@ -106,6 +113,7 @@ pub fn item<'a, Message: 'a>(
         chevron_open: None,
         body: None,
         disabled: false,
+        inset: 0.0,
     }
 }
 
@@ -182,30 +190,58 @@ impl<'a, Message: 'a> Accordion<'a, Message> {
     }
 }
 
+#[cfg(not(feature = "svg"))]
+fn chevron<'a, Message: 'a>(open: bool) -> Slot<'a, Message> {
+    let icon = if open {
+        Renderer::SCROLL_UP_ICON
+    } else {
+        Renderer::SCROLL_DOWN_ICON
+    };
+    iced_widget::text(icon.to_string())
+        .font(Renderer::ICON_FONT)
+        .size(10)
+        .width(16)
+        .height(16)
+        .align_x(iced_core::Alignment::Center)
+        .align_y(iced_core::Alignment::Center)
+        .into()
+}
+
+#[cfg(feature = "svg")]
+fn chevron<'a, Message: 'a>(open: bool) -> Slot<'a, Message> {
+    use iced_widget::Widget;
+    chevron::Icon::new(open).boxed().into()
+}
+
 impl<'a, Message: 'a> From<Accordion<'a, Message>>
     for iced_core::Element<'a, Message, Theme, Renderer>
 {
     fn from(a: Accordion<'a, Message>) -> Self {
-        // Resolve each Item into the widget-side struct, baking default
-        // chevrons via short text glyphs when the user didn't supply
-        // explicit icons.
-        use crate::text;
-        let items: Vec<widget::Item<'a, Message>> = a
+        let label = Inherited::default()
+            .with_size(14)
+            .with_weight(Weight::Medium)
+            .with_line_height(20.0)
+            .with_selectable(false);
+        let content = Inherited::default().with_size(14).with_line_height(20.0);
+        let items = a
             .items
             .into_iter()
-            .map(|it| widget::Item {
-                id: it.id,
-                trigger: it.trigger.compose(),
-                chevron_closed: it
-                    .chevron_closed
-                    .unwrap_or_else(|| Slot::from(text::Text::new(">")))
-                    .compose(),
-                chevron_open: it
-                    .chevron_open
-                    .unwrap_or_else(|| Slot::from(text::Text::new("v")))
-                    .compose(),
-                body: it.body.unwrap_or_else(|| Slot::from("")).compose(),
-                disabled: it.disabled,
+            .map(|mut it| {
+                it.trigger.inherit(&label);
+                let mut body = it.body.unwrap_or_else(|| Slot::from(""));
+                body.inherit(&content);
+                widget::Item {
+                    id: it.id,
+                    trigger: it.trigger.compose(),
+                    chevron_closed: it
+                        .chevron_closed
+                        .unwrap_or_else(|| chevron(false))
+                        .compose(),
+                    chevron_open: it.chevron_open.unwrap_or_else(|| chevron(true)).compose(),
+                    body: body.compose(),
+                    disabled: it.disabled,
+                    inset: it.inset,
+                }
             })
             .collect();
 
@@ -238,6 +274,17 @@ impl<'a, Message: 'a> From<Accordion<'a, Message>> for crate::Slot<'a, Message> 
 }
 
 impl<'a, Message: 'a> crate::compose::Compose<Message> for Accordion<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        for item in &mut self.items {
+            item.disabled |= from.is_disabled();
+            item.trigger
+                .inherit(&Inherited::default().with_disabled(item.disabled));
+            if let Some(body) = &mut item.body {
+                body.inherit(&Inherited::default().with_disabled(item.disabled));
+            }
+        }
+    }
+
     fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
