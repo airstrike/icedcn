@@ -176,16 +176,17 @@ fn tabs_skip_disabled_triggers_and_activate_on_vertical_arrows() {
     if let Outcome::Chain(mut step) = next.finish() {
         ui.operate(step.as_mut());
     }
+    // Global Tab traversal exposes one entry for the entire tab list.
     assert_eq!(
         focus(&mut ui),
         focusable::Count {
             focused: Some(0),
-            total: 2
+            total: 1
         }
     );
     ui.tap_key(Named::ArrowRight);
     ui.tap_key(Named::ArrowDown);
-    assert_eq!(focus(&mut ui).focused, Some(1));
+    assert_eq!(focus(&mut ui).focused, Some(0));
     ui.tap_key(Named::Home);
     assert_eq!(
         ui.into_messages().collect::<Vec<_>>(),
