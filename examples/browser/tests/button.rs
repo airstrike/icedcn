@@ -1,7 +1,7 @@
 //! Focused geometry and consumer regressions for the installed Button page.
-use browser::Message;
 use browser::component::button::ButtonPage;
 use browser::page::Page;
+use browser::{Message, docs};
 use iced::keyboard::key::Named;
 use iced::{Point, Rectangle, Size};
 use iced_test::core::Settings;
@@ -136,5 +136,65 @@ fn anchor_and_handlerless_examples_preserve_the_public_action_contract() {
         }
         assert_eq!(ui.drain().count(), 0);
         assert!(!controls(&mut ui).is_empty());
+    }
+}
+
+#[test]
+fn trailing_joined_controls_keep_their_label_and_icon_above_the_surface() {
+    use iced::{Color, Renderer, mouse};
+    use iced_test::core::Renderer as _;
+    use iced_test::core::renderer::{Headless, Scale, Style};
+    use iced_test::futures::futures::executor::block_on;
+    use iced_test::runtime::UserInterface;
+
+    let mut renderer = block_on(Renderer::new(Default::default(), Some("wgpu"))).expect("WGPU");
+    renderer.hint(Scale {
+        window: 1.,
+        application: 1.,
+    });
+    let page = ButtonPage::new(0);
+    let size = Size::new(360u32, 64);
+    let cursor = mouse::Cursor::Unavailable;
+
+    for dark in [false, true] {
+        let theme = docs::theme(dark);
+        let mut ui = UserInterface::build(
+            page.preview("button-group"),
+            Size::new(360., 64.),
+            Default::default(),
+            &mut renderer,
+        );
+        let mut controls = Controls::default();
+        ui.operate(&renderer, &mut controls);
+        ui.draw(
+            &mut renderer,
+            &theme,
+            &Style {
+                text_color: theme.neutral.foreground.into(),
+            },
+            cursor,
+        );
+        let pixels = renderer.screenshot(size, 1., Color::from(theme.neutral.base));
+        assert_eq!(controls.0.len(), 5);
+        for (index, name) in [(2, "Report"), (4, "ellipsis")] {
+            let bounds = controls.0[index].shrink(6.);
+            let ink = (bounds.y.ceil() as u32..(bounds.y + bounds.height) as u32)
+                .flat_map(|y| {
+                    (bounds.x.ceil() as u32..(bounds.x + bounds.width) as u32)
+                        .map(move |x| ((y * size.width + x) * 4) as usize)
+                })
+                .filter(|&i| {
+                    if dark {
+                        pixels[i] > 170
+                    } else {
+                        pixels[i] < 90
+                    }
+                })
+                .count();
+            assert!(
+                ink >= 5,
+                "{name} disappeared in dark={dark}, with {ink} ink pixels"
+            );
+        }
     }
 }

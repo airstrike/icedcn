@@ -1,13 +1,11 @@
+use crate::{Message, icon};
 use icedcn::Slot;
 use icedcn::widget::button;
 
-use super::icons;
-use crate::Message;
-
 pub fn view<'a>() -> Slot<'a, Message> {
-    button(icons::arrow_up(16.0))
+    button(icon::arrow_up().size(16))
         .square()
-        .style(button::Outline)
         .rounded()
+        .style(button::Outline)
         .into()
 }

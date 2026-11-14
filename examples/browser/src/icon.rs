@@ -1,6 +1,6 @@
 // Generated automatically by iced_lucide at build time.
 // Do not edit manually.
-// 3efff343d819cadf57e466505029e04f43afafd1a50ff6da0579a7548d51f3ee
+// 1398ca100cc4635a17ba32f84e55348aab98857d8a39050ab48058fa7f3b1a82
 use iced::widget::text::{self, Text};
 use iced::{Font, font};
 
@@ -44,6 +44,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("circle_alert", "\u{E077}"),
     ("circle_check", "\u{E226}"),
     ("circle_check_big", "\u{E07C}"),
+    ("circle_fading_arrow_up", "\u{E618}"),
     ("circle_fading_plus", "\u{E5BC}"),
     ("circle_question_mark", "\u{E082}"),
     ("clipboard_paste", "\u{E3E8}"),
@@ -378,6 +379,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E07C}")
+}
+
+pub fn circle_fading_arrow_up<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E618}")
 }
 
 pub fn circle_fading_plus<'a, Theme>() -> Text<'a, Theme>

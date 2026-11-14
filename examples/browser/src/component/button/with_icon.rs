@@ -1,13 +1,22 @@
-use icedcn::Size::*;
+use crate::Message;
+use iced::widget::svg;
 use icedcn::Slot;
 use icedcn::widget::button;
+use icedcn::{Size, Theme};
 
-use super::icons;
-use crate::Message;
+pub fn view() -> Slot<'static, Message> {
+    let branch = svg(svg::Handle::from_memory(
+        include_bytes!("../../../assets/button/git-branch.svg").as_slice(),
+    ))
+    .width(14)
+    .height(14)
+    .style(|theme: &Theme, _| svg::Style {
+        color: Some(theme.neutral.foreground.into()),
+    });
 
-pub fn view<'a>() -> Slot<'a, Message> {
-    button![icons::git_branch(14.0), "New Branch"]
-        .size(Sm)
+    button(branch)
+        .push("New Branch")
+        .size(Size::Sm)
         .style(button::Outline)
         .into()
 }

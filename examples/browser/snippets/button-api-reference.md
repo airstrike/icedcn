@@ -19,7 +19,7 @@
 | `.weight(weight)` | `impl Into<Weight>` | `Weight::Medium` | Cascades to composed text. |
 | `.interaction(cursor)` | `iced::mouse::Interaction` | Default arrow | Override the pointer affordance. |
 | `.height(height)` | `impl Into<Pixels>` | Size height | Override height while retaining typography. |
-| `.width(width)` | `impl Into<Length>` | Intrinsic | Fill or constrain the control; content is centered for `Fill`. Squares keep equal width and height. |
+| `.width(width)` | `impl Into<Length>` | Intrinsic | Fill or constrain the control. Content stays centered when the parent stretches it. Squares keep equal width and height. |
 | `.padding(padding)` | `impl Into<Padding>` | Size padding | Override content padding. Button adds the 1px border outside horizontal padding. |
 | `.inset(padding)` | `impl Into<Padding>` | Zero | Separate the painted surface from the hitbox. |
 | `.focus_ring(width, color)` | Pixels, theme function | Variant ring | Override the keyboard-focus ring. |

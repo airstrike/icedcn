@@ -3,7 +3,6 @@ pub(crate) mod default;
 mod destructive;
 mod ghost;
 mod icon;
-mod icons;
 mod link;
 mod outline;
 mod rounded;
@@ -108,13 +107,13 @@ pub static BLOCKS: &[page::Block] = &[
         id: "button-group",
         title: "Button Group",
         description: Some(
-            "Arrange related actions with [Button Group](icedcn://component/button-group).",
+            "Arrange related actions with [Button Group](icedcn://component/button-group). Start with the Personal label and store the new label when the menu publishes `Message::LabelSelected(label)`.",
         ),
         snippet: "examples/browser/snippets/button-mail-actions.md",
     },
     page::Block::Example {
         id: "link-button",
-        title: "Link Button",
+        title: "As Child",
         description: Some(
             "Call `.anchor()` for link styling and use `.on_press(...)` to send a navigation message.",
         ),
@@ -145,7 +144,7 @@ impl ButtonPage {
 fn demo() -> Slot<'static, crate::Message> {
     row![
         button("Button").style(button::Outline),
-        button(icons::arrow_up(16.0))
+        button(crate::icon::arrow_up().size(16))
             .square()
             .style(button::Outline),
     ]
