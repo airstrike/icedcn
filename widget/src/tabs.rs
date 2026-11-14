@@ -27,6 +27,7 @@ pub(crate) mod list;
 
 use crate::column::Column;
 use iced_core::Length::Fill;
+use iced_core::widget::Id;
 use iced_core::{Element, Length};
 use iced_widget::component::{self, Component};
 use iced_widget::{self, Space};
@@ -63,6 +64,7 @@ type Body<'a, Message> = Box<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
 /// builders for the list, its triggers and the panels.
 #[derive(Debug, Clone)]
 pub struct Handle {
+    scroll: Id,
     value: String,
     list_width: Length,
     rounded: bool,
@@ -92,9 +94,18 @@ pub enum Event<Message> {
 }
 
 /// The selected value of uncontrolled tabs.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct State {
     value: Option<String>,
+    scroll: Id,
+}
+impl Default for State {
+    fn default() -> Self {
+        Self {
+            value: None,
+            scroll: Id::unique(),
+        }
+    }
 }
 
 /// Create uncontrolled [`Tabs`] whose content is built by `body`.
@@ -193,10 +204,14 @@ impl Handle {
             Orientation::Vertical => Column::with_children(children)
                 .spacing(gap)
                 .width(self.list_width)
+                .stretch()
                 .into(),
         };
         let mut content = Container::new(content).width(self.list_width).padding(3);
-        if self.orientation == Orientation::Horizontal && !self.line {
+        if self.orientation == Orientation::Horizontal {
+            if self.line {
+                content = content.padding([0, 3]);
+            }
             content = content.center_y(32);
         }
         if !self.line {
@@ -209,10 +224,20 @@ impl Handle {
                 style
             });
         }
+        let horizontal =
+            self.orientation == Orientation::Horizontal && self.list_width == Length::Shrink;
+        let content = if horizontal {
+            crate::scrollable(content)
+                .horizontal()
+                .id(self.scroll.clone())
+                .into()
+        } else {
+            Slot::from(content)
+        };
         Slot::from(
             list::List {
-                content: Slot::from(content).compose(),
-                orientation: Some(self.orientation),
+                content: content.compose(),
+                orientation: Some((self.orientation, horizontal.then(|| self.scroll.clone()))),
             }
             .boxed(),
         )
@@ -229,12 +254,10 @@ impl Handle {
         let line = self.line;
         let rounded = self.rounded;
         let mut label = label.into();
-        let inherited = Inherited::default().with_size(Size::Default);
-        label.inherit(&if self.rounded {
-            inherited.with_line_height(20.0)
-        } else {
-            inherited
-        });
+        let inherited = Inherited::default()
+            .with_size(Size::Default)
+            .with_line_height(20.0);
+        label.inherit(&inherited);
         let style: iced_widget::button::StyleFn<'a, Theme> = Box::new(move |theme, status| {
             let mut style = tabs::trigger(theme, status, active);
             if rounded {
@@ -248,7 +271,17 @@ impl Handle {
             }
             style.into()
         });
-        let mut button = button(label).size(Size::Xs).translate(false).style(style);
+        let mut button = button(label)
+            .size(Size::Xs)
+            .height(if self.orientation == Orientation::Vertical {
+                26
+            } else {
+                25
+            })
+            .padding([2, 7])
+            .translate(false)
+            .focus_ring(3, |theme| theme.neutral.ring.alpha(0.5))
+            .style(style);
         if self.list_width != Length::Shrink {
             button = button.width(Fill);
         }
@@ -329,6 +362,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Trigger<'a, Message> {
                 });
             match orientation {
                 Orientation::Horizontal => crate::column![button, indicator.width(Fill).height(2)]
+                    .padding([3, 0, 0, 0])
                     .spacing(2)
                     .into(),
                 Orientation::Vertical => crate::row![button, indicator.width(2).height(Fill)]
@@ -383,6 +417,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Tabs<'a, 
 
     fn view(&self, state: &State) -> impl Widget<Event<Message>, Theme, Renderer> + 'a {
         let handle = Handle {
+            scroll: state.scroll.clone(),
             value: self.selected(state).to_owned(),
             list_width: self.list_width,
             rounded: self.rounded,

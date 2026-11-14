@@ -70,16 +70,18 @@ impl Operation for Reveal {
     ) {
         if id == Some(&self.scroll) {
             let target = self.target - translation;
-            let delta = if target.y < bounds.y + 4.0 {
-                target.y - bounds.y - 4.0
-            } else if target.y + target.height > bounds.y + bounds.height - 4.0 {
-                target.y + target.height - bounds.y - bounds.height + 4.0
-            } else {
-                0.0
+            let delta = |start: f32, size: f32, viewport: f32, extent: f32| {
+                if start < viewport + 4.0 {
+                    start - viewport - 4.0
+                } else {
+                    (start + size - viewport - extent + 4.0).max(0.0)
+                }
             };
-            if delta != 0.0 {
+            let x = delta(target.x, target.width, bounds.x, bounds.width);
+            let y = delta(target.y, target.height, bounds.y, bounds.height);
+            if x != 0.0 || y != 0.0 {
                 state.scroll_by(
-                    AbsoluteOffset { x: 0.0, y: delta },
+                    AbsoluteOffset { x, y },
                     operation::Animation::Instant,
                     bounds,
                     content,

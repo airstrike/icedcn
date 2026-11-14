@@ -2,15 +2,13 @@
 use super::{Date, Event};
 use crate::operation::focus;
 use iced_core::keyboard::{self, Key, key::Named};
-use iced_core::widget::operation::{Focusable, Scrollable, Text, TextInput};
-use iced_core::widget::{Id, Meta, Operation, Tree, tree};
+use iced_core::widget::{Meta, Operation, Tree, tree};
 use iced_core::{
     Element, Layout, Length, Rectangle, Shell, Size, Vector, Widget, layout, mouse, overlay,
     renderer, touch,
 };
 use iced_widget::Renderer;
 use icedcn_core::Theme;
-use std::any::Any;
 
 pub(super) struct Grid<'a> {
     pub content: Element<'a, Event, Theme, Renderer>,
@@ -181,18 +179,10 @@ impl Widget<Event, Theme, Renderer> for Grid<'_> {
             .focused
             .filter(|&i| self.targets.get(i).is_some_and(Option::is_some))
             .or(self.preferred);
-        self.content.operate(
-            child,
-            layout,
-            viewport,
-            renderer,
-            &mut Roving {
-                operation,
-                targets: &self.targets,
-                target,
-                index: 0,
-                day: false,
-            },
+        focus::roving(
+            operation,
+            |i| !self.targets.get(i).is_some_and(Option::is_some) || Some(i) == target,
+            |op| self.content.operate(child, layout, viewport, renderer, op),
         );
     }
     fn overlay<'b>(
@@ -210,68 +200,5 @@ impl Widget<Event, Theme, Renderer> for Grid<'_> {
             .expect("calendar content");
         self.content
             .overlay(child, layout, renderer, viewport, translation, window)
-    }
-}
-
-// Hide other dates from Tab traversal while keeping text, selectors, scrolling,
-// and header controls visible to the original operation.
-struct Roving<'a> {
-    operation: &'a mut dyn Operation,
-    targets: &'a [Option<Date>],
-    target: Option<usize>,
-    index: usize,
-    day: bool,
-}
-impl Operation for Roving<'_> {
-    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
-        let mut index = self.index;
-        let mut day = self.day;
-        self.operation.traverse(&mut |operation| {
-            let mut nested = Roving {
-                operation,
-                targets: self.targets,
-                target: self.target,
-                index,
-                day,
-            };
-            visit(&mut nested);
-            index = nested.index;
-            day = nested.day;
-        });
-        self.index = index;
-        self.day = day;
-    }
-    fn focusable(&mut self, id: Option<&Id>, bounds: Rectangle, state: &mut dyn Focusable) {
-        self.day = self.targets.get(self.index).is_some_and(Option::is_some)
-            && Some(self.index) != self.target;
-        if !self.day {
-            self.operation.focusable(id, bounds, state);
-        }
-        self.index += 1;
-    }
-    fn container(&mut self, id: Option<&Id>, bounds: Rectangle, viewport: &Rectangle) {
-        self.operation.container(id, bounds, viewport);
-    }
-    fn text(&mut self, id: Option<&Id>, bounds: Rectangle, state: &mut dyn Text) {
-        self.operation.text(id, bounds, state);
-    }
-    fn custom(&mut self, id: Option<&Id>, bounds: Rectangle, state: &mut dyn Any) {
-        if !self.day || !state.is::<focus::Visible>() {
-            self.operation.custom(id, bounds, state);
-        }
-    }
-    fn scrollable(
-        &mut self,
-        id: Option<&Id>,
-        bounds: Rectangle,
-        content: Size,
-        translation: Vector,
-        state: &mut dyn Scrollable,
-    ) {
-        self.operation
-            .scrollable(id, bounds, content, translation, state);
-    }
-    fn text_input(&mut self, id: Option<&Id>, bounds: Rectangle, state: &mut dyn TextInput) {
-        self.operation.text_input(id, bounds, state);
     }
 }

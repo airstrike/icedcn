@@ -2,6 +2,7 @@ use super::Orientation;
 use crate::operation::{
     control::{self, Control},
     focus,
+    scroll::Reveal,
 };
 use iced_core::keyboard::{self, Key, key::Named};
 use iced_core::widget::{Id, Meta, Operation, tree::Tree};
@@ -17,7 +18,7 @@ use std::any::Any;
 // it's independent of construction order and naturally skips disabled triggers.
 pub(crate) struct List<'a, Message> {
     pub content: Element<'a, Message, Theme, Renderer>,
-    pub orientation: Option<Orientation>,
+    pub orientation: Option<(Orientation, Option<Id>)>,
 }
 
 struct Activate {
@@ -76,7 +77,12 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
         {
             let count = focus::count(&mut visit);
             if count.focused.is_some() {
-                let target = match (key, self.orientation) {
+                let target = match (
+                    key,
+                    self.orientation
+                        .as_ref()
+                        .map(|(orientation, _)| *orientation),
+                ) {
                     (Named::Home, _) => Some(0),
                     (Named::End, _) => Some(count.total - 1),
                     (Named::ArrowRight, Some(Orientation::Horizontal) | None)
@@ -90,7 +96,11 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
                     _ => None,
                 };
                 if let Some(index) = target {
-                    visit(&mut focus::select(Some(index)));
+                    if let Some((_, Some(scroll))) = &self.orientation {
+                        focus::reveal(index, scroll, &mut visit);
+                    } else {
+                        visit(&mut focus::select(Some(index)));
+                    }
                     visit(&mut Activate { index, current: 0 });
                     shell.capture_event();
                     shell.request_redraw();
@@ -164,8 +174,27 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
             .next()
             .expect("a roving group has one child");
 
-        self.content
-            .operate(child_tree, child_layout, viewport, renderer, operation);
+        let mut visit = |op: &mut dyn Operation| {
+            self.content
+                .operate(child_tree, child_layout, viewport, renderer, op)
+        };
+        if self.orientation.is_some() {
+            let mut active = Active::default();
+            visit(&mut active);
+            let index = focus::count(&mut visit)
+                .focused
+                .or(active.selected)
+                .unwrap_or(0);
+            let entered = focus::roving(operation, |i| i == index, &mut visit);
+            if let (Some((_, Some(scroll))), Some(target)) = (&self.orientation, entered) {
+                visit(&mut Reveal {
+                    scroll: scroll.clone(),
+                    target,
+                });
+            }
+        } else {
+            visit(operation);
+        }
     }
 
     fn overlay<'b>(
@@ -190,5 +219,26 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
             translation,
             window,
         )
+    }
+}
+
+#[derive(Default)]
+struct Active {
+    count: usize,
+    selected: Option<usize>,
+}
+impl Operation for Active {
+    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+        visit(self);
+    }
+    fn custom(&mut self, id: Option<&Id>, bounds: Rectangle, state: &mut dyn Any) {
+        if let Some(control) = state.downcast_mut::<Control>() {
+            let mut checked = control::checked();
+            checked.custom(id, bounds, control);
+            if checked.get() == Some(true) {
+                self.selected = Some(self.count);
+            }
+            self.count += 1;
+        }
     }
 }

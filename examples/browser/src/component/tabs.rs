@@ -1,15 +1,11 @@
-// API Reference is rendered via the `tabs-api-reference.md` snippet at the
-// bottom of BLOCKS.
-//
-// Intentional skips:
-// - tabs-rtl — RTL is not in scope (per CLAUDE.md).
+// RTL is omitted under the component policy.
+mod demo;
 
 use iced::Task;
 
 use crate::icon;
-use icedcn::card;
-use icedcn::widget::{column, row, tabs, text};
-use icedcn::{Slot, Theme};
+use icedcn::Theme;
+use icedcn::widget::{container, row, tabs};
 
 use crate::Message;
 use crate::page;
@@ -27,37 +23,32 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/tabs-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/tabs-installation.md"),
+    page::Block::Md("examples/browser/snippets/tabs-usage.md"),
     page::Block::Md("examples/browser/snippets/tabs-composition.md"),
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "line",
-                title: "Line",
-                description: Some("Use `.line(true)` to underline the active tab."),
-                snippet: "examples/browser/snippets/tabs-line.md",
-            },
-            page::Block::Example {
-                id: "vertical",
-                title: "Vertical",
-                description: Some(
-                    "Use `.orientation(tabs::Orientation::Vertical)` for vertical tabs.",
-                ),
-                snippet: "examples/browser/snippets/tabs-vertical.md",
-            },
-            page::Block::Example {
-                id: "disabled",
-                title: "Disabled",
-                description: None,
-                snippet: "examples/browser/snippets/tabs-disabled.md",
-            },
-            page::Block::Example {
-                id: "icons",
-                title: "Icons",
-                description: None,
-                snippet: "examples/browser/snippets/tabs-icons.md",
-            },
-        ],
+    page::Block::Example {
+        id: "line",
+        title: "Line",
+        description: Some("Use `.line(true)` to underline the active tab."),
+        snippet: "examples/browser/snippets/tabs-line.md",
+    },
+    page::Block::Example {
+        id: "vertical",
+        title: "Vertical",
+        description: Some("Use `.orientation(tabs::Orientation::Vertical)` for vertical tabs."),
+        snippet: "examples/browser/snippets/tabs-vertical.md",
+    },
+    page::Block::Example {
+        id: "disabled",
+        title: "Disabled",
+        description: None,
+        snippet: "examples/browser/snippets/tabs-disabled.md",
+    },
+    page::Block::Example {
+        id: "icons",
+        title: "Icons",
+        description: None,
+        snippet: "examples/browser/snippets/tabs-icons.md",
     },
     page::Block::Md("examples/browser/snippets/tabs-api-reference.md"),
 ];
@@ -73,22 +64,6 @@ impl TabsPage {
             state: page::State::new(page_index, BLOCKS),
         })
     }
-}
-
-fn panel<'a>(title: &'a str, description: &'a str, body: &'a str) -> Slot<'a, Message> {
-    Slot::from(
-        card(
-            column![
-                card::header(title).description(description),
-                Slot::from(card::content(text::muted(body))),
-            ]
-            .spacing(16)
-            .padding([16, 0]),
-        )
-        .gap(0)
-        .padding(0)
-        .width(iced::Fill),
-    )
 }
 
 impl page::Page for TabsPage {
@@ -120,59 +95,16 @@ impl page::Page for TabsPage {
         self.state.reset_volatile();
     }
 
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: [24., 16.].into(),
+            ..Default::default()
+        }
+    }
+
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            "demo" => tabs(|t| {
-                column![
-                    t.list([
-                        t.trigger("overview", "Overview"),
-                        t.trigger("analytics", "Analytics"),
-                        t.trigger("reports", "Reports"),
-                        t.trigger("settings", "Settings"),
-                    ]),
-                    t.content(
-                        "overview",
-                        panel(
-                            "Overview",
-                            "View your key metrics and recent project activity. Track \
-                             progress across all your active projects.",
-                            "You have 12 active projects and 3 pending tasks.",
-                        ),
-                    ),
-                    t.content(
-                        "analytics",
-                        panel(
-                            "Analytics",
-                            "Track performance and user engagement metrics. Monitor trends \
-                             and identify growth opportunities.",
-                            "Page views are up 25% compared to last month.",
-                        ),
-                    ),
-                    t.content(
-                        "reports",
-                        panel(
-                            "Reports",
-                            "Generate and download your detailed reports. Export data in \
-                             multiple formats for analysis.",
-                            "You have 5 reports ready and available to export.",
-                        ),
-                    ),
-                    t.content(
-                        "settings",
-                        panel(
-                            "Settings",
-                            "Manage your account preferences and options. Customize your \
-                             experience to fit your needs.",
-                            "Configure notifications, security, and themes.",
-                        ),
-                    ),
-                ]
-                .spacing(8)
-                .into()
-            })
-            .default_value("overview")
-            .width(400)
-            .into(),
+            "demo" => container(demo::view()).center_y(336).into(),
 
             "line" => tabs(|t| {
                 t.list([

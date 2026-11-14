@@ -1,8 +1,10 @@
 //! Scoped focus traversal for controls that own their keyboard navigation.
 use super::scroll::Reveal;
-use iced_core::Rectangle;
-use iced_core::widget::operation::{self, Focusable, Outcome, focusable};
+use iced_core::widget::operation::{
+    self, Focusable, Outcome, Scrollable, Text, TextInput, focusable,
+};
 use iced_core::widget::{Id, Operation};
+use iced_core::{Rectangle, Size, Vector};
 use std::any::Any;
 
 /// Whether the focused control should show a keyboard focus indicator.
@@ -130,4 +132,84 @@ pub(crate) fn adjacent(count: focusable::Count, reverse: bool) -> Option<usize> 
         (Some(i), true) => i - 1,
         (Some(i), false) => (i + 1) % count.total,
     })
+}
+
+/// Expose the group's tab stop to global focus traversal while forwarding other operations.
+pub(crate) fn roving(
+    operation: &mut dyn Operation,
+    expose: impl Fn(usize) -> bool + Sync,
+    mut visit: impl FnMut(&mut dyn Operation),
+) -> Option<Rectangle> {
+    let mut entered = None;
+    visit(&mut Roving {
+        operation,
+        expose: &expose,
+        entered: &mut entered,
+        index: 0,
+        hidden: false,
+    });
+    entered
+}
+struct Roving<'a> {
+    operation: &'a mut dyn Operation,
+    expose: &'a (dyn Fn(usize) -> bool + Sync),
+    entered: &'a mut Option<Rectangle>,
+    index: usize,
+    hidden: bool,
+}
+impl Operation for Roving<'_> {
+    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+        let mut index = self.index;
+        let mut hidden = self.hidden;
+        self.operation.traverse(&mut |operation| {
+            let mut nested = Roving {
+                operation,
+                expose: self.expose,
+                entered: self.entered,
+                index,
+                hidden,
+            };
+            visit(&mut nested);
+            index = nested.index;
+            hidden = nested.hidden;
+        });
+        self.index = index;
+        self.hidden = hidden;
+    }
+    fn focusable(&mut self, id: Option<&Id>, bounds: Rectangle, state: &mut dyn Focusable) {
+        self.hidden = !(self.expose)(self.index);
+        if !self.hidden {
+            let focused = state.is_focused();
+            self.operation.focusable(id, bounds, state);
+            if !focused && state.is_focused() {
+                *self.entered = Some(bounds);
+            }
+        }
+        self.index += 1;
+    }
+    fn container(&mut self, id: Option<&Id>, bounds: Rectangle, viewport: &Rectangle) {
+        self.operation.container(id, bounds, viewport);
+    }
+    fn text(&mut self, id: Option<&Id>, bounds: Rectangle, state: &mut dyn Text) {
+        self.operation.text(id, bounds, state);
+    }
+    fn custom(&mut self, id: Option<&Id>, bounds: Rectangle, state: &mut dyn Any) {
+        if !self.hidden || !state.is::<Visible>() {
+            self.operation.custom(id, bounds, state);
+        }
+    }
+    fn scrollable(
+        &mut self,
+        id: Option<&Id>,
+        bounds: Rectangle,
+        content: Size,
+        translation: Vector,
+        state: &mut dyn Scrollable,
+    ) {
+        self.operation
+            .scrollable(id, bounds, content, translation, state);
+    }
+    fn text_input(&mut self, id: Option<&Id>, bounds: Rectangle, state: &mut dyn TextInput) {
+        self.operation.text_input(id, bounds, state);
+    }
 }

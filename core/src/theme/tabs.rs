@@ -38,10 +38,11 @@ pub fn trigger(theme: &Theme, status: button::Status, is_active: bool) -> button
     };
 
     let text_color = match status {
+        button::Status::Disabled if is_active => p.neutral.foreground.alpha(0.5),
         _ if is_active => p.neutral.foreground,
         button::Status::Hovered | button::Status::Pressed => p.neutral.foreground,
         button::Status::Active => idle_text,
-        button::Status::Disabled => idle_text.alpha(0.5),
+        button::Status::Disabled => idle_text.alpha(idle_text.a * 0.5),
     };
 
     if !is_active {

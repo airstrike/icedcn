@@ -33,6 +33,7 @@ pub struct Column<'a, Message> {
     max_width: f32,
     row_breakpoint: Option<f32>,
     reverse: bool,
+    stretch: bool,
     width: Length,
     height: Length,
     padding: Padding,
@@ -48,6 +49,7 @@ impl<'a, Message: 'a> Column<'a, Message> {
             max_width: f32::INFINITY,
             row_breakpoint: None,
             reverse: false,
+            stretch: false,
             width: Length::Shrink,
             height: Length::Shrink,
             padding: Padding::ZERO,
@@ -72,6 +74,12 @@ impl<'a, Message: 'a> Column<'a, Message> {
     /// Reverse vertical placement without changing keyboard traversal order.
     pub(crate) fn reverse(mut self) -> Self {
         self.reverse = true;
+        self
+    }
+
+    /// Stretch each child to the measured content width of this column.
+    pub(crate) fn stretch(mut self) -> Self {
+        self.stretch = true;
         self
     }
 
@@ -168,6 +176,7 @@ impl<'a, Message: 'a> Compose<Message> for Column<'a, Message> {
             max_width: self.max_width,
             row_breakpoint: self.row_breakpoint,
             reverse: self.reverse,
+            stretch: self.stretch,
             width: self.width,
             height: self.height,
             padding: self.padding,
@@ -188,6 +197,7 @@ struct ColumnWidget<'a, Message> {
     max_width: f32,
     row_breakpoint: Option<f32>,
     reverse: bool,
+    stretch: bool,
     width: Length,
     height: Length,
     padding: Padding,
@@ -254,6 +264,13 @@ impl<Message> Widget<Message, Theme, Renderer> for ColumnWidget<'_, Message> {
             &mut self.children,
             cache,
         );
+        if self.stretch {
+            let width = tree.size.width - self.padding.left - self.padding.right;
+            for (child, state) in self.children.iter_mut().zip(&mut tree.children) {
+                let size = iced_core::Size::new(width, state.size.height);
+                child.layout(state, renderer, &layout::Limits::new(size, size));
+            }
+        }
         if reverse {
             for child in &mut tree.children {
                 child.translation.y = tree.size.height
