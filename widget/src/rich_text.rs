@@ -260,7 +260,7 @@ impl<'a> RichText<'a> {
             content: (),
             bounds,
             size: self.size.unwrap_or_else(|| renderer.text_size()),
-            font: self.font.unwrap_or_else(|| renderer.font()),
+            font: self.font.unwrap_or_else(|| text::Renderer::font(renderer)),
             line_height: self.line_height,
             align_x: self.align_x,
             align_y: self.align_y,
