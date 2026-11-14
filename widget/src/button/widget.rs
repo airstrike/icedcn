@@ -116,8 +116,10 @@ where
     inset: Padding,
     clip: bool,
     translate: bool,
+    border_box: bool,
     interaction: Option<mouse::Interaction>,
     class: Theme::Class<'a>,
+    decoration: Option<Box<dyn Fn(&Theme, Status) -> (bool, f32) + 'a>>,
     status: Option<Status>,
 }
 
@@ -155,8 +157,10 @@ where
             inset: Padding::ZERO,
             clip: false,
             translate: true,
+            border_box: false,
             interaction: None,
             class: Theme::default(),
+            decoration: None,
             status: None,
         }
     }
@@ -189,9 +193,28 @@ where
         self
     }
 
+    /// Use the complete layout box for paint, as CSS border-box does.
+    /// Legacy vendored callers retain their reserved press clearance by default.
+    pub fn border_box(mut self, enabled: bool) -> Self {
+        self.border_box = enabled;
+        self
+    }
+
+    pub(super) fn decoration(
+        mut self,
+        decoration: impl Fn(&Theme, Status) -> (bool, f32) + 'a,
+    ) -> Self {
+        self.decoration = Some(Box::new(decoration));
+        self
+    }
+
     fn clearance(&self) -> Padding {
         // A transparent inset can already provide the pixel of press travel.
-        let travel: f32 = if self.translate { 1.0 } else { 0.0 };
+        let travel: f32 = if self.translate && !self.border_box {
+            1.0
+        } else {
+            0.0
+        };
         Padding {
             top: travel.max(self.inset.top),
             bottom: travel.max(self.inset.bottom),
@@ -306,6 +329,7 @@ struct State {
     is_pressed: bool,
     hover: crate::core::Animation<bool>,
     frame: Instant,
+    text: Vec<Rectangle>,
 }
 
 impl Default for State {
@@ -316,6 +340,7 @@ impl Default for State {
             was_focused: false,
             is_pressed: false,
             frame: Instant::now(),
+            text: Vec::new(),
             hover: crate::core::Animation::new(false)
                 .easing(crate::core::animation::Easing::Custom(
                     // cubic-bezier(0.4, 0, 0.2, 1) — shadcn's transition-all
@@ -338,6 +363,7 @@ impl operation::Focusable for State {
 
     fn unfocus(&mut self) {
         self.is_focused = false;
+        self.is_pressed = false;
     }
 }
 
@@ -365,6 +391,12 @@ where
 
     fn diff(&mut self, tree: &mut Tree) {
         tree.diff_children(std::slice::from_mut(&mut self.content));
+        if self.disabled {
+            let state = tree.state.downcast_mut::<State>();
+            state.is_focused = false;
+            state.is_pressed = false;
+            state.indicator.0 = false;
+        }
 
         let size = self.content.size();
         self.width = self.width.stack(size.width);
@@ -404,6 +436,20 @@ where
                 )
             },
         );
+        let mut text = Vec::new();
+        let local = Layout::new(tree.size);
+        let (child_layout, child) = local
+            .iter_mut(&mut tree.children)
+            .next()
+            .expect("Button content");
+        self.content.operate(
+            child,
+            child_layout,
+            &local.bounds(),
+            renderer,
+            &mut TextBounds(&mut text),
+        );
+        tree.state.downcast_mut::<State>().text = text;
     }
 
     fn operate(
@@ -514,6 +560,12 @@ where
                     shell.capture_event();
                 }
             }
+            Event::Window(window::Event::Unfocused) => {
+                let state = tree.state.downcast_mut::<State>();
+                state.is_pressed = false;
+                state.is_focused = false;
+                state.indicator.0 = false;
+            }
             Event::Touch(touch::Event::FingerLost { .. }) => {
                 let state = tree.state.downcast_mut::<State>();
 
@@ -558,7 +610,7 @@ where
             Status::Disabled
         } else if is_hovered && state.is_pressed {
             Status::Pressed
-        } else if state.is_focused {
+        } else if state.is_focused && state.indicator.0 {
             Status::Focused { is_hovered }
         } else if is_hovered {
             Status::Hovered
@@ -590,7 +642,7 @@ where
         let status = self.status.unwrap_or(Status::Disabled);
         let now = state.frame;
 
-        let style = if state.hover.is_animating(now) {
+        let style = if status != Status::Disabled && state.hover.is_animating(now) {
             // Keep a focused button's ring while its hover colors transition.
             let (active, hovered) = if matches!(status, Status::Focused { .. }) {
                 (
@@ -644,6 +696,12 @@ where
             theme.style(&self.class, status)
         };
 
+        let (underline, ring_offset) = self
+            .decoration
+            .as_ref()
+            .map(|f| f(theme, status))
+            .unwrap_or_default();
+
         // Rhea/Nova active:translate-y-px moves paint inside the reserved clearance.
         let press_y = if self.translate && status == Status::Pressed {
             1.0
@@ -655,13 +713,12 @@ where
 
         // Translate everything down by press_y
         renderer.with_translation(Vector::new(0.0, press_y), |renderer| {
-            if state.indicator.0
-                && let Some(ring) = style.ring
+            if let Some(ring) = style.ring
                 && ring.width > 0.
             {
                 renderer.fill_quad(
                     renderer::Quad {
-                        bounds: visual_bounds.expand(ring.width),
+                        bounds: visual_bounds.expand(ring.width + ring_offset),
                         border: ring,
                         snap: style.snap,
                         ..renderer::Quad::default()
@@ -701,6 +758,22 @@ where
                 cursor,
                 &viewport,
             );
+            if underline {
+                for text in &state.text {
+                    renderer.fill_quad(
+                        renderer::Quad {
+                            bounds: Rectangle {
+                                x: bounds.x + text.x,
+                                y: bounds.y + text.y + text.height - 1.0,
+                                width: text.width,
+                                height: 1.0,
+                            },
+                            ..renderer::Quad::default()
+                        },
+                        style.text_color,
+                    );
+                }
+            }
         });
     }
 
@@ -819,6 +892,16 @@ impl Default for Style {
             shadow: Shadow::default(),
             snap: cfg!(feature = "crisp"),
         }
+    }
+}
+
+struct TextBounds<'a>(&'a mut Vec<Rectangle>);
+impl Operation for TextBounds<'_> {
+    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+        visit(self);
+    }
+    fn text(&mut self, _: Option<&widget::Id>, bounds: Rectangle, _: &mut dyn operation::Text) {
+        self.0.push(bounds);
     }
 }
 

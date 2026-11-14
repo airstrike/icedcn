@@ -1,14 +1,18 @@
+use std::rc::Rc;
+
 use iced_core::Length;
 use iced_core::Length::Fill;
 use iced_core::Padding;
 use iced_core::alignment;
 use iced_core::border;
+use iced_core::mouse;
 use iced_widget::Widget;
 
 use crate::Size;
 use crate::compose::{Compose, Inherited, Slot};
 use icedxdy_core::Theme;
 use icedxdy_core::theme;
+use icedxdy_core::theme::button::state::{self, IntoStyle};
 
 use super::widget;
 
@@ -41,7 +45,7 @@ where
     Renderer: iced_core::Renderer,
     Theme: iced_widget::button::Catalog,
 {
-    content: Slot<'a, Message, Theme, Renderer>,
+    content: Vec<Slot<'a, Message, Theme, Renderer>>,
     size: Option<Size>,
     weight: crate::Weight,
     height: Option<f32>,
@@ -52,7 +56,13 @@ where
     inset: Padding,
     interaction: Option<iced_core::mouse::Interaction>,
     width: Option<Length>,
-    style: Theme::Class<'a>,
+    style: state::StyleFn<'a, Theme>,
+    nova: bool,
+    invalid: bool,
+    expanded: bool,
+    anchor: bool,
+    icon_start: bool,
+    icon_end: bool,
     focus_ring: Option<(f32, fn(&Theme) -> icedxdy_core::Color)>,
     on_press: Option<Message>,
     disabled: bool,
@@ -63,7 +73,7 @@ pub fn button<'a, Message: Clone + 'a>(
     content: impl Into<Slot<'a, Message>>,
 ) -> Button<'a, Message> {
     Button {
-        content: content.into(),
+        content: vec![content.into()],
         size: None,
         weight: crate::Weight::Medium,
         height: None,
@@ -74,7 +84,13 @@ pub fn button<'a, Message: Clone + 'a>(
         inset: Padding::ZERO,
         interaction: None,
         width: None,
-        style: Box::new(|t, s| theme::button::default(t, s).into()),
+        style: theme::button::Default.into_style(),
+        nova: true,
+        invalid: false,
+        expanded: false,
+        anchor: false,
+        icon_start: false,
+        icon_end: false,
         focus_ring: None,
         on_press: None,
         disabled: false,
@@ -82,6 +98,50 @@ pub fn button<'a, Message: Clone + 'a>(
 }
 
 impl<'a, Message: Clone + 'a> Button<'a, Message> {
+    /// Append inline content. The size variant supplies the gap between children.
+    pub fn push(mut self, content: impl Into<Slot<'a, Message>>) -> Self {
+        self.content.push(content.into());
+        self
+    }
+
+    /// Reserve Nova's reduced leading icon padding (`data-icon="inline-start"`).
+    pub fn icon_start(mut self) -> Self {
+        self.icon_start = true;
+        self
+    }
+
+    /// Reserve Nova's reduced trailing icon padding (`data-icon="inline-end"`).
+    pub fn icon_end(mut self) -> Self {
+        self.icon_end = true;
+        self
+    }
+
+    /// Apply the invalid border and ring. This does not disable the action.
+    pub fn invalid(mut self, invalid: bool) -> Self {
+        self.invalid = invalid;
+        self
+    }
+
+    /// Apply the expanded appearance of a popup trigger.
+    pub fn expanded(mut self, expanded: bool) -> Self {
+        self.expanded = expanded;
+        self
+    }
+
+    /// Mark a popup trigger, which does not translate while pressed.
+    pub fn has_popup(mut self, has_popup: bool) -> Self {
+        self.translate = !has_popup;
+        self
+    }
+
+    /// Style an anchor action (including primary hover) with a pointer cursor.
+    /// The caller supplies its destination message with `on_press`.
+    pub fn anchor(mut self) -> Self {
+        self.anchor = true;
+        self.interaction = Some(mouse::Interaction::Pointer);
+        self
+    }
+
     /// Set the size variant
     pub fn size(mut self, size: impl Into<Size>) -> Self {
         self.size = Some(size.into());
@@ -151,8 +211,9 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     }
 
     /// Set the style
-    pub fn style(mut self, style: impl Into<iced_widget::button::StyleFn<'a, Theme>>) -> Self {
-        self.style = style.into();
+    pub fn style<S: IntoStyle<'a>>(mut self, style: S) -> Self {
+        self.nova = style.uses_border_box();
+        self.style = style.into_style();
         self
     }
 
@@ -192,9 +253,12 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     where
         F: Fn(iced_widget::button::Style) -> iced_widget::button::Style + 'a,
     {
-        use iced_widget::button;
-        let prev = std::mem::replace(&mut self.style, Box::new(|_, _| button::Style::default()));
-        self.style = Box::new(move |t, s| transform(prev(t, s)));
+        let prev = std::mem::replace(&mut self.style, Box::new(|_, _| state::Style::default()));
+        self.style = Box::new(move |t, s| {
+            let mut resolved = prev(t, s);
+            resolved.paint = transform(resolved.paint);
+            resolved
+        });
         self
     }
 
@@ -225,15 +289,53 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
 {
     fn from(mut btn: Button<'a, Message>) -> Self {
         let size = btn.size.unwrap_or_default();
-        btn.content.inherit(
-            &Inherited::default()
-                .with_size(size)
-                .with_weight(btn.weight)
-                .with_selectable(false),
-        );
-
         let h = btn.size_height();
-        let content = btn.content.compose();
+        let line_height = match size {
+            Size::Xs => 16.0,
+            Size::Sm => 22.4,
+            _ => 20.0,
+        };
+        let mut inherited = Inherited::default()
+            .with_size(size)
+            .with_weight(btn.weight)
+            .with_selectable(false)
+            .with_disabled(btn.disabled);
+        if btn.nova {
+            inherited = inherited.with_line_height(line_height);
+        }
+        for child in &mut btn.content {
+            child.inherit(&inherited);
+        }
+        let content = if btn.content.len() == 1 {
+            btn.content.pop().expect("Button content").compose()
+        } else {
+            iced_widget::Row::with_children(btn.content.into_iter().map(Slot::compose))
+                .spacing(size.gap())
+                .align_y(alignment::Vertical::Center)
+                .boxed()
+        };
+        let mut padding = btn.padding.unwrap_or_else(|| size.padding());
+        if btn.nova {
+            // CSS height includes the border. Vertical layout centers the line box;
+            // horizontal padding reserves the transparent 1px border on each edge.
+            if btn.padding.is_none() {
+                padding.top = 1.0;
+                padding.bottom = 1.0;
+            }
+            let edge = if matches!(size, Size::Xs | Size::Sm) {
+                6.0
+            } else {
+                8.0
+            };
+            if btn.icon_start {
+                padding.left = edge;
+            }
+            if btn.icon_end {
+                padding.right = edge;
+            }
+            padding.left += 1.0;
+            padding.right += 1.0;
+        }
         let mut iced_btn = if btn.square {
             super::widget::Button::new(iced_widget::center(content))
                 .width(h)
@@ -261,12 +363,13 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
                 } else {
                     content
                 };
-            widget::Button::new(inner)
-                .height(h)
-                .padding(btn.padding.unwrap_or_else(|| size.padding()))
+            widget::Button::new(inner).height(h).padding(padding)
         };
 
-        iced_btn = iced_btn.translate(btn.translate).inset(btn.inset);
+        iced_btn = iced_btn
+            .translate(btn.translate)
+            .inset(btn.inset)
+            .border_box(btn.nova);
         if let Some(interaction) = btn.interaction {
             iced_btn = iced_btn.interaction(interaction);
         }
@@ -280,26 +383,51 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
         }
 
         let rounded = btn.rounded;
-        let bridge: super::widget::StyleFn<'a, Theme> =
-            Box::new(move |t: &Theme, s: super::widget::Status| {
-                let iced_status: iced_widget::button::Status = s.into();
-                let mut style: super::widget::Style = (btn.style)(t, iced_status).into();
-                if rounded {
-                    style.border.radius = (u32::MAX as f32).into();
-                }
-                if let Some((width, color)) = btn.focus_ring
-                    && matches!(s, widget::Status::Focused { .. })
-                {
-                    let mut radius = style.border.radius;
-                    radius.top_left += width;
-                    radius.top_right += width;
-                    radius.bottom_right += width;
-                    radius.bottom_left += width;
-                    style.ring = Some(border::width(width).color(color(t)).rounded(radius));
-                }
-                style
-            });
-        iced_btn = iced_btn.style(bridge);
+        let status = move |s| state::Status {
+            hovered: matches!(
+                s,
+                widget::Status::Hovered
+                    | widget::Status::Pressed
+                    | widget::Status::Focused { is_hovered: true }
+            ),
+            pressed: s == widget::Status::Pressed,
+            focused: matches!(s, widget::Status::Focused { .. }),
+            disabled: s == widget::Status::Disabled,
+            invalid: btn.invalid,
+            expanded: btn.expanded,
+            anchor: btn.anchor,
+            small: matches!(size, Size::Xs | Size::Sm),
+        };
+        let resolve: Rc<dyn Fn(&Theme, state::Status) -> state::Style + 'a> = Rc::from(btn.style);
+        let decorate = resolve.clone();
+        let bridge: widget::StyleFn<'a, Theme> = Box::new(move |t, s| {
+            let resolved = resolve(t, status(s));
+            let mut style: widget::Style = resolved.paint.into();
+            style.ring = resolved.ring;
+            if rounded {
+                style.border.radius = (u32::MAX as f32).into();
+            }
+            if let Some((width, color)) = btn.focus_ring
+                && matches!(s, widget::Status::Focused { .. })
+            {
+                style.ring = Some(border::width(width).color(color(t)));
+            }
+            if let Some(ring) = &mut style.ring {
+                let extent = ring.width + resolved.ring_offset;
+                let radius = style.border.radius;
+                ring.radius = border::Radius {
+                    top_left: radius.top_left + extent,
+                    top_right: radius.top_right + extent,
+                    bottom_left: radius.bottom_left + extent,
+                    bottom_right: radius.bottom_right + extent,
+                };
+            }
+            style
+        });
+        iced_btn = iced_btn.style(bridge).decoration(move |t, s| {
+            let resolved = decorate(t, status(s));
+            (resolved.underline, resolved.ring_offset)
+        });
 
         if let Some(on_press) = btn.on_press {
             iced_btn = iced_btn.on_press(on_press);
@@ -326,5 +454,64 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Button<'a, Message> {
         Self: 'b,
     {
         (*self).into()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use iced_widget::button;
+
+    fn stock(_: &Theme, _: button::Status) -> button::Style {
+        button::Style::default()
+    }
+
+    #[test]
+    fn existing_style_forms_compile_and_stock_fields_stay_exact() {
+        let callback: button::StyleFn<'_, Theme> = Box::new(stock);
+        let buttons: [Button<'_, ()>; 6] = [
+            super::button("stock").style(callback),
+            super::button("function").style(stock),
+            super::button("closure").style(|_: &Theme, _: button::Status| button::Style::default()),
+            super::button("boxed").style(Box::new(|_: &Theme, _: button::Status| {
+                button::Style::default()
+            })),
+            super::button("variant").style(theme::button::Outline),
+            super::button("spec").style(theme::button::Outline + icedxdy_core::radius(4)),
+        ];
+        for b in &buttons[..4] {
+            assert!(!b.nova);
+            let resolved = (b.style)(
+                &Theme::light(),
+                state::Status {
+                    focused: true,
+                    hovered: true,
+                    ..state::Status::default()
+                },
+            );
+            assert_eq!(resolved.paint, button::Style::default());
+            assert_eq!(resolved.ring, None);
+        }
+    }
+
+    #[test]
+    fn group_mapping_keeps_underlines_rings_and_mapped_corners() {
+        let b: Button<'_, ()> =
+            super::button("Link")
+                .style(theme::button::Link)
+                .map_style(|mut style| {
+                    style.border.radius.top_left = 0.0;
+                    style
+                });
+        let status = state::Status {
+            hovered: true,
+            focused: true,
+            ..state::Status::default()
+        };
+        let resolved = (b.style)(&Theme::light(), status);
+        assert!(resolved.underline);
+        assert_eq!(resolved.ring.expect("focus ring").width, 3.0);
+        assert_eq!(resolved.paint.border.radius.top_left, 0.0);
+        assert_eq!(resolved.paint.border.radius.top_right, 10.0);
     }
 }

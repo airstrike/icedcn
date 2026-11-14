@@ -1,58 +1,53 @@
-use iced::Widget;
-use iced::widget::responsive;
-use icedxdy::Size::*;
-use icedxdy::widget::{Row, button, column, container, row};
-use icedxdy::{Slot, Theme};
-
+use super::icons;
 use crate::Message;
-use crate::icon;
+use icedxdy::Size::*;
+use icedxdy::Slot;
+use icedxdy::widget::{Row, button, column, row};
 
-pub fn view<'a>() -> Slot<'a, Message> {
-    let layout = responsive(|bounds| -> iced::Element<'a, Message, Theme> {
-        let pairs: [Slot<'a, Message>; 4] = [
-            row![
-                button("Extra Small").style(button::Outline).size(Xs),
-                button(icon::arrow_up_right())
-                    .square()
-                    .style(button::Outline)
-                    .size(Xs),
-            ]
-            .spacing(8)
-            .into(),
-            row![
-                button("Small").style(button::Outline).size(Sm),
-                button(icon::arrow_up_right())
-                    .square()
-                    .style(button::Outline)
-                    .size(Sm),
-            ]
-            .spacing(8)
-            .into(),
-            row![
-                button("Default").style(button::Outline),
-                button(icon::arrow_up_right())
-                    .square()
-                    .style(button::Outline),
-            ]
-            .spacing(8)
-            .into(),
-            row![
-                button("Large").style(button::Outline).size(Lg),
-                button(icon::arrow_up_right())
-                    .square()
-                    .style(button::Outline)
-                    .size(Lg),
-            ]
-            .spacing(8)
-            .into(),
-        ];
-        let content: Slot<'a, Message> = if bounds.width < 520.0 {
-            column(pairs).spacing(32).into()
-        } else {
-            Row::with_children(pairs).spacing(32).into()
-        };
-        container(content).center(iced::Fill).into()
-    });
-    let layout: iced::Element<'a, Message, Theme> = layout.boxed();
-    layout.into()
+pub fn view<'a>(wide: bool) -> Slot<'a, Message> {
+    let pairs: [Slot<'a, Message>; 4] = [
+        row![
+            button("Extra Small").style(button::Outline).size(Xs),
+            button(icons::arrow_up_right(12.0))
+                .square()
+                .style(button::Outline)
+                .size(Xs),
+        ]
+        .spacing(8)
+        .into(),
+        row![
+            button("Small").style(button::Outline).size(Sm),
+            button(icons::arrow_up_right(16.0))
+                .square()
+                .style(button::Outline)
+                .size(Sm),
+        ]
+        .spacing(8)
+        .into(),
+        row![
+            button("Default").style(button::Outline),
+            button(icons::arrow_up_right(16.0))
+                .square()
+                .style(button::Outline),
+        ]
+        .spacing(8)
+        .into(),
+        row![
+            button("Large").style(button::Outline).size(Lg),
+            button(icons::arrow_up_right(16.0))
+                .square()
+                .style(button::Outline)
+                .size(Lg),
+        ]
+        .spacing(8)
+        .into(),
+    ];
+    if wide {
+        Row::with_children(pairs)
+            .spacing(32)
+            .align_y(iced::Top)
+            .into()
+    } else {
+        column(pairs).spacing(32).into()
+    }
 }

@@ -25,15 +25,16 @@ pub mod widget;
 
 pub use element::{Button, button};
 pub use group::ButtonGroup;
-pub use icedxdy_core::theme::button::{Default, Destructive, Ghost, Link, Outline, Secondary};
+pub use icedxdy_core::theme::button::{
+    Default, Destructive, Ghost, IntoStyle, Link, Outline, Secondary,
+};
 
 /// Create a button with one or more children.
 ///
 /// Two forms:
 /// - `button!("Submit")` — single child, defers to [`button`].
-/// - `button![child1, child2, ...]` — multiple children wrapped in a row
-///   and passed to [`button`]. Spacing comes from size propagation, not
-///   from the macro itself.
+/// - `button![child1, child2, ...]` — multiple children composed in an inline row.
+///   The button supplies the size variant's gap after inheritance.
 ///
 /// The variant is a style, set after the macro:
 ///
@@ -58,25 +59,12 @@ macro_rules! button {
     //
     // `button![arrow_up, "Submit"]` => button(row![icon::arrow_up(), "Submit"])
     ($first:ident, $($rest:expr),+ $(,)?) => {
-        $crate::button::button(
-            $crate::compose::Slot::new(
-                $crate::row::Row::with_children([
-                    Into::<$crate::compose::Slot<'_, _>>::into(icon::$first()),
-                    $(Into::<$crate::compose::Slot<'_, _>>::into($rest)),+
-                ])
-            )
-        )
+        $crate::button::button(icon::$first())$(.push($rest))+
     };
-    // Multi-arg arm — wraps children in a row.
-    ($($child:expr),+ $(,)?) => {
-        $crate::button::button(
-            $crate::compose::Slot::new(
-                $crate::row::Row::with_children([
-                    $(Into::<$crate::compose::Slot<'_, _>>::into($child)),+
-                ])
-            )
-        )
+    ($first:expr, $($rest:expr),+ $(,)?) => {
+        $crate::button::button($first)$(.push($rest))+
     };
+
 }
 
 #[cfg(test)]

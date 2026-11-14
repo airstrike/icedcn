@@ -7,7 +7,9 @@
 //! types happens once at the catalog boundary (`From<Style> for
 //! iced::Style`).
 
+pub mod state;
 pub use iced_widget::button::Status;
+pub use state::IntoStyle;
 
 use std::ops::Add;
 
@@ -431,13 +433,19 @@ pub struct Link;
 #[derive(Debug, Clone)]
 pub struct Spec {
     variant: fn(&Theme, Status) -> Style,
+    kind: state::Variant,
     tweaks: TweakSet,
 }
 
 impl Spec {
     pub(crate) fn variant(f: fn(&Theme, Status) -> Style) -> Spec {
+        Self::with_kind(f, state::Variant::Custom)
+    }
+
+    fn with_kind(f: fn(&Theme, Status) -> Style, kind: state::Variant) -> Spec {
         Spec {
             variant: f,
+            kind,
             tweaks: TweakSet::default(),
         }
     }
@@ -461,49 +469,49 @@ impl Spec {
 
 impl From<Default> for Spec {
     fn from(_: Default) -> Spec {
-        Spec::variant(default)
+        Spec::with_kind(default, state::Variant::Default)
     }
 }
 
 impl From<Secondary> for Spec {
     fn from(_: Secondary) -> Spec {
-        Spec::variant(secondary)
+        Spec::with_kind(secondary, state::Variant::Secondary)
     }
 }
 
 impl From<Outline> for Spec {
     fn from(_: Outline) -> Spec {
-        Spec::variant(outline)
+        Spec::with_kind(outline, state::Variant::Outline)
     }
 }
 
 impl From<Ghost> for Spec {
     fn from(_: Ghost) -> Spec {
-        Spec::variant(ghost)
+        Spec::with_kind(ghost, state::Variant::Ghost)
     }
 }
 
 impl From<Destructive> for Spec {
     fn from(_: Destructive) -> Spec {
-        Spec::variant(destructive)
+        Spec::with_kind(destructive, state::Variant::Destructive)
     }
 }
 
 impl From<Sidebar> for Spec {
     fn from(_: Sidebar) -> Spec {
-        Spec::variant(sidebar)
+        Spec::with_kind(sidebar, state::Variant::Sidebar)
     }
 }
 
 impl From<SidebarActive> for Spec {
     fn from(_: SidebarActive) -> Spec {
-        Spec::variant(sidebar_active)
+        Spec::with_kind(sidebar_active, state::Variant::SidebarActive)
     }
 }
 
 impl From<Link> for Spec {
     fn from(_: Link) -> Spec {
-        Spec::variant(link)
+        Spec::with_kind(link, state::Variant::Link)
     }
 }
 
@@ -622,7 +630,8 @@ fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme, status: Status) {
             }
         }
         // CSS-style cascade: tweaks that don't apply to button styling are
-        // silently dropped. Ring rendering is deferred to Phase 5.
+        // silently dropped by the stock compatibility resolver. The rich
+        // Button state resolver preserves ring and focus tweaks.
         Tweak::Ring { .. }
         | Tweak::Size(_)
         | Tweak::Weight(_)

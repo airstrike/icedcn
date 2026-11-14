@@ -1,56 +1,28 @@
-## API Reference
+### Button
 
-### `button()`
+`button(content)` creates a Button from any `impl Into<Slot>`. `button![icon, "Label"]` composes inline children with the size variant's gap. Application messages belong in `on_press`; without a handler, the button stays enabled and can serve as an owner's trigger.
 
-Constructor for a `Button`. The single-arg constructor takes any `impl Into<Slot>`; the `button!` macro wraps multiple children in a row. The variant is a style: `.style(button::Outline)`.
-
-| Builder | Type | Default | Description |
+| Source prop / Rust builder | Type | Default | Behavior |
 | --- | --- | --- | --- |
-| `.size(size)` | `impl Into<Size>` | `Size::Default` | Size variant: `Xs`, `Sm`, `Default`, `Lg`. Drives both the button height and the propagated text/icon sizes. |
-| `.square()` | — | — | Make the button square (icon-only). Width matches the size variant's height. |
-| `.rounded()` | — | — | Pill-shaped (`rounded-full`). Combine with `.square()` for a circular icon button. |
-| `.style(style)` | `impl Into<button::StyleFn>` | `button::Default` | Override the button's style — accepts variant unit structs (`Outline`, `Secondary`, `Ghost`, `Destructive`, `Link`) or a hand-rolled `Spec`. |
-| `.on_press(message)` | `Message` | `None` | Publish `message` when the button is activated. A button without a message stays enabled and can still act as a trigger. |
-| `.disabled(bool)` | `bool` | `false` | Disable the button (`disabled:opacity-50`, no input, skipped by focus). A disabled ancestor disables it too. |
-| `.weight(weight)` | `impl Into<Weight>` | propagated | Override the inherited font weight. |
-| `.translate(bool)` | `bool` | `true` | Gates the 1px press-down effect (matches shadcn's `active:translate-y-px`). |
-| `.interaction(interaction)` | `iced::mouse::Interaction` | size-dependent default | Per-button cursor override (Pointer for navigation, NotAllowed for soft-disabled, etc.). |
-| `.inset(padding)` | `impl Into<Padding>` | `Padding::ZERO` | Transparent margin between the button's hit-test bounds and painted bg/border. Lets a parent column keep `spacing(0)` so adjacent buttons hover continuously while the visible fills sit apart by `inset.top + inset.bottom` (likewise horizontally). Used by sidebar items. |
+| `variant` / `.style(style)` | `button::IntoStyle` | `button::Default` | `Default`, `Outline`, `Secondary`, `Ghost`, `Destructive`, `Link`, or a tweaked `Spec`. Link adds its underline on hover. |
+| `size` / `.size(size)` | `impl Into<Size>` | `Size::Default` | `Xs` 24px, `Sm` 28px, default 32px, `Lg` 36px. Text and gaps inherit the chosen size. |
+| Icon sizes / `.square()` | — | `false` | Combine with `Xs`, `Sm`, default or `Lg` for 24/28/32/36px square controls. Set an embedded SVG to 12px for icon-xs and 16px for the others. |
+| `asChild` / `.anchor()` | — | `false` | Navigation appearance and pointer cursor; pair with `.on_press(Message::OpenUrl(...))`. The application opens the destination in `update`. Owner handles such as `d.close(button(...))` provide native as-child triggers through Compose. |
+| `.on_press(message)` | `Message` | `None` | Publish on activation. Handler presence does not determine enabled state. |
+| `.disabled(disabled)` | `bool` | `false` | Half-opacity paint, no input and no focus traversal. Disabled ancestors also disable the control. |
+| `.rounded()` | — | `false` | Pill or circular outline. |
+| `.icon_start()` / `.icon_end()` | — | `false` | Reduce the corresponding padding for an inline icon or spinner, matching the source's `data-icon` attribute. |
+| `.invalid(invalid)` | `bool` | `false` | Destructive border and ring, including dark-theme treatment. |
+| `.expanded(expanded)` | `bool` | `false` | Expanded appearance for Outline, Ghost and Secondary. |
+| `.has_popup(has_popup)` | `bool` | `false` | Suppress the 1px active translation for a popup trigger. |
+| `.translate(translate)` | `bool` | `true` | Enable or suppress the 1px press translation. |
+| `.weight(weight)` | `impl Into<Weight>` | `Weight::Medium` | Cascades to composed text. |
+| `.interaction(cursor)` | `iced::mouse::Interaction` | Default arrow | Override the pointer affordance. |
+| `.height(height)` | `impl Into<Pixels>` | Size height | Override height while retaining typography. |
+| `.width(width)` | `impl Into<Length>` | Intrinsic | Fill or constrain the control; content is centered for `Fill`. Squares keep equal width and height. |
+| `.padding(padding)` | `impl Into<Padding>` | Size padding | Override content padding. Nova adds the 1px border outside horizontal padding. |
+| `.inset(padding)` | `impl Into<Padding>` | Zero | Separate the painted surface from the hitbox. |
+| `.focus_ring(width, color)` | Pixels, theme function | Variant ring | Override the keyboard-focus ring. |
+| `.map_style(transform)` | Stock Style → Stock Style | Identity | Transform stock paint fields while retaining rich underline/ring information. Button Group uses this to join corners. |
 
-### Variants
-
-shadcn's `variant` prop is a style. The unit structs live at `button::*`, take tweaks (`button::Outline + Bg(...)`) and work with the macro too.
-
-| Style | Variant |
-| --- | --- |
-| `button(...)` | `Default` (primary). |
-| `.style(button::Secondary)` | `Secondary`. |
-| `.style(button::Outline)` | `Outline`. |
-| `.style(button::Ghost)` | `Ghost`. |
-| `.style(button::Destructive)` | `Destructive`. |
-| `.style(button::Link)` | `Link` (text-only, primary color). |
-| `.square()` | shadcn's `size="icon"`: width matches the size's height. |
-
-### `button!`
-
-Wraps multiple children in a `Row` so labels and icons land side by side without manual layout. The leading-ident form rewrites `name` to `icon::name()` at the call site (so `use crate::icon;` must be in scope).
-
-| Macro | Description |
-| --- | --- |
-| `button!["Submit"]` | Single child. |
-| `button![icon::git_branch(), "New Branch"]` | Icon on the left. |
-| `button![git_branch, "Branch"]` | Leading-ident sugar — equivalent to the previous form. |
-| `button![git_branch, "Branch"].style(button::Outline)` | Any variant, set after the macro. |
-
-### `Size`
-
-| Variant | Height | Notes |
-| --- | --- | --- |
-| `Size::Xs` | 24px | Mirrors shadcn's `xs` size variant. |
-| `Size::Sm` | 28px | Mirrors shadcn's `sm` size variant. |
-| `Size::Default` | 32px | Default. Matches shadcn's `h-8`. |
-| `Size::Lg` | 36px | Mirrors shadcn's `lg` size variant. |
-
-Combine `.size(Sm)` + `.square()` to reproduce shadcn's `icon-sm` size, etc.
-
-Restyle via the variant styles above or the `core::theme::button::*` style functions. shadcn's `asChild` triggers (`CollapsibleTrigger`, `DialogClose`) wrap a button through the owner's handle: `c.trigger(button(...))`.
+Stock `iced::widget::button::StyleFn` callbacks and typed closures remain supported. Their paint is retained without guessing a variant from its colors; they do not acquire an underline or focus ring automatically. Variant tags and `Spec` preserve that information before conversion. The legacy stock callback geometry remains unchanged.

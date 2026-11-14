@@ -1,3 +1,5 @@
 ```rust
-button("Login").interaction(iced::mouse::Interaction::Pointer).on_press(crate::Message::OpenUrl("https://ui.shadcn.com/login"))
+use icedxdy::widget::button;
+
+button("Login").anchor().on_press(Message::OpenUrl("https://ui.shadcn.com/login"))
 ```
