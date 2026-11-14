@@ -194,7 +194,7 @@ fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme) {
 
 // Alert reuses iced's container widget; its intrinsic supplies the card
 // surface that Tint alone can't address. Tag inner closures only contribute
-// destructive text/border overlays.
+// destructive text overlays; both variants keep the neutral border.
 
 /// Alert intrinsic default in the universal Style shape — card surface,
 /// 1px neutral border, LG radius, card foreground text.
@@ -214,11 +214,8 @@ fn default_impl(_p: Palette, _s: status::Status) -> style::Style {
 }
 
 fn destructive_impl(p: Palette, _s: status::Status) -> style::Style {
-    // shadcn nova: light keeps destructive border at 0.5 alpha; dark uses full.
-    let border = if p.is_dark { p.base } else { p.base.alpha(0.5) };
     style::Style {
         text_color: Some(p.base),
-        border_color: Some(border),
         ..style::Style::default()
     }
 }
@@ -250,8 +247,31 @@ where
         let user = (sf.inner)(palette, status::Status::Active);
         let default = intrinsic_default(theme);
         let merged = default + user;
-        super::container::project_container(merged)
+        border_over_background(super::container::project_container(merged))
     })
+}
+
+// iced replaces the fill with the border at the edge of a quad. CSS paints
+// the background underneath the border, so resolve that source-over color
+// here in sRGB, after the Alert's background and border tweaks have resolved.
+// Keep the combined alpha so translucent custom fills still blend correctly.
+fn border_over_background(
+    mut style: iced_widget::container::Style,
+) -> iced_widget::container::Style {
+    if let Some(iced_core::Background::Color(bg)) = style.background {
+        let border = style.border.color;
+        if border.a < 1.0 && bg.a > 0.0 {
+            let remaining = bg.a * (1.0 - border.a);
+            let alpha = border.a + remaining;
+            style.border.color = iced_core::Color::from_rgba(
+                (border.r * border.a + bg.r * remaining) / alpha,
+                (border.g * border.a + bg.g * remaining) / alpha,
+                (border.b * border.a + bg.b * remaining) / alpha,
+                alpha,
+            );
+        }
+    }
+    style
 }
 
 // --- Bridge to iced::container::StyleFn --------------------------------------
@@ -272,13 +292,13 @@ impl<'a> From<Destructive> for iced_widget::container::StyleFn<'a, Theme> {
 
 impl<'a> From<Spec> for iced_widget::container::StyleFn<'a, Theme> {
     fn from(spec: Spec) -> Self {
-        Box::new(move |t| spec.resolve(t).into())
+        Box::new(move |t| border_over_background(spec.resolve(t).into()))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::tweak::{Bg, Token};
+    use super::super::tweak::{Alpha, Bg, Token};
     use super::*;
     use crate::{Background, Color};
 
@@ -317,6 +337,54 @@ mod tests {
                 && (bg.c - expected.c).abs() < 1e-4
                 && (bg.a - expected.a).abs() < 1e-4,
             "expected primary.base, got {bg:?}",
+        );
+    }
+
+    #[test]
+    fn neutral_border_covers_the_card_in_both_variant_bridges() {
+        for theme in [Theme::light(), Theme::dark()] {
+            let card: iced_core::Color = theme.card.base.into();
+            let border: iced_core::Color = theme.neutral.border.into();
+            let styles: [iced_widget::container::StyleFn<'_, Theme>; 4] = [
+                Default.into(),
+                Destructive.into(),
+                Spec::from(Default).into(),
+                Spec::from(Destructive).into(),
+            ];
+            for style in styles {
+                let painted = style(&theme);
+                let expected = iced_core::Color::from_rgb(
+                    border.r * border.a + card.r * (1.0 - border.a),
+                    border.g * border.a + card.g * (1.0 - border.a),
+                    border.b * border.a + card.b * (1.0 - border.a),
+                );
+                assert_eq!(painted.border.color, expected);
+                assert_eq!(painted.background, Some(card.into()));
+                assert_eq!(painted.border.width, 1.0);
+            }
+        }
+    }
+
+    #[test]
+    fn border_compositing_respects_translucent_background_tweaks() {
+        let theme = Theme::dark();
+        let bg = iced_core::Color::from_rgba(0.2, 0.4, 0.6, 0.5);
+        let border = iced_core::Color::from_rgba(0.8, 0.6, 0.4, 0.25);
+        let spec =
+            Default + Bg(Color::from(bg).into()) + Tweak::BorderColor(Color::from(border).into());
+        let style: iced_widget::container::StyleFn<'_, Theme> = spec.into();
+        let painted = style(&theme);
+        let expected = iced_core::Color::from_rgba(0.44, 0.48, 0.52, 0.625);
+        let actual = painted.border.color;
+        assert!((actual.r - expected.r).abs() < 1e-5);
+        assert!((actual.g - expected.g).abs() < 1e-5);
+        assert!((actual.b - expected.b).abs() < 1e-5);
+        assert_eq!(actual.a, expected.a);
+
+        let transparent: iced_widget::container::StyleFn<'_, Theme> = (Default + Alpha(0.0)).into();
+        assert_eq!(
+            transparent(&theme).border.color,
+            theme.neutral.border.into()
         );
     }
 }
