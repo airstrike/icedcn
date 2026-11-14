@@ -97,13 +97,17 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "group-count",
                 title: "Avatar Group Count",
-                description: Some("Use `.count(...)` to show how many additional avatars the group represents."),
+                description: Some(
+                    "Use `.count(...)` to show how many additional avatars the group represents.",
+                ),
                 snippet: "examples/browser/snippets/avatar-group-count.md",
             },
             page::Block::Example {
                 id: "group-count-icon",
                 title: "Avatar Group with Icon",
-                description: Some("Pass an icon to `.count(...)` to show it at the end of the group."),
+                description: Some(
+                    "Pass an icon to `.count(...)` to show it at the end of the group.",
+                ),
                 snippet: "examples/browser/snippets/avatar-group-count-icon.md",
             },
             page::Block::Example {

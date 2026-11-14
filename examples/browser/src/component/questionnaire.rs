@@ -22,7 +22,9 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "multiple",
         title: "Multiple Selection",
-        description: Some("Use `.multiple(true)` on an item that accepts more than one fixed answer."),
+        description: Some(
+            "Use `.multiple(true)` on an item that accepts more than one fixed answer.",
+        ),
         snippet: "examples/browser/snippets/questionnaire-multiple.md",
     },
     page::Block::Example {
@@ -36,9 +38,7 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "skip",
         title: "Explicit Skip",
-        description: Some(
-            "Use `.allow_skip(true)` to let the user skip an optional item.",
-        ),
+        description: Some("Use `.allow_skip(true)` to let the user skip an optional item."),
         snippet: "examples/browser/snippets/questionnaire-skip.md",
     },
     page::Block::Example {
@@ -88,7 +88,9 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "progress",
         title: "Custom Progress",
-        description: Some("Pass a closure to `.progress(...)` to build an indicator from the current question number and total."),
+        description: Some(
+            "Pass a closure to `.progress(...)` to build an indicator from the current question number and total.",
+        ),
         snippet: "examples/browser/snippets/questionnaire-progress.md",
     },
     page::Block::Example {

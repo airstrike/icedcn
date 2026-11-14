@@ -56,9 +56,7 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "disabled",
                 title: "Disabled",
-                description: Some(
-                    "Set `.disabled(true)` on an item to disable its trigger.",
-                ),
+                description: Some("Set `.disabled(true)` on an item to disable its trigger."),
                 snippet: "examples/browser/snippets/accordion-disabled.md",
             },
             page::Block::Example {
@@ -72,7 +70,9 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "card",
                 title: "Card",
-                description: Some("Place the accordion in `card::content(...)` below the card header."),
+                description: Some(
+                    "Place the accordion in `card::content(...)` below the card header.",
+                ),
                 snippet: "examples/browser/snippets/accordion-card.md",
             },
         ],

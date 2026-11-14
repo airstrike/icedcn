@@ -60,7 +60,9 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "custom",
                 title: "Custom Items",
-                description: Some("Use `.description(...)` to show more information alongside each item’s label."),
+                description: Some(
+                    "Use `.description(...)` to show more information alongside each item’s label.",
+                ),
                 snippet: "examples/browser/snippets/combobox-custom.md",
             },
             page::Block::Example {

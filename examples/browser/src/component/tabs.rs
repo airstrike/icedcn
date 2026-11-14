@@ -35,15 +35,15 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "line",
                 title: "Line",
-                description: Some(
-                    "Use `.line(true)` to underline the active tab.",
-                ),
+                description: Some("Use `.line(true)` to underline the active tab."),
                 snippet: "examples/browser/snippets/tabs-line.md",
             },
             page::Block::Example {
                 id: "vertical",
                 title: "Vertical",
-                description: Some("Use `.orientation(tabs::Orientation::Vertical)` for vertical tabs."),
+                description: Some(
+                    "Use `.orientation(tabs::Orientation::Vertical)` for vertical tabs.",
+                ),
                 snippet: "examples/browser/snippets/tabs-vertical.md",
             },
             page::Block::Example {

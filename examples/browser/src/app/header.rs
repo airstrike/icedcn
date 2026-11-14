@@ -261,10 +261,7 @@ impl App {
             }
             None
         };
-        let toolbar = tools
-            .push(github.into())
-            .push(divider())
-            .push(theme.into());
+        let toolbar = tools.push(github.into()).push(divider()).push(theme.into());
         let mut layers = stack![Element::from(toolbar), Element::from(fonts)];
         if let Some(search) = hidden_search {
             layers = layers.push(Element::from(search));

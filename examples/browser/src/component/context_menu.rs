@@ -52,7 +52,9 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "shortcuts",
                 title: "Shortcuts",
-                description: Some("Add `.shortcut(...)` to show a keyboard hint beside a menu item."),
+                description: Some(
+                    "Add `.shortcut(...)` to show a keyboard hint beside a menu item.",
+                ),
                 snippet: "examples/browser/snippets/context-menu-shortcuts.md",
             },
             page::Block::Example {
@@ -70,7 +72,9 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "checkboxes",
                 title: "Checkboxes",
-                description: Some("Use `menu::checkbox_item(...)` for choices that toggle independently."),
+                description: Some(
+                    "Use `menu::checkbox_item(...)` for choices that toggle independently.",
+                ),
                 snippet: "examples/browser/snippets/context-menu-checkboxes.md",
             },
             page::Block::Example {
@@ -82,9 +86,7 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "destructive",
                 title: "Destructive",
-                description: Some(
-                    "Use `.style(menu::Destructive)` for a destructive action.",
-                ),
+                description: Some("Use `.style(menu::Destructive)` for a destructive action."),
                 snippet: "examples/browser/snippets/context-menu-destructive.md",
             },
         ],
