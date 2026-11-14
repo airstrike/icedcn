@@ -70,6 +70,25 @@ fn stock_style_keeps_legacy_layout_and_square_dimensions_stay_exact() {
 }
 
 #[test]
+fn intrinsic_button_centers_its_child_line_box_at_each_size() {
+    for size in [Xs, Sm, Default, Lg] {
+        let id = Id::unique();
+        let label = container(Space::new().width(40).height(16)).id(id.clone());
+        let b = button(label).size(size);
+        let mut ui: Preview<'_> = Simulator::with_size(
+            Settings::default(),
+            Size::new(300., 100.),
+            Element::from(b),
+        );
+        next(&mut ui);
+        let outer = ui.find(selector::is_focused()).expect("button").bounds();
+        let inner = ui.find(id).expect("label").bounds();
+        assert_eq!(inner.height, 16.);
+        assert_eq!(inner.center_y(), outer.center_y());
+    }
+}
+
+#[test]
 fn explicit_width_centers_nova_content_at_roomy_and_narrow_widths() {
     for available in [300.0, 260.0] {
         for width in [Length::Fixed(200.0), Length::FillPortion(1)] {

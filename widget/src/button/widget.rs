@@ -425,7 +425,11 @@ where
             self.height,
             padding,
             |tree, limits| {
-                self.content.layout(tree, renderer, limits);
+                // The button owns its height. Measure the child at its natural
+                // height before centering it in the padded content box.
+                let mut child_limits = *limits;
+                child_limits.min.height = 0.0;
+                self.content.layout(tree, renderer, &child_limits);
 
                 tree.size
             },
