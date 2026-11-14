@@ -1,13 +1,14 @@
 ```rust
+use iced::{Center, Pixels};
 use icedxdy::Vertical;
 use icedxdy::widget::{row, separator, text};
 
 row![
-    text::small("Blog"),
+    text::small("Blog").line_height(Pixels(20.0)),
     separator().orientation(Vertical),
-    text::small("Docs"),
+    text::small("Docs").line_height(Pixels(20.0)),
     separator().orientation(Vertical),
-    text::small("Source"),
+    text::small("Source").line_height(Pixels(20.0)),
 ]
 .spacing(16)
 .height(20)

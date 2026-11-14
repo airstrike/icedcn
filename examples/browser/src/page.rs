@@ -243,6 +243,9 @@ pub trait Page: Send {
     fn update(&mut self, message: Message) -> Task<super::Message>;
     fn preview(&self, id: &str) -> iced::Element<'_, super::Message, Theme>;
 
+    /// Update the window width used by viewport-dependent example recipes.
+    fn window_width(&mut self, _width: f32) {}
+
     fn backdrop(&self) -> Backdrop {
         Backdrop::default()
     }

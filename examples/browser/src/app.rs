@@ -153,8 +153,10 @@ impl App {
             trace::TracePage::new,
         ];
 
+        let width = 1440.;
         for (i, ctor) in constructors.into_iter().enumerate() {
-            let page = ctor(i);
+            let mut page = ctor(i);
+            page.window_width(width);
             tasks.push(page.init());
             pages.push(page);
         }
@@ -186,7 +188,7 @@ impl App {
         (
             Self {
                 dark_mode,
-                width: 1440.,
+                width,
                 search: false,
                 fonts_open: false,
                 stars: None,
@@ -227,6 +229,9 @@ impl App {
         match message {
             Message::Width(width) => {
                 self.width = width;
+                for page in &mut self.pages {
+                    page.window_width(width);
+                }
                 Task::none()
             }
             Message::ToggleTheme => {

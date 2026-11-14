@@ -1,8 +1,9 @@
-// Intentional skips per CLAUDE.md: separator-rtl (RTL).
+// Intentional skip per AGENTS.md: separator-rtl (RTL).
 
-use iced::Task;
+use iced::widget::responsive;
+use iced::{Center, Fill, Length, Pixels, Shrink, Task, Widget};
 
-use icedxdy::widget::{column, row, separator, space, text};
+use icedxdy::widget::{Column, column, container, row, separator, space, text};
 use icedxdy::{Slot, Theme, Vertical, theme};
 
 use crate::Message;
@@ -20,59 +21,64 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/separator-demo.md",
     },
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "vertical",
-                title: "Vertical",
-                description: Some("Use `.orientation(Vertical)` for a vertical separator."),
-                snippet: "examples/browser/snippets/separator-vertical.md",
-            },
-            page::Block::Example {
-                id: "menu",
-                title: "Menu",
-                description: Some("Vertical separators between menu items with descriptions."),
-                snippet: "examples/browser/snippets/separator-menu.md",
-            },
-            page::Block::Example {
-                id: "list",
-                title: "List",
-                description: Some("Horizontal separators between list items."),
-                snippet: "examples/browser/snippets/separator-list.md",
-            },
-        ],
+    page::Block::Md("examples/browser/snippets/separator-installation.md"),
+    page::Block::Md("examples/browser/snippets/separator-usage.md"),
+    page::Block::Example {
+        id: "vertical",
+        title: "Vertical",
+        description: Some("Use `.orientation(Vertical)` for a vertical separator."),
+        snippet: "examples/browser/snippets/separator-vertical.md",
+    },
+    page::Block::Example {
+        id: "menu",
+        title: "Menu",
+        description: Some("Vertical separators between menu items with descriptions."),
+        snippet: "examples/browser/snippets/separator-menu.md",
+    },
+    page::Block::Example {
+        id: "list",
+        title: "List",
+        description: Some("Horizontal separators between list items."),
+        snippet: "examples/browser/snippets/separator-list.md",
     },
     page::Block::Md("examples/browser/snippets/separator-api-reference.md"),
 ];
 
 pub struct SeparatorPage {
     state: page::State,
+    wide: bool,
 }
 
 impl SeparatorPage {
     pub fn new(page_index: usize) -> Box<dyn page::Page> {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
+            wide: true,
         })
     }
 }
 
 /// A menu entry: a medium title over an `text-xs` muted description.
-fn menu_item<'a>(title: &'a str, description: &'a str) -> Slot<'a, Message> {
+fn menu_item<'a>(title: &'a str, description: &'a str) -> Column<'a, Message> {
     column![
-        text::small(title).medium(),
-        text::xs(description).style(theme::text::Muted),
+        text::small(title).medium().line_height(Pixels(20.0)),
+        text::xs(description)
+            .line_height(Pixels(16.0))
+            .wrapping(text::Wrapping::Word)
+            .style(theme::text::Muted),
     ]
     .spacing(4)
-    .into()
 }
 
 /// A `<dl>` row: the term on the left, its muted value on the right.
 fn list_item<'a>(term: &'a str, value: &'a str) -> Slot<'a, Message> {
-    row![text::small(term), space::horizontal(), text::muted(value)]
-        .width(iced::Fill)
-        .into()
+    row![
+        text::small(term).line_height(Pixels(20.0)),
+        space::horizontal(),
+        text::muted(value).line_height(Pixels(20.0)),
+    ]
+    .width(Fill)
+    .into()
 }
 
 impl page::Page for SeparatorPage {
@@ -100,6 +106,10 @@ impl page::Page for SeparatorPage {
         self.state.update(&event)
     }
 
+    fn window_width(&mut self, width: f32) {
+        self.wide = width >= 768.0;
+    }
+
     fn reset_volatile(&mut self) {
         self.state.reset_volatile();
     }
@@ -109,44 +119,65 @@ impl page::Page for SeparatorPage {
             // shadcn `separator-demo.tsx`.
             "demo" => column![
                 column![
-                    text::label("shadcn/ui"),
-                    text::muted("The Foundation for your Design System"),
+                    text::label("shadcn/ui").height(14),
+                    text::muted("The Foundation for your Design System").line_height(Pixels(20.0)),
                 ]
                 .spacing(6),
                 separator(),
                 text::small(
                     "A set of beautifully designed components that you can customize, \
                      extend, and build on.",
-                ),
+                )
+                .line_height(Pixels(20.0)),
             ]
             .spacing(16)
+            .width(Fill)
             .max_width(384.0)
             .into(),
 
             // shadcn `separator-vertical.tsx`: `flex h-5 items-center gap-4`.
             "vertical" => row![
-                text::small("Blog"),
+                text::small("Blog").line_height(Pixels(20.0)),
                 separator().orientation(Vertical),
-                text::small("Docs"),
+                text::small("Docs").line_height(Pixels(20.0)),
                 separator().orientation(Vertical),
-                text::small("Source"),
+                text::small("Source").line_height(Pixels(20.0)),
             ]
             .spacing(16)
             .height(20)
-            .align_y(iced::Center)
+            .align_y(Center)
             .into(),
 
-            // shadcn `separator-menu.tsx` at its `md:` breakpoint.
-            "menu" => row![
-                menu_item("Settings", "Manage preferences"),
-                separator().orientation(Vertical),
-                menu_item("Account", "Profile & security"),
-                separator().orientation(Vertical),
-                menu_item("Help", "Support & docs"),
-            ]
-            .spacing(16)
-            .align_y(iced::Center)
-            .into(),
+            // Only the window controls `md:` visibility; narrow embeds share column space.
+            "menu" => {
+                let wide = self.wide;
+                responsive(move |bounds| {
+                    let cramped = wide && bounds.width < 355.0;
+                    let width = |portion| {
+                        if cramped {
+                            Length::FillPortion(portion)
+                        } else {
+                            Shrink
+                        }
+                    };
+                    let mut items = row![
+                        menu_item("Settings", "Manage preferences").width(width(6)),
+                        separator().orientation(Vertical),
+                        menu_item("Account", "Profile & security").width(width(5)),
+                    ]
+                    .spacing(if wide { 16 } else { 8 })
+                    .width(if cramped { Fill } else { Shrink })
+                    .align_y(Center);
+                    if wide {
+                        items = items
+                            .push(separator().orientation(Vertical).into())
+                            .push(menu_item("Help", "Support & docs").width(width(4)).into());
+                    }
+                    iced::Element::from(container(items).center_x(Fill))
+                })
+                .height(Shrink)
+                .boxed()
+            }
 
             // shadcn `separator-list.tsx`.
             "list" => column![
@@ -157,7 +188,7 @@ impl page::Page for SeparatorPage {
                 list_item("Item 3", "Value 3"),
             ]
             .spacing(8)
-            .width(iced::Fill)
+            .width(Fill)
             .max_width(384.0)
             .into(),
 
