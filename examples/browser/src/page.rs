@@ -1,5 +1,6 @@
 mod heading;
 pub(crate) mod rhea;
+mod sections;
 
 use iced::Element;
 use iced::Widget;
@@ -18,7 +19,7 @@ mod bundled {
 use iced::Alignment::*;
 use iced::border;
 use iced::mouse::Interaction;
-use iced::widget::{Id, column, scrollable, sensor, stack, themer};
+use iced::widget::{Id, column, lazy, scrollable, stack, themer};
 use iced::{Background, Fill, Font, Pixels, Subscription, Task};
 
 use icedcn::Size::{Lg, Sm};
@@ -208,8 +209,7 @@ pub enum Message {
     Notice(String, String),
     CodeBlock(code_block::Event),
     FileSelected(Option<String>),
-    BlockShown(usize),
-    BlockHidden(usize),
+    VisibleSections(BTreeSet<usize>),
     ScrollTo(usize),
     ScrollTranscript(Id, scroller::Target, scroller::Animation),
     ExpandCode(usize),
@@ -314,9 +314,16 @@ pub fn view<'a>(
     page: &'a dyn Page,
     viewer: &'a SnippetViewer,
 ) -> (Slot<'a, super::Message>, Option<Slot<'a, super::Message>>) {
-    let body = render_blocks(page, viewer);
-    let toc_count = sections(page).count();
-    let nav = (toc_count > 1).then(|| toc(page));
+    view_with_toc(page, viewer, true)
+}
+
+pub fn view_with_toc<'a>(
+    page: &'a dyn Page,
+    viewer: &'a SnippetViewer,
+    show_toc: bool,
+) -> (Slot<'a, super::Message>, Option<Slot<'a, super::Message>>) {
+    let body = render_blocks(page, viewer, show_toc);
+    let nav = (show_toc && sections(page).nth(1).is_some()).then(|| toc(page));
     (body, nav)
 }
 
@@ -335,7 +342,11 @@ fn heading_for<'a>(
     }
 }
 
-fn render_blocks<'a>(page: &'a dyn Page, viewer: &'a SnippetViewer) -> Slot<'a, super::Message> {
+fn render_blocks<'a>(
+    page: &'a dyn Page,
+    viewer: &'a SnippetViewer,
+    show_toc: bool,
+) -> Slot<'a, super::Message> {
     let pi = page.page_index();
     let st = page.state();
     let mut items: Vec<iced::Element<'_, super::Message, Theme>> = Vec::new();
@@ -350,7 +361,7 @@ fn render_blocks<'a>(page: &'a dyn Page, viewer: &'a SnippetViewer) -> Slot<'a, 
         &mut flat_idx,
         &mut items,
     );
-    column(items).spacing(48).width(Fill).into()
+    sections::Sections::new(items, pi, show_toc).boxed().into()
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -392,16 +403,7 @@ fn walk_blocks<'a>(
             Block::Group { title, .. } => heading_for(depth, *title),
         };
 
-        // Wrap each block with a sensor for viewport tracking + a stable Id
-        // for `scroll_into_view`. The sensor is the outermost widget so it
-        // covers the entire block (heading + description + card or md body).
-        // For Block::Group, the sensor wraps ONLY the heading — children
-        // get their own subsequent flat indices and their own sensors.
-        let sensored = sensor(Element::from(container(body).id(block_id).width(Fill)))
-            .on_show(move |_| super::Message::Page(pi, Message::BlockShown(i)))
-            .on_hide(super::Message::Page(pi, Message::BlockHidden(i)))
-            .anticipate(50);
-        items.push(sensored.boxed());
+        items.push(container(body).id(block_id).width(Fill).into());
 
         if let Block::Group { children, .. } = block {
             walk_blocks(children, depth + 1, page, viewer, st, pi, flat_idx, items);
@@ -804,6 +806,7 @@ fn inline_style_from_theme(theme: &Theme, body: Font) -> markdown::Style {
 /// scrollable.
 pub struct SnippetViewer {
     theme: Theme,
+    code_theme_id: Id,
     map: markdown::highlighter::Map,
     /// Palette-derived markdown style. Inline-code fields (color +
     /// highlight bg) are driven by `palette.code`; everything else
@@ -822,6 +825,7 @@ impl SnippetViewer {
     pub fn new(map: markdown::highlighter::Map, theme: &Theme) -> Self {
         Self {
             map,
+            code_theme_id: Id::unique(),
             theme: theme.clone(),
             style: inline_style_from_theme(theme, Font::new(font::BODY)),
         }
@@ -835,6 +839,7 @@ impl SnippetViewer {
         self.style = inline_style_from_theme(&theme, self.style.font);
         self.theme = theme;
         self.map = map;
+        self.code_theme_id = Id::unique();
     }
 }
 
@@ -850,15 +855,25 @@ impl<'a> markdown::Viewer<'a, markdown::Uri, Theme, iced::Renderer> for SnippetV
     fn code_block(
         &'a self,
         settings: markdown::Settings,
-        _language: Option<&'a str>,
-        _code: &'a str,
+        language: Option<&'a str>,
+        code: &'a str,
         lines: &'a [markdown::Text],
     ) -> iced::Element<'a, markdown::Uri, Theme, iced::Renderer> {
         use icedcn::widget::scrollable;
 
-        let body = markdown::code(settings, lines, Some(&self.map))
-            .on_link_click(Self::on_link_click)
-            .boxed();
+        // Span construction clones every highlighted token. Reuse the selectable
+        // paragraph while only the viewport or the active heading has changed.
+        let key = (
+            code,
+            language,
+            &self.code_theme_id,
+            settings.style.code_block_font,
+            settings.code_size.0.to_bits(),
+        );
+        let body = lazy(key, move |_| {
+            markdown::code(settings, lines, Some(&self.map)).on_link_click(Self::on_link_click)
+        })
+        .boxed();
         let scroll = scrollable::scrollable(body).horizontal().spacing(2);
 
         container(scroll)
@@ -890,7 +905,7 @@ pub struct State {
     /// Extracted first-heading title for `Block::Md` paths. `None` if not
     /// loaded yet; `Some("")` if the file had no heading.
     pub md_titles: HashMap<&'static str, Option<String>>,
-    /// Sensor-driven viewport tracking, indexed by FLAT block position.
+    /// Sections in the last mounted table of contents, indexed by flat block position.
     pub visible: BTreeSet<usize>,
     /// Per-flat-block widget ids for `scroll_into_view` and sensors.
     /// `block_ids.len() == flatten(blocks).len()`.
@@ -1076,12 +1091,8 @@ impl State {
                 }
                 open_link(url)
             }
-            Message::BlockShown(idx) => {
-                self.visible.insert(*idx);
-                Task::none()
-            }
-            Message::BlockHidden(idx) => {
-                self.visible.remove(idx);
+            Message::VisibleSections(indices) => {
+                self.visible.clone_from(indices);
                 Task::none()
             }
             Message::ScrollTo(idx) if matches!(self.load.get(), Load::Loading { .. }) => {

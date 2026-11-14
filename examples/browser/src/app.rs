@@ -427,9 +427,7 @@ impl App {
         self.font_list = combo_box::State::new(names);
     }
 
-    pub fn view(&self) -> iced::Element<'_, Message, Theme> {
-        let width = self.width;
-        let header = self.header(width);
+    fn sidebar(&self) -> iced::Element<'_, Message, Theme> {
         let sidebar_header = container(
             text::xs("Components")
                 .selectable(false)
@@ -509,13 +507,19 @@ impl App {
             .width(Fill)
             .height(Fill);
 
-        let sidebar = sidebar::fixed(
+        sidebar::fixed(
             stack![Element::from(sidebar_scrollable), fade_overlay]
                 .width(240)
                 .height(Fill),
         )
         .height(Fill)
-        .class(theme::sidebar::Default + Bg(Token::Background));
+        .class(theme::sidebar::Default + Bg(Token::Background))
+        .into()
+    }
+
+    pub fn view(&self) -> iced::Element<'_, Message, Theme> {
+        let width = self.width;
+        let header = self.header(width);
 
         let current = &*self.pages[self.current_page];
         let meta = current.meta();
@@ -548,7 +552,8 @@ impl App {
         .align_y(iced::Alignment::Start);
         let page_header = column![title_row, Element::from(description)].spacing(8);
 
-        let (page_body, page_nav) = page::view(current, &self.snippet_viewer);
+        let (page_body, page_nav) =
+            page::view_with_toc(current, &self.snippet_viewer, width >= 1280.0);
 
         let content = container(
             column![page_header, Element::from(container(page_body).width(Fill))]
@@ -579,9 +584,7 @@ impl App {
 
         let mut body = row![].width(Fill).height(Fill);
         if width >= 1024.0 {
-            body = body
-                .push(Element::from(sidebar))
-                .push(sidebar_divider.into());
+            body = body.push(self.sidebar()).push(sidebar_divider.into());
         }
         body = body.push(Element::from(main));
         if width >= 1280.0
