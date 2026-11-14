@@ -1,7 +1,12 @@
 ```rust
-use code_block::ansi;
 use icedcn::widget::{CodeBlock, code_block};
-use std::sync::LazyLock;
+
+pub fn terminal<'a, Message>() -> CodeBlock<'a, Message> {
+    code_block::ansi(TRANSCRIPT)
+        .font("Geist Mono")
+        .title(code_block::terminal_title("Terminal"))
+        .copyable(true)
+}
 
 const TRANSCRIPT: &str = concat!(
     "$ cargo test --color always\n",
@@ -13,14 +18,4 @@ const TRANSCRIPT: &str = concat!(
     "\n",
     "test result: \x1b[31mFAILED\x1b[39m. 2 passed; 1 failed; 0 ignored",
 );
-
-static OUTPUT: LazyLock<ansi::Output> = LazyLock::new(|| ansi::parse(TRANSCRIPT));
-
-pub fn terminal<'a, Message>() -> CodeBlock<'a, Message> {
-    OUTPUT
-        .view()
-        .font("Geist Mono")
-        .title(code_block::terminal_title("Terminal"))
-        .actions(code_block::copy_button(OUTPUT.as_str()))
-}
 ```

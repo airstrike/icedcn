@@ -33,7 +33,7 @@ impl Article {
                 .font("Geist Mono")
                 .start_line(1)
                 .title(row![file_code(), code_block::title("src/index.rs")].spacing(6))
-                .actions(code_block::copy_button(TYPESET)),
+                .copyable(true),
             markdown::view(&self.after, settings).map(|_| ()).boxed()
         ]
         .spacing(12)

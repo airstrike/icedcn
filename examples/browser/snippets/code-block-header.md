@@ -4,7 +4,7 @@ use icedcn::widget::{CodeBlock, code_block};
 pub fn view<'a, Message>() -> CodeBlock<'a, Message> {
     code_block(HEADER)
         .font("Geist Mono")
-        .title("Terminal")
+        .title(code_block::terminal_title("Terminal"))
         .actions(code_block::copy_button("cargo check -p icedcn_widget"))
 }
 

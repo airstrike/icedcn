@@ -9,7 +9,7 @@ pub fn view<'a, Message: 'a>() -> Slot<'a, Message> {
             .font("Geist Mono")
             .wrap(true)
             .title(code_block::terminal_title("Terminal"))
-            .actions(code_block::copy_button(SIZE))
+            .copyable(true)
     };
     column![block(), block().compact(true)].spacing(16).into()
 }

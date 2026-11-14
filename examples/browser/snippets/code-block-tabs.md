@@ -28,7 +28,7 @@ pub fn view<Message: Clone + 'static>() -> Slot<'static, Message> {
                         .font("Geist Mono")
                         .start_line(1)
                         .title(title)
-                        .actions(code_block::copy_button(source)),
+                        .copyable(true),
                 ),
             );
         }

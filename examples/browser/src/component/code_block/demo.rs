@@ -4,13 +4,13 @@ use std::collections::BTreeMap;
 use iced::alignment::Horizontal;
 use iced::widget::{Id, svg};
 use iced::{Element, Fill, Widget};
-use icedcn::core::Border;
+use icedcn::theme::tweak::{Fg, Token, hover};
 use icedcn::widget::code_block::LineStyle;
 use icedcn::widget::{
     CodeBlock, bubble, button, code_block, column, container, markdown, message, row, tabs, text,
     tooltip, trace,
 };
-use icedcn::{Size, Slot, Theme, radius, theme};
+use icedcn::{Size, Slot, Theme};
 
 use super::samples::*;
 use crate::{icon, page};
@@ -152,11 +152,18 @@ impl State {
         filename: &'static str,
         block: CodeBlock<'static, Message>,
     ) -> Slot<'static, Message> {
-        let wrap = action(icon::wrap_text().size(14), "Wrap lines", Message::Wrap(id));
+        let wrapped = *self.wraps.get(id).unwrap_or(&(id == "actions"));
+        let wrap = action(
+            icon::wrap_text().size(14),
+            "Wrap lines",
+            Message::Wrap(id),
+            wrapped,
+        );
         let save = action(
             icon::download().size(14),
             "Download",
             Message::Save(filename, source),
+            false,
         );
         let title = if id == "actions" {
             code_block::terminal_title(title)
@@ -167,7 +174,8 @@ impl State {
         };
         let mut block = block
             .title(title)
-            .actions(row![wrap, save, code_block::copy_button(source)].spacing(4));
+            .actions(row![wrap, save].spacing(4))
+            .copyable(true);
         if let Some(status) = self.save_status.get(filename) {
             block = block.footer(text::muted(status.clone()));
         }
@@ -278,7 +286,7 @@ impl State {
             }
             "basic" => terminal(BASIC).into(),
             "header" => terminal(HEADER)
-                .title("Terminal")
+                .title(code_block::terminal_title("Terminal"))
                 .actions(code_block::copy_button("cargo check -p icedcn_widget"))
                 .into(),
             "actions" => {
@@ -291,19 +299,7 @@ impl State {
                     terminal(ACTIONS).wrap(wrap),
                 )
             }
-            "floating-actions" => terminal(FLOATING_ACTIONS)
-                .actions(container(code_block::copy_button(FLOATING_ACTIONS)).style(
-                    |theme: &Theme| theme::container::Style {
-                        background: Some(theme.neutral.base.into()),
-                        border: Border {
-                            width: 1.,
-                            color: theme.neutral.foreground.scale_alpha(0.1),
-                            radius: radius::SM.into(),
-                        },
-                        ..Default::default()
-                    },
-                ))
-                .into(),
+            "floating-actions" => terminal(FLOATING_ACTIONS).copyable(true).into(),
             "line-numbers" => terminal(LINE_NUMBERS).start_line(1).into(),
             "start-line" => terminal(START_LINE)
                 .language("rust")
@@ -322,12 +318,12 @@ impl State {
                 .language("rust")
                 .diff()
                 .title("src/search.rs")
-                .actions(code_block::copy_button(code_block::diff_text(DIFF)))
+                .copyable(true)
                 .into(),
             "height" => terminal(self.logs.clone())
                 .max_height(192.)
                 .title("Logs")
-                .actions(code_block::copy_button(self.logs.clone()))
+                .copyable(true)
                 .into(),
             "show-more" | "show-more-scroll" => {
                 let scroll = id == "show-more-scroll";
@@ -336,7 +332,7 @@ impl State {
                         .language("rust")
                         .title("src/notebook.rs")
                         .start_line(1)
-                        .actions(code_block::copy_button(SHOW_MORE));
+                        .copyable(true);
                     if scroll {
                         block.max_height(384.)
                     } else {
@@ -349,18 +345,18 @@ impl State {
                 terminal(SIZE)
                     .wrap(true)
                     .title(code_block::terminal_title("Terminal"))
-                    .actions(code_block::copy_button(SIZE)),
+                    .copyable(true),
                 terminal(SIZE)
                     .wrap(true)
                     .title(code_block::terminal_title("Terminal"))
                     .compact(true)
-                    .actions(code_block::copy_button(SIZE))
+                    .copyable(true)
             ]
             .spacing(16)
             .into(),
             "destructive" => error_block(DESTRUCTIVE)
                 .title("Error")
-                .actions(code_block::copy_button(DESTRUCTIVE))
+                .copyable(true)
                 .into(),
             "trace" => column![
                 trace_output("Ran cargo --version", TRACE, false),
@@ -387,7 +383,7 @@ impl State {
                                 .language(language)
                                 .start_line(1)
                                 .title(title)
-                                .actions(code_block::copy_button(source)),
+                                .copyable(true),
                         ),
                     );
                 }
@@ -404,7 +400,7 @@ impl State {
                         terminal(CHAT)
                             .language("rust")
                             .title("src/search.rs")
-                            .actions(code_block::copy_button(CHAT)),
+                            .copyable(true),
                         text::p("The result borrows the matching titles from the original list.")
                     ]
                     .spacing(12)
@@ -425,7 +421,7 @@ impl State {
                         ]
                         .spacing(6)
                     )
-                    .actions(code_block::copy_button(TYPESET)),
+                    .copyable(true),
                 prose(&self.typeset_after, dark)
             ]
             .spacing(12)
@@ -453,7 +449,7 @@ impl State {
                     .view()
                     .font("Geist Mono")
                     .title(code_block::terminal_title("Terminal"))
-                    .actions(code_block::copy_button(OUTPUT.as_str()))
+                    .copyable(true)
                     .into()
             }
             "streaming" => self.streaming(),
@@ -497,11 +493,17 @@ fn action(
     glyph: impl Into<Slot<'static, Message>>,
     label: &'static str,
     event: Message,
+    active: bool,
 ) -> Slot<'static, Message> {
+    let ink = if active {
+        Token::Foreground
+    } else {
+        Token::MutedForeground
+    };
     tooltip(
         button(glyph)
             .square()
-            .style(button::Ghost)
+            .style(button::Ghost + Fg(ink) + hover(Fg(Token::Foreground)))
             .size(Size::Xs)
             .on_press(event),
         label,

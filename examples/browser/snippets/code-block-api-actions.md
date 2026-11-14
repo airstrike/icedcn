@@ -6,4 +6,5 @@ Floating controls fade over 150ms. The current renderer fades inherited text and
 
 | API | Type | Default | Behavior |
 | --- | --- | --- | --- |
+| `.copyable(bool)` | `bool` | `false` | Append a Copy button for text, diff or ANSI source. |
 | `.actions(actions)` | `impl Into<Slot>` | absent | Usually a row of ghost icon buttons with a 4px gap. |

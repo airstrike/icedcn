@@ -77,6 +77,12 @@ fn surface(theme: &Theme) -> Style {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum Placement {
+    Header,
+    Floating,
+}
+
 enum Content<'a, Message> {
     Text(Cow<'a, str>),
     Ansi(ansi::Output),
@@ -91,6 +97,8 @@ pub fn code_block<'a, Message>(source: impl Into<Cow<'a, str>>) -> CodeBlock<'a,
         listing_view: None,
         title: None,
         actions: None,
+        copyable: false,
+        disabled: false,
         footer: None,
         start_line: None,
         wrap: false,
@@ -144,6 +152,8 @@ pub struct CodeBlock<'a, Message: 'a> {
     listing_view: Option<listing::View<'a, Message>>,
     title: Option<Slot<'a, Message>>,
     actions: Option<Slot<'a, Message>>,
+    copyable: bool,
+    disabled: bool,
     footer: Option<Slot<'a, Message>>,
     start_line: Option<usize>,
     wrap: bool,
@@ -211,6 +221,14 @@ impl<'a, Message: 'a> CodeBlock<'a, Message> {
         self.actions = Some(actions.into());
         self
     }
+    /// Append a copy button for the complete source, including collapsed lines.
+    /// ANSI escapes and diff markers are removed. For custom line slots, supply
+    /// the desired clipboard text explicitly with [`copy_button`].
+    pub fn copyable(mut self, copyable: bool) -> Self {
+        self.copyable = copyable;
+        self
+    }
+
     /// Controls below the content, such as a Show More button.
     pub fn footer(mut self, footer: impl Into<Slot<'a, Message>>) -> Self {
         self.footer = Some(footer.into());
@@ -282,6 +300,7 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
                 line.inherit(from);
             }
         }
+        self.disabled |= from.is_disabled();
         if from.is_disabled() {
             self.focusable = false;
         }
@@ -296,6 +315,8 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
             listing_view,
             mut title,
             mut actions,
+            copyable,
+            disabled,
             mut footer,
             start_line,
             wrap,
@@ -313,6 +334,29 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
         let line_height = size * 1.625;
         let has_header = title.is_some();
         let has_footer = footer.is_some();
+        if copyable {
+            let source = match &content {
+                Content::Text(value) if listing.diff => Some(copy::Source::Diff(value.clone())),
+                Content::Text(value) => Some(copy::Source::Text(value.clone())),
+                Content::Ansi(output) => Some(copy::Source::Ansi(output.clone())),
+                Content::Lines(_) => None,
+            };
+            if let Some(source) = source {
+                let copy = copy::from_source(source).disabled(disabled);
+                actions = Some(match actions {
+                    Some(other) => row![other, copy].spacing(4).into(),
+                    None => copy.into(),
+                });
+            }
+        }
+        if let Some(actions) = &mut actions {
+            let placement = if has_header {
+                Placement::Header
+            } else {
+                Placement::Floating
+            };
+            actions.inherit(&Inherited::default().with_code_actions(placement));
+        }
         let wrapping = if wrap {
             Wrapping::WordOrGlyph
         } else {

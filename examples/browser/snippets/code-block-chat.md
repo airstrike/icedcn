@@ -16,7 +16,7 @@ pub fn view<Message: Clone + 'static>() -> Slot<'static, Message> {
                     .language("rust")
                     .font("Geist Mono")
                     .title("src/search.rs")
-                    .actions(code_block::copy_button(CHAT)),
+                    .copyable(true),
                 text::p("The result borrows the matching titles from the original list.")
             ]
             .spacing(12)

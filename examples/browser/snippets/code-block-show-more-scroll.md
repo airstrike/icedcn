@@ -8,7 +8,7 @@ pub fn view<Message: 'static>(source: &str) -> Collapsible<'_, Message> {
             .font("Geist Mono")
             .title("src/notebook.rs")
             .start_line(1)
-            .actions(code_block::copy_button(source))
+            .copyable(true)
             .max_height(384.)
     })
 }

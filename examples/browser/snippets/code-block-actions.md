@@ -1,8 +1,9 @@
 ```rust
-use iced::widget::svg;
-use iced::{Task, Widget};
+use crate::icon;
+use iced::Task;
+use icedcn::theme::tweak::{Fg, Token, hover};
 use icedcn::widget::{CodeBlock, button, code_block, row, text, tooltip};
-use icedcn::{Size, Slot, Theme};
+use icedcn::{Size, Slot};
 #[derive(Clone, Debug)]
 pub enum Message {
     Wrap,
@@ -58,12 +59,12 @@ impl Demo {
             .title(code_block::terminal_title("Terminal"))
             .actions(
                 row![
-                    action(icon(WRAP_TEXT), "Wrap lines", Message::Wrap),
-                    action(icon(DOWNLOAD), "Download", Message::Save),
-                    code_block::copy_button(ACTIONS)
+                    action(icon::wrap_text().size(14), "Wrap lines", Message::Wrap, self.wrap),
+                    action(icon::download().size(14), "Download", Message::Save, false)
                 ]
                 .spacing(4),
-            );
+            )
+            .copyable(true);
         if let Some(status) = &self.status {
             block = block.footer(text::muted(status.as_str()));
         }
@@ -74,34 +75,19 @@ fn action(
     glyph: impl Into<Slot<'static, Message>>,
     label: &'static str,
     event: Message,
+    active: bool,
 ) -> Slot<'static, Message> {
+    let ink = if active { Token::Foreground } else { Token::MutedForeground };
     tooltip(
         button(glyph)
             .square()
-            .style(button::Ghost)
+            .style(button::Ghost + Fg(ink) + hover(Fg(Token::Foreground)))
             .size(Size::Xs)
             .on_press(event),
         label,
     )
     .into()
 }
-fn icon(path: &str) -> Slot<'static, Message> {
-    let source = format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{path}</svg>"#
-    );
-    svg(svg::Handle::from_memory(source.into_bytes()))
-        .width(14)
-        .height(14)
-        .style(|theme: &Theme, _| svg::Style {
-            color: Some(theme.neutral.foreground.into()),
-        })
-        .boxed()
-        .into()
-}
-const WRAP_TEXT: &str = r#"<path d="M3 6h18M3 12h15a3 3 0 0 1 0 6h-4m2-2-2 2 2 2M3 18h7"/>"#;
-const DOWNLOAD: &str =
-    r#"<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>"#;
-
 const ACTIONS: &str = r##"$ cargo clippy -- -D warnings
     Checking notebook v0.1.0
 error: writing `&String` instead of `&str` involves a new object where a slice will do

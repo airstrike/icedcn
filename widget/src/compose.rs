@@ -35,6 +35,7 @@ use icedcn_core::Theme;
 /// descendant, like a disabled `<fieldset>`.
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct Inherited {
+    code_actions: Option<crate::code_block::Placement>,
     card_spacing: Option<f32>,
     card_title_size: Option<f32>,
     card_gap: Option<f32>,
@@ -48,6 +49,15 @@ pub struct Inherited {
 }
 
 impl Inherited {
+    pub(crate) fn with_code_actions(mut self, value: crate::code_block::Placement) -> Self {
+        self.code_actions = Some(value);
+        self
+    }
+
+    pub(crate) fn code_actions(&self) -> Option<crate::code_block::Placement> {
+        self.code_actions
+    }
+
     /// Card section inset and title size, scoped by the nearest Card root.
     pub fn with_card(mut self, spacing: f32, title_size: f32) -> Self {
         self.card_spacing = Some(spacing);
@@ -166,6 +176,7 @@ impl Inherited {
     /// `disabled` is the union of both.
     pub fn or(self, fallback: Inherited) -> Inherited {
         Inherited {
+            code_actions: self.code_actions.or(fallback.code_actions),
             card_spacing: self.card_spacing.or(fallback.card_spacing),
             card_title_size: self.card_title_size.or(fallback.card_title_size),
             card_gap: self.card_gap.or(fallback.card_gap),

@@ -7,7 +7,7 @@ pub fn view<'a, Message>() -> CodeBlock<'a, Message> {
         .wrap(true)
         .style(code_block::Destructive)
         .title("Error")
-        .actions(code_block::copy_button(DESTRUCTIVE))
+        .copyable(true)
 }
 
 const DESTRUCTIVE: &str = r##"thread 'main' panicked at src/notebook.rs:18:22:

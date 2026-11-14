@@ -137,8 +137,22 @@ impl<Message> Widget<Message, Theme, Renderer> for Frame<'_, Message> {
             draw_background(renderer, &paint.into(), layout.bounds());
         }
         let (layout, child) = layout.iter(&tree.children).next().expect("frame child");
-        self.content
-            .draw(child, renderer, theme, &inherited, layout, cursor, viewport);
+        // Header actions use the panel's explicit ink on a custom surface.
+        let action_theme =
+            (self.actions && inherited.text_color != theme.neutral.foreground.into()).then(|| {
+                let mut design = theme.design().clone();
+                design.muted.foreground = inherited.text_color.into();
+                Theme::new(design)
+            });
+        self.content.draw(
+            child,
+            renderer,
+            action_theme.as_ref().unwrap_or(theme),
+            &inherited,
+            layout,
+            cursor,
+            viewport,
+        );
     }
     fn mouse_interaction(
         &self,
