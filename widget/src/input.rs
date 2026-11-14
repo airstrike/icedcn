@@ -163,13 +163,13 @@ impl<'a, Message: Clone + 'a> Input<'a, Message> {
             })
     }
 
-    /// Padding: nova `px-2.5 py-1` → `{4, 10, 4, 10}`.
+    /// CSS padding plus the one-pixel border, which iced paints inside the bounds.
     fn padding(&self) -> Padding {
         Padding {
-            top: 4.0,
-            bottom: 4.0,
-            left: 10.0,
-            right: 10.0,
+            top: 5.0,
+            bottom: 5.0,
+            left: 11.0,
+            right: 11.0,
         }
     }
 }
@@ -180,15 +180,9 @@ impl<'a, Message: Clone + 'a> From<Input<'a, Message>>
     fn from(input: Input<'a, Message>) -> Self {
         let height = input.height();
         let text_size = input.font_size();
-        let padding = input.join.map_or_else(
-            || input.padding(),
-            |join| {
-                let mut padding = input.padding();
-                padding.left += 1.;
-                padding.right += 1.;
-                join.padding(padding, 1.)
-            },
-        );
+        let padding = input
+            .join
+            .map_or_else(|| input.padding(), |join| join.padding(input.padding(), 1.));
 
         let ti: text_input::TextInput<'a, Message, Theme, Renderer> = match &input.value {
             Some(value) => text_input::TextInput::new(&input.placeholder, value),

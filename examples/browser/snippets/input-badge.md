@@ -1,17 +1,16 @@
 ```rust
-use icedcn::widget::{badge, field, input, row, space, text, Slot};
+use iced::Fill;
+use icedcn::widget::{Slot, badge, field, input, row, space};
 
-field(
-    input("https://api.example.com/webhook")
+field(input("https://api.example.com/webhook").width(Fill))
+    .label(Slot::from(
+        row![
+            field::label("Webhook URL"),
+            space::horizontal(),
+            badge("Beta").style(badge::Secondary),
+        ]
+        .align_y(iced::Center)
         .width(Fill),
-)
-.label(Slot::from(
-    row![
-        text::label("Webhook URL"),
-        space::horizontal(),
-        badge("Beta").style(badge::Secondary),
-    ]
-    .width(Fill),
-))
-.width(320)
+    ))
+    .width(320)
 ```

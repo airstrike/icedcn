@@ -1,3 +1,11 @@
 ```rust
-row![field(input("Jordan")).label("First Name").width(Fill), field(input("Lee")).label("Last Name").width(Fill)].spacing(16).width(384)
+use iced::Fill;
+use icedcn::widget::{field, input, row};
+
+row![
+    field(input("Jordan").width(Fill)).label("First Name").width(Fill),
+    field(input("Lee").width(Fill)).label("Last Name").width(Fill)
+]
+.spacing(20)
+.width(384)
 ```

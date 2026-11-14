@@ -137,6 +137,11 @@ pub fn group<'a, Message: 'a>(
     }
 }
 
+/// A medium-weight field label with the same line height as a plain string passed to `.label()`.
+pub fn label<'a>(content: impl iced_core::text::IntoFragment<'a>) -> crate::text::Text<'a> {
+    crate::text::label(content).line_height(1.375)
+}
+
 /// The larger heading used by the default FieldLegend. Use `text::label`
 /// for Nova's smaller label variant.
 pub fn legend<'a>(label: impl iced_core::text::IntoFragment<'a>) -> crate::text::Text<'a> {
@@ -490,13 +495,13 @@ pub trait IntoLabel<'a, Message> {
 
 impl<'a, Message: 'a> IntoLabel<'a, Message> for &'a str {
     fn into_label(self) -> Slot<'a, Message> {
-        crate::text::label(self).into()
+        label(self).into()
     }
 }
 
 impl<'a, Message: 'a> IntoLabel<'a, Message> for String {
     fn into_label(self) -> Slot<'a, Message> {
-        crate::text::label(self).into()
+        label(self).into()
     }
 }
 
@@ -520,13 +525,13 @@ pub trait IntoDescription<'a, Message> {
 
 impl<'a, Message: 'a> IntoDescription<'a, Message> for &'a str {
     fn into_description(self) -> Slot<'a, Message> {
-        crate::text::muted(self).into()
+        crate::text::muted(self).line_height(1.5).into()
     }
 }
 
 impl<'a, Message: 'a> IntoDescription<'a, Message> for String {
     fn into_description(self) -> Slot<'a, Message> {
-        crate::text::muted(self).into()
+        crate::text::muted(self).line_height(1.5).into()
     }
 }
 

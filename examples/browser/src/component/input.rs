@@ -5,12 +5,9 @@ use iced::Task;
 
 use crate::icon;
 use icedcn::Theme;
-use icedcn::rich_text;
 use icedcn::theme;
 use icedcn::theme::tweak::Alpha;
-use icedcn::theme::tweak::Token;
-use icedcn::widget::rich_text::span;
-use icedcn::widget::{Slot, badge, button, field, input, row, space, text};
+use icedcn::widget::{Slot, badge, button, container, field, input, row, space, text};
 use icedcn::widget::{button_group, input_group};
 
 use crate::Message;
@@ -28,95 +25,95 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/input-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/input-installation.md"),
     page::Block::Md("examples/browser/snippets/input-usage.md"),
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "basic",
-                title: "Basic",
-                description: Some("A simple input with a placeholder."),
-                snippet: "examples/browser/snippets/input-basic.md",
-            },
-            page::Block::Example {
-                id: "field",
-                title: "Field",
-                description: Some("An input with a label and description."),
-                snippet: "examples/browser/snippets/input-field.md",
-            },
-            page::Block::Example {
-                id: "fieldgroup",
-                title: "Field Group",
-                description: None,
-                snippet: "examples/browser/snippets/input-fieldgroup.md",
-            },
-            page::Block::Example {
-                id: "disabled",
-                title: "Disabled",
-                description: Some("A disabled input field."),
-                snippet: "examples/browser/snippets/input-disabled.md",
-            },
-            page::Block::Example {
-                id: "invalid",
-                title: "Invalid",
-                description: Some(
-                    "An input with validation errors, styled with a destructive border and focus ring.",
-                ),
-                snippet: "examples/browser/snippets/input-invalid.md",
-            },
-            page::Block::Example {
-                id: "file",
-                title: "File",
-                description: None,
-                snippet: "examples/browser/snippets/input-file.md",
-            },
-            page::Block::Example {
-                id: "inline",
-                title: "Inline",
-                description: Some("Use an input with a button to create a search input."),
-                snippet: "examples/browser/snippets/input-inline.md",
-            },
-            page::Block::Example {
-                id: "grid",
-                title: "Grid",
-                description: None,
-                snippet: "examples/browser/snippets/input-grid.md",
-            },
-            page::Block::Example {
-                id: "required",
-                title: "Required",
-                description: Some(
-                    "An input with a required label, marked by a destructive asterisk suffix.",
-                ),
-                snippet: "examples/browser/snippets/input-required.md",
-            },
-            page::Block::Example {
-                id: "badge",
-                title: "Badge",
-                description: Some(
-                    "A field label with a trailing badge to flag the input's status.",
-                ),
-                snippet: "examples/browser/snippets/input-badge.md",
-            },
-            page::Block::Example {
-                id: "input-group",
-                title: "Input Group",
-                description: None,
-                snippet: "examples/browser/snippets/input-input-group.md",
-            },
-            page::Block::Example {
-                id: "button-group",
-                title: "Button Group",
-                description: None,
-                snippet: "examples/browser/snippets/input-button-group.md",
-            },
-            page::Block::Example {
-                id: "form",
-                title: "Form",
-                description: None,
-                snippet: "examples/browser/snippets/input-form.md",
-            },
-        ],
+    page::Block::Example {
+        id: "basic",
+        title: "Basic",
+        description: None,
+        snippet: "examples/browser/snippets/input-basic.md",
+    },
+    page::Block::Example {
+        id: "field",
+        title: "Field",
+        description: Some(
+            "Give the input a clickable label with `.label(...)` and add help text with `.description(...)`.",
+        ),
+        snippet: "examples/browser/snippets/input-field.md",
+    },
+    page::Block::Example {
+        id: "fieldgroup",
+        title: "Field Group",
+        description: Some("Group related fields with `field::group`."),
+        snippet: "examples/browser/snippets/input-fieldgroup.md",
+    },
+    page::Block::Example {
+        id: "disabled",
+        title: "Disabled",
+        description: Some("Set `.disabled(true)` on the field to disable its input."),
+        snippet: "examples/browser/snippets/input-disabled.md",
+    },
+    page::Block::Example {
+        id: "invalid",
+        title: "Invalid",
+        description: Some(
+            "Apply `theme::text_input::Invalid` to the input and the destructive text style to its label.",
+        ),
+        snippet: "examples/browser/snippets/input-invalid.md",
+    },
+    page::Block::Example {
+        id: "file",
+        title: "File",
+        description: Some(
+            "Open a file picker from the Choose File action and display the selected filename.",
+        ),
+        snippet: "examples/browser/snippets/input-file.md",
+    },
+    page::Block::Example {
+        id: "inline",
+        title: "Inline",
+        description: Some("Place an input and a search button in the same row."),
+        snippet: "examples/browser/snippets/input-inline.md",
+    },
+    page::Block::Example {
+        id: "grid",
+        title: "Grid",
+        description: Some("Place two equal-width fields side by side."),
+        snippet: "examples/browser/snippets/input-grid.md",
+    },
+    page::Block::Example {
+        id: "required",
+        title: "Required",
+        description: Some(
+            "Mark a required field with an asterisk and validate its value on submission.",
+        ),
+        snippet: "examples/browser/snippets/input-required.md",
+    },
+    page::Block::Example {
+        id: "badge",
+        title: "Badge",
+        description: Some("Add a badge to the label to highlight the field’s status."),
+        snippet: "examples/browser/snippets/input-badge.md",
+    },
+    page::Block::Example {
+        id: "input-group",
+        title: "Input Group",
+        description: Some("Use `input_group` to place text and icons inside the input border."),
+        snippet: "examples/browser/snippets/input-input-group.md",
+    },
+    page::Block::Example {
+        id: "button-group",
+        title: "Button Group",
+        description: Some("Use `button_group!` to join an input and its action."),
+        snippet: "examples/browser/snippets/input-button-group.md",
+    },
+    page::Block::Example {
+        id: "form",
+        title: "Form",
+        description: Some(
+            "Combine text inputs, a country selector, and submit validation in one form.",
+        ),
+        snippet: "examples/browser/snippets/input-form.md",
     },
     page::Block::Md("examples/browser/snippets/input-api-reference.md"),
 ];
@@ -124,6 +121,7 @@ pub static BLOCKS: &[page::Block] = &[
 pub struct InputPage {
     state: page::State,
     file_name: Option<String>,
+    text_size: f32,
 }
 
 impl InputPage {
@@ -131,6 +129,7 @@ impl InputPage {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
             file_name: None,
+            text_size: 14.,
         })
     }
 }
@@ -167,7 +166,29 @@ impl page::Page for InputPage {
         self.state.reset_volatile();
     }
 
+    fn window_width(&mut self, width: f32) {
+        self.text_size = if width < 768. { 16. } else { 14. };
+    }
+
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: 0.into(),
+            ..Default::default()
+        }
+    }
+
+    fn docs_preview(&self, id: &str, theme: &Theme) -> iced::Element<'_, Message, Theme> {
+        let height = if id == "form" { 512 } else { 288 };
+        let padding = if id == "grid" { 24 } else { 40 };
+        container(self.themed_preview(id, theme))
+            .center_x(Fill)
+            .center_y(height)
+            .padding([0, padding])
+            .into()
+    }
+
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
+        let input = |placeholder| input(placeholder).text_size(self.text_size);
         let pi = self.state.page_index;
         match id {
             "demo" => field(input("sk-...").secure(true).width(Fill))
@@ -178,40 +199,38 @@ impl page::Page for InputPage {
 
             "basic" => input("Enter text").width(320).into(),
 
-            // Field: input with label "Username" and description.
             "field" => field(input("Enter your username").width(Fill))
                 .label("Username")
                 .description("Choose a unique username for your account.")
                 .width(320)
                 .into(),
 
-            "disabled" => field(input("Email").width(Fill).disabled(true))
-                .label(text::label("Email").style(theme::text::Foreground + Alpha(0.5)))
+            "disabled" => field(input("Email").width(Fill))
+                .label(field::label("Email").style(theme::text::Foreground + Alpha(0.5)))
                 .description("This field is currently disabled.")
+                .disabled(true)
                 .width(320)
                 .into(),
 
             "invalid" => field(input("Error").width(Fill).style(theme::text_input::Invalid))
-                .label(text::label("Invalid Input").style(theme::text::Destructive))
+                .label(field::label("Invalid Input").style(theme::text::Destructive))
                 .description("This field contains validation errors.")
                 .width(320)
                 .into(),
 
-            // Inline: input + button side by side.
-            "inline" => row![
-                input("Search...").width(Fill),
-                button("Search").on_press(Message::Page(pi, page::Message::Noop)),
-            ]
-            .spacing(8)
-            .width(400)
-            .into(),
+            "inline" => row![input("Search...").width(Fill), button("Search"),]
+                .spacing(8)
+                .width(320)
+                .into(),
 
-            // Required: rich-text label with a destructive asterisk.
             "required" => field(input("This field is required").width(Fill))
-                .label(Slot::from(rich_text![
-                    span("Required Field ").size(text::size::SM).medium(),
-                    span("*").size(text::size::SM).color(Token::Destructive),
-                ]))
+                .label(Slot::from(
+                    row![
+                        field::label("Required Field"),
+                        field::label("*").style(theme::text::Destructive),
+                    ]
+                    .spacing(8),
+                ))
                 .description("This field must be filled out.")
                 .width(320)
                 .into(),
@@ -219,10 +238,11 @@ impl page::Page for InputPage {
             "badge" => field(input("https://api.example.com/webhook").width(Fill))
                 .label(Slot::from(
                     row![
-                        text::label("Webhook URL"),
+                        field::label("Webhook URL"),
                         space::horizontal(),
                         badge("Beta").style(badge::Secondary),
                     ]
+                    .align_y(iced::Center)
                     .width(Fill),
                 ))
                 .width(320)
@@ -235,7 +255,8 @@ impl page::Page for InputPage {
                         .width(Fill),
                 )
                 .addon(input_group::addon(
-                    input_group::button("Choose File")
+                    input_group::button(text::small("Choose File").medium())
+                        .padding([0, 3])
                         .on_press(Message::Page(pi, page::Message::ChooseFile)),
                 )),
             )
@@ -244,10 +265,14 @@ impl page::Page for InputPage {
             .width(320)
             .into(),
             "grid" => row![
-                field(input("Jordan")).label("First Name").width(Fill),
-                field(input("Lee")).label("Last Name").width(Fill)
+                field(input("Jordan").width(Fill))
+                    .label("First Name")
+                    .width(Fill),
+                field(input("Lee").width(Fill))
+                    .label("Last Name")
+                    .width(Fill)
             ]
-            .spacing(16)
+            .spacing(20)
             .width(384)
             .into(),
             "input-group" => field(
@@ -268,8 +293,8 @@ impl page::Page for InputPage {
             .label("Search")
             .width(320)
             .into(),
-            "fieldgroup" => forms::preview(false).into(),
-            "form" => forms::preview(true).into(),
+            "fieldgroup" => forms::group(self.text_size),
+            "form" => forms::form(self.text_size),
             _ => unreachable!("unknown input preview id: {id}"),
         }
     }
