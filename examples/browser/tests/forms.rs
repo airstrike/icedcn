@@ -39,7 +39,8 @@ fn hijri_demo_displays_its_fixed_persian_date_and_navigates_months() {
         .expect("June 12, 2025 is Khordad 22, 1404");
     ui.find("۲۲").expect("selected Persian day");
     snapshot(&mut ui, "calendar-persian-375");
-    ui.click("›").expect("next Persian month");
+    ui.point_at(Point::new(29., 29.));
+    ui.simulate(simulator::click()); // Next month is on the left in the Persian grid.
     ui.find("تیر ۱۴۰۴").expect("caption changes to Tir");
 }
 

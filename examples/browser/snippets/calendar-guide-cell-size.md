@@ -1,0 +1,1 @@
+You can customize calendar cells with `.cell_size(...)`. The Custom Cell Size example uses 40 logical pixels below a 768-pixel window and 48 at wider windows. Its complete snippet obtains the initial window width and subscribes to resize events. Use `.cell_size(48.)` for a fixed size.

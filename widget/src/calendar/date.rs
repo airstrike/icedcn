@@ -53,6 +53,14 @@ impl System {
         self.date(ordinal.div_euclid(12), ordinal.rem_euclid(12) as u32 + 1, 1)
     }
 
+    pub(crate) fn shift_day(self, day: Date, months: i32) -> Option<Date> {
+        let next = self.shift(day, months)?;
+        let (year, month, _) = self.parts(next);
+        (1..=self.parts(day).2)
+            .rev()
+            .find_map(|d| self.date(year, month, d))
+    }
+
     pub fn month_name(self, month: u32) -> &'static str {
         let names = match self {
             Self::Gregorian => [
@@ -125,9 +133,39 @@ impl System {
     }
 }
 
+// DayPicker's en-US default: Sunday starts the week containing January 1.
+pub(crate) fn week_number(day: Date) -> u32 {
+    let end = day.checked_add_signed(Duration::days(6)).unwrap_or(day);
+    let jan1 = Date::from_ymd_opt(end.year(), 1, 1).unwrap_or(end);
+    let first = jan1
+        .checked_sub_signed(Duration::days(i64::from(
+            jan1.weekday().num_days_from_sunday(),
+        )))
+        .unwrap_or(jan1);
+    ((day - first).num_days().div_euclid(7) + 1) as u32
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sunday_week_numbers_roll_over_with_the_week_containing_january_first() {
+        for (year, month, day, expected) in [
+            (2025, 12, 21, 52),
+            (2025, 12, 28, 1),
+            (2026, 1, 4, 2),
+            (2026, 2, 1, 6),
+            (2026, 2, 22, 9),
+            (2022, 12, 25, 53),
+            (2023, 1, 1, 1),
+        ] {
+            assert_eq!(
+                week_number(Date::from_ymd_opt(year, month, day).unwrap()),
+                expected
+            );
+        }
+    }
     #[test]
     fn month_grids_start_on_the_correct_weekday_and_include_leap_days() {
         let feb = Date::from_ymd_opt(2024, 2, 1).unwrap();

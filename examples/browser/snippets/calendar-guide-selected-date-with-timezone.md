@@ -1,3 +1,20 @@
 ## Selected Date (With TimeZone)
 
-Calendar selections are civil dates without a time of day. The default initial month follows the local calendar date. Convert a selected date in the application’s intended time zone when storing a specific instant.
+Calendar selections are civil dates without a time of day. `today()` uses the user's local timezone. Convert a stored instant to the intended timezone before supplying its civil date to `.selected(...)` or `.default_selected(...)`.
+
+```rust
+use iced::Element;
+use icedxdy::Theme;
+use icedxdy::widget::calendar::{Date, Selection, today};
+use icedxdy::widget::calendar;
+
+pub fn calendar_for_local_date<Message: 'static>(local_date: Date) -> Element<'static, Message, Theme> {
+    calendar().default_selected(Selection::single(local_date)).into()
+}
+
+pub fn example<Message: 'static>() -> Element<'static, Message, Theme> {
+    calendar_for_local_date(today())
+}
+```
+
+If selecting the 20th highlights the 19th, check that conversion at the application boundary. Calendar does not convert a civil date through UTC. The original web example detects the timezone after mounting to avoid server/client hydration differences; a native iced application has no server-rendered hydration step.
