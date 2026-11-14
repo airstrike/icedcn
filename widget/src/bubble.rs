@@ -204,7 +204,9 @@ fn surface(variant: Variant, radius: Radius, theme: &Theme, status: Status) -> S
         text_color: Some(fg),
         border: Border {
             radius,
-            width: 1.,
+            // CSS paints the surface under a transparent border. Iced cuts
+            // the stroke out of the fill, so only paint a visible stroke.
+            width: if focused || variant == Outline { 1. } else { 0. },
             color: if focused {
                 theme.neutral.ring
             } else if variant == Outline {
@@ -247,12 +249,12 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Bubble<'a, Message> {
             if variant == Ghost {
                 Padding::ZERO
             } else {
-                [8, 12].into()
+                [10, 12].into()
             }
         });
         let radius = self
             .radius
-            .unwrap_or_else(|| if variant == Ghost { 0.0 } else { radius::XL }.into());
+            .unwrap_or_else(|| if variant == Ghost { 0.0 } else { radius::XL3 }.into());
         // iced draws its border inside the quad. CSS reserves a pixel on
         // each edge, including the transparent border on the ghost variant.
         let paint = self.paint.take();

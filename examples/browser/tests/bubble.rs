@@ -52,7 +52,7 @@ fn surface_padding_is_clickable_keyboard_reachable_and_inherits_disabled() {
         );
         if !disabled {
             let bounds = next(&mut ui);
-            assert_eq!(bounds.size(), Size::new(46., 30.));
+            assert_eq!(bounds.size(), Size::new(46., 34.));
         }
         click_at(&mut ui, Point::new(2., 2.));
         assert_eq!(ui.drain().count(), usize::from(!disabled));
@@ -116,12 +116,12 @@ fn reactions_do_not_change_row_height_and_remain_anchored_at_both_widths() {
                     ),
                 );
                 let row = ui.find(surface).unwrap().bounds();
-                close(row.height, 40. + 18. + 80.);
+                close(row.height, 40. + 22. + 80.);
                 let reaction = ui.find(id).unwrap().bounds();
                 // Float's operation reports its in-flow bounds. Paint/input is
                 // translated by 75% of the 24px chip plus its outer 3px ring.
                 let painted_y = reaction.y + if side == Vertical::Top { -21. } else { 21. };
-                close(painted_y, if side == Vertical::Top { 24. } else { 94. });
+                close(painted_y, if side == Vertical::Top { 24. } else { 98. });
                 close(
                     reaction.x,
                     if align == Horizontal::Left { 18. } else { 68. },
