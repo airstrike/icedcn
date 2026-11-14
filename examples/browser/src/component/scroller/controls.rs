@@ -26,7 +26,6 @@ impl Demo {
         let send = button(icon::arrow_up().size(16))
             .square()
             .rounded()
-            .inset(1)
             .style(button::Default + hover(Alpha(0.8)))
             .disabled(disabled)
             .on_press(Event::Send);
