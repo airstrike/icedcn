@@ -182,8 +182,7 @@ fn demo() -> Slot<'static, Message> {
                 },
                 destinations,
             )
-            .align(dropdown_menu::Align::Start)
-            .width(144),
+            .align(dropdown_menu::Align::Start),
         ),
         breadcrumb::link("Components", Message::Noop),
         breadcrumb::page("Breadcrumb"),
@@ -209,8 +208,7 @@ fn dropdown() -> Slot<'static, Message> {
                 },
                 destinations,
             )
-            .align(dropdown_menu::Align::Start)
-            .width(144),
+            .align(dropdown_menu::Align::Start),
         ),
         breadcrumb::page("Breadcrumb"),
     ])
