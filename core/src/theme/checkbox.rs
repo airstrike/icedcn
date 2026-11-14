@@ -144,7 +144,7 @@ fn is_checked(status: Status) -> bool {
 /// Default checkbox variant — nova `size-4` box with `rounded-[4px]` corners.
 ///
 /// Light unchecked bg = transparent (the page background shows through); dark
-/// unchecked bg = `palette.input` at α 0.3 (`dark:bg-input/30`). Checked bg =
+/// unchecked bg = `palette.input` with its alpha scaled by 0.3 (`dark:bg-input/30`). Checked bg =
 /// `palette.primary` (`data-checked:bg-primary`); icon color = primary
 /// foreground; checked border = primary. Border at rest = `palette.input`
 /// (`border border-input`).
@@ -153,9 +153,10 @@ pub fn default(theme: &Theme, status: Status) -> Style {
     let dark = is_dark(theme);
     let checked = is_checked(status);
 
-    // Unchecked bg — light = transparent, dark = palette.input @ 0.3.
+    // Tailwind's color-mix with transparent preserves the input token's alpha:
+    // dark input is white at 0.15, so bg-input/30 resolves to alpha 0.045.
     let unchecked_bg = if dark {
-        p.input.alpha(0.3)
+        p.input.scale_alpha(0.3)
     } else {
         Color::TRANSPARENT
     };
@@ -672,18 +673,26 @@ mod tests {
         );
     }
 
-    /// Dark unchecked bg = `palette.input` with alpha 0.3 (`dark:bg-input/30`).
-    /// Tailwind's `/N` modifier overrides the source alpha (does NOT multiply).
+    /// The rendered Nova bg-input/30 is white at alpha 0.045, including
+    /// through the stock Catalog bridge. Disabled opacity halves that again.
     #[test]
-    fn dark_unchecked_bg_uses_input_alpha_0_3() {
+    fn dark_unchecked_bg_preserves_input_alpha_through_both_catalogs() {
         let theme = Theme::dark();
-        let resolved = default(&theme, Status::Active { is_checked: false });
-        let bg = bg_color(&resolved);
-        let expected = theme.input.alpha(0.3);
-        assert!(
-            close(bg, expected),
-            "expected bg ≈ {expected:?}, got {bg:?}",
-        );
+        for (status, expected) in [
+            (Status::Active { is_checked: false }, 0.045),
+            (Status::Hovered { is_checked: false }, 0.045),
+            (Status::Disabled { is_checked: false }, 0.0225),
+        ] {
+            let resolved = default(&theme, status);
+            let bg = bg_color(&resolved);
+            assert!((bg.a - expected).abs() < 1e-6, "{bg:?}");
+            assert!((bg.l - 1.0).abs() < 1e-6);
+            let stock: iced_widget::checkbox::Style = resolved.into();
+            let iced_core::Background::Color(color) = stock.background else {
+                panic!("solid checkbox fill");
+            };
+            assert!((color.a - expected).abs() < 1e-6);
+        }
     }
 
     /// Nova has no `:hover` rule — Hovered must be field-identical to Active.

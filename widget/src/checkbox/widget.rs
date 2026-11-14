@@ -79,6 +79,7 @@ where
     font_features: Vec<font::Feature>,
     font: Option<Font>,
     icon: Icon,
+    check: Option<fn(&mut Renderer, Rectangle, Color, Rectangle)>,
     class: Theme::Class<'a>,
     last_status: Option<Status>,
     renderer: PhantomData<Renderer>,
@@ -121,6 +122,7 @@ where
                 line_height: text::LineHeight::default(),
                 shaping: text::Shaping::Basic,
             },
+            check: None,
             class: Theme::default(),
             last_status: None,
             renderer: PhantomData,
@@ -237,6 +239,14 @@ where
     /// Sets the [`Icon`] of the [`Checkbox`].
     pub fn icon(mut self, icon: Icon) -> Self {
         self.icon = icon;
+        self.check = None;
+        self
+    }
+
+    // The public Nova composition supplies its vector mark without imposing
+    // an SVG renderer bound on generic, custom-font Checkbox callers.
+    pub(super) fn check(mut self, draw: fn(&mut Renderer, Rectangle, Color, Rectangle)) -> Self {
+        self.check = Some(draw);
         self
     }
 
@@ -720,6 +730,11 @@ where
             let size = size.unwrap_or(Pixels(bounds.height * 0.875));
 
             match self.state {
+                State::Checked if self.check.is_some() => {
+                    if let Some(draw) = self.check {
+                        draw(renderer, bounds, style.icon_color, *viewport);
+                    }
+                }
                 State::Checked => {
                     renderer.fill_text(
                         text::Text {

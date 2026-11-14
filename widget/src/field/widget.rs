@@ -13,6 +13,7 @@
 //! Style sources stay catalog `StyleFn`s, resolved every frame, so palette
 //! swaps flow through.
 
+use crate::core::Length::Fill;
 use crate::core::layout;
 use crate::core::mouse;
 use crate::core::renderer;
@@ -86,6 +87,7 @@ where
         self.content = marker::marker(
             iced_widget::container(self.content)
                 .padding(padding)
+                .width(Fill)
                 ._boxed(),
             Label,
             marker::Press::Any,
@@ -467,7 +469,7 @@ mod tests {
         for initial in [false, true] {
             let (mut field, mut tree) = card(initial, false);
             assert_eq!(tree.state.downcast_ref::<State>().active, initial);
-            assert_eq!(tree.size, Size::new(38.0, 38.0));
+            assert_eq!(tree.size, Size::new(200.0, 38.0));
             for event in simulator::click() {
                 step(&mut field, &mut tree, event, Point::new(19.0, 19.0));
             }

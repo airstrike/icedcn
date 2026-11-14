@@ -123,7 +123,7 @@ impl<'a, Message: 'a> From<Checkbox<'a, Message>>
             Some(checked) => widget::Checkbox::new(checked),
             None => widget::Checkbox::new(State::Unchecked).uncontrolled(c.default_checked),
         };
-        let mut cb = cb.width(c.width).disabled(c.disabled);
+        let mut cb = cb.width(c.width).disabled(c.disabled).check(element::check);
 
         if let Some(label) = c.label {
             cb = cb.label(label);

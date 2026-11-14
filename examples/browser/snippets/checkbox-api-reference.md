@@ -4,23 +4,34 @@
 
 Constructor for an unchecked, uncontrolled `Checkbox`. Radix state: the value lives in the widget tree unless the app controls it.
 
-| Builder | Type | Default | Description |
-| --- | --- | --- | --- |
-| `.default_checked(state)` | `impl Into<State>` | `Unchecked` | Initial state of an uncontrolled checkbox (shadcn `defaultChecked`). |
-| `.checked(state)` | `impl Into<State>` | uncontrolled | Control the checkbox: it always shows `state` (shadcn `checked`). |
-| `.on_checked_change(f)` | `Fn(bool) -> Message` | `None` | Publish a message with the new checked state on each toggle in either mode. |
-| `.disabled(bool)` | `bool` | `false` | Disable the checkbox. A disabled ancestor (a disabled field) disables it too. |
-| `.label(label)` | `impl IntoFragment` | `None` | Optional inline label rendered next to the box. |
-| `.width(width)` | `impl Into<Length>` | `Length::Shrink` | Outer width. |
-| `.style(style)` | `impl Into<theme::checkbox::StyleFn<'a, Theme>>` | `theme::checkbox::Default` | Variant unit structs (`checkbox::Default`, `checkbox::Invalid`, `checkbox::Disabled`) or a `theme::checkbox::Spec`. |
+**`.default_checked(state)`** accepts `impl Into<State>`. Default: `Unchecked`.
+Sets the initial state of an uncontrolled checkbox (shadcn `defaultChecked`).
+
+**`.checked(state)`** accepts `impl Into<State>`. Default: uncontrolled.
+Controls the checkbox: it always shows `state` (shadcn `checked`).
+
+**`.on_checked_change(f)`** accepts `Fn(bool) -> Message`. Default: `None`.
+Publishes a message with the new checked state on each toggle in either mode.
+
+**`.disabled(bool)`** accepts `bool`. Default: `false`.
+Disables the checkbox. A disabled ancestor (a disabled field) disables it too.
+
+**`.label(label)`** accepts `impl IntoFragment`. Default: `None`.
+Renders an optional inline label next to the box.
+
+**`.width(width)`** accepts `impl Into<Length>`. Default: `Length::Shrink`.
+Sets the outer width.
+
+**`.style(style)`** accepts a value convertible to
+`theme::checkbox::StyleFn<'a, Theme>`. Default: `theme::checkbox::Default`.
+Use the variant unit structs `checkbox::Default`, `checkbox::Invalid`,
+`checkbox::Disabled`, or a `theme::checkbox::Spec`.
 
 ### `checkbox::State`
 
-| Variant | Description |
-| --- | --- |
-| `State::Checked` | Renders the check glyph. |
-| `State::Unchecked` | Renders an empty box. |
-| `State::Indeterminate` | Renders a horizontal stroke. A click commits it to checked. |
+- `State::Checked` renders the check glyph.
+- `State::Unchecked` renders an empty box.
+- `State::Indeterminate` renders a horizontal stroke. A click commits it to checked.
 
 `From<bool> for State` maps `true` to `Checked` and `false` to `Unchecked`.
 
@@ -34,13 +45,11 @@ Apply `theme::checkbox::Invalid` via `.style(...)` to land the destructive borde
 
 ### Mapping from shadcn
 
-| Shadcn prop | icedxdy equivalent |
-| --- | --- |
-| `Checkbox.defaultChecked` | `.default_checked(state)`. |
-| `Checkbox.checked` | `.checked(state)`. |
-| `Checkbox.onCheckedChange` | `.on_checked_change(f)`. |
-| `Checkbox.disabled` | `.disabled(true)`. |
-| `Checkbox.aria-invalid` | `.style(theme::checkbox::Invalid)`. |
+- `Checkbox.defaultChecked` maps to `.default_checked(state)`.
+- `Checkbox.checked` maps to `.checked(state)`.
+- `Checkbox.onCheckedChange` maps to `.on_checked_change(f)`.
+- `Checkbox.disabled` maps to `.disabled(true)`.
+- `Checkbox.aria-invalid` maps to `.style(theme::checkbox::Invalid)`.
 
 ### Keyboard interaction
 

@@ -18,10 +18,31 @@
 //! crates (the vendored module re-exports core's), so no Status conversion is
 //! needed.
 
+use std::sync::LazyLock;
+
+use iced_core::svg::{Handle, Renderer as _, Svg};
+use iced_core::{Color, Rectangle};
+use iced_widget::Renderer;
 use icedxdy_core::Theme;
 use icedxdy_core::theme::checkbox;
 
 use super::widget;
+
+// Lucide Check: the Nova indicator is14px, with a2px stroke in a24px viewBox.
+static CHECK: LazyLock<Handle> = LazyLock::new(|| {
+    Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>"#)
+});
+
+pub(super) fn check(renderer: &mut Renderer, bounds: Rectangle, color: Color, viewport: Rectangle) {
+    let size = bounds.height * 0.875;
+    let mark = Rectangle {
+        x: bounds.center_x() - size / 2.0,
+        y: bounds.center_y() - size / 2.0,
+        width: size,
+        height: size,
+    };
+    renderer.draw_svg(Svg::new(CHECK.clone()).color(color), mark, viewport);
+}
 
 /// Convert our OKLCH-native core `Style` into the vendored widget's `Style`.
 /// Preserves `ring` end-to-end (the iced bridge would silently drop it

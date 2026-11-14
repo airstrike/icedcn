@@ -4,13 +4,14 @@ use std::time::Duration;
 
 use browser::Message;
 use browser::component::checkbox::CheckboxPage;
-use browser::page::Page;
+use browser::page::{self, Page};
 use iced::{Event, Font, Length, Point, Rectangle, Size, Vector, mouse, time::Instant, window};
-use iced_test::core::widget::operation::Scrollable;
+use iced_test::core::widget::operation::{Scrollable, Text};
 use iced_test::core::widget::{Id, Operation};
 use iced_test::core::{Settings, Widget};
 use iced_test::simulator::{self, Simulator};
 use icedxdy::Theme;
+use icedxdy::widget::markdown;
 use icedxdy::widget::operation::control;
 
 type Preview<'a> = Simulator<'a, Message, Theme, iced::Renderer>;
@@ -198,7 +199,7 @@ fn table_header_and_rows_apply_complete_selection_at_both_widths() {
 }
 
 #[test]
-fn hero_card_reserves_border_outside_padding_at_both_widths() {
+fn hero_card_fills_its_group_with_border_padding_and_active_right_edge() {
     for (window, width, expected_y) in [(1440.0, 634.0, 58.75), (390.0, 324.0, 37.75)] {
         let mut page = CheckboxPage::new(0);
         page.window_width(window);
@@ -209,5 +210,52 @@ fn hero_card_reserves_border_outside_padding_at_both_widths() {
             (boxes[3].0.x - boxes[0].0.x - 11.0).abs() < 0.1,
             "{boxes:?}"
         );
+        // The whole FieldLabel card fills the group. The desktop right edge
+        // used to stop about15px early at the helper text's intrinsic width.
+        let group_width = (width - 80.0).min(384.0);
+        let right_padding = Point::new(boxes[0].0.x + group_width - 2.0, boxes[3].0.center_y());
+        click(&mut ui, right_padding);
+        assert!(controls(&mut ui).0[3].1, "right padding {right_padding:?}");
+        click(&mut ui, right_padding);
+        assert!(!controls(&mut ui).0[3].1);
+    }
+}
+
+#[test]
+fn api_descriptions_fit_without_horizontal_scrolling_at_both_widths() {
+    #[derive(Default)]
+    struct Bounds(Vec<(Rectangle, String)>);
+
+    impl Operation for Bounds {
+        fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+            visit(self);
+        }
+
+        fn text(&mut self, _: Option<&Id>, bounds: Rectangle, text: &mut dyn Text) {
+            self.0.push((bounds, text.text().to_string()));
+        }
+    }
+
+    let items = markdown::parse(include_str!("../snippets/checkbox-api-reference.md")).collect();
+    let theme = Theme::light();
+    let viewer = page::SnippetViewer::new((&theme).into(), &theme);
+    for width in [634.0, 324.0] {
+        let mut ui = Simulator::with_size(
+            Settings {
+                font: Font::new("Geist"),
+                ..Settings::default()
+            },
+            Size::new(width, 6000.0),
+            page::snippet(0, &items, &viewer).compose(),
+        );
+        let mut bounds = Bounds::default();
+        ui.operate(&mut bounds);
+        assert!(bounds.0.len() > 20, "complete API content is laid out");
+        for (bounds, text) in bounds.0 {
+            assert!(
+                bounds.x >= 0.0 && bounds.x + bounds.width <= width + 0.1,
+                "content width {width}: {bounds:?} {text}"
+            );
+        }
     }
 }
