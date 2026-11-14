@@ -75,11 +75,8 @@ fn intrinsic_button_centers_its_child_line_box_at_each_size() {
         let id = Id::unique();
         let label = container(Space::new().width(40).height(16)).id(id.clone());
         let b = button(label).size(size);
-        let mut ui: Preview<'_> = Simulator::with_size(
-            Settings::default(),
-            Size::new(300., 100.),
-            Element::from(b),
-        );
+        let mut ui: Preview<'_> =
+            Simulator::with_size(Settings::default(), Size::new(300., 100.), Element::from(b));
         next(&mut ui);
         let outer = ui.find(selector::is_focused()).expect("button").bounds();
         let inner = ui.find(id).expect("label").bounds();

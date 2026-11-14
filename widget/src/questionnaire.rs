@@ -63,7 +63,7 @@ pub struct Questionnaire<'a, M> {
     progress: Option<Box<dyn Fn(Progress) -> Slot<'a, Event> + 'a>>,
     on_item: Option<Box<dyn Fn(String) -> M + 'a>>,
     on_submit: Option<Box<dyn Fn(Answers) -> M + 'a>>,
-    validate: Option<Box<dyn Fn(&Answers) -> Option<Invalid> + 'a>>,
+    validate: Option<Validation<'a>>,
     controlled_answers: Option<Answers>,
     on_answers: Option<Box<dyn Fn(Answers) -> M + 'a>>,
 }
@@ -580,3 +580,5 @@ mod tests {
         );
     }
 }
+
+type Validation<'a> = Box<dyn Fn(&Answers) -> Option<Invalid> + 'a>;

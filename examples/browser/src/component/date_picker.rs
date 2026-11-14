@@ -6,9 +6,7 @@ use iced::{Element, Task};
 use icedcn::Slot;
 use icedcn::Theme;
 use icedcn::widget::calendar::{Date, Datelike, Duration, Mode, Selection, Weekday, today};
-use icedcn::widget::{
-    calendar, date_picker, field, input, input_group, popover, row, space, text,
-};
+use icedcn::widget::{calendar, date_picker, field, input, input_group, popover, row, space, text};
 
 pub static META: page::Meta = page::Meta {
     title: "Date Picker",

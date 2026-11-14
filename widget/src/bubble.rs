@@ -55,7 +55,7 @@ pub struct Bubble<'a, Message> {
     interactive: bool,
     on_press: Option<Message>,
     disabled: bool,
-    paint: Option<Box<dyn Fn(&Theme, Status, Style) -> Style + 'a>>,
+    paint: Option<Paint<'a>>,
 }
 
 /// Frame content in a primary, start-aligned bubble.
@@ -206,7 +206,11 @@ fn surface(variant: Variant, radius: Radius, theme: &Theme, status: Status) -> S
             radius,
             // CSS paints the surface under a transparent border. Iced cuts
             // the stroke out of the fill, so only paint a visible stroke.
-            width: if focused || variant == Outline { 1. } else { 0. },
+            width: if focused || variant == Outline {
+                1.
+            } else {
+                0.
+            },
             color: if focused {
                 theme.neutral.ring
             } else if variant == Outline {
@@ -390,3 +394,5 @@ impl<'a, Message: Clone + 'a> From<Bubble<'a, Message>> for Element<'a, Message,
         Box::new(bubble).compose()
     }
 }
+
+type Paint<'a> = Box<dyn Fn(&Theme, Status, Style) -> Style + 'a>;

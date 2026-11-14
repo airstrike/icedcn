@@ -1,4 +1,4 @@
-use super::avatar::{evilrabbit_handle, maxleiter_handle, alex_handle};
+use super::avatar::{alex_handle, evilrabbit_handle, maxleiter_handle};
 use iced::widget::image;
 use iced::{ContentFit, Fill, Shrink, Task, Widget};
 use std::sync::OnceLock;
@@ -414,9 +414,7 @@ impl page::Page for ItemPage {
                     item::actions([icon::external_link().size(16).into()])
                 ])
                 .style(item::Outline)
-                .on_press(Message::OpenUrl(
-                    "https://github.com/airstrike/icedcn"
-                ))
+                .on_press(Message::OpenUrl("https://github.com/airstrike/icedcn"))
             ]
             .spacing(16)
             .width(Fill)

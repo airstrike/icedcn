@@ -35,9 +35,7 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "separator",
         title: "Custom separator",
-        description: Some(
-            "Use `.separator(...)` to draw a custom separator.",
-        ),
+        description: Some("Use `.separator(...)` to draw a custom separator."),
         snippet: "examples/browser/snippets/breadcrumb-separator.md",
     },
     page::Block::Example {

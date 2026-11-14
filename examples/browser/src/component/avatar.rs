@@ -111,7 +111,9 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "size",
         title: "Sizes",
-        description: Some("Use `.size(avatar::Sm)` or `.size(avatar::Lg)` to change the avatar size."),
+        description: Some(
+            "Use `.size(avatar::Sm)` or `.size(avatar::Lg)` to change the avatar size.",
+        ),
         snippet: "examples/browser/snippets/avatar-size.md",
     },
     page::Block::Example {
@@ -207,12 +209,9 @@ impl page::Page for AvatarPage {
 
             "basic" => avatar(Some(alex_handle())).fallback("AC").into(),
 
-            "badge" => avatar::badge(
-                avatar(Some(alex_handle())).fallback("AC"),
-                avatar::dot(),
-            )
-            .badge_style(presence)
-            .into(),
+            "badge" => avatar::badge(avatar(Some(alex_handle())).fallback("AC"), avatar::dot())
+                .badge_style(presence)
+                .into(),
 
             "badge-icon" => avatar::badge(
                 avatar(Some(pranathip_handle())).fallback("PP"),
@@ -248,13 +247,9 @@ impl page::Page for AvatarPage {
             .into(),
 
             "size" => row![
-                avatar(Some(alex_handle()))
-                    .fallback("AC")
-                    .size(avatar::Sm),
+                avatar(Some(alex_handle())).fallback("AC").size(avatar::Sm),
                 avatar(Some(alex_handle())).fallback("AC"),
-                avatar(Some(alex_handle()))
-                    .fallback("AC")
-                    .size(avatar::Lg),
+                avatar(Some(alex_handle())).fallback("AC").size(avatar::Lg),
             ]
             .spacing(8)
             .wrap()
@@ -289,8 +284,6 @@ impl page::Page for AvatarPage {
         }
     }
 }
-
-
 
 fn presence(theme: &Theme) -> theme::container::Style {
     let mut style = badge_style(theme);

@@ -127,9 +127,9 @@ impl State {
     fn seeded(value: f32) -> Self {
         Self {
             animated: Animation::new(value)
-                .easing(Easing::Custom(
-                    |t| crate::animation::cubic_bezier(0.4, 0.0, 0.2, 1.0, t),
-                ))
+                .easing(Easing::Custom(|t| {
+                    crate::animation::cubic_bezier(0.4, 0.0, 0.2, 1.0, t)
+                }))
                 .duration(TRANSITION_DURATION),
             settled_at: Some(value),
         }

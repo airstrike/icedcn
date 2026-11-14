@@ -34,6 +34,7 @@ use iced_core::time::Instant;
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
+use icedcn_core::border;
 use icedcn_core::theme;
 use icedcn_core::theme::container::Style;
 use icedcn_core::theme::dialog;
@@ -432,11 +433,10 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                     let handle = Container::new(iced_widget::Space::new())
                         .width(100)
                         .height(4)
-                        .style(|theme: &Theme| {
-                            let mut style = Style::default();
-                            style.background = Some(theme.muted.base.into());
-                            style.border.radius = 2.0.into();
-                            style.into()
+                        .style(|theme: &Theme| Style {
+                            background: Some(theme.muted.base.into()),
+                            border: border::rounded(2),
+                            ..Style::default()
                         });
                     column![
                         Container::new(handle).center_x(Fill).padding([16, 0, 0, 0]),
@@ -465,7 +465,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                         bottom_left,
                     };
                 }
-                style.into()
+                style
             };
             let panel = match placement {
                 Placement::Center { .. } => Container::new(content).width(Fill).style(self.style),

@@ -568,7 +568,8 @@ where
                 .filter(|f| f.is_window_focused)
                 .map(|_| state.cursor.end(value).min(slots.count - 1));
             let caret_visible = state.is_focused.as_ref().is_some_and(|focus| {
-                ((focus.now - focus.updated_at).as_millis() / CURSOR_BLINK_INTERVAL_MILLIS) % 2 == 0
+                ((focus.now - focus.updated_at).as_millis() / CURSOR_BLINK_INTERVAL_MILLIS)
+                    .is_multiple_of(2)
             });
             let glyphs = value.to_string().chars().collect::<Vec<_>>();
             let selection = state.cursor.selection(value);

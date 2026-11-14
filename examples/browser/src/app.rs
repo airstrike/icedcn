@@ -23,8 +23,8 @@ use crate::component;
 use crate::docs;
 use crate::fonts;
 use crate::icon;
-use crate::sleep;
 use crate::page::{self, SnippetViewer};
+use crate::sleep;
 
 const PINNED_FONTS: &[&str] = &["Geist", "Inter"];
 
@@ -83,8 +83,8 @@ impl App {
             dropdown_menu, empty, field, hover_card, input, input_group, input_otp, item, kbd,
             label, marker, menubar, message, native_select, navigation_menu, pagination, popover,
             progress, questionnaire, radio_group, resizable, scroll_area, scroller, select,
-            separator, sheet, sidebar, skeleton, slider, spinner, switch, table, tabs,
-            text, textarea, toast, toggle, toggle_group, tooltip, trace,
+            separator, sheet, sidebar, skeleton, slider, spinner, switch, table, tabs, text,
+            textarea, toast, toggle, toggle_group, tooltip, trace,
         };
 
         let constructors: Vec<fn(usize) -> Box<dyn page::Page>> = vec![
@@ -250,8 +250,14 @@ impl App {
             Message::OpenComponent(target) => {
                 let (name, fragment) = target
                     .split_once('#')
-                    .map_or((target.as_str(), None), |(name, fragment)| (name, Some(fragment)));
-                let Some(index) = self.pages.iter().position(|p| page::slug(p.meta().title) == name) else {
+                    .map_or((target.as_str(), None), |(name, fragment)| {
+                        (name, Some(fragment))
+                    });
+                let Some(index) = self
+                    .pages
+                    .iter()
+                    .position(|p| page::slug(p.meta().title) == name)
+                else {
                     return Task::none();
                 };
                 let section = fragment.and_then(|id| self.pages[index].state().section(id));

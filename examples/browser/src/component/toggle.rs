@@ -1,4 +1,3 @@
-
 use iced::widget::component::{Component, component};
 use iced::widget::svg;
 use iced::{Element, Task, Widget};

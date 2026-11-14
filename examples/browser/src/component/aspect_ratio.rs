@@ -24,17 +24,13 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "square",
         title: "Square",
-        description: Some(
-            "Pass `1.0` for a square crop.",
-        ),
+        description: Some("Pass `1.0` for a square crop."),
         snippet: "examples/browser/snippets/aspect-ratio-square.md",
     },
     page::Block::Example {
         id: "portrait",
         title: "Portrait",
-        description: Some(
-            "Pass `9.0 / 16.0` for a portrait crop.",
-        ),
+        description: Some("Pass `9.0 / 16.0` for a portrait crop."),
         snippet: "examples/browser/snippets/aspect-ratio-portrait.md",
     },
     page::Block::Group {

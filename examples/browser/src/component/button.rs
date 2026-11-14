@@ -37,9 +37,7 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "size",
         title: "Size",
-        description: Some(
-            "Choose a button size with `.size(...)`.",
-        ),
+        description: Some("Choose a button size with `.size(...)`."),
         snippet: "examples/browser/snippets/button-size.md",
     },
     page::Block::Example {
@@ -95,9 +93,7 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "rounded",
         title: "Rounded",
-        description: Some(
-            "Call `.rounded()` for a pill-shaped button.",
-        ),
+        description: Some("Call `.rounded()` for a pill-shaped button."),
         snippet: "examples/browser/snippets/button-rounded.md",
     },
     page::Block::Example {

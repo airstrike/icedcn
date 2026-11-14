@@ -49,7 +49,7 @@ pub struct Item {
     pub(super) input: Option<(String, String)>,
     pub(super) multiple: bool,
     pub(super) required: bool,
-    enabled_when: Option<Box<dyn Fn(&Answers) -> bool>>,
+    enabled_when: Option<Condition>,
 }
 
 pub fn item(name: impl Into<String>, title: impl Into<String>) -> Item {
@@ -116,3 +116,5 @@ impl Item {
         }
     }
 }
+
+type Condition = Box<dyn Fn(&Answers) -> bool>;

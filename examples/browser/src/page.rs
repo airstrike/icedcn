@@ -12,7 +12,6 @@ mod bundled {
     include!(concat!(env!("OUT_DIR"), "/snippets.rs"));
 }
 
-
 use iced::Alignment::*;
 use iced::border;
 use iced::mouse::Interaction;
@@ -939,7 +938,10 @@ impl State {
             return Some(0);
         }
         flatten(self.blocks).iter().position(|(block, _)| {
-            if block.toc_title(self).is_some_and(|title| slug(title) == fragment) {
+            if block
+                .toc_title(self)
+                .is_some_and(|title| slug(title) == fragment)
+            {
                 return true;
             }
             match block {
@@ -947,7 +949,10 @@ impl State {
                 Block::Md(path) => Path::new(path)
                     .file_stem()
                     .and_then(|stem| stem.to_str())
-                    .is_some_and(|stem| stem.strip_suffix(fragment).is_some_and(|p| p.ends_with('-'))),
+                    .is_some_and(|stem| {
+                        stem.strip_suffix(fragment)
+                            .is_some_and(|p| p.ends_with('-'))
+                    }),
                 _ => false,
             }
         })
@@ -963,10 +968,9 @@ impl State {
         let tasks: Vec<Task<super::Message>> = paths
             .into_iter()
             .map(|path| {
-                Task::perform(
-                    load_snippet(path),
-                    move |result| super::Message::Page(pi, Message::SnippetLoaded(path, result)),
-                )
+                Task::perform(load_snippet(path), move |result| {
+                    super::Message::Page(pi, Message::SnippetLoaded(path, result))
+                })
             })
             .collect();
         Task::batch(tasks)
@@ -1014,7 +1018,8 @@ impl State {
             Message::FileSelected(_) | Message::CodeBlock(_) => Task::none(),
             Message::LinkClicked(url) => {
                 if let Some(fragment) = url.strip_prefix('#') {
-                    return self.section(fragment)
+                    return self
+                        .section(fragment)
                         .map_or_else(Task::none, |index| self.update(&Message::ScrollTo(index)));
                 }
                 open_link(url)
@@ -1060,10 +1065,13 @@ impl State {
 
 #[cfg(not(target_arch = "wasm32"))]
 async fn load_snippet(path: &str) -> Result<String, String> {
-    let name = path.strip_prefix("examples/browser/")
+    let name = path
+        .strip_prefix("examples/browser/")
         .ok_or_else(|| format!("Unknown snippet: {path}"))?;
     let file = Path::new(env!("CARGO_MANIFEST_DIR")).join(name);
-    read_to_string(file).await.map_err(|error| error.to_string())
+    read_to_string(file)
+        .await
+        .map_err(|error| error.to_string())
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1085,9 +1093,8 @@ pub fn open_link(url: &str) -> Task<super::Message> {
     if url.starts_with("https://") || url.starts_with("http://") || url.starts_with("mailto:") {
         #[cfg(target_arch = "wasm32")]
         if let Some(window) = web_sys::window() {
-            let _ = window.open_with_url_and_target_and_features(
-                url, "_blank", "noopener,noreferrer",
-            );
+            let _ =
+                window.open_with_url_and_target_and_features(url, "_blank", "noopener,noreferrer");
         }
         #[cfg(not(target_arch = "wasm32"))]
         {

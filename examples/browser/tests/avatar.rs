@@ -146,8 +146,8 @@ fn loaded_portraits_replace_the_fallback_surface_and_preserve_transparency() {
         );
         let background = pixel(&half, 60, 20);
         for (channel, foreground) in [255.0, 0.0, 0.0].into_iter().enumerate() {
-            let expected = foreground * (128.0 / 255.0)
-                + f32::from(background[channel]) * (127.0 / 255.0);
+            let expected =
+                foreground * (128.0 / 255.0) + f32::from(background[channel]) * (127.0 / 255.0);
             assert!(
                 (f32::from(pixel(&half, 16, 16)[channel]) - expected).abs() <= 1.0,
                 "portrait alpha must composite over the actual backdrop"

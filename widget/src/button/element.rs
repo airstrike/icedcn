@@ -63,7 +63,7 @@ where
     anchor: bool,
     icon_start: bool,
     icon_end: bool,
-    focus_ring: Option<(f32, fn(&Theme) -> icedcn_core::Color)>,
+    focus_ring: Option<Ring>,
     on_press: Option<Message>,
     disabled: bool,
 }
@@ -388,7 +388,7 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
             anchor: btn.anchor,
             small: matches!(size, Size::Xs | Size::Sm),
         };
-        let resolve: Rc<dyn Fn(&Theme, state::Status) -> state::Style + 'a> = Rc::from(btn.style);
+        let resolve: Resolver<'a> = Rc::from(btn.style);
         let decorate = resolve.clone();
         let bridge: widget::StyleFn<'a, Theme> = Box::new(move |t, s| {
             let resolved = resolve(t, status(s));
@@ -505,3 +505,7 @@ mod tests {
         assert_eq!(resolved.paint.border.radius.top_right, 10.0);
     }
 }
+
+type Ring = (f32, fn(&Theme) -> icedcn_core::Color);
+
+type Resolver<'a> = Rc<dyn Fn(&Theme, state::Status) -> state::Style + 'a>;

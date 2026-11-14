@@ -176,10 +176,10 @@ mod tests {
     use crate::code_block::{Destructive, viewport};
     use iced_core::renderer::Headless;
     use iced_core::shell::{Bus, Waker};
-    use iced_test::futures::futures::executor::block_on;
     use iced_core::widget::operation::focusable;
     use iced_core::widget::{Id, Tree};
     use iced_core::{Event, Layout, Point, Rectangle, Shell, Size, Widget, layout, mouse, window};
+    use iced_test::futures::futures::executor::block_on;
     use iced_widget::Widget as _;
     use iced_widget::{Renderer, Space};
     use icedcn_core::Theme;
@@ -196,7 +196,8 @@ mod tests {
         let mut panel = Frame::new(content.boxed(), style);
         let mut tree = Tree::new(&panel);
         tree.diff(&mut panel);
-        let renderer = block_on(Renderer::new(Default::default(), None)).expect("headless renderer");
+        let renderer =
+            block_on(Renderer::new(Default::default(), None)).expect("headless renderer");
         panel.layout(
             &mut tree,
             &renderer,

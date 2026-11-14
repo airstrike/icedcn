@@ -1,4 +1,3 @@
-
 use iced::{Fill, FillPortion, Task, Widget};
 
 use icedcn::card;

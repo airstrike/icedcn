@@ -10,9 +10,9 @@ use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::font::Weight;
 use iced_core::text::{Ellipsis, LineHeight, Wrapping};
 use iced_core::{Element, Length};
-use iced_widget::text::StyleFn;
+
 use iced_widget::{Renderer, Widget, stack};
-use icedcn_core::theme::container::Style;
+use icedcn_core::theme::container::{Style, StyleFn};
 use icedcn_core::{Border, Theme, radius};
 pub use trigger::{Trigger, trigger};
 
@@ -31,13 +31,13 @@ pub struct Attachment<'a, Message> {
     description: Option<String>,
     media: Option<Slot<'a, Message>>,
     actions: Vec<Slot<'a, Message>>,
-    trigger: Option<Box<dyn FnOnce(Slot<'a, Message>) -> Slot<'a, Message> + 'a>>,
+    trigger: Option<Mount<'a, Message>>,
     state: State,
     size: Size,
     vertical: bool,
     width: Option<Length>,
     inherited: Inherited,
-    style: Option<Box<dyn Fn(&Theme) -> Style + 'a>>,
+    style: Option<StyleFn<'a, Theme>>,
 }
 pub fn attachment<'a, Message>(title: impl Into<String>) -> Attachment<'a, Message> {
     Attachment {
@@ -120,7 +120,7 @@ fn truncate<'a, Message: 'a>(label: String, pixels: f32, medium: bool) -> Slot<'
 }
 impl<'a, Message: 'a> Compose<Message> for Attachment<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {
-        self.inherited = self.inherited.clone().or(from.clone());
+        self.inherited = self.inherited.or(*from);
         if let Some(media) = &mut self.media {
             media.inherit(from);
         }
@@ -190,7 +190,7 @@ impl<'a, Message: 'a> Compose<Message> for Attachment<'a, Message> {
                         .into(),
                     ),
                     ..Default::default()
-                }) as StyleFn<Theme>)
+                }) as iced_widget::text::StyleFn<Theme>)
                 .into();
             description.inherit(&inherited);
             labels = labels.push(description);
@@ -202,7 +202,7 @@ impl<'a, Message: 'a> Compose<Message> for Attachment<'a, Message> {
             _ => side,
         };
         let media = media.map(|mut item| {
-            item.inherit(&inherited.clone().with_size(if vertical {
+            item.inherit(&inherited.with_size(if vertical {
                 24.
             } else if size == Size::Xs {
                 14.
@@ -339,3 +339,5 @@ impl<'a, Message: 'a> From<Attachment<'a, Message>> for Element<'a, Message, The
         Box::new(a).compose()
     }
 }
+
+type Mount<'a, Message> = Box<dyn FnOnce(Slot<'a, Message>) -> Slot<'a, Message> + 'a>;

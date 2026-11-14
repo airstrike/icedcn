@@ -119,7 +119,7 @@ where
     border_box: bool,
     interaction: Option<mouse::Interaction>,
     class: Theme::Class<'a>,
-    decoration: Option<Box<dyn Fn(&Theme, Status) -> (bool, f32) + 'a>>,
+    decoration: Option<Decoration<'a, Theme>>,
     status: Option<Status>,
 }
 
@@ -1277,3 +1277,5 @@ fn disabled(style: Style) -> Style {
         ..style
     }
 }
+
+type Decoration<'a, Theme> = Box<dyn Fn(&Theme, Status) -> (bool, f32) + 'a>;

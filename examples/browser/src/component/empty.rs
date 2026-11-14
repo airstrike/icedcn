@@ -1,4 +1,4 @@
-use super::avatar::{evilrabbit_handle, maxleiter_handle, alex_handle};
+use super::avatar::{alex_handle, evilrabbit_handle, maxleiter_handle};
 use iced::mouse::Cursor;
 use iced::widget::{canvas, stack};
 use iced::{Element, Fill, Point, Rectangle, Task, Widget};

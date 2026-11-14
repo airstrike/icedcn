@@ -255,7 +255,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 style.border.width = 1.;
                 style.border.radius = radius::LG.into();
                 style.border.color = theme.neutral.border;
-                style.into()
+                style
             });
         }
         List {

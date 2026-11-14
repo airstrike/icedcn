@@ -45,9 +45,7 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "file-tree",
         title: "File Tree",
-        description: Some(
-            "Open a folder to reveal its files and nested folders.",
-        ),
+        description: Some("Open a folder to reveal its files and nested folders."),
         snippet: "examples/browser/snippets/collapsible-file-tree.md",
     },
     page::Block::Group {

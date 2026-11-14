@@ -221,7 +221,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme> for Carousel<'a
 }
 impl<'a, Message: Clone + 'static> Compose<Message> for Carousel<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {
-        self.inherited = from.clone();
+        self.inherited = *from;
     }
     fn compose<'b>(self: Box<Self>) -> Element<'b, Message, Theme, Renderer>
     where

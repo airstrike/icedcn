@@ -90,12 +90,9 @@ fn status() -> Slot<'static, Message> {
 }
 fn description() -> Slot<'static, Message> {
     trace([
-        line(
-            "Edited src/settings/notifications.rs",
-            icon::file_pen,
-        )
-        .description("+48 −12")
-        .into(),
+        line("Edited src/settings/notifications.rs", icon::file_pen)
+            .description("+48 −12")
+            .into(),
         line("Ran cargo test", icon::terminal)
             .description("14s")
             .into(),

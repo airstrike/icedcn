@@ -2,11 +2,11 @@ mod demo;
 mod samples;
 mod sections;
 use crate::{Message, page};
+use iced::time::Instant;
 use iced::widget::Id;
 use iced::{Element, Fill, Task, clipboard};
 use icedcn::{Theme, widget::container};
 use sections::BLOCKS;
-use iced::time::Instant;
 pub static META: page::Meta = page::Meta {
     title: "Code Block",
     description: "Displays code, terminal output and diffs with an optional header, line numbers and a copy button.",

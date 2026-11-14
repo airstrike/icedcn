@@ -247,7 +247,8 @@ mod tests {
         };
         let mut tree = Tree::new(&control);
         tree.diff(&mut control);
-        let renderer = block_on(Renderer::new(Default::default(), None)).expect("headless renderer");
+        let renderer =
+            block_on(Renderer::new(Default::default(), None)).expect("headless renderer");
         let size = Size::new(100., 100.);
         control.layout(&mut tree, &renderer, &layout::Limits::new(Size::ZERO, size));
         let viewport = Rectangle::with_size(size);

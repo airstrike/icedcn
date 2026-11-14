@@ -511,9 +511,10 @@ where
                         shell.capture_event();
                     }
                 }
-                Event::Keyboard(keyboard::Event::KeyReleased { key, .. })
-                    if matches!(key, Key::Named(Named::Space)) =>
-                {
+                Event::Keyboard(keyboard::Event::KeyReleased {
+                    key: Key::Named(Named::Space),
+                    ..
+                }) => {
                     if std::mem::take(&mut internal.space_pressed)
                         && internal.is_focused
                         && !shell.is_event_captured()

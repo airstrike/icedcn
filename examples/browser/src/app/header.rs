@@ -23,7 +23,10 @@ const NAVIGATION: &[(&str, &str)] = &[
     ("Home", GITHUB),
     ("Docs", "icedcn://component/button#installation"),
     ("Components", "icedcn://component/accordion"),
-    ("Examples", "https://github.com/airstrike/icedcn/tree/HEAD/examples"),
+    (
+        "Examples",
+        "https://github.com/airstrike/icedcn/tree/HEAD/examples",
+    ),
     ("Charts", "icedcn://component/chart"),
     ("Typography", "icedcn://component/typography"),
 ];
@@ -33,10 +36,16 @@ pub(super) const GUIDES: &[(&str, &str)] = &[
     ("Components", "icedcn://component/accordion"),
     ("Conversations", "icedcn://component/message-scroller"),
     ("Installation", "icedcn://component/button#installation"),
-    ("Theming", "https://github.com/airstrike/icedcn/tree/HEAD/core/src/theme"),
+    (
+        "Theming",
+        "https://github.com/airstrike/icedcn/tree/HEAD/core/src/theme",
+    ),
     ("Cargo", "https://doc.rust-lang.org/cargo/"),
     ("Typography", "icedcn://component/typography"),
-    ("Changelog", "https://github.com/airstrike/icedcn/commits/HEAD"),
+    (
+        "Changelog",
+        "https://github.com/airstrike/icedcn/commits/HEAD",
+    ),
 ];
 
 pub(super) async fn stars() -> Option<u64> {
@@ -347,11 +356,10 @@ mod tests {
         );
         assert!(desktop.find("New").is_err());
         desktop.click("Examples").unwrap();
-        assert!(
-            desktop
-                .drain()
-                .any(|m| matches!(m, Message::OpenUrl("https://github.com/airstrike/icedcn/tree/HEAD/examples")))
-        );
+        assert!(desktop.drain().any(|m| matches!(
+            m,
+            Message::OpenUrl("https://github.com/airstrike/icedcn/tree/HEAD/examples")
+        )));
         let mut mobile = header(&app, 375.);
         mobile.click("Menu").unwrap();
         mobile.click("Charts").unwrap();

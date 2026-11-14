@@ -12,8 +12,8 @@ use crate::core::widget::tree::{self, Tree};
 use crate::core::widget::{Meta, Operation};
 use crate::core::window;
 use crate::core::{Event, Length, Rectangle, Shell, Size, Vector, Widget};
-use icedcn_core::Theme;
 use iced_core::time::{Duration, Instant};
+use icedcn_core::Theme;
 
 /// A widget that displays another widget on top of it.
 ///

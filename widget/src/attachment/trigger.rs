@@ -32,8 +32,7 @@ impl<Message> Trigger<'_, Message> {
 impl<'a, Message: Clone + 'a> Compose<Message> for Trigger<'a, Message> {
     fn inherit(&mut self, inherited: &Inherited) {
         self.disabled |= inherited.is_disabled();
-        self.content
-            .inherit(&inherited.clone().with_selectable(false));
+        self.content.inherit(&(*inherited).with_selectable(false));
     }
     fn compose<'b>(self: Box<Self>) -> Element<'b, Message, Theme, Renderer>
     where

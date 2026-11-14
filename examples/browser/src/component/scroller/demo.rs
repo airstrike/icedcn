@@ -77,11 +77,13 @@ impl Demo {
             Self::Anchoring => {
                 "Toggle the anchor role, then send messages to compare where turns settle."
             }
-            Self::Group => {
-                "Add Rocky to start a turn anchored at the join marker."
+            Self::Group => "Add Rocky to start a turn anchored at the join marker.",
+            Self::Context => {
+                "Adjust the slider, then send a message to see how much of the previous reply stays visible."
             }
-            Self::Context => "Adjust the slider, then send a message to see how much of the previous reply stays visible.",
-            Self::Streaming => "The simulated reply follows the bottom of the viewport while you read there.",
+            Self::Streaming => {
+                "The simulated reply follows the bottom of the viewport while you read there."
+            }
             Self::Opening => {
                 "Choose where the transcript opens. Try its start, its end, or its last anchored turn."
             }

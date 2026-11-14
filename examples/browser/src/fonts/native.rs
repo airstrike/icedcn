@@ -1,5 +1,5 @@
-use iced::Task;
 use fount::google;
+use iced::Task;
 use iced::font::{self, Family};
 
 #[derive(Debug, Clone)]
@@ -11,10 +11,7 @@ pub enum Message {
 
 pub fn init() -> Task<Message> {
     Task::batch([
-        Task::future(google::catalog(
-            google::DEFAULT_CATALOG_MAX_AGE,
-        ))
-        .map(Message::CatalogLoaded),
+        Task::future(google::catalog(google::DEFAULT_CATALOG_MAX_AGE)).map(Message::CatalogLoaded),
         font::list()
             .map(Result::ok)
             .and_then(Task::done)
