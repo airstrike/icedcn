@@ -216,6 +216,8 @@ pub enum Message {
 
 /// Spacing and surfaces around an installed example.
 pub struct Backdrop {
+    /// Minimum preview height in logical pixels, before the code panel.
+    pub min_height: f32,
     pub padding: iced::Padding,
     pub surface: fn(&Theme) -> theme::container::Style,
     pub border: fn(&Theme) -> theme::container::Style,
@@ -224,6 +226,7 @@ pub struct Backdrop {
 impl Default for Backdrop {
     fn default() -> Self {
         Self {
+            min_height: PREVIEW_HEIGHT,
             padding: PREVIEW_PADDING.into(),
             surface: card_preview,
             border: card,
@@ -502,7 +505,7 @@ fn framed_example<'a>(
     let preview_el: iced::Element<'_, super::Message, Theme> = container(preview)
         .center_x(Fill)
         .align_y(iced::Center)
-        .min_height(PREVIEW_HEIGHT)
+        .min_height(backdrop.min_height)
         .padding(backdrop.padding)
         .style(backdrop.surface)
         .into();

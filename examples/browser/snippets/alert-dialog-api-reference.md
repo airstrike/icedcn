@@ -1,6 +1,14 @@
-## API Reference
+### size
 
-### `alert_dialog()`
+Use the `.size(..)` builder on `AlertDialog` to control the size of the alert dialog. It accepts the following values:
+
+| Builder | Type | Default |
+| --- | --- | --- |
+| `.size(size)` | `Size::Default` or `Size::Sm` | `Size::Default` |
+
+For more information about the other components and their props, see the [Radix UI documentation](https://www.radix-ui.com/primitives/docs/components/alert-dialog#api-reference).
+
+**`alert_dialog()`**
 
 `alert_dialog(trigger, content)` is a dialog without a corner close button that a press outside does not dismiss: its cancel and action buttons and `Escape` close it.
 
@@ -11,7 +19,7 @@
 | `.open(open)` | `bool` | - | Control the dialog. |
 | `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | The message published with the new open state. |
 
-### The handle
+**The handle**
 
 | Method | Description |
 | --- | --- |

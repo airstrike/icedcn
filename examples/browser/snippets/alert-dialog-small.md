@@ -1,4 +1,6 @@
 ```rust
+use iced::Fill;
+use icedxdy::Size;
 use icedxdy::widget::{alert_dialog, button, column};
 
 alert_dialog(

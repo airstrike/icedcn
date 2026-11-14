@@ -15,6 +15,7 @@ pub(crate) struct Width<'a, M> {
     pub content: Element<'a, M, Theme, Renderer>,
     pub mobile: bool,
     pub enabled: bool,
+    pub breakpoint: f32,
     pub change: fn(bool) -> M,
 }
 impl<M> Meta for Width<'_, M> {}
@@ -136,7 +137,8 @@ impl<Message> Widget<Message, Theme, Renderer> for Width<'_, Message> {
         translation: Vector,
         window: Size,
     ) -> Vec<overlay::Element<'b, Message, Theme, Renderer>> {
-        *tree.state.downcast_mut::<Option<bool>>() = Some(self.enabled && window.width < 768.);
+        *tree.state.downcast_mut::<Option<bool>>() =
+            Some(self.enabled && window.width < self.breakpoint);
         let (child_layout, child_tree) = layout
             .iter_mut(&mut tree.children)
             .next()

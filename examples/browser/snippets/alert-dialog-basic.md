@@ -1,4 +1,5 @@
 ```rust
+use iced::Fill;
 use icedxdy::widget::{alert_dialog, button, column};
 
 alert_dialog(
@@ -11,7 +12,7 @@ alert_dialog(
             ),
             a.footer([
                 a.cancel(button("Cancel").style(button::Outline)),
-                a.action(button("Continue").on_press(Message::Delete)),
+                a.action(button("Continue")),
             ]),
         ]
         .width(Fill)

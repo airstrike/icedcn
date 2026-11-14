@@ -1,6 +1,6 @@
 ## Composition
 
-Use the handle in the trigger and content closures to connect the opener, cancel button and action to the same dialog.
+Use the following composition to build an `AlertDialog`:
 
 ```text
 AlertDialog

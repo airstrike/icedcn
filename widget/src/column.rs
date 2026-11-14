@@ -32,6 +32,7 @@ pub struct Column<'a, Message> {
     spacing: Option<f32>,
     max_width: f32,
     row_breakpoint: Option<f32>,
+    reverse: bool,
     width: Length,
     height: Length,
     padding: Padding,
@@ -46,6 +47,7 @@ impl<'a, Message: 'a> Column<'a, Message> {
             spacing: None,
             max_width: f32::INFINITY,
             row_breakpoint: None,
+            reverse: false,
             width: Length::Shrink,
             height: Length::Shrink,
             padding: Padding::ZERO,
@@ -64,6 +66,12 @@ impl<'a, Message: 'a> Column<'a, Message> {
     /// Sets the vertical spacing between elements.
     pub fn spacing(mut self, spacing: impl Into<Pixels>) -> Self {
         self.spacing = Some(spacing.into().0);
+        self
+    }
+
+    /// Reverse vertical placement without changing keyboard traversal order.
+    pub(crate) fn reverse(mut self) -> Self {
+        self.reverse = true;
         self
     }
 
@@ -153,6 +161,7 @@ impl<'a, Message: 'a> Compose<Message> for Column<'a, Message> {
             spacing: self.spacing.unwrap_or(0.0),
             max_width: self.max_width,
             row_breakpoint: self.row_breakpoint,
+            reverse: self.reverse,
             width: self.width,
             height: self.height,
             padding: self.padding,
@@ -172,6 +181,7 @@ struct ColumnWidget<'a, Message> {
     spacing: f32,
     max_width: f32,
     row_breakpoint: Option<f32>,
+    reverse: bool,
     width: Length,
     height: Length,
     padding: Padding,
@@ -224,6 +234,7 @@ impl<Message> Widget<Message, Theme, Renderer> for ColumnWidget<'_, Message> {
         } else {
             flex::Axis::Vertical
         };
+        let reverse = self.reverse && matches!(axis, flex::Axis::Vertical);
         tree.size = flex::resolve(
             axis,
             renderer,
@@ -237,6 +248,14 @@ impl<Message> Widget<Message, Theme, Renderer> for ColumnWidget<'_, Message> {
             &mut self.children,
             cache,
         );
+        if reverse {
+            for child in &mut tree.children {
+                child.translation.y = tree.size.height
+                    - self.padding.bottom
+                    - (child.translation.y - self.padding.top)
+                    - child.size.height;
+            }
+        }
     }
 
     fn operate(

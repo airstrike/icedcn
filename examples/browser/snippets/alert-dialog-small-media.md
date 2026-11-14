@@ -1,4 +1,8 @@
 ```rust
+use iced::{Fill, Widget};
+use iced::widget::svg;
+use icedxdy::Theme;
+use icedxdy::Size;
 use icedxdy::widget::{alert_dialog, button, column};
 
 alert_dialog(
@@ -9,7 +13,11 @@ alert_dialog(
                 "Allow accessory to connect?",
                 "Do you want to allow the USB accessory to connect to this device?",
             )
-            .media(icon::bluetooth()),
+            .media(svg(svg::Handle::from_memory(r#"<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m7 7 10 10-5 5V2l5 5L7 17" /> </svg>"#.as_bytes()))
+                .width(24)
+                .height(24)
+                .style(|theme: &Theme, _| svg::Style { color: Some(theme.neutral.foreground.into()) })
+                .boxed()),
             a.footer([
                 a.cancel(button("Don't allow").style(button::Outline)),
                 a.action(button("Allow")),

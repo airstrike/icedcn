@@ -31,6 +31,7 @@
 use iced_core::Element;
 use iced_core::Length::Fill;
 use iced_core::alignment::{Horizontal, Vertical};
+use iced_core::text::LineHeight;
 use iced_widget::Renderer;
 use icedxdy_core::Theme;
 use icedxdy_core::theme::alert_dialog;
@@ -47,7 +48,7 @@ use crate::row::Row;
 use crate::separator::separator;
 use crate::text;
 
-pub use icedxdy_core::theme::alert_dialog::Media;
+pub use icedxdy_core::theme::alert_dialog::{Destructive, Media};
 
 /// A closure that builds part of an [`AlertDialog`].
 type Body<'a, Message> = Box<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
@@ -69,6 +70,7 @@ pub struct AlertDialog<'a, Message> {
 pub struct Handle {
     dialog: dialog::Handle,
     is_small: bool,
+    is_mobile: bool,
 }
 
 /// Create a closed, uncontrolled [`AlertDialog`]: `trigger` builds what
@@ -153,12 +155,17 @@ impl Handle {
         title: &'a str,
         description: &'a str,
     ) -> Header<'a, Message> {
-        let alignment = if self.is_small {
+        let alignment = if self.is_small || self.is_mobile {
             Horizontal::Center
         } else {
             Horizontal::Left
         };
-        self.header_content(title, text::muted(description).align_x(alignment))
+        self.header_content(
+            title,
+            text::muted(description)
+                .line_height(LineHeight::Absolute(20.0.into()))
+                .align_x(alignment),
+        )
     }
 
     /// Build a header with a composed description, such as rich text with a link.
@@ -172,23 +179,37 @@ impl Handle {
             description: description.into(),
             media: None,
             media_style: Media.into(),
-            is_small: self.is_small,
+            is_small: self.is_small || self.is_mobile,
         }
     }
 
     /// An `AlertDialogFooter`: its buttons on a `bg-muted/50` band, at
-    /// the end (default) or in equal halves (`Size::Sm`).
+    /// the end (default) or in equal halves (`Size::Sm`). Narrow default
+    /// dialogs stack actions in reverse visual order, preserving focus order.
     pub fn footer<'a, Message: 'a>(
         &self,
         buttons: impl IntoIterator<Item = Slot<'a, Message>>,
     ) -> Slot<'a, Message> {
-        let row = Row::with_children(buttons).spacing(8);
-        let row = if self.is_small { row.width(Fill) } else { row };
+        let buttons: Vec<_> = buttons.into_iter().collect();
+        let actions: Slot<'a, Message> = if self.is_mobile && !self.is_small {
+            Column::with_children(buttons)
+                .reverse()
+                .spacing(8)
+                .width(Fill)
+                .into()
+        } else {
+            let row = Row::with_children(buttons).spacing(8);
+            if self.is_small {
+                row.width(Fill).into()
+            } else {
+                row.into()
+            }
+        };
 
         Column::with_children([
             Slot::from(separator()),
             Slot::from(
-                Container::new(row)
+                Container::new(actions)
                     .width(Fill)
                     .padding(16)
                     .align_x(Horizontal::Right)
@@ -199,9 +220,9 @@ impl Handle {
         .into()
     }
 
-    /// Footer buttons in a small dialog fill their half.
+    /// Small actions fill their half; narrow default actions fill the column.
     fn fit<'a, Message: Clone + 'a>(&self, button: Button<'a, Message>) -> Button<'a, Message> {
-        if self.is_small {
+        if self.is_small || self.is_mobile {
             button.width(Fill)
         } else {
             button
@@ -262,11 +283,13 @@ impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
         };
         let title = text::Text::new(title)
             .size(text::size::BASE)
+            .line_height(LineHeight::Absolute(24.0.into()))
             .medium()
             .style(Foreground)
             .align_x(alignment);
         let copy = Column::with_children([Slot::from(title), description])
             .spacing(6)
+            .width(Fill)
             .align_x(alignment);
 
         // `size-10 rounded-md`, icons at `size-6`.
@@ -293,6 +316,7 @@ impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
             .into(),
             (Some(media), false) => Row::with_children([Slot::from(media), Slot::from(copy)])
                 .spacing(16)
+                .align_y(Vertical::Top)
                 .width(Fill)
                 .into(),
         };
@@ -335,16 +359,19 @@ impl<'a, Message: Clone + 'static> Compose<Message> for AlertDialog<'a, Message>
                 trigger(&Handle {
                     dialog: *d,
                     is_small,
+                    is_mobile: d.is_mobile(),
                 })
             },
             move |d| {
                 content(&Handle {
                     dialog: *d,
                     is_small,
+                    is_mobile: d.is_mobile(),
                 })
             },
             Placement::Center { max_width },
         )
+        .compact(320.0, 640.0)
         .show_close_button(false)
         .dismiss_outside(false)
         .padding(0)

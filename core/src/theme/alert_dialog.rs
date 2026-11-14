@@ -58,3 +58,27 @@ impl<T: Into<Tweak>> Add<T> for Media {
         Spec::from(self).push(rhs.into())
     }
 }
+
+/// A destructive media tile, including Nova's stronger dark background.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Destructive;
+
+impl From<Destructive> for Spec {
+    fn from(_: Destructive) -> Spec {
+        Spec::variant(|theme| {
+            let mut style = media(theme);
+            let opacity = if theme.neutral.is_dark { 0.2 } else { 0.1 };
+            style.background = Some(theme.destructive.base.alpha(opacity).into());
+            style.text_color = Some(theme.destructive.base);
+            style
+        })
+    }
+}
+
+impl<T: Into<Tweak>> Add<T> for Destructive {
+    type Output = Spec;
+
+    fn add(self, rhs: T) -> Spec {
+        Spec::from(self).push(rhs.into())
+    }
+}

@@ -301,6 +301,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Provider<
             content: modal.boxed(),
             mobile: state.mobile,
             enabled: self.collapsible != Collapsible::None,
+            breakpoint: 768.,
             change: Event::Mobile,
         }
     }

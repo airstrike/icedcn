@@ -64,6 +64,7 @@ pub struct Dialog<'a, Message> {
     placement: Placement,
     drawer_height: Option<f32>,
     responsive: Option<f32>,
+    compact: Option<(f32, f32)>,
     show_close_button: bool,
     dismiss_outside: bool,
     padding: u16,
@@ -132,6 +133,7 @@ impl<'a, Message> Dialog<'a, Message> {
             placement,
             drawer_height: None,
             responsive: None,
+            compact: None,
             show_close_button: true,
             dismiss_outside: true,
             padding: 16,
@@ -230,6 +232,12 @@ impl<'a, Message> Dialog<'a, Message> {
     /// Pin the panel to the selected window edge.
     pub fn side(mut self, side: Side) -> Self {
         self.placement = Placement::Side(side);
+        self
+    }
+
+    /// Use a narrower centered panel below a window breakpoint.
+    pub(crate) fn compact(mut self, max_width: f32, breakpoint: f32) -> Self {
+        self.compact = Some((max_width, breakpoint));
         self
     }
 
@@ -369,7 +377,13 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
 
     fn view(&self, state: &State) -> impl Widget<Event<Message>, Theme, Renderer> + 'a {
         let desktop = self.responsive.filter(|_| !state.mobile);
-        let placement = desktop.map_or(self.placement, |max_width| Placement::Center { max_width });
+        let compact = self
+            .compact
+            .filter(|_| state.mobile)
+            .map(|(width, _)| width);
+        let placement = compact
+            .or(desktop)
+            .map_or(self.placement, |max_width| Placement::Center { max_width });
         let drawer_height = self.drawer_height.filter(|_| desktop.is_none());
         let handle = Handle {
             is_open: self.is_open(state),
@@ -485,11 +499,12 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
             .backdrop(self.backdrop)
             .animation(state.closing, || Event::Exited)
             .drawer_height(drawer_height);
-        if self.responsive.is_some() {
+        if self.responsive.is_some() || self.compact.is_some() {
             Width {
                 content: modal.boxed(),
                 mobile: state.mobile,
                 enabled: true,
+                breakpoint: self.compact.map_or(768., |(_, breakpoint)| breakpoint),
                 change: Event::Mobile,
             }
             .boxed()

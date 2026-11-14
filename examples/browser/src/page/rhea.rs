@@ -73,5 +73,6 @@ pub(crate) fn backdrop() -> Backdrop {
         padding: [64, 40].into(),
         surface: canvas,
         border,
+        ..Backdrop::default()
     }
 }
