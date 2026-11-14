@@ -218,9 +218,6 @@ impl App {
             .on_press(Message::ToggleTheme),
             "Toggle theme",
         );
-        let create = button(row![icon::plus().size(14), "New"].spacing(6))
-            .height(31)
-            .on_press(Message::OpenUrl("https://ui.shadcn.com/create"));
         let fonts = dialog(
             |_| Space::new().into(),
             |_| {
@@ -264,9 +261,7 @@ impl App {
         let toolbar = tools
             .push(github.into())
             .push(divider())
-            .push(theme.into())
-            .push(divider())
-            .push(create.into());
+            .push(theme.into());
         let mut layers = stack![Element::from(toolbar), Element::from(fonts)];
         if let Some(search) = hidden_search {
             layers = layers.push(Element::from(search));
@@ -353,7 +348,8 @@ mod tests {
                 .drain()
                 .any(|m| matches!(m, Message::OpenUrl("https://ui.shadcn.com/charts/area")))
         );
-        desktop.click("New").unwrap();
+        assert!(desktop.find("New").is_err());
+        desktop.click("Create").unwrap();
         assert!(
             desktop
                 .drain()
