@@ -7,6 +7,7 @@ use iced::Widget;
 use iced::widget::button::{Style, StyleFn};
 use iced::widget::svg;
 use iced::{Element, Fill, Task};
+use icedxdy::theme::tweak::{Fg, Token, hover};
 use icedxdy::widget::{breadcrumb, button, container, dropdown_menu, menu, row};
 use icedxdy::{Size, Slot, Theme, Weight};
 
@@ -90,15 +91,6 @@ impl BreadcrumbPage {
     }
 }
 
-fn more() -> Slot<'static, Message> {
-    svg(svg::Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>"#))
-        .width(16)
-        .height(16)
-        .style(|theme: &Theme, _| svg::Style { color: Some(theme.muted.foreground.into()) })
-        .boxed()
-        .into()
-}
-
 fn dot() -> Slot<'static, Message> {
     svg(svg::Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12.1" cy="12.1" r="1"/></svg>"#))
         .width(14)
@@ -177,10 +169,14 @@ fn demo() -> Slot<'static, Message> {
             dropdown_menu(
                 |m| {
                     m.trigger(
-                        button(more())
+                        button(breadcrumb::ellipsis(None))
                             .size(Size::Sm)
                             .square()
-                            .style(button::Ghost)
+                            .style(
+                                button::Ghost
+                                    + Fg(Token::MutedForeground)
+                                    + hover(Fg(Token::Foreground)),
+                            )
                             .translate(false),
                     )
                 },

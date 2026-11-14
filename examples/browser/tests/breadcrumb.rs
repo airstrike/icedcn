@@ -208,3 +208,41 @@ fn links_and_menu_trigger_are_keyboard_reachable_but_current_page_is_not() {
     frame(&mut ui);
     ui.find("Documentation").expect("keyboard-opened dropdown");
 }
+
+#[test]
+fn arrow_down_opens_both_focused_triggers_and_restores_focus_on_escape() {
+    for id in ["demo", "dropdown"] {
+        let page = BreadcrumbPage::new(0);
+        let mut ui = preview(&*page, id, 558.);
+        ui.point_at(Point::new(550., 290.));
+        next(&mut ui);
+        next(&mut ui);
+        frame(&mut ui);
+        let trigger = ui.find(selector::is_focused()).unwrap().bounds();
+        ui.tap_key(Named::ArrowDown);
+        ui = ui.rebuild(page.preview(id));
+        frame(&mut ui);
+        let first = ui
+            .find("Documentation")
+            .expect("ArrowDown opens menu")
+            .bounds();
+        let mut focus = Focused::default();
+        ui.operate(&mut focus);
+        assert!(focus.0.iter().any(|bounds| bounds.contains(first.center())));
+        ui.tap_key(Named::ArrowDown);
+        let second = ui.find("Themes").unwrap().bounds();
+        let mut focus = Focused::default();
+        ui.operate(&mut focus);
+        assert!(
+            focus
+                .0
+                .iter()
+                .any(|bounds| bounds.contains(second.center()))
+        );
+        ui.tap_key(Named::Escape);
+        ui = ui.rebuild(page.preview(id));
+        frame(&mut ui);
+        assert!(ui.find("Documentation").is_err());
+        assert_eq!(ui.find(selector::is_focused()).unwrap().bounds(), trigger);
+    }
+}

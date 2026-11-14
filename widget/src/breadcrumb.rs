@@ -64,46 +64,81 @@ use iced_widget::container::Style;
 use iced_widget::{Renderer, container};
 use icedxdy_core::Theme;
 
-/// One entry in a breadcrumb trail.
+/// A composable breadcrumb part, usable in a trail or as another widget's child.
 ///
-/// Public via the `breadcrumb::Item` namespace path (per RUST_STYLE
-/// no-composite-names: callers write `breadcrumb::Item`, never
-/// `BreadcrumbItem`). Construct via the [`item`], [`link`], [`page`], and [`ellipsis`]
-/// helpers rather than the variants directly.
-pub enum Item<'a, Message> {
-    /// Custom content that participates in the trail as a breadcrumb item.
+/// Construct with [`item`], [`link`], [`page`] or [`ellipsis`]. Parts preserve
+/// inherited typography and disabling until their Compose boundary.
+pub struct Item<'a, Message> {
+    kind: Kind<'a, Message>,
+    inherited: Inherited,
+}
+
+enum Kind<'a, Message> {
     Content(Slot<'a, Message>),
-    /// A clickable crumb. Mirrors `<BreadcrumbLink>`.
     Link(Slot<'a, Message>, Message),
-    /// The current page. Mirrors `<BreadcrumbPage>`.
     Page(Slot<'a, Message>),
-    /// An "..." indicator standing in for elided intermediate crumbs.
-    /// Mirrors `<BreadcrumbEllipsis>`.
     Ellipsis(Option<Message>),
+}
+
+impl<'a, Message> Item<'a, Message> {
+    fn new(kind: Kind<'a, Message>) -> Self {
+        Self {
+            kind,
+            inherited: Inherited::default(),
+        }
+    }
+}
+
+impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        self.inherited = self.inherited.or(*from);
+    }
+
+    fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
+    where
+        Self: 'b,
+    {
+        render_item(self.kind, &self.inherited).compose()
+    }
+}
+
+impl<'a, Message: Clone + 'a> From<Item<'a, Message>> for Slot<'a, Message> {
+    fn from(item: Item<'a, Message>) -> Self {
+        Slot::new(item)
+    }
+}
+
+impl<'a, Message: Clone + 'a> From<Item<'a, Message>>
+    for iced_core::Element<'a, Message, Theme, Renderer>
+{
+    fn from(item: Item<'a, Message>) -> Self {
+        Box::new(item).compose()
+    }
 }
 
 /// Place a widget in the trail, preserving its own interactions and styling.
 pub fn item<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Item<'a, Message> {
-    Item::Content(content.into())
+    Item::new(Kind::Content(content.into()))
 }
 
-/// Build a clickable [`Item::Link`] crumb.
+/// Build a clickable breadcrumb part.
 pub fn link<'a, Message: 'a>(
     text: impl Into<Slot<'a, Message>>,
     on_press: Message,
 ) -> Item<'a, Message> {
-    Item::Link(text.into(), on_press)
+    Item::new(Kind::Link(text.into(), on_press))
 }
 
-/// Build a non-clickable [`Item::Page`] crumb (the current page).
+/// Build a non-clickable current-page part.
 pub fn page<'a, Message: 'a>(text: impl Into<Slot<'a, Message>>) -> Item<'a, Message> {
-    Item::Page(text.into())
+    Item::new(Kind::Page(text.into()))
 }
 
-/// Build an [`Item::Ellipsis`] crumb. Pass `Some(message)` to make it
-/// clickable, `None` for a static visual placeholder.
+/// Build an ellipsis part. Pass `Some(message)` to make it
+/// clickable, `None` for a static visual placeholder. The static part also
+/// composes inside a button: `button(breadcrumb::ellipsis(None))`.
 pub fn ellipsis<'a, Message: 'a>(on_press: Option<Message>) -> Item<'a, Message> {
-    Item::Ellipsis(on_press)
+    Item::new(Kind::Ellipsis(on_press))
 }
 
 /// Build a [`Breadcrumb`] with a muted chevron between adjacent items.
@@ -196,8 +231,9 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Breadcrumb<'a, Message> {
         // children (items + separators).
         let mut row = Row::new().spacing(6.0).wrap();
 
-        for (idx, item) in items.into_iter().enumerate() {
-            row = row.push(render_item(item, &inherited));
+        for (idx, mut item) in items.into_iter().enumerate() {
+            item.inherit(&inherited);
+            row = row.push(item.into());
             if idx + 1 < item_count {
                 let mut separator = make_separator();
                 separator.inherit(&inherited);
@@ -217,20 +253,20 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Breadcrumb<'a, Message> {
 /// Render a single [`Item`] to a [`Slot`]. Extracted so the dispatch
 /// reads as a flat match in one place.
 fn render_item<'a, Message: Clone + 'a>(
-    item: Item<'a, Message>,
+    item: Kind<'a, Message>,
     inherited: &Inherited,
 ) -> Slot<'a, Message> {
     match item {
-        Item::Content(mut content) => {
+        Kind::Content(mut content) => {
             content.inherit(inherited);
             content
         }
-        Item::Link(content, on_press) => render_link(content, on_press, inherited),
-        Item::Page(mut content) => {
+        Kind::Link(content, on_press) => render_link(content, on_press, inherited),
+        Kind::Page(mut content) => {
             content.inherit(inherited);
             render_page(content)
         }
-        Item::Ellipsis(on_press) => render_ellipsis(on_press, inherited),
+        Kind::Ellipsis(on_press) => render_ellipsis(on_press, inherited),
     }
 }
 

@@ -38,6 +38,7 @@ use crate::core::widget::tree::{self, Tree};
 use crate::core::widget::{Meta, Operation};
 use crate::core::{Element, Event, Layout, Length, Rectangle, Shell, Size, Vector, Widget};
 use crate::operation::control::Control;
+use crate::operation::focus;
 
 /// What counts as pressing a [`Marker`]'s child.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -55,6 +56,7 @@ pub struct Marker<'a, S, Message, Theme, Renderer> {
     content: Element<'a, Message, Theme, Renderer>,
     signal: S,
     press: Press,
+    key_signal: Option<(key::Named, S)>,
     /// Whether the marker is a form control, and if so whether it is
     /// checked.
     control: Option<bool>,
@@ -70,11 +72,19 @@ pub fn marker<'a, S, Message, Theme, Renderer>(
         content: content.into(),
         signal,
         press,
+        key_signal: None,
         control: None,
     }
 }
 
 impl<S, Message, Theme, Renderer> Marker<'_, S, Message, Theme, Renderer> {
+    /// Record an owner-specific signal for an otherwise unhandled named key,
+    /// only while an enabled descendant has focus. Child handlers run first.
+    pub(crate) fn on_key(mut self, key: key::Named, signal: S) -> Self {
+        self.key_signal = Some((key, signal));
+        self
+    }
+
     /// Make the marker a form control, `checked` or not: a linked label's
     /// `control::activate` records the signal
     /// as a press would.
@@ -155,6 +165,31 @@ where
                 shell,
                 viewport,
             );
+        }
+
+        if !shell.is_event_captured()
+            && let Some((named, signal)) = &self.key_signal
+            && let Event::Keyboard(keyboard::Event::KeyPressed { key, .. }) = event
+            && key.as_ref() == keyboard::Key::Named(*named)
+        {
+            let (child_layout, child_tree) = layout
+                .iter_mut(&mut tree.children)
+                .next()
+                .expect("a marker has one child");
+            let focused = focus::count(|operation| {
+                self.content
+                    .operate(child_tree, child_layout, viewport, renderer, operation);
+            })
+            .focused
+            .is_some();
+            if focused {
+                tree.state
+                    .downcast_mut::<State<S>>()
+                    .signals
+                    .0
+                    .push(signal.clone());
+                shell.capture_event();
+            }
         }
 
         let child_captured = !was_captured && shell.is_event_captured();

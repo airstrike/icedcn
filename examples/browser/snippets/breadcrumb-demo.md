@@ -1,23 +1,13 @@
 ```rust
-use iced::Widget;
-use iced::widget::svg;
 use icedxdy::Size;
+use icedxdy::theme::tweak::{Fg, Token, hover};
 use icedxdy::widget::{breadcrumb, button, dropdown_menu, menu};
-use icedxdy::{Slot, Theme};
+use icedxdy::Slot;
 
 #[derive(Debug, Clone)]
 enum Message {
     GoHome,
     GoComponents,
-}
-
-fn more() -> Slot<'static, Message> {
-    svg(svg::Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>"#))
-        .width(16)
-        .height(16)
-        .style(|theme: &Theme, _| svg::Style { color: Some(theme.muted.foreground.into()) })
-        .boxed()
-        .into()
 }
 
 fn destinations(_: &dropdown_menu::Handle) -> Slot<'static, Message> {
@@ -35,10 +25,10 @@ fn view() -> Slot<'static, Message> {
             dropdown_menu(
                 |m| {
                     m.trigger(
-                        button(more())
+                        button(breadcrumb::ellipsis(None))
                             .size(Size::Sm)
                             .square()
-                            .style(button::Ghost)
+                            .style(button::Ghost + Fg(Token::MutedForeground) + hover(Fg(Token::Foreground)))
                             .translate(false),
                     )
                 },

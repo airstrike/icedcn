@@ -224,7 +224,9 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
 
         let style: widget::StyleFn<'b, Theme> =
             Box::new(move |theme: &Theme, status: widget::Status| {
-                let status = if highlighted && !disabled {
+                let status = if !disabled
+                    && (highlighted || matches!(status, widget::Status::Focused { .. }))
+                {
                     widget::Status::Hovered
                 } else {
                     status

@@ -23,6 +23,7 @@
 //! pressing the trigger again does too. The panel is built only while open,
 //! so its widgets mount fresh each time, as in Radix.
 
+use iced_core::keyboard::key::Named;
 use iced_core::{Element, Length, Padding, Pixels};
 use iced_widget::anchored;
 use iced_widget::component::{self, Component};
@@ -55,6 +56,7 @@ pub struct Popover<'a, Message> {
     min_width: f32,
     padding: Padding,
     modal: bool,
+    open_on_arrow_down: bool,
     hover: Option<(Duration, Duration)>,
     inherited: Inherited,
 }
@@ -64,6 +66,7 @@ pub struct Popover<'a, Message> {
 #[derive(Debug, Clone, Copy)]
 pub struct Handle {
     is_open: bool,
+    open_on_arrow_down: bool,
 }
 
 /// What a popover's markers signal.
@@ -111,6 +114,7 @@ pub fn popover<'a, Message>(
         // `p-2.5`.
         padding: Padding::new(10.0),
         modal: false,
+        open_on_arrow_down: false,
         hover: None,
         inherited: Inherited::default(),
     }
@@ -191,6 +195,12 @@ impl<'a, Message> Popover<'a, Message> {
         self
     }
 
+    /// Dropdowns opt into keyboard opening; ordinary popovers keep their keys.
+    pub(crate) fn open_on_arrow_down(mut self) -> Self {
+        self.open_on_arrow_down = true;
+        self
+    }
+
     pub(crate) fn hover(mut self, open_delay: Duration, close_delay: Duration) -> Self {
         self.hover = Some((open_delay, close_delay));
         self
@@ -203,7 +213,10 @@ impl<'a, Message> Popover<'a, Message> {
 
 impl Handle {
     pub(crate) fn new(is_open: bool) -> Self {
-        Self { is_open }
+        Self {
+            is_open,
+            open_on_arrow_down: false,
+        }
     }
 
     /// Whether the popover is open.
@@ -221,6 +234,7 @@ impl Handle {
             child: child.into(),
             signal: Signal::Toggle,
             press: Press::Captured,
+            open_on_arrow_down: self.open_on_arrow_down && !self.is_open,
         })
     }
 
@@ -231,6 +245,7 @@ impl Handle {
             child: child.into(),
             signal: Signal::Close,
             press: Press::Captured,
+            open_on_arrow_down: false,
         })
     }
 }
@@ -253,6 +268,7 @@ pub(crate) struct Marked<'a, Message> {
     pub(crate) child: Slot<'a, Message>,
     pub(crate) signal: Signal,
     pub(crate) press: Press,
+    open_on_arrow_down: bool,
 }
 
 impl<'a, Message: 'a> Compose<Message> for Marked<'a, Message> {
@@ -264,7 +280,12 @@ impl<'a, Message: 'a> Compose<Message> for Marked<'a, Message> {
     where
         Self: 'b,
     {
-        marker::marker(self.child.compose(), self.signal, self.press).into()
+        let marker = marker::marker(self.child.compose(), self.signal, self.press);
+        if self.open_on_arrow_down {
+            marker.on_key(Named::ArrowDown, Signal::Toggle).into()
+        } else {
+            marker.into()
+        }
     }
 }
 
@@ -313,6 +334,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
     fn view(&self, state: &State) -> impl Widget<Event<Message>, Theme, Renderer> + 'a {
         let handle = Handle {
             is_open: self.is_open(state),
+            open_on_arrow_down: self.open_on_arrow_down,
         };
 
         let mut trigger = (self.trigger)(&handle);

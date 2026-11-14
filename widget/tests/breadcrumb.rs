@@ -9,7 +9,9 @@ use iced_core::{Element, Event, Point, Size, mouse};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space, Widget};
 use icedxdy_core::Theme;
-use icedxdy_widget::{Compose, Inherited, Slot, Weight, breadcrumb, button, container};
+use icedxdy_widget::{
+    Compose, Inherited, Slot, Weight, breadcrumb, button, container, dropdown_menu, popover, row,
+};
 
 type Preview = iced_test::Simulator<'static, u32, Theme, Renderer>;
 
@@ -164,4 +166,100 @@ fn typography_cascades_without_overwriting_explicit_child_values() {
     assert_eq!(actual.size().unwrap().text_size(), 12.);
     assert_eq!(actual.weight(), Some(Weight::Bold));
     assert_eq!(actual.line_height(), Some(24.));
+}
+
+#[test]
+fn parts_compose_in_controls_and_preserve_disabled_inheritance() {
+    let view = |disabled| {
+        let mut content: Slot<'_, u32> = row![
+            breadcrumb::link(Space::new().width(40).height(20), 1),
+            breadcrumb::page(Space::new().width(40).height(20)),
+            button(breadcrumb::ellipsis(None))
+                .height(28)
+                .square()
+                .on_press(2),
+        ]
+        .into();
+        content.inherit(&Inherited::default().with_disabled(disabled));
+        content.compose()
+    };
+    let mut ui = simulator(view(false));
+    assert_eq!(focus(&mut ui).total, 2);
+    next(&mut ui, false);
+    ui.tap_key(Named::Enter);
+    assert_eq!(ui.drain().collect::<Vec<_>>(), [1]);
+    next(&mut ui, false);
+    ui.tap_key(Named::Space);
+    assert_eq!(ui.drain().collect::<Vec<_>>(), [2]);
+    ui = ui.rebuild(view(true));
+    assert_eq!(focus(&mut ui).total, 0);
+    ui.tap_key(Named::Enter);
+    ui.tap_key(Named::Space);
+    assert_eq!(ui.drain().count(), 0);
+}
+
+#[test]
+fn arrow_down_is_dropdown_owned_and_respects_focus_and_disabling() {
+    let menu = |disabled| {
+        let mut content: Slot<'_, u32> = dropdown_menu(
+            |m| m.trigger(button(Space::new().width(40).height(20)).on_press(77)),
+            |_| Space::new().width(40).height(20).into(),
+        )
+        .on_open_change(|open| if open { 10 } else { 11 })
+        .into();
+        content.inherit(&Inherited::default().with_disabled(disabled));
+        content.compose()
+    };
+    let mut ui = simulator(menu(false));
+    ui.tap_key(Named::ArrowDown);
+    assert_eq!(ui.drain().count(), 0, "unfocused trigger is inert");
+    next(&mut ui, false);
+    ui.tap_key(Named::ArrowDown);
+    assert_eq!(
+        ui.drain().collect::<Vec<_>>(),
+        [10],
+        "opening does not press the child"
+    );
+    ui.tap_key(Named::Escape);
+    assert_eq!(ui.drain().collect::<Vec<_>>(), [11]);
+    ui = ui.rebuild(menu(true));
+    next(&mut ui, false);
+    ui.tap_key(Named::ArrowDown);
+    ui.tap_key(Named::Enter);
+    assert_eq!(ui.drain().count(), 0, "disabled trigger is inert");
+
+    let content: Element<'_, u32, Theme, Renderer> = popover(
+        |p| p.trigger(button(Space::new().width(40).height(20)).on_press(77)),
+        |_| Space::new().width(40).height(20).into(),
+    )
+    .on_open_change(|_| 10)
+    .into();
+    let mut ui = simulator(content);
+    next(&mut ui, false);
+    ui.tap_key(Named::ArrowDown);
+    assert_eq!(
+        ui.drain().count(),
+        0,
+        "ordinary Popover does not claim ArrowDown"
+    );
+    ui.tap_key(Named::Enter);
+    assert_eq!(
+        ui.drain().collect::<Vec<_>>(),
+        [77, 10],
+        "child handler and owner still fire"
+    );
+
+    let content: Element<'_, u32, Theme, Renderer> = button(Space::new().width(40).height(20))
+        .on_press(77)
+        .into();
+    let mut ui = simulator(content);
+    next(&mut ui, false);
+    ui.tap_key(Named::ArrowDown);
+    assert_eq!(
+        ui.drain().count(),
+        0,
+        "ordinary Button does not claim ArrowDown"
+    );
+    ui.tap_key(Named::Space);
+    assert_eq!(ui.drain().collect::<Vec<_>>(), [77]);
 }

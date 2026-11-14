@@ -4,7 +4,7 @@
 //! least 128px) with `p-1`, and it is modal, so the page ignores the
 //! pointer while it is open and a press anywhere outside closes it. Build
 //! the content from [`menu`](crate::menu) parts; selecting an item closes
-//! the menu.
+//! the menu. A focused trigger also opens with ArrowDown and focuses the first item.
 //!
 //! ```ignore
 //! use icedxdy::widget::{button, column, dropdown_menu, menu};
@@ -50,7 +50,8 @@ pub fn dropdown_menu<'a, Message>(
         popover: popover::popover(trigger, content)
             .trigger_width(128.0)
             .padding(4)
-            .modal(true),
+            .modal(true)
+            .open_on_arrow_down(),
     }
 }
 
