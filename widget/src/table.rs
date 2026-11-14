@@ -11,7 +11,8 @@ use icedcn_core::theme::container::Style;
 use icedcn_core::{Border, Theme};
 
 use crate::compose::{Compose, Inherited, Slot};
-use crate::{Size, Weight, column, container, rule};
+use crate::scrollable::{Direction, scrollbar};
+use crate::{Size, Weight, column, container, rule, scrollable};
 
 /// Root table slot.
 pub struct Table<'a, Message> {
@@ -100,9 +101,15 @@ pub fn body<'a, Message: 'a>(
 pub fn footer<'a, Message: 'a>(
     rows: impl IntoIterator<Item = Row<'a, Message>>,
 ) -> Footer<'a, Message> {
-    Footer {
-        rows: rows.into_iter().collect(),
-    }
+    let style = Inherited::default().with_weight(Weight::Medium);
+    let rows = rows
+        .into_iter()
+        .map(|mut row| {
+            row.inherit(&style);
+            row
+        })
+        .collect();
+    Footer { rows }
 }
 
 /// Create a [`Row`] from cells.
@@ -132,7 +139,10 @@ pub fn cell<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Cell<'a, 
 
 /// Create a header [`Cell`].
 pub fn head<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Cell<'a, Message> {
-    cell(content).kind(cell::Kind::Head).height(40.0)
+    cell(content)
+        .kind(cell::Kind::Head)
+        .height(40.0)
+        .padding([0., 8.])
 }
 
 /// Create a [`Caption`].
@@ -234,13 +244,23 @@ impl<'a, Message: 'a> From<Table<'a, Message>> for Slot<'a, Message> {
 }
 
 impl<'a, Message: 'a> Compose<Message> for Table<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        for child in &mut self.children {
+            child.inherit(from);
+        }
+    }
+
     fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
     {
         let Table { children, width } = *self;
 
-        column(children).spacing(0).width(width).into()
+        scrollable(column(children).spacing(0).width(Fill))
+            .direction(Direction::Horizontal(scrollbar().auto_hide(true)))
+            .focus_group()
+            .width(width)
+            .into()
     }
 }
 
@@ -259,6 +279,12 @@ impl<'a, Message: 'a> From<Header<'a, Message>> for Slot<'a, Message> {
 }
 
 impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        for child in &mut self.rows {
+            child.inherit(from);
+        }
+    }
+
     fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
@@ -283,6 +309,12 @@ impl<'a, Message: 'a> From<Body<'a, Message>> for Slot<'a, Message> {
 }
 
 impl<'a, Message: 'a> Compose<Message> for Body<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        for child in &mut self.rows {
+            child.inherit(from);
+        }
+    }
+
     fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
@@ -314,6 +346,12 @@ impl<'a, Message: 'a> From<Footer<'a, Message>> for Slot<'a, Message> {
 }
 
 impl<'a, Message: 'a> Compose<Message> for Footer<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        for child in &mut self.rows {
+            child.inherit(from);
+        }
+    }
+
     fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
@@ -350,6 +388,12 @@ impl<'a, Message: 'a> From<Row<'a, Message>> for Slot<'a, Message> {
 }
 
 impl<'a, Message: 'a> Compose<Message> for Row<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        for child in &mut self.cells {
+            child.inherit(from);
+        }
+    }
+
     fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
@@ -396,6 +440,10 @@ impl<'a, Message: 'a> From<Cell<'a, Message>> for Slot<'a, Message> {
 }
 
 impl<'a, Message: 'a> Compose<Message> for Cell<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        self.content.inherit(from);
+    }
+
     fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
@@ -411,7 +459,9 @@ impl<'a, Message: 'a> Compose<Message> for Cell<'a, Message> {
             align_y,
         } = *self;
 
-        let mut inherited = Inherited::default().with_size(Size::Default);
+        let mut inherited = Inherited::default()
+            .with_size(Size::Default)
+            .with_line_height(20.);
         if kind == cell::Kind::Head {
             inherited = inherited.with_weight(Weight::Medium);
         }
@@ -442,12 +492,20 @@ impl<'a, Message: 'a> From<Caption<'a, Message>> for Slot<'a, Message> {
 }
 
 impl<'a, Message: 'a> Compose<Message> for Caption<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        self.content.inherit(from);
+    }
+
     fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
     {
         let Caption { mut content } = *self;
-        content.inherit(&Inherited::default().with_size(Size::Default));
+        content.inherit(
+            &Inherited::default()
+                .with_size(Size::Default)
+                .with_line_height(20.),
+        );
 
         container(content)
             .padding(Padding::ZERO.top(16.0))

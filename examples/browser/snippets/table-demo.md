@@ -1,40 +1,46 @@
 ```rust
 use iced::alignment::Horizontal::Right;
-use icedcn::widget::table::Track::{Auto, Fixed, Flex};
-use icedcn::widget::{column, table, text};
+use icedcn::Slot;
+use icedcn::widget::table::Track::Auto;
+use icedcn::widget::{table, text};
 
-fn invoices<'a>(count: usize) -> iced::Element<'a, Message, Theme> {
+pub fn view<'a, M: 'a>() -> Slot<'a, M> {
     let header = table::header([table::row([
-        table::head("Invoice"),
+        table::head("Invoice").width(100),
         table::head("Status"),
         table::head("Method"),
         table::head("Amount").align_x(Right),
     ])]);
-    let body = table::body(
-        INVOICES
-            .iter()
-            .take(count)
-            .map(|[invoice, status, method, amount]| {
-                table::row([
-                    table::cell(text::small(*invoice).medium()),
-                    table::cell(text::small(*status)),
-                    table::cell(text::small(*method)),
-                    table::cell(text::small(*amount)).align_x(Right),
-                ])
-            }),
-    );
+    let body = table::body(INVOICES.into_iter().map(|[invoice, status, method, amount]| {
+        table::row([
+            table::cell(text(invoice).medium()),
+            table::cell(status),
+            table::cell(method),
+            table::cell(amount).align_x(Right),
+        ])
+    }));
     let footer = table::footer([table::row([
-        table::cell(text::small("Total").medium()).span(3),
-        table::cell(text::small("$2,500.00").medium()).align_x(Right),
+        table::cell("Total").span(3),
+        table::cell("$2,500.00").align_x(Right),
     ])]);
-    column![
-        table::grid([Fixed(100.0), Flex(1), Flex(1), Auto])
-            .header(header)
-            .body(body)
-            .footer(footer),
-        table::caption("A list of your recent invoices."),
-    ]
-    .width(Fill)
+    let grid = table::grid([Auto; 4])
+        .header(header)
+        .body(body)
+        .footer(footer);
+    table([
+        Slot::from(grid),
+        table::caption("A list of your recent invoices.").into(),
+    ])
     .into()
 }
+
+const INVOICES: [[&str; 4]; 7] = [
+    ["INV001", "Paid", "Credit Card", "$250.00"],
+    ["INV002", "Pending", "PayPal", "$150.00"],
+    ["INV003", "Unpaid", "Bank Transfer", "$350.00"],
+    ["INV004", "Paid", "Credit Card", "$450.00"],
+    ["INV005", "Paid", "PayPal", "$550.00"],
+    ["INV006", "Pending", "Bank Transfer", "$200.00"],
+    ["INV007", "Unpaid", "Credit Card", "$300.00"],
+];
 ```

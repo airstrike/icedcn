@@ -71,6 +71,7 @@ impl<'a, Message: 'a> Compose<Message> for Grid<'a, Message> {
         let mut rows = Vec::new();
         let mut spans = Vec::new();
         let mut tracks = self.tracks;
+        let mut preferred = Vec::<f32>::new();
         for (kind, group) in self.groups {
             let count = group.len();
             for (index, row) in group.into_iter().enumerate() {
@@ -78,6 +79,12 @@ impl<'a, Message: 'a> Compose<Message> for Grid<'a, Message> {
                 let mut col = 0;
                 for mut cell in row.cells {
                     let span = cell.span;
+                    if span == 1
+                        && let Length::Fixed(width) = cell.width
+                    {
+                        preferred.resize(preferred.len().max(col + 1), 0.);
+                        preferred[col] = preferred[col].max(width);
+                    }
                     spans.push((col, span));
                     col += span;
                     cell.width = Length::Fill;
@@ -98,6 +105,7 @@ impl<'a, Message: 'a> Compose<Message> for Grid<'a, Message> {
             cells,
             spans,
             rows,
+            preferred,
             tracks,
         }
         ._boxed()
@@ -126,6 +134,7 @@ struct LayoutGrid<'a, Message> {
     cells: Vec<Element<'a, Message, Theme, Renderer>>,
     spans: Vec<(usize, usize)>,
     rows: Vec<Line>,
+    preferred: Vec<f32>,
     tracks: Vec<Track>,
 }
 struct Surface {
@@ -191,7 +200,8 @@ impl<Message> Widget<Message, Theme, Renderer> for LayoutGrid<'_, Message> {
         }
     }
     fn size(&self) -> Size<Length> {
-        Size::new(Length::Fill, Length::Shrink)
+        // Measure the grid before stretching its caption in a horizontal scrollport.
+        Size::new(Length::Fit, Length::Shrink)
     }
     fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) {
         let width = limits.bounds().width;
@@ -213,7 +223,10 @@ impl<Message> Widget<Message, Theme, Renderer> for LayoutGrid<'_, Message> {
         {
             if span == 1 && self.tracks[col] == Track::Auto {
                 cell.layout(state, renderer, &natural);
-                widths[col] = widths[col].max(state.size.width);
+                // Round outward to a layout subpixel so subtracting cumulative
+                // track positions cannot wrap a label at its measured width.
+                let intrinsic = (state.size.width * 64.).ceil() / 64.;
+                widths[col] = widths[col].max(intrinsic);
             }
         }
         // A horizontal scroller preserves its viewport in max.width while
@@ -230,7 +243,28 @@ impl<Message> Widget<Message, Theme, Renderer> for LayoutGrid<'_, Message> {
             }
         };
         let rigid: f32 = widths.iter().sum();
-        let remaining = (width - rigid).max(0.0);
+        let mut remaining = (width - rigid).max(0.);
+        // Honor preferred widths on auto columns after every column has room for
+        // its content. When space is tight, the scrollport uses the intrinsic widths.
+        let requested = |col: usize, natural: f32| {
+            if self.tracks[col] == Track::Auto {
+                (self.preferred.get(col).copied().unwrap_or_default() - natural).max(0.)
+            } else {
+                0.
+            }
+        };
+        let needed: f32 = widths
+            .iter()
+            .enumerate()
+            .map(|(col, &w)| requested(col, w))
+            .sum();
+        if needed > 0. {
+            let share = (remaining / needed).min(1.);
+            for (col, w) in widths.iter_mut().enumerate() {
+                *w += share * requested(col, *w);
+            }
+            remaining = (remaining - needed).max(0.);
+        }
         let units: u32 = self
             .tracks
             .iter()
@@ -242,17 +276,25 @@ impl<Message> Widget<Message, Theme, Renderer> for LayoutGrid<'_, Message> {
                 }
             })
             .sum();
+        let has_unsized = self.tracks.iter().enumerate().any(|(col, t)| {
+            *t == Track::Auto && self.preferred.get(col).copied().unwrap_or_default() <= 0.
+        });
+        let grows = |col: usize, track: Track| {
+            track == Track::Auto
+                && (!has_unsized || self.preferred.get(col).copied().unwrap_or_default() <= 0.)
+        };
         let automatic: f32 = widths
             .iter()
             .zip(&self.tracks)
-            .filter_map(|(w, t)| (*t == Track::Auto).then_some(*w))
+            .enumerate()
+            .filter_map(|(col, (w, t))| grows(col, *t).then_some(*w))
             .sum();
-        for (w, t) in widths.iter_mut().zip(&self.tracks) {
+        for (col, (w, t)) in widths.iter_mut().zip(&self.tracks).enumerate() {
             if let Track::Flex(n) = t {
                 *w = remaining * f32::from(*n) / units.max(1) as f32;
             } else if rigid > width {
                 *w *= width / rigid;
-            } else if units == 0 && *t == Track::Auto && automatic > 0.0 {
+            } else if units == 0 && grows(col, *t) && automatic > 0.0 {
                 *w += remaining * *w / automatic;
             }
         }

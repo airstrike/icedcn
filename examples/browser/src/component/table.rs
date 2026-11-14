@@ -1,9 +1,9 @@
 use iced::alignment::Horizontal::Right;
 use iced::{Fill, Task};
-use icedcn::widget::table::Track::{Auto, Fixed, Flex};
+use icedcn::widget::table::Track::Auto;
 
-use icedcn::Theme;
-use icedcn::widget::{button, column, dropdown_menu, menu, table, text};
+use icedcn::widget::{button, container, dropdown_menu, menu, menu_group, table, text};
+use icedcn::{Slot, Theme};
 
 use crate::{Message, icon, page};
 
@@ -19,31 +19,28 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/table-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/table-installation.md"),
+    page::Block::Md("examples/browser/snippets/table-usage.md"),
     page::Block::Md("examples/browser/snippets/table-composition.md"),
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "footer",
-                title: "Footer",
-                description: Some("Use `table::footer(..)` to add a footer to the table."),
-                snippet: "examples/browser/snippets/table-footer.md",
-            },
-            page::Block::Example {
-                id: "actions",
-                title: "Actions",
-                description: Some(
-                    "A table showing actions for each row using a `dropdown_menu` component.",
-                ),
-                snippet: "examples/browser/snippets/table-actions.md",
-            },
-        ],
+    page::Block::Example {
+        id: "footer",
+        title: "Footer",
+        description: Some("Use `table::footer(..)` to add a footer to the table."),
+        snippet: "examples/browser/snippets/table-footer.md",
+    },
+    page::Block::Example {
+        id: "actions",
+        title: "Actions",
+        description: Some(
+            "A table showing actions for each row using a `dropdown_menu` component.",
+        ),
+        snippet: "examples/browser/snippets/table-actions.md",
     },
     page::Block::Md("examples/browser/snippets/table-guide-data-table.md"),
     page::Block::Md("examples/browser/snippets/table-api-reference.md"),
 ];
 
-/// invoices: number, status, method and amount.
+/// Invoice number, payment status, method and amount.
 const INVOICES: [[&str; 4]; 7] = [
     ["INV001", "Paid", "Credit Card", "$250.00"],
     ["INV002", "Pending", "PayPal", "$150.00"],
@@ -66,43 +63,38 @@ impl TablePage {
     }
 }
 
-/// The invoice table over the first `count` invoices, with its footer.
-fn invoices<'a>(count: usize) -> iced::Element<'a, Message, Theme> {
+/// Render the provided invoice records and the statement total.
+fn invoices<'a, M: 'a>(records: &'a [[&'a str; 4]]) -> Slot<'a, M> {
     let header = table::header([table::row([
-        table::head("Invoice"),
+        table::head("Invoice").width(100),
         table::head("Status"),
         table::head("Method"),
         table::head("Amount").align_x(Right),
     ])]);
-    let body = table::body(
-        INVOICES
-            .iter()
-            .take(count)
-            .map(|[invoice, status, method, amount]| {
-                table::row([
-                    table::cell(text::small(*invoice).medium()),
-                    table::cell(text::small(*status)),
-                    table::cell(text::small(*method)),
-                    table::cell(text::small(*amount)).align_x(Right),
-                ])
-            }),
-    );
+    let body = table::body(records.iter().map(|&[invoice, status, method, amount]| {
+        table::row([
+            table::cell(text(invoice).medium()),
+            table::cell(status),
+            table::cell(method),
+            table::cell(amount).align_x(Right),
+        ])
+    }));
     let footer = table::footer([table::row([
-        table::cell(text::small("Total").medium()).span(3),
-        table::cell(text::small("$2,500.00").medium()).align_x(Right),
+        table::cell("Total").span(3),
+        table::cell("$2,500.00").align_x(Right),
     ])]);
-    column![
-        table::grid([Fixed(100.0), Flex(1), Flex(1), Auto])
-            .header(header)
-            .body(body)
-            .footer(footer),
-        table::caption("A list of your recent invoices."),
-    ]
-    .width(Fill)
+    let grid = table::grid([Auto; 4])
+        .header(header)
+        .body(body)
+        .footer(footer);
+    table([
+        Slot::from(grid),
+        table::caption("A list of your recent invoices.").into(),
+    ])
     .into()
 }
 
-fn actions<'a>() -> iced::Element<'a, Message, Theme> {
+fn actions<'a, M: Clone + 'static>() -> Slot<'a, M> {
     let products = [
         ("Wireless Mouse", "$29.99"),
         ("Mechanical Keyboard", "$129.99"),
@@ -117,31 +109,33 @@ fn actions<'a>() -> iced::Element<'a, Message, Theme> {
 
     let body = table::body(products.into_iter().map(|(name, price)| {
         let actions = dropdown_menu(
-            |menu| menu.trigger(button(icon::ellipsis()).square().style(button::Ghost)),
+            |menu| {
+                menu.trigger(
+                    button(icon::ellipsis().size(16).line_height(1.0))
+                        .square()
+                        .style(button::Ghost)
+                        .has_popup(true),
+                )
+            },
             |_| {
-                column![
+                menu_group![
                     menu::item("Edit"),
                     menu::item("Duplicate"),
                     menu::separator(),
                     menu::item("Delete").style(menu::Destructive),
                 ]
-                .width(Fill)
-                .into()
             },
         )
         .align(dropdown_menu::Align::End);
 
         table::row([
-            table::cell(text::small(name).medium()),
-            table::cell(text::small(price)),
+            table::cell(text(name).medium()),
+            table::cell(price),
             table::cell(actions).align_x(Right),
         ])
     }));
 
-    table::grid([Flex(2), Flex(1), Auto])
-        .header(header)
-        .body(body)
-        .into()
+    table([table::grid([Auto; 3]).header(header).body(body)]).into()
 }
 
 impl page::Page for TablePage {
@@ -173,13 +167,26 @@ impl page::Page for TablePage {
         self.state.reset_volatile();
     }
 
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: [0., 40.].into(),
+            ..Default::default()
+        }
+    }
+    fn docs_preview(&self, id: &str, outer: &Theme) -> iced::Element<'_, Message, Theme> {
+        let height = if id == "demo" { 480. } else { 288. };
+        container(self.themed_preview(id, outer))
+            .center_x(Fill)
+            .center_y(height)
+            .into()
+    }
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            "demo" => invoices(INVOICES.len()),
+            "demo" => invoices(&INVOICES).into(),
 
-            "footer" => invoices(3),
+            "footer" => invoices(&INVOICES[..3]).into(),
 
-            "actions" => actions(),
+            "actions" => actions().into(),
 
             _ => unreachable!("unknown table preview id: {id}"),
         }

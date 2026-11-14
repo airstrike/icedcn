@@ -1,9 +1,11 @@
 ```rust
+use crate::icon;
 use iced::alignment::Horizontal::Right;
-use icedcn::widget::table::Track::{Auto, Fixed, Flex};
-use icedcn::widget::{column, table, text};
+use icedcn::Slot;
+use icedcn::widget::table::Track::Auto;
+use icedcn::widget::{button, dropdown_menu, menu, menu_group, table, text};
 
-fn actions<'a>() -> iced::Element<'a, Message, Theme> {
+pub fn actions<'a, M: Clone + 'static>() -> Slot<'a, M> {
     let products = [
         ("Wireless Mouse", "$29.99"),
         ("Mechanical Keyboard", "$129.99"),
@@ -18,30 +20,32 @@ fn actions<'a>() -> iced::Element<'a, Message, Theme> {
 
     let body = table::body(products.into_iter().map(|(name, price)| {
         let actions = dropdown_menu(
-            |menu| menu.trigger(button(icon::ellipsis()).square().style(button::Ghost)),
+            |menu| {
+                menu.trigger(
+                    button(icon::ellipsis().size(16).line_height(1.0))
+                        .square()
+                        .style(button::Ghost)
+                        .has_popup(true),
+                )
+            },
             |_| {
-                column![
+                menu_group![
                     menu::item("Edit"),
                     menu::item("Duplicate"),
                     menu::separator(),
                     menu::item("Delete").style(menu::Destructive),
                 ]
-                .width(Fill)
-                .into()
             },
         )
         .align(dropdown_menu::Align::End);
 
         table::row([
-            table::cell(text::small(name).medium()),
-            table::cell(text::small(price)),
+            table::cell(text(name).medium()),
+            table::cell(price),
             table::cell(actions).align_x(Right),
         ])
     }));
 
-    table::grid([Flex(2), Flex(1), Auto])
-        .header(header)
-        .body(body)
-        .into()
+    table([table::grid([Auto; 3]).header(header).body(body)]).into()
 }
 ```

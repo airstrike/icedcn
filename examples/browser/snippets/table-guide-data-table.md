@@ -1,3 +1,3 @@
 ## Data Table
 
-The Data Table page builds on these shared column tracks with sorting, filtering, selection and pagination. The recipe keeps view state in a local component and derives visible rows from the payment records.
+For sorting, filtering, selection and pagination, see the [Data Table](icedcn://component/data-table) example. It keeps the view state in a local component and derives the visible rows from the payment records.
