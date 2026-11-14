@@ -416,6 +416,7 @@ impl Default for Direction {
 /// A scrollbar within a [`Scrollable`].
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Scrollbar {
+    auto_hide: bool,
     width: f32,
     margin: f32,
     scroller_width: f32,
@@ -427,6 +428,7 @@ pub struct Scrollbar {
 impl Default for Scrollbar {
     fn default() -> Self {
         Self {
+            auto_hide: false,
             width: 10.0,
             margin: 0.0,
             scroller_width: 10.0,
@@ -447,6 +449,13 @@ impl Scrollbar {
     /// scroller.
     pub fn hidden() -> Self {
         Self::default().width(0).scroller_width(0)
+    }
+
+    /// Show this overlay only while scrolling, pointing at its rail, or dragging it.
+    /// Embedded scrollbars remain visible.
+    pub fn auto_hide(mut self, enabled: bool) -> Self {
+        self.auto_hide = enabled;
+        self
     }
 
     /// Sets the scrollbar width of the [`Scrollbar`] .
@@ -730,6 +739,7 @@ where
         let scrollbars = Scrollbars::new(state.last_translation, self.direction, bounds, content);
         let mouse_over_scrollbar = scrollbars.is_mouse_over(cursor);
         let last_offsets = (state.offset_x, state.offset_y);
+        let previous_translation = state.last_translation;
 
         if self.focus_group
             && state.focused
@@ -888,7 +898,22 @@ where
             }
         };
 
-        if let Event::Window(window::Event::RedrawRequested(_now)) = event {
+        if let Event::Window(window::Event::RedrawRequested(now)) = event {
+            let transient = |bar: &Scrollbar| bar.auto_hide && bar.spacing.is_none();
+            if self.direction.horizontal().is_some_and(transient)
+                || self.direction.vertical().is_some_and(transient)
+            {
+                if previous_translation != state.last_translation {
+                    state.indicator_until = Some(*now + Duration::from_millis(600));
+                }
+                if let Some(until) = state.indicator_until {
+                    if *now < until {
+                        shell.request_redraw_at(until);
+                    } else {
+                        state.indicator_until = None;
+                    }
+                }
+            }
             state.last_status = Some(status);
         }
 
@@ -1006,11 +1031,22 @@ where
                 renderer.start_layer(viewport);
             }
 
-            if let Some(scrollbar) = scrollbars.y {
+            let visible = |axis, bar: Option<&Scrollbar>| {
+                bar.is_some_and(|bar| !bar.auto_hide || bar.spacing.is_some())
+                    || state.indicator_until.is_some()
+                    || mouse_over_scrollbar == Some(axis)
+                    || state.interaction.axis() == Some(axis)
+            };
+
+            if let Some(scrollbar) = scrollbars.y
+                && visible(Axis::Y, self.direction.vertical())
+            {
                 draw_scrollbar(renderer, style.vertical_rail, &scrollbar);
             }
 
-            if let Some(scrollbar) = scrollbars.x {
+            if let Some(scrollbar) = scrollbars.x
+                && visible(Axis::X, self.direction.horizontal())
+            {
                 draw_scrollbar(renderer, style.horizontal_rail, &scrollbar);
             }
 
@@ -1365,6 +1401,7 @@ struct State {
     keyboard_modifiers: keyboard::Modifiers,
     last_notified: Option<Viewport>,
     last_scrolled: Option<Instant>,
+    indicator_until: Option<Instant>,
     is_scrollbar_visible: bool,
     last_status: Option<Status>,
     last_id: Option<widget::Id>,
@@ -1561,6 +1598,7 @@ impl Default for State {
             keyboard_modifiers: keyboard::Modifiers::default(),
             last_notified: None,
             last_scrolled: None,
+            indicator_until: None,
             is_scrollbar_visible: true,
             last_status: None,
             last_id: None,
