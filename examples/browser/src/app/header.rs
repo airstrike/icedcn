@@ -230,6 +230,7 @@ impl App {
                     )
                     .width(Fill)
                 ]
+                .width(Fill)
                 .spacing(8)
                 .into()
             },
