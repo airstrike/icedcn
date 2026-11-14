@@ -1,7 +1,7 @@
 ```rust
 use iced::alignment::Vertical;
 use iced::widget::{svg, text::LineHeight};
-use iced::{Fill, Padding, Widget};
+use iced::{Fill, Padding};
 use icedxdy::widget::{button, collapsible, column, container, input, row, text};
 use icedxdy::{Slot, Theme, card};
 
@@ -47,14 +47,12 @@ fn settings<Message: Clone + 'static>() -> Slot<'static, Message> {
             .width(Fill)
             .into()
         }).width(Fill))
-        .padding([0, 12])
-        .boxed(),
+        .padding([0, 12]),
     ]
     .spacing(12)
     .padding([12, 0])
-    .width(Fill))
+    .width(Fill)).gap(0).padding(0)
     .width(Fill.max(320))
-    .boxed()
     .into()
 }
 

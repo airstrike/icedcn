@@ -1,6 +1,6 @@
 ```rust
 use iced::widget::{svg, text::LineHeight};
-use iced::{Fill, Widget};
+use iced::Fill;
 use icedxdy::core::Border;
 use icedxdy::theme::container::Style;
 use icedxdy::widget::{button, collapsible, column, container, space, text};
@@ -59,11 +59,9 @@ fn basic<Message: Clone + 'static>() -> Slot<'static, Message> {
             })
             .width(Fill),
         )
-        .padding([16, 16])
-        .boxed(),
-    )
+        .padding([16, 16]),
+    ).gap(0).padding(0)
     .width(Fill.max(384))
-    .boxed()
     .into()
 }
 

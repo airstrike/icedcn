@@ -4,7 +4,7 @@ mod chevron;
 
 use iced::alignment::{Horizontal, Vertical};
 use iced::widget::{svg, text::LineHeight};
-use iced::{Fill, Padding, Task, Widget};
+use iced::{Fill, Padding, Task};
 use icedxdy::core::Border;
 use icedxdy::theme::container::Style;
 use icedxdy::theme::tweak::{Fg, Token};
@@ -201,11 +201,9 @@ fn basic<Message: Clone + 'static>() -> Slot<'static, Message> {
             })
             .width(Fill),
         )
-        .padding([16, 16])
-        .boxed(),
-    )
+        .padding([16, 16]),
+    ).gap(0).padding(0)
     .width(Fill.max(384))
-    .boxed()
     .into()
 }
 
@@ -242,14 +240,12 @@ fn settings<Message: Clone + 'static>() -> Slot<'static, Message> {
             .width(Fill)
             .into()
         }).width(Fill))
-        .padding([0, 12])
-        .boxed(),
+        .padding([0, 12]),
     ]
     .spacing(12)
     .padding([12, 0])
-    .width(Fill))
+    .width(Fill)).gap(0).padding(0)
     .width(Fill.max(320))
-    .boxed()
     .into()
 }
 
@@ -379,15 +375,15 @@ fn file_tree<Message: Clone + 'static>() -> Slot<'static, Message> {
         column![
             card::header(Slot::from(header)).inset(12.),
             card::content(column(FILE_TREE.iter().map(entry)).width(Fill).spacing(4))
-                .padding([0, 12])
-                .boxed(),
+                .padding([0, 12]),
         ]
         .width(Fill)
         .padding([12, 0])
         .spacing(8),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill.max(256))
-    .boxed()
     .into()
 }
 

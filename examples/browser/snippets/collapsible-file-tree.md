@@ -1,7 +1,7 @@
 ```rust
 use iced::alignment::Vertical;
 use iced::widget::{svg, text::LineHeight};
-use iced::{Fill, Padding, Widget};
+use iced::{Fill, Padding};
 use icedxdy::theme::tweak::{Fg, Token};
 use icedxdy::widget::{button, collapsible, column, row, tabs, text};
 use icedxdy::{Size, Slot, Theme, card};
@@ -250,15 +250,15 @@ fn file_tree<Message: Clone + 'static>() -> Slot<'static, Message> {
         column![
             card::header(Slot::from(header)).inset(12.),
             card::content(column(FILE_TREE.iter().map(entry)).width(Fill).spacing(4))
-                .padding([0, 12])
-                .boxed(),
+                .padding([0, 12]),
         ]
         .width(Fill)
         .padding([12, 0])
         .spacing(8),
     )
+    .gap(0)
+    .padding(0)
     .width(Fill.max(256))
-    .boxed()
     .into()
 }
 
