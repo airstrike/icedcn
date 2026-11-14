@@ -9,6 +9,7 @@ use iced_core::{
 };
 use iced_widget::{Image, Renderer};
 use icedxdy_core::Theme;
+use icedxdy_core::theme::avatar::fallback_style;
 use icedxdy_core::theme::container::{Style, StyleFn};
 
 use super::Geometry;
@@ -18,7 +19,7 @@ pub(super) struct Avatar<'a, Message> {
     pub children: Vec<Element<'a, Message, Theme, Renderer>>,
     pub geometry: Geometry,
     pub ring: bool,
-    pub style: StyleFn<'a, Theme>,
+    pub style: Option<StyleFn<'a, Theme>>,
     pub badge_style: StyleFn<'a, Theme>,
 }
 
@@ -85,11 +86,29 @@ impl<Message> Widget<Message, Theme, Renderer> for Avatar<'_, Message> {
         if self.ring {
             ring(renderer, theme, bounds);
         }
-        let style = (self.style)(theme);
+        let loaded = self.loaded(renderer);
+        let style = self
+            .style
+            .as_ref()
+            .map(|style| style(theme))
+            .unwrap_or_else(|| {
+                let mut style = fallback_style(theme, false);
+                style.border.width = 1.0;
+                // White/10 in dark mode has the same result with normal and
+                // lighten blending. The light fallback can use the border token
+                // directly. Light portraits still approximate darken blending
+                // until the renderer supports a destination-aware border.
+                style.border.color = if loaded && !theme.neutral.is_dark {
+                    theme.neutral.foreground.alpha(0.1)
+                } else {
+                    theme.neutral.border
+                };
+                style
+            });
         surface(renderer, style, bounds, false);
         let mut children = layout.iter(&tree.children);
         if let Some((child_layout, child_tree)) = children.next() {
-            if let Some(handle) = self.handle.as_ref().filter(|_| self.loaded(renderer)) {
+            if let Some(handle) = self.handle.as_ref().filter(|_| loaded) {
                 let image = Image::new(handle.clone())
                     .width(Fill)
                     .height(Fill)

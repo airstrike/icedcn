@@ -41,7 +41,7 @@ use iced_core::Length::Fill;
 use iced_core::image::Handle;
 use iced_widget::{Renderer, Widget};
 use icedxdy_core::Theme;
-use icedxdy_core::theme::avatar::{badge_style, fallback_style};
+use icedxdy_core::theme::avatar::badge_style;
 use icedxdy_core::theme::container::{Style, StyleFn};
 
 use crate::compose::{Compose, Inherited, Slot};
@@ -122,7 +122,7 @@ pub struct Avatar<'a, Message> {
     /// leave this `false`.
     ring: bool,
     badge: Option<Slot<'a, Message>>,
-    style: StyleFn<'a, Theme>,
+    style: Option<StyleFn<'a, Theme>>,
     badge_style: StyleFn<'a, Theme>,
     inherited: Inherited,
 }
@@ -138,12 +138,7 @@ pub fn avatar<'a, Message: 'a>(image: Option<Handle>) -> Avatar<'a, Message> {
         size: Size::default(),
         ring: false,
         badge: None,
-        style: Box::new(|theme| {
-            let mut style = fallback_style(theme, false);
-            style.border.width = 1.0;
-            style.border.color = theme.neutral.foreground.alpha(0.1);
-            style
-        }),
+        style: None,
         badge_style: Box::new(|theme| {
             let mut style = badge_style(theme);
             style.border.width = 0.0;
@@ -171,7 +166,7 @@ impl<'a, Message: 'a> Avatar<'a, Message> {
 
     /// Customize the circular surface, fallback color and inset border.
     pub fn style(mut self, style: impl Fn(&Theme) -> Style + 'a) -> Self {
-        self.style = Box::new(style);
+        self.style = Some(Box::new(style));
         self
     }
 

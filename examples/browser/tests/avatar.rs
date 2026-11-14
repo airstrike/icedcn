@@ -85,6 +85,43 @@ fn badge_and_group_rings_paint_above_loaded_portraits() {
     }
 }
 
+#[test]
+fn fallback_edge_matches_border_token_and_dark_portrait_uses_white_overlay() {
+    let mut renderer = renderer();
+    let invalid = image::Handle::from_bytes(b"invalid avatar image".as_slice());
+    assert!(renderer.load_image(&invalid).is_err());
+    for theme in [Theme::light(), Theme::dark()] {
+        let fallback = pixels(avatar(None).into(), &mut renderer, &theme);
+        let failed = pixels(avatar(Some(invalid.clone())).into(), &mut renderer, &theme);
+        assert_eq!(fallback, failed, "failed images must retain the same edge");
+        let border = Color::from(theme.neutral.border);
+        let background = Color::from(theme.muted.base);
+        let expected =
+            ((border.r * border.a + background.r * (1.0 - border.a)) * 255.0).round() as i16;
+        let edge = pixel(&fallback, 0, 15)[0] as i16;
+        assert!(
+            (edge - expected).abs() <= 2,
+            "fallback edge:{edge}, expected:{expected}"
+        );
+    }
+
+    let black = solid(&renderer, [0, 0, 0, 255]);
+    let portrait = pixels(
+        avatar(Some(black)).size(33.0).into(),
+        &mut renderer,
+        &Theme::dark(),
+    );
+    // Source dark:border-border is white/10. Allow one level of WGPU's
+    // byte quantization around the source value of25.5 on black.
+    // An odd diameter puts this edge exactly on a full-coverage pixel.
+    assert!(
+        pixel(&portrait, 0, 16)
+            .iter()
+            .all(|channel| (25..=26).contains(channel))
+    );
+    assert_eq!(pixel(&portrait, 1, 16), [0, 0, 0]);
+}
+
 #[derive(Default)]
 struct Bounds(Vec<Rectangle>);
 impl Operation for Bounds {
