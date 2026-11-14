@@ -127,7 +127,6 @@ fn action(
 }
 fn floating_style(theme: &Theme, status: Status) -> Style {
     let mut style = ghost(theme, status);
-    // Ghost's dark hover and pressed alpha are explicit CSS opacity values.
     // Restore the parent's opacity after those values are resolved.
     if theme.neutral.is_dark || status == Status::Pressed {
         if let Some(background) = style.background {

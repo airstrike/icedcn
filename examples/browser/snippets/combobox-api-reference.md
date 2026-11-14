@@ -7,7 +7,7 @@ An iced `Component` that owns the typed text, the open state and, uncontrolled, 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
 | `.placeholder(text)` | `String` | `""` | The input's placeholder. |
-| `.empty(text)` | `String` | `"No items found."` | `ComboboxEmpty`, shown when nothing matches. |
+| `.empty(text)` | `String` | `"No items found."` | Text shown when no options match the search. |
 | `.default_value(item)` | `String` | `None` | The item an uncontrolled combobox starts with. |
 | `.value(item)` | `String` | uncontrolled | Control the combobox. |
 | `.on_value_change(f)` | `Fn(String) -> Message` | `None` | Publish a message with the chosen item’s value. |

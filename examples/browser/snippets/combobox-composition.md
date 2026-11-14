@@ -1,57 +1,13 @@
 ## Composition
 
-Pass the available items to `combobox`. The widget owns the search input, filtered list and selection.
-
 ### Simple
 
-A single-line input and a flat list (see Basic).
-
-```text
-Combobox
-├── ComboboxInput
-└── ComboboxContent
-    ├── ComboboxEmpty
-    └── ComboboxList
-        ├── ComboboxItem
-        └── ComboboxItem
-```
+Pass a list of strings to `combobox(items)`. The widget owns the search field and filtered list. Use `.empty(message)` to set the text shown when no options match.
 
 ### With chips
 
-Multi-select with `multiple`, chips, and a chips input (see Multiple).
+Enable `.multiple(true)` to show selected values as removable chips. Seed the selection with `.default_values(items)` or use `.values(items)` with `.on_values_change(handler)` to keep the selection in the application.
 
-```text
-Combobox
-├── ComboboxChips
-│   ├── ComboboxValue
-│   │   └── ComboboxChip
-│   └── ComboboxChipsInput
-└── ComboboxContent
-    ├── ComboboxEmpty
-    └── ComboboxList
-        ├── ComboboxItem
-        └── ComboboxItem
-```
+### With groups
 
-### With groups and collection
-
-Nested items per group using `ComboboxCollection` inside each `ComboboxGroup`, with a separator between groups (see Groups).
-
-```text
-Combobox
-├── ComboboxInput
-└── ComboboxContent
-    ├── ComboboxEmpty
-    └── ComboboxList
-        ├── ComboboxGroup
-        │   ├── ComboboxLabel
-        │   └── ComboboxCollection
-        │       ├── ComboboxItem
-        │       └── ComboboxItem
-        ├── ComboboxSeparator
-        └── ComboboxGroup
-            ├── ComboboxLabel
-            └── ComboboxCollection
-                ├── ComboboxItem
-                └── ComboboxItem
-```
+Pass `combobox::item(value, label).group(name)` entries to `combobox::options(items)` to display related options under the same label. Selection publishes the chosen value.

@@ -9,7 +9,7 @@ fn preview() -> Element<'static, Message, Theme> {
             .inset(12.0)
             .description("This card uses the small size variant."),
         card::content(text::small(
-            "The card component supports a size prop that can be set to \"sm\" for a more compact appearance."
+            "Smaller gaps and padding give this card a compact layout."
         ).line_height(iced::Pixels(20.0))).padding([0, 12]),
         card::footer_with_spacing(
             button("Action").style(button::Outline).size(Size::Sm)

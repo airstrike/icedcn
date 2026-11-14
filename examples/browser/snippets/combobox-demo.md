@@ -1,7 +1,7 @@
 ```rust
 use icedxdy::widget::combobox;
 
-combobox(["Next.js", "SvelteKit", "Nuxt.js", "Remix", "Astro"])
+combobox(["iced", "egui", "Slint", "GTK", "Druid"])
     .placeholder("Select a framework")
     .icon(icon::chevron_down)
 ```

@@ -1,6 +1,6 @@
 ## API Reference
 
-See [React DayPicker](https://react-day-picker.js.org) for the source component's selection and keyboard behavior.
+[Read the calendar implementation](https://github.com/airstrike/icedxdy/blob/HEAD/widget/src/calendar.rs).
 
 | Rust builder or type | Default | Behavior |
 | --- | --- | --- |
