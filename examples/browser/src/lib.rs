@@ -165,8 +165,6 @@ pub fn run() -> iced::Result {
         .fonts([icon::FONT, font::GEIST_MONO]);
     #[cfg(target_arch = "wasm32")]
     let application = application
-        // A canvas cannot switch to 2D after an unsuccessful WebGPU probe.
-        .backend(iced::Backend::Software)
         .fonts([include_bytes!("../fonts/Geist.ttf").as_slice()])
         .font(iced::Font::new(font::BODY));
     application.run()

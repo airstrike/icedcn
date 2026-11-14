@@ -82,8 +82,23 @@ def main():
         f"if surface_size.width > 0 && surface_size.height > 0 {{\n            {configure}\n        }}",
         patch=ROOT / "examples/browser/web/clipboard.patch",
     )
+    # Probe adapter/device compatibility on a disposable canvas. A failed WebGPU
+    # attempt must leave the application's canvas free to acquire a 2D context.
+    probe = "wgpu::SurfaceTarget::Window(Box::new(compatible_window))"
+    disposable = """{
+                use wgpu::web_sys::{self, HtmlCanvasElement, wasm_bindgen::JsCast};
+                let _ = compatible_window;
+                let canvas = web_sys::window()
+                    .and_then(|window| window.document())
+                    .and_then(|doc| doc.create_element("canvas").ok())
+                    .and_then(|element| element.dyn_into::<HtmlCanvasElement>().ok())
+                    .ok_or(Error::IncompatibleSurface)?;
+                wgpu::SurfaceTarget::Canvas(canvas)
+            }"""
+    gpu = patched_source(build, packages["iced_wgpu"], "wgpu", "src/window/compositor.rs",
+                         probe, disposable)
     subprocess.run([
-        "cargo", "--config", "paths = " + json.dumps([str(sweeten), str(winit)]),
+        "cargo", "--config", "paths = " + json.dumps([str(sweeten), str(winit), str(gpu)]),
         "build", "--locked", "--release", "--target", TARGET, "-p", "browser", "--bin", "browser",
     ], env=env, check=True)
     output = build / "browser-web"
