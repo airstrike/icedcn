@@ -123,10 +123,10 @@ fn view(id: &str) -> Slot<'static, page::Message> {
         },
         "spinner" => {
             row![
-                badge![spinner().size(12.0), "Deleting"]
+                badge![spinner().circle().size(12.0), "Deleting"]
                     .icon_start()
                     .style(badge::Destructive),
-                badge!["Generating", spinner().size(12.0)]
+                badge!["Generating", spinner().circle().size(12.0)]
                     .icon_end()
                     .style(badge::Secondary),
             ]

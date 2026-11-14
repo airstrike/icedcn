@@ -74,19 +74,26 @@ where
     Theme: Catalog,
 {
     size: f32,
-    bar_height: f32,
+    bar_height: Option<f32>,
     rotation_duration: Duration,
-    spokes: bool,
+    shape: Shape,
     class: Theme::Class<'a>,
+}
+
+#[derive(Clone, Copy)]
+enum Shape {
+    Arc,
+    Circle,
+    Spokes,
 }
 
 impl<'a> Spinner<'a> {
     pub fn new() -> Self {
         Self {
             size: 16.0,
-            bar_height: 2.0,
+            bar_height: None,
             rotation_duration: Duration::from_millis(1000),
-            spokes: false,
+            shape: Shape::Arc,
             class: <Theme as Catalog>::default(),
         }
     }
@@ -96,14 +103,24 @@ impl<'a> Spinner<'a> {
         self
     }
 
+    /// Draw Lucide's loader-circle: a 288-degree arc with a radius of
+    /// 9/24 of the size. The stroke scales as 2/24 of the size unless
+    /// explicitly set with [`Self::bar_height`].
+    ///
+    /// The last call to `circle` or `spokes` selects the glyph.
+    pub fn circle(mut self) -> Self {
+        self.shape = Shape::Circle;
+        self
+    }
+
     /// Draw the eight radial strokes of the Lucide loader glyph.
     pub fn spokes(mut self) -> Self {
-        self.spokes = true;
+        self.shape = Shape::Spokes;
         self
     }
 
     pub fn bar_height(mut self, bar_height: f32) -> Self {
-        self.bar_height = bar_height;
+        self.bar_height = Some(bar_height);
         self
     }
 
@@ -249,19 +266,26 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Spinner<'a> {
         let track_color = catalog_style.track_color.unwrap_or(Color::TRANSPARENT);
 
         let geometry = state.cache.draw(renderer, bounds.size(), |frame| {
-            let track_radius = frame.width() / 2.0 - self.bar_height;
+            let bar_height = self.bar_height.unwrap_or(match self.shape {
+                Shape::Circle => frame.width() / 12.0,
+                Shape::Arc | Shape::Spokes => 2.0,
+            });
+            let track_radius = match self.shape {
+                Shape::Circle => frame.width() * 3.0 / 8.0,
+                Shape::Arc | Shape::Spokes => frame.width() / 2.0 - bar_height,
+            };
             let track_path = canvas::Path::circle(frame.center(), track_radius);
 
             frame.stroke(
                 &track_path,
                 canvas::Stroke::default()
                     .with_color(track_color)
-                    .with_width(self.bar_height),
+                    .with_width(bar_height),
             );
 
             let angle = state.animation.angle() * 2.0 * PI;
             let mut builder = canvas::path::Builder::new();
-            if self.spokes {
+            if matches!(self.shape, Shape::Spokes) {
                 let center = frame.center();
                 for i in 0..8 {
                     let theta = angle + PI * i as f32 / 4.0;
@@ -276,7 +300,14 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Spinner<'a> {
                     center: frame.center(),
                     radius: track_radius,
                     start_angle: start,
-                    end_angle: start + Radians(PI * 1.75),
+                    end_angle: start
+                        + Radians(
+                            PI * if matches!(self.shape, Shape::Circle) {
+                                1.6
+                            } else {
+                                1.75
+                            },
+                        ),
                 });
             }
             frame.stroke(
@@ -284,7 +315,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Spinner<'a> {
                 canvas::Stroke::default()
                     .with_line_cap(canvas::LineCap::Round)
                     .with_color(bar_color)
-                    .with_width(self.bar_height),
+                    .with_width(bar_height),
             );
         });
 
