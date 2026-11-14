@@ -1,1 +1,1 @@
-The examples include token colors for Rust, TOML, and shell commands. To support another language, prepare its token ranges and map them to rich-text spans.
+Use `.language("rust")`, `.language("toml")`, or `.language("sh")` for source files, manifests, and shell commands. Omit `.language(...)` to display plain text.

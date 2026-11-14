@@ -1,3 +1,3 @@
 ## Highlighted Lines
 
-Give the version and edition rows `LineStyle::Highlighted` when building the Cargo manifest with `CodeBlock::lines`.
+Apply `.line_style(3, LineStyle::Highlighted)` and `.line_style(4, LineStyle::Highlighted)` to highlight the version and edition in the Cargo manifest.

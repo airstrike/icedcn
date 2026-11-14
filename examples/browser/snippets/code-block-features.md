@@ -1,8 +1,8 @@
 ## Features
 
-- **Plain streaming output stays small.** A string without line numbers uses one selectable paragraph. These highlighted recipes reuse retained fixed-sample tokens and render a safe prefix as output arrives.
-- **Line decorations stay separate.** Line numbers and diff markers are not selectable code. Copy actions choose the exact source string, including hidden lines; the Diff action deliberately copies the original patch.
-- **Code stays left to right.** The native examples retain code order independently of surrounding prose.
-- **Highlighting is optional.** These fixed recipes retain pinned Shiki tokens with GitHub Light/Dark colors. Plain output has no highlighting dependency. ANSI colors reset at each line.
-- **Code fits other content.** Compose it inside a Message, a Markdown fence, Trace, Tabs, or prose.
-- **Content supports keyboard scrolling.** Tab to the content, then use arrows, Page Up/Down, Home/End or Space. Floating actions appear when content or an action has keyboard focus.
+- Pass a string to display selectable text. Streamed blocks can show the current source prefix as it arrives.
+- Gutter numbers and diff markers stay outside the selectable code. The copy button takes the text to put on the clipboard.
+- Code stays left to right inside surrounding prose.
+- Set a language for syntax highlighting, or use `code_block::ansi(...)` for a colored terminal transcript.
+- Compose code blocks inside a message, a Markdown fence, a trace, or a tab.
+- Tab to the content, then scroll with the arrow keys, Page Up/Down, Home/End, or Space. Floating actions appear when content or an action has keyboard focus.

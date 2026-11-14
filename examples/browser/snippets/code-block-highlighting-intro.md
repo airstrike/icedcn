@@ -1,1 +1,1 @@
-Pass one rich-text slot per source line to `CodeBlock::lines`. Each span uses the token color for the current theme.
+Pass Rust source to `code_block(source).language("rust")`. Token colors follow the active theme.

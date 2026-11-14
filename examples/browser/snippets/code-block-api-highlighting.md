@@ -1,10 +1,11 @@
-### Syntax tokens
+### Syntax highlighting
 
-The example’s `listing` helper reads the token ranges for a fixed source and passes one rich-text slot per line to `CodeBlock::lines`. Unknown input displays in the default text color.
+Enable the `icedxdy/highlighter` Cargo feature to use `.language(...)` with source strings. The active theme selects light or dark token colors.
 
-| API | Type | Default | Behavior |
-| --- | --- | --- | --- |
-| `source` | `&str` | required | Code to display; highlighted recipes use fixed owned fixture data. |
-| Language | fixed fixture metadata | retained with source | Uses the pinned grammar output for the fixture, otherwise plain output. |
-| `visible` | byte count | full length | A UTF-8-safe prefix for streamed fixed samples. |
-| `dark` | `bool` | active theme | GitHub Light or GitHub Dark token colors. |
+| Builder | Argument | Behavior |
+| --- | --- | --- |
+| `.language(language)` | Language name such as `"rust"` or `"toml"` | Highlight the source with the named grammar. Unknown languages display as plain text. |
+| `.line_style(line, style)` | One-based source line and `LineStyle` | Apply a line highlight or change marker. Source line 1 stays the first line when the gutter starts at a different number. |
+| `.diff()` | None | Read the leading space, `+`, or `-` on each patch-body line and paint its marker separately. |
+
+For a copy action that omits patch markers, use `code_block::copy_button(code_block::diff_text(patch))`.

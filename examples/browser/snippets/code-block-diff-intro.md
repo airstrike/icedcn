@@ -1,3 +1,3 @@
 ## Diff
 
-Use `LineStyle::Added` and `LineStyle::Removed` for changed lines. Give each slot the source without its patch prefix. The widget paints a separate marker, and the copy button copies the original patch.
+Use `.diff()` to display the added, removed and unchanged lines of a patch body. To copy the displayed code without the leading markers, pass `code_block::diff_text(patch)` to `code_block::copy_button`.
