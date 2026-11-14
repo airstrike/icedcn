@@ -357,7 +357,13 @@ impl<Message: Clone> Widget<Message, Theme, Renderer> for Badge<'_, Message> {
         renderer.fill_quad(
             renderer::Quad {
                 bounds,
-                border: style.border.into(),
+                // CSS backgrounds extend under the border. Iced subtracts
+                // even a transparent border from its background geometry, so
+                // paint the full capsule first and then overlay the stroke.
+                border: iced_core::Border {
+                    radius: style.border.radius.into(),
+                    ..iced_core::Border::default()
+                },
                 shadow: style.shadow.into(),
                 snap: style.snap,
             },
@@ -366,6 +372,17 @@ impl<Message: Clone> Widget<Message, Theme, Renderer> for Badge<'_, Message> {
                 .map(Background::from)
                 .unwrap_or(Background::Color(Color::TRANSPARENT)),
         );
+        if style.border.width > 0.0 {
+            renderer.fill_quad(
+                renderer::Quad {
+                    bounds,
+                    border: style.border.into(),
+                    snap: style.snap,
+                    ..renderer::Quad::default()
+                },
+                Color::TRANSPARENT,
+            );
+        }
         renderer.with_layer(clip, |renderer| {
             let (child_layout, child) = layout.iter(&tree.children).next().expect("Badge content");
             self.content.draw(
