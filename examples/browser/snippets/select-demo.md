@@ -10,6 +10,5 @@ select([select::group([
     select::item("pineapple", "Pineapple"),
 ])])
 .placeholder("Select a fruit")
-.icon(icon::chevron_down)
 .width(192)
 ```

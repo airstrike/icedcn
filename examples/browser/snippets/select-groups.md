@@ -17,6 +17,5 @@ select([
     ]),
 ])
 .placeholder("Select a fruit")
-.icon(icon::chevron_down)
 .width(192)
 ```

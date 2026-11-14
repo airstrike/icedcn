@@ -1,5 +1,7 @@
 ```rust
-use icedcn::widget::{field, select};
+use iced::Fill;
+use icedcn::theme;
+use icedcn::widget::{field, select, text};
 
 field(
     select([select::group([
@@ -8,11 +10,10 @@ field(
         select::item("blueberry", "Blueberry"),
     ])])
     .placeholder("Select a fruit")
-    .icon(icon::chevron_down)
     .style(select::Invalid)
     .width(Fill),
 )
-.label("Fruit")
-.error("Please select a fruit.")
+.label(field::label("Fruit").style(theme::text::Destructive))
+.error(text::error("Please select a fruit.").line_height(20. / 14.))
 .width(192)
 ```

@@ -8,11 +8,11 @@ use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Task, Widget};
 
 use icedcn::Theme;
+use icedcn::theme;
 use icedcn::widget::field::Orientation::Horizontal;
-use icedcn::widget::{column, field, select, switch};
+use icedcn::widget::{column, field, select, switch, text};
 
 use crate::Message;
-use crate::icon;
 use crate::page;
 
 pub static META: page::Meta = page::Meta {
@@ -27,45 +27,42 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/select-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/select-installation.md"),
+    page::Block::Md("examples/browser/snippets/select-usage.md"),
     page::Block::Md("examples/browser/snippets/select-composition.md"),
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "align-item",
-                title: "Align Item With Trigger",
-                description: Some(
-                    "Toggle between aligning the selected item with the trigger and placing the popup below it.",
-                ),
-                snippet: "examples/browser/snippets/select-align-item.md",
-            },
-            page::Block::Example {
-                id: "groups",
-                title: "Groups",
-                description: Some(
-                    "Use `select::group`, `select::label` and `select::separator` to organize items.",
-                ),
-                snippet: "examples/browser/snippets/select-groups.md",
-            },
-            page::Block::Example {
-                id: "scrollable",
-                title: "Scrollable",
-                description: Some("A select with many items that scrolls."),
-                snippet: "examples/browser/snippets/select-scrollable.md",
-            },
-            page::Block::Example {
-                id: "disabled",
-                title: "Disabled",
-                description: None,
-                snippet: "examples/browser/snippets/select-disabled.md",
-            },
-            page::Block::Example {
-                id: "invalid",
-                title: "Invalid",
-                description: Some("Use `.style(select::Invalid)` inside a field with an error."),
-                snippet: "examples/browser/snippets/select-invalid.md",
-            },
-        ],
+    page::Block::Example {
+        id: "align-item",
+        title: "Align Item With Trigger",
+        description: Some(
+            "Toggle between aligning the selected item with the trigger and placing the popup below it.",
+        ),
+        snippet: "examples/browser/snippets/select-align-item.md",
+    },
+    page::Block::Example {
+        id: "groups",
+        title: "Groups",
+        description: Some(
+            "Use `select::group`, `select::label` and `select::separator` to organize items.",
+        ),
+        snippet: "examples/browser/snippets/select-groups.md",
+    },
+    page::Block::Example {
+        id: "scrollable",
+        title: "Scrollable",
+        description: Some("A select with many items that scrolls."),
+        snippet: "examples/browser/snippets/select-scrollable.md",
+    },
+    page::Block::Example {
+        id: "disabled",
+        title: "Disabled",
+        description: None,
+        snippet: "examples/browser/snippets/select-disabled.md",
+    },
+    page::Block::Example {
+        id: "invalid",
+        title: "Invalid",
+        description: Some("Use `.style(select::Invalid)` inside a field with an error."),
+        snippet: "examples/browser/snippets/select-invalid.md",
     },
     page::Block::Md("examples/browser/snippets/select-api-reference.md"),
 ];
@@ -105,43 +102,41 @@ fn zone(label: &str, items: &[(&str, &str)]) -> select::Entry {
 
 struct Alignment;
 impl<'a> Component<'a, Message, Theme> for Alignment {
-    type State = Option<bool>;
+    type State = select::Position;
     type Event = bool;
     fn update(
         &self,
-        state: &mut Option<bool>,
+        state: &mut select::Position,
         aligned: bool,
         _: &iced::Renderer,
     ) -> Option<Message> {
-        *state = Some(aligned);
+        *state = if aligned {
+            select::Position::ItemAligned
+        } else {
+            select::Position::Popper
+        };
         None
     }
-    fn view(&self, state: &Option<bool>) -> impl Widget<bool, Theme> + 'a {
-        let aligned = state.unwrap_or(true);
+    fn view(&self, state: &select::Position) -> impl Widget<bool, Theme> + 'a {
+        let aligned = *state == select::Position::ItemAligned;
         Element::from(
             column![
-                field(switch().checked(aligned).on_checked_change(|value| value))
-                    .orientation(Horizontal)
-                    .control_last()
-                    .label("Align Item")
-                    .description("Toggle to align the item with the trigger."),
-                select([select::group([
-                    select::item("apple", "Apple"),
-                    select::item("banana", "Banana"),
-                    select::item("blueberry", "Blueberry"),
-                    select::item("grapes", "Grapes"),
-                    select::item("pineapple", "Pineapple")
-                ])])
-                .default_value("banana")
-                .icon(icon::chevron_down)
-                .position(if aligned {
-                    select::Position::ItemAligned
-                } else {
-                    select::Position::Popper
-                }),
+                field(
+                    switch()
+                        .checked(aligned)
+                        .on_checked_change(std::convert::identity)
+                )
+                .orientation(Horizontal)
+                .control_last()
+                .label("Align Item")
+                .description("Toggle to align the item with the trigger."),
+                select([select::group(fruits())])
+                    .default_value("banana")
+                    .width(Fill)
+                    .position(*state),
             ]
             .width(Fill.max(320.0))
-            .spacing(16),
+            .spacing(20),
         )
     }
 }
@@ -174,13 +169,19 @@ impl page::Page for SelectPage {
         self.state.reset_volatile();
     }
 
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: 40.into(),
+            ..Default::default()
+        }
+    }
+
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
             "demo" => select([select::group(
                 std::iter::once(select::label("Fruits")).chain(fruits()),
             )])
             .placeholder("Select a fruit")
-            .icon(icon::chevron_down)
             .width(192)
             .into(),
 
@@ -200,7 +201,6 @@ impl page::Page for SelectPage {
                 ]),
             ])
             .placeholder("Select a fruit")
-            .icon(icon::chevron_down)
             .width(192)
             .into(),
 
@@ -259,7 +259,6 @@ impl page::Page for SelectPage {
                 ),
             ])
             .placeholder("Select a timezone")
-            .icon(icon::chevron_down)
             .width(256)
             .into(),
 
@@ -271,7 +270,6 @@ impl page::Page for SelectPage {
                 select::item("pineapple", "Pineapple"),
             ])])
             .placeholder("Select a fruit")
-            .icon(icon::chevron_down)
             .disabled(true)
             .width(192)
             .into(),
@@ -283,12 +281,11 @@ impl page::Page for SelectPage {
                     select::item("blueberry", "Blueberry"),
                 ])])
                 .placeholder("Select a fruit")
-                .icon(icon::chevron_down)
                 .style(select::Invalid)
                 .width(Fill),
             )
-            .label("Fruit")
-            .error("Please select a fruit.")
+            .label(field::label("Fruit").style(theme::text::Destructive))
+            .error(text::error("Please select a fruit.").line_height(20. / 14.))
             .width(192)
             .into(),
 
