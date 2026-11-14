@@ -1,6 +1,6 @@
 <svg viewBox="-15 -15 150 150" xmlns="http://www.w3.org/2000/svg">
-  <polygon points="41.79,53.98 41.79,113.98 0.91,84.79 0.91,24.79 70.42,0.46 91.35,15.40" fill="#fefefe" stroke="#141414" stroke-width="3.0" stroke-linejoin="round"/>
-  <polygon points="41.79,53.98 91.35,15.40 119.09,35.21 119.09,95.21 49.58,119.54 41.79,113.98" fill="#141414" stroke="#fefefe" stroke-width="3.0" stroke-linejoin="round"/>
+  <polygon points="70.90,-2.89 122.09,33.67 122.09,97.34 49.10,122.89 -2.09,86.33 -2.09,22.66" fill="#fefefe" stroke="#141414" stroke-width="3" stroke-linejoin="round"/>
+  <polygon points="43.29,54.71 91.39,17.27 117.59,35.98 117.59,94.15 49.82,117.87 43.29,113.21" fill="#141414"/>
   <circle cx="51.12" cy="23.66" r="6.0" fill="#141414"/>
   <circle cx="84.33" cy="77.38" r="6.0" fill="#fefefe"/>
 </svg>
