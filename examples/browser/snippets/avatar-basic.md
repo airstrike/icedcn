@@ -1,5 +1,9 @@
 ```rust
+use iced::widget::image;
+use icedxdy::Theme;
 use icedxdy::widget::avatar;
 
-avatar(Some(shadcn_handle())).fallback("CN")
+fn preview(shadcn: image::Handle) -> iced::Element<'static, (), Theme> {
+    avatar(Some(shadcn)).fallback("CN").into()
+}
 ```

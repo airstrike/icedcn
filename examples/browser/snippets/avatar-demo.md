@@ -1,19 +1,86 @@
 ```rust
-use icedxdy::widget::{avatar, row};
+use iced::widget::image;
+use iced::{Subscription, Task, window};
+use icedxdy::Theme;
+use icedxdy::widget::avatar;
+use icedxdy::widget::row;
 
-row![
-    avatar(Some(shadcn_handle())).fallback("CN"),
-    avatar::badge(
-        avatar(Some(evilrabbit_handle())).fallback("ER"),
-        avatar::dot(),
-    ),
-    avatar::group([
-        avatar(Some(shadcn_handle())).fallback("CN"),
-        avatar(Some(maxleiter_handle())).fallback("LR"),
-        avatar(Some(evilrabbit_handle())).fallback("ER"),
-    ])
-    .count("+3"),
-]
-.spacing(24)
-.align_y(iced::Center)
+use icedxdy::theme::avatar::badge_style;
+use icedxdy::theme::container;
+
+fn presence(theme: &Theme) -> container::Style {
+    let mut style = badge_style(theme);
+    let color = if theme.neutral.base.l < 0.5 {
+        iced::Color::from_rgb8(1, 102, 48)
+    } else {
+        iced::Color::from_rgb8(0, 166, 62)
+    };
+    style.background = Some(icedxdy::Color::from_srgb(color).into());
+    style.border.width = 0.0;
+    style
+}
+
+struct Demo {
+    window_width: f32,
+    shadcn: image::Handle,
+    maxleiter: image::Handle,
+    evilrabbit: image::Handle,
+}
+
+#[derive(Clone, Debug)]
+enum Message {
+    Width(f32),
+}
+
+impl Demo {
+    fn new() -> (Self, Task<Message>) {
+        (
+            Self {
+                window_width: 1024.0,
+                shadcn: image::Handle::from_path("shadcn-grayscale.png"),
+                maxleiter: image::Handle::from_path("maxleiter-grayscale.png"),
+                evilrabbit: image::Handle::from_path("evilrabbit.png"),
+            },
+            window::oldest()
+                .and_then(window::size)
+                .map(|size| Message::Width(size.width)),
+        )
+    }
+
+    fn update(&mut self, Message::Width(width): Message) {
+        self.window_width = width;
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        window::resize_events().map(|(_, size)| Message::Width(size.width))
+    }
+
+    fn view(&self) -> iced::Element<'_, Message, Theme> {
+        row![
+            avatar(Some(self.shadcn.clone())).fallback("CN"),
+            avatar::badge(
+                avatar(Some(self.evilrabbit.clone())).fallback("ER"),
+                avatar::dot()
+            )
+            .badge_style(presence),
+            avatar::group([
+                avatar(Some(self.shadcn.clone())).fallback("CN"),
+                avatar(Some(self.maxleiter.clone())).fallback("LR"),
+                avatar(Some(self.evilrabbit.clone())).fallback("ER"),
+            ])
+            .count("+3"),
+        ]
+        .spacing(if self.window_width >= 768.0 { 48 } else { 24 })
+        .wrap()
+        .align_y(iced::Center)
+        .into()
+    }
+}
+
+fn main() -> iced::Result {
+    iced::application(Demo::new, Demo::update, Demo::view)
+        .subscription(Demo::subscription)
+        .theme(|_: &Demo| Theme::light())
+        .run()
+}
 ```

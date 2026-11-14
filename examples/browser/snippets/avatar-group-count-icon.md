@@ -1,10 +1,29 @@
 ```rust
+use iced::widget::image;
+use icedxdy::Theme;
 use icedxdy::widget::avatar;
 
-avatar::group([
-    avatar(Some(shadcn_handle())).fallback("CN"),
-    avatar(Some(maxleiter_handle())).fallback("LR"),
-    avatar(Some(evilrabbit_handle())).fallback("ER"),
-])
-.count(icon::plus())
+use iced::widget::{Svg, svg};
+
+fn plus(size: f32) -> Svg<'static, Theme> {
+    svg(svg::Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>"#))
+        .width(size)
+        .height(size)
+}
+
+fn preview(
+    shadcn: image::Handle,
+    maxleiter: image::Handle,
+    evilrabbit: image::Handle,
+) -> iced::Element<'static, (), Theme> {
+    avatar::group([
+        avatar(Some(shadcn)).fallback("CN"),
+        avatar(Some(maxleiter)).fallback("LR"),
+        avatar(Some(evilrabbit)).fallback("ER"),
+    ])
+    .count(plus(16.0).style(|theme: &Theme, _| svg::Style {
+        color: Some(theme.muted.foreground.into()),
+    }))
+    .into()
+}
 ```

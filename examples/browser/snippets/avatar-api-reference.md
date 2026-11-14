@@ -1,50 +1,22 @@
-## API Reference
+### Avatar
 
-### `avatar()`
+The `Avatar` component is the root component that wraps the avatar image and fallback.
 
-Constructor for an `Avatar` builder. Takes an `Option<image::Handle>` — `Some(handle)` renders the image (clipped to a circle); `None` always renders the fallback content.
-
-| Builder | Type | Default | Description |
+| Rust API | Type | Default | Behavior |
 | --- | --- | --- | --- |
-| `.fallback(content)` | `impl Into<Slot>` | `None` | Content rendered on the muted surface when no image is provided. Typically initials (`"CN"`, `"ER"`) but accepts any `Slot` — an icon, a single character, etc. |
-| `.size(size)` | `impl Into<Size>` | `Default` (32px) | Size variant: `avatar::Sm` (24px), `avatar::Default` (32px), `avatar::Lg` (40px). Drives diameter, font size, and badge chip dimensions. |
-
-The fallback is visible while the image loads and when decoding fails.
-
-### `avatar::badge()`
-
-Wrap an `Avatar` with a corner badge chip overlaid at the bottom-right. Mirrors shadcn's `AvatarBadge`.
+| `avatar(image)` | `Option<image::Handle>` | required | `Some(handle)` displays an image; `None` displays the fallback. |
+| `.size(size)` | `impl Into<avatar::Size>` | `avatar::Default` | `Sm` 24px, default 32px, `Lg` 40px, or a custom diameter. |
+| `.style(style)` | `Fn(&Theme) -> container::Style` | muted surface and inset edge | Styles the avatar surface, fallback color and inset border. |
 
 ```rust
-// Presence dot.
-avatar::badge(avatar(None).fallback("CN"), avatar::dot())
+use iced::widget::image;
+use icedxdy::Theme;
+use icedxdy::widget::avatar;
 
-// Icon inside the badge.
-avatar::badge(avatar(None).fallback("PP"), icon::plus())
+fn preview(image: image::Handle) -> iced::Element<'static, (), Theme> {
+    avatar(Some(image))
+        .fallback("CN")
+        .size(avatar::Default)
+        .into()
+}
 ```
-
-The chip's diameter and inner-icon size derive from the parent avatar's geometry. On `Sm` the inner icon is hidden entirely (matches shadcn's `[&>svg]:hidden` cascade).
-
-### `avatar::dot()`
-
-A presence dot for use as the inner content of `avatar::badge` — renders nothing, leaving just the chip surface (matches shadcn's empty `AvatarBadge` colored via the chip's own background).
-
-### `avatar::group()`
-
-Compose N overlapping avatars into a horizontal group with negative-space overlap (`-8px` between siblings) plus an optional trailing count chip. Mirrors shadcn's `AvatarGroup`.
-
-| Builder | Type | Default | Description |
-| --- | --- | --- | --- |
-| `.count(content)` | `impl Into<Slot>` | `None` | Trailing count chip after the avatars — pass a string like `"+3"` for the numeric form, or `icon::plus()` for the icon form. Mirrors shadcn's `AvatarGroupCount`. |
-
-Every avatar in a group renders with a 2px outer ring colored to the page background so overlapping avatars read as distinct discs (matches shadcn's `*:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:ring-background` cascade). The count chip's geometry mirrors the first avatar's size variant.
-
-### `avatar::Size`
-
-| Variant | Diameter | Notes |
-| --- | --- | --- |
-| `avatar::Sm` | 24px | Mirrors shadcn's `sm` size variant. Badge inner-icon hidden. |
-| `avatar::Default` | 32px | Default. Mirrors shadcn's `default` size variant. |
-| `avatar::Lg` | 40px | Mirrors shadcn's `lg` size variant. |
-
-Shadcn's `AvatarImage` `src`/`alt` props collapse into the `image::Handle` argument; the `AvatarImage` / `AvatarFallback` sub-component pair folds into the `avatar(image).fallback(content)` builder shape. Restyle via the `core::theme::avatar::*` style functions.

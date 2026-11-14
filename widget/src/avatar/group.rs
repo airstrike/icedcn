@@ -1,129 +1,108 @@
-//! Avatar group — N overlapping avatars with an optional trailing count
-//! chip.
-//!
-//! Mirrors shadcn's `<AvatarGroup>` (`flex -space-x-2
-//! *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:ring-background`).
-//! Composition is a horizontal `Row` with negative spacing — each avatar
-//! claims its own circular footprint and the row's `-8px` gap pulls the
-//! next avatar's left edge under the previous avatar's right edge by 8
-//! logical pixels. Each avatar in the group ships with a 2px outer ring
-//! colored to the page background so overlapping avatars read as
-//! distinct discs.
-//!
-//! Z-order matches render order: later children draw on top, so the
-//! count chip (when present) sits on top of the rightmost avatar — same
-//! as shadcn (the `<AvatarGroupCount>` is the last child of the group
-//! and naturally lands at the top of the stacking context).
+//! Overlapping avatars with an optional trailing count.
 
-use iced_core::Length;
-use iced_widget::Widget;
-use iced_widget::{Renderer, row};
+use iced_core::Element;
+use iced_widget::{Renderer, Widget, row};
 use icedxdy_core::Theme;
 use icedxdy_core::theme::avatar::group_count_style;
 
-use crate::compose::{Inherited, Slot};
-use crate::container::Container;
+use crate::compose::{Compose, Inherited, Slot};
 
-use super::{Avatar, Geometry, Size};
+use super::{Avatar, Geometry, Size, avatar};
 
-/// Negative inter-avatar spacing — shadcn `-space-x-2` = `margin-left:
-/// -0.5rem` = `-8px` on every child after the first.
-const OVERLAP_PX: f32 = -8.0;
-
-/// Builder for an [`Avatar`] group.
-///
-/// Compose with [`group`] then optionally append a count chip via
-/// [`Group::count`]. Each avatar in the group renders with a 2px outer
-/// ring colored to the page background.
+/// A group of avatars, including avatars with badges.
 pub struct Group<'a, Message> {
     avatars: Vec<Avatar<'a, Message>>,
     count: Option<Slot<'a, Message>>,
+    inherited: Inherited,
 }
 
-/// Compose N avatars into a horizontal group with negative-space overlap.
-///
-/// ```ignore
-/// avatar::group([
-///     avatar(None).fallback("CN"),
-///     avatar(None).fallback("LR"),
-///     avatar(None).fallback("ER"),
-/// ])
-/// ```
-///
-/// Append a trailing count chip with [`Group::count`].
+/// Arrange avatars with 8px overlap and a 2px outer background ring.
 pub fn group<'a, Message: 'a>(
     avatars: impl IntoIterator<Item = Avatar<'a, Message>>,
 ) -> Group<'a, Message> {
     Group {
         avatars: avatars.into_iter().collect(),
         count: None,
+        inherited: Inherited::default(),
     }
 }
 
 impl<'a, Message: 'a> Group<'a, Message> {
-    /// Append a trailing count chip after the avatars.
+    /// Append a count such as `"+3"`, or an explicitly sized stock iced icon.
     ///
-    /// Accepts any `Slot` — pass a string like `"+3"` for the
-    /// numeric form, or `icon::plus()` for the icon form.
-    /// Mirrors shadcn's `<AvatarGroupCount>` slot at the tail of the
-    /// group.
+    /// The chip matches any small/large member; small wins in a mixed group.
+    /// Text stays 14px. Source icon sizes are 12/16/20px for small/default/large.
     pub fn count(mut self, content: impl Into<Slot<'a, Message>>) -> Self {
         self.count = Some(content.into());
         self
     }
+
+    /// Geometry of the count chip, following the source's group selectors.
+    pub fn count_geometry(&self) -> Geometry {
+        let mut geometry = Geometry::DEFAULT;
+        for avatar in &self.avatars {
+            let member = avatar.geometry();
+            if member == Geometry::SM {
+                return Geometry {
+                    font_size: 14.0,
+                    ..Geometry::SM
+                };
+            }
+            if member == Geometry::LG {
+                geometry = Geometry::LG;
+            }
+        }
+        geometry
+    }
 }
 
-impl<'a, Message: 'a> From<Group<'a, Message>>
-    for iced_core::Element<'a, Message, Theme, Renderer>
-{
-    fn from(group: Group<'a, Message>) -> Self {
-        let Group { avatars, count } = group;
+impl<'a, Message: 'a> Compose<Message> for Group<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        self.inherited = self.inherited.or(*from);
+    }
 
-        // Geometry for the trailing count chip mirrors the FIRST avatar's
-        // diameter — shadcn's `<AvatarGroupCount>` adapts to the group's
-        // `data-size` via `group-has-data-[size=…]/avatar-group:size-…`,
-        // and we bind that to the first avatar's variant since the group
-        // doesn't carry a size of its own.
-        let count_geometry: Geometry = avatars
-            .first()
-            .map(Avatar::geometry)
-            .unwrap_or_else(|| Size::default().geometry());
-
-        // Push `ring(true)` onto every avatar so the 2px page-bg outline
-        // is present in the group context. Outside the group an avatar's
-        // bare surface has no ring (per shadcn — the ring is a sibling-
-        // selector only).
-        let avatar_elements = avatars.into_iter().map(|a| {
-            let with_ring: iced_core::Element<'a, Message, Theme, Renderer> = a.ring(true).into();
-            with_ring
-        });
-
-        let count_element: Option<iced_core::Element<'a, Message, Theme, Renderer>> =
-            count.map(|inner| {
-                let mut sized = inner;
-                sized.inherit(
-                    &Inherited::default().with_size(crate::Size::Custom(count_geometry.font_size)),
-                );
-                let chip = Container::new(sized)
-                    .center(Length::from(count_geometry.diameter))
-                    .clip(true)
-                    .class(Box::new(|t: &Theme| group_count_style(t).into())
-                        as iced_widget::container::StyleFn<'static, Theme>);
-                chip.into()
-            });
-
-        let mut children: Vec<iced_core::Element<'a, Message, Theme, Renderer>> =
-            avatar_elements.collect();
-        if let Some(c) = count_element {
-            children.push(c);
+    fn compose<'b>(self: Box<Self>) -> Element<'b, Message, Theme, Renderer>
+    where
+        Self: 'b,
+    {
+        let geometry = self.count_geometry();
+        let Self {
+            avatars,
+            count,
+            inherited,
+        } = *self;
+        let mut children: Vec<Element<'_, Message, Theme, Renderer>> = avatars
+            .into_iter()
+            .map(|mut avatar| {
+                avatar.inherit(&inherited);
+                avatar.ring(true).into()
+            })
+            .collect();
+        if let Some(count) = count {
+            let mut chip = avatar(None)
+                .fallback(count)
+                .size(Size(geometry))
+                .ring(true)
+                .style(|theme| {
+                    let mut style = group_count_style(theme);
+                    style.border.width = 0.0;
+                    style
+                });
+            chip.inherit(&inherited);
+            children.push(chip.into());
         }
+        row(children).spacing(-8.0).boxed()
+    }
+}
 
-        row(children).spacing(OVERLAP_PX).boxed()
+impl<'a, Message: 'a> From<Group<'a, Message>> for Element<'a, Message, Theme, Renderer> {
+    fn from(group: Group<'a, Message>) -> Self {
+        Box::new(group).compose()
     }
 }
 
 impl<'a, Message: 'a> From<Group<'a, Message>> for Slot<'a, Message> {
     fn from(group: Group<'a, Message>) -> Self {
-        Slot::from(iced_core::Element::from(group))
+        Slot::new(group)
     }
 }

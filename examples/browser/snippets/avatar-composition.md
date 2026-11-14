@@ -1,6 +1,6 @@
 ## Composition
 
-Give `avatar` an image handle and a fallback. Use `avatar::badge` to place a status mark on the portrait and `avatar::group` to arrange portraits together.
+Use the following composition to build an `Avatar`:
 
 ```text
 Avatar
@@ -9,7 +9,7 @@ Avatar
 └── AvatarBadge
 ```
 
-Pass the avatars to `avatar::group(...)` and use `.count(...)` for the final entry.
+Use the following composition to build an `AvatarGroup`:
 
 ```text
 AvatarGroup
@@ -23,3 +23,5 @@ AvatarGroup
 │   └── AvatarBadge
 └── AvatarGroupCount
 ```
+
+In Rust, `avatar(image).fallback(content)` composes the image and fallback. `avatar::badge(avatar, content)` retains the badge on that Avatar, so it can be used inside `avatar::group([...])`. Append the count with `.count(content)`.

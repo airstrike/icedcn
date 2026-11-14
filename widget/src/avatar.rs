@@ -35,15 +35,14 @@
 
 pub mod badge;
 pub mod group;
-mod image;
+mod widget;
 
-use self::image::Portrait;
-use iced_core::Length;
 use iced_core::Length::Fill;
 use iced_core::image::Handle;
 use iced_widget::{Renderer, Widget};
 use icedxdy_core::Theme;
-use icedxdy_core::theme::avatar::fallback_style;
+use icedxdy_core::theme::avatar::{badge_style, fallback_style};
+use icedxdy_core::theme::container::{Style, StyleFn};
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
@@ -122,6 +121,10 @@ pub struct Avatar<'a, Message> {
     /// overlapping avatars look visually separated. Stand-alone avatars
     /// leave this `false`.
     ring: bool,
+    badge: Option<Slot<'a, Message>>,
+    style: StyleFn<'a, Theme>,
+    badge_style: StyleFn<'a, Theme>,
+    inherited: Inherited,
 }
 
 /// Create an [`Avatar`] from an optional image handle.
@@ -134,11 +137,24 @@ pub fn avatar<'a, Message: 'a>(image: Option<Handle>) -> Avatar<'a, Message> {
         fallback: None,
         size: Size::default(),
         ring: false,
+        badge: None,
+        style: Box::new(|theme| {
+            let mut style = fallback_style(theme, false);
+            style.border.width = 1.0;
+            style.border.color = theme.neutral.foreground.alpha(0.1);
+            style
+        }),
+        badge_style: Box::new(|theme| {
+            let mut style = badge_style(theme);
+            style.border.width = 0.0;
+            style
+        }),
+        inherited: Inherited::default(),
     }
 }
 
 impl<'a, Message: 'a> Avatar<'a, Message> {
-    /// Set the fallback content rendered when no image handle is provided.
+    /// Set the content shown while an image loads, if decoding fails, or without an image.
     ///
     /// Typically the user's initials (`"CN"`, `"ER"`) but accepts any
     /// `Slot` — an icon, a single character, etc.
@@ -150,6 +166,18 @@ impl<'a, Message: 'a> Avatar<'a, Message> {
     /// Set the avatar's size variant. Defaults to [`Default`] (32px).
     pub fn size(mut self, size: impl Into<Size>) -> Self {
         self.size = size.into();
+        self
+    }
+
+    /// Customize the circular surface, fallback color and inset border.
+    pub fn style(mut self, style: impl Fn(&Theme) -> Style + 'a) -> Self {
+        self.style = Box::new(style);
+        self
+    }
+
+    /// Customize the badge surface and text color, keeping its outer ring.
+    pub fn badge_style(mut self, style: impl Fn(&Theme) -> Style + 'a) -> Self {
+        self.badge_style = Box::new(style);
         self
     }
 
@@ -184,39 +212,59 @@ impl<'a, Message: 'a> From<Avatar<'a, Message>> for Slot<'a, Message> {
 }
 
 impl<'a, Message: 'a> Compose<Message> for Avatar<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        self.inherited = self.inherited.or(*from);
+    }
+
     fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
     {
         let Avatar {
-            image: handle,
+            image,
             fallback,
             size,
             ring,
+            badge,
+            style,
+            badge_style,
+            inherited,
         } = *self;
         let geometry = size.geometry();
-        let diameter = geometry.diameter;
-
-        // Circular surface = container at fixed diameter, pill-radius
-        // border. The fallback bg / text colors come from the theme
-        // catalog so light/dark mode tracks correctly.
-        let style_fn: iced_widget::container::StyleFn<'static, Theme> =
-            Box::new(move |t| fallback_style(t, ring).into());
-
         let mut fallback = fallback.unwrap_or_else(|| Slot::from(""));
-        fallback.inherit(&Inherited::default().with_size(crate::Size::Custom(geometry.font_size)));
-        let inner: Slot<'_, Message> = match handle {
-            Some(handle) => {
-                let centered = Container::new(fallback).center(Fill);
-                Slot::from(Portrait::new(handle, centered.into()).boxed())
+        fallback.inherit(
+            &Inherited::default()
+                .with_size(crate::Size::Custom(geometry.font_size))
+                .with_line_height(if geometry.font_size == 12.0 {
+                    16.0
+                } else {
+                    20.0
+                })
+                .with_selectable(false)
+                .or(inherited),
+        );
+        let mut children = vec![Container::new(fallback).center(Fill).into()];
+        if let Some(mut badge) = badge {
+            if geometry.badge_icon_size == 0.0 {
+                badge = Slot::from("");
             }
-            None => fallback,
-        };
-
-        let circle = Container::new(inner)
-            .center(Length::from(diameter))
-            .clip(true)
-            .class(style_fn);
-        iced_core::Element::from(circle)
+            badge.inherit(
+                &Inherited::default()
+                    .with_size(crate::Size::Custom(geometry.badge_icon_size))
+                    .with_line_height(geometry.badge_icon_size)
+                    .with_selectable(false)
+                    .or(inherited),
+            );
+            children.push(Container::new(badge).center(Fill).into());
+        }
+        widget::Avatar {
+            handle: image,
+            children,
+            geometry,
+            ring,
+            style,
+            badge_style,
+        }
+        .boxed()
     }
 }

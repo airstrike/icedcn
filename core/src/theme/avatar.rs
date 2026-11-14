@@ -2,8 +2,9 @@
 //!
 //! Mirrors shadcn nova's three-size avatar shape: `Sm` = 24px, `Default` =
 //! 32px, `Lg` = 40px (`size-6`, `size-8`, `size-10`). The visual atom set
-//! is intentionally small — there's no border / shadow story on a stock
-//! avatar; the only atoms a Spec needs to know about are
+//! includes the fallback surface and legacy container ring styles. The
+//! Avatar widget paints its inset edge and outer rings separately. The
+//! shared surface values are
 //!
 //! - the fallback bg (`bg-muted`) and fallback fg (`text-muted-foreground`),
 //!   shared with our muted palette;
@@ -107,7 +108,8 @@ impl From<Lg> for Geometry {
 /// Mirrors shadcn `bg-muted text-muted-foreground` for the fallback layer.
 /// `ring` controls the 2px outer border that AvatarGroup adds via
 /// `*:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:ring-background` —
-/// pass `true` from `avatar::group` and `false` for stand-alone avatars.
+/// This container-style helper retains the legacy inset border representation.
+/// The Avatar widget uses `false` and paints its group ring outside the bounds.
 pub fn fallback_style(theme: &Theme, ring: bool) -> Style {
     let p = theme;
     Style {
@@ -115,13 +117,8 @@ pub fn fallback_style(theme: &Theme, ring: bool) -> Style {
         text_color: Some(p.muted.foreground),
         border: Border {
             radius: PILL_RADIUS.into(),
-            // Shadcn's group ring is 2px and matches the page background so
-            // overlapping avatars look visually separated. Outside group
-            // context, no border (the bare `Avatar` ships an inset
-            // `after:border` 1px with `mix-blend-darken` in shadcn that we
-            // intentionally skip — the blend mode doesn't replicate cleanly
-            // in iced and the visual delta is negligible against the muted
-            // fallback bg).
+            // Legacy container approximation. The Avatar widget paints an
+            // actual outer ring separately without reducing the image area.
             width: if ring { 2.0 } else { 0.0 },
             color: if ring {
                 p.neutral.base
