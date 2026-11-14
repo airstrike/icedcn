@@ -1,23 +1,18 @@
-// API Reference is rendered via the `collapsible-api-reference.md` snippet
-// at the bottom of BLOCKS.
-//
-// Intentional skips:
-// - collapsible-rtl — RTL is not in scope (per CLAUDE.md).
+//! Pinned Radix Nova Collapsible examples. RTL is excluded by project policy.
 
-use iced::Alignment::Center;
-use iced::Fill;
-use iced::Task;
-use iced::Widget;
+mod chevron;
 
-use icedxdy::card;
-use icedxdy::core::{Border, Color};
+use iced::alignment::{Horizontal, Vertical};
+use iced::widget::{svg, text::LineHeight};
+use iced::{Fill, Padding, Task, Widget};
+use icedxdy::core::Border;
 use icedxdy::theme::container::Style;
+use icedxdy::theme::tweak::{Fg, Token};
 use icedxdy::widget::{button, collapsible, column, container, input, row, space, tabs, text};
-use icedxdy::{Size, Slot, Theme, radius};
+use icedxdy::{Size, Slot, Theme, card, radius};
 
-use crate::Message;
-use crate::icon;
-use crate::page;
+use crate::{Message, page};
+use chevron::chevron;
 
 pub static META: page::Meta = page::Meta {
     title: "Collapsible",
@@ -31,36 +26,40 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/collapsible-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/collapsible-installation.md"),
+    page::Block::Md("examples/browser/snippets/collapsible-usage.md"),
     page::Block::Md("examples/browser/snippets/collapsible-composition.md"),
     page::Block::Md("examples/browser/snippets/collapsible-guide-controlled-state.md"),
+    page::Block::Example {
+        id: "basic",
+        title: "Basic",
+        description: None,
+        snippet: "examples/browser/snippets/collapsible-basic.md",
+    },
+    page::Block::Example {
+        id: "settings",
+        title: "Settings Panel",
+        description: Some("Use a trigger button to reveal additional settings."),
+        snippet: "examples/browser/snippets/collapsible-settings.md",
+    },
+    page::Block::Example {
+        id: "file-tree",
+        title: "File Tree",
+        description: Some(
+            "Use nested collapsibles to build a file tree. In a conversation, this is the [File Tree](https://ui.shadcn.com/docs/ai-elements/radix/file-tree) pattern.",
+        ),
+        snippet: "examples/browser/snippets/collapsible-file-tree.md",
+    },
     page::Block::Group {
-        title: "Examples",
+        title: "API Reference",
         children: &[
-            page::Block::Example {
-                id: "basic",
-                title: "Basic",
-                description: None,
-                snippet: "examples/browser/snippets/collapsible-basic.md",
-            },
-            page::Block::Example {
-                id: "settings",
-                title: "Settings Panel",
-                description: Some("Use a trigger button to reveal additional settings."),
-                snippet: "examples/browser/snippets/collapsible-settings.md",
-            },
-            page::Block::Example {
-                id: "file-tree",
-                title: "File Tree",
-                description: Some("Use nested collapsibles to build a file tree."),
-                snippet: "examples/browser/snippets/collapsible-file-tree.md",
-            },
+            page::Block::Md("examples/browser/snippets/collapsible-api-reference.md"),
+            page::Block::Md("examples/browser/snippets/collapsible-api-trigger.md"),
+            page::Block::Md("examples/browser/snippets/collapsible-api-content.md"),
         ],
     },
-    page::Block::Md("examples/browser/snippets/collapsible-api-reference.md"),
 ];
 
-/// The collapsible page. Every example is uncontrolled: each collapsible
-/// keeps its open state in its own tree.
 pub struct CollapsiblePage {
     state: page::State,
 }
@@ -73,11 +72,20 @@ impl CollapsiblePage {
     }
 }
 
-/// A `rounded-md border px-4 py-2 text-sm` box.
-fn bordered<'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
+fn icon(path: &'static str, size: f32) -> svg::Svg<'static, Theme> {
+    svg(svg::Handle::from_memory(format!(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{path}</svg>"#
+    ).into_bytes()))
+    .width(size).height(size)
+    .style(|theme: &Theme, _| svg::Style { color: Some(theme.neutral.foreground.into()) })
+}
+
+fn bordered<Message: 'static>(
+    content: impl Into<Slot<'static, Message>>,
+) -> Slot<'static, Message> {
     container(content)
         .width(Fill)
-        .padding([8, 16])
+        .padding([9, 17])
         .style(|theme: &Theme| Style {
             border: Border {
                 width: 1.0,
@@ -89,11 +97,162 @@ fn bordered<'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
         .into()
 }
 
-fn detail<'a>(title: &'a str, body: &'a str) -> Slot<'a, Message> {
-    bordered(column![text::small(title).medium(), text::muted(body)])
+fn detail<Message: 'static>(title: &'static str, body: &'static str) -> Slot<'static, Message> {
+    bordered(column![
+        text::small(title)
+            .medium()
+            .line_height(LineHeight::Absolute(20.into())),
+        text::muted(body).line_height(LineHeight::Absolute(20.into())),
+    ])
 }
 
-/// One entry of the file tree: a folder is a nested collapsible.
+fn demo<Message: Clone + 'static>() -> Slot<'static, Message> {
+    collapsible(|c| {
+        column![
+            column![
+                container(
+                    row![
+                        text::small("Order #4189")
+                            .semibold()
+                            .line_height(LineHeight::Absolute(20.into())),
+                        space::horizontal(),
+                        c.trigger(
+                            button(icon(r#"<path d="m7 15 5 5 5-5M7 9l5-5 5 5"/>"#, 16.))
+                                .square()
+                                .style(button::Ghost)
+                        ),
+                    ]
+                    .spacing(16)
+                    .align_y(Vertical::Center)
+                    .width(Fill)
+                )
+                .padding([0, 16]),
+                bordered(
+                    row![
+                        text::muted("Status").line_height(LineHeight::Absolute(20.into())),
+                        space::horizontal(),
+                        text::small("Shipped")
+                            .medium()
+                            .line_height(LineHeight::Absolute(20.into())),
+                    ]
+                    .width(Fill)
+                ),
+            ]
+            .spacing(8)
+            .width(Fill),
+            c.content(
+                column![
+                    detail("Shipping address", "100 Market St, San Francisco"),
+                    detail("Items", "2x Studio Headphones"),
+                ]
+                .spacing(8)
+                .width(Fill)
+                .padding(Padding::ZERO.top(8))
+            ),
+        ]
+        .width(Fill)
+        .into()
+    })
+    .width(Fill.max(350))
+    .into()
+}
+
+fn basic<Message: Clone + 'static>() -> Slot<'static, Message> {
+    card(
+        card::content(
+            collapsible(|c| {
+                let open = c.is_open();
+                let path = if open {
+                    r#"<path d="m18 15-6-6-6 6"/>"#
+                } else {
+                    r#"<path d="m6 9 6 6 6-6"/>"#
+                };
+                container(
+                    column![
+                        c.trigger(
+                            button!["Product details", space::horizontal(), icon(path, 16.)]
+                                .width(Fill)
+                                .style(button::Ghost)
+                        ),
+                        c.content(
+                            column![
+                                text::small("This panel can be expanded or collapsed to reveal additional content.")
+                                    .line_height(LineHeight::Absolute(20.into()))
+                                    .width(Fill),
+                                button("Learn More").size(Size::Xs),
+                            ]
+                            .width(Fill)
+                            .spacing(8)
+                            .padding([0, 10, 10, 10])
+                        ),
+                    ]
+                    .width(Fill),
+                )
+                .width(Fill)
+                .style(move |theme: &Theme| Style {
+                    background: open.then(|| theme.muted.base.into()),
+                    border: Border {
+                        radius: radius::MD.into(),
+                        ..Border::default()
+                    },
+                    ..Style::default()
+                })
+                .into()
+            })
+            .width(Fill),
+        )
+        .padding([16, 16])
+        .boxed(),
+    )
+    .width(Fill.max(384))
+    .boxed()
+    .into()
+}
+
+fn settings<Message: Clone + 'static>() -> Slot<'static, Message> {
+    card(column![
+        card::header(text::small("Radius").medium().line_height(1.375))
+            .inset(12.)
+            .description(
+                text::muted("Set the corner radius of the element.")
+                    .line_height(LineHeight::Absolute(20.into()))
+            ),
+        card::content(collapsible(|c| {
+            let inputs = || row![
+                input("0").default_value("0").width(Fill),
+                input("0").default_value("0").width(Fill),
+            ]
+            .spacing(8)
+            .width(Fill);
+            let path = if c.is_open() {
+                r#"<path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>"#
+            } else {
+                r#"<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>"#
+            };
+            row![
+                column![
+                    inputs(),
+                    c.content(container(inputs()).width(Fill).padding(Padding::ZERO.top(8))),
+                ]
+                .width(Fill),
+                c.trigger(button(icon(path, 16.)).square().style(button::Outline)),
+            ]
+            .spacing(8)
+            .align_y(Vertical::Top)
+            .width(Fill)
+            .into()
+        }).width(Fill))
+        .padding([0, 12])
+        .boxed(),
+    ]
+    .spacing(12)
+    .padding([12, 0])
+    .width(Fill))
+    .width(Fill.max(320))
+    .boxed()
+    .into()
+}
+
 enum Entry {
     File(&'static str),
     Folder(&'static str, &'static [Entry]),
@@ -155,32 +314,37 @@ const FILE_TREE: &[Entry] = &[
     Entry::File(".gitignore"),
 ];
 
-fn entry(node: &'static Entry) -> Slot<'static, Message> {
+fn entry<Message: Clone + 'static>(node: &'static Entry) -> Slot<'static, Message> {
     match node {
-        Entry::File(name) => button(row![icon::file(), *name].spacing(8).width(Fill))
-            .size(Size::Sm)
-            .style(button::Link)
-            .width(Fill)
-            .into(),
+        Entry::File(name) => button(row![
+            icon(r#"<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>"#, 14.),
+            *name,
+        ]
+        .spacing(8)
+        .align_y(Vertical::Center)
+        .width(Fill))
+        .size(Size::Sm)
+        .style(button::Link + Fg(Token::Foreground))
+        .width(Fill)
+        .into(),
         Entry::Folder(name, children) => collapsible(move |folder| {
-            let chevron = if folder.is_open() {
-                icon::chevron_down()
-            } else {
-                icon::chevron_right()
-            };
-
             column![
-                folder.trigger(
-                    button(row![chevron, icon::folder(), *name].spacing(8).width(Fill))
-                        .size(Size::Sm)
-                        .style(button::Ghost)
-                        .width(Fill),
-                ),
+                folder.trigger(button(row![
+                    chevron(folder.is_open()),
+                    icon(r#"<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>"#, 14.),
+                    *name,
+                ]
+                .spacing(4)
+                .align_y(Vertical::Center)
+                .width(Fill))
+                .size(Size::Sm)
+                .style(button::Ghost)
+                .width(Fill)),
                 folder.content(
                     column(children.iter().map(entry))
                         .width(Fill)
                         .spacing(4)
-                        .padding(iced::Padding::ZERO.top(4).left(20)),
+                        .padding(Padding::ZERO.top(4).left(20))
                 ),
             ]
             .width(Fill)
@@ -191,26 +355,40 @@ fn entry(node: &'static Entry) -> Slot<'static, Message> {
     }
 }
 
-fn file_tree() -> iced::Element<'static, Message, Theme> {
+fn file_tree<Message: Clone + 'static>() -> Slot<'static, Message> {
     let header = tabs(|tabs| {
         tabs.list([
-            tabs.trigger("explorer", "Explorer"),
-            tabs.trigger("settings", "Outline"),
+            tabs.trigger(
+                "explorer",
+                text::small("Explorer")
+                    .medium()
+                    .line_height(LineHeight::Absolute(20.into())),
+            ),
+            tabs.trigger(
+                "settings",
+                text::small("Outline")
+                    .medium()
+                    .line_height(LineHeight::Absolute(20.into())),
+            ),
         ])
     })
-    .default_value("explorer");
-
+    .default_value("explorer")
+    .width(Fill)
+    .list_width(Fill);
     card(
         column![
-            card::header(Slot::from(header)),
-            card::content(column(FILE_TREE.iter().map(entry)).width(Fill).spacing(4)).boxed(),
+            card::header(Slot::from(header)).inset(12.),
+            card::content(column(FILE_TREE.iter().map(entry)).width(Fill).spacing(4))
+                .padding([0, 12])
+                .boxed(),
         ]
         .width(Fill)
         .padding([12, 0])
         .spacing(8),
     )
-    .width(Fill.max(256.0))
+    .width(Fill.max(256))
     .boxed()
+    .into()
 }
 
 impl page::Page for CollapsiblePage {
@@ -229,150 +407,40 @@ impl page::Page for CollapsiblePage {
     fn scrollable_id(&self) -> iced::widget::Id {
         self.state.scrollable_id.clone()
     }
-
     fn init(&self) -> Task<Message> {
         self.state.init()
     }
-
     fn update(&mut self, event: page::Message) -> Task<Message> {
         self.state.update(&event)
     }
-
     fn reset_volatile(&mut self) {
         self.state.reset_volatile();
     }
-
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: Padding::ZERO,
+            ..page::Backdrop::default()
+        }
+    }
+    fn docs_preview(&self, id: &str, outer: &Theme) -> iced::Element<'_, Message, Theme> {
+        container(self.themed_preview(id, outer))
+            .width(Fill)
+            .min_height(if id == "file-tree" { 576 } else { 288 })
+            .align_x(Horizontal::Center)
+            .align_y(if matches!(id, "demo" | "basic") {
+                Vertical::Top
+            } else {
+                Vertical::Center
+            })
+            .padding(40)
+            .into()
+    }
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            // shadcn `collapsible-demo.tsx`.
-            "demo" => collapsible(|c| {
-                column![
-                    container(
-                        row![
-                            text::small("Order #4189").semibold(),
-                            space::horizontal(),
-                            c.trigger(
-                                button(icon::chevrons_up_down())
-                                    .square()
-                                    .style(button::Ghost),
-                            ),
-                        ]
-                        .spacing(16)
-                        .align_y(Center)
-                        .width(Fill),
-                    )
-                    .padding([0, 16]),
-                    bordered(row![
-                        text::muted("Status"),
-                        space::horizontal(),
-                        text::small("Shipped").medium(),
-                    ]),
-                    c.content(
-                        column![
-                            detail("Shipping address", "100 Market St, San Francisco"),
-                            detail("Items", "2x Studio Headphones"),
-                        ]
-                        .spacing(8),
-                    ),
-                ]
-                .spacing(8)
-                .into()
-            })
-            .width(350)
-            .into(),
-
-            // shadcn `collapsible-basic.tsx`: the panel tints `bg-muted`
-            // while open.
-            "basic" => card(
-                card::content(
-                    collapsible(|c| {
-                        let is_open = c.is_open();
-                        let chevron = if is_open {
-                            icon::chevron_up()
-                        } else {
-                            icon::chevron_down()
-                        };
-
-                        container(column![
-                            c.trigger(
-                                button!["Product details", space::horizontal(), chevron,]
-                                    .width(Fill)
-                                    .style(button::Ghost),
-                            ),
-                            c.content(
-                                column![
-                                    text::small(
-                                        "This panel can be expanded or collapsed to reveal \
-                                     additional content.",
-                                    ),
-                                    button("Learn More").size(Size::Xs),
-                                ]
-                                .spacing(8)
-                                .padding([0, 10, 10, 10]),
-                            ),
-                        ])
-                        .width(Fill)
-                        .style(move |theme: &Theme| Style {
-                            background: is_open.then(|| theme.muted.base.into()),
-                            border: Border {
-                                width: 0.0,
-                                color: Color::TRANSPARENT,
-                                radius: radius::MD.into(),
-                            },
-                            ..Style::default()
-                        })
-                        .into()
-                    })
-                    .width(Fill),
-                )
-                .boxed(),
-            )
-            .width(Fill.max(384.0))
-            .boxed(),
-
-            "settings" => card(
-                column![
-                    card::header("Radius").description("Set the corner radius of the element."),
-                    Slot::from(
-                        card::content(
-                            collapsible(|c| {
-                                let inputs = || {
-                                    row![
-                                        input("0").default_value("0").width(Fill),
-                                        input("0").default_value("0").width(Fill)
-                                    ]
-                                    .spacing(8)
-                                    .width(Fill)
-                                };
-                                let icon = if c.is_open() {
-                                    icon::minimize()
-                                } else {
-                                    icon::maximize()
-                                };
-                                row![
-                                    column![inputs(), c.content(inputs())]
-                                        .spacing(8)
-                                        .width(Fill),
-                                    c.trigger(button(icon).square().style(button::Outline)),
-                                ]
-                                .spacing(8)
-                                .width(Fill)
-                                .into()
-                            })
-                            .width(Fill)
-                        )
-                        .boxed()
-                    ),
-                ]
-                .spacing(12)
-                .padding([12, 0]),
-            )
-            .width(Fill.max(320.0))
-            .boxed(),
-
-            // shadcn `collapsible-file-tree.tsx`.
-            "file-tree" => file_tree(),
-
+            "demo" => demo().compose(),
+            "basic" => basic().compose(),
+            "settings" => settings().compose(),
+            "file-tree" => file_tree().compose(),
             _ => unreachable!("unknown collapsible preview id: {id}"),
         }
     }

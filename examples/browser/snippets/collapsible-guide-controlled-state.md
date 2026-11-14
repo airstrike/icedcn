@@ -1,3 +1,24 @@
 ## Controlled State
 
-Pass `.open(value)` and `.on_open_change(...)` when the application shares the open state with other controls. Use `.default_open(true)` to start an uncontrolled disclosure open.
+Use `.open(value)` and `.on_open_change(...)` to control the state. The message carries the requested new value; assign it in `update`. Without `.open(...)`, the widget owns its state. Use `.default_open(true)` to start it open.
+
+```rust
+use icedxdy::Slot;
+use icedxdy::widget::{button, collapsible, column};
+
+#[derive(Debug, Clone)]
+enum Message { OpenChanged(bool) }
+
+fn update(open: &mut bool, message: Message) {
+    match message { Message::OpenChanged(next) => *open = next }
+}
+
+fn view(open: bool) -> Slot<'static, Message> {
+    collapsible(|c| {
+        column![c.trigger(button("Toggle")), c.content("Content")].into()
+    })
+    .open(open)
+    .on_open_change(Message::OpenChanged)
+    .into()
+}
+```

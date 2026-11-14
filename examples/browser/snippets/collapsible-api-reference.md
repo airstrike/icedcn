@@ -1,22 +1,15 @@
-## API Reference
+### Root — `collapsible(body)`
 
-### `collapsible(body)`
-
-An iced `Component` that owns its open state. `body` is a closure that receives a `collapsible::Handle` and builds the content in your own message type; it runs again whenever the collapsible opens or closes.
+An iced `Component` that owns its open state. The closure receives a `collapsible::Handle` and returns a `Slot` in your application's message type.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `.default_open(bool)` | `bool` | `false` | Whether an uncontrolled collapsible starts open. |
-| `.open(bool)` | `bool` | uncontrolled | Control the collapsible: open exactly when the app says so. |
-| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Publish a message with the requested open state when a trigger is pressed. |
-| `.width(width)` | `impl Into<Length>` | `Shrink` | Width of the collapsible. |
+| `.default_open(bool)` | `bool` | `false` | Seed the uncontrolled state once. |
+| `.open(bool)` | `bool` | uncontrolled | Show the supplied state; interaction requests a change. |
+| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Publish the complete requested open state. A callback does not make the widget controlled. |
+| `.disabled(bool)` | `bool` | `false` | Disable every trigger. Controls in already-open content remain usable. |
+| `.width(width)` | `impl Into<Length>` | `Shrink` | Width of the root. |
 
-### `collapsible::Handle`
+`c.is_open()` exposes the current state and `c.is_disabled()` exposes the root/ancestor trigger-disabled state. An inherited disabled ancestor disables all descendants. Inherited typography reaches the content closure.
 
-| Method | Description |
-| --- | --- |
-| `c.trigger(child)` | Make `child` toggle the collapsible when pressed, like `<CollapsibleTrigger asChild>`. The child keeps its own `on_press`. A disabled child never toggles. |
-| `c.content(child)` | Show `child` only while open, like `<CollapsibleContent>`. |
-| `c.is_open()` | Whether the collapsible is open, for content that changes with it (a flipping chevron, a tinted background). |
-
-The collapsible passes its inherited size, font weight and disabled state to the content returned by the closure.
+See the [Radix UI reference](https://www.radix-ui.com/docs/primitives/components/collapsible#api-reference) for the corresponding web API.

@@ -1,0 +1,15 @@
+## Usage
+
+```rust
+use icedxdy::Slot;
+use icedxdy::widget::{button, collapsible, column, text};
+
+fn view() -> Slot<'static, ()> {
+    collapsible(|c| {
+        column![
+            c.trigger(button("Can I use this in my project?")),
+            c.content(text::small("Yes. Free to use for personal and commercial projects. No attribution required.")),
+        ].into()
+    }).into()
+}
+```

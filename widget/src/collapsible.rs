@@ -43,6 +43,7 @@ pub struct Collapsible<'a, Message> {
     body: Body<'a, Message>,
     open: Option<bool>,
     default_open: bool,
+    disabled: bool,
     on_open_change: Option<Box<dyn Fn(bool) -> Message + 'a>>,
     width: Length,
     inherited: Inherited,
@@ -53,6 +54,7 @@ pub struct Collapsible<'a, Message> {
 #[derive(Debug, Clone, Copy)]
 pub struct Handle {
     is_open: bool,
+    disabled: bool,
 }
 
 /// The signal a trigger records when pressed.
@@ -83,6 +85,7 @@ pub fn collapsible<'a, Message>(
         body: Box::new(body),
         open: None,
         default_open: false,
+        disabled: false,
         on_open_change: None,
         width: Length::Shrink,
         inherited: Inherited::default(),
@@ -110,6 +113,12 @@ impl<'a, Message> Collapsible<'a, Message> {
         self
     }
 
+    /// Disable the disclosure triggers without disabling controls in its content.
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
+        self
+    }
+
     /// Set the width of the collapsible.
     pub fn width(mut self, width: impl Into<Length>) -> Self {
         self.width = width.into();
@@ -128,15 +137,20 @@ impl Handle {
         self.is_open
     }
 
+    /// Whether the root or an ancestor disables the disclosure triggers.
+    pub fn is_disabled(&self) -> bool {
+        self.disabled
+    }
+
     /// Make `child` toggle the collapsible when pressed, like
     /// `<CollapsibleTrigger asChild>`. The child keeps its own handlers.
     pub fn trigger<'a, Message: 'a>(
         &self,
         child: impl Into<Slot<'a, Message>>,
     ) -> Slot<'a, Message> {
-        Slot::new(Trigger {
-            child: child.into(),
-        })
+        let mut child = child.into();
+        child.inherit(&Inherited::default().with_disabled(self.disabled));
+        Slot::new(Trigger { child })
     }
 
     /// Show `child` only while the collapsible is open, like
@@ -189,6 +203,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Collapsib
     ) -> Option<Message> {
         match event {
             Event::App(message) => Some(message),
+            Event::Toggle if self.disabled || self.inherited.is_disabled() => None,
             Event::Toggle => {
                 let next = !self.is_open(state);
 
@@ -206,6 +221,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Collapsib
     fn view(&self, state: &State) -> impl Widget<Event<Message>, Theme, Renderer> + 'a {
         let handle = Handle {
             is_open: self.is_open(state),
+            disabled: self.disabled || self.inherited.is_disabled(),
         };
 
         let mut body = (self.body)(&handle);
