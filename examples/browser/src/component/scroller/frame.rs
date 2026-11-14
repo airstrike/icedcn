@@ -5,8 +5,8 @@ use crate::icon;
 use iced::Alignment::Center;
 use iced::alignment::Vertical::Bottom;
 use iced::widget::button::StyleFn;
-use iced::widget::stack;
 use iced::widget::text::{Ellipsis, LineHeight, Wrapping};
+use iced::widget::{stack, svg};
 use iced::{Element, Fill, Widget};
 use icedxdy::theme::container::Style;
 use icedxdy::widget::scroller::Target;
@@ -87,7 +87,15 @@ impl Demo {
                     "Click the button below to send the first message.",
                 ),
             };
-            let tile = container(icon::message_circle_dashed().size(20))
+            let bubble = svg(svg::Handle::from_memory(include_bytes!(
+                "../../../assets/scroller/message-circle-dashed.svg"
+            )))
+            .width(20)
+            .height(20)
+            .style(|theme: &Theme, _| svg::Style {
+                color: Some(theme.neutral.foreground.into()),
+            });
+            let tile = container(bubble)
                 .center_x(40)
                 .center_y(40)
                 .style(skin::tile);

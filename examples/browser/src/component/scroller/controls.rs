@@ -26,6 +26,7 @@ impl Demo {
         let send = button(icon::arrow_up().size(16))
             .square()
             .rounded()
+            .inset(1)
             .style(button::Default + hover(Alpha(0.8)))
             .disabled(disabled)
             .on_press(Event::Send);
@@ -324,17 +325,30 @@ fn presets(selected: motion::Preset) -> Slot<'static, Event> {
             )
         })
         .icon(icon::chevron_down)
+        // Rhea's px-3 inside a one-pixel border.
+        .padding([0, 13])
         .position(select::Position::Popper)
         .side(select::Side::Top)
         .align(select::Align::Start)
-        .trigger_style(|theme, _, _, _| widget::Style {
-            background: Some(theme.input.scale_alpha(0.5).into()),
-            text_color: theme.neutral.foreground.into(),
-            border: iced::Border {
-                radius: 18.0.into(),
+        .trigger_style(|theme, status, _, _| {
+            let focused = matches!(status, widget::Status::Focused { .. });
+            let mut border = Border::default().rounded(18);
+            if focused {
+                border = border.width(1).color(theme.neutral.ring);
+            }
+            widget::Style {
+                background: Some(theme.input.scale_alpha(0.5).into()),
+                text_color: theme.neutral.foreground.into(),
+                border: border.into(),
+                ring: focused.then(|| {
+                    Border::default()
+                        .width(3)
+                        .rounded(21)
+                        .color(theme.neutral.ring.scale_alpha(0.3))
+                        .into()
+                }),
                 ..Default::default()
-            },
-            ..Default::default()
+            }
         })
         .into()
 }

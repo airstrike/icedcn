@@ -24,8 +24,10 @@
 use iced_core::Length::Fill;
 use iced_core::{Alignment, Element, Length, Padding};
 use iced_widget::component::{self, Component};
+use iced_widget::text::LineHeight;
 use iced_widget::{Renderer, Space, Widget, anchored};
 use icedxdy_core::Theme;
+use icedxdy_core::theme::container::Style;
 use icedxdy_core::theme::popover::content;
 use icedxdy_core::theme::select::trigger;
 use std::rc::Rc;
@@ -130,6 +132,7 @@ pub struct Select<'a, Message> {
     on_value_change: Option<Box<dyn Fn(String) -> Message + 'a>>,
     disabled: bool,
     width: Length,
+    padding: Padding,
     size: Size,
     variant: Variant,
     trigger_paint: Option<TriggerPaint<'a>>,
@@ -170,6 +173,8 @@ pub fn select<'a, Message>(entries: impl IntoIterator<Item = Entry>) -> Select<'
         on_value_change: None,
         disabled: false,
         width: Length::Shrink,
+        // Nova's pl-2.5 / pr-2 plus the one-pixel border.
+        padding: Padding::default().left(11).right(9),
         size: Size::Default,
         variant: Variant::Default,
         trigger_paint: None,
@@ -237,6 +242,12 @@ impl<'a, Message> Select<'a, Message> {
     /// Set the trigger's width (`w-fit` by default).
     pub fn width(mut self, width: impl Into<Length>) -> Self {
         self.width = width.into();
+        self
+    }
+
+    /// Set the space between the trigger's outer edge and its content.
+    pub fn padding(mut self, padding: impl Into<Padding>) -> Self {
+        self.padding = padding.into();
         self
     }
 
@@ -365,17 +376,21 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
         });
 
         let has_value = chosen.is_some();
-        let value: Slot<'a, Event> = match chosen {
-            Some(label) => text::small(label).into(),
-            None => text::muted(self.placeholder.clone()).into(),
-        };
+        let value = match chosen {
+            Some(label) => text::small(label),
+            None => text::muted(self.placeholder.clone()),
+        }
+        .line_height(LineHeight::Absolute(20.into()));
 
         let chevron: Slot<'a, Event> = match &self.icon {
-            Some(icon) => icon().size(16).into(),
+            Some(icon) => icon().size(16).line_height(LineHeight::Relative(1.)).into(),
             None => text::muted("\u{2304}").into(),
         };
-
-        let mut line: Slot<'a, Event> = row![value, Space::new().width(Fill), chevron]
+        let chevron = Container::new(chevron).style(|theme| Style {
+            text_color: Some(theme.muted.foreground),
+            ..Style::default()
+        });
+        let mut line: Slot<'a, Event> = row![Container::new(value).width(Fill), chevron]
             .spacing(6)
             .align_y(Alignment::Center)
             .into();
@@ -392,15 +407,10 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
                 )
             });
 
-        // `py-2 pr-2 pl-2.5`, `h-8` (`h-7` small).
+        // `h-8` (`h-7` small).
         let height = if self.size == Size::Sm { 28.0 } else { 32.0 };
         let button = Button::new(line.compose())
-            .padding(Padding {
-                top: 0.0,
-                bottom: 0.0,
-                left: 10.0,
-                right: 8.0,
-            })
+            .padding(self.padding)
             .height(height)
             .width(self.width)
             .translate(false)

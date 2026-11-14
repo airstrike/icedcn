@@ -12,7 +12,7 @@ serde.workspace = true
 serde_json.workspace = true
 rfd = "0.17"
 icedxdy = { workspace = true, features = ["markdown", "spinner", "svg", "sweeten"] }
-iced = { workspace = true, features = ["markdown", "highlighter", "selector", "tokio", "svg", "image"] }
+iced = { workspace = true, features = ["advanced-shaping", "markdown", "highlighter", "selector", "tokio", "svg", "image"] }
 iced_widget.workspace = true
 sweeten.workspace = true
 fount = { git = "https://github.com/airstrike/fount" }

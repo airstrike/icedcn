@@ -188,6 +188,16 @@ where
         self
     }
 
+    fn clearance(&self) -> Padding {
+        // A transparent inset can already provide the pixel of press travel.
+        let travel: f32 = if self.translate { 1.0 } else { 0.0 };
+        Padding {
+            top: travel.max(self.inset.top),
+            bottom: travel.max(self.inset.bottom),
+            ..self.inset
+        }
+    }
+
     /// Sets the message that will be produced when the [`Button`] is pressed.
     pub fn on_press(mut self, on_press: Message) -> Self {
         self.on_press = Some(OnPress::Direct(on_press));
@@ -366,19 +376,12 @@ where
     }
 
     fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) {
-        // When translate is on: 1px top + 1px bottom for press-down effect.
-        // `inset` adds transparent margin around the painted bg/border -
-        // bounds grow to include it so hover/hit-test stay continuous.
-        //
-        // The child sits at the top edge of the reserved translate budget.
-        // Draw then consumes that budget only while pressed, keeping the
-        // resting text optically centered while layout accounts for travel.
-        let translate = if self.translate { 1.0 } else { 0.0 };
+        let clearance = self.clearance();
         let padding = Padding {
-            top: self.padding.top + translate + self.inset.top,
-            bottom: self.padding.bottom + translate + self.inset.bottom,
-            left: self.padding.left + self.inset.left,
-            right: self.padding.right + self.inset.right,
+            top: self.padding.top + clearance.top,
+            bottom: self.padding.bottom + clearance.bottom,
+            left: self.padding.left + clearance.left,
+            right: self.padding.right + clearance.right,
         };
         layout::positioned(
             tree,
@@ -391,7 +394,7 @@ where
 
                 tree.size
             },
-            |_, _| Vector::new(0.0, -translate),
+            |_, _| Vector::new(0.0, self.inset.top - clearance.top),
         );
     }
 
@@ -632,26 +635,14 @@ where
             theme.style(&self.class, status)
         };
 
-        // 1px press-down effect (active:translate-y-px)
-        // Layout has 1px top + 1px bottom extra padding when translate is on.
-        // At rest: draw translated by (0, 0). On press: translated by (0, 1).
+        // Rhea/Nova active:translate-y-px moves paint inside the reserved clearance.
         let press_y = if self.translate && status == Status::Pressed {
             1.0
         } else {
             0.0
         };
 
-        // Visual button bounds: shrunk inward from `bounds` by the
-        // translate-margin (1px top/bottom when on) AND `inset`. The
-        // outer `bounds` stays as the hit-test region so adjacent
-        // buttons in a `spacing(0)` column hover continuously.
-        let translate = if self.translate { 1.0 } else { 0.0 };
-        let visual_bounds = Rectangle {
-            x: bounds.x + self.inset.left,
-            y: bounds.y + translate + self.inset.top,
-            width: bounds.width - self.inset.left - self.inset.right,
-            height: bounds.height - 2.0 * translate - self.inset.top - self.inset.bottom,
-        };
+        let visual_bounds = bounds.shrink(self.clearance());
 
         // Translate everything down by press_y
         renderer.with_translation(Vector::new(0.0, press_y), |renderer| {

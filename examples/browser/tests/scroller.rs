@@ -364,6 +364,73 @@ fn composer_menu_and_animation_picker_open_above_their_triggers() {
 }
 
 #[test]
+fn send_paints_a_circle_inside_its_square_target() {
+    use iced::{Color, Renderer, mouse};
+    use iced_test::core::renderer::{Headless, Style};
+    use iced_test::core::shell::{Bus, Waker};
+    use iced_test::futures::futures::executor::block_on;
+    use iced_test::runtime::UserInterface;
+
+    let backend = std::env::var("ICED_TEST_BACKEND").ok();
+    let mut renderer =
+        block_on(Renderer::new(Default::default(), backend.as_deref())).expect("headless renderer");
+    let page = scroller::Page::new(0);
+    let theme = Theme::dark();
+    let mut ui = UserInterface::build(
+        page.themed_preview("animation", &theme),
+        Size::new(384., 620.),
+        Default::default(),
+        &mut renderer,
+    );
+    ui.update(
+        &window::Headless,
+        &Waker::noop(),
+        &[Event::Window(
+            window::Event::RedrawRequested(Instant::now()),
+        )],
+        mouse::Cursor::Unavailable,
+        &mut renderer,
+        &mut Bus::new(),
+    );
+    let mut layout = Layout::default();
+    ui.operate(&renderer, &mut layout);
+    let send = layout.buttons.last().expect("the footer contains Send");
+    assert_eq!(send.size(), Size::new(32., 32.));
+    for scale in [1u32, 2] {
+        ui.draw(
+            &mut renderer,
+            &theme,
+            &Style::default(),
+            mouse::Cursor::Unavailable,
+        );
+        let width = 384 * scale;
+        let rgba = renderer.screenshot(Size::new(width, 620 * scale), scale as f32, Color::BLACK);
+        let left = (send.x * scale as f32).round() as u32;
+        let top = (send.y * scale as f32).round() as u32;
+        let side = 32 * scale;
+        let mut bounds = (side, side, 0, 0);
+        for y in 0..side {
+            for x in 0..side {
+                let i = (4 * ((top + y) * width + left + x)) as usize;
+                if rgba[i + 2].saturating_sub(rgba[i]) > 80 {
+                    bounds = (
+                        bounds.0.min(x),
+                        bounds.1.min(y),
+                        bounds.2.max(x),
+                        bounds.3.max(y),
+                    );
+                }
+            }
+        }
+        assert_eq!(
+            bounds,
+            (scale, scale, side - scale - 1, side - scale - 1),
+            "the Rhea primary fill has a one-point transparent border on every side of {send:?} at {scale}×"
+        );
+    }
+}
+
+#[test]
 fn ellipsis_uses_the_font_and_only_changes_the_last_overflowing_line() {
     use iced::mouse;
     use iced::{Color, Element, Font, Renderer};
