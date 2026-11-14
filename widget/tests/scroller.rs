@@ -1,7 +1,7 @@
 //! Rebuilding a streaming transcript must preserve the reader's place.
-use iced_core::time::Instant;
+use iced_core::time::{Duration, Instant};
 use iced_core::widget::{Id, Operation, operation};
-use iced_core::{Element, Event, Rectangle, Size, Vector, window};
+use iced_core::{Element, Event, Point, Rectangle, Size, Vector, mouse, touch, window};
 use iced_runtime::task;
 use iced_test::simulator::{Simulator, simulator};
 use iced_widget::{Renderer, Space};
@@ -234,4 +234,199 @@ fn scrollable_keeps_child_taps_and_coasts_after_an_unhandled_swipe() {
     ui.operate(&mut offset);
     assert!(offset.0 > released + 12.);
     assert_eq!(ui.drain().count(), 0);
+}
+
+/// A wide snippet at the top of a tall article, with a real tappable child.
+fn nested_scrolls(content_width: u32) -> Simulator<'static, bool, Theme, Renderer> {
+    use icedcn_widget::{button, column, scrollable};
+    let snippet = scrollable(column![
+        button("Tap").width(140).height(36).on_press(true),
+        Space::new().width(content_width).height(36),
+    ])
+    .id("snippet")
+    .horizontal()
+    .height(72)
+    .width(160);
+    let article = scrollable(column![snippet, Space::new().height(800).width(160)])
+        .id("article")
+        .height(150)
+        .width(160);
+    simulator(Element::from(article))
+}
+
+#[derive(Default)]
+struct NestedOffsets {
+    article: f32,
+    snippet: f32,
+}
+impl Operation for NestedOffsets {
+    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+        visit(self);
+    }
+    fn scrollable(
+        &mut self,
+        id: Option<&Id>,
+        _: Rectangle,
+        _: Size,
+        translation: Vector,
+        _: &mut dyn operation::Scrollable,
+    ) {
+        if id == Some(&Id::new("snippet")) {
+            self.snippet = translation.x;
+        } else if id == Some(&Id::new("article")) {
+            self.article = translation.y;
+        }
+    }
+}
+fn offsets(ui: &mut Simulator<'_, bool, Theme, Renderer>) -> (f32, f32) {
+    let _ = ui.simulate([Event::Window(
+        window::Event::RedrawRequested(Instant::now()),
+    )]);
+    let mut offsets = NestedOffsets::default();
+    ui.operate(&mut offsets);
+    (offsets.snippet, offsets.article)
+}
+type Nested = Simulator<'static, bool, Theme, Renderer>;
+const FINGER: touch::Finger = touch::Finger(1);
+
+fn contact(ui: &mut Nested, event: touch::Event, position: Point) {
+    ui.point_at(position);
+    let _ = ui.simulate([Event::Touch(event)]);
+}
+
+fn press(ui: &mut Nested, x: f32, y: f32) {
+    let position = Point::new(x, y);
+    contact(
+        ui,
+        touch::Event::FingerPressed {
+            id: FINGER,
+            position,
+        },
+        position,
+    );
+}
+
+fn drag(ui: &mut Nested, x: f32, y: f32) {
+    let position = Point::new(x, y);
+    contact(
+        ui,
+        touch::Event::FingerMoved {
+            id: FINGER,
+            position,
+        },
+        position,
+    );
+}
+
+fn lift(ui: &mut Nested, x: f32, y: f32) {
+    let position = Point::new(x, y);
+    contact(
+        ui,
+        touch::Event::FingerLifted {
+            id: FINGER,
+            position,
+        },
+        position,
+    );
+}
+
+#[test]
+fn diagonal_swipes_choose_one_nested_viewport_and_cancel_its_button() {
+    for (x, y, expected) in [(83., 6., (0., 24.)), (58., 22., (32., 0.))] {
+        let mut ui = nested_scrolls(440);
+        press(&mut ui, 90., 30.);
+        drag(&mut ui, x, y);
+        assert_eq!(offsets(&mut ui), expected);
+        lift(&mut ui, x, y);
+        assert_eq!(ui.drain().count(), 0, "release over original button");
+    }
+    let mut ui = nested_scrolls(440);
+    press(&mut ui, 80., 30.);
+    drag(&mut ui, 79., 29.);
+    lift(&mut ui, 79., 29.);
+    assert_eq!(ui.drain().collect::<Vec<_>>(), [true]);
+    assert_eq!(offsets(&mut ui), (0., 0.));
+
+    press(&mut ui, 80., 30.);
+    drag(&mut ui, 52., 28.);
+    lift(&mut ui, 52., 28.);
+    let _ = ui.simulate([Event::Window(window::Event::RedrawRequested(
+        Instant::now() + Duration::from_millis(80),
+    ))]);
+    let mut coast = NestedOffsets::default();
+    ui.operate(&mut coast);
+    assert!(coast.snippet > 28. && coast.article == 0.);
+}
+
+#[test]
+fn reaching_a_child_edge_does_not_replay_a_drag_on_the_parent() {
+    let mut ui = nested_scrolls(170);
+    press(&mut ui, 90., 60.);
+    drag(&mut ui, 62., 51.);
+    assert_eq!(offsets(&mut ui), (10., 0.));
+    drag(&mut ui, 52., 15.);
+    assert_eq!(offsets(&mut ui), (10., 0.));
+    lift(&mut ui, 52., 15.);
+    for width in [150, 440] {
+        let mut ui = nested_scrolls(width);
+        press(&mut ui, 90., 60.);
+        drag(&mut ui, 90., 21.);
+        assert_eq!(offsets(&mut ui), (0., 39.));
+    }
+}
+
+#[test]
+fn horizontal_thumb_owns_its_drag_over_the_vertical_article() {
+    let mut ui = nested_scrolls(440);
+    press(&mut ui, 20., 71.);
+    drag(&mut ui, 62., 32.);
+    let (snippet, article) = offsets(&mut ui);
+    assert!(snippet > 60., "thumb drag moved the snippet: {snippet}");
+    assert_eq!(article, 0.);
+    lift(&mut ui, 62., 32.);
+    assert_eq!(offsets(&mut ui), (snippet, 0.));
+}
+
+#[test]
+fn wheel_rechecks_axis_and_bounds_on_every_event_over_a_snippet() {
+    let mut ui = nested_scrolls(440);
+    ui.point_at(Point::new(80., 15.));
+    for (x, y, expected) in [
+        (-16., -3., (16., 0.)),
+        (-1., -12., (16., 12.)),
+        (-8., 0., (24., 12.)),
+        (500., 0., (0., 12.)),
+        (10., 2., (0., 12.)),
+        (0., 6., (0., 6.)),
+    ] {
+        let _ = ui.simulate([Event::Mouse(mouse::Event::WheelScrolled {
+            delta: mouse::ScrollDelta::Pixels { x, y },
+        })]);
+        assert_eq!(offsets(&mut ui), expected);
+    }
+}
+
+#[test]
+fn a_new_vertical_gesture_chains_when_the_inner_viewport_is_at_its_edge() {
+    use icedcn_widget::{column, scrollable};
+    let pane = scrollable(Space::new().width(160).height(82))
+        .height(72)
+        .width(160);
+    let article = scrollable(column![pane, Space::new().width(160).height(500)])
+        .id("article")
+        .width(160)
+        .height(150);
+    let mut ui = simulator(Element::from(article));
+    press(&mut ui, 50., 60.);
+    drag(&mut ui, 50., 28.);
+    drag(&mut ui, 50., 14.);
+    lift(&mut ui, 50., 14.);
+    assert_eq!(
+        offsets(&mut ui).1,
+        0.,
+        "the first gesture stays with its owner"
+    );
+    press(&mut ui, 50., 60.);
+    drag(&mut ui, 50., 38.);
+    assert_eq!(offsets(&mut ui).1, 22., "the next gesture starts cleanly");
 }

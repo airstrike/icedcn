@@ -70,7 +70,7 @@ fn swipe_coasts_with_touch_notifications_and_stops_at_the_content_edge() {
     assert!(state.step(started + Duration::from_millis(16), VIEW, CONTENT));
     assert!(state.axis_offset(super::Axis::Y, VIEW, CONTENT) > 60.);
     assert_eq!(
-        state.notify_scroll(VIEW, CONTENT).unwrap().source,
+        state.notify_viewport(VIEW, CONTENT).unwrap().source,
         Source::Touch
     );
     let smaller = Size::new(160., 250.);

@@ -391,18 +391,14 @@ impl Direction {
     }
 
     fn align(&self, delta: Vector) -> Vector {
-        let horizontal_alignment = self.horizontal().map(|p| p.alignment).unwrap_or_default();
-
-        let vertical_alignment = self.vertical().map(|p| p.alignment).unwrap_or_default();
-
-        let align = |alignment: Anchor, delta: f32| match alignment {
-            Anchor::Start => delta,
-            Anchor::End => -delta,
+        let align = |bar: Option<&Scrollbar>, delta: f32| match bar.map(|bar| bar.alignment) {
+            Some(Anchor::Start) => delta,
+            Some(Anchor::End) => -delta,
+            None => 0.,
         };
-
         Vector::new(
-            align(horizontal_alignment, delta.x),
-            align(vertical_alignment, delta.y),
+            align(self.horizontal(), delta.x),
+            align(self.vertical(), delta.y),
         )
     }
 }
@@ -864,6 +860,20 @@ where
                 self.auto_scroll,
                 shell.is_event_captured(),
             );
+
+            if let Some(cancel) = update.cancel_child {
+                let viewport =
+                    bounds.intersection(viewport).unwrap_or_default() + state.last_translation;
+                self.content.update(
+                    content_tree,
+                    &Event::Touch(cancel),
+                    content_layout,
+                    mouse::Cursor::Unavailable,
+                    renderer,
+                    shell,
+                    &viewport,
+                );
+            }
 
             if let Some(scroll) = update.scroll
                 && let Some(on_scroll) = &self.on_scroll
@@ -1378,6 +1388,9 @@ struct Interact {
 /// The outcome of [`State::update`]: the [`Shell`] effects to materialize
 #[derive(Debug, Default)]
 struct Update {
+    /// Cancel the child press when a drag first claims the contact.
+    cancel_child: Option<touch::Event>,
+
     /// The scroll notification to publish, if the scroll changed: the final
     /// state after the event, coalescing any intermediate changes
     scroll: Option<Scroll>,
@@ -1407,7 +1420,6 @@ struct State {
     interaction: Interaction,
     keyboard_modifiers: keyboard::Modifiers,
     last_notified: Option<Viewport>,
-    last_scrolled: Option<Instant>,
     indicator_until: Option<Instant>,
     is_scrollbar_visible: bool,
     last_status: Option<Status>,
@@ -1457,6 +1469,7 @@ struct Segment {
 enum Interaction {
     None,
     ScrollerGrabbed(Axis, f32),
+    TouchPending(Swipe),
     TouchScrolling(Swipe),
     AutoScrolling {
         origin: Point,
@@ -1625,7 +1638,6 @@ impl Default for State {
             interaction: Interaction::None,
             keyboard_modifiers: keyboard::Modifiers::default(),
             last_notified: None,
-            last_scrolled: None,
             indicator_until: None,
             is_scrollbar_visible: true,
             last_status: None,
@@ -2059,6 +2071,30 @@ impl State {
         State::default()
     }
 
+    /// A child may claim only a gesture whose dominant axis can advance its viewport.
+    fn can_scroll(
+        &self,
+        direction: Direction,
+        delta: Vector,
+        bounds: Rectangle,
+        content: Size,
+        target: Option<Target>,
+    ) -> bool {
+        let axis = if delta.x.abs() > delta.y.abs() {
+            Axis::X
+        } else {
+            Axis::Y
+        };
+        let aligned = direction.align(delta);
+        let (movement, destination) = match axis {
+            Axis::X => (aligned.x, target.map(|t| t.destination.x)),
+            Axis::Y => (aligned.y, target.map(|t| t.destination.y)),
+        };
+        let offset = destination.unwrap_or_else(|| self.axis_offset(axis, bounds, content));
+        let limit = (axis.length(content) - axis.length(bounds.size())).max(0.);
+        (movement > 0. && offset < limit) || (movement < 0. && offset > 0.)
+    }
+
     fn scroll(&mut self, delta: Vector<f32>, bounds: Rectangle, content: Size) {
         self.cancel();
 
@@ -2474,18 +2510,6 @@ impl State {
     }
 
     /// Builds a [`Scroll`] notification for the current viewport, if it changed
-    /// since the last one, and records that the user scrolled.
-    fn notify_scroll(&mut self, bounds: Rectangle, content: Size) -> Option<Scroll> {
-        let notification = self.notify_viewport(bounds, content);
-
-        if notification.is_some() {
-            self.last_scrolled = Some(Instant::now());
-        }
-
-        notification
-    }
-
-    /// Builds a [`Scroll`] notification for the current viewport, if it changed
     /// since the last one, recording it so that it is not reported again.
     fn notify_viewport(&mut self, bounds: Rectangle, content: Size) -> Option<Scroll> {
         if content.width <= bounds.width && content.height <= bounds.height {
@@ -2875,25 +2899,6 @@ impl State {
     ) -> Interact {
         let mut interact = Interact::default();
 
-        // Clear the scroll transaction, if the user is no longer scrolling
-        if let Some(last_scrolled) = self.last_scrolled {
-            let clear_transaction = match event {
-                Event::Mouse(
-                    mouse::Event::ButtonPressed(_)
-                    | mouse::Event::ButtonReleased(_)
-                    | mouse::Event::CursorLeft,
-                ) => true,
-                Event::Mouse(mouse::Event::CursorMoved { .. }) => {
-                    last_scrolled.elapsed() > Duration::from_millis(100)
-                }
-                _ => last_scrolled.elapsed() > Duration::from_millis(1500),
-            };
-
-            if clear_transaction {
-                self.last_scrolled = None;
-            }
-        }
-
         // A tap arrests a coast immediately, even when a child handles the press.
         if self.source == Some(Source::Touch)
             && cursor_over_scrollable.is_some()
@@ -2909,7 +2914,7 @@ impl State {
             // guards against stepping twice for the same instant
             if self.last_frame != Some(*now)
                 && self.step(*now, bounds, content)
-                && let Some(notification) = self.notify_scroll(bounds, content)
+                && let Some(notification) = self.notify_viewport(bounds, content)
             {
                 interact.scroll = Some(notification);
             }
@@ -2940,7 +2945,7 @@ impl State {
                             RailStep::Moved => {
                                 self.source = Some(Source::Scrollbar);
 
-                                if let Some(notification) = self.notify_scroll(bounds, content) {
+                                if let Some(notification) = self.notify_viewport(bounds, content) {
                                     interact.scroll = Some(notification);
                                 }
 
@@ -3005,7 +3010,7 @@ impl State {
 
                         self.source = Some(Source::AutoScroll);
 
-                        let notification = self.notify_scroll(bounds, content);
+                        let notification = self.notify_viewport(bounds, content);
                         let has_scrolled = notification.is_some();
 
                         if let Some(notification) = notification {
@@ -3067,7 +3072,7 @@ impl State {
 
                         self.source = Some(Source::Scrollbar);
 
-                        if let Some(notification) = self.notify_scroll(bounds, content) {
+                        if let Some(notification) = self.notify_viewport(bounds, content) {
                             interact.scroll = Some(notification);
                         }
 
@@ -3141,7 +3146,7 @@ impl State {
 
                         self.source = Some(Source::Scrollbar);
 
-                        if let Some(notification) = self.notify_scroll(bounds, content) {
+                        if let Some(notification) = self.notify_viewport(bounds, content) {
                             interact.scroll = Some(notification);
                         }
 
@@ -3168,9 +3173,13 @@ impl State {
             return interact;
         }
 
-        if self.last_scrolled.is_none()
-            || !matches!(event, Event::Mouse(mouse::Event::WheelScrolled { .. }))
-        {
+        // Once a swipe owns this contact, the child has received FingerLost.
+        // Keep all wheel events child-first so a new axis can route immediately.
+        let owns_contact = matches!((self.interaction, event),
+            (Interaction::TouchScrolling(swipe), Event::Touch(
+                touch::Event::FingerMoved { id, .. } | touch::Event::FingerLifted { id, .. } | touch::Event::FingerLost { id, .. }
+            )) if swipe.finger == *id);
+        if !owns_contact {
             let cursor = match cursor_over_scrollable {
                 Some(cursor_position)
                     if mouse_over_scrollbar.is_none() && !self.interaction.scrollers_grabbed() =>
@@ -3206,20 +3215,70 @@ impl State {
     ) -> Update {
         let mut update = Update::default();
 
-        if let Event::Touch(
-            touch::Event::FingerLifted { id, .. } | touch::Event::FingerLost { id, .. },
-        ) = event
-        {
-            if let Interaction::TouchScrolling(swipe) = self.interaction {
-                if swipe.finger != *id {
-                    return update;
+        if let Event::Touch(contact) = event {
+            match *contact {
+                touch::Event::FingerPressed { id, position } => {
+                    // A button may capture the press. Observe it without claiming
+                    // the tap, so a later drag can still cancel the pressed child.
+                    if cursor_over_scrollable.is_some()
+                        && mouse_over_scrollbar.is_none()
+                        && matches!(self.interaction, Interaction::None)
+                    {
+                        self.interaction = Interaction::TouchPending(Swipe {
+                            finger: id,
+                            position,
+                            moved_at: Instant::now(),
+                            velocity: Vector::ZERO,
+                        });
+                    }
                 }
-                if matches!(event, Event::Touch(touch::Event::FingerLifted { .. })) {
-                    self.fling(swipe, direction, bounds, content, Instant::now());
-                    update.request_redraw = self.target.is_some();
+                touch::Event::FingerMoved { id, position } => {
+                    let mut swipe = match self.interaction {
+                        Interaction::TouchPending(swipe) if swipe.finger == id => {
+                            let delta = swipe.position - position;
+                            if is_event_captured {
+                                self.interaction = Interaction::None;
+                                return update;
+                            }
+                            // Let a small amount of contact jitter remain a tap.
+                            if delta.x.abs().max(delta.y.abs()) < 5. {
+                                return update;
+                            }
+                            if !self.can_scroll(direction, delta, bounds, content, None) {
+                                self.interaction = Interaction::None;
+                                return update;
+                            }
+                            update.cancel_child = Some(touch::Event::FingerLost { id, position });
+                            swipe
+                        }
+                        Interaction::TouchScrolling(swipe) if swipe.finger == id => swipe,
+                        _ => return update,
+                    };
+                    let delta = swipe.drag(position, Instant::now());
+                    self.interaction = Interaction::TouchScrolling(swipe);
+                    self.scroll(direction.align(delta), bounds, content);
+                    self.source = Some(Source::Touch);
+                    update.scroll = self.notify_viewport(bounds, content);
+                    update.capture = true;
+                }
+                touch::Event::FingerLifted { id, .. } | touch::Event::FingerLost { id, .. } => {
+                    match self.interaction {
+                        Interaction::TouchScrolling(swipe) => {
+                            if swipe.finger != id {
+                                return update;
+                            }
+                            if matches!(contact, touch::Event::FingerLifted { .. }) {
+                                self.fling(swipe, direction, bounds, content, Instant::now());
+                                update.request_redraw = self.target.is_some();
+                            }
+                            update.capture = true;
+                        }
+                        Interaction::TouchPending(swipe) if swipe.finger != id => return update,
+                        _ => {}
+                    }
+                    self.interaction = Interaction::None;
                 }
             }
-            self.interaction = Interaction::None;
             return update;
         }
 
@@ -3227,7 +3286,10 @@ impl State {
             event,
             Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
         ) {
-            if !matches!(self.interaction, Interaction::TouchScrolling(_)) {
+            if !matches!(
+                self.interaction,
+                Interaction::TouchPending(_) | Interaction::TouchScrolling(_)
+            ) {
                 self.interaction = Interaction::None;
             }
             return update;
@@ -3243,9 +3305,6 @@ impl State {
                     return update;
                 }
 
-                if self.source == Some(Source::Touch) {
-                    self.cancel();
-                }
                 let (delta, is_significant) = match *delta {
                     mouse::ScrollDelta::Lines { x, y } => {
                         let is_shift_pressed = self.keyboard_modifiers.shift();
@@ -3275,32 +3334,28 @@ impl State {
                     mouse::ScrollDelta::Pixels { x, y } => (-Vector::new(x, y), false),
                 };
 
+                let smooth = smooth_scroll && is_significant;
+                let target = if smooth && self.source == Some(Source::Wheel) {
+                    self.target
+                } else {
+                    None
+                };
+                if !self.can_scroll(direction, delta, bounds, content, target) {
+                    return update;
+                }
+                if self.source == Some(Source::Touch) {
+                    self.cancel();
+                }
                 let delta = direction.align(delta);
-
-                if smooth_scroll && is_significant {
+                if smooth {
                     self.scroll_smoothly(delta, bounds, content, Instant::now());
                 } else {
                     self.scroll(delta, bounds, content);
                 }
-
                 self.source = Some(Source::Wheel);
-
-                let notification = self.notify_scroll(bounds, content);
-                let has_scrolled = notification.is_some();
-
-                if let Some(notification) = notification {
-                    update.scroll = Some(notification);
-                }
-
-                let in_transaction = self.last_scrolled.is_some() || self.target.is_some();
-
-                if has_scrolled || in_transaction {
-                    update.capture = true;
-                }
-
-                if self.target.is_some() {
-                    update.request_redraw = true;
-                }
+                update.scroll = self.notify_viewport(bounds, content);
+                update.capture = true;
+                update.request_redraw = self.target.is_some();
             }
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Middle))
                 if auto_scroll && matches!(self.interaction, Interaction::None) =>
@@ -3318,44 +3373,6 @@ impl State {
                 update.capture = true;
                 update.invalidate_layout = true;
                 update.request_redraw = true;
-            }
-            Event::Touch(event)
-                if matches!(self.interaction, Interaction::TouchScrolling(_))
-                    || mouse_over_scrollbar.is_none() =>
-            {
-                match event {
-                    touch::Event::FingerPressed { id, position } => {
-                        if cursor_over_scrollable.is_none()
-                            || !matches!(self.interaction, Interaction::None)
-                        {
-                            return update;
-                        }
-                        self.interaction = Interaction::TouchScrolling(Swipe {
-                            finger: *id,
-                            position: *position,
-                            moved_at: Instant::now(),
-                            velocity: Vector::ZERO,
-                        });
-                    }
-                    touch::Event::FingerMoved { id, position } => {
-                        let Interaction::TouchScrolling(swipe) = &mut self.interaction else {
-                            return update;
-                        };
-                        if swipe.finger != *id {
-                            return update;
-                        }
-                        let delta = swipe.drag(*position, Instant::now());
-                        self.scroll(direction.align(delta), bounds, content);
-                        self.source = Some(Source::Touch);
-
-                        if let Some(notification) = self.notify_scroll(bounds, content) {
-                            update.scroll = Some(notification);
-                        }
-                    }
-                    _ => {}
-                }
-
-                update.capture = true;
             }
             Event::Mouse(mouse::Event::CursorMoved { position }) => {
                 if let Interaction::AutoScrolling {
