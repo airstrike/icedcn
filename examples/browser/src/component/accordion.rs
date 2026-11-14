@@ -70,12 +70,14 @@ pub static BLOCKS: &[page::Block] = &[
 /// tree, seeded from shadcn's `defaultValue`.
 pub struct AccordionPage {
     state: page::State,
+    wide: bool,
 }
 
 impl AccordionPage {
     pub fn new(page_index: usize) -> Box<dyn page::Page> {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
+            wide: true,
         })
     }
 }
@@ -123,6 +125,41 @@ impl page::Page for AccordionPage {
         self.state.reset_volatile();
     }
 
+    fn window_width(&mut self, width: f32) {
+        self.wide = width >= 768.;
+    }
+
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: iced::Padding::ZERO,
+            ..page::Backdrop::default()
+        }
+    }
+
+    fn docs_preview(&self, id: &str, outer: &Theme) -> iced::Element<'_, Message, Theme> {
+        // The MDX preview sets a smaller cap than the standalone examples.
+        let content = container(self.themed_preview(id, outer)).width(Fill.max(384));
+        let height = match (id, self.wide) {
+            ("multiple", true) => 480,
+            ("multiple", false) => 576,
+            ("borders", true) => 320,
+            ("borders", false) => 384,
+            ("card", true) => 448,
+            ("card", false) => 512,
+            _ => 300,
+        };
+        // On narrow windows the browser shell already supplies 32 px of
+        // exterior padding. The upstream page supplies 24 px before its
+        // 40 px preview inset, leaving the same 64 px on each side.
+        let gutter = if self.wide { 40 } else { 32 };
+        container(content)
+            .center_x(Fill)
+            .height(height)
+            .padding(iced::Padding::default().top(40).left(gutter).right(gutter))
+            .clip(true)
+            .into()
+    }
+
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         let single = accordion::Mode::Single { collapsible: true };
         let multiple = accordion::Mode::Multiple;
@@ -152,8 +189,7 @@ impl page::Page for AccordionPage {
                     ),
                 ],
             ))
-            .max_width(512.0)
-            .width(Fill)
+            .width(Fill.max(512))
             .into(),
 
             "basic" => container(build_accordion(
@@ -180,8 +216,7 @@ impl page::Page for AccordionPage {
                     ),
                 ],
             ))
-            .max_width(512.0)
-            .width(Fill)
+            .width(Fill.max(512))
             .into(),
 
             "multiple" => container(build_accordion(
@@ -208,8 +243,7 @@ impl page::Page for AccordionPage {
                     ),
                 ],
             ))
-            .max_width(512.0)
-            .width(Fill)
+            .width(Fill.max(512))
             .into(),
 
             "disabled" => container(build_accordion(
@@ -264,8 +298,7 @@ impl page::Page for AccordionPage {
                 .default_value(["billing"]);
 
                 container(inner)
-                    .max_width(512.0)
-                    .width(Fill)
+                    .width(Fill.max(512))
                     .padding(1)
                     .style(|theme: &Theme| Style {
                             background: None,

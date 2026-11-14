@@ -265,6 +265,12 @@ pub trait Page: Send {
         }
     }
 
+    /// The installed documentation may constrain a recipe's width, height
+    /// and alignment independently of the standalone component example.
+    fn docs_preview(&self, id: &str, outer: &Theme) -> iced::Element<'_, super::Message, Theme> {
+        self.themed_preview(id, outer)
+    }
+
     /// Subscription for pages that drive animations or timers. Default:
     /// `Subscription::none()`. Only the currently active page's subscription
     /// is wired by `App`, so pages don't waste cycles when the user is on
@@ -457,7 +463,7 @@ fn render_example<'a>(
         depth,
         title,
         description,
-        page.themed_preview(id, &viewer.theme),
+        page.docs_preview(id, &viewer.theme),
         code,
         page.backdrop(),
     )

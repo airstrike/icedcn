@@ -37,8 +37,7 @@ let inner = accordion(items.into_iter().map(|(id, trigger, body)| {
 .default_value(["billing"]);
 
 container(inner)
-    .max_width(512)
-    .width(Fill)
+    .width(Fill.max(512))
     .padding(1)
     .style(|theme: &Theme| Style {
         border: Border {
