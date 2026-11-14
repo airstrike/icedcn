@@ -18,19 +18,9 @@
 //! aspect_ratio(my_image, 16.0 / 9.0).max_width(384.0)
 //! ```
 //!
-//! # Width control
-//!
-//! Use `.max_width(N)` to cap the width — this mirrors shadcn's
-//! `max-w-sm` / `max-w-[10rem]` parent-width idioms without needing a
-//! wrapping `container(...).max_width(...)`. Wrapping aspect_ratio in a
-//! `Shrink`-width container is actively wrong: iced's `Limits::width(Shrink)`
-//! sets `compression.width = true`, which collapses our `Length::Fill`
-//! request to the (zero) intrinsic width — leaving the child invisible.
-//! `.max_width()` here is the right knob for the "needs a known width
-//! upstream" rule.
-//!
-//! `.width(Length)` is also available for explicit `Length::Fixed(n)` /
-//! `Length::FillPortion(n)` cases.
+//! Use [`AspectRatio::max_width`] to cap the available width, or
+//! [`AspectRatio::width`] for an explicit iced length. When the available
+//! height is smaller, both axes shrink together to preserve the ratio.
 
 use iced_core::layout;
 use iced_core::mouse;
@@ -42,7 +32,7 @@ use iced_widget::Renderer;
 
 use icedxdy_core::Theme;
 
-use crate::compose::Slot;
+use crate::compose::{Compose, Inherited, Slot};
 
 /// A widget that constrains its child to a `width : height` ratio.
 ///
@@ -50,26 +40,28 @@ use crate::compose::Slot;
 /// `16.0 / 9.0` is widescreen, `9.0 / 16.0` is portrait). The widget
 /// claims the available width (`Length::Fill`) by default and reports
 /// `width / ratio` for its height. Use [`AspectRatio::max_width`] or
-/// [`AspectRatio::width`] to control the width directly — wrapping in a
-/// `Shrink`-width container collapses the layout to zero (see module docs).
+/// [`AspectRatio::width`] to control the width.
 pub struct AspectRatio<'a, Message, Renderer = iced_widget::Renderer>
 where
     Renderer: iced_core::Renderer,
 {
-    content: Element<'a, Message, Theme, Renderer>,
+    // A slot can receive inherited props until iced diffs the widget.
+    pending: Option<Slot<'a, Message, Theme, Renderer>>,
+    content: Option<Element<'a, Message, Theme, Renderer>>,
     ratio: f32,
     width: Length,
     max_width: f32,
 }
 
-impl<'a, Message, Renderer> AspectRatio<'a, Message, Renderer>
+impl<'a, Message: 'a, Renderer> AspectRatio<'a, Message, Renderer>
 where
-    Renderer: iced_core::Renderer,
+    Renderer: iced_core::Renderer + 'a,
 {
     /// Wrap `content` and constrain it to the given `width / height` ratio.
-    pub fn new(content: Element<'a, Message, Theme, Renderer>, ratio: f32) -> Self {
+    pub fn new(content: impl Into<Slot<'a, Message, Theme, Renderer>>, ratio: f32) -> Self {
         Self {
-            content,
+            pending: Some(content.into()),
+            content: None,
             ratio,
             width: Length::Fill,
             max_width: f32::INFINITY,
@@ -85,8 +77,7 @@ where
 
     /// Cap the resolved width at `max_width` pixels. Mirrors shadcn's
     /// `max-w-sm` / `max-w-[10rem]` parent-width idioms — the equivalent
-    /// of wrapping in `container(...).max_width(N)` but without the
-    /// width-compression footgun (see module docs).
+    /// of applying a maximum width to the parent.
     pub fn max_width(mut self, max_width: impl Into<Pixels>) -> Self {
         self.max_width = max_width.into().0;
         self
@@ -101,7 +92,7 @@ pub fn aspect_ratio<'a, Message: 'a>(
     content: impl Into<Slot<'a, Message>>,
     ratio: f32,
 ) -> AspectRatio<'a, Message> {
-    AspectRatio::new(content.into().compose(), ratio)
+    AspectRatio::new(content, ratio)
 }
 
 impl<Message, Renderer> Meta for AspectRatio<'_, Message, Renderer> where
@@ -109,75 +100,35 @@ impl<Message, Renderer> Meta for AspectRatio<'_, Message, Renderer> where
 {
 }
 
-impl<Message, Renderer> Widget<Message, Theme, Renderer> for AspectRatio<'_, Message, Renderer>
+impl<'a, Message: 'a, Renderer> Widget<Message, Theme, Renderer>
+    for AspectRatio<'a, Message, Renderer>
 where
-    Renderer: iced_core::Renderer,
+    Renderer: iced_core::Renderer + 'a,
 {
     fn diff(&mut self, tree: &mut Tree) {
+        if let Some(slot) = self.pending.take() {
+            self.content = Some(slot.compose());
+        }
         tree.diff_children(std::slice::from_mut(&mut self.content));
     }
 
     fn size(&self) -> Size<Length> {
-        // Report the configured width (Fill by default); height is derived
-        // in `layout` from the resolved width and the ratio. `Shrink` here
-        // lets parents that measure us in a height-Shrink context (the
-        // common case — Column, card preview) accept whatever height we
-        // report.
-        Size {
-            width: self.width,
-            height: Length::Shrink,
-        }
+        Size::new(self.width, Length::Shrink)
     }
 
     fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) {
-        // Compute the width directly from the limits + the configured
-        // width / max_width. We deliberately bypass `Limits::resolve` —
-        // when the parent is a `Shrink`-width container (the common
-        // wrapping idiom), the parent's `Limits::width(Shrink)` flips
-        // `compression.width = true`, and a `Length::Fill` request would
-        // then collapse to the (zero) intrinsic width. Aspect-ratio's
-        // whole job is to *project* a width into a height; an empty
-        // intrinsic width breaks that contract. So we read `limits.max`
-        // directly and cap at `max_width`.
-        let safe_ratio = if self.ratio.is_finite() && self.ratio > 0.0 {
+        let ratio = if self.ratio.is_finite() && self.ratio > 0.0 {
             self.ratio
         } else {
-            // Fall back to a 1:1 box when the caller passes a non-positive or
-            // non-finite ratio. Avoids divide-by-zero / NaN propagating into
-            // the layout tree.
             1.0
         };
-
-        let width = match self.width {
-            Length::Fixed(n) => n,
-            // Fill / FillPortion / Shrink: use the available max, capped
-            // at the user-supplied `max_width` (defaults to INFINITY).
-            _ => limits.bounds().width,
-        };
-        let width = width.min(self.max_width).max(0.0);
-        // Be defensive against an unbounded parent (no `max_width` and
-        // `limits.max.width = INFINITY`). Without a known width we cannot
-        // produce a sensible height; report a zero box and let the empty
-        // child render — matches CSS `aspect-ratio` in the same edge case.
+        // A ratio projects the available width into a height even inside a
+        // shrink-width parent. A completely unbounded width has no projection.
+        let bounds = limits.width(self.width).bounds();
+        let width = bounds.width.min(self.max_width).max(0.0);
         let width = if width.is_finite() { width } else { 0.0 };
-        let height = (width / safe_ratio).max(0.0);
+        let child_size = Size::new(width, bounds.height.max(0.0)).ratio(ratio);
 
-        // If the height would exceed the available height, scale down both
-        // axes proportionally so the box fits — same behavior CSS
-        // aspect-ratio gets in a doubly-constrained flex item. Without
-        // this, portrait ratios overflow card-shaped previews.
-        let max_height = limits.bounds().height;
-        let (width, height) = if max_height.is_finite() && height > max_height {
-            let scaled = max_height * safe_ratio;
-            (scaled.max(0.0), max_height.max(0.0))
-        } else {
-            (width, height)
-        };
-
-        let child_size = Size::new(width, height);
-
-        // Tight-limit the child to the computed box so it has exactly the
-        // ratio-constrained space to lay out in.
         let child_limits = layout::Limits::new(child_size, child_size);
         let child = &mut tree.children[0];
         self.content.layout(child, renderer, &child_limits);
@@ -196,7 +147,10 @@ where
         shell: &mut Shell<'_, Message>,
         viewport: &Rectangle,
     ) {
-        let (layout, tree) = layout.iter_mut(&mut tree.children).next().unwrap();
+        let (layout, tree) = layout
+            .iter_mut(&mut tree.children)
+            .next()
+            .expect("aspect ratio has a child");
 
         self.content
             .update(tree, event, layout, cursor, renderer, shell, viewport);
@@ -210,7 +164,10 @@ where
         viewport: &Rectangle,
         renderer: &Renderer,
     ) -> mouse::Interaction {
-        let (layout, tree) = layout.iter(&tree.children).next().unwrap();
+        let (layout, tree) = layout
+            .iter(&tree.children)
+            .next()
+            .expect("aspect ratio has a child");
 
         self.content
             .mouse_interaction(tree, layout, cursor, viewport, renderer)
@@ -224,7 +181,10 @@ where
         renderer: &Renderer,
         operation: &mut dyn Operation,
     ) {
-        let (layout, tree) = layout.iter_mut(&mut tree.children).next().unwrap();
+        let (layout, tree) = layout
+            .iter_mut(&mut tree.children)
+            .next()
+            .expect("aspect ratio has a child");
 
         self.content
             .operate(tree, layout, viewport, renderer, operation);
@@ -240,7 +200,10 @@ where
         cursor: mouse::Cursor,
         viewport: &Rectangle,
     ) {
-        let (layout, tree) = layout.iter(&tree.children).next().unwrap();
+        let (layout, tree) = layout
+            .iter(&tree.children)
+            .next()
+            .expect("aspect ratio has a child");
 
         self.content.draw(
             tree,
@@ -262,7 +225,10 @@ where
         translation: Vector,
         window: Size,
     ) -> Vec<overlay::Element<'b, Message, Theme, Renderer>> {
-        let (layout, tree) = layout.iter_mut(&mut tree.children).next().unwrap();
+        let (layout, tree) = layout
+            .iter_mut(&mut tree.children)
+            .next()
+            .expect("aspect ratio has a child");
 
         self.content
             .overlay(tree, layout, renderer, viewport, translation, window)
@@ -279,6 +245,67 @@ impl<'a, Message: 'a> From<AspectRatio<'a, Message, Renderer>>
 
 impl<'a, Message: 'a> From<AspectRatio<'a, Message, Renderer>> for Slot<'a, Message> {
     fn from(widget: AspectRatio<'a, Message, Renderer>) -> Self {
-        Slot::from(Element::from(widget))
+        Slot::new(widget)
+    }
+}
+
+impl<'a, Message: 'a, Renderer: iced_core::Renderer + 'a> Compose<Message, Theme, Renderer>
+    for AspectRatio<'a, Message, Renderer>
+{
+    fn inherit(&mut self, inherited: &Inherited) {
+        if let Some(child) = &mut self.pending {
+            child.inherit(inherited);
+        }
+    }
+
+    fn compose<'b>(self: Box<Self>) -> Element<'b, Message, Theme, Renderer>
+    where
+        Self: 'b,
+    {
+        (*self)._boxed()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::aspect_ratio;
+    use crate::{Inherited, Slot, button, container};
+    use iced_core::Length::Fill;
+    use iced_core::widget::Id;
+    use iced_core::{Element, Length, Point, Size};
+    use iced_test::Simulator;
+    use iced_test::simulator::click;
+    use iced_widget::Space;
+    use icedxdy_core::Theme;
+
+    #[test]
+    fn an_oversized_or_bounded_width_respects_its_available_space() {
+        for (width, expected) in [(384.into(), 200.0), (Length::Fill.max(80), 80.0)] {
+            let id = Id::unique();
+            let child = container(Space::new())
+                .id(id.clone())
+                .width(Fill)
+                .height(Fill);
+            let content: Element<'_, (), Theme, iced_widget::Renderer> =
+                aspect_ratio(child, 2.0).width(width).into();
+            let mut ui = Simulator::with_size(Default::default(), Size::new(200.0, 300.0), content);
+            let bounds = ui.find(id).unwrap().bounds();
+            assert_eq!(bounds.size(), Size::new(expected, expected / 2.0));
+        }
+    }
+
+    #[test]
+    fn disabled_reaches_interactive_children() {
+        let mut content: Slot<'_, bool> = aspect_ratio(
+            button(Space::new().width(40).height(40)).on_press(true),
+            1.0,
+        )
+        .width(64)
+        .into();
+        content.inherit(&Inherited::default().with_disabled(true));
+        let mut ui = Simulator::new(content.compose());
+        ui.point_at(Point::new(10.0, 10.0));
+        ui.simulate(click());
+        assert_eq!(ui.drain().count(), 0);
     }
 }

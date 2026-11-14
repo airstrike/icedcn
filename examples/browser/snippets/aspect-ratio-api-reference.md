@@ -1,14 +1,14 @@
-## API Reference
+### AspectRatio
 
-### `aspect_ratio()`
+The `AspectRatio` component displays content within a desired ratio.
 
-Constructor for an `AspectRatio` wrapper. Takes any `impl Into<Slot>` plus a `width / height` ratio (e.g. `16.0 / 9.0` for widescreen, `9.0 / 16.0` for portrait).
-
-| Builder | Type | Default | Description |
+| Argument or builder | Type | Default | Required |
 | --- | --- | --- | --- |
-| `.width(width)` | `impl Into<Length>` | `Length::Fill` | Width policy. Use `Length::Fixed(n)` for an explicit pixel width or `FillPortion(n)` for proportional layouts. |
-| `.max_width(max_width)` | `impl Into<Pixels>` | `f32::INFINITY` | Cap the resolved width — mirrors shadcn's `max-w-sm` / `max-w-[10rem]` parent-width idioms. Prefer this over wrapping in a `Shrink`-width container, which collapses the layout to zero (see widget docs for the width-compression footgun). |
+| `content` | `impl Into<Slot>` | — | Yes |
+| `ratio` | `f32` (width divided by height) | — | Yes |
+| `.width(width)` | `impl Into<Length>` | `Length::Fill` | No |
+| `.max_width(width)` | `impl Into<Pixels>` | Unbounded | No |
 
-The `ratio` argument follows the shadcn / CSS convention: `width / height`. Non-finite or non-positive ratios fall back to `1.0` (square box) — no panic, no NaN propagation.
+A non-positive or non-finite ratio falls back to a square. Apply backgrounds, rounded corners and image fitting to the child.
 
-The shadcn `ratio` prop maps to the constructor arg. Style the child (e.g. `bg-muted`, `rounded-lg`) at the call site, just as shadcn's examples do. There's no theme catalog: aspect-ratio is purely structural.
+For more information, see the [Radix UI documentation](https://www.radix-ui.com/primitives/docs/components/aspect-ratio#api-reference).

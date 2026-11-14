@@ -1,11 +1,4 @@
-// API Reference is rendered via the `aspect-ratio-api-reference.md` snippet
-// at the bottom of BLOCKS. The live docs API Reference covers `ratio`
-// (`f32`, required) plus styling props that our snippet captures via the
-// icedxdy-shaped builder API (`.width(...)`, `.max_width(...)`, ratio
-// fallback semantics).
-//
-// Intentional skips:
-// - aspect-ratio-rtl — RTL is not in scope (per CLAUDE.md).
+// The upstream RTL example is outside this browser’s scope.
 
 use iced::widget::{image, stack};
 use iced::{ContentFit, Fill, Task, Widget};
@@ -30,30 +23,32 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/aspect-ratio-demo.md",
     },
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "square",
-                title: "Square",
-                description: Some(
-                    "A square aspect ratio component using a `1 / 1` ratio. \
-                     This is useful for displaying images in a square format.",
-                ),
-                snippet: "examples/browser/snippets/aspect-ratio-square.md",
-            },
-            page::Block::Example {
-                id: "portrait",
-                title: "Portrait",
-                description: Some(
-                    "A portrait aspect ratio component using a `9 / 16` ratio. \
-                     This is useful for displaying images in a portrait format.",
-                ),
-                snippet: "examples/browser/snippets/aspect-ratio-portrait.md",
-            },
-        ],
+    page::Block::Md("examples/browser/snippets/aspect-ratio-installation.md"),
+    page::Block::Md("examples/browser/snippets/aspect-ratio-usage.md"),
+    page::Block::Example {
+        id: "square",
+        title: "Square",
+        description: Some(
+            "A square aspect ratio component using the `ratio={1 / 1}` prop. \
+             This is useful for displaying images in a square format.",
+        ),
+        snippet: "examples/browser/snippets/aspect-ratio-square.md",
     },
-    page::Block::Md("examples/browser/snippets/aspect-ratio-api-reference.md"),
+    page::Block::Example {
+        id: "portrait",
+        title: "Portrait",
+        description: Some(
+            "A portrait aspect ratio component using the `ratio={9 / 16}` prop. \
+             This is useful for displaying images in a portrait format.",
+        ),
+        snippet: "examples/browser/snippets/aspect-ratio-portrait.md",
+    },
+    page::Block::Group {
+        title: "API Reference",
+        children: &[page::Block::Md(
+            "examples/browser/snippets/aspect-ratio-api-reference.md",
+        )],
+    },
 ];
 
 pub struct AspectRatioPage {
@@ -132,29 +127,25 @@ impl page::Page for AspectRatioPage {
         self.state.reset_volatile();
     }
 
-    fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
-        match id {
-            // Demo (16:9). shadcn `aspect-ratio-demo.tsx`: max-w-sm
-            // (`24rem` = 384px) cap on the AspectRatio's parent. We apply
-            // it directly via `aspect_ratio.max_width(...)` — see the
-            // widget docs for why a wrapping `container(...).max_width(...)`
-            // is the wrong shape (Shrink-width parent triggers
-            // width-compression and collapses the child).
-            "demo" => aspect_ratio(cover(false), 16.0 / 9.0)
-                .max_width(384.0)
-                .into(),
-
-            // Portrait (9:16). shadcn `aspect-ratio-portrait.tsx`:
-            // max-w-[10rem] = 160px.
-            "portrait" => aspect_ratio(cover(false), 9.0 / 16.0)
-                .max_width(160.0)
-                .into(),
-
-            // Square (1:1). shadcn `aspect-ratio-square.tsx`:
-            // max-w-[12rem] = 192px.
-            "square" => aspect_ratio(cover(false), 1.0).max_width(192.0).into(),
-
-            _ => unreachable!("unknown aspect_ratio preview id: {id}"),
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: [0, 40].into(),
+            ..page::Backdrop::default()
         }
+    }
+
+    fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
+        // The image stays centered even when it exceeds the space between the
+        // frame's vertical padding (the hero is 216px in a 288px frame).
+        let (ratio, max_width, frame_height) = match id {
+            "demo" => (16.0 / 9.0, 384, 288),
+            "square" => (1.0, 192, 288),
+            "portrait" => (9.0 / 16.0, 160, 384),
+            _ => unreachable!("unknown aspect_ratio preview id: {id}"),
+        };
+        container(aspect_ratio(cover(false), ratio).max_width(max_width))
+            .center_x(Fill)
+            .center_y(frame_height)
+            .into()
     }
 }
