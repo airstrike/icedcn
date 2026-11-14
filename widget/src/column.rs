@@ -250,7 +250,8 @@ impl<Message> Widget<Message, Theme, Renderer> for ColumnWidget<'_, Message> {
         } else {
             flex::Axis::Vertical
         };
-        let reverse = self.reverse && matches!(axis, flex::Axis::Vertical);
+        let vertical = matches!(axis, flex::Axis::Vertical);
+        let reverse = self.reverse && vertical;
         tree.size = flex::resolve(
             axis,
             renderer,
@@ -264,7 +265,7 @@ impl<Message> Widget<Message, Theme, Renderer> for ColumnWidget<'_, Message> {
             &mut self.children,
             cache,
         );
-        if self.stretch {
+        if self.stretch && vertical {
             let width = tree.size.width - self.padding.left - self.padding.right;
             for (child, state) in self.children.iter_mut().zip(&mut tree.children) {
                 let size = iced_core::Size::new(width, state.size.height);

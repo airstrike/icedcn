@@ -59,6 +59,7 @@ pub mod widget;
 
 use iced_core::Length;
 use iced_core::Length::Fill;
+use iced_core::Widget as _;
 use iced_widget::Renderer;
 use icedcn_core::Theme;
 use icedcn_core::theme::field::Card;
@@ -145,7 +146,7 @@ pub fn label<'a>(content: impl iced_core::text::IntoFragment<'a>) -> crate::text
 /// The larger heading used by the default FieldLegend. Use `text::label`
 /// for Nova's smaller label variant.
 pub fn legend<'a>(label: impl iced_core::text::IntoFragment<'a>) -> crate::text::Text<'a> {
-    crate::text::small(label).size(16).medium()
+    crate::text::small(label).size(16).medium().line_height(1.5)
 }
 
 /// A fieldset with its legend, optional description and related controls.
@@ -154,9 +155,9 @@ pub fn set<'a, Message: 'a>(
     description: Option<&'a str>,
     controls: impl Into<Slot<'a, Message>>,
 ) -> Column<'a, Message> {
-    let mut header = Column::with_children([legend.into()]).spacing(6);
+    let mut header = Column::with_children([legend.into()]);
     if let Some(description) = description {
-        header = header.push(crate::text::muted(description).into());
+        header = header.push(crate::text::muted(description).line_height(1.5).into());
     }
     Column::with_children([header.into(), controls.into()])
         .spacing(16)
@@ -171,6 +172,7 @@ pub fn actions<'a, Message: 'a>(
         .spacing(8)
         .width(Fill)
         .row_at(448.)
+        .stretch()
 }
 
 impl<'a, Message: 'a> Field<'a, Message> {
@@ -380,7 +382,15 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
             if let Some(description) = description {
                 heading = heading.push(description);
             }
-            let mut controls = Column::with_children([content]).spacing(2).width(Fill);
+            let content = content.compose();
+            let width = match content.size().width {
+                fixed @ Length::Fixed(_) => fixed,
+                _ => Fill,
+            };
+            let mut controls = Column::with_children([content.into()])
+                .spacing(2)
+                .width(width)
+                .stretch();
             if let Some(error) = error {
                 controls = controls.push(error);
             }
@@ -388,6 +398,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
                 .spacing(8)
                 .width(Fill)
                 .row_at(448.)
+                .stretch()
                 .into()
         } else {
             match orientation {
@@ -434,9 +445,12 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
                         }
                         let row = iced_widget::Row::new().spacing(8).align_y(align);
                         if control_last {
-                            row.push(right.width(Fill).boxed())
-                                .push(content_element)
-                                .boxed()
+                            let right = if card || width.is_some() {
+                                right.width(Fill)
+                            } else {
+                                right
+                            };
+                            row.push(right.boxed()).push(content_element).boxed()
                         } else {
                             row.push(content_element).push(right.boxed()).boxed()
                         }
@@ -555,13 +569,13 @@ pub trait IntoError<'a, Message> {
 
 impl<'a, Message: 'a> IntoError<'a, Message> for &'a str {
     fn into_error(self) -> Slot<'a, Message> {
-        crate::text::error(self).into()
+        crate::text::error(self).line_height(1.5).into()
     }
 }
 
 impl<'a, Message: 'a> IntoError<'a, Message> for String {
     fn into_error(self) -> Slot<'a, Message> {
-        crate::text::error(self).into()
+        crate::text::error(self).line_height(1.5).into()
     }
 }
 

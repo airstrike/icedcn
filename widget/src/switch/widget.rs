@@ -16,6 +16,7 @@ use crate::core::alignment;
 use crate::core::animation::Easing;
 use crate::core::border;
 use crate::core::font;
+use crate::core::keyboard::{self, Key, key::Named};
 use crate::core::layout;
 use crate::core::mouse;
 use crate::core::renderer;
@@ -24,6 +25,7 @@ use crate::core::text::paragraph;
 use crate::core::time::Instant;
 use crate::core::touch;
 use crate::core::widget;
+use crate::core::widget::operation::Focusable;
 use crate::core::widget::tree::{self, Tree};
 use crate::core::window;
 use crate::core::{
@@ -31,6 +33,7 @@ use crate::core::{
     Rectangle, Shell, Size, Theme, Widget,
 };
 use crate::operation::control::Control;
+use crate::operation::focus;
 
 use std::marker::PhantomData;
 
@@ -276,6 +279,24 @@ struct State<P: text::Paragraph> {
     animation: Animation<bool>,
     now: Option<Instant>,
     last_is_toggled: bool,
+    focused: bool,
+    key_down: Option<Named>,
+    indicator: focus::Visible,
+    ring: focus::Ring,
+}
+
+impl<P: text::Paragraph> Focusable for State<P> {
+    fn is_focused(&self) -> bool {
+        self.focused
+    }
+    fn focus(&mut self) {
+        self.focused = true;
+        self.indicator.0 = true;
+    }
+    fn unfocus(&mut self) {
+        self.focused = false;
+        self.key_down = None;
+    }
 }
 
 impl<Message, Theme, Renderer> Toggler<'_, Message, Theme, Renderer>
@@ -329,6 +350,10 @@ where
                 .easing(Easing::EaseOut),
             now: None,
             last_is_toggled: self.is_toggled,
+            focused: false,
+            key_down: None,
+            indicator: focus::Visible::default(),
+            ring: focus::Ring::default(),
         })
     }
 
@@ -363,6 +388,13 @@ where
     ) {
         let state = tree.state.downcast_mut::<State<Renderer::Paragraph>>();
 
+        if !self.is_disabled {
+            operation.focusable(None, layout.bounds(), state);
+            operation.custom(None, layout.bounds(), &mut state.indicator);
+        }
+        state.ring.visible = state.focused && state.indicator.0 && !self.is_disabled;
+        state.ring.disabled = self.is_disabled;
+        operation.custom(None, layout.bounds(), &mut state.ring);
         state.control.set_checked(self.is_toggled);
         operation.custom(None, layout.bounds(), &mut state.control);
     }
@@ -435,6 +467,8 @@ where
         // A linked label (Field) pressed this toggler through the `activate`
         // operation; act on it like a click.
         if state.control.take_activation() && !self.is_disabled {
+            state.focused = true;
+            state.indicator.0 = false;
             self.toggle(state, shell);
         }
 
@@ -458,12 +492,43 @@ where
             }
         }
 
-        if !self.is_disabled
-            && let Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left))
-            | Event::Touch(touch::Event::FingerPressed { .. }) = event
-            && cursor.is_over(layout.bounds())
-        {
-            self.toggle(state, shell);
+        let previous = (state.focused, state.indicator.0);
+        if self.is_disabled {
+            state.unfocus();
+        } else {
+            match event {
+                Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left))
+                | Event::Touch(touch::Event::FingerPressed { .. }) => {
+                    state.focused = cursor.is_over(layout.bounds()) && !shell.is_event_captured();
+                    state.indicator.0 = false;
+                    state.key_down = None;
+                    if state.focused {
+                        self.toggle(state, shell);
+                    }
+                }
+                Event::Keyboard(keyboard::Event::KeyPressed {
+                    key: Key::Named(key @ (Named::Space | Named::Enter)),
+                    ..
+                }) if state.focused && !shell.is_event_captured() => {
+                    state.indicator.0 = true;
+                    state.key_down = Some(*key);
+                    shell.capture_event();
+                }
+                Event::Keyboard(keyboard::Event::KeyReleased {
+                    key: Key::Named(key),
+                    ..
+                }) if state.key_down == Some(*key) => {
+                    state.key_down = None;
+                    if state.focused && !shell.is_event_captured() {
+                        self.toggle(state, shell);
+                    }
+                }
+                Event::Window(window::Event::Unfocused) => state.unfocus(),
+                _ => {}
+            }
+        }
+        if previous != (state.focused, state.indicator.0) {
+            shell.request_redraw();
         }
 
         let current_status = if self.is_disabled {
@@ -566,6 +631,13 @@ where
             }
             _ => theme.style(&self.class, current_status),
         };
+
+        let style =
+            if state.focused && state.indicator.0 && !self.is_disabled && !state.ring.delegated {
+                theme.focused(style)
+            } else {
+                style
+            };
 
         if self.label.is_some() {
             let (label_layout, _) = children.next().unwrap();
@@ -768,6 +840,18 @@ pub trait Catalog: Sized {
     fn style(&self, class: &Self::Class<'_>, status: Status) -> Style;
 
     /// The global selection [`Color`].
+    fn focused(&self, mut style: Style) -> Style {
+        if style.ring.is_none() {
+            let color = self.selection();
+            style.background_border_color = color;
+            style.ring = Some(Ring {
+                color: color.scale_alpha(0.5),
+                width: 3.,
+            });
+        }
+        style
+    }
+
     fn selection(&self) -> Color;
 }
 

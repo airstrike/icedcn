@@ -210,9 +210,17 @@ where
             self.content
                 .operate(child_tree, child_layout, viewport, renderer, &mut activate);
 
-            if activate.is_done() {
-                shell.request_redraw();
+            if !activate.is_done() {
+                // Composite controls such as Select expose an ordinary focusable trigger.
+                self.content.operate(
+                    child_tree,
+                    child_layout,
+                    viewport,
+                    renderer,
+                    &mut focus::restore(Some(0), false),
+                );
             }
+            shell.request_redraw();
         }
 
         if self.card.is_none() {
