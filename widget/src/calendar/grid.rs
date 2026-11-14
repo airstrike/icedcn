@@ -9,7 +9,7 @@ use iced_core::{
     renderer, touch,
 };
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 use std::any::Any;
 
 pub(super) struct Grid<'a> {

@@ -18,8 +18,8 @@
 //! `core::theme::scrollable` so the project-wide thin invisible-rail
 //! default is the resolved style.
 
-use icedxdy_core::Theme;
-use icedxdy_core::theme::scrollable;
+use icedcn_core::Theme;
+use icedcn_core::theme::scrollable;
 
 use super::widget;
 

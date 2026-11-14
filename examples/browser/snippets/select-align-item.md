@@ -1,7 +1,7 @@
 ```rust
 use iced::Fill;
-use icedxdy::widget::{field, column, switch, select};
-use icedxdy::widget::field::Orientation::Horizontal;
+use icedcn::widget::{field, column, switch, select};
+use icedcn::widget::field::Orientation::Horizontal;
 
 column![
     field(switch().checked(aligned).on_checked_change(Message::Align))

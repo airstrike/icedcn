@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, dropdown_menu, menu};
+use icedcn::widget::{button, dropdown_menu, menu};
 
 // `status`, `activity` and `panel` live in your state.
 dropdown_menu(

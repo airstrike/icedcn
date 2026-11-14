@@ -1,10 +1,10 @@
 ```rust
 use iced::Alignment::Center;
 use iced::{Element, Fill, Widget};
-use icedxdy::{card, Size, Slot, Theme};
-use icedxdy::widget::{button, column, field, input, row, space, text};
+use icedcn::{card, Size, Slot, Theme};
+use icedcn::widget::{button, column, field, input, row, space, text};
 use iced::widget::component::{Component, component};
-use icedxdy::widget::toggle_group;
+use icedcn::widget::toggle_group;
 
 fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
     let password_label = row![
@@ -12,7 +12,7 @@ fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
         space::horizontal(),
         button(
             text::small("Forgot your password?")
-                .weight(icedxdy::Weight::Normal)
+                .weight(icedcn::Weight::Normal)
                 .line_height(iced::Pixels(20.0))
         )
         .style(button::Link)

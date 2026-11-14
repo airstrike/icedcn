@@ -8,8 +8,8 @@ use iced_core::widget::Id;
 use iced_core::{Length, Padding, Pixels};
 use iced_widget::Renderer;
 use iced_widget::container::StyleFn;
-use icedxdy_core::Theme;
-use icedxdy_core::theme::container::Style;
+use icedcn_core::Theme;
+use icedcn_core::theme::container::Style;
 
 /// Create a [`Container`] wrapping the given content.
 ///
@@ -94,8 +94,8 @@ impl<'a, Message: 'a> Container<'a, Message> {
         self
     }
 
-    pub fn padding(mut self, padding: impl Into<icedxdy_core::Padding>) -> Self {
-        let padding: icedxdy_core::Padding = padding.into();
+    pub fn padding(mut self, padding: impl Into<icedcn_core::Padding>) -> Self {
+        let padding: icedcn_core::Padding = padding.into();
         self.padding = padding.into();
         self
     }
@@ -123,7 +123,7 @@ impl<'a, Message: 'a> Container<'a, Message> {
     }
 
     /// Set the style of this container via a `Fn(&Theme) -> Style` closure
-    /// or fn-pointer, where `Style` is icedxdy's OKLCH-native [`Style`].
+    /// or fn-pointer, where `Style` is icedcn's OKLCH-native [`Style`].
     /// Mirrors iced's stock `Container::style` so bare fn pointers like
     /// `card_preview` coerce directly.
     ///

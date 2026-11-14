@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, column, field, input, popover};
+use icedcn::widget::{button, column, field, input, popover};
 
 popover(
     |p| p.trigger(button("Open Popover").style(button::Outline)),

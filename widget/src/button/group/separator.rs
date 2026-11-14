@@ -13,7 +13,7 @@ use iced_core::renderer;
 use iced_core::widget::{Meta, Tree};
 use iced_core::{Background, Layout, Rectangle, Size, Widget};
 
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use super::Orientation;
 

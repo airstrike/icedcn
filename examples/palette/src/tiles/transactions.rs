@@ -11,11 +11,11 @@
 use iced::Widget;
 use iced::widget::space;
 use iced::{Center, Fill};
-use icedxdy::Slot;
-use icedxdy::Theme;
-use icedxdy::card;
-use icedxdy::theme;
-use icedxdy::widget::{
+use icedcn::Slot;
+use icedcn::Theme;
+use icedcn::card;
+use icedcn::theme;
+use icedcn::widget::{
     Column, avatar, badge, button, column, container, row, rule, scrollable, separator, text,
 };
 
@@ -152,8 +152,8 @@ fn tx_row(tx: &Tx) -> Slot<'_, Message> {
 
     let amount = format_amount(tx.amount_cents);
     let pos = tx.amount_cents >= 0;
-    let amount_style: iced_widget::text::StyleFn<'static, icedxdy::Theme> =
-        Box::new(move |t: &icedxdy::Theme| iced_widget::text::Style {
+    let amount_style: iced_widget::text::StyleFn<'static, icedcn::Theme> =
+        Box::new(move |t: &icedcn::Theme| iced_widget::text::Style {
             color: Some(if pos {
                 t.success.base.into()
             } else {
@@ -167,7 +167,7 @@ fn tx_row(tx: &Tx) -> Slot<'_, Message> {
     // alongside the separator between rows. Wrap the
     // Fill-height rule in a fixed-height container so the row's
     // shrink height doesn't collapse it to zero.
-    let divider: iced::Element<'_, Message, icedxdy::Theme> = rule::vertical(1).into();
+    let divider: iced::Element<'_, Message, icedcn::Theme> = rule::vertical(1).into();
 
     let inner = row![
         Slot::from(avatar_chip),

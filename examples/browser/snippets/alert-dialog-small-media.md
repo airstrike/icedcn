@@ -1,9 +1,9 @@
 ```rust
 use iced::{Fill, Widget};
 use iced::widget::svg;
-use icedxdy::Theme;
-use icedxdy::Size;
-use icedxdy::widget::{alert_dialog, button, column};
+use icedcn::Theme;
+use icedcn::Size;
+use icedcn::widget::{alert_dialog, button, column};
 
 alert_dialog(
     |a| a.trigger(button("Show Dialog").style(button::Outline)),

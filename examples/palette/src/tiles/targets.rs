@@ -5,11 +5,11 @@
 
 use iced::Fill;
 use iced::Widget;
-use icedxdy::Slot;
-use icedxdy::Theme;
-use icedxdy::card;
-use icedxdy::theme;
-use icedxdy::widget::{button, column, container, progress, row, space, text};
+use icedcn::Slot;
+use icedcn::Theme;
+use icedcn::card;
+use icedcn::theme;
+use icedcn::widget::{button, column, container, progress, row, space, text};
 
 use crate::{Message, State};
 

@@ -1,8 +1,8 @@
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Task, Widget};
 
-use icedxdy::widget::{column, container, row, slider, space, text};
-use icedxdy::{Theme, Vertical};
+use icedcn::widget::{column, container, row, slider, space, text};
+use icedcn::{Theme, Vertical};
 
 use crate::Message;
 use crate::page;

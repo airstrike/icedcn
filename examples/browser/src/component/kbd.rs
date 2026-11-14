@@ -1,10 +1,10 @@
 use iced::Task;
 
 use crate::icon;
-use icedxdy::Theme;
-use icedxdy::widget::button::group;
-use icedxdy::widget::input_group::Align;
-use icedxdy::widget::{
+use icedcn::Theme;
+use icedcn::widget::button::group;
+use icedcn::widget::input_group::Align;
+use icedcn::widget::{
     button, button_group, column, container, input, input_group, kbd, kbd_group, row, text, tooltip,
 };
 

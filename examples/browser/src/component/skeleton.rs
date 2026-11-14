@@ -1,9 +1,9 @@
 
 use iced::{Fill, FillPortion, Task, Widget};
 
-use icedxdy::card;
-use icedxdy::widget::{Column, aspect_ratio, column, row, skeleton, space};
-use icedxdy::{Gap, Slot, Theme};
+use icedcn::card;
+use icedcn::widget::{Column, aspect_ratio, column, row, skeleton, space};
+use icedcn::{Gap, Slot, Theme};
 
 use crate::Message;
 use crate::page;

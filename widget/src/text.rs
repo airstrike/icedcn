@@ -3,7 +3,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::text;
+//! use icedcn::text;
 //!
 //! text::h1("Page Title")
 //! text::muted("Secondary text")
@@ -26,8 +26,8 @@ use iced_widget::text::StyleFn;
 use crate::Size;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::rule;
-use icedxdy_core::Theme;
-use icedxdy_core::theme;
+use icedcn_core::Theme;
+use icedcn_core::theme;
 
 /// Text size presets in logical pixels.
 pub mod size {

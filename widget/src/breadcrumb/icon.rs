@@ -4,7 +4,7 @@ use iced_core::svg::{Handle, Renderer as _, Svg};
 use iced_core::widget::{Meta, Tree};
 use iced_core::{Layout, Length, Rectangle, Size, Widget, layout, mouse, renderer};
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 // Lucide chevron-right and ellipsis; resolved text color comes from the parent.
 static CHEVRON: LazyLock<Handle> = LazyLock::new(|| {

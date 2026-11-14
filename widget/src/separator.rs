@@ -4,8 +4,8 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::{column, row, separator};
-//! use icedxdy::Vertical;
+//! use icedcn::widget::{column, row, separator};
+//! use icedcn::Vertical;
 //!
 //! column![content_a, separator(), content_b]
 //!
@@ -13,7 +13,7 @@
 //! ```
 
 use iced_widget::{Renderer, Widget, rule};
-use icedxdy_core::{Orientation, Theme};
+use icedcn_core::{Orientation, Theme};
 
 use crate::compose::{Compose, Slot};
 

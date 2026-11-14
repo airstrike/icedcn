@@ -14,9 +14,9 @@ use crate::core::{
 };
 use crate::operation::control::Control;
 
-use icedxdy_core::Theme;
-use icedxdy_core::theme::button::{Spec, Status};
-use icedxdy_core::theme::toggle;
+use icedcn_core::Theme;
+use icedcn_core::theme::button::{Spec, Status};
+use icedcn_core::theme::toggle;
 
 /// A pressable surface around `content` that is either on or off.
 pub struct Toggle<'a, Message, Renderer> {

@@ -10,7 +10,7 @@ use iced_core::{
     renderer,
 };
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// Recognizes a long press while allowing short taps and vertical scrolling.
 pub(super) struct LongPress<'a, Message> {

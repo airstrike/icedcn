@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{column, row, skeleton};
+use icedcn::widget::{column, row, skeleton};
 
 row![
     skeleton().width(48).height(48).radius(u32::MAX as f32),

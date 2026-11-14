@@ -1,8 +1,8 @@
 ```rust
 use iced::widget::svg;
 use iced::{Font, Task, Widget};
-use icedxdy::widget::{CodeBlock, button, code_block, row, text, tooltip};
-use icedxdy::{Size, Slot, Theme};
+use icedcn::widget::{CodeBlock, button, code_block, row, text, tooltip};
+use icedcn::{Size, Slot, Theme};
 #[derive(Clone, Debug)]
 pub enum Message {
     Wrap,

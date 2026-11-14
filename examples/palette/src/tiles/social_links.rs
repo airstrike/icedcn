@@ -2,8 +2,8 @@
 
 use iced::Fill;
 use iced::Widget;
-use icedxdy::widget::{button, column, field, input, row, space};
-use icedxdy::{Theme, card};
+use icedcn::widget::{button, column, field, input, row, space};
+use icedcn::{Theme, card};
 
 use super::api_gap;
 use crate::Message;
@@ -42,7 +42,7 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
     .boxed()
 }
 
-fn link_field<'a>(label: &'static str, value: &'a str) -> icedxdy::Slot<'a, Message> {
+fn link_field<'a>(label: &'static str, value: &'a str) -> icedcn::Slot<'a, Message> {
     field::field(input("").default_value(value).width(Fill))
         .label(label)
         .width(Fill)

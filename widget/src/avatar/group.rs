@@ -2,8 +2,8 @@
 
 use iced_core::Element;
 use iced_widget::{Renderer, Widget, row};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::avatar::group_count_style;
+use icedcn_core::Theme;
+use icedcn_core::theme::avatar::group_count_style;
 
 use crate::compose::{Compose, Inherited, Slot};
 

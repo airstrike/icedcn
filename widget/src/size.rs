@@ -111,12 +111,12 @@ impl From<f32> for Size {
 /// `radius::SM` (6px), `Default`/`Icon` get `radius::MD` (8px), `Lg` gets
 /// `radius::LG` (10px). `Custom(v)` uses `v` directly as the radius.
 /// Lets callers write `radius(Lg)` instead of `radius(radius::LG)`.
-impl From<Size> for icedxdy_core::Radius {
+impl From<Size> for icedcn_core::Radius {
     fn from(s: Size) -> Self {
         match s {
-            Size::Xs | Size::Sm => icedxdy_core::radius::SM.into(),
-            Size::Default | Size::Icon => icedxdy_core::radius::MD.into(),
-            Size::Lg => icedxdy_core::radius::LG.into(),
+            Size::Xs | Size::Sm => icedcn_core::radius::SM.into(),
+            Size::Default | Size::Icon => icedcn_core::radius::MD.into(),
+            Size::Lg => icedcn_core::radius::LG.into(),
             Size::Custom(v) => v.into(),
         }
     }

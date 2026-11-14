@@ -4,7 +4,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::textarea;
+//! use icedcn::widget::textarea;
 //!
 //! // Uncontrolled: the textarea keeps its own text.
 //! textarea("Type your message here.")
@@ -24,11 +24,11 @@ mod widget;
 use iced_core::Element;
 use iced_widget::text_editor::StyleFn;
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use crate::compose::{Compose, Inherited, Slot};
 
-pub use icedxdy_core::theme::textarea::{Default, Invalid};
+pub use icedcn_core::theme::textarea::{Default, Invalid};
 
 /// A multi-line text field.
 ///

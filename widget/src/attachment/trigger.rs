@@ -3,7 +3,7 @@ use crate::{Compose, Inherited, Slot};
 use iced_core::Length::Fill;
 use iced_core::{Element, mouse};
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// A transparent, keyboard-accessible target for an entire attachment.
 pub struct Trigger<'a, Message> {

@@ -1,8 +1,8 @@
 //! Dashboard tiles arranged in fixed-width columns inside a horizontally scrollable surface.
 
 use iced::{Alignment, Fill};
-use icedxdy::widget::{Column, container, row};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{Column, container, row};
+use icedcn::{Slot, Theme};
 
 use crate::tiles::{
     account_access, banner, card_overview, chart, claimable_balance, codespaces,

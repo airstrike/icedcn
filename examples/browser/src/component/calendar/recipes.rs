@@ -1,12 +1,12 @@
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Pixels, Widget};
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::calendar::{Date, Datelike, Duration, Mode, Selection, System, today};
-use icedxdy::widget::{
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::calendar::{Date, Datelike, Duration, Mode, Selection, System, today};
+use icedcn::widget::{
     Column, Row, button, calendar, column, container, field, input, input_group, rule, text,
 };
-use icedxdy::{Size, Slot, Theme, card};
+use icedcn::{Size, Slot, Theme, card};
 
 pub fn date(month: u32, day: u32) -> Date {
     Date::from_ymd_opt(today().year(), month, day).unwrap_or_else(today)

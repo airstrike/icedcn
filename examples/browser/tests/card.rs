@@ -4,8 +4,8 @@ use browser::{Message, docs, page};
 use iced::{Element, Font, Size};
 use iced_test::Simulator;
 use iced_test::core::Settings;
-use icedxdy::widget::{button, text};
-use icedxdy::{Inherited, Slot, Theme, card};
+use icedcn::widget::{button, text};
+use icedcn::{Inherited, Slot, Theme, card};
 
 fn settings() -> Settings {
     Settings {

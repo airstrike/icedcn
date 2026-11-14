@@ -6,16 +6,16 @@ use iced::widget::component::{Component, component};
 use iced::widget::image;
 use iced::{ContentFit, Fill, Widget};
 use iced::{Element, Task};
-use icedxdy::theme::text::Foreground;
-use icedxdy::theme::tweak::{Fg, Token};
-use icedxdy::widget::bubble::Muted;
-use icedxdy::widget::status_marker::shimmer;
-use icedxdy::widget::{
+use icedcn::theme::text::Foreground;
+use icedcn::theme::tweak::{Fg, Token};
+use icedcn::widget::bubble::Muted;
+use icedcn::widget::status_marker::shimmer;
+use icedcn::widget::{
     attachment, avatar, bubble, button, column, container, message, row, space, status_marker,
     text, toggle, tooltip,
 };
-use icedxdy::{Size, Weight};
-use icedxdy::{Slot, Theme};
+use icedcn::{Size, Weight};
+use icedcn::{Slot, Theme};
 use page::Block;
 use std::sync::LazyLock;
 

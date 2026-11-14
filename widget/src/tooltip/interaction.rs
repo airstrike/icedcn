@@ -13,7 +13,7 @@ use iced_core::{
 };
 use iced_widget::Widget as _;
 use iced_widget::{Anchored, Renderer, anchored};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 use std::cell::Cell;
 use std::time::Duration;
 

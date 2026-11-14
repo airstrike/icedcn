@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, row, tooltip};
+use icedcn::widget::{button, row, tooltip};
 
 fn side<'a>(label: &'a str, side: tooltip::Side) -> Slot<'a, Message> {
     tooltip(button(label).style(button::Outline), "Add to library")

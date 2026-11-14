@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::sidebar;
+use icedcn::widget::sidebar;
 
 sidebar::floating(
     sidebar::content([

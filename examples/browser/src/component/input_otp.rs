@@ -4,10 +4,10 @@ use iced::alignment::Horizontal;
 use iced::widget::component::{Component, component};
 use iced::{Element, Task};
 use iced::{Fill, Widget};
-use icedxdy::Theme;
-use icedxdy::widget::input_otp::Pattern;
-use icedxdy::widget::{button, column, container, field, input_otp, row, space, text};
-use icedxdy::{Size, Slot, card};
+use icedcn::Theme;
+use icedcn::widget::input_otp::Pattern;
+use icedcn::widget::{button, column, container, field, input_otp, row, space, text};
+use icedcn::{Size, Slot, card};
 
 pub static META: page::Meta = page::Meta {
     title: "Input OTP",

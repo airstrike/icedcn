@@ -7,7 +7,7 @@ scroller(rows).id("conversation")
 Return the scroll task from `update` when the user chooses a message.
 
 ```rust
-use icedxdy::widget::scroller::{self, Animation, Target};
+use icedcn::widget::scroller::{self, Animation, Target};
 
 #[derive(Debug, Clone)]
 enum Message {

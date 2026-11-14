@@ -9,8 +9,8 @@ use iced_test::futures::futures::executor::block_on;
 use iced_test::runtime::UserInterface;
 use iced_test::simulator::{self, Simulator};
 use iced_widget::core::widget::{Id, Operation, operation};
-use icedxdy::Theme;
-use icedxdy::widget::markdown::highlighter::Map;
+use icedcn::Theme;
+use icedcn::widget::markdown::highlighter::Map;
 
 #[derive(Default)]
 struct Bounds {

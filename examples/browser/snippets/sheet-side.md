@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, row, sheet};
+use icedcn::widget::{button, row, sheet};
 
 row![
     profile(sheet::Side::Top, "Top"),

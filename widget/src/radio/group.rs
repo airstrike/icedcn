@@ -6,8 +6,8 @@
 //! around an item links its label:
 //!
 //! ```ignore
-//! use icedxdy::widget::{column, field, radio_group};
-//! use icedxdy::Horizontal;
+//! use icedcn::widget::{column, field, radio_group};
+//! use icedcn::Horizontal;
 //!
 //! radio_group(|g| {
 //!     column![
@@ -26,8 +26,8 @@ use iced_core::{Border, Element, Length};
 use iced_widget::component::{self, Component};
 use iced_widget::radio::Status;
 use iced_widget::{Renderer, Space, Widget, container};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::radio;
+use icedcn_core::Theme;
+use icedcn_core::theme::radio;
 use std::convert::Infallible;
 
 use crate::button::widget;

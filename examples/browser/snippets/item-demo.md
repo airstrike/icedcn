@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, column, item};
+use icedcn::widget::{button, column, item};
 
 column![
     item::item([

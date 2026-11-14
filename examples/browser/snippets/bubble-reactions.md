@@ -2,10 +2,10 @@
 use iced::Fill;
 use iced::alignment::Horizontal::{Left, Right};
 use iced::alignment::Vertical::{Bottom, Top};
-use icedxdy::Size;
-use icedxdy::Slot;
-use icedxdy::widget::bubble::{Destructive, Muted};
-use icedxdy::widget::{bubble, button, column, container, row, toast, toaster};
+use icedcn::Size;
+use icedcn::Slot;
+use icedcn::widget::bubble::{Destructive, Muted};
+use icedcn::widget::{bubble, button, column, container, row, toast, toaster};
 
 fn example() -> Slot<'static, ()> {
     toaster(frame(

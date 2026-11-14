@@ -1,9 +1,9 @@
 ```rust
 use iced::{Element, Subscription, Task, window};
-use icedxdy::Size;
-use icedxdy::Theme;
-use icedxdy::widget::text::Wrapping;
-use icedxdy::widget::{alert, button};
+use icedcn::Size;
+use icedcn::Theme;
+use icedcn::widget::text::Wrapping;
+use icedcn::widget::{alert, button};
 
 struct Example {
     window_width: f32,

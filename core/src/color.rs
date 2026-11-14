@@ -266,7 +266,7 @@ impl Default for Color {
 ///
 /// # Example
 /// ```
-/// use icedxdy_core::oklch;
+/// use icedcn_core::oklch;
 /// let white = oklch(1.0, 0.0, 0.0);
 /// let black = oklch(0.0, 0.0, 0.0);
 /// ```
@@ -278,7 +278,7 @@ pub const fn oklch(l: f32, c: f32, h: f32) -> Color {
 ///
 /// # Example
 /// ```
-/// use icedxdy_core::oklch_alpha;
+/// use icedcn_core::oklch_alpha;
 /// let semi_transparent_white = oklch_alpha(1.0, 0.0, 0.0, 0.5);
 /// ```
 pub const fn oklch_alpha(l: f32, c: f32, h: f32, a: f32) -> Color {

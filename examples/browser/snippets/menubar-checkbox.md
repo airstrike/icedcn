@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{menu, menubar};
+use icedcn::widget::{menu, menubar};
 
 menubar([
     menubar::menu("View", {

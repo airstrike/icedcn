@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::combobox;
+use icedcn::widget::combobox;
 
 const COUNTRIES: &[(&str, &str, &str)] = &[
     ("", "Select country", ""),

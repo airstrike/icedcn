@@ -1,11 +1,11 @@
 ```rust
 use iced::{Fill, Widget};
 use iced::widget::svg;
-use icedxdy::Theme;
-use icedxdy::Size;
+use icedcn::Theme;
+use icedcn::Size;
 use iced::widget::{rich_text, span, text::LineHeight};
-use icedxdy::theme::text::muted;
-use icedxdy::widget::{alert_dialog, button, column};
+use icedcn::theme::text::muted;
+use icedcn::widget::{alert_dialog, button, column};
 
 alert_dialog(
     |a| a.trigger(button("Delete Chat").style(button::Destructive)),

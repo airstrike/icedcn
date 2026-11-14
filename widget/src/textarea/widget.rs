@@ -8,7 +8,7 @@
 
 use iced_widget::Renderer;
 use iced_widget::text_editor::{Action, Content, StyleFn, TextEditor};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use crate::core::layout;
 use crate::core::mouse;

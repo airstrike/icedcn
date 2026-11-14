@@ -4,8 +4,8 @@
 use std::any::Any;
 
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
-use icedxdy_core::theme::text_input::{Status, StyleFn};
+use icedcn_core::Theme;
+use icedcn_core::theme::text_input::{Status, StyleFn};
 
 use crate::core::Renderer as _;
 use crate::core::layout;

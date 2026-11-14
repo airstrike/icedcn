@@ -5,11 +5,11 @@ use iced_core::Length::Fill;
 use iced_core::Padding;
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_widget::Renderer;
-use icedxdy_core::theme::{
+use icedcn_core::theme::{
     container::Transparent,
     tweak::{Fg, Token},
 };
-use icedxdy_core::{Theme, font_size};
+use icedcn_core::{Theme, font_size};
 
 pub struct Message<'a, Event> {
     content: Slot<'a, Event>,

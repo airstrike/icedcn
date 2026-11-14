@@ -38,7 +38,7 @@ mod svg {
     use iced_core::widget::{Meta, Tree};
     use iced_core::{Layout, Length, Rectangle, Size, Widget, layout, mouse, renderer};
     use iced_widget::{Renderer, Widget as _};
-    use icedxdy_core::Theme;
+    use icedcn_core::Theme;
 
     pub(super) fn view<'a, Message: 'a>(glyph: Glyph) -> Slot<'a, Message> {
         glyph.boxed().into()

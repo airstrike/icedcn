@@ -6,7 +6,7 @@
 use crate::compose::Slot;
 use crate::container::Container;
 use iced_core::Length::Fill;
-use icedxdy_core::theme::container;
+use icedcn_core::theme::container;
 
 /// Create a sidebar inset content area (baseline).
 ///

@@ -5,7 +5,7 @@ use iced::keyboard::key::Named;
 use iced::time::Instant;
 use iced::{Event, Size, window};
 use iced_test::{Simulator, selector};
-use icedxdy::Theme;
+use icedcn::Theme;
 use std::time::Duration;
 
 #[test]

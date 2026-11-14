@@ -3,10 +3,10 @@ use crate::{Message, page};
 use iced::Widget;
 use iced::widget::component::{Component, component};
 use iced::{Element, Task};
-use icedxdy::Slot;
-use icedxdy::Theme;
-use icedxdy::widget::calendar::{Date, Datelike, Duration, Mode, Selection, Weekday, today};
-use icedxdy::widget::{
+use icedcn::Slot;
+use icedcn::Theme;
+use icedcn::widget::calendar::{Date, Datelike, Duration, Mode, Selection, Weekday, today};
+use icedcn::widget::{
     calendar, date_picker, field, input, input_group, popover, row, space, text,
 };
 

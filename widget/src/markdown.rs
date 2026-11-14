@@ -7,7 +7,7 @@
 //! apps can register additional languages with [`highlighter::register`].
 //!
 //! Code-theme palettes are app-level concerns. The widget ships a
-//! `From<&icedxdy_core::Theme> for highlighter::Map` derivation so the
+//! `From<&icedcn_core::Theme> for highlighter::Map` derivation so the
 //! default look matches the surrounding UI; apps that want a specific
 //! aesthetic load their own VS Code / TextMate theme JSON via
 //! [`highlighter::Map::from_vscode_theme`] and pass it to a
@@ -32,11 +32,11 @@ pub use widget::{
 
 // Catalog impl for our own Theme — mirrors iced's default impl on
 // `iced_core::Theme` (in widget.rs:1649-1653) so callers using
-// `icedxdy_core::Theme` can render markdown.
+// `icedcn_core::Theme` can render markdown.
 #[cfg(feature = "markdown")]
 mod theme_impl {
-    use icedxdy_core::Theme;
-    use icedxdy_core::theme::container::code_block;
+    use icedcn_core::Theme;
+    use icedcn_core::theme::container::code_block;
 
     impl super::widget::Catalog for Theme {
         fn code_block<'a>() -> <Self as iced_widget::container::Catalog>::Class<'a> {

@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::pagination;
+use icedcn::widget::pagination;
 
 pagination([
     pagination::link("1").into(),

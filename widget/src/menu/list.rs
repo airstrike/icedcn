@@ -9,7 +9,7 @@ use iced_core::{
     renderer,
 };
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// The keyboard focus scope of a horizontal menubar or a vertical menu panel.
 pub(crate) struct List<'a, Message> {

@@ -6,7 +6,7 @@
 //! closes it, as do `Escape` and any press outside (the menu is modal).
 //!
 //! ```ignore
-//! use icedxdy::widget::{column, context_menu, menu, text};
+//! use icedcn::widget::{column, context_menu, menu, text};
 //!
 //! context_menu(
 //!     |_| text("Right click here").into(),
@@ -26,8 +26,8 @@ use iced_core::Length::Fill;
 use iced_core::{Element, Length, Pixels, Point};
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Space, Widget, anchored, mouse_area};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::popover::content;
+use icedcn_core::Theme;
+use icedcn_core::theme::popover::content;
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;

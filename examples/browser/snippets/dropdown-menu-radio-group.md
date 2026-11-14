@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, dropdown_menu, menu};
+use icedcn::widget::{button, dropdown_menu, menu};
 
 // `position` lives in your state.
 dropdown_menu(

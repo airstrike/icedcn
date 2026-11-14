@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, dialog};
+use icedcn::widget::{button, dialog};
 
 dialog(
     |d| d.trigger(button("No Close Button").style(button::Outline)),

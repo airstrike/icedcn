@@ -2,9 +2,9 @@ use iced::widget::component::{Component, component};
 use iced::widget::scrollable;
 use iced::widget::scrollable::{Direction, Scrollbar};
 use iced::{Element, Fill, Pixels, Widget};
-use icedxdy::Theme;
-use icedxdy::widget::table::Track;
-use icedxdy::widget::{checkbox, table, text};
+use icedcn::Theme;
+use icedcn::widget::table::Track;
+use icedcn::widget::{checkbox, table, text};
 
 use crate::Message;
 

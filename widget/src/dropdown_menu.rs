@@ -7,7 +7,7 @@
 //! the menu. A focused trigger also opens with ArrowDown and focuses the first item.
 //!
 //! ```ignore
-//! use icedxdy::widget::{button, column, dropdown_menu, menu};
+//! use icedcn::widget::{button, column, dropdown_menu, menu};
 //!
 //! dropdown_menu(
 //!     |m| m.trigger(button("Open").style(button::Outline)),
@@ -27,7 +27,7 @@
 
 use iced_core::{Element, Pixels};
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::popover::{self, Popover};

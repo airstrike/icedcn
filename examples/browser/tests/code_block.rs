@@ -5,9 +5,9 @@ use iced::{Element, Point, Rectangle, Size, Vector};
 use iced_test::Simulator;
 use iced_test::core::text::Target;
 use iced_test::core::widget::operation::{self, Operation, Outcome, Scrollable, text};
-use icedxdy::Theme;
-use icedxdy::widget::code_block::{CodeBlock, LineStyle};
-use icedxdy::widget::{code_block, container, rich_text, span};
+use icedcn::Theme;
+use icedcn::widget::code_block::{CodeBlock, LineStyle};
+use icedcn::widget::{code_block, container, rich_text, span};
 
 #[derive(Default)]
 struct Viewports(Vec<(Rectangle, Size)>);
@@ -211,7 +211,7 @@ fn ansi_matches_explicit_terminal_spans_at_both_scales_and_themes() {
             };
             let color = |light, dark, alpha| {
                 let rgb = if theme.neutral.is_dark { dark } else { light };
-                icedxdy::Color::from(iced::Color::from_packed_rgba8(rgb, alpha))
+                icedcn::Color::from(iced::Color::from_packed_rgba8(rgb, alpha))
             };
             let row = |spans| {
                 let text = rich_text(spans)

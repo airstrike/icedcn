@@ -10,7 +10,7 @@ use iced_test::core::widget::Id;
 use iced_test::core::widget::operation::{Operation, Outcome, focusable};
 use iced_test::simulator;
 use iced_test::{Simulator, selector};
-use icedxdy::Theme;
+use icedcn::Theme;
 
 type Preview<'a> = Simulator<'a, Message, Theme, iced::Renderer>;
 

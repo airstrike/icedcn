@@ -1,7 +1,7 @@
 ## Usage
 
 ```rust
-use icedxdy::widget::separator;
+use icedcn::widget::separator;
 
 separator()
 ```

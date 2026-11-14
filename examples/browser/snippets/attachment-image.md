@@ -1,14 +1,14 @@
 ```rust
-use icedxdy::{Color, Theme};
-use icedxdy::core::oklch;
+use icedcn::{Color, Theme};
+use icedcn::core::oklch;
 
 fn canvas(theme: &Theme) -> Color {
     if theme.neutral.is_dark { theme.neutral.base } else { oklch(0.98, 0.0, 0.0) }
 }
-use icedxdy::widget::container;
+use icedcn::widget::container;
 use iced::{ContentFit, Fill, Widget};
 use iced::widget::image;
-use icedxdy::widget::{attachment, tooltip};
+use icedcn::widget::{attachment, tooltip};
 
 let photos = [
     ("workspace.png", "PNG · 820 KB", workspace, "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=900&auto=format&fit=crop&q=80"),

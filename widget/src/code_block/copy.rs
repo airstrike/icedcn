@@ -10,7 +10,7 @@ use iced_core::{
     renderer, window,
 };
 use iced_widget::{Renderer, Widget as _};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use super::glyph::Glyph;
 use crate::compose::{Compose, Inherited, Slot};
@@ -234,7 +234,9 @@ impl<'a, M: Clone + 'a> Widget<M, Theme, Renderer> for Control<'a, M> {
 mod tests {
     use super::*;
     use iced_core::clipboard::{Content, Error};
+    use iced_core::renderer::Headless;
     use iced_core::shell::{Bus, Waker};
+    use iced_test::futures::futures::executor::block_on;
 
     #[test]
     fn copy_writes_on_release_and_shows_feedback_only_after_success() {
@@ -245,7 +247,7 @@ mod tests {
         };
         let mut tree = Tree::new(&control);
         tree.diff(&mut control);
-        let renderer = Renderer::default();
+        let renderer = block_on(Renderer::new(Default::default(), None)).expect("headless renderer");
         let size = Size::new(100., 100.);
         control.layout(&mut tree, &renderer, &layout::Limits::new(Size::ZERO, size));
         let viewport = Rectangle::with_size(size);

@@ -1,7 +1,7 @@
 ```rust
 use iced::{Element, Fill, Widget};
-use icedxdy::{card, Size, Theme};
-use icedxdy::widget::{button, column, text};
+use icedcn::{card, Size, Theme};
+use icedcn::widget::{button, column, text};
 
 fn preview() -> Element<'static, Message, Theme> {
     card(column![

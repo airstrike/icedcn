@@ -1,5 +1,5 @@
 [package]
-name = "icedxdy"
+name = "icedcn"
 description = "Themed widgets for iced applications"
 exclude = ["/scripts/sync-nova.sh"]
 version.workspace = true
@@ -12,15 +12,15 @@ keywords.workspace = true
 
 [features]
 default = []
-highlighter = ["icedxdy_widget/highlighter"]
-markdown = ["icedxdy_core/markdown", "icedxdy_widget/markdown"]
-spinner = ["icedxdy_widget/spinner"]
-svg = ["icedxdy_core/svg", "icedxdy_widget/svg"]
-sweeten = ["icedxdy_widget/sweeten"]
+highlighter = ["icedcn_widget/highlighter"]
+markdown = ["icedcn_core/markdown", "icedcn_widget/markdown"]
+spinner = ["icedcn_widget/spinner"]
+svg = ["icedcn_core/svg", "icedcn_widget/svg"]
+sweeten = ["icedcn_widget/sweeten"]
 
 [dependencies]
-icedxdy_core.workspace = true
-icedxdy_widget.workspace = true
+icedcn_core.workspace = true
+icedcn_widget.workspace = true
 iced.workspace = true
 iced_core.workspace = true
 iced_widget.workspace = true
@@ -39,15 +39,15 @@ version = "0.1.0"
 authors = ["Andy Terra <tech@andyterra.com>"]
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/airstrike/icedxdy"
+repository = "https://github.com/airstrike/icedcn"
 categories = ["gui"]
 keywords = ["gui", "iced", "graphics", "interface", "widgets"]
 rust-version = "1.85"
 
 [workspace.dependencies]
-icedxdy = { path = "." }
-icedxdy_core = { path = "./core" }
-icedxdy_widget = { path = "./widget" }
+icedcn = { path = "." }
+icedcn_core = { path = "./core" }
+icedcn_widget = { path = "./widget" }
 
 iced = "0.15.0-dev"
 iced_core = "0.15.0-dev"
@@ -77,7 +77,7 @@ split-debuginfo = "packed"
 
 # Optimize dependencies (built once, cached) while the workspace crates stay at
 # the default dev opt-level for fast incremental recompiles. The per-frame
-# widget walk lives mostly in deps (iced/wgpu/icedxdy_widget), so this is the
+# widget walk lives mostly in deps (iced/wgpu/icedcn_widget), so this is the
 # big lever for dev-loop runtime cost without slowing incremental compiles.
 [profile.dev.package."*"]
 opt-level = 3

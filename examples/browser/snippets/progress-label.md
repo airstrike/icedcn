@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{column, progress, row, space, text};
+use icedcn::widget::{column, progress, row, space, text};
 
 column![
     row![

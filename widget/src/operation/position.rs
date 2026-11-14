@@ -7,7 +7,7 @@
 //! # Example
 //!
 //! ```no_run
-//! use icedxdy_widget::operation::position;
+//! use icedcn_widget::operation::position;
 //!
 //! # #[derive(Debug, Clone)]
 //! # enum Message { Found(Option<iced_core::Rectangle>) }

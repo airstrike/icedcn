@@ -4,7 +4,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::kbd;
+//! use icedcn::widget::kbd;
 //!
 //! kbd_group![kbd("⌘"), kbd("⇧"), kbd("⌥"), kbd("⌃")]
 //! kbd_group![kbd("Ctrl"), "+", kbd("B")]
@@ -16,14 +16,14 @@
 use iced_core::Alignment;
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
-use icedxdy_core::theme::container::Spec;
+use icedcn_core::Theme;
+use icedcn_core::theme::container::Spec;
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::row::Row;
 use crate::{Size, Weight};
 
-pub use icedxdy_core::theme::kbd::{Default, Tooltip};
+pub use icedcn_core::theme::kbd::{Default, Tooltip};
 
 /// Lay out keys in a kbd group.
 ///

@@ -6,7 +6,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::alert;
+//! use icedcn::widget::alert;
 //!
 //! alert()
 //!     .icon(icon::terminal())
@@ -30,13 +30,13 @@ use iced_core::{Length::*, Padding, Pixels};
 use iced_widget::Renderer;
 use iced_widget::Widget;
 use iced_widget::text::{Style, StyleFn};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use crate::Size;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::text;
 
-pub use icedxdy_core::theme::alert::{Default, Destructive, Spec};
+pub use icedcn_core::theme::alert::{Default, Destructive, Spec};
 
 /// A callout box with optional icon, title, description, and action.
 pub struct Alert<'a, Message> {

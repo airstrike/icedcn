@@ -5,11 +5,11 @@ mod chevron;
 use iced::alignment::{Horizontal, Vertical};
 use iced::widget::{svg, text::LineHeight};
 use iced::{Fill, Padding, Task};
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::theme::tweak::{Fg, Token};
-use icedxdy::widget::{button, collapsible, column, container, input, row, space, tabs, text};
-use icedxdy::{Size, Slot, Theme, card, radius};
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::theme::tweak::{Fg, Token};
+use icedcn::widget::{button, collapsible, column, container, input, row, space, tabs, text};
+use icedcn::{Size, Slot, Theme, card, radius};
 
 use crate::{Message, page};
 use chevron::chevron;

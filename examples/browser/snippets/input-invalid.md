@@ -1,6 +1,6 @@
 ```rust
-use icedxdy::theme;
-use icedxdy::widget::{field, input, text};
+use icedcn::theme;
+use icedcn::widget::{field, input, text};
 
 field(
     input("Error")

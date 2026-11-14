@@ -5,7 +5,7 @@
 //!
 //! ```ignore
 //! use iced::Fill;
-//! use icedxdy::widget::progress;
+//! use icedcn::widget::progress;
 //!
 //! progress(value).width(Fill)
 //! ```

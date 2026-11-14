@@ -10,8 +10,8 @@ The `Avatar` component is the root component that wraps the avatar image and fal
 
 ```rust
 use iced::widget::image;
-use icedxdy::Theme;
-use icedxdy::widget::avatar;
+use icedcn::Theme;
+use icedcn::widget::avatar;
 
 fn preview(image: image::Handle) -> iced::Element<'static, (), Theme> {
     avatar(Some(image))

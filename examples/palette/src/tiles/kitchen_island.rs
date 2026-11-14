@@ -2,11 +2,11 @@
 
 use iced::Fill;
 use iced::Widget;
-use icedxdy::card;
-use icedxdy::core::{Border, Color, oklch};
-use icedxdy::theme;
-use icedxdy::widget::{Size, column, container, item, slider, space, text, toggle_group};
-use icedxdy::{Slot, Space, Theme};
+use icedcn::card;
+use icedcn::core::{Border, Color, oklch};
+use icedcn::theme;
+use icedcn::widget::{Size, column, container, item, slider, space, text, toggle_group};
+use icedcn::{Slot, Space, Theme};
 
 use crate::{KitchenMode, KitchenScene, Message, State};
 

@@ -10,8 +10,8 @@ use iced_widget::Widget as _;
 use iced_widget::core::svg::{Handle, Renderer as _, Svg};
 use iced_widget::core::widget::{Meta, Tree, Widget, tree};
 use iced_widget::core::{Layout, Shell, layout, renderer};
-use icedxdy::widget::animation::cubic_bezier;
-use icedxdy::{Compose, Slot, Theme};
+use icedcn::widget::animation::cubic_bezier;
+use icedcn::{Compose, Slot, Theme};
 
 static PATH: LazyLock<Handle> = LazyLock::new(|| {
     Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>"#)

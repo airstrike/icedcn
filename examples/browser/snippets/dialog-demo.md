@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, column, dialog, field, input};
+use icedcn::widget::{button, column, dialog, field, input};
 
 dialog(
     |d| d.trigger(button("Open Dialog").style(button::Outline)),

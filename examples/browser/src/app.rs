@@ -5,19 +5,19 @@ use iced::Widget;
 use iced::mouse::Interaction;
 use iced::widget::{column, combo_box, operation, row, space, stack};
 use iced::{clipboard, window};
-use icedxdy::widget::scrollable;
-use icedxdy::widget::spinner;
+use icedcn::widget::scrollable;
+use icedcn::widget::spinner;
 use std::time::Duration;
 
 use iced::{Center, Fill, Font, Pixels, Subscription, Task};
-use icedxdy::theme::tweak::Bg;
-use icedxdy::theme::tweak::token::Token;
-use icedxdy::widget::container;
-use icedxdy::widget::markdown::highlighter::Map;
-use icedxdy::widget::sidebar::MenuButtonSize;
+use icedcn::theme::tweak::Bg;
+use icedcn::theme::tweak::token::Token;
+use icedcn::widget::container;
+use icedcn::widget::markdown::highlighter::Map;
+use icedcn::widget::sidebar::MenuButtonSize;
 
-use icedxdy::widget::{button, rule, sidebar, text, toast, toaster};
-use icedxdy::{Size, Theme, Weight, theme};
+use icedcn::widget::{button, rule, sidebar, text, toast, toaster};
+use icedcn::{Size, Theme, Weight, theme};
 
 use crate::component;
 use crate::docs;

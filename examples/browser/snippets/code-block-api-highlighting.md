@@ -1,6 +1,6 @@
 ### Syntax highlighting
 
-Enable the `icedxdy/highlighter` Cargo feature to use `.language(...)` with source strings. The active theme selects light or dark token colors.
+Enable the `icedcn/highlighter` Cargo feature to use `.language(...)` with source strings. The active theme selects light or dark token colors.
 
 | Builder | Argument | Behavior |
 | --- | --- | --- |

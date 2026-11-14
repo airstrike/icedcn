@@ -10,7 +10,7 @@ use iced_core::{
     renderer,
 };
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 use std::any::Any;
 
 // List-level keyboard navigation operates on the actual mounted controls, so

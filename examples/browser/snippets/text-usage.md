@@ -1,7 +1,7 @@
 ## Usage
 
 ```rust
-use icedxdy::widget::text;
+use icedcn::widget::text;
 ```
 
 Each typography level has its own constructor:

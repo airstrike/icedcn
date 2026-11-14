@@ -2,13 +2,13 @@ use super::items;
 use crate::{Message, page};
 use iced::widget::component::{self, Component};
 use iced::{Element, Fill, Widget};
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::questionnaire::{Answers, Invalid, Progress, Shortcuts};
-use icedxdy::widget::{
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::questionnaire::{Answers, Invalid, Progress, Shortcuts};
+use icedcn::widget::{
     Row, button, column, container, dialog, native_select, questionnaire, row, space, text,
 };
-use icedxdy::{Slot, Theme, card};
+use icedcn::{Slot, Theme, card};
 
 pub(super) fn preview<'a>(id: &'static str, page: usize) -> Element<'a, Message, Theme> {
     component::component(Example { id, page }).boxed()

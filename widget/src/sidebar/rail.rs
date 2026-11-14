@@ -4,7 +4,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::sidebar;
+//! use icedcn::widget::sidebar;
 //!
 //! sidebar::rail(Message::ToggleSidebar)
 //! ```
@@ -19,8 +19,8 @@ use super::trigger::Toggle;
 use crate::button::widget;
 use crate::compose::{Compose, Slot};
 use crate::marker::{self, Press};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::button;
+use icedcn_core::Theme;
+use icedcn_core::theme::button;
 
 /// Width of the rail hit target in logical pixels.
 pub const RAIL_WIDTH: f32 = 16.0;

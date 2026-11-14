@@ -13,8 +13,8 @@ use iced_core::{
     mouse, overlay, renderer, window,
 };
 use iced_widget::{Renderer, Widget as _};
-use icedxdy_core::theme::scrollable;
-use icedxdy_core::{Color, Theme};
+use icedcn_core::theme::scrollable;
+use icedcn_core::{Color, Theme};
 
 use super::surface;
 use crate::scrollable::Direction;

@@ -1,7 +1,7 @@
 use iced::Task;
 
-use icedxdy::Theme;
-use icedxdy::widget::native_select;
+use icedcn::Theme;
+use icedcn::widget::native_select;
 
 use crate::Message;
 use crate::page;

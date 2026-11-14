@@ -6,9 +6,9 @@ use iced_core::{Element, Event, Point, Rectangle, Size, Vector, touch, window};
 use iced_runtime::task;
 use iced_test::simulator::{Simulator, click, simulator};
 use iced_widget::{Renderer, Space};
-use icedxdy_core::Theme;
-use icedxdy_widget::scroller;
-use icedxdy_widget::scroller::{Animation, Position, Reader, Target};
+use icedcn_core::Theme;
+use icedcn_widget::scroller;
+use icedcn_widget::scroller::{Animation, Position, Reader, Target};
 
 type Preview = Simulator<'static, Reader, Theme, Renderer>;
 
@@ -189,7 +189,7 @@ fn keyboard_space_pages_the_focused_transcript() {
 
 #[test]
 fn keyed_editor_stays_with_its_message_across_a_reorder_and_replacement() {
-    use icedxdy_widget::input;
+    use icedcn_widget::input;
     let editors = |ids: &[u64]| -> Element<'static, (), Theme, Renderer> {
         scroller(
             ids.iter()

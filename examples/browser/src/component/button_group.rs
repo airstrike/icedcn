@@ -1,13 +1,13 @@
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Task, Widget};
 
-use icedxdy::widget::button::group;
-use icedxdy::widget::input_group::Align;
-use icedxdy::widget::{
+use icedcn::widget::button::group;
+use icedcn::widget::input_group::Align;
+use icedcn::widget::{
     button, button_group, column, container, dropdown_menu, field, input, input_group, menu,
     popover, row, select, textarea, tooltip,
 };
-use icedxdy::{Slot, Theme};
+use icedcn::{Slot, Theme};
 
 use crate::Message;
 use crate::icon;
@@ -258,7 +258,7 @@ impl<'a> Component<'a, Message, Theme> for Voice {
 }
 
 fn view(id: &str, pi: usize) -> Slot<'static, Message> {
-    use icedxdy::Size::{Lg, Sm};
+    use icedcn::Size::{Lg, Sm};
 
     // Stub on_press target — every button in the page wires `.on_press(noop())`
     // so they aren't styled as disabled. Cloning is fine because `Message::Page`

@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, empty, spinner};
+use icedcn::widget::{button, empty, spinner};
 
 empty::empty()
     .media(empty::media(spinner()).style(empty::Icon))

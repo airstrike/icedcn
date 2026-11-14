@@ -6,9 +6,9 @@ use iced_core::{Element, Event, Length, Point, Size, mouse, window};
 use iced_test::core::Settings;
 use iced_test::{Simulator, selector, simulator};
 use iced_widget::{Renderer, Space};
-use icedxdy_core::{Theme, theme};
-use icedxdy_widget::Size::{Default, Lg, Sm, Xs};
-use icedxdy_widget::{Inherited, Slot, button, container};
+use icedcn_core::{Theme, theme};
+use icedcn_widget::Size::{Default, Lg, Sm, Xs};
+use icedcn_widget::{Inherited, Slot, button, container};
 
 type Preview<'a> = Simulator<'a, (), Theme, Renderer>;
 

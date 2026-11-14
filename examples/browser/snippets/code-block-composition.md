@@ -10,4 +10,4 @@ CodeBlock
 └── .footer(...) — controls below the content
 ```
 
-Pass a string to `code_block`. Use `.language(...)` for syntax colors and `.line_style(...)` to decorate source lines. `CodeBlock::lines(...)` accepts custom widgets in each row. The slots accept the same `Compose` children used elsewhere in icedxdy.
+Pass a string to `code_block`. Use `.language(...)` for syntax colors and `.line_style(...)` to decorate source lines. `CodeBlock::lines(...)` accepts custom widgets in each row. The slots accept the same `Compose` children used elsewhere in icedcn.

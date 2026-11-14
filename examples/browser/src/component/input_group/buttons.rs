@@ -1,11 +1,11 @@
 use crate::{Message, icon};
 use iced::widget::component::{self, Component};
 use iced::{Element, Fill, Widget};
-use icedxdy::widget::input_group::Align;
-use icedxdy::widget::{Column, button, column, input, input_group, popover, text};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::input_group::Align;
+use icedcn::widget::{Column, button, column, input, input_group, popover, text};
+use icedcn::{Slot, Theme};
 
-const URL: &str = "https://github.com/airstrike/icedxdy";
+const URL: &str = "https://github.com/airstrike/icedcn";
 
 struct Buttons;
 #[derive(Default)]

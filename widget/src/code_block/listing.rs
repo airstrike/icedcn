@@ -7,7 +7,7 @@ use iced_core::alignment::Horizontal;
 use iced_core::text::{LineHeight, Wrapping};
 use iced_core::{Element, Font};
 use iced_widget::{Renderer, Widget, text};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 

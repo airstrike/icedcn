@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::textarea;
+use icedcn::widget::textarea;
 
 textarea("Type your message here.")
 ```

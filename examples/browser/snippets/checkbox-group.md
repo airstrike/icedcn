@@ -1,6 +1,6 @@
 ```rust
 use iced::{Pixels, Shrink};
-use icedxdy::widget::{checkbox, column, field, text};
+use icedcn::widget::{checkbox, column, field, text};
 
 let choices = [
     "Hard disks",

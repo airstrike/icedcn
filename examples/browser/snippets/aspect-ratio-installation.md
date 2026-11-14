@@ -4,8 +4,8 @@ An application in this workspace can inherit both dependencies in its `Cargo.tom
 
 ```toml
 [dependencies]
-icedxdy = { workspace = true }
+icedcn = { workspace = true }
 iced = { workspace = true, features = ["image"] }
 ```
 
-For a separate application, point `icedxdy` at your checkout and use the iced revision and patches from its workspace manifest.
+For a separate application, point `icedcn` at your checkout and use the iced revision and patches from its workspace manifest.

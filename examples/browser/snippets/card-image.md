@@ -4,8 +4,8 @@ Select the light or dark cover when your application theme changes. Prepare the 
 use iced::widget::image;
 use iced::border;
 use iced::{ContentFit, Element, Fill, Widget};
-use icedxdy::{card, Gap, Theme, radius};
-use icedxdy::widget::{aspect_ratio, badge, button, column};
+use icedcn::{card, Gap, Theme, radius};
+use icedcn::widget::{aspect_ratio, badge, button, column};
 
 fn preview(light: image::Handle, dark: image::Handle, theme: &Theme) -> Element<'static, Message, Theme> {
     let photo = if theme.neutral.is_dark { dark } else { light };

@@ -5,15 +5,15 @@ use iced::border;
 use iced::widget::component::{Component, component};
 use iced::widget::image;
 use iced::{ContentFit, Element, Fill};
-use icedxdy::theme::container::Style;
+use icedcn::theme::container::Style;
 use std::sync::LazyLock;
 
-use icedxdy::card;
-use icedxdy::widget::{
+use icedcn::card;
+use icedcn::widget::{
     aspect_ratio, badge, button, column, container, field, input, row, scroll_area, separator,
     space, text, toggle_group,
 };
-use icedxdy::{Gap, Size, Slot, Theme, radius};
+use icedcn::{Gap, Size, Slot, Theme, radius};
 
 use crate::Message;
 use crate::page;
@@ -86,7 +86,7 @@ fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
         space::horizontal(),
         button(
             text::small("Forgot your password?")
-                .weight(icedxdy::Weight::Normal)
+                .weight(icedcn::Weight::Normal)
                 .line_height(iced::Pixels(20.0))
         )
         .style(button::Link)

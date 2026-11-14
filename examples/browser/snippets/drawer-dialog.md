@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, column, dialog, drawer};
+use icedcn::widget::{button, column, dialog, drawer};
 
 drawer(
     |d| d.trigger(button("Edit Profile").style(button::Outline)),

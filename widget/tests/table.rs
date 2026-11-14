@@ -4,9 +4,9 @@ use iced_core::widget::{Id, Operation};
 use iced_core::{Element, Rectangle};
 use iced_test::simulator::simulator;
 use iced_widget::{Renderer, Space};
-use icedxdy_core::Theme;
-use icedxdy_widget::table::Track;
-use icedxdy_widget::{container, table};
+use icedcn_core::Theme;
+use icedcn_widget::table::Track;
+use icedcn_widget::{container, table};
 
 #[derive(Default)]
 struct Bounds {

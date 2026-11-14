@@ -1,6 +1,6 @@
 ```rust
-use icedxdy::Size::Sm;
-use icedxdy::widget::button;
+use icedcn::Size::Sm;
+use icedcn::widget::button;
 
 button_group![
     button("Copy").style(button::Secondary).size(Sm).on_press(Message::Copy),

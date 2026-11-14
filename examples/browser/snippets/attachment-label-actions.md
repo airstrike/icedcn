@@ -3,7 +3,7 @@
 Name the operation and the file, such as “Remove sales-dashboard.pdf”. The preview shows a tooltip on icon-only controls. For a visible label, pass a text button to `.action(...)`.
 
 ```rust
-use icedxdy::widget::{attachment, button};
+use icedcn::widget::{attachment, button};
 
 attachment("sales-dashboard.pdf").action(
     button("Remove sales-dashboard.pdf")

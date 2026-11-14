@@ -6,7 +6,7 @@
 //! 1. User writes `input.style(Default + tweak::...)` (the variants and
 //!    `Spec` live in core).
 //! 2. The wrapper's `.style()` takes `impl Into<StyleFn>` from core — those
-//!    `From` impls live in `icedxdy_core` (orphan rule: `From<Default> for
+//!    `From` impls live in `icedcn_core` (orphan rule: `From<Default> for
 //!    StyleFn` works because both types are local to core).
 //! 3. The stored core StyleFn produces a core `Style` with `ring` populated.
 //! 4. At conversion time, the wrapper composes a widget `StyleFn` that calls
@@ -18,9 +18,9 @@
 //! crates (the vendored module re-exports core's), so no Status conversion is
 //! needed.
 
-use icedxdy_core::Theme;
-use icedxdy_core::theme;
-use icedxdy_core::theme::text_input;
+use icedcn_core::Theme;
+use icedcn_core::theme;
+use icedcn_core::theme::text_input;
 
 use super::widget;
 

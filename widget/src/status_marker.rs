@@ -2,11 +2,11 @@
 use iced_core::Length::Fill;
 use iced_core::{Alignment, Element};
 use iced_widget::Renderer;
-use icedxdy_core::theme::{
+use icedcn_core::theme::{
     container::Transparent,
     tweak::{Fg, Token},
 };
-use icedxdy_core::{Theme, font_size};
+use icedcn_core::{Theme, font_size};
 
 use crate::{Compose, Inherited, Slot, column, container, row, separator};
 

@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use iced_core::text::{LineHeight, Wrapping};
 use iced_core::{Font, Length};
-use icedxdy_core::Color;
+use icedcn_core::Color;
 
 use super::{CodeBlock, Content, LineStyle, code_block};
 use crate::{Slot, rich_text, span};

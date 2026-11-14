@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{trace, text};
+use icedcn::widget::{trace, text};
 
 result(
     "Ran rustc --version",

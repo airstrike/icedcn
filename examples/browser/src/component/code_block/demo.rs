@@ -5,20 +5,20 @@ use iced::alignment::Horizontal;
 use iced::widget::button::Style;
 use iced::widget::{Id, svg};
 use iced::{Element, Fill, Font, Widget};
-use icedxdy::core::Border;
-use icedxdy::widget::code_block::LineStyle;
-use icedxdy::widget::{
+use icedcn::core::Border;
+use icedcn::widget::code_block::LineStyle;
+use icedcn::widget::{
     CodeBlock, bubble, button, code_block, column, container, markdown, message, row, tabs, text,
     tooltip, trace,
 };
-use icedxdy::{Size, Slot, Theme, radius, theme};
+use icedcn::{Size, Slot, Theme, radius, theme};
 
 use super::samples::*;
 use crate::{font, icon, page};
 use iced::widget::{Action, Component, component};
 use iced::{mouse, window};
-use icedxdy::theme::button::{Status, ghost};
-use icedxdy::widget::animation::cubic_bezier;
+use icedcn::theme::button::{Status, ghost};
+use icedcn::widget::animation::cubic_bezier;
 use std::f32::consts::PI;
 
 #[derive(Clone, Debug)]
@@ -391,7 +391,7 @@ impl State {
             "basic" => terminal(BASIC).into(),
             "header" => terminal(HEADER)
                 .title(row![icon::terminal().size(14), code_block::title("Terminal")].spacing(6))
-                .actions(self.copy("header", "cargo check -p icedxdy_widget"))
+                .actions(self.copy("header", "cargo check -p icedcn_widget"))
                 .into(),
             "actions" => {
                 let wrap = *self.wraps.get("actions").unwrap_or(&true);

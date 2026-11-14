@@ -37,7 +37,7 @@ use std::marker::PhantomData;
 use std::time::Duration;
 
 // Iced's widget crate re-exports `core::widget::text::*` at `crate::text`. We
-// can't reuse that path (our `crate::text` is the icedxdy typography helpers,
+// can't reuse that path (our `crate::text` is the icedcn typography helpers,
 // and `use iced_widget::text` collides with `crate::core::text` already in
 // scope above). A private re-exporting module gives the vendored draw + layout
 // calls shallow `text_helpers::*` paths that satisfy the pre-commit deep-path
@@ -890,10 +890,10 @@ impl From<bool> for State {
 /// The possible status of a [`Checkbox`].
 ///
 /// **Deviation from upstream sweeten/iced**: `Status` is re-exported from
-/// `icedxdy_core` so the whole crate (theme + widget + wrapper) speaks one
+/// `icedcn_core` so the whole crate (theme + widget + wrapper) speaks one
 /// canonical type. Variants match upstream 1:1 so the rest of this file's
 /// pattern matches keep working.
-pub use icedxdy_core::theme::checkbox::Status;
+pub use icedcn_core::theme::checkbox::Status;
 
 trait StatusExt {
     fn with_checked(self, is_checked: bool) -> Self;
@@ -975,7 +975,7 @@ pub type StyleFn<'a, Theme> = Box<dyn Fn(&Theme, Status) -> Style + 'a>;
 /// Convert from iced's stock `checkbox::Style` into the vendored widget's
 /// `Style`. Lossless in this direction (iced has no `ring` field, so we set
 /// `ring: None`). Used by `Catalog for iced_widget::Theme` to satisfy callers
-/// that pick stock iced::Theme instead of `icedxdy_core::Theme`.
+/// that pick stock iced::Theme instead of `icedcn_core::Theme`.
 impl From<iced_widget::checkbox::Style> for Style {
     fn from(s: iced_widget::checkbox::Style) -> Self {
         Style {
@@ -990,7 +990,7 @@ impl From<iced_widget::checkbox::Style> for Style {
 
 /// Stock-iced fallback Catalog impl — for callers who pick
 /// `iced_core::Theme` (== `iced_widget::Theme`) instead of
-/// `icedxdy_core::Theme`. Routes through iced's stock checkbox default and
+/// `icedcn_core::Theme`. Routes through iced's stock checkbox default and
 /// lifts the result through `From<iced_widget::checkbox::Style> for Style`.
 /// Ring stays `None`.
 impl Catalog for Theme {
@@ -1027,7 +1027,7 @@ mod tests {
     use iced_core::time::{Duration, Instant};
     use iced_core::widget::Tree;
     use iced_core::{Event, Layout, Point, Rectangle, Shell, Size, Widget, mouse, window};
-    use icedxdy_core::Theme;
+    use icedcn_core::Theme;
 
     fn step(checkbox: &mut Checkbox<'_, (), Theme, ()>, tree: &mut Tree, event: Event) {
         let mut messages = Bus::new();

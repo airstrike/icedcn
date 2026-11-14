@@ -2,10 +2,10 @@
 use iced::alignment::Vertical;
 use iced::widget::{svg, text::LineHeight};
 use iced::{Fill, Padding};
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{button, collapsible, column, container, row, space, text};
-use icedxdy::{Slot, Theme, radius};
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::{button, collapsible, column, container, row, space, text};
+use icedcn::{Slot, Theme, radius};
 
 fn icon(path: &'static str, size: f32) -> svg::Svg<'static, Theme> {
     svg(svg::Handle::from_memory(format!(

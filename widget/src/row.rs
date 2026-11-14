@@ -2,7 +2,7 @@ use crate::compose::{Compose, Inherited, Slot};
 use iced_core::Length;
 use iced_widget::Renderer;
 use iced_widget::Widget;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// Create a [`Row`] with the given children.
 ///
@@ -21,7 +21,7 @@ macro_rules! row {
     };
 }
 
-/// A row of icedxdy elements that participates in size propagation.
+/// A row of icedcn elements that participates in size propagation.
 pub struct Row<'a, Message> {
     children: Vec<Slot<'a, Message>>,
     spacing: Option<f32>,
@@ -63,7 +63,7 @@ impl<'a, Message: 'a> Row<'a, Message> {
         self
     }
 
-    pub fn padding(mut self, padding: impl Into<icedxdy_core::Padding>) -> Self {
+    pub fn padding(mut self, padding: impl Into<icedcn_core::Padding>) -> Self {
         self.padding = padding.into().into();
         self
     }

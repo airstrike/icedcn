@@ -9,7 +9,7 @@
 //! ```no_run
 //! use iced_widget::{Renderer, Theme, Widget};
 //! use iced_widget::core::Element;
-//! use icedxdy_widget::markdown;
+//! use icedcn_widget::markdown;
 //!
 //! struct State {
 //!    markdown: Vec<markdown::Item>,
@@ -416,7 +416,7 @@ impl Bullet {
 /// ```no_run
 /// use iced_widget::{Renderer, Theme, Widget};
 /// use iced_widget::core::Element;
-/// use icedxdy_widget::markdown;
+/// use icedcn_widget::markdown;
 ///
 /// struct State {
 ///    markdown: Vec<markdown::Item>,
@@ -1180,7 +1180,7 @@ impl From<Theme> for Style {
 /// ```no_run
 /// use iced_widget::{Renderer, Theme, Widget};
 /// use iced_widget::core::Element;
-/// use icedxdy_widget::markdown;
+/// use icedcn_widget::markdown;
 ///
 /// struct State {
 ///    markdown: Vec<markdown::Item>,

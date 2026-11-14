@@ -15,8 +15,8 @@ use iced_core::{
     Vector, Widget, layout, mouse, overlay, renderer, touch, window,
 };
 use iced_widget::Renderer;
-use icedxdy_core::theme::badge::state::{Status, Style, StyleFn};
-use icedxdy_core::{self, Theme};
+use icedcn_core::theme::badge::state::{Status, Style, StyleFn};
+use icedcn_core::{self, Theme};
 
 use crate::operation::focus;
 
@@ -463,13 +463,13 @@ impl Operation for TextBounds<'_> {
 
 fn mix(a: Style, b: Style, t: f32, inherited: Color) -> Style {
     let t = t.clamp(0.0, 1.0);
-    let color = |a: icedxdy_core::Color, b: icedxdy_core::Color| a.blend(b, t);
+    let color = |a: icedcn_core::Color, b: icedcn_core::Color| a.blend(b, t);
     let background = match (a.background, b.background) {
-        (Some(icedxdy_core::Background::Color(a)), Some(icedxdy_core::Background::Color(b))) => {
+        (Some(icedcn_core::Background::Color(a)), Some(icedcn_core::Background::Color(b))) => {
             Some(color(a, b).into())
         }
-        (None, Some(icedxdy_core::Background::Color(b))) => Some(color(b.alpha(0.0), b).into()),
-        (Some(icedxdy_core::Background::Color(a)), None) => Some(color(a, a.alpha(0.0)).into()),
+        (None, Some(icedcn_core::Background::Color(b))) => Some(color(b.alpha(0.0), b).into()),
+        (Some(icedcn_core::Background::Color(a)), None) => Some(color(a, a.alpha(0.0)).into()),
         _ => {
             if t < 0.5 {
                 a.background
@@ -482,14 +482,14 @@ fn mix(a: Style, b: Style, t: f32, inherited: Color) -> Style {
         (None, None) => None,
         (a, b) => {
             let base = b.or(a).expect("one ring");
-            let absent = icedxdy_core::Border {
+            let absent = icedcn_core::Border {
                 width: 0.0,
                 color: base.color.alpha(0.0),
                 ..base
             };
             let a = a.unwrap_or(absent);
             let b = b.unwrap_or(absent);
-            Some(icedxdy_core::Border {
+            Some(icedcn_core::Border {
                 width: a.width + (b.width - a.width) * t,
                 color: color(a.color, b.color),
                 ..b
@@ -502,7 +502,7 @@ fn mix(a: Style, b: Style, t: f32, inherited: Color) -> Style {
             a.text_color.unwrap_or_else(|| inherited.into()),
             b.text_color.unwrap_or_else(|| inherited.into()),
         )),
-        border: icedxdy_core::Border {
+        border: icedcn_core::Border {
             color: color(a.border.color, b.border.color),
             width: a.border.width + (b.border.width - a.border.width) * t,
             ..b.border

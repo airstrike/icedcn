@@ -23,9 +23,9 @@ mod parser_heap;
 
 use iced::widget::column;
 use iced::{Element, Subscription, Task};
-use icedxdy::Theme;
-use icedxdy::widget::markdown::highlighter::Map;
-use icedxdy::widget::{center, progress, text};
+use icedcn::Theme;
+use icedcn::widget::markdown::highlighter::Map;
+use icedcn::widget::{center, progress, text};
 
 use app::App;
 
@@ -132,7 +132,7 @@ impl Browser {
 fn splash<'a>(message: &str, progress_value: f32) -> Element<'a, Message, Theme> {
     center(
         column![
-            Element::from(text::h1("icedxdy")),
+            Element::from(text::h1("icedcn")),
             Element::from(text::muted(message.to_owned())),
             Element::from(
                 progress(progress_value)
@@ -157,7 +157,7 @@ pub fn run() -> iced::Result {
         parser_heap::install();
     }
     let application = iced::application(Browser::new, Browser::update, Browser::view)
-        .title("icedxdy \u{2022} components browser")
+        .title("icedcn \u{2022} components browser")
         .window_size([1440.0, 900.0])
         .antialiasing(true)
         .subscription(Browser::subscription)

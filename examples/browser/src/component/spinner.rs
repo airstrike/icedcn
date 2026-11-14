@@ -1,11 +1,11 @@
 use iced::{Shrink, Task};
 
 use crate::icon;
-use icedxdy::widget::input_group::Align;
-use icedxdy::widget::{
+use icedcn::widget::input_group::Align;
+use icedcn::widget::{
     badge, button, column, empty, input, input_group, item, row, space, spinner, text, textarea,
 };
-use icedxdy::{Size, Theme};
+use icedcn::{Size, Theme};
 
 use crate::Message;
 use crate::page;

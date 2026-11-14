@@ -7,8 +7,8 @@ use iced_core::{
     mouse, overlay, renderer,
 };
 use iced_widget::Renderer;
-use icedxdy_core::theme::container::{Style, StyleFn};
-use icedxdy_core::{Theme, radius};
+use icedcn_core::theme::container::{Style, StyleFn};
+use icedcn_core::{Theme, radius};
 
 pub(super) struct Frame<'a, Message> {
     content: Element<'a, Message, Theme, Renderer>,
@@ -174,14 +174,16 @@ impl<Message> Widget<Message, Theme, Renderer> for Frame<'_, Message> {
 mod tests {
     use super::Frame;
     use crate::code_block::{Destructive, viewport};
+    use iced_core::renderer::Headless;
     use iced_core::shell::{Bus, Waker};
+    use iced_test::futures::futures::executor::block_on;
     use iced_core::widget::operation::focusable;
     use iced_core::widget::{Id, Tree};
     use iced_core::{Event, Layout, Point, Rectangle, Shell, Size, Widget, layout, mouse, window};
     use iced_widget::Widget as _;
     use iced_widget::{Renderer, Space};
-    use icedxdy_core::Theme;
-    use icedxdy_core::theme::container::StyleFn;
+    use icedcn_core::Theme;
+    use icedcn_core::theme::container::StyleFn;
 
     fn mounted(style: Option<StyleFn<'static, Theme>>) -> (Frame<'static, ()>, Tree, Renderer) {
         let content = viewport::Viewport::new(
@@ -194,7 +196,7 @@ mod tests {
         let mut panel = Frame::new(content.boxed(), style);
         let mut tree = Tree::new(&panel);
         tree.diff(&mut panel);
-        let renderer = Renderer::default();
+        let renderer = block_on(Renderer::new(Default::default(), None)).expect("headless renderer");
         panel.layout(
             &mut tree,
             &renderer,

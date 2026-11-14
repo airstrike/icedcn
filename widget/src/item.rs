@@ -5,7 +5,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::item;
+//! use icedcn::widget::item;
 //!
 //! item::item([
 //!     item::media(icon::badge_check()).style(item::Icon).into(),
@@ -27,14 +27,14 @@ use iced_core::text::LineHeight;
 use iced_core::{Alignment, Padding};
 use iced_widget::Renderer;
 use iced_widget::Widget;
-use icedxdy_core::theme::container::Spec;
-use icedxdy_core::theme::media::Frame;
-use icedxdy_core::{Gap, Orientation, Theme};
+use icedcn_core::theme::container::Spec;
+use icedcn_core::theme::media::Frame;
+use icedcn_core::{Gap, Orientation, Theme};
 
 use crate::compose::{Compose, Slot};
 use crate::text;
 
-pub use icedxdy_core::theme::item::{Default, Icon, Image, Muted, Outline};
+pub use icedcn_core::theme::item::{Default, Icon, Image, Muted, Outline};
 
 /// Item sizes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

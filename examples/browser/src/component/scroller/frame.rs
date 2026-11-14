@@ -5,13 +5,13 @@ use crate::icon;
 use iced::Alignment::Center;
 use iced::widget::text::{Ellipsis, LineHeight, Wrapping};
 use iced::{Element, Fill};
-use icedxdy::theme::container::Style;
-use icedxdy::widget::scroller::Target;
-use icedxdy::widget::{
+use icedcn::theme::container::Style;
+use icedcn::widget::scroller::Target;
+use icedcn::widget::{
     button, column, container, hover_card, motion, row, scroller, separator, space, status_marker,
     text, tooltip,
 };
-use icedxdy::{Slot, Theme};
+use icedcn::{Slot, Theme};
 use std::time::Duration;
 
 impl Demo {
@@ -211,7 +211,7 @@ impl Demo {
                                 .ellipsis(Ellipsis::End),
                         )
                         .translate(false)
-                        .weight(icedxdy::Weight::Normal)
+                        .weight(icedcn::Weight::Normal)
                         .height(32)
                         .padding([6, 8])
                         .width(Fill)

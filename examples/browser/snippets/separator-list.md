@@ -1,7 +1,7 @@
 ```rust
 use iced::{Fill, Pixels};
-use icedxdy::Slot;
-use icedxdy::widget::{column, row, separator, space, text};
+use icedcn::Slot;
+use icedcn::widget::{column, row, separator, space, text};
 
 fn list_item<'a>(term: &'a str, value: &'a str) -> Slot<'a, Message> {
     row![

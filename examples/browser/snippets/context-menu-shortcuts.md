@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{context_menu, menu};
+use icedcn::widget::{context_menu, menu};
 
 context_menu(
     |_| area(),

@@ -10,10 +10,10 @@
 use iced::widget::{column, combo_box, scrollable};
 use iced::{Element, Fill, Font, Length, Pixels, Subscription, Task, Widget, keyboard};
 use iced_widget::stack;
-use icedxdy::widget::markdown::highlighter;
-use icedxdy::widget::text;
-use icedxdy::widget::{center, container, markdown};
-use icedxdy::{Theme, theme};
+use icedcn::widget::markdown::highlighter;
+use icedcn::widget::text;
+use icedcn::widget::{center, container, markdown};
+use icedcn::{Theme, theme};
 
 use crate::registry;
 
@@ -124,8 +124,8 @@ impl App {
             // gradient overlay (analog of the code-fade overlay). The
             // gradient lets the previous theme show through up top; the
             // card makes the "Loading" text readable in the middle.
-            use icedxdy::Size::Lg;
-            use icedxdy::theme::tweak::{Opaque, radius};
+            use icedcn::Size::Lg;
+            use icedcn::theme::tweak::{Opaque, radius};
             let card = container(text::muted(format!("Loading {slug}\u{2026}")))
                 .padding([8, 16])
                 .class(theme::container::Card + Opaque + radius(Lg));

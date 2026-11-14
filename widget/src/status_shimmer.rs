@@ -6,7 +6,7 @@ use iced_core::widget::{Meta, Operation, Tree, tree};
 use iced_core::{Event, Layout, Length, Rectangle, Shell, Size, layout, mouse, renderer, window};
 use iced_widget::Widget as _;
 use iced_widget::{Renderer, text};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use crate::Slot;
 

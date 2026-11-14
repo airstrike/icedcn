@@ -5,8 +5,8 @@ use iced_core::widget::{Id, Operation};
 use iced_core::{Element, Event, Point, Rectangle, event, mouse};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space};
-use icedxdy_core::Theme;
-use icedxdy_widget::{Inherited, Slot, badge};
+use icedcn_core::Theme;
+use icedcn_widget::{Inherited, Slot, badge};
 
 #[test]
 fn keyboard_activates_link_without_hover() {

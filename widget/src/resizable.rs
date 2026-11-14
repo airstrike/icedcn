@@ -10,7 +10,7 @@ use iced_core::{
     layout, mouse, overlay, renderer, touch,
 };
 use iced_widget::Renderer;
-use icedxdy_core::{Orientation, Theme};
+use icedcn_core::{Orientation, Theme};
 
 pub struct Resizable<'a, Message> {
     panels: [Slot<'a, Message>; 2],

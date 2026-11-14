@@ -1,6 +1,6 @@
 ```rust
 use iced::widget::component::{Component, component};
-use icedxdy::widget::{column, progress, slider};
+use icedcn::widget::{column, progress, slider};
 
 /// The value is UI state shared by two widgets, so the pair is a user
 /// `Component` holding it.

@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{badge, field, input, row, space, text, Slot};
+use icedcn::widget::{badge, field, input, row, space, text, Slot};
 
 field(
     input("https://api.example.com/webhook")

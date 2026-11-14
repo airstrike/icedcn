@@ -1,8 +1,8 @@
 //! Sidebar nav card.
 
 use iced::Fill;
-use icedxdy::widget::{column, row, sidebar, text};
-use icedxdy::{Slot, Theme, card};
+use icedcn::widget::{column, row, sidebar, text};
+use icedcn::{Slot, Theme, card};
 
 use crate::{Message, State, icon};
 

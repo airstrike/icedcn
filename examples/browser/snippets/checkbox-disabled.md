@@ -1,8 +1,8 @@
 ```rust
 use iced::Pixels;
-use icedxdy::theme;
-use icedxdy::theme::tweak::Alpha;
-use icedxdy::widget::{checkbox, field, text};
+use icedcn::theme;
+use icedcn::theme::tweak::Alpha;
+use icedcn::widget::{checkbox, field, text};
 
 field(checkbox().disabled(true))
     .orientation(field::Horizontal)

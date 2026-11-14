@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, column, field, input, sheet};
+use icedcn::widget::{button, column, field, input, sheet};
 
 sheet(
     |s| s.trigger(button("Open").style(button::Outline)),

@@ -1,6 +1,6 @@
 ## API Reference
 
-[Read the accordion implementation](https://github.com/airstrike/icedxdy/blob/HEAD/widget/src/accordion.rs).
+[Read the accordion implementation](https://github.com/airstrike/icedcn/blob/HEAD/widget/src/accordion.rs).
 
 ### `accordion()`
 

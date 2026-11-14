@@ -4,7 +4,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::radio;
+//! use icedcn::widget::radio;
 //!
 //! radio("Card", Method::Card, Some(self.method), Message::Method)
 //!
@@ -17,9 +17,9 @@ mod widget;
 
 use iced_core::Pixels;
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
-use icedxdy_core::theme::radio;
+use icedcn_core::theme::radio;
 
 use crate::compose::{Compose, Inherited, Slot};
 

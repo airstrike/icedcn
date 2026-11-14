@@ -1,8 +1,8 @@
 ```rust
 use iced::widget::image;
-use icedxdy::Theme;
-use icedxdy::widget::avatar;
-use icedxdy::widget::{button, column, dropdown_menu, menu};
+use icedcn::Theme;
+use icedcn::widget::avatar;
+use icedcn::widget::{button, column, dropdown_menu, menu};
 
 fn preview(portrait: image::Handle) -> iced::Element<'static, (), Theme> {
     dropdown_menu(

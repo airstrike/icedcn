@@ -2,8 +2,8 @@
 
 use iced::{Fill, Padding};
 use iced_widget::pick_list;
-use icedxdy::widget::Slot;
-use icedxdy::{Space, Theme, font_size};
+use icedcn::widget::Slot;
+use icedcn::{Space, Theme, font_size};
 
 use crate::Message;
 

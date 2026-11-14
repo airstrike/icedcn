@@ -6,14 +6,14 @@ use iced::Widget;
 use iced::widget::{space, stack};
 use iced::{Center, Fill};
 use iced_widget::button::Status;
-use icedxdy::Theme;
-use icedxdy::card;
-use icedxdy::core::{Border, Color, oklch};
-use icedxdy::theme;
-use icedxdy::theme::text_input;
-use icedxdy::widget::button::Button;
-use icedxdy::widget::row::Row;
-use icedxdy::widget::{
+use icedcn::Theme;
+use icedcn::card;
+use icedcn::core::{Border, Color, oklch};
+use icedcn::theme;
+use icedcn::theme::text_input;
+use icedcn::widget::button::Button;
+use icedcn::widget::row::Row;
+use icedcn::widget::{
     Size, Skeleton, Slot, badge, button, checkbox, column, container, input, row, skeleton, slider,
     switch, text,
 };

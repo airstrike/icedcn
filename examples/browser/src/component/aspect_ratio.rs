@@ -1,7 +1,7 @@
 use iced::widget::image;
 use iced::{ContentFit, Fill, Task, Widget};
-use icedxdy::widget::{aspect_ratio, container};
-use icedxdy::{Theme, radius};
+use icedcn::widget::{aspect_ratio, container};
+use icedcn::{Theme, radius};
 use std::sync::LazyLock;
 
 use crate::Message;

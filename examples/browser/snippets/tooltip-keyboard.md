@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, kbd, row, text, tooltip};
+use icedcn::widget::{button, kbd, row, text, tooltip};
 
 tooltip(
     button(icon::save()).size(Size::Sm).square().style(button::Outline),

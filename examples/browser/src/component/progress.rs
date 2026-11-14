@@ -2,8 +2,8 @@ use iced::time::{Duration, Instant};
 
 use iced::widget::component::{Component, component};
 use iced::{Element, FillPortion, Task, Widget};
-use icedxdy::Theme;
-use icedxdy::widget::{column, progress, row, slider, space, text};
+use icedcn::Theme;
+use icedcn::widget::{column, progress, row, slider, space, text};
 
 use crate::Message;
 use crate::page;

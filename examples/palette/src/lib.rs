@@ -1,4 +1,4 @@
-//! Interactive palette preview for icedxdy. Use the side panel to customize the theme and see
+//! Interactive palette preview for icedcn. Use the side panel to customize the theme and see
 //! how its colors apply to dashboard cards, alerts, and actions.
 //!
 //! The root scrollable opts into both axes; tiles that genuinely need
@@ -15,14 +15,14 @@ use iced::widget::Id;
 use iced::widget::stack;
 use iced::{Bottom, Fill, Font, Padding, Pixels, Right, Task};
 use iced_widget::button::Status;
-use icedxdy::Theme;
-use icedxdy::core::{Background, Border};
-use icedxdy::theme;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::Size;
-use icedxdy::widget::qr_code;
-use icedxdy::widget::scrollable::{Direction, scrollbar};
-use icedxdy::widget::{button, column, container, row, scrollable};
+use icedcn::Theme;
+use icedcn::core::{Background, Border};
+use icedcn::theme;
+use icedcn::theme::container::Style;
+use icedcn::widget::Size;
+use icedcn::widget::qr_code;
+use icedcn::widget::scrollable::{Direction, scrollbar};
+use icedcn::widget::{button, column, container, row, scrollable};
 
 pub mod chrome;
 pub mod dashboard;
@@ -327,8 +327,8 @@ struct GithubRepo {
 
 async fn fetch_github_stars() -> Result<String, String> {
     let repo = reqwest::Client::new()
-        .get("https://api.github.com/repos/airstrike/icedxdy")
-        .header(reqwest::header::USER_AGENT, "icedxdy-palette")
+        .get("https://api.github.com/repos/airstrike/icedcn")
+        .header(reqwest::header::USER_AGENT, "icedcn-palette")
         .send()
         .await
         .map_err(|e| e.to_string())?

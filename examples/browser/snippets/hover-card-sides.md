@@ -1,7 +1,7 @@
 ```rust
 use std::time::Duration;
 
-use icedxdy::widget::{button, column, hover_card, row, text};
+use icedcn::widget::{button, column, hover_card, row, text};
 
 row![
     side("Left", hover_card::Side::Left),

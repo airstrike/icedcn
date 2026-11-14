@@ -8,9 +8,9 @@ use iced_test::core::renderer::{Headless, Scale, Settings, Style};
 use iced_test::core::widget::{Id, Operation};
 use iced_test::futures::futures::executor::block_on;
 use iced_test::runtime::UserInterface;
-use icedxdy::Theme;
-use icedxdy::theme::container;
-use icedxdy::widget::avatar;
+use icedcn::Theme;
+use icedcn::theme::container;
+use icedcn::widget::avatar;
 
 fn renderer() -> Renderer {
     let mut renderer =
@@ -54,7 +54,7 @@ fn badge_and_group_rings_paint_above_loaded_portraits() {
     for theme in [Theme::light(), Theme::dark()] {
         let badge = avatar::badge(avatar(Some(red.clone())), avatar::dot()).badge_style(|_| {
             container::Style {
-                background: Some(icedxdy::Color::from_srgb(Color::from_rgb8(0, 166, 62)).into()),
+                background: Some(icedcn::Color::from_srgb(Color::from_rgb8(0, 166, 62)).into()),
                 ..Default::default()
             }
         });
@@ -157,7 +157,7 @@ fn loaded_portraits_replace_the_fallback_surface_and_preserve_transparency() {
         let styled = pixels(
             avatar(Some(transparent.clone()))
                 .style(|_| container::Style {
-                    background: Some(icedxdy::Color::from_srgb(Color::from_rgb8(0, 255, 0)).into()),
+                    background: Some(icedcn::Color::from_srgb(Color::from_rgb8(0, 255, 0)).into()),
                     ..Default::default()
                 })
                 .into(),

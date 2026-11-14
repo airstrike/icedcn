@@ -1,7 +1,7 @@
 ```rust
-use icedxdy::widget::container;
-use icedxdy::Size;
-use icedxdy::widget::{attachment, column};
+use icedcn::widget::container;
+use icedcn::Size;
+use icedcn::widget::{attachment, column};
 
 container(column![
     attachment("Default attachment")

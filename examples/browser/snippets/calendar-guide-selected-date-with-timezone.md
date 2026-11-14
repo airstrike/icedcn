@@ -4,9 +4,9 @@ Calendar selections are civil dates without a time of day. `today()` uses the us
 
 ```rust
 use iced::Element;
-use icedxdy::Theme;
-use icedxdy::widget::calendar::{Date, Selection, today};
-use icedxdy::widget::calendar;
+use icedcn::Theme;
+use icedcn::widget::calendar::{Date, Selection, today};
+use icedcn::widget::calendar;
 
 pub fn calendar_for_local_date<Message: 'static>(local_date: Date) -> Element<'static, Message, Theme> {
     calendar().default_selected(Selection::single(local_date)).into()

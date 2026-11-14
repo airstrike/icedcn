@@ -6,7 +6,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::{checkbox, field, input, text};
+//! use icedcn::widget::{checkbox, field, input, text};
 //!
 //! // Terse — strings auto-style with the matching typography helper
 //! // (`text::label`, `text::muted`, `text::error`).
@@ -60,25 +60,25 @@ pub mod widget;
 use iced_core::Length;
 use iced_core::Length::Fill;
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
-use icedxdy_core::theme::field::Card;
-use icedxdy_core::theme::field::CardActive;
+use icedcn_core::Theme;
+use icedcn_core::theme::field::Card;
+use icedcn_core::theme::field::CardActive;
 
 use crate::column::Column;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::marker::{self, Press};
 
-// Re-export the crate-root [`icedxdy::Orientation`] (and its bare variants)
+// Re-export the crate-root [`icedcn::Orientation`] (and its bare variants)
 // at this module path. The underlying type is shared across widgets — a
 // `field::Orientation` value and a `button::group::Orientation` value are
-// the SAME enum, so callers can build `use icedxdy::{Vertical, Horizontal};`
+// the SAME enum, so callers can build `use icedcn::{Vertical, Horizontal};`
 // once and feed into every `.orientation()` builder via `impl Into`.
 //
 // Fields default to a vertical layout. Use a horizontal layout for a label beside a compact
 // control.
-pub use icedxdy_core::Horizontal;
-pub use icedxdy_core::Orientation;
-pub use icedxdy_core::Vertical;
+pub use icedcn_core::Horizontal;
+pub use icedcn_core::Orientation;
+pub use icedcn_core::Vertical;
 
 /// A labeled control with optional description, error and card chrome.
 ///

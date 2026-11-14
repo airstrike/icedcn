@@ -1,10 +1,10 @@
 use iced::{Fill, Task};
 
-use icedxdy::theme;
-use icedxdy::theme::tweak::Alpha;
-use icedxdy::widget::text;
-use icedxdy::widget::{button, column, container, field, textarea};
-use icedxdy::{Slot, Theme};
+use icedcn::theme;
+use icedcn::theme::tweak::Alpha;
+use icedcn::widget::text;
+use icedcn::widget::{button, column, container, field, textarea};
+use icedcn::{Slot, Theme};
 
 use crate::Message;
 use crate::page;

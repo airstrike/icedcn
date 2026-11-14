@@ -55,7 +55,7 @@ use crate::Design;
 use crate::palette::Palette;
 use crate::style::Tint;
 
-/// Theme for icedxdy components.
+/// Theme for icedcn components.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Theme {
     design: Design,

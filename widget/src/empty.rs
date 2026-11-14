@@ -5,7 +5,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::empty;
+//! use icedcn::widget::empty;
 //!
 //! empty::empty()
 //!     .media(empty::media(icon::folder_code()).style(empty::Icon))
@@ -23,14 +23,14 @@ use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::text::LineHeight;
 use iced_widget::Renderer;
 use iced_widget::Widget;
-use icedxdy_core::theme::container::Style;
-use icedxdy_core::theme::media::Frame;
-use icedxdy_core::{Border, Gap, Theme, radius};
+use icedcn_core::theme::container::Style;
+use icedcn_core::theme::media::Frame;
+use icedcn_core::{Border, Gap, Theme, radius};
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::{Size, text};
 
-pub use icedxdy_core::theme::empty::Icon;
+pub use icedcn_core::theme::empty::Icon;
 
 /// Empty-state root.
 pub struct Empty<'a, Message> {
@@ -78,8 +78,8 @@ impl<'a, Message: 'a> Empty<'a, Message> {
     }
 
     /// Change the padding around the empty state.
-    pub fn padding(mut self, padding: impl Into<icedxdy_core::Padding>) -> Self {
-        let padding: icedxdy_core::Padding = padding.into();
+    pub fn padding(mut self, padding: impl Into<icedcn_core::Padding>) -> Self {
+        let padding: icedcn_core::Padding = padding.into();
         self.padding = padding.into();
         self
     }

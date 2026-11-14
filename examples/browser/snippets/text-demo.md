@@ -1,8 +1,8 @@
 ```rust
 use iced::{Element, Fill, Widget};
 use iced::widget::column;
-use icedxdy::Theme;
-use icedxdy::widget::text;
+use icedcn::Theme;
+use icedcn::widget::text;
 use sweeten::widget::table;
 
 fn table_card<'a, Message: 'a>() -> iced::Element<'a, Message, Theme> {

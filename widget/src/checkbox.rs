@@ -3,7 +3,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::checkbox;
+//! use icedcn::widget::checkbox;
 //!
 //! // Uncontrolled: the checkbox keeps its own value.
 //! checkbox().default_checked(true)
@@ -17,15 +17,15 @@
 pub(crate) mod element;
 pub mod widget;
 
-pub use icedxdy_core::theme::checkbox::{Default, Disabled, Invalid};
+pub use icedcn_core::theme::checkbox::{Default, Disabled, Invalid};
 pub use widget::{Catalog, Ring, State, Status, Style, StyleFn};
 
 use crate::compose::{Compose, Inherited, Slot};
 use iced_core::Length;
 use iced_core::text::IntoFragment;
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
-use icedxdy_core::theme;
+use icedcn_core::Theme;
+use icedcn_core::theme;
 
 use self::element::from_core;
 

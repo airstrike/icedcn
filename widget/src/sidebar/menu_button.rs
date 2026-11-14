@@ -5,7 +5,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::sidebar;
+//! use icedcn::widget::sidebar;
 //!
 //! sidebar::menu_button("Dashboard")
 //!     .active(true)
@@ -27,8 +27,8 @@ use iced_widget::tooltip::Position;
 use crate::Size;
 use crate::button::widget;
 use crate::compose::{Compose, Inherited, Slot};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::button;
+use icedcn_core::Theme;
+use icedcn_core::theme::button;
 
 /// Menu button size
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

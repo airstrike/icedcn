@@ -1,15 +1,15 @@
 ```rust
-use icedxdy::{Color, Theme};
-use icedxdy::core::oklch;
+use icedcn::{Color, Theme};
+use icedcn::core::oklch;
 
 fn canvas(theme: &Theme) -> Color {
     if theme.neutral.is_dark { theme.neutral.base } else { oklch(0.98, 0.0, 0.0) }
 }
-use icedxdy::widget::container;
+use icedcn::widget::container;
 use iced::{ContentFit, Widget};
 use iced::widget::image;
-use icedxdy::widget::{attachment, column, spinner, tooltip};
-use icedxdy::widget::attachment::State;
+use icedcn::widget::{attachment, column, spinner, tooltip};
+use icedcn::widget::attachment::State;
 
 let photos = [
     ("workspace.png", "PNG · 820 KB", workspace),

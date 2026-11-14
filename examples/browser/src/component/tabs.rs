@@ -8,9 +8,9 @@ use iced::Task;
 use iced::Widget;
 
 use crate::icon;
-use icedxdy::card;
-use icedxdy::widget::{column, row, tabs, text};
-use icedxdy::{Slot, Theme};
+use icedcn::card;
+use icedcn::widget::{column, row, tabs, text};
+use icedcn::{Slot, Theme};
 
 use crate::Message;
 use crate::page;

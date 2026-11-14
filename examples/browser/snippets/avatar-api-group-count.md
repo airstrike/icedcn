@@ -7,4 +7,4 @@
 
 The chip is 24px if any member is small, otherwise 40px if any is large, otherwise 32px. Text remains 14px; stock iced icons should be 12/16/20px for small/default/large groups. The ring is outside the chip’s layout bounds.
 
-[Read the avatar implementation](https://github.com/airstrike/icedxdy/blob/HEAD/widget/src/avatar.rs).
+[Read the avatar implementation](https://github.com/airstrike/icedcn/blob/HEAD/widget/src/avatar.rs).

@@ -2,9 +2,9 @@
 
 use iced::Fill;
 use iced::Widget;
-use icedxdy::widget::checkbox;
-use icedxdy::widget::{button, column, field};
-use icedxdy::{Theme, card};
+use icedcn::widget::checkbox;
+use icedcn::widget::{button, column, field};
+use icedcn::{Theme, card};
 
 use crate::{Message, State};
 
@@ -73,7 +73,7 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
     .boxed()
 }
 
-fn notification_field(state: &State, n: &Notification) -> icedxdy::Slot<'static, Message> {
+fn notification_field(state: &State, n: &Notification) -> icedcn::Slot<'static, Message> {
     let id = n.id;
     field::field(
         checkbox::checkbox()

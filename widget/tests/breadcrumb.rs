@@ -8,8 +8,8 @@ use iced_core::widget::operation::{self, Operation, Outcome, focusable};
 use iced_core::{Element, Event, Point, Size, mouse};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space, Widget};
-use icedxdy_core::Theme;
-use icedxdy_widget::{
+use icedcn_core::Theme;
+use icedcn_widget::{
     Compose, Inherited, Slot, Weight, breadcrumb, button, container, dropdown_menu, popover, row,
 };
 

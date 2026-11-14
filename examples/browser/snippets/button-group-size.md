@@ -1,6 +1,6 @@
 ```rust
-use icedxdy::Size::{Lg, Sm};
-use icedxdy::widget::{button, column};
+use icedcn::Size::{Lg, Sm};
+use icedcn::widget::{button, column};
 
 column([
     button_group![

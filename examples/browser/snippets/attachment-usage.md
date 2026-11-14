@@ -1,7 +1,7 @@
 ## Usage
 
 ```rust
-use icedxdy::widget::{attachment, tooltip};
+use icedcn::widget::{attachment, tooltip};
 
 attachment("sales-dashboard.pdf")
     .media(icon::file_text().size(16).selectable(false))

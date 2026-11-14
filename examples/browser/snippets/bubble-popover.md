@@ -4,11 +4,11 @@ use iced::Widget;
 use iced::alignment::Horizontal::Right;
 use iced::alignment::Vertical::Bottom;
 use iced::widget::svg;
-use icedxdy::Size;
-use icedxdy::Slot;
-use icedxdy::Theme;
-use icedxdy::widget::bubble::Destructive;
-use icedxdy::widget::{bubble, button, column, container, popover};
+use icedcn::Size;
+use icedcn::Slot;
+use icedcn::Theme;
+use icedcn::widget::bubble::Destructive;
+use icedcn::widget::{bubble, button, column, container, popover};
 
 fn example() -> Slot<'static, ()> {
     frame(

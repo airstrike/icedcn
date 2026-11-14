@@ -1,4 +1,4 @@
-use icedxdy::widget::questionnaire::{Answer, Answers, Item, choice, item};
+use icedcn::widget::questionnaire::{Answer, Answers, Item, choice, item};
 
 fn demo() -> Vec<Item> {
     vec![

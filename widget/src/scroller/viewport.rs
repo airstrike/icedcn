@@ -12,7 +12,7 @@ use iced_core::{
     mouse, overlay, renderer, touch,
 };
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 // The browser controller ignores small edge differences caused by rounding or zoom.
 const EDGE: f32 = 8.0;

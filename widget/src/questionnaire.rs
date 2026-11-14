@@ -14,7 +14,7 @@ use iced_widget::{
     Renderer, Widget,
     component::{self, Component},
 };
-use icedxdy_core::{Theme, theme::text_input};
+use icedcn_core::{Theme, theme::text_input};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Shortcuts {

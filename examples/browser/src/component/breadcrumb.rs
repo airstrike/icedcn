@@ -7,9 +7,9 @@ use iced::Widget;
 use iced::widget::button::{Style, StyleFn};
 use iced::widget::svg;
 use iced::{Element, Fill, Task};
-use icedxdy::theme::tweak::{Fg, Token, hover};
-use icedxdy::widget::{breadcrumb, button, container, dropdown_menu, menu, row};
-use icedxdy::{Size, Slot, Theme, Weight};
+use icedcn::theme::tweak::{Fg, Token, hover};
+use icedcn::widget::{breadcrumb, button, container, dropdown_menu, menu, row};
+use icedcn::{Size, Slot, Theme, Weight};
 
 pub static META: page::Meta = page::Meta {
     title: "Breadcrumb",

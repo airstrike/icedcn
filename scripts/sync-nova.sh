@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sync the local mirror of shadcn-ui nova source into .nova/ (gitignored).
+# Sync the local mirror of upstream nova source into .nova/ (gitignored).
 #
 # Idempotent — first run does a sparse clone, subsequent runs pull updates.
 # Paths mirrored (see CLAUDE.md "Local nova source mirror"):
@@ -18,7 +18,6 @@ set -euo pipefail
 cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
 
 NOVA_DIR=".nova"
-SHADCN_REPO="https://github.com/shadcn-ui/ui.git"
 SPARSE_PATHS=(
     "apps/v4/styles/radix-nova/ui"
     "apps/v4/examples/radix"
@@ -36,9 +35,12 @@ if [ -d "$NOVA_DIR/.git" ]; then
     git -C "$NOVA_DIR" sparse-checkout set "${SPARSE_PATHS[@]}"
     git -C "$NOVA_DIR" pull --quiet --depth=1 --ff-only
 else
-    echo "Cloning shadcn-ui (sparse) into $NOVA_DIR ..."
+    echo "Cloning upstream (sparse) into $NOVA_DIR ..."
+    # Resolve the reference repository by its permanent GitHub ID.
+    NOVA_REPO=$(curl -fsSL https://api.github.com/repositories/585146387 |
+        python3 -c 'import json, sys; print(json.load(sys.stdin)["clone_url"])')
     git clone --quiet --depth=1 --filter=blob:none --sparse \
-        "$SHADCN_REPO" "$NOVA_DIR"
+        "$NOVA_REPO" "$NOVA_DIR"
     git -C "$NOVA_DIR" sparse-checkout set "${SPARSE_PATHS[@]}"
 fi
 

@@ -2,7 +2,7 @@
 //! the first item. A leading item with an empty value can serve as a prompt.
 //!
 //! ```ignore
-//! use icedxdy::widget::native_select;
+//! use icedcn::widget::native_select;
 //!
 //! native_select([
 //!     native_select::item("", "Select status"),
@@ -24,13 +24,13 @@ use iced_core::{Element, Padding};
 use iced_widget::component::{self, Component};
 use iced_widget::pick_list::{Status, Style, StyleFn};
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::select::Position;
 use crate::{Size, select};
 
-pub use icedxdy_core::theme::native_select::{Default, Invalid};
+pub use icedcn_core::theme::native_select::{Default, Invalid};
 
 /// One choice of a [`NativeSelect`] (`NativeSelectOption`).
 #[derive(Debug, Clone, PartialEq, Eq)]

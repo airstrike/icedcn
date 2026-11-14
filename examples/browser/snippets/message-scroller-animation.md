@@ -1,8 +1,8 @@
 ```rust
 use iced::alignment::Horizontal::Right;
-use icedxdy::Slot;
-use icedxdy::widget::{bubble, message, motion, scroller};
-use icedxdy::widget::motion::Preset;
+use icedcn::Slot;
+use icedcn::widget::{bubble, message, motion, scroller};
+use icedcn::widget::motion::Preset;
 
 fn conversation<'a, Message: 'a>(
     history: &'a str,

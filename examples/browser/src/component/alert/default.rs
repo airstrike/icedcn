@@ -1,7 +1,7 @@
 use iced::Widget;
 use iced::widget::svg;
-use icedxdy::widget::{alert, text};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{alert, text};
+use icedcn::{Slot, Theme};
 
 use crate::Message;
 

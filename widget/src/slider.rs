@@ -14,7 +14,7 @@ pub use widget::{
 /// to control it, or [`default_value`](Slider::default_value) to seed it.
 pub fn slider<'a, T, Message>(
     range: RangeInclusive<T>,
-) -> Slider<'a, T, Message, icedxdy_core::Theme>
+) -> Slider<'a, T, Message, icedcn_core::Theme>
 where
     T: Copy + From<u8> + PartialOrd,
     Message: Clone,
@@ -25,7 +25,7 @@ where
 /// Create two ordered, individually focusable thumbs, initially at the bounds.
 pub fn range<'a, T: Copy + PartialOrd, Message: Clone>(
     bounds: RangeInclusive<T>,
-) -> Slider<'a, T, Message, icedxdy_core::Theme, [T; 2]> {
+) -> Slider<'a, T, Message, icedcn_core::Theme, [T; 2]> {
     let values = [*bounds.start(), *bounds.end()];
     Slider::from_values(bounds, values)
 }
@@ -34,6 +34,6 @@ pub fn range<'a, T: Copy + PartialOrd, Message: Clone>(
 pub fn multiple<'a, T: Copy + PartialOrd, Message: Clone, const N: usize>(
     bounds: RangeInclusive<T>,
     values: [T; N],
-) -> Slider<'a, T, Message, icedxdy_core::Theme, [T; N]> {
+) -> Slider<'a, T, Message, icedcn_core::Theme, [T; N]> {
     Slider::from_values(bounds, values).default_value(values)
 }

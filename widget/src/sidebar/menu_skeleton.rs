@@ -4,9 +4,9 @@ use crate::compose::Slot;
 use crate::container::Container;
 use iced_core::Length::Fill;
 use iced_widget::{Widget, space};
-use icedxdy_core::radius;
-use icedxdy_core::theme::container::Style;
-use icedxdy_core::{Border, Theme};
+use icedcn_core::radius;
+use icedcn_core::theme::container::Style;
+use icedcn_core::{Border, Theme};
 
 /// Create a sidebar menu skeleton.
 ///

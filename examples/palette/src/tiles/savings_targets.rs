@@ -2,9 +2,9 @@
 
 use iced::widget::space;
 use iced::{Center, Fill};
-use icedxdy::theme;
-use icedxdy::widget::{button, column, container, field, input, item, progress, row, text};
-use icedxdy::{Slot, Theme, Vertical, card};
+use icedcn::theme;
+use icedcn::widget::{button, column, container, field, input, item, progress, row, text};
+use icedcn::{Slot, Theme, Vertical, card};
 
 use super::{api_gap, select};
 use crate::Message;

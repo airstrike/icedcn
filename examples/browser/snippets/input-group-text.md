@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{input, input_group, textarea};
+use icedcn::widget::{input, input_group, textarea};
 
 column![
     input_group(input("0.00"))

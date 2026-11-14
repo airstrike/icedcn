@@ -1,6 +1,6 @@
 ```rust
 use iced::Font;
-use icedxdy::widget::{CodeBlock, code_block};
+use icedcn::widget::{CodeBlock, code_block};
 
 pub fn view<Message: Clone + 'static>() -> CodeBlock<'static, Message> {
     code_block(DIFF)

@@ -1,5 +1,5 @@
-use icedxdy::Slot;
-use icedxdy::widget::{button, row, spinner};
+use icedcn::Slot;
+use icedcn::widget::{button, row, spinner};
 
 use crate::Message;
 

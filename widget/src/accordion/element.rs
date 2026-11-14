@@ -19,8 +19,8 @@
 //! `from_core` shim is therefore identity, but kept named for symmetry
 //! with switch/text_input where it IS a real translation.
 
-use icedxdy_core::Theme;
-use icedxdy_core::theme::accordion;
+use icedcn_core::Theme;
+use icedcn_core::theme::accordion;
 
 use super::widget;
 

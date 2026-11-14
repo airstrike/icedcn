@@ -1,6 +1,6 @@
 ```rust
 use iced::Fill;
-use icedxdy::widget::{field, input};
+use icedcn::widget::{field, input};
 
 field(input("sk-...").secure(true).width(Fill))
     .label("API Key")

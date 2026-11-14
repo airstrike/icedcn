@@ -5,7 +5,7 @@ use iced_core::svg::{Handle, Renderer as _, Svg};
 use iced_core::widget::{Meta, Tree};
 use iced_core::{Layout, Length, Rectangle, Size, Widget, layout, mouse, renderer};
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 // Lucide chevron-down, rotated for the open state. Inherit the trigger's
 // resolved color so custom themes and disabled opacity reach the icon.

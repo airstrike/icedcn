@@ -5,7 +5,7 @@
 //! strips the control's own:
 //!
 //! ```ignore
-//! use icedxdy::widget::{input, input_group};
+//! use icedcn::widget::{input, input_group};
 //!
 //! input_group(input("Search..."))
 //!     .addon(input_group::addon(icon::search()))
@@ -23,9 +23,9 @@ use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::{Alignment, Element, Padding};
 use iced_widget::{Renderer, Widget};
 use iced_widget::{container, text_editor};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::input_group::{control, textarea};
-use icedxdy_core::theme::text_input::{Default, StyleFn};
+use icedcn_core::Theme;
+use icedcn_core::theme::input_group::{control, textarea};
+use icedcn_core::theme::text_input::{Default, StyleFn};
 
 use crate::button::{self, Button};
 use crate::column::Column;

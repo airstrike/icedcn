@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::combobox;
+use icedcn::widget::combobox;
 
 const ZONES: &[(&str, &[&str])] = &[
     (

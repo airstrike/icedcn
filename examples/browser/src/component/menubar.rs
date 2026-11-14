@@ -1,8 +1,8 @@
 use crate::{Message, icon, page};
 use iced::widget::component::{Component, component};
 use iced::{Element, Task, Widget};
-use icedxdy::widget::{menu, menubar, row, text};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{menu, menubar, row, text};
+use icedcn::{Slot, Theme};
 use std::collections::BTreeSet;
 pub static META: page::Meta = page::Meta {
     title: "Menubar",

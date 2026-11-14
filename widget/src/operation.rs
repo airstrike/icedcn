@@ -6,7 +6,7 @@
 //! # Example
 //! ```no_run
 //! # use iced_core::widget;
-//! use icedxdy_widget::operation;
+//! use icedcn_widget::operation;
 //!
 //! # #[derive(Debug, Clone)]
 //! # enum Message { FocusedId(widget::Id), FocusNext }

@@ -1,13 +1,13 @@
 ```rust
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Pixels, Widget};
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::calendar::{Date, Datelike, Duration, Mode, Selection, System, today};
-use icedxdy::widget::{
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::calendar::{Date, Datelike, Duration, Mode, Selection, System, today};
+use icedcn::widget::{
     Column, Row, button, calendar, column, container, field, input, input_group, rule, text,
 };
-use icedxdy::{Size, Slot, Theme, card};
+use icedcn::{Size, Slot, Theme, card};
 
 fn bordered<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Element<'a, Message, Theme> {
     container(content)
@@ -37,7 +37,7 @@ pub fn hijri<Message: 'static>() -> Element<'static, Message, Theme> {
 
 fn main() -> iced::Result {
     use iced::font;
-    use icedxdy::widget::calendar::persian;
+    use icedcn::widget::calendar::persian;
     iced::application(
         || ((), font::load(persian::FONT).map(|_| ())),
         |_: &mut (), _: ()| {},

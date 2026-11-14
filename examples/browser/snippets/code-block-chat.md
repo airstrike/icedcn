@@ -1,8 +1,8 @@
 ```rust
 use iced::Font;
 use iced::alignment::Horizontal;
-use icedxdy::widget::{bubble, message, text};
-use icedxdy::{
+use icedcn::widget::{bubble, message, text};
+use icedcn::{
     Slot,
     widget::{code_block, column},
 };

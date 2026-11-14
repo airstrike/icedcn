@@ -13,7 +13,7 @@ use iced_core::{
     renderer,
 };
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 pub(super) struct Body<'a> {
     pub content: Element<'a, Event, Theme, Renderer>,

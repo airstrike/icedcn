@@ -1,7 +1,7 @@
 ## Usage
 
 ```rust
-use icedxdy::widget::checkbox;
+use icedcn::widget::checkbox;
 
 checkbox()
 ```

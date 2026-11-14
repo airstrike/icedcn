@@ -3,7 +3,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::input;
+//! use icedcn::widget::input;
 //!
 //! // Uncontrolled: the input keeps what the user types.
 //! input("Name").default_value("Pedro Duarte")
@@ -20,9 +20,9 @@ use iced_core::text::{Fragment, IntoFragment};
 use iced_core::{Length, Padding};
 use iced_widget::Renderer;
 use iced_widget::Widget;
-use icedxdy_core::Theme;
-use icedxdy_core::theme;
-use icedxdy_core::theme::text_input::default;
+use icedcn_core::Theme;
+use icedcn_core::theme;
+use icedcn_core::theme::text_input::default;
 
 /// A single-line text field. [`default_value`](Self::default_value) initializes text kept by
 /// the widget. Use [`value`](Self::value) and [`on_input`](Self::on_input) to manage the text

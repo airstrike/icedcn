@@ -7,7 +7,7 @@ use iced_core::{
     renderer,
 };
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// A sidebar may mount after a window's initial resize event. Read the actual
 /// window passed to overlay layout, including inside a constrained preview.

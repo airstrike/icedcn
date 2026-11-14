@@ -2,9 +2,9 @@
 use iced::Widget;
 use iced::widget::svg;
 use iced::{Element, Subscription, Task, window};
-use icedxdy::Theme;
-use icedxdy::widget::alert;
-use icedxdy::widget::text::Wrapping;
+use icedcn::Theme;
+use icedcn::widget::alert;
+use icedcn::widget::text::Wrapping;
 
 struct Example {
     window_width: f32,

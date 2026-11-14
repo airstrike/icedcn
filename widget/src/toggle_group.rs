@@ -6,7 +6,7 @@
 //! [`spacing`](ToggleGroup::spacing):
 //!
 //! ```ignore
-//! use icedxdy::widget::toggle_group;
+//! use icedcn::widget::toggle_group;
 //!
 //! // Uncontrolled, any subset pressed.
 //! toggle_group(|| {
@@ -38,15 +38,15 @@ use iced_core::{Alignment, Element};
 use iced_widget::button::StyleFn;
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::theme::button::Spec;
-use icedxdy_core::theme::toggle;
-use icedxdy_core::{Orientation, Theme};
+use icedcn_core::theme::button::Spec;
+use icedcn_core::theme::toggle;
+use icedcn_core::{Orientation, Theme};
 
 use crate::button::{self, group};
 use crate::compose::{Compose, Inherited, Slot};
 use crate::{Button, Size};
 
-pub use icedxdy_core::theme::toggle::{Default, Outline};
+pub use icedcn_core::theme::toggle::{Default, Outline};
 
 /// How many items can be pressed at once.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, std::default::Default)]

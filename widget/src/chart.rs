@@ -10,7 +10,7 @@ use iced_core::{
     border, layout, mouse, renderer, touch,
 };
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Series<'a> {

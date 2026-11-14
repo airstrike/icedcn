@@ -1,6 +1,6 @@
-use icedxdy::Size;
-use icedxdy::Slot;
-use icedxdy::widget::{alert, button, text};
+use icedcn::Size;
+use icedcn::Slot;
+use icedcn::widget::{alert, button, text};
 
 use crate::Message;
 

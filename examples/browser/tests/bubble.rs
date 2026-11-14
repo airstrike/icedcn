@@ -10,8 +10,8 @@ use iced_test::core::Settings;
 use iced_test::{Selector, Simulator, selector, simulator};
 use iced_widget::core::widget::Operation;
 use iced_widget::core::widget::operation::{self, Outcome, focusable};
-use icedxdy::widget::{bubble, container, toaster};
-use icedxdy::{Inherited, Slot, Theme};
+use icedcn::widget::{bubble, container, toaster};
+use icedcn::{Inherited, Slot, Theme};
 
 type Preview<'a> = Simulator<'a, Message, Theme, iced::Renderer>;
 

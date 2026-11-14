@@ -7,7 +7,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::avatar;
+//! use icedcn::widget::avatar;
 //!
 //! // Stand-alone, with an image and an initials fallback.
 //! avatar(Some(my_image_handle)).fallback("CN")
@@ -39,9 +39,9 @@ mod widget;
 use iced_core::Length::Fill;
 use iced_core::image::Handle;
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::avatar::badge_style;
-use icedxdy_core::theme::container::{Style, StyleFn};
+use icedcn_core::Theme;
+use icedcn_core::theme::avatar::badge_style;
+use icedcn_core::theme::container::{Style, StyleFn};
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
@@ -55,7 +55,7 @@ pub use group::group;
 // `avatar::Sm`, `avatar::Default`, `avatar::Lg` — the same name shape the
 // theme catalog uses, kept consistent across the call site.
 #[doc(inline)]
-pub use icedxdy_core::theme::avatar::{Default, Geometry, Lg, Sm};
+pub use icedcn_core::theme::avatar::{Default, Geometry, Lg, Sm};
 
 /// Size variant for an [`Avatar`].
 ///

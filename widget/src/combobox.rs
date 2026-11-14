@@ -8,7 +8,7 @@
 //! the value:
 //!
 //! ```ignore
-//! use icedxdy::widget::combobox;
+//! use icedcn::widget::combobox;
 //!
 //! combobox(["Cargo", "Clippy", "Miri", "Rustfmt"])
 //!     .placeholder("Select a tool")
@@ -28,9 +28,9 @@ use iced_core::{Element, Length};
 use iced_widget::component::{self, Component};
 use iced_widget::text::Text;
 use iced_widget::{Renderer, Space, Widget, anchored};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::popover::content;
-use icedxdy_core::theme::text_input::Invalid;
+use icedcn_core::Theme;
+use icedcn_core::theme::popover::content;
+use icedcn_core::theme::text_input::Invalid;
 use keys::Keys;
 
 use crate::compose::{Compose, Inherited, Slot};

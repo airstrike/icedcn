@@ -1,7 +1,7 @@
 ```rust
 use iced::alignment::Horizontal::Right;
-use icedxdy::widget::table::Track::{Auto, Fixed, Flex};
-use icedxdy::widget::{column, table, text};
+use icedcn::widget::table::Track::{Auto, Fixed, Flex};
+use icedcn::widget::{column, table, text};
 
 fn actions<'a>() -> iced::Element<'a, Message, Theme> {
     let products = [

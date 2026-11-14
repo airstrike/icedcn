@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::tabs;
+use icedcn::widget::tabs;
 
 tabs(|t| {
     t.list([

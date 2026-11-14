@@ -6,12 +6,12 @@ use iced::widget::{
     component::{Component, component},
 };
 use iced::{Fill, Task, Widget};
-use icedxdy::theme::container::CodeBlock;
-use icedxdy::theme::tweak::{Alpha, Bg, Fg, Token};
-use icedxdy::widget::{
+use icedcn::theme::container::CodeBlock;
+use icedcn::theme::tweak::{Alpha, Bg, Fg, Token};
+use icedcn::widget::{
     badge, button, code_block, column, container, dialog, row, sheet, spinner, text, trace,
 };
-use icedxdy::{Slot, Theme};
+use icedcn::{Slot, Theme};
 use trace::{Line, Status};
 
 type Glyph = fn() -> Text<'static, Theme>;
@@ -144,7 +144,7 @@ impl<'a> Component<'a, Message, Theme> for OpenState {
                 } else {
                     "Show the Cargo output"
                 })
-                .size(icedxdy::Size::Sm)
+                .size(icedcn::Size::Sm)
                 .style(button::Outline)
                 .on_press(!open)
             ]

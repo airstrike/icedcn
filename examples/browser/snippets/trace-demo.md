@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{code_block, text, trace};
+use icedcn::widget::{code_block, text, trace};
 
 trace([
     trace::disclosure(|| trace::line("Thought for 5s"), || text(reason).into()).into(),

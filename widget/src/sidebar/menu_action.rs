@@ -6,7 +6,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::sidebar;
+//! use icedcn::widget::sidebar;
 //!
 //! sidebar::menu_action(icon::plus())
 //!     .on_press(Message::AddItem)
@@ -17,8 +17,8 @@ use iced_widget::Renderer;
 use crate::Size;
 use crate::button::widget;
 use crate::compose::{Compose, Inherited, Slot};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::button;
+use icedcn_core::Theme;
+use icedcn_core::theme::button;
 
 /// A ghost-style action button for sidebar menu items.
 ///

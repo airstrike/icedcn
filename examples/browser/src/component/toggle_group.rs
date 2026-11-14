@@ -1,9 +1,9 @@
 use iced::widget::component::{Component, component};
 use iced::{Element, Task, Widget};
 
-use icedxdy::widget::{column, field, row, text, toggle_group};
-use icedxdy::{Size, Theme, Vertical};
-use icedxdy::{Slot, Weight};
+use icedcn::widget::{column, field, row, text, toggle_group};
+use icedcn::{Size, Theme, Vertical};
+use icedcn::{Slot, Weight};
 
 use crate::page;
 use crate::{Message, icon};

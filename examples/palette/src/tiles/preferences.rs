@@ -3,8 +3,8 @@
 use iced::Widget;
 use iced::widget::space;
 use iced::{Center, Fill};
-use icedxdy::widget::{button, column, field, row, switch};
-use icedxdy::{Space, Theme, card};
+use icedcn::widget::{button, column, field, row, switch};
+use icedcn::{Space, Theme, card};
 
 use super::{api_gap, select};
 use crate::Message;

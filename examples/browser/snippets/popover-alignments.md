@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, popover, row, text};
+use icedcn::widget::{button, popover, row, text};
 
 row![
     aligned("Start", popover::Align::Start, "Aligned to start"),

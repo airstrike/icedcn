@@ -1,7 +1,7 @@
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Widget};
-use icedxdy::widget::{button, field, input, row, select};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{button, field, input, row, select};
+use icedcn::{Slot, Theme};
 
 use crate::Message;
 

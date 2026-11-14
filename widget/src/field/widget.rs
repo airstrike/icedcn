@@ -28,7 +28,7 @@ use crate::operation::{control, focus};
 use std::any::Any;
 
 use iced_widget::container::StyleFn;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// The signal a field's label marker records when pressed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -73,9 +73,9 @@ where
         mut self,
         inactive: StyleFn<'a, Theme>,
         active: StyleFn<'a, Theme>,
-        padding: impl Into<icedxdy_core::Padding>,
+        padding: impl Into<icedcn_core::Padding>,
     ) -> Self {
-        let padding: icedxdy_core::Padding = padding.into();
+        let padding: icedcn_core::Padding = padding.into();
         let padding: Padding = padding.into();
         let padding = Padding {
             top: padding.top + 1.0,
@@ -430,8 +430,8 @@ mod tests {
     use iced_core::widget::Tree;
     use iced_core::{Event, Layout, Point, Rectangle, Shell, Size, Widget, layout, mouse, window};
     use iced_test::simulator;
-    use icedxdy_core::Theme;
-    use icedxdy_core::theme::field::{Card, CardActive};
+    use icedcn_core::Theme;
+    use icedcn_core::theme::field::{Card, CardActive};
 
     fn card(checked: bool, disabled: bool) -> (Field<'static, (), ()>, Tree) {
         let checkbox: Checkbox<'_, (), Theme, ()> = Checkbox::new(checked)

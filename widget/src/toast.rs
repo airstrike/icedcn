@@ -6,7 +6,7 @@
 //! or from `update` with the [`show`] task:
 //!
 //! ```ignore
-//! use icedxdy::widget::{button, toast, toaster};
+//! use icedcn::widget::{button, toast, toaster};
 //!
 //! toaster(column![
 //!     toast::trigger(
@@ -34,7 +34,7 @@ use iced_core::Element;
 use iced_runtime::Task;
 use iced_runtime::task;
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::core::Rectangle;

@@ -5,7 +5,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::toggle;
+//! use icedcn::widget::toggle;
 //!
 //! // Uncontrolled: the toggle keeps its own value.
 //! toggle(icon::bookmark()).default_pressed(true)
@@ -28,13 +28,13 @@ mod widget;
 
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::button::Spec;
+use icedcn_core::Theme;
+use icedcn_core::theme::button::Spec;
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::{Size, Weight};
 
-pub use icedxdy_core::theme::toggle::{Default, Outline};
+pub use icedcn_core::theme::toggle::{Default, Outline};
 
 /// Create a toggle with one or more children.
 ///

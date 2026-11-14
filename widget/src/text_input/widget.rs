@@ -14,7 +14,7 @@
 //! // the `text_input(...)` helper lives in `widget/src/text_input.rs`.
 //! # pub type Element<'a, Message> = iced_core::Element<'a, Message, iced_widget::Theme, iced_widget::Renderer>;
 //! #
-//! use icedxdy_widget::text_input;
+//! use icedcn_widget::text_input;
 //!
 //! #[derive(Debug, Clone)]
 //! enum Message {
@@ -2056,11 +2056,11 @@ const CURSOR_BLINK_INTERVAL_MILLIS: u128 = 500;
 
 /// The possible status of a [`TextInput`].
 /// **Deviation from upstream sweeten/iced**: `Status` is re-exported from
-/// `icedxdy_core` so the whole crate (theme + widget + wrapper) speaks one
+/// `icedcn_core` so the whole crate (theme + widget + wrapper) speaks one
 /// canonical type. Otherwise we'd carry an extra `widget::Status ↔
 /// core::Status` conversion at every Catalog call. Variants match upstream
 /// 1:1 so the rest of this file's pattern matches keep working.
-pub use icedxdy_core::theme::text_input::Status;
+pub use icedcn_core::theme::text_input::Status;
 
 /// A ring of `width` pixels painted behind the text field.
 #[derive(Debug, Clone, Copy, PartialEq)]

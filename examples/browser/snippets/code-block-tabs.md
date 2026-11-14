@@ -1,7 +1,7 @@
 ```rust
 use iced::Font;
-use icedxdy::widget::tabs;
-use icedxdy::{
+use icedcn::widget::tabs;
+use icedcn::{
     Slot,
     widget::{code_block, column},
 };
@@ -39,8 +39,8 @@ pub fn view<Message: Clone + 'static>() -> Slot<'static, Message> {
     .into()
 }
 
-const TABS_0: &str = r##"use icedxdy::widget::{column, text};
-use icedxdy::Slot;
+const TABS_0: &str = r##"use icedcn::widget::{column, text};
+use icedcn::Slot;
 
 pub fn view(titles: &[String]) -> Slot<'_, ()> {
     let mut items = column![].spacing(8);

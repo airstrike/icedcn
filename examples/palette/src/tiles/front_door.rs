@@ -2,10 +2,10 @@
 
 use iced::Widget;
 use iced::{Fill, Right};
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{badge, column, container, row, space, text};
-use icedxdy::{Space, Theme, card};
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::{badge, column, container, row, space, text};
+use icedcn::{Space, Theme, card};
 
 use super::api_gap;
 use crate::{Message, State, icon};

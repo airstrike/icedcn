@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::button;
+use icedcn::widget::button;
 
 button_group![
     button(icon::plus()).square().style(button::Outline).on_press(Message::Increase),

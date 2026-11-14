@@ -153,7 +153,7 @@ static REGISTRY: LazyLock<RwLock<HashMap<String, &'static HighlightConfiguration
 /// # Example
 ///
 /// ```ignore
-/// use icedxdy::widget::markdown::highlighter;
+/// use icedcn::widget::markdown::highlighter;
 ///
 /// highlighter::register(
 ///     ["python", "py"],
@@ -284,7 +284,7 @@ fn unstyled_line(line: &str) -> Line {
 // Custom themes:
 //
 // ```ignore
-// use icedxdy::widget::markdown::highlighter::{fg, fg_bold, Map};
+// use icedcn::widget::markdown::highlighter::{fg, fg_bold, Map};
 //
 // let monokai = Map::from_entries([
 //     ("comment", fg(0x75715e)),
@@ -346,7 +346,7 @@ pub fn fg_italic(hex: u32) -> Style {
 /// default text colour.
 ///
 /// Build a map with [`Map::from_entries`], load a theme with [`Map::from_vscode_theme`],
-/// or convert an icedxdy theme with `Map::from`.
+/// or convert an icedcn theme with `Map::from`.
 #[derive(Debug, Clone)]
 pub struct Map {
     styles: Vec<Style>,
@@ -377,7 +377,7 @@ impl Map {
 
     /// Set whether this map represents a dark theme. Returned by
     /// [`Map::from_vscode_theme`] from the JSON's `type` field; the
-    /// [`From<&icedxdy_core::Theme>`] impl sets it from the source palette.
+    /// [`From<&icedcn_core::Theme>`] impl sets it from the source palette.
     pub fn with_dark(mut self, is_dark: bool) -> Self {
         self.is_dark = is_dark;
         self
@@ -657,16 +657,16 @@ impl Map {
     }
 }
 
-// --- Default Map derived from the icedxdy palette -------------------------------
+// --- Default Map derived from the icedcn palette -------------------------------
 
-/// Build a default [`Map`] from an [`icedxdy_core::Theme`]. The fallback uses semantic colors
+/// Build a default [`Map`] from an [`icedcn_core::Theme`]. The fallback uses semantic colors
 /// from the application theme.
 ///
 /// Apps that want a specific aesthetic (GitHub Light/Dark, Monokai,
 /// etc.) should ship their own VS Code theme JSON and parse it via
 /// [`Map::from_vscode_theme`].
-impl From<&icedxdy_core::Theme> for Map {
-    fn from(theme: &icedxdy_core::Theme) -> Self {
+impl From<&icedcn_core::Theme> for Map {
+    fn from(theme: &icedcn_core::Theme) -> Self {
         let p = theme;
         let is_dark = p.neutral.base.l < 0.5;
 
@@ -927,8 +927,8 @@ mod tests {
     #[test]
     fn image_21_button_size_snippet_literal() {
         let src = "\
-use icedxdy::widget::{button, row};
-use icedxdy::Size::*;
+use icedcn::widget::{button, row};
+use icedcn::Size::*;
 
 row![
     row![
@@ -1041,13 +1041,13 @@ row![
     /// cyan, `use` keyword in purple, braces/`::` in light cyan).
     #[test]
     fn use_clause_namespace_chain() {
-        let src = "use icedxdy::widget::{button, row};";
+        let src = "use icedcn::widget::{button, row};";
         assert_captures(
             src,
             "rust",
             &[
                 ("use", Some("keyword.control.import")),
-                ("icedxdy", Some("namespace")),
+                ("icedcn", Some("namespace")),
                 ("::", Some("punctuation.delimiter")),
                 ("widget", Some("namespace")),
                 ("::", Some("punctuation.delimiter")),

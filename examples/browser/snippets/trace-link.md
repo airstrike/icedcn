@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{trace, text};
+use icedcn::widget::{trace, text};
 
 trace([
     local("Read examples/browser/src/page.rs", "link", index),

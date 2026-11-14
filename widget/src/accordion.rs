@@ -3,7 +3,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::{accordion, text};
+//! use icedcn::widget::{accordion, text};
 //!
 //! // Uncontrolled: the accordion keeps its own open set.
 //! accordion(vec![
@@ -38,8 +38,8 @@ use iced_core::Padding;
 #[cfg(not(feature = "svg"))]
 use iced_core::text::Renderer as _;
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
-use icedxdy_core::theme;
+use icedcn_core::Theme;
+use icedcn_core::theme;
 
 use crate::{Inherited, Slot, Weight};
 
@@ -175,8 +175,8 @@ impl<'a, Message: 'a> Accordion<'a, Message> {
     /// Override outer padding. Defaults to zero — the wrapping container
     /// (e.g. card) is responsible for outer breathing room. Surfaced as
     /// a knob so the `borders` example can supply `px-4`.
-    pub fn padding(mut self, padding: impl Into<icedxdy_core::Padding>) -> Self {
-        let padding: icedxdy_core::Padding = padding.into();
+    pub fn padding(mut self, padding: impl Into<icedcn_core::Padding>) -> Self {
+        let padding: icedcn_core::Padding = padding.into();
         self.outer_padding = padding.into();
         self
     }

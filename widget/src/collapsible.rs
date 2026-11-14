@@ -2,7 +2,7 @@
 //! trigger and expandable content in your layout.
 //!
 //! ```ignore
-//! use icedxdy::widget::{button, collapsible, column, row, text};
+//! use icedcn::widget::{button, collapsible, column, row, text};
 //!
 //! collapsible(|c| {
 //!     column![
@@ -26,7 +26,7 @@
 use iced_core::{Element, Length};
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::marker::{self, Press};

@@ -1,7 +1,7 @@
 //! A native scrolling viewport with Nova's 10px hit target and rounded thumb.
 use iced_widget::scrollable::{Status, Style};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::scrollable::hidden;
+use icedcn_core::Theme;
+use icedcn_core::theme::scrollable::hidden;
 
 use crate::Slot;
 use crate::scrollable::{Direction, Scrollable, Scrollbar};

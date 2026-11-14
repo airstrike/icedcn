@@ -2,7 +2,7 @@
 //!
 //! # Example
 //! ```ignore
-//! use icedxdy::widget::slider;
+//! use icedcn::widget::slider;
 //!
 //! struct State {
 //!    value: f32,
@@ -48,7 +48,7 @@ use crate::core::Length::Fill;
 use crate::core::widget::{Operation, operation};
 use crate::operation::control::Control;
 use iced_widget::slider;
-use icedxdy_core::Orientation;
+use icedcn_core::Orientation;
 use std::cmp::Ordering;
 
 use std::ops::RangeInclusive;
@@ -68,7 +68,7 @@ use std::time::Duration;
 ///
 /// # Example
 /// ```ignore
-/// use icedxdy::widget::slider;
+/// use icedcn::widget::slider;
 ///
 /// struct State {
 ///    value: f32,
@@ -93,7 +93,7 @@ use std::time::Duration;
 ///     }
 /// }
 /// ```
-pub struct Slider<'a, T, Message, Theme = icedxdy_core::Theme, Values = T>
+pub struct Slider<'a, T, Message, Theme = icedcn_core::Theme, Values = T>
 where
     Theme: Catalog,
 {

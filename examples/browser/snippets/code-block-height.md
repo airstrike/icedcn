@@ -1,6 +1,6 @@
 ```rust
 use iced::Font;
-use icedxdy::widget::{CodeBlock, code_block};
+use icedcn::widget::{CodeBlock, code_block};
 
 pub fn view<'a, Message: Clone + 'a>(logs: &'a str) -> CodeBlock<'a, Message> {
     code_block(logs)

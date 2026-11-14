@@ -3,11 +3,11 @@ use iced::Fill;
 use iced::Widget;
 use iced::alignment::Horizontal::Right;
 use iced::widget::svg;
-use icedxdy::Slot;
-use icedxdy::Theme;
-use icedxdy::theme::tweak::{Fg, Token};
-use icedxdy::widget::bubble::Muted;
-use icedxdy::widget::{bubble, button, collapsible, column, container, row, text};
+use icedcn::Slot;
+use icedcn::Theme;
+use icedcn::theme::tweak::{Fg, Token};
+use icedcn::widget::bubble::Muted;
+use icedcn::widget::{bubble, button, collapsible, column, container, row, text};
 
 fn example() -> Slot<'static, ()> {
     frame(

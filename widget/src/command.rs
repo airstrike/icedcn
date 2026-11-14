@@ -8,7 +8,7 @@ use iced_core::keyboard::key::Named;
 use iced_core::{Element, Length};
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::{Theme, theme::popover::content};
+use icedcn_core::{Theme, theme::popover::content};
 
 /// An action in a command list.
 pub struct Item<'a, Message> {

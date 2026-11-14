@@ -3,7 +3,7 @@ use iced_core::svg::{Handle, Renderer as _, Svg};
 use iced_core::widget::{Meta, Tree};
 use iced_core::{Layout, Length, Rectangle, Size, Widget, layout, mouse, renderer};
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 use std::sync::LazyLock;
 static LEFT: LazyLock<Handle> = LazyLock::new(|| {
     Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>"#)

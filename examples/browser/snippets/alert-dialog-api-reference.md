@@ -6,7 +6,7 @@ Use the `.size(..)` builder on `AlertDialog` to control the size of the alert di
 | --- | --- | --- |
 | `.size(size)` | `Size::Default` or `Size::Sm` | `Size::Default` |
 
-[Read the alert_dialog implementation](https://github.com/airstrike/icedxdy/blob/HEAD/widget/src/alert_dialog.rs).
+[Read the alert_dialog implementation](https://github.com/airstrike/icedcn/blob/HEAD/widget/src/alert_dialog.rs).
 
 **`alert_dialog()`**
 

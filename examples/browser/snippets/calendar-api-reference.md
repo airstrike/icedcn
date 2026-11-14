@@ -1,6 +1,6 @@
 ## API Reference
 
-[Read the calendar implementation](https://github.com/airstrike/icedxdy/blob/HEAD/widget/src/calendar.rs).
+[Read the calendar implementation](https://github.com/airstrike/icedcn/blob/HEAD/widget/src/calendar.rs).
 
 | Rust builder or type | Default | Behavior |
 | --- | --- | --- |

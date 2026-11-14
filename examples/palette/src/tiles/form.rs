@@ -14,11 +14,11 @@
 use iced::Fill;
 use iced::Widget;
 use iced::widget::component::{Component, component};
-use icedxdy::Slot;
-use icedxdy::Theme;
-use icedxdy::card;
-use icedxdy::theme;
-use icedxdy::widget::{Column, button, checkbox, column, field, input, row, switch, text};
+use icedcn::Slot;
+use icedcn::Theme;
+use icedcn::card;
+use icedcn::theme;
+use icedcn::widget::{Column, button, checkbox, column, field, input, row, switch, text};
 
 use crate::{Message, State};
 
@@ -61,7 +61,7 @@ struct Values {
 impl Default for Values {
     fn default() -> Self {
         Self {
-            email: "ada@icedxdy.dev".to_owned(),
+            email: "ada@icedcn.dev".to_owned(),
             name: "Ada Lovelace".to_owned(),
             accept_terms: true,
             weekly_digest: false,

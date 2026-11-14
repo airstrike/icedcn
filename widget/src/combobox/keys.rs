@@ -6,7 +6,7 @@ use iced_core::{
     renderer,
 };
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// Listen to named keys only while the wrapped control contains focus.
 pub(crate) struct Keys<'a, Message> {

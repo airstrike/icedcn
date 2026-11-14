@@ -45,7 +45,7 @@ pub use token::Token;
 pub use weight::Weight;
 
 // Re-export the primitive `radius()` constructor here so call sites that
-// use the tweak prelude (`use icedxdy::theme::tweak::*`) get it automatically.
+// use the tweak prelude (`use icedcn::theme::tweak::*`) get it automatically.
 pub use crate::radius;
 
 /// A single style tweak. Each atom struct converts into one of these

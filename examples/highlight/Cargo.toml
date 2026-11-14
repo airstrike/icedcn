@@ -6,7 +6,7 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
-icedxdy = { workspace = true, features = ["markdown"] }
+icedcn = { workspace = true, features = ["markdown"] }
 iced = { workspace = true, features = ["markdown", "highlighter", "tokio"] }
 iced_widget.workspace = true
 iced_runtime.workspace = true

@@ -6,7 +6,7 @@
 //! card closes `close_delay` after the pointer has left both.
 //!
 //! ```ignore
-//! use icedxdy::widget::{button, column, hover_card, text};
+//! use icedcn::widget::{button, column, hover_card, text};
 //!
 //! hover_card(
 //!     button("Hover Here").style(button::Link),
@@ -20,9 +20,9 @@ use std::time::Duration;
 
 use iced_core::{Element, Pixels};
 use iced_widget::{Renderer, Widget, anchored};
-use icedxdy_core::theme::container::Style;
-use icedxdy_core::theme::popover;
-use icedxdy_core::{Padding, Theme};
+use icedcn_core::theme::container::Style;
+use icedcn_core::theme::popover;
+use icedcn_core::{Padding, Theme};
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;

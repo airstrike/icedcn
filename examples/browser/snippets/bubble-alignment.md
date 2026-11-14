@@ -1,9 +1,9 @@
 ```rust
 use iced::Fill;
 use iced::alignment::Horizontal::Right;
-use icedxdy::Slot;
-use icedxdy::widget::bubble::Muted;
-use icedxdy::widget::{bubble, column, container};
+use icedcn::Slot;
+use icedcn::widget::bubble::Muted;
+use icedcn::widget::{bubble, column, container};
 
 fn example() -> Slot<'static, ()> {
     frame(

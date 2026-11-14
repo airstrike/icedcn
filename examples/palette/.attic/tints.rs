@@ -7,13 +7,13 @@
 //! (label), row, column.
 
 use iced::Fill;
-use icedxdy::Slot;
-use icedxdy::card;
-use icedxdy::core::style::{
+use icedcn::Slot;
+use icedcn::card;
+use icedcn::core::style::{
     Tint, accent, destructive, info, muted, neutral, outline, primary, secondary, success, warning,
 };
-use icedxdy::widget::{Row, badge, button, column, row, text};
-use icedxdy::Theme;
+use icedcn::widget::{Row, badge, button, column, row, text};
+use icedcn::Theme;
 
 use crate::{Message, State};
 
@@ -87,7 +87,7 @@ fn tint_button(
     tint: Tint,
     connected: bool,
     is_outline: bool,
-) -> icedxdy::widget::Button<'static, Message> {
+) -> icedcn::widget::Button<'static, Message> {
     let mut b = if is_outline {
         button(label).style(outline + tint).width(BUTTON_WIDTH)
     } else {

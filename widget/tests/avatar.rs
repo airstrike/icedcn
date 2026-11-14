@@ -6,8 +6,8 @@ use iced_core::widget::{Id, Operation};
 use iced_core::{Element, Point, Rectangle};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space, Widget};
-use icedxdy_core::Theme;
-use icedxdy_widget::{Compose, Inherited, Size, Slot, Weight, avatar, button};
+use icedcn_core::Theme;
+use icedcn_widget::{Compose, Inherited, Size, Slot, Weight, avatar, button};
 
 #[derive(Default)]
 struct Bounds(Vec<Rectangle>);
@@ -169,7 +169,7 @@ fn disabled_fallback_stays_disabled_through_group_rebuilds() {
 
 #[test]
 fn avatar_trigger_opens_selects_and_reopens_its_dropdown() {
-    use icedxdy_widget::{column, dropdown_menu, menu};
+    use icedcn_widget::{column, dropdown_menu, menu};
     fn view() -> Element<'static, bool, Theme, Renderer> {
         dropdown_menu(
             |m| {

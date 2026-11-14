@@ -4,8 +4,8 @@ use iced_core::{Event, Point, mouse};
 use iced_test::Simulator;
 use iced_test::simulator::{self, simulator};
 use iced_widget::Renderer;
-use icedxdy_core::{Theme, Vertical};
-use icedxdy_widget::slider;
+use icedcn_core::{Theme, Vertical};
+use icedcn_widget::slider;
 
 #[test]
 fn keyboard_clamps_one_thumb_and_preserves_controlled_values() {

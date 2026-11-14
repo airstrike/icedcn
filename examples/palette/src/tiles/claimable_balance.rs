@@ -3,11 +3,11 @@
 use iced::Widget;
 use iced::widget::space;
 use iced::{Center, Fill};
-use icedxdy::card;
-use icedxdy::core::{Border, oklch};
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{badge, column, container, item, row, rule, text};
-use icedxdy::{Slot, Theme, Vertical};
+use icedcn::card;
+use icedcn::core::{Border, oklch};
+use icedcn::theme::container::Style;
+use icedcn::widget::{badge, column, container, item, row, rule, text};
+use icedcn::{Slot, Theme, Vertical};
 
 use crate::{Message, State};
 

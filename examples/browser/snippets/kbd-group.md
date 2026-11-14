@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{kbd, kbd_group, row, text};
+use icedcn::widget::{kbd, kbd_group, row, text};
 
 row![
     text::muted("Use"),

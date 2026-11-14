@@ -1,8 +1,8 @@
 ```rust
 use iced::{Fill, Widget};
 use iced::widget::svg;
-use icedxdy::Theme;
-use icedxdy::widget::{alert_dialog, button, column};
+use icedcn::Theme;
+use icedcn::widget::{alert_dialog, button, column};
 
 alert_dialog(
     |a| a.trigger(button("Share Project").style(button::Outline)),

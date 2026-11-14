@@ -1,14 +1,14 @@
 ```rust
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Widget};
-use icedxdy::widget::button::group;
-use icedxdy::widget::{button, button_group, column, dropdown_menu, menu, row};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::button::group;
+use icedcn::widget::{button, button_group, column, dropdown_menu, menu, row};
+use icedcn::{Slot, Theme};
 use crate::Message;
 
 mod icon {
 use iced::widget::svg;
-use icedxdy::Theme;
+use icedcn::Theme;
 pub fn arrow_left<'a>() -> svg::Svg<'a, Theme> {
     svg(svg::Handle::from_memory(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m12 19-7-7 7-7" /> <path d="M19 12H5" /> </svg>"#.as_bytes()))
         .width(16).height(16)

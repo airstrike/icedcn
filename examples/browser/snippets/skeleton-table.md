@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{Column, row, skeleton};
+use icedcn::widget::{Column, row, skeleton};
 
 Column::with_children((0..5).map(|_| {
     row![

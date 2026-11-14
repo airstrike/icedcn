@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{field, textarea};
+use icedcn::widget::{field, textarea};
 
 field(textarea("Type your message here."))
     .label("Message")

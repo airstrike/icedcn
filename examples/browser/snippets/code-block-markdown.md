@@ -1,7 +1,7 @@
 ```rust
 use iced::alignment::Horizontal;
 use iced::{Fill, Font, Subscription, Widget, time};
-use icedxdy::{
+use icedcn::{
     Size, Slot, Theme,
     widget::{bubble, button, code_block, column, container, markdown, message},
 };

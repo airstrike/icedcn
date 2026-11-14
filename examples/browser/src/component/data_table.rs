@@ -4,14 +4,14 @@ use iced::Task;
 use iced::alignment::Horizontal::Right;
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Widget};
-use icedxdy::Theme;
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::table::Track;
-use icedxdy::widget::{
+use icedcn::Theme;
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::table::Track;
+use icedcn::widget::{
     button, checkbox, column, container, dropdown_menu, input, menu, row, space, table, text,
 };
-use icedxdy::{Size, Slot};
+use icedcn::{Size, Slot};
 use std::collections::BTreeSet;
 
 pub static META: page::Meta = page::Meta {

@@ -2,7 +2,7 @@
 //! the tab list, triggers, and panels.
 //!
 //! ```ignore
-//! use icedxdy::widget::{column, tabs};
+//! use icedcn::widget::{column, tabs};
 //!
 //! tabs(|t| {
 //!     column![
@@ -31,9 +31,9 @@ use iced_core::{Element, Length};
 use iced_widget::component::{self, Component};
 use iced_widget::{self, Space};
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::container;
-use icedxdy_core::theme::tabs;
+use icedcn_core::Theme;
+use icedcn_core::theme::container;
+use icedcn_core::theme::tabs;
 
 use crate::Size;
 use crate::button::button;
@@ -239,7 +239,7 @@ impl Handle {
             let mut style = tabs::trigger(theme, status, active);
             if rounded {
                 style.shadow = Default::default();
-                style.border.color = icedxdy_core::Color::TRANSPARENT;
+                style.border.color = icedcn_core::Color::TRANSPARENT;
             }
             if line {
                 style.background = None;

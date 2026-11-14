@@ -7,12 +7,12 @@
 
 use iced::Fill;
 use iced::Widget;
-use icedxdy::Slot;
-use icedxdy::Theme;
-use icedxdy::card;
-use icedxdy::theme::container::card_muted;
-use icedxdy::theme::tweak::Token;
-use icedxdy::widget::{
+use icedcn::Slot;
+use icedcn::Theme;
+use icedcn::card;
+use icedcn::theme::container::card_muted;
+use icedcn::theme::tweak::Token;
+use icedcn::widget::{
     aspect_ratio, badge, button, column, container, rich_text, row, space, spinner, text,
 };
 
@@ -76,7 +76,7 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
 
     card::card(
         column([
-            card::header("Welcome to icedxdy")
+            card::header("Welcome to icedcn")
                 .description("Themed widgets for iced applications.")
                 .into(),
             card::content(body).into(),

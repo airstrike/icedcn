@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, input};
+use icedcn::widget::{button, input};
 
 row![
     input("Search...")

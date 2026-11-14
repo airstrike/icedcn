@@ -21,8 +21,8 @@ use iced_core::text::{LineHeight, Wrapping};
 use iced_core::widget::Id;
 use iced_core::{Element, Font, Padding};
 use iced_widget::{Renderer, Widget, text};
-use icedxdy_core::theme::container::{Style, StyleFn};
-use icedxdy_core::{Border, Theme, radius};
+use icedcn_core::theme::container::{Style, StyleFn};
+use icedcn_core::{Border, Theme, radius};
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::scrollable::{Direction, scrollbar};

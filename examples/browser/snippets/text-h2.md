@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{column, rule, text};
+use icedcn::widget::{column, rule, text};
 
 column![
     text::h2("The People of the Kingdom"),

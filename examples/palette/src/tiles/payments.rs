@@ -1,6 +1,6 @@
 //! Payments card.
 
-use icedxdy::Theme;
+use icedcn::Theme;
 
 use super::api_gap;
 use crate::{Message, State};

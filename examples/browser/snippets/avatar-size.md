@@ -1,8 +1,8 @@
 ```rust
 use iced::widget::image;
-use icedxdy::Theme;
-use icedxdy::widget::avatar;
-use icedxdy::widget::row;
+use icedcn::Theme;
+use icedcn::widget::avatar;
+use icedcn::widget::row;
 
 fn preview(portrait: image::Handle) -> iced::Element<'static, (), Theme> {
     row![

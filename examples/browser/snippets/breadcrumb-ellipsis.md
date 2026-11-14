@@ -1,6 +1,6 @@
 ```rust
-use icedxdy::Slot;
-use icedxdy::widget::breadcrumb;
+use icedcn::Slot;
+use icedcn::widget::breadcrumb;
 
 #[derive(Debug, Clone)]
 enum Message {

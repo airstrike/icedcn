@@ -10,7 +10,7 @@ use iced::{Event, Rectangle, Size, Vector, window};
 use iced_test::core::Settings;
 use iced_test::simulator::Simulator;
 use iced_widget::core::widget::{Id, Operation, operation};
-use icedxdy::Theme;
+use icedcn::Theme;
 
 type Preview<'a> = Simulator<'a, Message, Theme, iced::Renderer>;
 
@@ -519,7 +519,7 @@ fn ellipsis_uses_the_font_and_only_changes_the_last_overflowing_line() {
     use iced_test::futures::futures::executor::block_on;
     use iced_test::runtime::UserInterface;
     use iced_widget::text::LineHeight;
-    use icedxdy::widget::text::{self, Ellipsis};
+    use icedcn::widget::text::{self, Ellipsis};
 
     fn pixels(renderer: &mut Renderer, value: &str, lines: u32, ellipsis: Ellipsis) -> Vec<u8> {
         let height = lines * 20;

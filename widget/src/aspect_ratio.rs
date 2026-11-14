@@ -5,7 +5,7 @@
 //! Apply visual styles directly to its child.
 //!
 //! ```ignore
-//! use icedxdy::widget::aspect_ratio;
+//! use icedcn::widget::aspect_ratio;
 //!
 //! aspect_ratio(my_image, 16.0 / 9.0).max_width(384.0)
 //! ```
@@ -22,7 +22,7 @@ use iced_core::widget::{Meta, Operation, Tree};
 use iced_core::{Element, Event, Layout, Length, Pixels, Rectangle, Shell, Size, Vector, Widget};
 use iced_widget::Renderer;
 
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use crate::compose::{Compose, Inherited, Slot};
 
@@ -259,7 +259,7 @@ mod tests {
     use iced_test::Simulator;
     use iced_test::simulator::click;
     use iced_widget::Space;
-    use icedxdy_core::Theme;
+    use icedcn_core::Theme;
 
     #[test]
     fn an_oversized_or_bounded_width_respects_its_available_space() {

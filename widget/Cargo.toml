@@ -1,5 +1,5 @@
 [package]
-name = "icedxdy_widget"
+name = "icedcn_widget"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -21,11 +21,11 @@ highlighter = [
 ]
 markdown = ["dep:pulldown-cmark", "highlighter"]
 spinner = ["canvas", "dep:lyon_algorithms"]
-svg = ["iced_widget/svg", "icedxdy_core/svg"]
-sweeten = ["dep:sweeten", "icedxdy_core/sweeten"]
+svg = ["iced_widget/svg", "icedcn_core/svg"]
+sweeten = ["dep:sweeten", "icedcn_core/sweeten"]
 
 [dependencies]
-icedxdy_core.workspace = true
+icedcn_core.workspace = true
 iced_core.workspace = true
 iced_highlighter = { workspace = true, optional = true }
 iced_runtime = { workspace = true, features = ["selector"] }

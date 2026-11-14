@@ -2,10 +2,10 @@
 use crate::icon;
 use iced::widget::text;
 use iced::{Center, Fill, Vector};
-use icedxdy::core::{Border, Shadow};
-use icedxdy::theme::{container::Style, input_group::control, text_input::StyleFn};
-use icedxdy::widget::{Input, command, container, input_group};
-use icedxdy::{Color, Slot, Theme, radius};
+use icedcn::core::{Border, Shadow};
+use icedcn::theme::{container::Style, input_group::control, text_input::StyleFn};
+use icedcn::widget::{Input, command, container, input_group};
+use icedcn::{Color, Slot, Theme, radius};
 
 pub(super) const INSET: u16 = 8;
 pub(super) const RIM: u16 = 4;

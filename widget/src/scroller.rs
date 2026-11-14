@@ -9,7 +9,7 @@ pub use iced_core::widget::operation::Animation;
 use iced_core::{Element, Length};
 use iced_runtime::{Action, Task, task};
 use iced_widget::{Renderer, Widget, column};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// Where the first layout displays a saved transcript.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

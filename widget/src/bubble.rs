@@ -3,14 +3,14 @@ use iced_core::Length::{Fill, FillPortion};
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::{Element, Vector};
 use iced_widget::{Renderer, Widget, float, stack};
-use icedxdy_core::{Border, Color, Padding, Radius, Theme, font_size, radius};
+use icedcn_core::{Border, Color, Padding, Radius, Theme, font_size, radius};
 
 use crate::button::widget::Button;
 use crate::container::widget::Container;
 use crate::{Column, Compose, Inherited, Size, Slot, button, column, container, row, space};
 
 pub use crate::button::widget::Status;
-pub use icedxdy_core::theme::container::Style;
+pub use icedcn_core::theme::container::Style;
 
 /// The seven Nova bubble surfaces.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]

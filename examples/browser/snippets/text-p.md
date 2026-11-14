@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::text;
+use icedcn::widget::text;
 
 text::p(
     "The king, seeing how much happier his subjects were, realized the error of \

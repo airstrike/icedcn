@@ -9,13 +9,13 @@
 
 use iced::Fill;
 use iced::Widget;
-use icedxdy::Slot;
-use icedxdy::Theme;
-use icedxdy::card;
-use icedxdy::core::style::{destructive, outline};
-use icedxdy::theme;
-use icedxdy::theme::container::code_block;
-use icedxdy::widget::{button, checkbox, column, container, field, row, space, text};
+use icedcn::Slot;
+use icedcn::Theme;
+use icedcn::card;
+use icedcn::core::style::{destructive, outline};
+use icedcn::theme;
+use icedcn::theme::container::code_block;
+use icedcn::widget::{button, checkbox, column, container, field, row, space, text};
 
 use crate::{Message, State};
 

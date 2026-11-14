@@ -9,9 +9,9 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::rich_text;
-//! use icedxdy::widget::{rich_text::span, text};
-//! use icedxdy::theme::tweak::Token;
+//! use icedcn::rich_text;
+//! use icedcn::widget::{rich_text::span, text};
+//! use icedcn::theme::tweak::Token;
 //!
 //! rich_text![
 //!     span("Required Field ").size(text::size::SM).medium(),
@@ -46,8 +46,8 @@ use crate::core::{
     Color, Element, Em, Layout, Length, Pixels, Point, Rectangle, Size, Text, Widget,
 };
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
-use icedxdy_core::theme::tweak::Token;
+use icedcn_core::Theme;
+use icedcn_core::theme::tweak::Token;
 
 use crate::compose::{Compose, Inherited, Slot};
 

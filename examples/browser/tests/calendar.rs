@@ -6,9 +6,9 @@ use iced::{Element, Font, Point, Rectangle, Size};
 use iced_test::core::Settings;
 use iced_test::core::widget::operation::{self, Focusable, Operation, Outcome, Text, focusable};
 use iced_test::simulator::{self, Simulator};
-use icedxdy::Theme;
-use icedxdy::widget::calendar::{Date, Selection, persian};
-use icedxdy::widget::{Inherited, Slot, calendar};
+use icedcn::Theme;
+use icedcn::widget::calendar::{Date, Selection, persian};
+use icedcn::widget::{Inherited, Slot, calendar};
 use std::borrow::Cow;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -232,7 +232,7 @@ fn caption_escape_restores_the_trigger_for_keyboard_reopening() {
 
 #[test]
 fn demo_focuses_today_and_navigation_can_repeat_in_both_directions() {
-    use icedxdy::widget::calendar::{Datelike, today};
+    use icedcn::widget::calendar::{Datelike, today};
     let page = CalendarPage::new(0);
     let mut ui = Simulator::new(page.preview("demo"));
     assert_eq!(tab_to_day(&mut ui, 5), today().day().to_string());
@@ -255,7 +255,7 @@ fn demo_focuses_today_and_navigation_can_repeat_in_both_directions() {
 }
 #[test]
 fn installed_range_uses_window_breakpoint_and_aligns_month_tops() {
-    use icedxdy::widget::calendar::{Datelike, today};
+    use icedcn::widget::calendar::{Datelike, today};
     for (window, content) in [(1440., 640.), (700., 640.), (767., 640.), (768., 640.)] {
         let mut page = CalendarPage::new(0);
         page.window_width(window);
@@ -339,8 +339,8 @@ fn installed_time_constraints_presets_and_persian_grid() {
 
 #[test]
 fn nested_calendar_caption_can_change_month_and_single_date_picker_still_closes() {
-    use icedxdy::widget::calendar::today;
-    use icedxdy::widget::date_picker;
+    use icedcn::widget::calendar::today;
+    use icedcn::widget::date_picker;
     let view = || {
         Element::<Message, Theme>::from(
             date_picker()
@@ -366,7 +366,7 @@ fn nested_calendar_caption_can_change_month_and_single_date_picker_still_closes(
 
 #[test]
 fn all_preset_actions_update_both_selection_and_visible_month() {
-    use icedxdy::widget::calendar::{Datelike, Duration, today};
+    use icedcn::widget::calendar::{Datelike, Duration, today};
     let page = CalendarPage::new(0);
     let mut ui = Simulator::with_size(
         Settings::default(),

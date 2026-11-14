@@ -3,12 +3,12 @@
 use iced::widget::{space, svg};
 use iced::{Center, Fill};
 use iced_widget::button::Status;
-use icedxdy::core::{Border, Color, oklch};
-use icedxdy::theme::container::background;
-use icedxdy::widget::input::{Input, input};
-use icedxdy::widget::row::Row;
-use icedxdy::widget::{Size, Slot, button, container, row, rule, text};
-use icedxdy::{Theme, theme};
+use icedcn::core::{Border, Color, oklch};
+use icedcn::theme::container::background;
+use icedcn::widget::input::{Input, input};
+use icedcn::widget::row::Row;
+use icedcn::widget::{Size, Slot, button, container, row, rule, text};
+use icedcn::{Theme, theme};
 
 use crate::{Message, Mode, State, icon};
 

@@ -1,4 +1,4 @@
-//! Font weight for icedxdy components.
+//! Font weight for icedcn components.
 
 /// Font weight used by text and control labels.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

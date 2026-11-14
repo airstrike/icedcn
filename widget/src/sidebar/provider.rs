@@ -7,7 +7,7 @@
 //! state:
 //!
 //! ```ignore
-//! use icedxdy::widget::{column, row, sidebar};
+//! use icedcn::widget::{column, row, sidebar};
 //!
 //! sidebar::provider(|s| {
 //!     row![
@@ -29,7 +29,7 @@ use iced_core::window;
 use iced_core::{Element, Rectangle, mouse};
 use iced_widget::component::{self, Component};
 use iced_widget::{Action, Renderer, Widget};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 use std::cell::RefCell;
 
 use super::state::{Collapsible, WIDTH, WIDTH_ICON};

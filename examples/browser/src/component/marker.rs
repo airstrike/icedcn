@@ -1,9 +1,9 @@
 use crate::{Message, icon, page};
 use iced::widget::Id;
 use iced::{Element, Fill, Task};
-use icedxdy::widget::status_marker::{Border, Separator, shimmer};
-use icedxdy::widget::{button, column, container, spinner, status_marker, toast};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::status_marker::{Border, Separator, shimmer};
+use icedcn::widget::{button, column, container, spinner, status_marker, toast};
+use icedcn::{Slot, Theme};
 use page::Block;
 
 pub static META: page::Meta = page::Meta {

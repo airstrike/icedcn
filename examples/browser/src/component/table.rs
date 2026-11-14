@@ -1,9 +1,9 @@
 use iced::alignment::Horizontal::Right;
 use iced::{Fill, Task};
-use icedxdy::widget::table::Track::{Auto, Fixed, Flex};
+use icedcn::widget::table::Track::{Auto, Fixed, Flex};
 
-use icedxdy::Theme;
-use icedxdy::widget::{button, column, dropdown_menu, menu, table, text};
+use icedcn::Theme;
+use icedcn::widget::{button, column, dropdown_menu, menu, table, text};
 
 use crate::{Message, icon, page};
 

@@ -1,6 +1,6 @@
-use icedxdy::Size::*;
-use icedxdy::Slot;
-use icedxdy::widget::button;
+use icedcn::Size::*;
+use icedcn::Slot;
+use icedcn::widget::button;
 
 use super::icons;
 use crate::Message;

@@ -6,10 +6,10 @@ use iced::widget::component::{Component, component};
 use iced::widget::image;
 use iced::{ContentFit, Fill, Widget};
 use iced::{Element, Task};
-use icedxdy::Size;
-use icedxdy::widget::attachment::State;
-use icedxdy::widget::{attachment, column, container, dialog, spinner, tooltip};
-use icedxdy::{Slot, Theme};
+use icedcn::Size;
+use icedcn::widget::attachment::State;
+use icedcn::widget::{attachment, column, container, dialog, spinner, tooltip};
+use icedcn::{Slot, Theme};
 use page::Block;
 use std::collections::BTreeSet;
 use std::sync::LazyLock;
@@ -181,11 +181,11 @@ fn action(name: &'static str, cancel: bool) -> Slot<'static, Edit> {
     )
     .into()
 }
-fn canvas(theme: &Theme) -> icedxdy::Color {
+fn canvas(theme: &Theme) -> icedcn::Color {
     if theme.neutral.is_dark {
         theme.neutral.base
     } else {
-        icedxdy::core::oklch(0.98, 0., 0.)
+        icedcn::core::oklch(0.98, 0., 0.)
     }
 }
 fn photos(state: &FilesState, interactive: bool) -> Slot<'static, Edit> {
@@ -340,7 +340,7 @@ impl<'a> Component<'a, Message, Theme> for Files {
             Edit::Open(url) => return Some(Message::OpenUrl(url)),
             Edit::Copy => {
                 return Some(Message::CopyText(
-                    "icedxdy://component/attachment#trigger".into(),
+                    "icedcn://component/attachment#trigger".into(),
                 ));
             }
         }

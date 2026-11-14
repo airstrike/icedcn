@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, column, empty, row};
+use icedcn::widget::{button, column, empty, row};
 
 empty::empty()
     .media(empty::media(icon::folder()).style(empty::Icon))

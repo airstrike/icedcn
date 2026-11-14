@@ -5,9 +5,9 @@ use std::sync::OnceLock;
 use iced::Task;
 use iced::widget::{Svg, image, svg};
 
-use icedxdy::theme::avatar::badge_style;
-use icedxdy::widget::{avatar, button, column, dropdown_menu, menu, row};
-use icedxdy::{Color, Theme, theme};
+use icedcn::theme::avatar::badge_style;
+use icedcn::widget::{avatar, button, column, dropdown_menu, menu, row};
+use icedcn::{Color, Theme, theme};
 
 use crate::Message;
 use crate::page;

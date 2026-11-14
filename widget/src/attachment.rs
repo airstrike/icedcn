@@ -12,8 +12,8 @@ use iced_core::text::{Ellipsis, LineHeight, Wrapping};
 use iced_core::{Element, Length};
 use iced_widget::text::StyleFn;
 use iced_widget::{Renderer, Widget, stack};
-use icedxdy_core::theme::container::Style;
-use icedxdy_core::{Border, Theme, radius};
+use icedcn_core::theme::container::Style;
+use icedcn_core::{Border, Theme, radius};
 pub use trigger::{Trigger, trigger};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]

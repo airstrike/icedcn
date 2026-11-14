@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{input, input_group, row};
+use icedcn::widget::{input, input_group, row};
 
 fn end<'a>(content: impl Into<Slot<'a, Message>>) -> input_group::Addon<'a, Message> {
     input_group::addon(content).align(input_group::Align::InlineEnd)

@@ -14,7 +14,7 @@ use iced_core::{
     mouse, overlay, renderer,
 };
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Track {

@@ -1,6 +1,6 @@
 ## API Reference
 
-`button_group![...]` joins buttons and inputs in their visual order. Use `icedxdy::widget::button::group` to build a group from an iterator of `group::Item` values.
+`button_group![...]` joins buttons and inputs in their visual order. Use `icedcn::widget::button::group` to build a group from an iterator of `group::Item` values.
 
 | Builder | Default | Behavior |
 | --- | --- | --- |

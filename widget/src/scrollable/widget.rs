@@ -5,7 +5,7 @@
 //! a project-wide thin invisible-rail default can be installed without
 //! shadowing iced's stock default for downstream `iced::Theme` users; the
 //! actual default lives in `super::element` (impl `Catalog` for
-//! `icedxdy_core::Theme`).
+//! `icedcn_core::Theme`).
 //!
 //! No additional builder fields beyond stock iced — only the [`Catalog`]
 //! plumbing is local. The cross-crate flow:
@@ -66,7 +66,7 @@ pub use operation::scrollable::{AbsoluteOffset, RelativeOffset};
 /// A widget that can vertically display an infinite amount of content with a
 /// scrollbar.
 ///
-/// Default `Theme` generic is `icedxdy_core::Theme` so the vendored
+/// Default `Theme` generic is `icedcn_core::Theme` so the vendored
 /// `Catalog` impl in [`super::element`] is the one selected when the
 /// generic is left at the default — same shape as `widget/src/button/widget.rs`.
 ///
@@ -109,8 +109,8 @@ pub use operation::scrollable::{AbsoluteOffset, RelativeOffset};
 pub struct Scrollable<
     'a,
     Message,
-    W = crate::core::Element<'a, Message, icedxdy_core::Theme, iced_widget::Renderer>,
-    Theme = icedxdy_core::Theme,
+    W = crate::core::Element<'a, Message, icedcn_core::Theme, iced_widget::Renderer>,
+    Theme = icedcn_core::Theme,
 > where
     Theme: Catalog,
 {
@@ -345,7 +345,7 @@ where
 
     /// Sets the style class of the [`Scrollable`].
     ///
-    /// Upstream gates this behind the `advanced` feature; the icedxdy
+    /// Upstream gates this behind the `advanced` feature; the icedcn
     /// fork drops the gate so the wrapper in `widget/src/scrollable.rs`
     /// can attach its bridge `StyleFn` without conditional compilation.
     #[must_use]
@@ -622,7 +622,7 @@ where
 
                 if was_scrollbar_visible != is_scrollbar_visible {
                     // Upstream emits a `log::trace!` here; dropped in
-                    // the icedxdy fork to avoid pulling in the optional
+                    // the icedcn fork to avoid pulling in the optional
                     // `log` crate as a hard dep just for one diagnostic.
                     tree.state.downcast_mut::<State>().is_scrollbar_visible = is_scrollbar_visible;
 

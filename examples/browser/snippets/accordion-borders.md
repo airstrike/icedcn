@@ -1,9 +1,9 @@
 ```rust
 use iced::Fill;
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{accordion, container};
-use icedxdy::{Theme, radius};
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::{accordion, container};
+use icedcn::{Theme, radius};
 
 let items = [
     (

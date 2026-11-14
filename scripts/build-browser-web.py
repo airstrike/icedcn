@@ -103,7 +103,11 @@ def main():
         shutil.copyfile(optimized, output / wasm_name)
         (output / js_name).write_text(js.replace("browser_bg.wasm", wasm_name))
         template = (ROOT / "examples/browser/web/index.html").read_text()
-        (output / "index.html").write_text(template.replace("BROWSER_MODULE", js_name))
+        html = (template.replace("BROWSER_MODULE", js_name)
+                .replace("BROWSER_WASM", wasm_name)
+                .replace("BROWSER_BYTES", str(optimized.stat().st_size))
+                .replace("BROWSER_LOGO", (ROOT / "assets/logo.svg").read_text().strip()))
+        (output / "index.html").write_text(html)
         # Only generated modules in this dedicated output tree are stale.
         for pattern in ("browser-*.wasm", "browser-*.js"):
             for old in output.glob(pattern):

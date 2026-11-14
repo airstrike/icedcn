@@ -1,8 +1,8 @@
 ```rust
 use iced::{Fill, Pixels};
-use icedxdy::theme;
-use icedxdy::theme::tweak::Alpha;
-use icedxdy::widget::{Slot, checkbox, column, container, field, text};
+use icedcn::theme;
+use icedcn::theme::tweak::Alpha;
+use icedcn::widget::{Slot, checkbox, column, container, field, text};
 
 column![
     field(checkbox())

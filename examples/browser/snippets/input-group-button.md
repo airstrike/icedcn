@@ -1,12 +1,12 @@
 ```rust
 use iced::widget::component::{self, Component};
 use iced::{Element, Fill, Widget};
-use icedxdy::{Theme, Slot};
-use icedxdy::widget::{Column, button, column, input, input_group, popover, text};
-use icedxdy::widget::input_group::Align;
+use icedcn::{Theme, Slot};
+use icedcn::widget::{Column, button, column, input, input_group, popover, text};
+use icedcn::widget::input_group::Align;
 use crate::{icon, Message};
 
-const URL: &str = "https://github.com/airstrike/icedxdy";
+const URL: &str = "https://github.com/airstrike/icedcn";
 
 struct Buttons;
 #[derive(Default)]

@@ -7,8 +7,8 @@
 use iced::widget::responsive;
 use iced::{Shrink, Task, Widget};
 
-use icedxdy::widget::{button, column, dialog, field, input, scrollable, text};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{button, column, dialog, field, input, scrollable, text};
+use icedcn::{Slot, Theme};
 
 use crate::Message;
 use crate::page;
@@ -171,7 +171,7 @@ impl page::Page for DialogPage {
                             "Anyone who has this link will be able to view this.",
                         ),
                         input("")
-                            .default_value("https://github.com/airstrike/icedxdy")
+                            .default_value("https://github.com/airstrike/icedcn")
                             .width(iced::Fill),
                         dialog::footer([d.close(button("Close"))]),
                     ]

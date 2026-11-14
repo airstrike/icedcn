@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{item, spinner, text};
+use icedcn::widget::{item, spinner, text};
 
 item::item([
     item::media(spinner()).into(),

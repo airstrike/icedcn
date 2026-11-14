@@ -9,7 +9,7 @@ use iced_core::{
     mouse, overlay, renderer,
 };
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 pub(super) struct Viewport<'a, Message> {
     content: Element<'a, Message, Theme, Renderer>,

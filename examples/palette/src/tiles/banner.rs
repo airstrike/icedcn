@@ -4,11 +4,11 @@ use iced::Fill;
 use iced::Widget;
 use iced::gradient::Linear;
 use iced::widget::space;
-use icedxdy::Theme;
-use icedxdy::card;
-use icedxdy::core::{Border, oklch};
-use icedxdy::theme;
-use icedxdy::widget::{badge, button, column, container, row, text};
+use icedcn::Theme;
+use icedcn::card;
+use icedcn::core::{Border, oklch};
+use icedcn::theme;
+use icedcn::widget::{badge, button, column, container, row, text};
 
 use crate::{Message, State};
 

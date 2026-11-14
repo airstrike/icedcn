@@ -3,12 +3,12 @@ use iced::Task;
 use iced::widget::button::StyleFn;
 use iced::widget::component::{Component, component};
 use iced::{Color, Element, Fill, Widget};
-use icedxdy::Theme;
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::chart::{Chart, Series};
-use icedxdy::widget::{button, chart, column, container, row, separator, space, text};
-use icedxdy::{Slot, card};
+use icedcn::Theme;
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::chart::{Chart, Series};
+use icedcn::widget::{button, chart, column, container, row, separator, space, text};
+use icedcn::{Slot, card};
 
 pub static META: page::Meta = page::Meta {
     title: "Chart",
@@ -185,7 +185,7 @@ fn sample(
                 .width(width)
                 .height(height)
                 .style(move |_| Style {
-                    background: Some(icedxdy::Color::from(color).into()),
+                    background: Some(icedcn::Color::from(color).into()),
                     border: Border {
                         radius: 2.into(),
                         ..Default::default()

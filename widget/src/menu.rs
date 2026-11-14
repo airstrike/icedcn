@@ -2,7 +2,7 @@
 //! [`DropdownMenu`](crate::DropdownMenu) and [`ContextMenu`](crate::ContextMenu).
 //!
 //! ```ignore
-//! use icedxdy::widget::menu;
+//! use icedcn::widget::menu;
 //!
 //! column![
 //!     menu::group([
@@ -28,9 +28,9 @@ use iced_core::Length::Fill;
 use iced_core::text::IntoFragment;
 use iced_core::{Alignment, Element, Padding};
 use iced_widget::{Renderer, Space, Widget, anchored};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::menu::item;
-use icedxdy_core::theme::popover::content;
+use icedcn_core::Theme;
+use icedcn_core::theme::menu::item;
+use icedcn_core::theme::popover::content;
 
 use crate::button::widget::{self, Button};
 use crate::compose::{Compose, Inherited, Slot};
@@ -39,7 +39,7 @@ use crate::marker::{self, Press};
 use crate::popover::Signal;
 use crate::{column, row, text};
 
-pub use icedxdy_core::theme::menu::item::{Destructive, Variant};
+pub use icedcn_core::theme::menu::item::{Destructive, Variant};
 
 /// A `MenuItem`: a row that publishes its message and closes the menu
 /// when selected.

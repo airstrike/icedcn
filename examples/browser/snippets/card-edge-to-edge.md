@@ -1,8 +1,8 @@
 ```rust
 use iced::{Fill, Widget};
-use icedxdy::{card, Slot};
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{button, column, container, row, scroll_area, separator, space, text};
+use icedcn::{card, Slot};
+use icedcn::theme::container::Style;
+use icedcn::widget::{button, column, container, row, scroll_area, separator, space, text};
 
 fn terms<'a>() -> Slot<'a, Message> {
     const TERMS: [&str; 4] = [

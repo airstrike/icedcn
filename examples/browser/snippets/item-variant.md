@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{column, item};
+use icedcn::widget::{column, item};
 
 fn inbox<'a>(title: &'a str, description: &'a str) -> item::Item<'a, Message> {
     item::item([

@@ -7,8 +7,8 @@
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Task, Widget};
 
-use icedxdy::widget::{avatar, button, column, dropdown_menu, menu, row, text};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{avatar, button, column, dropdown_menu, menu, row, text};
+use icedcn::{Slot, Theme};
 
 use crate::Message;
 use crate::component::avatar::alex_handle;

@@ -3,8 +3,8 @@
 use iced::widget::component::{Component, component};
 use iced::{Element, Task, Widget};
 
-use icedxdy::widget::{column, row, sidebar, text};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{column, row, sidebar, text};
+use icedcn::{Slot, Theme};
 
 use crate::page;
 
@@ -76,8 +76,8 @@ use crate::component::avatar::alex_handle;
 use crate::icon;
 use iced::widget::{Space, Text};
 use iced::{Alignment, Fill};
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{avatar, collapsible, container, dropdown_menu, menu, scrollable};
+use icedcn::theme::container::Style;
+use icedcn::widget::{avatar, collapsible, container, dropdown_menu, menu, scrollable};
 
 type Glyph = fn() -> Text<'static, Theme>;
 const TEAMS: [(&str, &str, Glyph); 3] = [

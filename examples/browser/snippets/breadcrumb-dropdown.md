@@ -2,9 +2,9 @@
 use iced::Widget;
 use iced::widget::button::{Style, StyleFn};
 use iced::widget::svg;
-use icedxdy::Weight;
-use icedxdy::widget::{breadcrumb, button, dropdown_menu, menu, row};
-use icedxdy::{Slot, Theme};
+use icedcn::Weight;
+use icedcn::widget::{breadcrumb, button, dropdown_menu, menu, row};
+use icedcn::{Slot, Theme};
 
 #[derive(Debug, Clone)]
 enum Message {

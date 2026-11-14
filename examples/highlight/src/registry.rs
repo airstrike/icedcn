@@ -79,7 +79,7 @@ enum FileNode {
 fn cache_root() -> Result<PathBuf, String> {
     let dir = dirs::cache_dir()
         .ok_or_else(|| "no platform cache directory available".to_owned())?
-        .join("icedxdy")
+        .join("icedcn")
         .join("highlight");
     std::fs::create_dir_all(dir.join("themes")).map_err(|e| e.to_string())?;
     Ok(dir)

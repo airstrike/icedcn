@@ -8,12 +8,12 @@
 
 use iced::Fill;
 use iced::Widget;
-use icedxdy::Slot;
-use icedxdy::card;
-use icedxdy::core::{Border, Color, Palette};
-use icedxdy::theme;
-use icedxdy::widget::{Column, alert, column, container, text};
-use icedxdy::{Theme, theme::container::Style};
+use icedcn::Slot;
+use icedcn::card;
+use icedcn::core::{Border, Color, Palette};
+use icedcn::theme;
+use icedcn::widget::{Column, alert, column, container, text};
+use icedcn::{Theme, theme::container::Style};
 
 use crate::Message;
 
@@ -85,7 +85,7 @@ fn tinted_alert(
                 background: Some(tint_fill(p).into()),
                 text_color: Some(p.foreground),
                 border: Border {
-                    radius: icedxdy::radius::LG.into(),
+                    radius: icedcn::radius::LG.into(),
                     width: 1.0,
                     color: tint_border(p),
                 },

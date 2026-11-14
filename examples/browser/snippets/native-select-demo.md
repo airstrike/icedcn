@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::native_select;
+use icedcn::widget::native_select;
 
 native_select([
     native_select::item("", "Select status"),

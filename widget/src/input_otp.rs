@@ -4,8 +4,8 @@ use crate::compose::{Compose, Inherited, Slot};
 use crate::text_input::{TextInput, element};
 use iced_core::Element;
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::text_input;
+use icedcn_core::Theme;
+use icedcn_core::theme::text_input;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Pattern {

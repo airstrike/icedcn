@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, toast};
+use icedcn::widget::{button, toast};
 
 toast::trigger(
     button("Show Toast").style(button::Outline),

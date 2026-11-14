@@ -8,8 +8,8 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::card;
-//! use icedxdy::widget::{button, column};
+//! use icedcn::card;
+//! use icedcn::widget::{button, column};
 //!
 //! card(column![
 //!     card::header("Login to your account")

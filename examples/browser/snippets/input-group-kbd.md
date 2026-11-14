@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{input, input_group, kbd};
+use icedcn::widget::{input, input_group, kbd};
 
 input_group(input("Search..."))
     .addon(input_group::addon(icon::search()))

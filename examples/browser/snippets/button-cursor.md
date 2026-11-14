@@ -4,7 +4,7 @@ Buttons use the default arrow cursor. Set `.interaction(Interaction::Pointer)` t
 
 ```rust
 use iced::mouse::Interaction;
-use icedxdy::widget::button;
+use icedcn::widget::button;
 
 button("Docs").style(button::Ghost)
     .interaction(Interaction::Pointer)

@@ -7,8 +7,8 @@ use iced_core::Length::{Fill, Shrink};
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::{Length, Padding};
 use iced_widget::Renderer;
-use icedxdy_core::theme::container::Style;
-use icedxdy_core::{Border, Theme};
+use icedcn_core::theme::container::Style;
+use icedcn_core::{Border, Theme};
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::{Size, Weight, column, container, rule};
@@ -195,8 +195,8 @@ impl<'a, Message: 'a> Cell<'a, Message> {
     }
 
     /// Set the cell padding.
-    pub fn padding(mut self, padding: impl Into<icedxdy_core::Padding>) -> Self {
-        let padding: icedxdy_core::Padding = padding.into();
+    pub fn padding(mut self, padding: impl Into<icedcn_core::Padding>) -> Self {
+        let padding: icedcn_core::Padding = padding.into();
         self.padding = padding.into();
         self
     }

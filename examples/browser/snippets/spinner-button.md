@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, column, spinner};
+use icedcn::widget::{button, column, spinner};
 
 column![
     button![spinner(), "Loading..."].size(Size::Sm).disabled(true),

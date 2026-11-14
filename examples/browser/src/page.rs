@@ -19,22 +19,22 @@ use iced::mouse::Interaction;
 use iced::widget::{Id, column, scrollable, sensor, stack, themer};
 use iced::{Background, Fill, Font, Pixels, Subscription, Task};
 
-use icedxdy::Size::{Lg, Sm};
-use icedxdy::core::{Border, Radius};
-use icedxdy::theme::container::{
+use icedcn::Size::{Lg, Sm};
+use icedcn::core::{Border, Radius};
+use icedcn::theme::container::{
     Style, code_block, code_block_panel, code_fade_overlay, transparent,
 };
-use icedxdy::theme::tweak::Opaque;
-use icedxdy::widget::markdown;
-use icedxdy::widget::markdown::widget::Highlight;
-use icedxdy::widget::{button, rule, text};
-use icedxdy::widget::{container, toast};
-use icedxdy::{Slot, Theme, Weight, radius, theme};
+use icedcn::theme::tweak::Opaque;
+use icedcn::widget::markdown;
+use icedcn::widget::markdown::widget::Highlight;
+use icedcn::widget::{button, rule, text};
+use icedcn::widget::{container, toast};
+use icedcn::{Slot, Theme, Weight, radius, theme};
 
 use crate::component::code_block;
 use crate::font;
 use crate::icon;
-use icedxdy::widget::scroller;
+use icedcn::widget::scroller;
 
 /// Height for preview containers, in logical pixels. Per-example
 /// cards stay at this fixed height; tall content (the typography
@@ -817,7 +817,7 @@ pub struct SnippetViewer {
     map: markdown::highlighter::Map,
     /// Palette-derived markdown style. Inline-code fields (color +
     /// highlight bg) are driven by `palette.code`; everything else
-    /// is the icedxdy default. Private because only [`snippet`] in
+    /// is the icedcn default. Private because only [`snippet`] in
     /// this module reads it; the App swaps the whole viewer on theme
     /// toggle rather than mutating in place.
     style: markdown::Style,
@@ -854,7 +854,7 @@ impl<'a> markdown::Viewer<'a, markdown::Uri, Theme, iced::Renderer> for SnippetV
         _code: &'a str,
         lines: &'a [markdown::Text],
     ) -> iced::Element<'a, markdown::Uri, Theme, iced::Renderer> {
-        use icedxdy::widget::scrollable;
+        use icedcn::widget::scrollable;
 
         let body = markdown::code(settings, lines, Some(&self.map))
             .on_link_click(Self::on_link_click)
@@ -973,7 +973,7 @@ impl State {
     }
 
     pub fn update(&mut self, event: &Message) -> Task<super::Message> {
-        use icedxdy::widget::operation::scroll;
+        use icedcn::widget::operation::scroll;
 
         match event {
             Message::SnippetLoaded(path, result) => {
@@ -1079,7 +1079,7 @@ pub(crate) fn slug(title: &str) -> String {
 
 /// Route component links to the installed browser page and external URLs to the system handler.
 pub fn open_link(url: &str) -> Task<super::Message> {
-    if let Some(target) = url.strip_prefix("icedxdy://component/") {
+    if let Some(target) = url.strip_prefix("icedcn://component/") {
         return Task::done(super::Message::OpenComponent(target.to_owned()));
     }
     if url.starts_with("https://") || url.starts_with("http://") || url.starts_with("mailto:") {

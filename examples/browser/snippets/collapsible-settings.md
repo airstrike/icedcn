@@ -2,8 +2,8 @@
 use iced::alignment::Vertical;
 use iced::widget::{svg, text::LineHeight};
 use iced::{Fill, Padding};
-use icedxdy::widget::{button, collapsible, column, container, input, row, text};
-use icedxdy::{Slot, Theme, card};
+use icedcn::widget::{button, collapsible, column, container, input, row, text};
+use icedcn::{Slot, Theme, card};
 
 fn icon(path: &'static str, size: f32) -> svg::Svg<'static, Theme> {
     svg(svg::Handle::from_memory(format!(

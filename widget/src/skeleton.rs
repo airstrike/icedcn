@@ -12,7 +12,7 @@ use iced_core::{
     Event, Layout, Rectangle, Renderer as _, Shell, Size, Widget, layout, mouse, renderer, window,
 };
 use iced_widget::Renderer;
-use icedxdy_core::{Radius, Theme, radius};
+use icedcn_core::{Radius, Theme, radius};
 
 use crate::compose::{Compose, Slot};
 

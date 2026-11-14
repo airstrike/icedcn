@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{field, input};
+use icedcn::widget::{field, input};
 
 field(
     input("Enter your username")

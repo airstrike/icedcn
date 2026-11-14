@@ -1,8 +1,8 @@
 ```rust
 use iced::{alignment, Element, Widget};
 use iced::widget;
-use icedxdy::Theme;
-use icedxdy::widget::badge;
+use icedcn::Theme;
+use icedcn::widget::badge;
 
 fn example() -> Element<'static, (), Theme> {
     widget::row::<Element<'_, _, Theme>>([

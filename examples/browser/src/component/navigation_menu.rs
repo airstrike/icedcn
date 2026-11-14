@@ -1,8 +1,8 @@
 use crate::{Message, page};
 use iced::widget::responsive;
 use iced::{Fill, Task, Widget};
-use icedxdy::widget::{column, container, menu, navigation_menu, row, text};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{column, container, menu, navigation_menu, row, text};
+use icedcn::{Slot, Theme};
 pub static META: page::Meta = page::Meta {
     title: "Navigation Menu",
     description: "A collection of links for navigating an application.",
@@ -49,32 +49,32 @@ const COMPONENTS: &[(&str, &str, &str)] = &[
     (
         "Alert Dialog",
         "A modal dialog that interrupts the user with important content and expects a response.",
-        "icedxdy://component/alert-dialog",
+        "icedcn://component/alert-dialog",
     ),
     (
         "Hover Card",
         "For sighted users to preview content available behind a link.",
-        "icedxdy://component/hover-card",
+        "icedcn://component/hover-card",
     ),
     (
         "Progress",
         "Displays an indicator showing the completion progress of a task, typically displayed as a progress bar.",
-        "icedxdy://component/progress",
+        "icedcn://component/progress",
     ),
     (
         "Scroll Area",
         "Scroll through content inside a fixed viewport.",
-        "icedxdy://component/scroll-area",
+        "icedcn://component/scroll-area",
     ),
     (
         "Tabs",
         "A set of layered sections of content—known as tab panels—that are displayed one at a time.",
-        "icedxdy://component/tabs",
+        "icedcn://component/tabs",
     ),
     (
         "Tooltip",
         "A popup that displays information related to an element when the element receives keyboard focus or the mouse hovers over it.",
-        "icedxdy://component/tooltip",
+        "icedcn://component/tooltip",
     ),
 ];
 
@@ -85,17 +85,17 @@ fn navigation(wide: bool) -> Slot<'static, Message> {
                 doc_link(
                     "Introduction",
                     "Reusable widgets for iced applications.",
-                    "https://github.com/airstrike/icedxdy"
+                    "https://github.com/airstrike/icedcn"
                 ),
                 doc_link(
                     "Installation",
                     "How to install dependencies and structure your app.",
-                    "https://github.com/airstrike/icedxdy"
+                    "https://github.com/airstrike/icedcn"
                 ),
                 doc_link(
                     "Typography",
                     "Styles for headings, paragraphs, lists...etc",
-                    "icedxdy://component/typography"
+                    "icedcn://component/typography"
                 )
             ]
             .into()
@@ -121,7 +121,7 @@ fn navigation(wide: bool) -> Slot<'static, Message> {
     }
     entries.push(navigation_menu::link(
         "Docs",
-        Message::OpenUrl("https://github.com/airstrike/icedxdy"),
+        Message::OpenUrl("https://github.com/airstrike/icedcn"),
     ));
     navigation_menu(entries).into()
 }

@@ -1,7 +1,7 @@
 use iced::Task;
 
-use icedxdy::widget::{button, column, row, toast};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{button, column, row, toast};
+use icedcn::{Slot, Theme};
 
 use crate::Message;
 use crate::page;

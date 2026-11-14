@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{column, kbd, kbd_group, text};
+use icedcn::widget::{column, kbd, kbd_group, text};
 
 column![
     kbd_group![kbd("⌘"), kbd("⇧"), kbd("⌥"), kbd("⌃")],

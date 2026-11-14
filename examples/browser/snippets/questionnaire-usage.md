@@ -3,8 +3,8 @@
 Define the ordered questions once and handle the submitted answers in your application.
 
 ```rust
-use icedxdy::widget::questionnaire;
-use icedxdy::widget::questionnaire::{choice, item};
+use icedcn::widget::questionnaire;
+use icedcn::widget::questionnaire::{choice, item};
 
 questionnaire([
     item("direction", "What should we prototype next?")

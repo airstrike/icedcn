@@ -2,7 +2,7 @@
 //! the items.
 //!
 //! ```ignore
-//! use icedxdy::widget::breadcrumb;
+//! use icedcn::widget::breadcrumb;
 //!
 //! breadcrumb([
 //!     breadcrumb::link("Home", Message::GoHome),
@@ -45,7 +45,7 @@ use iced_core::mouse::Interaction;
 use iced_widget::Widget;
 use iced_widget::container::Style;
 use iced_widget::{Renderer, container};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// A composable breadcrumb part, usable in a trail or as another widget's child.
 ///

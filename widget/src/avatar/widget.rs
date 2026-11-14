@@ -8,9 +8,9 @@ use iced_core::{
     Renderer as _, Shell, Size, Vector, Widget, layout, mouse, overlay, renderer,
 };
 use iced_widget::{Image, Renderer};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::avatar::fallback_style;
-use icedxdy_core::theme::container::{Style, StyleFn};
+use icedcn_core::Theme;
+use icedcn_core::theme::avatar::fallback_style;
+use icedcn_core::theme::container::{Style, StyleFn};
 
 use super::Geometry;
 

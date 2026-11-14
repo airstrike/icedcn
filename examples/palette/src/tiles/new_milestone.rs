@@ -2,8 +2,8 @@
 
 use iced::Fill;
 use iced::Widget;
-use icedxdy::widget::{button, column, field, input, row};
-use icedxdy::{Theme, card};
+use icedcn::widget::{button, column, field, input, row};
+use icedcn::{Theme, card};
 
 use crate::Message;
 

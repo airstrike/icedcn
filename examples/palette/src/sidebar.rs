@@ -3,10 +3,10 @@
 use iced::widget::{space, svg};
 use iced::{Center, Fill};
 use iced_widget::button::Status;
-use icedxdy::Theme;
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{Size, Slot, button, column, container, row, rule, scrollable, text};
+use icedcn::Theme;
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::{Size, Slot, button, column, container, row, rule, scrollable, text};
 
 use crate::{Message, State, icon};
 

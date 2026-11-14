@@ -1,6 +1,6 @@
 ```rust
-use icedxdy::widget::{field, switch};
-use icedxdy::widget::field::Horizontal;
+use icedcn::widget::{field, switch};
+use icedcn::widget::field::Horizontal;
 
 field(switch())
     .orientation(Horizontal)

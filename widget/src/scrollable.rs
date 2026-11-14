@@ -11,7 +11,7 @@ use crate::compose::{Compose, Inherited, Slot};
 use iced_core::Length;
 use iced_core::widget::Id;
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// Width of the scrollbar's rail: 1px, invisible.
 pub const RAIL_WIDTH: f32 = 1.0;

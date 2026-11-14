@@ -2,12 +2,12 @@ use crate::{Message, page};
 use iced::Task;
 use iced::widget::image;
 use iced::{ContentFit, Widget};
-use icedxdy::Slot;
-use icedxdy::Theme;
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::scrollable::Direction;
-use icedxdy::widget::{Row, column, container, row, scroll_area, separator, text};
+use icedcn::Slot;
+use icedcn::Theme;
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::scrollable::Direction;
+use icedcn::widget::{Row, column, container, row, scroll_area, separator, text};
 use std::sync::OnceLock;
 
 pub static META: page::Meta = page::Meta {

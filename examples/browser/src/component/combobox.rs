@@ -6,8 +6,8 @@
 
 use iced::Task;
 
-use icedxdy::Theme;
-use icedxdy::widget::combobox;
+use icedcn::Theme;
+use icedcn::widget::combobox;
 
 use crate::Message;
 use crate::icon;

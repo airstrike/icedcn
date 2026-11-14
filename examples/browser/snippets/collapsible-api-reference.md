@@ -12,4 +12,4 @@ An iced `Component` that owns its open state. The closure receives a `collapsibl
 
 `c.is_open()` exposes the current state and `c.is_disabled()` exposes the root/ancestor trigger-disabled state. An inherited disabled ancestor disables all descendants. Inherited typography reaches the content closure.
 
-[Read the collapsible implementation](https://github.com/airstrike/icedxdy/blob/HEAD/widget/src/collapsible.rs).
+[Read the collapsible implementation](https://github.com/airstrike/icedcn/blob/HEAD/widget/src/collapsible.rs).

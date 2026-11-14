@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{trace, text};
+use icedcn::widget::{trace, text};
 
 trace::disclosure(
     || trace::line("Looking into the slow Cargo build").status(Status::Running),

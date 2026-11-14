@@ -2,13 +2,13 @@
 
 use iced::Widget;
 use iced::{Center, Fill, Padding};
-use icedxdy::Theme;
-use icedxdy::card;
-use icedxdy::core::Border;
-use icedxdy::theme;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{button, column, container, row, text};
-use icedxdy::{Slot, Space};
+use icedcn::Theme;
+use icedcn::card;
+use icedcn::core::Border;
+use icedcn::theme;
+use icedcn::theme::container::Style;
+use icedcn::widget::{button, column, container, row, text};
+use icedcn::{Slot, Space};
 
 use super::api_gap;
 use crate::{Message, State};

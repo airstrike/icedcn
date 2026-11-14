@@ -5,7 +5,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::sidebar;
+//! use icedcn::widget::sidebar;
 //!
 //! sidebar::provider(|s| {
 //!     row![s.sidebar(menu()), sidebar::main(column![sidebar::trigger(), body()])].into()
@@ -19,7 +19,7 @@ use crate::marker::{self, Press};
 use crate::text::Text;
 use iced_core::Element;
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// The signal a trigger records when pressed.
 #[derive(Debug, Clone, Copy)]

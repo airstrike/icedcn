@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{attachment, dialog};
+use icedcn::widget::{attachment, dialog};
 
 dialog(
     |d| {

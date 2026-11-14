@@ -4,8 +4,8 @@ use iced_core::{Element, Event, Point, mouse};
 use iced_test::Simulator;
 use iced_test::simulator::{self, simulator};
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
-use icedxdy_widget::resizable;
+use icedcn_core::Theme;
+use icedcn_widget::resizable;
 
 #[test]
 fn dragging_and_keyboard_adjust_the_same_split() {

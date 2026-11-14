@@ -7,7 +7,7 @@ use iced_core::renderer;
 use iced_core::widget::{Meta, Operation, Tree, Widget, tree};
 use iced_core::{Event, Length, Padding, Pixels, Rectangle, Shell, Vector};
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// Create a [`Column`] with the given children.
 ///
@@ -26,7 +26,7 @@ macro_rules! column {
     };
 }
 
-/// A column of icedxdy elements that participates in size propagation.
+/// A column of icedcn elements that participates in size propagation.
 pub struct Column<'a, Message> {
     children: Vec<Slot<'a, Message>>,
     spacing: Option<f32>,
@@ -100,8 +100,8 @@ impl<'a, Message: 'a> Column<'a, Message> {
     }
 
     /// Sets the [`Padding`] of the [`Column`].
-    pub fn padding(mut self, padding: impl Into<icedxdy_core::Padding>) -> Self {
-        let padding: icedxdy_core::Padding = padding.into();
+    pub fn padding(mut self, padding: impl Into<icedcn_core::Padding>) -> Self {
+        let padding: icedcn_core::Padding = padding.into();
         self.padding = padding.into();
         self
     }

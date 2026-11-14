@@ -1,11 +1,11 @@
-// A `<Label htmlFor>` links to its control by id; in icedxdy the link is a
+// A `<Label htmlFor>` links to its control by id; in icedcn the link is a
 // `field(..)`, whose label presses the control it wraps. `text::label`
 // alone is the typography without the link.
 
 use iced::Task;
 
-use icedxdy::widget::{checkbox, field};
-use icedxdy::{Horizontal, Theme};
+use icedcn::widget::{checkbox, field};
+use icedcn::{Horizontal, Theme};
 
 use crate::Message;
 use crate::page;

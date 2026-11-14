@@ -4,7 +4,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::pagination;
+//! use icedcn::widget::pagination;
 //!
 //! pagination([
 //!     pagination::previous().on_press(Message::Previous).into(),
@@ -24,7 +24,7 @@ use iced_core::Length::Fill;
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::{Alignment, Length};
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use crate::button;
 use crate::compose::{Compose, Slot};

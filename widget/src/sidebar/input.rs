@@ -4,7 +4,7 @@ use crate::compose::Slot;
 use crate::container::Container;
 use iced_core::Length::Fill;
 use iced_widget::Widget;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// Create a sidebar text input.
 ///

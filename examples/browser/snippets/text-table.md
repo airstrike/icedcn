@@ -1,6 +1,6 @@
 ```rust
 use iced::{Element, Fill};
-use icedxdy::widget::text;
+use icedcn::widget::text;
 use sweeten::widget::table;
 
 let rows = &[

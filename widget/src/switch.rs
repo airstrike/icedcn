@@ -3,7 +3,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::switch;
+//! use icedcn::widget::switch;
 //!
 //! // Uncontrolled: the switch keeps its own value.
 //! switch().label("Airplane mode")
@@ -23,8 +23,8 @@ use crate::compose::{Compose, Inherited, Slot};
 use iced_core::Length;
 use iced_core::text::IntoFragment;
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
-use icedxdy_core::theme;
+use icedcn_core::Theme;
+use icedcn_core::theme;
 
 use self::element::from_core;
 

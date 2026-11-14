@@ -2,4 +2,4 @@
 
 Use `.side(..)` to choose a window edge and `.height_fraction(..)` to cap a top or bottom panel. Drawers accept `.open(..)`, `.default_open(..)`, and `.on_open_change(..)`.
 
-[Read the drawer implementation](https://github.com/airstrike/icedxdy/blob/HEAD/widget/src/drawer.rs).
+[Read the drawer implementation](https://github.com/airstrike/icedcn/blob/HEAD/widget/src/drawer.rs).

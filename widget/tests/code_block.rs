@@ -5,9 +5,9 @@ use iced_core::widget::operation::{Operation, Outcome, Scrollable, focusable};
 use iced_core::{Element, Event, Point, Rectangle, Size, Vector, mouse};
 use iced_test::{Simulator, simulator};
 use iced_widget::{Renderer, Space};
-use icedxdy_core::Theme;
-use icedxdy_widget::code_block::LineStyle;
-use icedxdy_widget::{CodeBlock, Slot, button, container};
+use icedcn_core::Theme;
+use icedcn_widget::code_block::LineStyle;
+use icedcn_widget::{CodeBlock, Slot, button, container};
 
 type Ui = Simulator<'static, (), Theme, Renderer>;
 
@@ -142,7 +142,7 @@ fn collapsed_content_keeps_complete_source_and_does_not_scroll_vertically() {
 
 #[test]
 fn floating_actions_precede_content_and_survive_rebuild() {
-    let block = || icedxdy_widget::code_block("output").actions(button("Copy").on_press(()));
+    let block = || icedcn_widget::code_block("output").actions(button("Copy").on_press(()));
     let mut view = ui(container(block()).width(448).into(), 600.);
     view.point_at(Point::new(550., 900.));
     view.draw(&Theme::light());
@@ -179,7 +179,7 @@ fn header_actions_stay_at_the_end_at_both_widths() {
     for compact in [false, true] {
         for width in [512., 260.] {
             for title_width in [40., 800.] {
-                let block = icedxdy_widget::code_block("output")
+                let block = icedcn_widget::code_block("output")
                     .compact(compact)
                     .title(container(Space::new().width(title_width).height(20)).id("title"))
                     .actions(
@@ -206,7 +206,7 @@ fn header_actions_stay_at_the_end_at_both_widths() {
 #[test]
 fn highlighted_patch_rebuilds_with_incoming_source_and_preserves_rows() {
     use iced_core::widget::operation::Text;
-    use icedxdy_widget::code_block;
+    use icedcn_widget::code_block;
 
     #[derive(Default)]
     struct Rows(Vec<String>);

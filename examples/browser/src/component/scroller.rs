@@ -10,7 +10,7 @@ use crate::page::rhea;
 use crate::{Message, page};
 use iced::widget::component::component;
 use iced::{Task, Widget};
-use icedxdy::Theme;
+use icedcn::Theme;
 
 pub static META: page::Meta = page::Meta {
     title: "Message Scroller",

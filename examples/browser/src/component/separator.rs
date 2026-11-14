@@ -3,8 +3,8 @@
 use iced::widget::responsive;
 use iced::{Center, Fill, Length, Pixels, Shrink, Task, Widget};
 
-use icedxdy::widget::{Column, column, container, row, separator, space, text};
-use icedxdy::{Slot, Theme, Vertical, theme};
+use icedcn::widget::{Column, column, container, row, separator, space, text};
+use icedcn::{Slot, Theme, Vertical, theme};
 
 use crate::Message;
 use crate::page;
@@ -118,7 +118,7 @@ impl page::Page for SeparatorPage {
         match id {
             "demo" => column![
                 column![
-                    text::label("icedxdy").height(14),
+                    text::label("icedcn").height(14),
                     text::muted("The Foundation for your Design System").line_height(Pixels(20.0)),
                 ]
                 .spacing(6),

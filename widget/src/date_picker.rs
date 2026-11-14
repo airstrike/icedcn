@@ -3,7 +3,7 @@
 use iced_core::Element;
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 use std::rc::Rc;
 
 use crate::calendar::{Mode, Selection};

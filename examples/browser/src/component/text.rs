@@ -2,9 +2,9 @@ use iced::Element;
 use iced::Widget;
 use iced::widget::column;
 use iced::{Fill, Task};
-use icedxdy::Size::Sm;
-use icedxdy::widget::{container, rule, text};
-use icedxdy::{Theme, radius, theme};
+use icedcn::Size::Sm;
+use icedcn::widget::{container, rule, text};
+use icedcn::{Theme, radius, theme};
 use sweeten::widget::table;
 
 use crate::Message;

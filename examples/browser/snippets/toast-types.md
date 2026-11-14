@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, row, toast};
+use icedcn::widget::{button, row, toast};
 
 fn raise<'a>(label: &'a str, toast: toast::Toast<Message>) -> Slot<'a, Message> {
     toast::trigger(button(label).style(button::Outline), toast)

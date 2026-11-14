@@ -1,7 +1,7 @@
 //! Composition: the [`Compose`] trait, the type-erased [`Slot`] and the
 //! [`Inherited`] props a parent cascades into its children.
 //!
-//! Every icedxdy widget is a builder that implements [`Compose`]. A parent
+//! Every icedcn widget is a builder that implements [`Compose`]. A parent
 //! holds its children as [`Slot`]s, pushes its cascading props into them with
 //! [`Slot::inherit`] and only then turns them into iced [`Element`]s with
 //! [`Slot::compose`]. That ordering is what lets `button!["Fork", icon]` size
@@ -9,7 +9,7 @@
 //! it.
 //!
 //! Each [`Compose`] implementor also provides `From<Self> for Slot`, so APIs
-//! take `impl Into<Slot>`. The stock iced widgets icedxdy composes with are
+//! take `impl Into<Slot>`. The stock iced widgets icedcn composes with are
 //! listed at the bottom of this module; any other widget joins through its
 //! [`Element`] (`.boxed()`). Neither can be a blanket impl. iced implements
 //! `Widget` for `&str`, so a blanket over every iced widget would claim string
@@ -24,7 +24,7 @@ use crate::text::Text;
 use iced_core::Element;
 use iced_core::alignment::Horizontal;
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// The props a parent cascades to its descendants, like inherited CSS.
 ///
@@ -143,7 +143,7 @@ pub trait Compose<Message, T = Theme, R = Renderer> {
         Self: 'a;
 }
 
-/// A type-erased [`Compose`]: the child every icedxdy widget slot carries.
+/// A type-erased [`Compose`]: the child every icedcn widget slot carries.
 ///
 /// Covariant in `'a` (just like [`Element`]) so children of different
 /// lifetimes can sit side by side in [`column!`](crate::column!) and

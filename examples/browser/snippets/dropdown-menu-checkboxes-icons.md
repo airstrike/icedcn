@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, dropdown_menu, menu};
+use icedcn::widget::{button, dropdown_menu, menu};
 
 dropdown_menu(
     |m| m.trigger(button("Notifications").style(button::Outline)),

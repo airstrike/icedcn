@@ -2,7 +2,7 @@
 //! place the trigger and the second to build the panel and its close controls.
 //!
 //! ```ignore
-//! use icedxdy::widget::{button, column, dialog, field, input};
+//! use icedcn::widget::{button, column, dialog, field, input};
 //!
 //! dialog(
 //!     |d| d.trigger(button("Open Dialog").style(button::Outline)),
@@ -33,10 +33,10 @@ use iced_core::alignment::Horizontal;
 use iced_core::time::Instant;
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::Theme;
-use icedxdy_core::theme;
-use icedxdy_core::theme::container::Style;
-use icedxdy_core::theme::dialog;
+use icedcn_core::Theme;
+use icedcn_core::theme;
+use icedcn_core::theme::container::Style;
+use icedcn_core::theme::dialog;
 
 use crate::button::{self, button};
 use crate::compose::{Compose, Inherited, Slot};
@@ -458,7 +458,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                         Placement::Side(Side::Left) => [0., 12., 12., 0.],
                         Placement::Center { .. } => [12.; 4],
                     };
-                    style.border.radius = icedxdy_core::Radius {
+                    style.border.radius = icedcn_core::Radius {
                         top_left,
                         top_right,
                         bottom_right,

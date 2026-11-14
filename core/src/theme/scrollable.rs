@@ -5,7 +5,7 @@
 //! - Rail (track) background: TRANSPARENT — invisible.
 //! - Rail border: `Border::default()` — none.
 //! - Scroller width: 2px (set on the [`Scrollbar`] direction itself by the
-//!   icedxdy widget's defaults; the style here only paints the scroller).
+//!   icedcn widget's defaults; the style here only paints the scroller).
 //! - Scroller color: `palette.muted.foreground` at alpha 0.4 (Active),
 //!   0.7 (Hovered), 0.9 (Dragged). Reads as a faint hairline in both
 //!   light and dark mode while still being draggable.
@@ -17,7 +17,7 @@
 //! Iced's stock default is a chunky 10px rail with `palette.background.weak`
 //! background and `palette.background.strongest` scroller — the visual shape
 //! used by `iced::Theme` consumers. The `Theme` Catalog impl below replaces
-//! that with the thin spec for icedxdy users.
+//! that with the thin spec for icedcn users.
 //!
 //! Variants:
 //! - `Default` — the same thin spec, exposed as a unit struct so callers can

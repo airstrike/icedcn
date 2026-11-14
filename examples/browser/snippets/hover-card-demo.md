@@ -1,7 +1,7 @@
 ```rust
 use std::time::Duration;
 
-use icedxdy::widget::{button, column, container, hover_card, text};
+use icedcn::widget::{button, column, container, hover_card, text};
 
 hover_card(
     button("Hover Here").style(button::Link),

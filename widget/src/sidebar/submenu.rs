@@ -7,7 +7,7 @@ use crate::row::Row;
 use iced_core::Length::Fill;
 use iced_core::Padding;
 use iced_widget::Widget;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// Create a nested sidebar list with indentation and a left border.
 pub fn submenu<'a, Message: 'a>(

@@ -1,8 +1,8 @@
 ```rust
-use icedxdy::Size;
-use icedxdy::theme::tweak::{Fg, Token, hover};
-use icedxdy::widget::{breadcrumb, button, dropdown_menu, menu};
-use icedxdy::Slot;
+use icedcn::Size;
+use icedcn::theme::tweak::{Fg, Token, hover};
+use icedcn::widget::{breadcrumb, button, dropdown_menu, menu};
+use icedcn::Slot;
 
 #[derive(Debug, Clone)]
 enum Message {

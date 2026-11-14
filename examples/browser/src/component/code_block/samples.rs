@@ -20,9 +20,9 @@ pub const ANSI: &str = concat!(
 );
 
 pub const BASIC: &str = r##"$ cargo build --release
-   Compiling icedxdy_core v0.1.0
-   Compiling icedxdy_widget v0.1.0
-   Compiling icedxdy v0.1.0
+   Compiling icedcn_core v0.1.0
+   Compiling icedcn_widget v0.1.0
+   Compiling icedcn v0.1.0
    Compiling notebook v0.1.0
     Finished `release` profile [optimized] target(s) in 4.20s"##;
 
@@ -38,7 +38,7 @@ fn search<'a>(query: &str, titles: &[&'a str]) -> Vec<&'a str> {
         .collect()
 }"##;
 
-pub const DEMO: &str = r##"use icedxdy::{Slot, widget::{column, input, text}};
+pub const DEMO: &str = r##"use icedcn::{Slot, widget::{column, input, text}};
 
 #[derive(Clone, Debug)]
 pub enum Message { SearchChanged(String) }
@@ -69,9 +69,9 @@ pub const FLOATING_ACTIONS: &str = r##"$ cargo add serde --features derive
              + derive
              + std"##;
 
-pub const HEADER: &str = r##"$ cargo check -p icedxdy_widget
-    Checking icedxdy_core v0.1.0
-    Checking icedxdy_widget v0.1.0
+pub const HEADER: &str = r##"$ cargo check -p icedcn_widget
+    Checking icedcn_core v0.1.0
+    Checking icedcn_widget v0.1.0
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.80s"##;
 
 pub const HIGHLIGHTED_LINES: &str = r##"[package]
@@ -80,7 +80,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-icedxdy = { path = "../icedxdy" }"##;
+icedcn = { path = "../icedcn" }"##;
 
 pub const HIGHLIGHTING: &str = r##"#[derive(Debug, Default)]
 struct Notebook {
@@ -95,7 +95,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-icedxdy = { path = "../icedxdy" }"##;
+icedcn = { path = "../icedcn" }"##;
 
 pub const MARKDOWN: &str = r##"Normalize the query and title with `to_lowercase` before comparing them.
 
@@ -108,8 +108,8 @@ fn matches(query: &str, title: &str) -> bool {
 
 Trimming the query also ignores extra spaces at either end."##;
 
-pub const SHOW_MORE: &str = r##"use icedxdy::widget::{button, column, input, text};
-use icedxdy::Slot;
+pub const SHOW_MORE: &str = r##"use icedcn::widget::{button, column, input, text};
+use icedcn::Slot;
 
 #[derive(Default)]
 pub struct Notebook {
@@ -177,8 +177,8 @@ fn load_titles(path: &Path) -> std::io::Result<Vec<String>> {
 
 pub const WRAP: &str = r##"error: failed to read notebook index from /home/reader/.local/share/notebook/collections/research/field-notes/archive/index.toml: No such file or directory (os error 2)"##;
 
-pub const TABS_0: &str = r##"use icedxdy::widget::{column, text};
-use icedxdy::Slot;
+pub const TABS_0: &str = r##"use icedcn::widget::{column, text};
+use icedcn::Slot;
 
 pub fn view(titles: &[String]) -> Slot<'_, ()> {
     let mut items = column![].spacing(8);

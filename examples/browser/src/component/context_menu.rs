@@ -11,10 +11,10 @@ use iced::widget::Text;
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Task, Widget};
 
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{column, container, context_menu, menu, row, text};
-use icedxdy::{Slot, Theme, radius};
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::{column, container, context_menu, menu, row, text};
+use icedcn::{Slot, Theme, radius};
 
 use crate::Message;
 use crate::icon;

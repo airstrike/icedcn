@@ -1,12 +1,12 @@
 ```rust
 use iced::widget::image;
 use iced::{Subscription, Task, window};
-use icedxdy::Theme;
-use icedxdy::widget::avatar;
-use icedxdy::widget::row;
+use icedcn::Theme;
+use icedcn::widget::avatar;
+use icedcn::widget::row;
 
-use icedxdy::theme::avatar::badge_style;
-use icedxdy::theme::container;
+use icedcn::theme::avatar::badge_style;
+use icedcn::theme::container;
 
 fn presence(theme: &Theme) -> container::Style {
     let mut style = badge_style(theme);
@@ -15,7 +15,7 @@ fn presence(theme: &Theme) -> container::Style {
     } else {
         iced::Color::from_rgb8(0, 166, 62)
     };
-    style.background = Some(icedxdy::Color::from_srgb(color).into());
+    style.background = Some(icedcn::Color::from_srgb(color).into());
     style.border.width = 0.0;
     style
 }

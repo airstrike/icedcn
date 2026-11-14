@@ -2,10 +2,10 @@ Use `.badge_style(...)` to customize its surface and text color; badge geometry 
 
 ```rust
 use iced::widget::image;
-use icedxdy::Theme;
-use icedxdy::theme::avatar::badge_style;
-use icedxdy::theme::container;
-use icedxdy::widget::avatar;
+use icedcn::Theme;
+use icedcn::theme::avatar::badge_style;
+use icedcn::theme::container;
+use icedcn::widget::avatar;
 
 fn presence(theme: &Theme) -> container::Style {
     let mut style = badge_style(theme);
@@ -14,7 +14,7 @@ fn presence(theme: &Theme) -> container::Style {
     } else {
         iced::Color::from_rgb8(0, 166, 62)
     };
-    style.background = Some(icedxdy::Color::from_srgb(color).into());
+    style.background = Some(icedcn::Color::from_srgb(color).into());
     style.border.width = 0.0;
     style
 }

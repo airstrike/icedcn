@@ -1,7 +1,7 @@
 ```rust
-use icedxdy::widget::container;
+use icedcn::widget::container;
 use iced::Fill;
-use icedxdy::widget::{attachment, dialog, tooltip};
+use icedcn::widget::{attachment, dialog, tooltip};
 
 let name = "research-summary.pdf";
 container(dialog(

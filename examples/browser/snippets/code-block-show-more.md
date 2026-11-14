@@ -1,8 +1,8 @@
 ```rust
 use iced::widget::svg;
 use iced::{Fill, Font, Subscription, Widget, time};
-use icedxdy::widget::{CodeBlock, animation::cubic_bezier, button, code_block, container, row};
-use icedxdy::{Size, Slot, Theme};
+use icedcn::widget::{CodeBlock, animation::cubic_bezier, button, code_block, container, row};
+use icedcn::{Size, Slot, Theme};
 use std::f32::consts::PI;
 use std::time::{Duration, Instant};
 #[derive(Clone, Debug)]
@@ -93,8 +93,8 @@ fn chevron(turn: f32) -> Slot<'static, Message> {
         .style(|theme: &Theme, _| svg::Style { color: Some(theme.neutral.foreground.into()) }).boxed().into()
 }
 
-const SHOW_MORE: &str = r##"use icedxdy::widget::{button, column, input, text};
-use icedxdy::Slot;
+const SHOW_MORE: &str = r##"use icedcn::widget::{button, column, input, text};
+use icedcn::Slot;
 
 #[derive(Default)]
 pub struct Notebook {

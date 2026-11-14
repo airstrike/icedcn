@@ -1,7 +1,7 @@
 //! Catalog bridge for the vendored slider widget.
 
-use icedxdy_core::Theme;
-use icedxdy_core::theme::slider;
+use icedcn_core::Theme;
+use icedcn_core::theme::slider;
 
 use super::widget;
 

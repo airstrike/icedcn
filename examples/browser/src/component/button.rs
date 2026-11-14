@@ -14,8 +14,8 @@ mod with_icon;
 
 use iced::Task;
 
-use icedxdy::widget::{button, row};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{button, row};
+use icedcn::{Slot, Theme};
 
 use crate::page;
 
@@ -112,7 +112,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "button-group",
         title: "Button Group",
         description: Some(
-            "Arrange related actions with [Button Group](icedxdy://component/button-group).",
+            "Arrange related actions with [Button Group](icedcn://component/button-group).",
         ),
         snippet: "examples/browser/snippets/button-mail-actions.md",
     },

@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{row, toggle};
+use icedcn::widget::{row, toggle};
 
 row![
     toggle![italic, "Italic"].style(toggle::Outline),

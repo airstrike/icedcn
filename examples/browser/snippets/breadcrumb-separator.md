@@ -1,8 +1,8 @@
 ```rust
 use iced::Widget;
 use iced::widget::svg;
-use icedxdy::widget::breadcrumb;
-use icedxdy::{Slot, Theme};
+use icedcn::widget::breadcrumb;
+use icedcn::{Slot, Theme};
 
 #[derive(Debug, Clone)]
 enum Message {

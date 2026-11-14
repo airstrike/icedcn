@@ -2,8 +2,8 @@ use iced_core::time::Instant;
 use iced_core::{Element, Event, Point, window};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space};
-use icedxdy_core::{Horizontal, Theme};
-use icedxdy_widget::{Slot, field, switch};
+use icedcn_core::{Horizontal, Theme};
+use icedcn_widget::{Slot, field, switch};
 
 #[test]
 fn a_trailing_control_obeys_its_label_and_field_disabled_state() {
@@ -32,7 +32,7 @@ fn a_trailing_control_obeys_its_label_and_field_disabled_state() {
 #[test]
 fn resizing_a_responsive_field_preserves_the_typed_value() {
     use iced_core::Size;
-    use icedxdy_widget::{input, operation::control};
+    use icedcn_widget::{input, operation::control};
     let label: Slot<'_, String> = Space::new().width(40).height(20).into();
     let form: Element<'_, String, Theme, Renderer> = field(input("").on_input(|value| value))
         .label(label)
@@ -48,7 +48,7 @@ fn resizing_a_responsive_field_preserves_the_typed_value() {
 
 #[test]
 fn an_addon_focuses_its_input_except_when_a_button_handles_the_press() {
-    use icedxdy_widget::{button, input, input_group};
+    use icedcn_widget::{button, input, input_group};
     for active_button in [false, true] {
         let block: Slot<'_, String> = Space::new().width(22).height(20).into();
         let addon = if active_button {
@@ -78,8 +78,8 @@ fn an_addon_focuses_its_input_except_when_a_button_handles_the_press() {
 #[test]
 fn one_time_code_filters_input_and_edits_the_clicked_slot() {
     use iced_core::keyboard::key::Named;
-    use icedxdy_widget::input_otp::{Pattern, input_otp};
-    use icedxdy_widget::operation::control;
+    use icedcn_widget::input_otp::{Pattern, input_otp};
+    use icedcn_widget::operation::control;
     let code: Element<'_, String, Theme, Renderer> = input_otp(4)
         .pattern(Pattern::Digits)
         .group_size(2)
@@ -103,7 +103,7 @@ fn radio_arrows_select_and_wrap_past_disabled_choices() {
     use iced_core::keyboard::key::Named;
     use iced_core::widget::Operation;
     use iced_core::widget::operation::{self, Outcome, focusable};
-    use icedxdy_widget::{column, radio_group};
+    use icedcn_widget::{column, radio_group};
     let group: Element<'_, String, Theme, Renderer> = radio_group(|g| {
         column![
             g.item("first"),

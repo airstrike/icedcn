@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::select;
+use icedcn::widget::select;
 
 select([select::group([
     select::item("apple", "Apple"),

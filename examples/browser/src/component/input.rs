@@ -4,15 +4,15 @@ use iced::Fill;
 use iced::Task;
 
 use crate::icon;
-use icedxdy::Theme;
-use icedxdy::rich_text;
-use icedxdy::theme;
-use icedxdy::theme::tweak::Alpha;
-use icedxdy::theme::tweak::Token;
-use icedxdy::widget::button::group::Item;
-use icedxdy::widget::rich_text::span;
-use icedxdy::widget::{Slot, badge, button, field, input, row, space, text};
-use icedxdy::widget::{button_group, input_group};
+use icedcn::Theme;
+use icedcn::rich_text;
+use icedcn::theme;
+use icedcn::theme::tweak::Alpha;
+use icedcn::theme::tweak::Token;
+use icedcn::widget::button::group::Item;
+use icedcn::widget::rich_text::span;
+use icedcn::widget::{Slot, badge, button, field, input, row, space, text};
+use icedcn::widget::{button_group, input_group};
 
 use crate::Message;
 use crate::page;

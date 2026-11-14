@@ -6,7 +6,7 @@
 //! dialog's:
 //!
 //! ```ignore
-//! use icedxdy::widget::{alert_dialog, button, column};
+//! use icedcn::widget::{alert_dialog, button, column};
 //!
 //! alert_dialog(
 //!     |a| a.trigger(button("Show Dialog").style(button::Outline)),
@@ -33,10 +33,10 @@ use iced_core::Length::Fill;
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::text::LineHeight;
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
-use icedxdy_core::theme::alert_dialog;
-use icedxdy_core::theme::container::Spec;
-use icedxdy_core::theme::text::Foreground;
+use icedcn_core::Theme;
+use icedcn_core::theme::alert_dialog;
+use icedcn_core::theme::container::Spec;
+use icedcn_core::theme::text::Foreground;
 
 use crate::Size;
 use crate::button::Button;
@@ -48,7 +48,7 @@ use crate::row::Row;
 use crate::separator::separator;
 use crate::text;
 
-pub use icedxdy_core::theme::alert_dialog::{Destructive, Media};
+pub use icedcn_core::theme::alert_dialog::{Destructive, Media};
 
 #[cfg(test)]
 mod tests;

@@ -4,7 +4,7 @@
 //! `iced::container::Style` boundary, then converts to the vendored
 //! widget's `Style` via the `From` impl in `super::widget`.
 
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use super::widget;
 

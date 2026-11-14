@@ -14,7 +14,7 @@ fn sample(
                 .width(width)
                 .height(height)
                 .style(move |_| Style {
-                    background: Some(icedxdy::Color::from(color).into()),
+                    background: Some(icedcn::Color::from(color).into()),
                     border: Border {
                         radius: 2.into(),
                         ..Default::default()

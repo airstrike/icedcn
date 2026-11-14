@@ -3,9 +3,9 @@
 use iced::Fill;
 use iced::Widget;
 use iced::widget::space;
-use icedxdy::card;
-use icedxdy::widget::{button, column, container, input, row};
-use icedxdy::{Slot, Theme};
+use icedcn::card;
+use icedcn::widget::{button, column, container, input, row};
+use icedcn::{Slot, Theme};
 
 use crate::Message;
 

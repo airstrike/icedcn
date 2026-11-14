@@ -2,9 +2,9 @@
 use iced::alignment::Vertical;
 use iced::widget::{svg, text::LineHeight};
 use iced::{Fill, Padding};
-use icedxdy::theme::tweak::{Fg, Token};
-use icedxdy::widget::{button, collapsible, column, row, tabs, text};
-use icedxdy::{Size, Slot, Theme, card};
+use icedcn::theme::tweak::{Fg, Token};
+use icedcn::widget::{button, collapsible, column, row, tabs, text};
+use icedcn::{Size, Slot, Theme, card};
 
 fn icon(path: &'static str, size: f32) -> svg::Svg<'static, Theme> {
     svg(svg::Handle::from_memory(format!(
@@ -27,8 +27,8 @@ mod chevron {
     use iced_widget::core::svg::{Handle, Renderer as _, Svg};
     use iced_widget::core::widget::{Meta, Tree, Widget, tree};
     use iced_widget::core::{Layout, Shell, layout, renderer};
-    use icedxdy::widget::animation::cubic_bezier;
-    use icedxdy::{Compose, Slot, Theme};
+    use icedcn::widget::animation::cubic_bezier;
+    use icedcn::{Compose, Slot, Theme};
 
     static PATH: LazyLock<Handle> = LazyLock::new(|| {
         Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>"#)

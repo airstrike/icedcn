@@ -1,6 +1,6 @@
 ```rust
 use iced::Font;
-use icedxdy::{
+use icedcn::{
     Slot,
     widget::{code_block, column},
 };

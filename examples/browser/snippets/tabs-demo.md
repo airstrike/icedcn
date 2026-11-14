@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{column, tabs};
+use icedcn::widget::{column, tabs};
 
 tabs(|t| {
     column![

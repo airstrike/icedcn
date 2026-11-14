@@ -159,8 +159,8 @@ fn the_full_card_border_opens_the_preview_without_swallowing_actions() {
 
 #[test]
 fn a_disabled_ancestor_disables_the_full_card_target() {
-    use icedxdy::widget::attachment;
-    use icedxdy::{Inherited, Slot};
+    use icedcn::widget::attachment;
+    use icedcn::{Inherited, Slot};
     let mut card: Slot<'static, bool> = attachment("Disabled file")
         .trigger(|target| attachment::trigger(target).on_press(true).into())
         .into();
@@ -179,7 +179,7 @@ fn a_disabled_ancestor_disables_the_full_card_target() {
 #[test]
 fn repeated_escape_and_close_restore_the_attachment_trigger() {
     use iced_test::selector;
-    use icedxdy::Theme;
+    use icedcn::Theme;
     use std::time::Duration;
     let page = attachment::AttachmentPage::new(0);
     let mut ui: Simulator<'_, browser::Message, Theme, iced::Renderer> =
@@ -216,7 +216,7 @@ fn repeated_escape_and_close_restore_the_attachment_trigger() {
 #[test]
 fn a_wheel_gesture_settles_on_the_next_card_with_scroll_padding() {
     use iced::mouse::ScrollDelta;
-    use icedxdy::Theme;
+    use icedcn::Theme;
     use std::time::Duration;
     let page = attachment::AttachmentPage::new(0);
     let mut ui: Simulator<'_, browser::Message, Theme, iced::Renderer> =
@@ -239,7 +239,7 @@ fn a_wheel_gesture_settles_on_the_next_card_with_scroll_padding() {
 
 #[test]
 fn arrow_keys_scroll_while_a_file_action_keeps_focus() {
-    use icedxdy::Theme;
+    use icedcn::Theme;
     use std::time::Duration;
     let page = attachment::AttachmentPage::new(0);
     let mut ui: Simulator<'_, browser::Message, Theme, iced::Renderer> =

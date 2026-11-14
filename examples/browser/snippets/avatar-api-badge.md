@@ -10,16 +10,16 @@ The badge disk is 8/10/12px for small/default/large. Small avatars hide the inne
 
 ```rust
 use iced::widget::{Svg, svg};
-use icedxdy::Theme;
-use icedxdy::widget::avatar;
+use icedcn::Theme;
+use icedcn::widget::avatar;
 
 fn plus(size: f32) -> Svg<'static, Theme> {
     svg(svg::Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>"#))
         .width(size)
         .height(size)
 }
-use icedxdy::theme::avatar::badge_style;
-use icedxdy::theme::container;
+use icedcn::theme::avatar::badge_style;
+use icedcn::theme::container;
 
 fn presence(theme: &Theme) -> container::Style {
     let mut style = badge_style(theme);
@@ -28,7 +28,7 @@ fn presence(theme: &Theme) -> container::Style {
     } else {
         iced::Color::from_rgb8(0, 166, 62)
     };
-    style.background = Some(icedxdy::Color::from_srgb(color).into());
+    style.background = Some(icedcn::Color::from_srgb(color).into());
     style.border.width = 0.0;
     style
 }

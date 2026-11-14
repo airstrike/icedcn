@@ -5,9 +5,9 @@ use iced::time::{Duration, Instant};
 use iced::widget::Action;
 use iced::widget::component::Component;
 use iced::{Element, Event, Fill, Rectangle, Widget, mouse, window};
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{button, column, container, spinner, text, trace};
-use icedxdy::{Slot, Theme};
+use icedcn::theme::container::Style;
+use icedcn::widget::{button, column, container, spinner, text, trace};
+use icedcn::{Slot, Theme};
 use trace::Status;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -270,7 +270,7 @@ impl<'a> Component<'a, Message, Theme> for Replay {
             };
             layout = layout.push(
                 button(label)
-                    .size(icedxdy::Size::Sm)
+                    .size(icedcn::Size::Sm)
                     .style(button::Outline)
                     .on_press(msg)
                     .into(),

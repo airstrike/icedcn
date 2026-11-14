@@ -1,8 +1,8 @@
 ```rust
-use icedxdy::theme;
-use icedxdy::theme::tweak::Alpha;
-use icedxdy::Horizontal;
-use icedxdy::widget::{column, field, radio_group, text};
+use icedcn::theme;
+use icedcn::theme::tweak::Alpha;
+use icedcn::Horizontal;
+use icedcn::widget::{column, field, radio_group, text};
 
 radio_group(|g| {
     column![

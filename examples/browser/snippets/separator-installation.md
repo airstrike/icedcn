@@ -1,8 +1,8 @@
 ## Installation
 
-Add `icedxdy` to your application:
+Add `icedcn` to your application:
 
 ```toml
 [dependencies]
-icedxdy = { git = "https://github.com/airstrike/icedxdy" }
+icedcn = { git = "https://github.com/airstrike/icedcn" }
 ```

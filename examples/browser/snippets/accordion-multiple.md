@@ -1,6 +1,6 @@
 ```rust
 use iced::Fill;
-use icedxdy::widget::{accordion, container};
+use icedcn::widget::{accordion, container};
 
 let items = [
     (

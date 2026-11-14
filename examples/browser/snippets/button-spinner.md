@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, row, spinner};
+use icedcn::widget::{button, row, spinner};
 
 row![
     button![spinner().circle(), "Generating"]

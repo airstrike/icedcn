@@ -5,8 +5,8 @@ use iced_core::time::Instant;
 use iced_core::{Element, Event, Point, window};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space};
-use icedxdy_core::Theme;
-use icedxdy_widget::{carousel, container};
+use icedcn_core::Theme;
+use icedcn_widget::{carousel, container};
 use std::time::Duration;
 
 fn gallery(controlled: bool) -> Element<'static, usize, Theme, Renderer> {

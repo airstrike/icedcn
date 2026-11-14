@@ -3,8 +3,8 @@
 Supply the current trail in reading order. Handle `Message::GoHome` and `Message::GoComponents` in your application update function to change the displayed route.
 
 ```rust
-use icedxdy::Slot;
-use icedxdy::widget::breadcrumb;
+use icedcn::Slot;
+use icedcn::widget::breadcrumb;
 
 #[derive(Debug, Clone)]
 enum Message {

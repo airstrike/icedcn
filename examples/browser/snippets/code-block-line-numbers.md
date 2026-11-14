@@ -1,6 +1,6 @@
 ```rust
 use iced::Font;
-use icedxdy::widget::{CodeBlock, code_block};
+use icedcn::widget::{CodeBlock, code_block};
 
 pub fn view<Message: Clone + 'static>() -> CodeBlock<'static, Message> {
     code_block(LINE_NUMBERS)
@@ -14,5 +14,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-icedxdy = { path = "../icedxdy" }"##;
+icedcn = { path = "../icedcn" }"##;
 ```

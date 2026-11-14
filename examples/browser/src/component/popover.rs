@@ -6,9 +6,9 @@
 
 use iced::{Fill, FillPortion, Task};
 
-use icedxdy::widget::field::Orientation;
-use icedxdy::widget::{button, column, field, input, popover, row, text};
-use icedxdy::{Size, Slot, Theme};
+use icedcn::widget::field::Orientation;
+use icedcn::widget::{button, column, field, input, popover, row, text};
+use icedcn::{Size, Slot, Theme};
 
 use crate::Message;
 use crate::page;

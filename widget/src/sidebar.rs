@@ -39,7 +39,7 @@ pub use trigger::trigger;
 
 use crate::compose::Slot;
 use crate::container::Container;
-use icedxdy_core::theme::sidebar;
+use icedcn_core::theme::sidebar;
 
 /// A sidebar flush against the window edge.
 pub fn fixed<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Container<'a, Message> {

@@ -1,7 +1,7 @@
 ```rust
 use iced::Fill;
-use icedxdy::Size;
-use icedxdy::widget::{alert_dialog, button, column};
+use icedcn::Size;
+use icedcn::widget::{alert_dialog, button, column};
 
 alert_dialog(
     |a| a.trigger(button("Show Dialog").style(button::Outline)),

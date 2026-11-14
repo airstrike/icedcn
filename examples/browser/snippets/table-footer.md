@@ -1,7 +1,7 @@
 ```rust
 use iced::alignment::Horizontal::Right;
-use icedxdy::widget::table::Track::{Auto, Fixed, Flex};
-use icedxdy::widget::{column, table, text};
+use icedcn::widget::table::Track::{Auto, Fixed, Flex};
+use icedcn::widget::{column, table, text};
 
 fn invoices<'a>(count: usize) -> iced::Element<'a, Message, Theme> {
     let header = table::header([table::row([

@@ -1,5 +1,5 @@
-use icedxdy::Slot;
-use icedxdy::widget::button;
+use icedcn::Slot;
+use icedcn::widget::button;
 
 use super::icons;
 use crate::Message;

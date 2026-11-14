@@ -1,6 +1,6 @@
 [package]
-name = "icedxdy_core"
-description = "Core types for icedxdy - design tokens, colors, and theme definitions"
+name = "icedcn_core"
+description = "Core types for icedcn - design tokens, colors, and theme definitions"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true

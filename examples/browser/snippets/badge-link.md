@@ -1,9 +1,9 @@
 ```rust
 use iced::{Element, Task, Widget};
 use iced::widget::{svg, Id};
-use icedxdy::Theme;
-use icedxdy::widget::badge;
-use icedxdy::widget::operation::scroll;
+use icedcn::Theme;
+use icedcn::widget::badge;
+use icedcn::widget::operation::scroll;
 
 #[derive(Clone)]
 enum Message { OpenLink }

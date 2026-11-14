@@ -7,8 +7,8 @@ mod destructive;
 use iced::widget::svg;
 use iced::{Fill, Task, Widget};
 
-use icedxdy::widget::{alert, column, text};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{alert, column, text};
+use icedcn::{Slot, Theme};
 
 use crate::page;
 

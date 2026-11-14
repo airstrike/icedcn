@@ -1,7 +1,7 @@
 ```rust
 use iced::widget::svg;
 use iced::{Font, Widget};
-use icedxdy::{
+use icedcn::{
     Slot, Theme,
     widget::{code_block, column, markdown, row, text},
 };

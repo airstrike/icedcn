@@ -1,8 +1,8 @@
 ```rust
 use iced::{Element, Widget};
 use iced::widget::svg;
-use icedxdy::Theme;
-use icedxdy::widget::{badge, row};
+use icedcn::Theme;
+use icedcn::widget::{badge, row};
 
 fn example() -> Element<'static, (), Theme> {
     row![

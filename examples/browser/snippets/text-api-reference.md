@@ -101,9 +101,9 @@ color `Token` resolved against the active palette at draw time, so the
 same widget renders correctly in light and dark modes.
 
 ```rust
-use icedxdy::rich_text;
-use icedxdy::widget::{rich_text::span, text};
-use icedxdy::theme::tweak::Token;
+use icedcn::rich_text;
+use icedcn::widget::{rich_text::span, text};
+use icedcn::theme::tweak::Token;
 
 rich_text![
     span("Required Field ").size(text::size::SM).medium(),

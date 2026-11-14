@@ -5,8 +5,8 @@ use iced_core::widget::operation::{self, Operation, Outcome, focusable};
 use iced_core::{Element, Event, Point, window};
 use iced_test::simulator::{self, simulator};
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
-use icedxdy_widget::{accordion, button, column, dialog};
+use icedcn_core::Theme;
+use icedcn_widget::{accordion, button, column, dialog};
 
 #[derive(Debug, Clone, PartialEq)]
 enum Message {
@@ -35,7 +35,7 @@ fn accordion_header_keeps_its_height_below_a_scrollable_viewport() {
     use iced_core::mouse::ScrollDelta;
     use iced_core::widget::Id;
     use iced_widget::Space;
-    use icedxdy_widget::{container, scrollable};
+    use icedcn_widget::{container, scrollable};
 
     let id = Id::unique();
     let label = container(Space::new().width(80).height(20)).id(id.clone());
@@ -65,7 +65,7 @@ fn accordion_fill_trigger_uses_its_intrinsic_height_below_a_scrollable_viewport(
     use iced_core::Length::Fill;
     use iced_core::widget::Id;
     use iced_widget::Space;
-    use icedxdy_widget::{container, scrollable};
+    use icedcn_widget::{container, scrollable};
 
     let id = Id::unique();
     let trigger = container(Space::new().width(80).height(20))
@@ -157,7 +157,7 @@ fn dialog_focus_enters_wraps_and_returns_on_escape() {
 
 #[test]
 fn tabs_skip_disabled_triggers_and_activate_on_vertical_arrows() {
-    use icedxdy_widget::tabs;
+    use icedcn_widget::tabs;
     let element: Element<'static, Message, Theme, Renderer> = tabs(|t| {
         t.list([
             t.trigger("first", "First"),
@@ -198,7 +198,7 @@ fn tabs_skip_disabled_triggers_and_activate_on_vertical_arrows() {
 
 #[test]
 fn combobox_filters_custom_values_and_selects_the_highlight_from_the_keyboard() {
-    use icedxdy_widget::combobox;
+    use icedcn_widget::combobox;
     let widget: Element<'_, Message, Theme, Renderer> = combobox::options([
         combobox::item("us", "United States").group("America"),
         combobox::item("gb", "United Kingdom").description("Europe (gb)"),
@@ -221,7 +221,7 @@ fn combobox_filters_custom_values_and_selects_the_highlight_from_the_keyboard() 
 
 #[test]
 fn command_search_skips_disabled_results_and_runs_the_highlighted_action() {
-    use icedxdy_widget::command;
+    use icedcn_widget::command;
     let widget: Element<'_, Message, Theme, Renderer> = command([
         command::item("Calendar").disabled(true),
         command::item("Calculate").on_select(Message::Pressed),
@@ -247,7 +247,7 @@ fn focus_next(ui: &mut Simulator<'_>) {
 
 #[test]
 fn tooltip_opens_on_keyboard_focus_and_escape_suppresses_it_until_refocus() {
-    use icedxdy_widget::tooltip;
+    use icedcn_widget::tooltip;
     let tip: Element<'_, Message, Theme, Renderer> = tooltip(button("Help"), "Hint")
         .on_open_change(|open| Message::Open(vec![open.to_string()]))
         .into();
@@ -267,7 +267,7 @@ fn tooltip_opens_on_keyboard_focus_and_escape_suppresses_it_until_refocus() {
 
 #[test]
 fn submenu_arrow_keys_enter_the_first_item_and_return_to_the_trigger() {
-    use icedxdy_widget::menu;
+    use icedcn_widget::menu;
     let body: Element<'_, Message, Theme, Renderer> = menu::sub(
         "More",
         [menu::item("Choose").on_select(Message::Pressed).into()],
@@ -289,7 +289,7 @@ fn submenu_arrow_keys_enter_the_first_item_and_return_to_the_trigger() {
 #[test]
 fn context_menu_stationary_touch_opens_but_vertical_scrolling_does_not() {
     use iced_core::{time::Duration, touch};
-    use icedxdy_widget::{container, context_menu, menu};
+    use icedcn_widget::{container, context_menu, menu};
     let body: Element<'_, Message, Theme, Renderer> = context_menu(
         |_| container("Area").width(200).height(100).into(),
         |_| menu::group([menu::item("Inspect").into()]),
@@ -325,7 +325,7 @@ fn context_menu_stationary_touch_opens_but_vertical_scrolling_does_not() {
 #[test]
 fn drawer_outward_swipe_closes_on_the_selected_edge() {
     use iced_core::touch;
-    use icedxdy_widget::{container, drawer};
+    use icedcn_widget::{container, drawer};
     let body: Element<'_, Message, Theme, Renderer> = drawer(
         |d| d.trigger(button("Open")),
         |_| container("Panel").width(200).height(200).into(),
@@ -357,7 +357,7 @@ fn drawer_outward_swipe_closes_on_the_selected_edge() {
 #[test]
 fn mobile_sidebar_opens_in_a_sheet_without_changing_desktop_preference() {
     use iced_core::Size;
-    use icedxdy_widget::{row, sidebar};
+    use icedcn_widget::{row, sidebar};
     let body = || -> Element<'static, Message, Theme, Renderer> {
         sidebar::provider(|s| row![s.sidebar(button("Workspace")), sidebar::trigger()].into())
             .on_open_change(|_| Message::Pressed)
@@ -381,7 +381,7 @@ fn mobile_sidebar_opens_in_a_sheet_without_changing_desktop_preference() {
 
 #[test]
 fn dropdown_keyboard_focus_reaches_submenus_and_skips_disabled_items() {
-    use icedxdy_widget::{dropdown_menu, menu};
+    use icedcn_widget::{dropdown_menu, menu};
     let body: Element<'_, Message, Theme, Renderer> = dropdown_menu(
         |m| m.trigger(button("Menu")),
         |_| {
@@ -409,7 +409,7 @@ fn dropdown_keyboard_focus_reaches_submenus_and_skips_disabled_items() {
 
 #[test]
 fn combobox_popup_moves_focus_to_the_search_input() {
-    use icedxdy_widget::combobox;
+    use icedcn_widget::combobox;
     let body: Element<'_, Message, Theme, Renderer> = combobox(["Apple", "Apricot", "Pear"])
         .popup(true)
         .auto_highlight(true)
@@ -431,7 +431,7 @@ fn combobox_popup_moves_focus_to_the_search_input() {
 #[test]
 fn responsive_drawer_uses_window_width_and_preserves_open_state() {
     use iced_core::Size;
-    use icedxdy_widget::drawer;
+    use icedcn_widget::drawer;
     let view = || -> Element<'static, Message, Theme, Renderer> {
         drawer(
             |d| d.trigger(button("Open")),

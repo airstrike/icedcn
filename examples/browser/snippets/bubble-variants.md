@@ -6,10 +6,10 @@ use iced::font::Weight;
 use iced::widget::text::LineHeight;
 use iced::widget::{rich_text, text::Span};
 use iced::{Font, Widget, border};
-use icedxdy::Slot;
-use icedxdy::Theme;
-use icedxdy::widget::bubble::{Destructive, Ghost, Muted, Outline, Secondary, Tinted};
-use icedxdy::widget::{bubble, column, container, text};
+use icedcn::Slot;
+use icedcn::Theme;
+use icedcn::widget::bubble::{Destructive, Ghost, Muted, Outline, Secondary, Tinted};
+use icedcn::widget::{bubble, column, container, text};
 
 fn example(theme: &Theme) -> Slot<'static, ()> {
     frame(

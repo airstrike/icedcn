@@ -3,9 +3,9 @@ use drawer::Side;
 use iced::widget::component::{Component, component};
 use iced::widget::{Space, scrollable};
 use iced::{Alignment, Element, Fill, Task, Widget};
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{button, column, container, dialog, drawer, field, input, row, text};
-use icedxdy::{Slot, Theme};
+use icedcn::theme::container::Style;
+use icedcn::widget::{button, column, container, dialog, drawer, field, input, row, text};
+use icedcn::{Slot, Theme};
 pub static META: page::Meta = page::Meta {
     title: "Drawer",
     description: "A drawer component.",
@@ -92,7 +92,7 @@ impl<'a> Component<'a, Message, Theme> for Activity {
                 .align_y(Alignment::End);
                 let controls = row![
                     button(icon::minus())
-                        .size(icedxdy::Size::Sm)
+                        .size(icedcn::Size::Sm)
                         .square()
                         .rounded()
                         .style(button::Outline)
@@ -107,7 +107,7 @@ impl<'a> Component<'a, Message, Theme> for Activity {
                     )
                     .center_x(Fill),
                     button(icon::plus())
-                        .size(icedxdy::Size::Sm)
+                        .size(icedcn::Size::Sm)
                         .square()
                         .rounded()
                         .style(button::Outline)

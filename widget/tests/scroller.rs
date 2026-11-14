@@ -5,9 +5,9 @@ use iced_core::{Element, Event, Rectangle, Size, Vector, window};
 use iced_runtime::task;
 use iced_test::simulator::{Simulator, simulator};
 use iced_widget::{Renderer, Space};
-use icedxdy_core::Theme;
-use icedxdy_widget::scroller::{Animation, Position, Reader, Target};
-use icedxdy_widget::{container, scroller};
+use icedcn_core::Theme;
+use icedcn_widget::scroller::{Animation, Position, Reader, Target};
+use icedcn_widget::{container, scroller};
 
 #[derive(Default)]
 struct Offset(f32);

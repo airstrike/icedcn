@@ -3,11 +3,11 @@
 use iced::widget::text::LineHeight;
 use iced::{Fill, Task, Widget};
 
-use icedxdy::Theme;
-use icedxdy::card;
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{accordion, column, container};
+use icedcn::Theme;
+use icedcn::card;
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::{accordion, column, container};
 
 use crate::Message;
 use crate::page;
@@ -303,7 +303,7 @@ impl page::Page for AccordionPage {
                             border: Border {
                                 width: 1.0,
                                 color: theme.neutral.border,
-                                radius: icedxdy::radius::LG.into(),
+                                radius: icedcn::radius::LG.into(),
                             },
                             ..Style::default()
                     })

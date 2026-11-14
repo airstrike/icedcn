@@ -6,7 +6,7 @@ use iced_core::{
     overlay, renderer, touch, window,
 };
 use iced_widget::Renderer;
-use icedxdy_core::{Orientation, Theme};
+use icedcn_core::{Orientation, Theme};
 use std::time::Duration;
 
 pub(super) struct Viewport<'a, Message> {

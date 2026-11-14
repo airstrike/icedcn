@@ -1,9 +1,9 @@
 use super::demo::Event;
 use super::fixtures::{Role, Turn};
 use iced::alignment::Horizontal::{Left, Right};
-use icedxdy::Slot;
-use icedxdy::radius;
-use icedxdy::widget::{bubble, column, message, motion, status_marker};
+use icedcn::Slot;
+use icedcn::radius;
+use icedcn::widget::{bubble, column, message, motion, status_marker};
 
 impl Turn {
     pub(super) fn motion(

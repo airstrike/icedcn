@@ -1,9 +1,9 @@
 use iced::Task;
 
-use icedxdy::theme;
-use icedxdy::theme::tweak::Alpha;
-use icedxdy::widget::{column, field, radio_group, text};
-use icedxdy::{Horizontal, Slot, Theme};
+use icedcn::theme;
+use icedcn::theme::tweak::Alpha;
+use icedcn::widget::{column, field, radio_group, text};
+use icedcn::{Horizontal, Slot, Theme};
 
 use crate::Message;
 use crate::page;

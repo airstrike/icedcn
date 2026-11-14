@@ -4,8 +4,8 @@ use iced_core::widget::operation::{Operation, Outcome, focusable};
 use iced_core::{Element, Point};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space};
-use icedxdy_core::Theme;
-use icedxdy_widget::{Inherited, Slot, button, collapsible, column};
+use icedcn_core::Theme;
+use icedcn_widget::{Inherited, Slot, button, collapsible, column};
 
 type Ui = iced_test::Simulator<'static, Message, Theme, Renderer>;
 #[derive(Debug, Clone, PartialEq)]

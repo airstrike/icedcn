@@ -3,10 +3,10 @@
 use iced::Widget;
 use iced::widget::{space, svg};
 use iced::{Bottom, Center, Fill, Padding};
-use icedxdy::card;
-use icedxdy::core::Border;
-use icedxdy::widget::{Slot, button, column, container, field, row, slider, text};
-use icedxdy::{Size, Space, Theme, font_size, radius};
+use icedcn::card;
+use icedcn::core::Border;
+use icedcn::widget::{Slot, button, column, container, field, row, slider, text};
+use icedcn::{Size, Space, Theme, font_size, radius};
 
 use super::{api_gap, select};
 use crate::{Message, State};

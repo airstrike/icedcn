@@ -3,7 +3,7 @@
 //! close control.
 //!
 //! ```ignore
-//! use icedxdy::widget::{button, popover};
+//! use icedcn::widget::{button, popover};
 //!
 //! popover(
 //!     |p| p.trigger(button("Open popover").style(button::Outline)),
@@ -24,9 +24,9 @@ use iced_core::{Element, Length, Padding, Pixels};
 use iced_widget::anchored;
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Space, Widget};
-use icedxdy_core::Theme;
-use icedxdy_core::theme;
-use icedxdy_core::theme::popover::content;
+use icedcn_core::Theme;
+use icedcn_core::theme;
+use icedcn_core::theme::popover::content;
 use std::time::Duration;
 
 use crate::compose::{Compose, Inherited, Slot};

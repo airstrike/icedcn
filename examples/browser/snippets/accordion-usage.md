@@ -1,7 +1,7 @@
 ## Usage
 
 ```rust
-use icedxdy::widget::accordion;
+use icedcn::widget::accordion;
 
 accordion([
     accordion::item("item-1", "Is it accessible?")

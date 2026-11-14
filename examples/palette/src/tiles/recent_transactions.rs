@@ -2,12 +2,12 @@
 
 use iced::Widget;
 use iced::{Center, Fill, Right};
-use icedxdy::card;
-use icedxdy::core::Border;
-use icedxdy::padding::*;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{Slot, button, column, container, row, table, text};
-use icedxdy::{Gap, Size, Theme, radius};
+use icedcn::card;
+use icedcn::core::Border;
+use icedcn::padding::*;
+use icedcn::theme::container::Style;
+use icedcn::widget::{Slot, button, column, container, row, table, text};
+use icedcn::{Gap, Size, Theme, radius};
 
 use crate::{Message, State, icon};
 

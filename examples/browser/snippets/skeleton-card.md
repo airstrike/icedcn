@@ -1,6 +1,6 @@
 ```rust
-use icedxdy::card;
-use icedxdy::widget::{aspect_ratio, column, row, skeleton, space};
+use icedcn::card;
+use icedcn::widget::{aspect_ratio, column, row, skeleton, space};
 
 /// A 16px line spanning `part` of `whole` of its parent's width.
 fn line<'a>(part: u16, whole: u16) -> Slot<'a, Message> {

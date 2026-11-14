@@ -12,7 +12,7 @@ use crate::core::widget::tree::{self, Tree};
 use crate::core::widget::{Meta, Operation};
 use crate::core::window;
 use crate::core::{Event, Length, Rectangle, Shell, Size, Vector, Widget};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 use iced_core::time::{Duration, Instant};
 
 /// A widget that displays another widget on top of it.

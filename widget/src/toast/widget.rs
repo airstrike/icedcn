@@ -6,8 +6,8 @@ use std::time::Duration;
 use iced_core::Length::Fill;
 use iced_core::time::Instant;
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
-use icedxdy_core::theme::toast;
+use icedcn_core::Theme;
+use icedcn_core::theme::toast;
 
 use super::{Icons, Inbox, Kind, Position, Raise, Toast};
 use crate::button::button;

@@ -16,13 +16,13 @@ use iced::{
     },
 };
 use iced::{Font, Widget};
-use icedxdy::Size;
-use icedxdy::theme::tweak::{Fg, Token};
-use icedxdy::widget::bubble::{Destructive, Ghost, Muted, Outline, Secondary, Tinted};
-use icedxdy::widget::{
+use icedcn::Size;
+use icedcn::theme::tweak::{Fg, Token};
+use icedcn::widget::bubble::{Destructive, Ghost, Muted, Outline, Secondary, Tinted};
+use icedcn::widget::{
     bubble, button, collapsible, column, container, popover, row, text, toast, tooltip,
 };
-use icedxdy::{Slot, Theme};
+use icedcn::{Slot, Theme};
 use page::Block;
 
 pub static META: page::Meta = page::Meta {
@@ -86,7 +86,7 @@ pub static BLOCKS: &[Block] = &[
         id: "collapsible",
         title: "Show More / Collapsible",
         description: Some(
-            "Use [Collapsible](icedxdy://component/collapsible) to let the reader expand a long message and collapse it again.",
+            "Use [Collapsible](icedcn://component/collapsible) to let the reader expand a long message and collapse it again.",
         ),
         snippet: "examples/browser/snippets/bubble-collapsible.md",
     },
@@ -94,7 +94,7 @@ pub static BLOCKS: &[Block] = &[
         id: "tooltip",
         title: "Tooltip",
         description: Some(
-            "Wrap a bubble in a [Tooltip](icedxdy://component/tooltip) to reveal metadata on hover, such as when a message was read.",
+            "Wrap a bubble in a [Tooltip](icedcn://component/tooltip) to reveal metadata on hover, such as when a message was read.",
         ),
         snippet: "examples/browser/snippets/bubble-tooltip.md",
     },
@@ -102,7 +102,7 @@ pub static BLOCKS: &[Block] = &[
         id: "popover",
         title: "Popover",
         description: Some(
-            "Pair a bubble with a [Popover](icedxdy://component/popover) to show the full error message for a failed action.",
+            "Pair a bubble with a [Popover](icedcn://component/popover) to show the full error message for a failed action.",
         ),
         snippet: "examples/browser/snippets/bubble-popover.md",
     },

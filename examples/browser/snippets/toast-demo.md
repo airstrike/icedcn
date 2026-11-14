@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, toast, toaster};
+use icedcn::widget::{button, toast, toaster};
 
 // Once, around the app's view:
 toaster(view)

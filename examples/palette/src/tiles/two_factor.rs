@@ -2,10 +2,10 @@
 
 use iced::Fill;
 use iced::Widget;
-use icedxdy::Theme;
-use icedxdy::card;
-use icedxdy::theme;
-use icedxdy::widget::{column, row, space, switch, text};
+use icedcn::Theme;
+use icedcn::card;
+use icedcn::theme;
+use icedcn::widget::{column, row, space, switch, text};
 
 use crate::{Message, State};
 

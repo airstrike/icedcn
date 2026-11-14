@@ -10,9 +10,9 @@ use iced_widget::Widget;
 
 use crate::Size;
 use crate::compose::{Compose, Inherited, Slot};
-use icedxdy_core::Theme;
-use icedxdy_core::theme;
-use icedxdy_core::theme::button::state::{self, IntoStyle};
+use icedcn_core::Theme;
+use icedcn_core::theme;
+use icedcn_core::theme::button::state::{self, IntoStyle};
 
 use super::widget;
 
@@ -40,7 +40,7 @@ impl widget::Catalog for Theme {
 /// Holds a [`Size`] which is propagated to its content when converting
 /// to an `iced::Element`. This means a `Size::Lg` button automatically
 /// gets larger text, larger icons, etc.
-pub struct Button<'a, Message, Theme = icedxdy_core::Theme, Renderer = iced_widget::Renderer>
+pub struct Button<'a, Message, Theme = icedcn_core::Theme, Renderer = iced_widget::Renderer>
 where
     Renderer: iced_core::Renderer,
     Theme: iced_widget::button::Catalog,
@@ -63,7 +63,7 @@ where
     anchor: bool,
     icon_start: bool,
     icon_end: bool,
-    focus_ring: Option<(f32, fn(&Theme) -> icedxdy_core::Color)>,
+    focus_ring: Option<(f32, fn(&Theme) -> icedcn_core::Color)>,
     on_press: Option<Message>,
     disabled: bool,
 }
@@ -221,7 +221,7 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     pub fn focus_ring(
         mut self,
         width: impl Into<iced_core::Pixels>,
-        color: fn(&Theme) -> icedxdy_core::Color,
+        color: fn(&Theme) -> icedcn_core::Color,
     ) -> Self {
         self.focus_ring = Some((width.into().0, color));
         self
@@ -467,7 +467,7 @@ mod tests {
                 button::Style::default()
             })),
             super::button("variant").style(theme::button::Outline),
-            super::button("spec").style(theme::button::Outline + icedxdy_core::radius(4)),
+            super::button("spec").style(theme::button::Outline + icedcn_core::radius(4)),
         ];
         for b in &buttons[..4] {
             assert!(!b.nova);

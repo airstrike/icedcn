@@ -1,10 +1,10 @@
-//! Layout orientation primitive shared across icedxdy widgets.
+//! Layout orientation primitive shared across icedcn widgets.
 //!
 //! Used by every widget that has a "horizontal vs. vertical" axis prop —
 //! `Field`, `button::group::ButtonGroup`, etc. Living in the core crate
 //! (rather than per-widget) means each widget's `.orientation()` builder
 //! takes the SAME type, so callers can pass `Vertical` / `Horizontal` from
-//! a single bare-variant import (`use icedxdy::{Vertical, Horizontal};`)
+//! a single bare-variant import (`use icedcn::{Vertical, Horizontal};`)
 //! and it flows into every widget without per-widget enum collision.
 //!
 //! Each widget that has a stronger naming preference can still re-export

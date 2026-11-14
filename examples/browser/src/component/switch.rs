@@ -1,10 +1,10 @@
 use iced::Task;
 
-use icedxdy::Horizontal;
-use icedxdy::Theme;
-use icedxdy::theme;
-use icedxdy::theme::tweak::Alpha;
-use icedxdy::widget::{container, field, switch, text};
+use icedcn::Horizontal;
+use icedcn::Theme;
+use icedcn::theme;
+use icedcn::theme::tweak::Alpha;
+use icedcn::widget::{container, field, switch, text};
 
 use crate::Message;
 use crate::page;

@@ -4,9 +4,9 @@ use iced::time::{Duration, Instant};
 use iced::widget::component::Component;
 use iced::widget::{Action, Id};
 use iced::{Rectangle, Widget, mouse, window};
-use icedxdy::Theme;
-use icedxdy::widget::motion;
-use icedxdy::widget::scroller::{Animation, Position, Reader, Target};
+use icedcn::Theme;
+use icedcn::widget::motion;
+use icedcn::widget::scroller::{Animation, Position, Reader, Target};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Demo {

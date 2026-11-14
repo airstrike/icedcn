@@ -2,10 +2,10 @@
 
 use iced::Widget;
 use iced::{Center, Fill};
-use icedxdy::Theme;
-use icedxdy::card;
-use icedxdy::theme;
-use icedxdy::widget::{button, column, container, text};
+use icedcn::Theme;
+use icedcn::card;
+use icedcn::theme;
+use icedcn::widget::{button, column, container, text};
 
 use crate::{Message, State};
 

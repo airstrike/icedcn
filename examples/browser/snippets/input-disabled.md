@@ -1,7 +1,7 @@
 ```rust
-use icedxdy::theme;
-use icedxdy::theme::tweak::Alpha;
-use icedxdy::widget::{field, input, text};
+use icedcn::theme;
+use icedcn::theme::tweak::Alpha;
+use icedcn::widget::{field, input, text};
 
 field(input("Email").width(Fill).disabled(true))
     .label(text::label("Email").style(theme::text::Foreground + Alpha(0.5)))

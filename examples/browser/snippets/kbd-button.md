@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, kbd};
+use icedcn::widget::{button, kbd};
 
 button!["Accept", kbd("⏎")].style(button::Outline)
 ```

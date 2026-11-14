@@ -6,7 +6,7 @@ use iced_core::Length::Fill;
 use iced_core::Padding;
 use iced_widget::Widget;
 use iced_widget::rule;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 /// Create a sidebar separator.
 ///

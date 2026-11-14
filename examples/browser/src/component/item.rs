@@ -3,10 +3,10 @@ use iced::widget::image;
 use iced::{ContentFit, Fill, Shrink, Task, Widget};
 use std::sync::OnceLock;
 
-use icedxdy::widget::{
+use icedcn::widget::{
     Column, Row, aspect_ratio, avatar, button, column, dropdown_menu, item, menu,
 };
-use icedxdy::{Size, Slot, Theme};
+use icedcn::{Size, Slot, Theme};
 
 use crate::page;
 use crate::{Message, icon};
@@ -385,7 +385,7 @@ impl page::Page for ItemPage {
                             ])
                             .into(),
                         ])
-                        .orientation(icedxdy::Vertical)
+                        .orientation(icedcn::Vertical)
                         .style(item::Outline)
                         .into()
                     },
@@ -415,7 +415,7 @@ impl page::Page for ItemPage {
                 ])
                 .style(item::Outline)
                 .on_press(Message::OpenUrl(
-                    "https://github.com/airstrike/icedxdy"
+                    "https://github.com/airstrike/icedcn"
                 ))
             ]
             .spacing(16)

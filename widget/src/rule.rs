@@ -30,7 +30,7 @@ pub fn vertical<'a, Theme: Catalog>(width: impl Into<Pixels>) -> Rule<'a, Theme>
 }
 
 /// A horizontal or vertical rule for dividing content.
-pub struct Rule<'a, Theme = icedxdy_core::Theme>
+pub struct Rule<'a, Theme = icedcn_core::Theme>
 where
     Theme: Catalog,
 {
@@ -297,7 +297,7 @@ pub trait Catalog: Sized {
 /// A styling function for a [`Rule`].
 pub type StyleFn<'a, Theme> = Box<dyn Fn(&Theme) -> Style + 'a>;
 
-impl Catalog for icedxdy_core::Theme {
+impl Catalog for icedcn_core::Theme {
     type Class<'a> = StyleFn<'a, Self>;
 
     fn default<'a>() -> Self::Class<'a> {

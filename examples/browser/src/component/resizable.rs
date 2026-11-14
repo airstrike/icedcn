@@ -1,11 +1,11 @@
 use crate::{Message, page};
 use iced::Fill;
 use iced::Task;
-use icedxdy::Theme;
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{container, resizable, text};
-use icedxdy::{Orientation, Slot};
+use icedcn::Theme;
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::{container, resizable, text};
+use icedcn::{Orientation, Slot};
 
 pub static META: page::Meta = page::Meta {
     title: "Resizable",

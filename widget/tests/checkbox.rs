@@ -5,9 +5,9 @@ use iced_core::widget::operation::{Outcome, black_box, focusable};
 use iced_core::{Element, Event, Point, mouse};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space};
-use icedxdy_core::Theme;
-use icedxdy_widget::operation::control;
-use icedxdy_widget::{Inherited, Slot, checkbox, column, field};
+use icedcn_core::Theme;
+use icedcn_widget::operation::control;
+use icedcn_widget::{Inherited, Slot, checkbox, column, field};
 
 type Ui = iced_test::Simulator<'static, bool, Theme, Renderer>;
 

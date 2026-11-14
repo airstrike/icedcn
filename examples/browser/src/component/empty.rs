@@ -2,12 +2,12 @@ use super::avatar::{evilrabbit_handle, maxleiter_handle, alex_handle};
 use iced::mouse::Cursor;
 use iced::widget::{canvas, stack};
 use iced::{Element, Fill, Point, Rectangle, Task, Widget};
-use icedxdy::theme::container::Style;
-use icedxdy::widget::input_group::Align;
+use icedcn::theme::container::Style;
+use icedcn::widget::input_group::Align;
 
-use icedxdy::theme::tweak::{Fg, Token};
-use icedxdy::widget::{avatar, button, column, container, empty, input, input_group, kbd, row};
-use icedxdy::{Size, Slot, Theme};
+use icedcn::theme::tweak::{Fg, Token};
+use icedcn::widget::{avatar, button, column, container, empty, input, input_group, kbd, row};
+use icedcn::{Size, Slot, Theme};
 
 use crate::page;
 use crate::{Message, icon};

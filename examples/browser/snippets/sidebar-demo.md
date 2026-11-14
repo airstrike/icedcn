@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{column, container, row, scrollable, sidebar};
+use icedcn::widget::{column, container, row, scrollable, sidebar};
 
 sidebar::provider(move |s| {
     let compact = !s.is_open() && !s.is_mobile();

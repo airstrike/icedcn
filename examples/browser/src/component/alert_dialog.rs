@@ -3,10 +3,10 @@
 use iced::widget::text::LineHeight;
 use iced::widget::{rich_text, span, svg};
 use iced::{Fill, Task, Widget};
-use icedxdy::theme::text::muted;
+use icedcn::theme::text::muted;
 
-use icedxdy::widget::{alert_dialog, button, column};
-use icedxdy::{Size, Slot, Theme};
+use icedcn::widget::{alert_dialog, button, column};
+use icedcn::{Size, Slot, Theme};
 
 use crate::Message;
 use crate::page;

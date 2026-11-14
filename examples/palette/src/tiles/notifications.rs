@@ -7,11 +7,11 @@
 
 use iced::Fill;
 use iced::Widget;
-use icedxdy::Theme;
-use icedxdy::card;
-use icedxdy::core::style::{destructive, outline};
-use icedxdy::theme;
-use icedxdy::widget::{accordion, badge, button, column, container, row, space, text};
+use icedcn::Theme;
+use icedcn::card;
+use icedcn::core::style::{destructive, outline};
+use icedcn::theme;
+use icedcn::widget::{accordion, badge, button, column, container, row, space, text};
 
 use crate::{Message, State};
 
@@ -24,7 +24,7 @@ struct Note {
 const NOTES: &[Note] = &[
     Note {
         id: "welcome",
-        title: "Welcome to icedxdy",
+        title: "Welcome to icedcn",
         body: "Open any item to reveal its body, then dismiss to clear it. The accordion is in multi-mode so several can stay open at once.",
     },
     Note {

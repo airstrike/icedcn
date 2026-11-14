@@ -6,7 +6,7 @@
 //! sections itself, through [`header`] and [`footer`]:
 //!
 //! ```ignore
-//! use icedxdy::widget::{button, column, sheet};
+//! use icedcn::widget::{button, column, sheet};
 //!
 //! sheet(
 //!     |s| s.trigger(button("Open").style(button::Outline)),
@@ -29,8 +29,8 @@ use iced_core::Element;
 use iced_core::Length::Fill;
 use iced_core::alignment::Vertical;
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
-use icedxdy_core::theme;
+use icedcn_core::Theme;
+use icedcn_core::theme;
 
 use crate::column::Column;
 use crate::compose::{Compose, Inherited, Slot};

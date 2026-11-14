@@ -1,7 +1,7 @@
 ## Usage
 
 ```rust
-use icedxdy::widget::sidebar;
+use icedcn::widget::sidebar;
 ```
 
 ```rust

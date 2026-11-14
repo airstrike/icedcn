@@ -32,8 +32,8 @@ use iced_core::{
 // for the concrete `iced_widget::Renderer`.
 use iced_core::Renderer as _;
 
-use icedxdy_core::Theme;
-use icedxdy_core::theme::accordion::{self, Status};
+use icedcn_core::Theme;
+use icedcn_core::theme::accordion::{self, Status};
 
 /// Duration of the opening and closing animation.
 const TRANSITION_DURATION: Duration = Duration::from_millis(200);

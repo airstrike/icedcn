@@ -7,8 +7,8 @@ use iced_core::{Animation, Element, Length::Fill, Padding, alignment::Vertical::
 use iced_widget::button::{Status, StyleFn};
 use iced_widget::transition::Program;
 use iced_widget::{Renderer, Widget, space, transition};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::button::secondary;
+use icedcn_core::Theme;
+use icedcn_core::theme::button::secondary;
 
 struct Visibility(Animation<f32>);
 

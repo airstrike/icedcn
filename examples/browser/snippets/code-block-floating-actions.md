@@ -1,8 +1,8 @@
 ```rust
 use iced::Font;
-use icedxdy::core::Border;
-use icedxdy::widget::{CodeBlock, code_block};
-use icedxdy::{Theme, radius, theme, widget::container};
+use icedcn::core::Border;
+use icedcn::widget::{CodeBlock, code_block};
+use icedcn::{Theme, radius, theme, widget::container};
 pub fn view<Message: Clone + 'static>() -> CodeBlock<'static, Message> {
     code_block(FLOATING_ACTIONS)
         .font(Font::new("Geist Mono"))

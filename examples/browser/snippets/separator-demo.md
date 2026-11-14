@@ -1,10 +1,10 @@
 ```rust
 use iced::{Fill, Pixels};
-use icedxdy::widget::{column, separator, text};
+use icedcn::widget::{column, separator, text};
 
 column![
     column![
-        text::label("icedxdy").height(14),
+        text::label("icedcn").height(14),
         text::muted("The Foundation for your Design System").line_height(Pixels(20.0)),
     ]
     .spacing(6),

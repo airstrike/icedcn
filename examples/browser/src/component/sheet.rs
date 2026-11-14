@@ -6,8 +6,8 @@
 
 use iced::Task;
 
-use icedxdy::widget::{button, column, field, input, row, sheet, text};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{button, column, field, input, row, sheet, text};
+use icedcn::{Slot, Theme};
 
 use crate::Message;
 use crate::page;

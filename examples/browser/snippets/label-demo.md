@@ -1,6 +1,6 @@
 ```rust
-use icedxdy::Horizontal;
-use icedxdy::widget::{checkbox, field};
+use icedcn::Horizontal;
+use icedcn::widget::{checkbox, field};
 
 field(checkbox())
     .orientation(Horizontal)

@@ -1,6 +1,6 @@
 //! Light and dark palettes used by the component browser.
 
-use icedxdy::{Color, Design, Theme};
+use icedcn::{Color, Design, Theme};
 
 /// Select the docs palette without changing the library's Neutral preset.
 pub fn theme(dark: bool) -> Theme {
@@ -38,7 +38,7 @@ pub fn theme(dark: bool) -> Theme {
 mod tests {
     use super::theme;
     use crate::{Browser, Message};
-    use icedxdy::{Color, Theme};
+    use icedcn::{Color, Theme};
 
     #[test]
     fn docs_tokens_reach_tinted_and_stock_iced_consumers() {

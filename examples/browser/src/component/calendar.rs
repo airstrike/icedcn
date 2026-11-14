@@ -2,9 +2,9 @@
 pub mod recipes;
 use crate::{Message, page};
 use iced::{Element, Fill, Task, font};
-use icedxdy::Theme;
-use icedxdy::widget::calendar::persian;
-use icedxdy::widget::container;
+use icedcn::Theme;
+use icedcn::widget::calendar::persian;
+use icedcn::widget::container;
 
 pub static META: page::Meta = page::Meta {
     title: "Calendar",

@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::text;
+use icedcn::widget::text;
 
 text::blockquote(
     "\"After all,\" he said, \"everyone enjoys a good joke, so it's only \

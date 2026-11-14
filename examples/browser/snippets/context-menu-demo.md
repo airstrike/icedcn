@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{column, context_menu, menu};
+use icedcn::widget::{column, context_menu, menu};
 
 // `bookmarks`, `full_urls` and `person` live in your state.
 context_menu(

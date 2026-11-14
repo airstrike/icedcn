@@ -17,9 +17,9 @@ use iced_widget::{
     component::{self, Component},
     mouse_area,
 };
-use icedxdy_core::theme::button::ghost;
-use icedxdy_core::theme::container::Style;
-use icedxdy_core::{Theme, radius};
+use icedcn_core::theme::button::ghost;
+use icedcn_core::theme::container::Style;
+use icedcn_core::{Theme, radius};
 
 /// A menu trigger and the content displayed below it, or a navigation link.
 #[derive(Clone)]

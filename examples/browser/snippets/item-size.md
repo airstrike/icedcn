@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{column, item};
+use icedcn::widget::{column, item};
 
 column![
     inbox("Default Size", "The standard size for most use cases.").style(item::Outline),

@@ -1,8 +1,8 @@
 
 use iced::Task;
 
-use icedxdy::widget::{button, kbd, row, text, tooltip};
-use icedxdy::{Size, Slot, Theme};
+use icedcn::widget::{button, kbd, row, text, tooltip};
+use icedcn::{Size, Slot, Theme};
 
 use crate::Message;
 use crate::icon;

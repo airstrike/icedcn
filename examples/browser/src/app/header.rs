@@ -7,36 +7,36 @@ use iced::keyboard::{self, Key};
 use iced::widget::button::{Status, StyleFn};
 use iced::widget::{Space, combo_box, stack, svg};
 use iced::{Center, Element, Event, Fill, Subscription, event};
-use icedxdy::theme::button::ghost;
-use icedxdy::widget::Row;
-use icedxdy::widget::{
+use icedcn::theme::button::ghost;
+use icedcn::widget::Row;
+use icedcn::widget::{
     button, column, command, container, dialog, dropdown_menu, menu, row, rule, space, text,
     tooltip,
 };
-use icedxdy::{Slot, Theme, radius};
+use icedcn::{Slot, Theme, radius};
 use serde::Deserialize;
 use std::time::Duration;
 
-const GITHUB: &str = "https://github.com/airstrike/icedxdy";
+const GITHUB: &str = "https://github.com/airstrike/icedcn";
 
 const NAVIGATION: &[(&str, &str)] = &[
     ("Home", GITHUB),
-    ("Docs", "icedxdy://component/button#installation"),
-    ("Components", "icedxdy://component/accordion"),
-    ("Examples", "https://github.com/airstrike/icedxdy/tree/HEAD/examples"),
-    ("Charts", "icedxdy://component/chart"),
-    ("Typography", "icedxdy://component/typography"),
+    ("Docs", "icedcn://component/button#installation"),
+    ("Components", "icedcn://component/accordion"),
+    ("Examples", "https://github.com/airstrike/icedcn/tree/HEAD/examples"),
+    ("Charts", "icedcn://component/chart"),
+    ("Typography", "icedcn://component/typography"),
 ];
 
 pub(super) const GUIDES: &[(&str, &str)] = &[
     ("Introduction", GITHUB),
-    ("Components", "icedxdy://component/accordion"),
-    ("Conversations", "icedxdy://component/message-scroller"),
-    ("Installation", "icedxdy://component/button#installation"),
-    ("Theming", "https://github.com/airstrike/icedxdy/tree/HEAD/core/src/theme"),
+    ("Components", "icedcn://component/accordion"),
+    ("Conversations", "icedcn://component/message-scroller"),
+    ("Installation", "icedcn://component/button#installation"),
+    ("Theming", "https://github.com/airstrike/icedcn/tree/HEAD/core/src/theme"),
     ("Cargo", "https://doc.rust-lang.org/cargo/"),
-    ("Typography", "icedxdy://component/typography"),
-    ("Changelog", "https://github.com/airstrike/icedxdy/commits/HEAD"),
+    ("Typography", "icedcn://component/typography"),
+    ("Changelog", "https://github.com/airstrike/icedcn/commits/HEAD"),
 ];
 
 pub(super) async fn stars() -> Option<u64> {
@@ -45,8 +45,8 @@ pub(super) async fn stars() -> Option<u64> {
         stargazers_count: u64,
     }
     let response = reqwest::Client::new()
-        .get("https://api.github.com/repos/airstrike/icedxdy")
-        .header("User-Agent", "icedxdy-component-browser")
+        .get("https://api.github.com/repos/airstrike/icedcn")
+        .header("User-Agent", "icedcn-component-browser")
         .timeout(Duration::from_secs(5))
         .send()
         .await
@@ -321,7 +321,7 @@ mod tests {
     use iced::window;
     use iced_test::core::Settings;
     use iced_test::simulator::Simulator;
-    use icedxdy::widget::markdown::highlighter::Map;
+    use icedcn::widget::markdown::highlighter::Map;
 
     fn app() -> App {
         App::new(Map::from(&Theme::light()), Map::from(&Theme::dark())).0
@@ -343,14 +343,14 @@ mod tests {
         assert!(
             desktop
                 .drain()
-                .any(|m| matches!(m, Message::OpenUrl("icedxdy://component/chart")))
+                .any(|m| matches!(m, Message::OpenUrl("icedcn://component/chart")))
         );
         assert!(desktop.find("New").is_err());
         desktop.click("Examples").unwrap();
         assert!(
             desktop
                 .drain()
-                .any(|m| matches!(m, Message::OpenUrl("https://github.com/airstrike/icedxdy/tree/HEAD/examples")))
+                .any(|m| matches!(m, Message::OpenUrl("https://github.com/airstrike/icedcn/tree/HEAD/examples")))
         );
         let mut mobile = header(&app, 375.);
         mobile.click("Menu").unwrap();
@@ -358,7 +358,7 @@ mod tests {
         assert!(
             mobile
                 .drain()
-                .any(|m| matches!(m, Message::OpenUrl("icedxdy://component/chart")))
+                .any(|m| matches!(m, Message::OpenUrl("icedcn://component/chart")))
         );
     }
 
@@ -366,7 +366,7 @@ mod tests {
     fn component_links_work_before_the_markdown_finishes_loading() {
         let mut app = app();
         for &(_, url) in NAVIGATION.iter().chain(GUIDES) {
-            if let Some(target) = url.strip_prefix("icedxdy://component/") {
+            if let Some(target) = url.strip_prefix("icedcn://component/") {
                 let _ = app.update(Message::OpenComponent(target.to_owned()));
                 let current = &app.pages[app.current_page];
                 let (name, fragment) = target.split_once('#').unwrap_or((target, ""));

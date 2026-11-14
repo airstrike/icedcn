@@ -1,6 +1,6 @@
 ```rust
 use iced::Pixels;
-use icedxdy::widget::{checkbox, field, text};
+use icedcn::widget::{checkbox, field, text};
 
 field(checkbox().default_checked(true))
     .orientation(field::Horizontal)
@@ -12,8 +12,8 @@ The preview uses `.default_checked(true)` for local state. For controlled state,
 
 ```rust
 use iced::Element;
-use icedxdy::Theme;
-use icedxdy::widget::checkbox;
+use icedcn::Theme;
+use icedcn::widget::checkbox;
 
 #[derive(Default)]
 struct Example {

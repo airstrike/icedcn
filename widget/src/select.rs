@@ -6,7 +6,7 @@
 //! owns its open state and, uncontrolled, its value:
 //!
 //! ```ignore
-//! use icedxdy::widget::select;
+//! use icedcn::widget::select;
 //!
 //! select([select::group([
 //!     select::label("Fruits"),
@@ -26,10 +26,10 @@ use iced_core::{Alignment, Element, Length, Padding};
 use iced_widget::component::{self, Component};
 use iced_widget::text::LineHeight;
 use iced_widget::{Renderer, Space, Widget, anchored};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::container::Style;
-use icedxdy_core::theme::popover::content;
-use icedxdy_core::theme::select::trigger;
+use icedcn_core::Theme;
+use icedcn_core::theme::container::Style;
+use icedcn_core::theme::popover::content;
+use icedcn_core::theme::select::trigger;
 use std::rc::Rc;
 
 use crate::button::widget::{self, Button};
@@ -38,7 +38,7 @@ use crate::container::Container;
 use crate::{Size, column, menu, row, scrollable, text};
 
 pub use iced_widget::anchored::{Align, Side};
-pub use icedxdy_core::theme::select::{Invalid, Variant};
+pub use icedcn_core::theme::select::{Invalid, Variant};
 
 /// A part of a select's list.
 #[derive(Debug, Clone, PartialEq)]

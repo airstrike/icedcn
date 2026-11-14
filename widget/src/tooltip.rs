@@ -9,7 +9,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::{button, tooltip};
+//! use icedcn::widget::{button, tooltip};
 //!
 //! tooltip(button("Hover").style(button::Outline), "Add to library")
 //!
@@ -23,8 +23,8 @@ use std::time::Duration;
 
 use iced_core::Pixels;
 use iced_widget::{Renderer, Widget, anchored};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::tooltip::content;
+use icedcn_core::Theme;
+use icedcn_core::theme::tooltip::content;
 
 use crate::Size;
 use crate::compose::{Compose, Inherited, Slot};

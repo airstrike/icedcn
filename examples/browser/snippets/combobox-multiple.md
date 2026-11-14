@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::combobox;
+use icedcn::widget::combobox;
 
 const FRAMEWORKS: [&str; 5] = ["iced", "egui", "Slint", "GTK", "Druid"];
 

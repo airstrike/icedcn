@@ -1,8 +1,8 @@
 ```rust
 use iced::Widget;
 use iced::widget::svg;
-use icedxdy::Theme;
-use icedxdy::widget::{button, row};
+use icedcn::Theme;
+use icedcn::widget::{button, row};
 
 row![
     button("Button").style(button::Outline),

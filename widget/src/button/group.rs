@@ -19,7 +19,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::{button, button_group};
+//! use icedcn::widget::{button, button_group};
 //!
 //! button_group![
 //!     button("Copy").style(button::Outline),
@@ -43,7 +43,7 @@
 use iced_core::Length;
 use iced_widget::Renderer;
 use iced_widget::Widget;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use crate::compose::Compose;
 use crate::{Button, Slot};
@@ -52,14 +52,14 @@ pub mod separator;
 
 pub use separator::Separator;
 
-// Re-export the crate-root [`icedxdy::Orientation`] (and its bare variants)
+// Re-export the crate-root [`icedcn::Orientation`] (and its bare variants)
 // at this module path. The underlying type is shared across widgets — a
 // `field::Orientation` value and a `button::group::Orientation` value are
-// the SAME enum, so callers can build `use icedxdy::{Vertical, Horizontal};`
+// the SAME enum, so callers can build `use icedcn::{Vertical, Horizontal};`
 // once and feed into every `.orientation()` builder via `impl Into`.
-pub use icedxdy_core::Horizontal;
-pub use icedxdy_core::Orientation;
-pub use icedxdy_core::Vertical;
+pub use icedcn_core::Horizontal;
+pub use icedcn_core::Orientation;
+pub use icedcn_core::Vertical;
 
 /// Position of a button among all the items in its group, including separators. This
 /// determines which outer corners keep their radius.
@@ -150,7 +150,7 @@ pub struct ButtonGroup<'a, Message> {
 ///
 ///
 /// ```ignore
-/// use icedxdy::widget::{button, button_group};
+/// use icedcn::widget::{button, button_group};
 ///
 /// button_group![
 ///     button("Archive").style(button::Outline),
@@ -340,7 +340,7 @@ fn joined_radius(
 /// don't spell `.into()` per child.
 ///
 /// ```ignore
-/// use icedxdy::widget::{button, button_group};
+/// use icedcn::widget::{button, button_group};
 ///
 /// button_group![
 ///     button("Archive").style(button::Outline),

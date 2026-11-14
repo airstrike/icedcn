@@ -3,10 +3,10 @@ use crate::{Message, page};
 use iced::Task;
 use iced::widget::responsive;
 use iced::{Fill, Widget};
-use icedxdy::Theme;
-use icedxdy::widget::carousel::Carousel;
-use icedxdy::widget::{aspect_ratio, carousel, container, text};
-use icedxdy::{Orientation, Slot, card};
+use icedcn::Theme;
+use icedcn::widget::carousel::Carousel;
+use icedcn::widget::{aspect_ratio, carousel, container, text};
+use icedcn::{Orientation, Slot, card};
 use std::time::Duration;
 
 pub static META: page::Meta = page::Meta {

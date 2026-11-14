@@ -1,8 +1,8 @@
 ```rust
 use iced::widget::responsive;
 use iced::{Center, Element, Fill, Length, Pixels, Shrink, Subscription, Task, Widget, window};
-use icedxdy::{Theme, Vertical, theme};
-use icedxdy::widget::{Column, column, container, row, separator, text};
+use icedcn::{Theme, Vertical, theme};
+use icedcn::widget::{Column, column, container, row, separator, text};
 
 struct Menu {
     window_width: f32,

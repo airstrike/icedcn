@@ -38,9 +38,9 @@ Existing one-argument `container::StyleFn` callbacks remain accepted by `.style(
 
 ```rust
 use iced::widget::container;
-use icedxdy::Theme;
-use icedxdy::core::theme::badge::Spec;
-use icedxdy::widget::{badge, row};
+use icedcn::Theme;
+use icedcn::core::theme::badge::Spec;
+use icedcn::widget::{badge, row};
 
 fn example() -> iced::Element<'static, (), Theme> {
     let legacy: container::StyleFn<'static, Theme> = Box::new(|theme| {

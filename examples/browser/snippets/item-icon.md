@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, item};
+use icedcn::widget::{button, item};
 
 item::item([
     item::media(icon::shield_alert()).style(item::Icon).into(),

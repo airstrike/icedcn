@@ -3,7 +3,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::badge;
+//! use icedcn::widget::badge;
 //!
 //! badge("Badge")
 //! badge("Secondary").style(badge::Secondary)
@@ -83,10 +83,10 @@ use crate::Weight;
 use crate::compose::{Compose, Inherited, Slot};
 use iced_core::Padding;
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
-pub use icedxdy_core::theme::badge::state::{IntoStyle, Status, Style, StyleFn};
-pub use icedxdy_core::theme::badge::{Default, Destructive, Ghost, Link, Outline, Secondary};
+pub use icedcn_core::theme::badge::state::{IntoStyle, Status, Style, StyleFn};
+pub use icedcn_core::theme::badge::{Default, Destructive, Ghost, Link, Outline, Secondary};
 
 /// A small inline pill label.
 pub struct Badge<'a, Message> {

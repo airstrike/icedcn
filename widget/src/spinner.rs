@@ -15,7 +15,7 @@ use iced_core::{
 use iced_widget::Renderer;
 use iced_widget::canvas;
 
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use std::f32::consts::PI;
 use std::time::Duration;
@@ -64,12 +64,12 @@ pub fn default(_theme: &Theme) -> Style {
 /// A circular loading spinner.
 ///
 /// ```ignore
-/// use icedxdy::widget::spinner;
+/// use icedcn::widget::spinner;
 ///
 /// spinner()
 /// spinner().size(24).bar_height(2.0)
 /// ```
-pub struct Spinner<'a, Theme = icedxdy_core::Theme>
+pub struct Spinner<'a, Theme = icedcn_core::Theme>
 where
     Theme: Catalog,
 {

@@ -1,7 +1,7 @@
 ```rust
 use iced::Element;
-use icedxdy::Theme;
-use icedxdy::widget::{badge, row, spinner};
+use icedcn::Theme;
+use icedcn::widget::{badge, row, spinner};
 
 fn example() -> Element<'static, (), Theme> {
     row![

@@ -10,9 +10,9 @@ use iced_test::core::widget::operation::{Scrollable, Text};
 use iced_test::core::widget::{Id, Operation};
 use iced_test::core::{Settings, Widget};
 use iced_test::simulator::{self, Simulator};
-use icedxdy::Theme;
-use icedxdy::widget::markdown;
-use icedxdy::widget::operation::control;
+use icedcn::Theme;
+use icedcn::widget::markdown;
+use icedcn::widget::operation::control;
 
 type Preview<'a> = Simulator<'a, Message, Theme, iced::Renderer>;
 

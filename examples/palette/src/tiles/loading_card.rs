@@ -2,9 +2,9 @@
 
 use iced::Fill;
 use iced::Widget;
-use icedxdy::card;
-use icedxdy::widget::{Skeleton, column, row, skeleton};
-use icedxdy::{Space, Theme};
+use icedcn::card;
+use icedcn::widget::{Skeleton, column, row, skeleton};
+use icedcn::{Space, Theme};
 
 use crate::{Message, State};
 

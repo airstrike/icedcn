@@ -1,6 +1,6 @@
 use crate::{Message, page};
 use iced::Task;
-use icedxdy::Theme;
+use icedcn::Theme;
 mod items;
 mod preview;
 use preview::preview;

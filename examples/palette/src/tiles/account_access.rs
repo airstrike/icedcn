@@ -2,8 +2,8 @@
 
 use iced::Fill;
 use iced::Widget;
-use icedxdy::widget::{button, column, field, input, item};
-use icedxdy::{Theme, card};
+use icedcn::widget::{button, column, field, input, item};
+use icedcn::{Theme, card};
 
 use super::api_gap;
 use crate::{Message, icon};

@@ -1,4 +1,4 @@
-//! Design tokens, colors, and theme definitions shared by icedxdy widgets.
+//! Design tokens, colors, and theme definitions shared by icedcn widgets.
 
 pub mod background;
 pub mod border;
@@ -19,7 +19,7 @@ pub use constants::*;
 pub use design::{Design, FontFamily};
 pub use orientation::Orientation;
 // Re-export the variants at module scope so a bare `Vertical` /
-// `Horizontal` import from `icedxdy_core` (or, transitively, from `icedxdy`)
+// `Horizontal` import from `icedcn_core` (or, transitively, from `icedcn`)
 // can be passed directly to any `.orientation()` builder via `impl Into`.
 pub use orientation::Orientation::{Horizontal, Vertical};
 pub use padding::Padding;

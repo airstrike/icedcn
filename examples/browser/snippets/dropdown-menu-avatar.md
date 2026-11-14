@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{avatar, button, dropdown_menu, menu};
+use icedcn::widget::{avatar, button, dropdown_menu, menu};
 
 dropdown_menu(
     |m| {

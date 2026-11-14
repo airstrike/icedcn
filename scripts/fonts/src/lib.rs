@@ -1,4 +1,4 @@
-//! Font definitions and loading for icedxdy
+//! Font definitions and loading for icedcn
 //!
 //! Provides a font management system with lazy initialization.
 //! Currently supports Inter Tight as the default UI font.
@@ -8,7 +8,7 @@
 //! ## Option 1: Settings-based (synchronous, at startup)
 //!
 //! ```ignore
-//! use icedxdy::fonts;
+//! use icedcn::fonts;
 //!
 //! fn main() -> iced::Result {
 //!     let settings = iced::Settings {
@@ -26,7 +26,7 @@
 //! ## Option 2: Task-based (async, in App::new)
 //!
 //! ```ignore
-//! use icedxdy::fonts;
+//! use icedcn::fonts;
 //!
 //! impl App {
 //!     fn new() -> (Self, Task<Message>) {

@@ -4,8 +4,8 @@ use iced::alignment;
 use iced::widget::{self, svg};
 use iced::{Task, Widget};
 
-use icedxdy::widget::{badge, row, spinner};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{badge, row, spinner};
+use icedcn::{Slot, Theme};
 
 use crate::page;
 

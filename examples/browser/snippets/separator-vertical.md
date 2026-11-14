@@ -1,7 +1,7 @@
 ```rust
 use iced::{Center, Pixels};
-use icedxdy::Vertical;
-use icedxdy::widget::{row, separator, text};
+use icedcn::Vertical;
+use icedcn::widget::{row, separator, text};
 
 row![
     text::small("Blog").line_height(Pixels(20.0)),

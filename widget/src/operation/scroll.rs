@@ -7,7 +7,7 @@
 //!
 //! ```no_run
 //! use iced_core::widget::Id;
-//! use icedxdy_widget::operation::scroll;
+//! use icedcn_widget::operation::scroll;
 //!
 //! # #[derive(Debug, Clone)]
 //! # enum Message {}

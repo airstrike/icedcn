@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{field, select};
+use icedcn::widget::{field, select};
 
 field(
     select([select::group([

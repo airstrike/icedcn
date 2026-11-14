@@ -11,8 +11,8 @@ use iced_core::{
     mouse, overlay, renderer,
 };
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
-use icedxdy_core::theme::container::Style;
+use icedcn_core::Theme;
+use icedcn_core::theme::container::Style;
 
 /// The root owns paint and dispatch: independent actions receive input before
 /// the full-card target. Its layout remains the content's natural size.

@@ -1,15 +1,15 @@
 ```rust
-use icedxdy::{Color, Theme};
-use icedxdy::core::oklch;
+use icedcn::{Color, Theme};
+use icedcn::core::oklch;
 
 fn canvas(theme: &Theme) -> Color {
     if theme.neutral.is_dark { theme.neutral.base } else { oklch(0.98, 0.0, 0.0) }
 }
-use icedxdy::widget::container;
+use icedcn::widget::container;
 use iced::{ContentFit, Widget};
 use iced::widget::image;
-use icedxdy::Slot;
-use icedxdy::widget::{attachment, tooltip};
+use icedcn::Slot;
+use icedcn::widget::{attachment, tooltip};
 
 let preview = image(workspace).width(40).height(40).content_fit(ContentFit::Cover).border_radius(10);
 let files: [(_, _, Slot<'_, Message>); 4] = [

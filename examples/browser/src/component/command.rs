@@ -1,7 +1,7 @@
 use crate::{Message, icon, page};
 use iced::Task;
-use icedxdy::widget::{button, command, dialog};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{button, command, dialog};
+use icedcn::{Slot, Theme};
 
 pub static META: page::Meta = page::Meta {
     title: "Command",

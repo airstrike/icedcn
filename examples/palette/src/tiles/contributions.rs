@@ -3,13 +3,13 @@
 use iced::Fill;
 use iced::Widget;
 use iced::widget::space;
-use icedxdy::card;
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::column::Column;
-use icedxdy::widget::row::Row;
-use icedxdy::widget::{button, column, container};
-use icedxdy::{Slot, Theme};
+use icedcn::card;
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::column::Column;
+use icedcn::widget::row::Row;
+use icedcn::widget::{button, column, container};
+use icedcn::{Slot, Theme};
 
 use crate::{Message, State};
 

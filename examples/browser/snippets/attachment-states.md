@@ -1,8 +1,8 @@
 ```rust
-use icedxdy::widget::container;
-use icedxdy::widget::attachment::State;
-use icedxdy::Slot;
-use icedxdy::widget::{attachment, column, spinner, tooltip};
+use icedcn::widget::container;
+use icedcn::widget::attachment::State;
+use icedcn::Slot;
+use icedcn::widget::{attachment, column, spinner, tooltip};
 
 let files: [(_, _, _, Slot<'_, Message>); 5] = [
     ("selected-file.pdf", "Ready to upload", State::Idle, icon::clock().size(16).selectable(false).into()),

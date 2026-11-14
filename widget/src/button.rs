@@ -3,7 +3,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use icedxdy::widget::button;
+//! use icedcn::widget::button;
 //!
 //! button("Submit").on_press(Message::Submit)
 //! button("Go").size(Size::Lg).on_press(Message::Go)
@@ -23,7 +23,7 @@ pub mod widget;
 
 pub use element::{Button, button};
 pub use group::ButtonGroup;
-pub use icedxdy_core::theme::button::{
+pub use icedcn_core::theme::button::{
     Default, Destructive, Ghost, IntoStyle, Link, Outline, Secondary,
 };
 

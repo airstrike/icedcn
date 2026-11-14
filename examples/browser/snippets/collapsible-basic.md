@@ -1,10 +1,10 @@
 ```rust
 use iced::widget::{svg, text::LineHeight};
 use iced::Fill;
-use icedxdy::core::Border;
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{button, collapsible, column, container, space, text};
-use icedxdy::{Size, Slot, Theme, card, radius};
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::{button, collapsible, column, container, space, text};
+use icedcn::{Size, Slot, Theme, card, radius};
 
 fn icon(path: &'static str, size: f32) -> svg::Svg<'static, Theme> {
     svg(svg::Handle::from_memory(format!(

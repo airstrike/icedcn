@@ -2,11 +2,11 @@
 
 use iced::Widget;
 use iced::{Center, Color, Fill, Padding};
-use icedxdy::card;
-use icedxdy::core::{Border, oklch};
-use icedxdy::theme::container::Style;
-use icedxdy::widget::{button, column, container, qr_code, text};
-use icedxdy::{Slot, Theme};
+use icedcn::card;
+use icedcn::core::{Border, oklch};
+use icedcn::theme::container::Style;
+use icedcn::widget::{button, column, container, qr_code, text};
+use icedcn::{Slot, Theme};
 
 use crate::{Message, State};
 

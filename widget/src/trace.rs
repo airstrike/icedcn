@@ -6,10 +6,10 @@ use crate::compose::{Compose, Inherited, Slot};
 use crate::{column, container, row, status_shimmer, text};
 use iced_core::{Alignment, Element, Length::Fill};
 use iced_widget::{Renderer, Space, Widget};
-use icedxdy_core::Theme;
-use icedxdy_core::theme::button::ghost;
-use icedxdy_core::theme::container::Style;
-use icedxdy_core::theme::text::{Destructive, Muted};
+use icedcn_core::Theme;
+use icedcn_core::theme::button::ghost;
+use icedcn_core::theme::container::Style;
+use icedcn_core::theme::text::{Destructive, Muted};
 use std::borrow::Cow;
 
 /// Stack trace lines and nested disclosures at Nova's 8px gap.

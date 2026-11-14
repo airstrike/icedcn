@@ -7,9 +7,9 @@
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Task, Widget};
 
-use icedxdy::Theme;
-use icedxdy::widget::field::Orientation::Horizontal;
-use icedxdy::widget::{column, field, select, switch};
+use icedcn::Theme;
+use icedcn::widget::field::Orientation::Horizontal;
+use icedcn::widget::{column, field, select, switch};
 
 use crate::Message;
 use crate::icon;

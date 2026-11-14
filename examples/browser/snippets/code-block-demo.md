@@ -1,8 +1,8 @@
 ```rust
 use iced::widget::svg;
 use iced::{Font, Task, Widget};
-use icedxdy::widget::{CodeBlock, button, code_block, row, text, tooltip};
-use icedxdy::{Size, Slot, Theme};
+use icedcn::widget::{CodeBlock, button, code_block, row, text, tooltip};
+use icedcn::{Size, Slot, Theme};
 #[derive(Clone, Debug)]
 pub enum Message {
     Wrap,
@@ -107,7 +107,7 @@ const DOWNLOAD: &str =
     r#"<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>"#;
 const FILE_CODE: &str = r#"<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6m-10 5-2 2 2 2m4-4 2 2-2 2"/>"#;
 
-const DEMO: &str = r##"use icedxdy::{Slot, widget::{column, input, text}};
+const DEMO: &str = r##"use icedcn::{Slot, widget::{column, input, text}};
 
 #[derive(Clone, Debug)]
 pub enum Message { SearchChanged(String) }

@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{scroller, text};
+use icedcn::widget::{scroller, text};
 use scroller::{Position, Target};
 
 scroller(rows)

@@ -8,7 +8,7 @@ use iced_core::widget::{Id, Operation};
 use iced_core::{Element, Event, Point, Rectangle, Size, touch, window};
 use iced_test::simulator;
 use iced_widget::{Renderer, Space};
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use super::alert_dialog;
 use crate::button;

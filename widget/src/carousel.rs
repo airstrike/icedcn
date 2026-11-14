@@ -7,7 +7,7 @@ use iced_core::Element;
 use iced_core::Length::Fill;
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
-use icedxdy_core::{Orientation, Theme};
+use icedcn_core::{Orientation, Theme};
 use std::time::Duration;
 
 pub struct Carousel<'a, Message> {

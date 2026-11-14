@@ -7,7 +7,7 @@ use iced_core::{
     overlay, renderer,
 };
 use iced_widget::Renderer;
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 pub(super) struct Lines<'a, Message> {
     content: Element<'a, Message, Theme, Renderer>,

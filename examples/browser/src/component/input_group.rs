@@ -2,10 +2,10 @@ mod buttons;
 
 use iced::{Fill, Task};
 
-use icedxdy::widget::input_group::Align;
-use icedxdy::widget::{Column, input, input_group, kbd, row, textarea};
-use icedxdy::widget::{button, dropdown_menu, field, menu, space, spinner};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::input_group::Align;
+use icedcn::widget::{Column, input, input_group, kbd, row, textarea};
+use icedcn::widget::{button, dropdown_menu, field, menu, space, spinner};
+use icedcn::{Slot, Theme};
 
 use crate::page;
 use crate::{Message, icon};

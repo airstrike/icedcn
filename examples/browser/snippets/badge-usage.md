@@ -2,8 +2,8 @@
 
 ```rust
 use iced::Element;
-use icedxdy::Theme;
-use icedxdy::widget::badge;
+use icedcn::Theme;
+use icedcn::widget::badge;
 
 fn example() -> Element<'static, (), Theme> {
     badge("Badge").style(badge::Default).into()

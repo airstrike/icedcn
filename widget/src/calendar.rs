@@ -22,9 +22,9 @@ use iced_widget::component::{self, Component};
 use iced_widget::text::StyleFn;
 use iced_widget::{Renderer, Widget};
 use iced_widget::{rich_text, scrollable, span};
-use icedxdy_core::theme;
-use icedxdy_core::theme::button::ghost;
-use icedxdy_core::{Radius, Theme};
+use icedcn_core::theme;
+use icedcn_core::theme::button::ghost;
+use icedcn_core::{Radius, Theme};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mode {

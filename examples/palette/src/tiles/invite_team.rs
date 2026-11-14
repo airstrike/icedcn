@@ -3,11 +3,11 @@
 use iced::Fill;
 use iced::Widget;
 use iced::widget::space;
-use icedxdy::card;
-use icedxdy::theme;
-use icedxdy::widget::column::Column;
-use icedxdy::widget::{avatar, badge, button, column, container, input, row, text};
-use icedxdy::{Slot, Theme};
+use icedcn::card;
+use icedcn::theme;
+use icedcn::widget::column::Column;
+use icedcn::widget::{avatar, badge, button, column, container, input, row, text};
+use icedcn::{Slot, Theme};
 
 use crate::Message;
 
@@ -22,13 +22,13 @@ const MEMBERS: &[Member] = &[
     Member {
         initials: "AL",
         name: "Ada Lovelace",
-        email: "ada@icedxdy.dev",
+        email: "ada@icedcn.dev",
         role: "Admin",
     },
     Member {
         initials: "GH",
         name: "Grace Hopper",
-        email: "grace@icedxdy.dev",
+        email: "grace@icedcn.dev",
         role: "Editor",
     },
 ];

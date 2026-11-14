@@ -5,20 +5,20 @@ use iced::Alignment::Center;
 use iced::Fill;
 use iced::widget::button::{Status, StyleFn};
 use iced::widget::text::LineHeight;
-use icedxdy::core::Border;
-use icedxdy::theme::button::{outline, secondary};
-use icedxdy::theme::container::Style;
-use icedxdy::theme::text::{Foreground, Muted};
-use icedxdy::theme::tweak::{Alpha, hover};
-use icedxdy::widget::button::widget;
-use icedxdy::widget::scroller::{Position, Target};
-use icedxdy::widget::slider::Catalog;
-use icedxdy::widget::text::Ellipsis;
-use icedxdy::widget::{
+use icedcn::core::Border;
+use icedcn::theme::button::{outline, secondary};
+use icedcn::theme::container::Style;
+use icedcn::theme::text::{Foreground, Muted};
+use icedcn::theme::tweak::{Alpha, hover};
+use icedcn::widget::button::widget;
+use icedcn::widget::scroller::{Position, Target};
+use icedcn::widget::slider::Catalog;
+use icedcn::widget::text::Ellipsis;
+use icedcn::widget::{
     button, column, container, dropdown_menu, menu, motion, row, select, slider, space, tabs, text,
     toggle_group,
 };
-use icedxdy::{Padding, Slot, Theme, radius};
+use icedcn::{Padding, Slot, Theme, radius};
 
 impl Demo {
     pub(super) fn controls(self, state: &Model) -> Slot<'static, Event> {

@@ -12,9 +12,9 @@
 
 use iced::widget::column;
 use iced::{Element, Subscription, Task, Widget};
-use icedxdy::widget::markdown::highlighter;
-use icedxdy::widget::{center, text};
-use icedxdy::{Theme, theme};
+use icedcn::widget::markdown::highlighter;
+use icedcn::widget::{center, text};
+use icedcn::{Theme, theme};
 
 mod app;
 mod registry;
@@ -23,7 +23,7 @@ use app::{App, fetch_theme_task};
 
 fn main() -> iced::Result {
     iced::application(Highlights::new, Highlights::update, Highlights::view)
-        .title("icedxdy \u{2022} highlight playground")
+        .title("icedcn \u{2022} highlight playground")
         .antialiasing(true)
         .subscription(Highlights::subscription)
         .theme(Highlights::theme)

@@ -35,7 +35,7 @@ use crate::operation::control::Control;
 use std::marker::PhantomData;
 
 // Iced's widget crate re-exports `core::widget::text::*` at `crate::text`. We
-// can't reuse that path (our `crate::text` is the icedxdy typography helpers,
+// can't reuse that path (our `crate::text` is the icedcn typography helpers,
 // and `use iced_widget::text` collides with `crate::core::text` already in
 // scope above). A private re-exporting module gives the vendored draw + layout
 // calls shallow `text_helpers::*` paths that satisfy the pre-commit deep-path
@@ -700,10 +700,10 @@ where
 /// The possible status of a [`Toggler`].
 ///
 /// **Deviation from upstream iced**: `Status` is re-exported from
-/// `icedxdy_core` so the whole crate (theme + widget + wrapper) speaks one
+/// `icedcn_core` so the whole crate (theme + widget + wrapper) speaks one
 /// canonical type. Variants match upstream 1:1 so the rest of this file's
 /// pattern matches keep working.
-pub use icedxdy_core::theme::switch::Status;
+pub use icedcn_core::theme::switch::Status;
 
 trait StatusExt {
     fn with_toggled(self, is_toggled: bool) -> Self;
@@ -779,7 +779,7 @@ pub type StyleFn<'a, Theme> = Box<dyn Fn(&Theme, Status) -> Style + 'a>;
 /// Convert from iced's stock `toggler::Style` into the vendored widget's
 /// `Style`. Lossless in this direction (iced has no `ring` field, so we set
 /// `ring: None`). Used by `Catalog for iced_widget::Theme` to satisfy callers
-/// that pick stock iced::Theme instead of `icedxdy_core::Theme`.
+/// that pick stock iced::Theme instead of `icedcn_core::Theme`.
 impl From<iced_widget::toggler::Style> for Style {
     fn from(s: iced_widget::toggler::Style) -> Self {
         Style {
@@ -798,7 +798,7 @@ impl From<iced_widget::toggler::Style> for Style {
 }
 
 /// Stock-iced fallback Catalog impl — for callers who pick
-/// `iced_core::Theme` instead of `icedxdy_core::Theme`. Routes through
+/// `iced_core::Theme` instead of `icedcn_core::Theme`. Routes through
 /// iced's stock toggler default and lifts the result through
 /// `From<iced_widget::toggler::Style> for Style`. Ring stays `None`.
 impl Catalog for Theme {

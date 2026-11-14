@@ -1,9 +1,9 @@
 use iced::Vector;
 use iced::widget::button::{Status, StyleFn};
-use icedxdy::core::{Border, Shadow};
-use icedxdy::theme::container::Style;
-use icedxdy::theme::{button, popover};
-use icedxdy::{Color, Theme};
+use icedcn::core::{Border, Shadow};
+use icedcn::theme::container::Style;
+use icedcn::theme::{button, popover};
+use icedcn::{Color, Theme};
 
 pub(super) fn card(theme: &Theme) -> Style {
     let alpha = if theme.neutral.is_dark { 0.1 } else { 0.05 };

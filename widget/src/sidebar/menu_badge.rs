@@ -2,7 +2,7 @@
 
 use crate::container::Container;
 use crate::text::Text;
-use icedxdy_core::theme;
+use icedcn_core::theme;
 
 /// Create a sidebar menu badge.
 ///

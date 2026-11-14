@@ -1,8 +1,8 @@
 //! Blue preview palette for conversation widgets.
 use super::Backdrop;
-use icedxdy::core::{Border, Radius, oklch};
-use icedxdy::theme::container::Style;
-use icedxdy::{Color, Palette, Theme};
+use icedcn::core::{Border, Radius, oklch};
+use icedcn::theme::container::Style;
+use icedcn::{Color, Palette, Theme};
 
 pub(crate) fn theme(outer: &Theme) -> Theme {
     let mut design = outer.design().clone();

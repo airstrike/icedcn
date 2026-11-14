@@ -2,7 +2,7 @@
 
 ```rust
 use iced::Fill;
-use icedxdy::widget::progress;
+use icedcn::widget::progress;
 ```
 
 ```rust

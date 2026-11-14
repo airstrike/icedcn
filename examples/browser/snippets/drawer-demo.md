@@ -24,7 +24,7 @@ drawer(
         .align_y(Alignment::End);
         let controls = row![
             button(icon::minus())
-                .size(icedxdy::Size::Sm)
+                .size(icedcn::Size::Sm)
                 .square()
                 .rounded()
                 .style(button::Outline)
@@ -39,7 +39,7 @@ drawer(
             )
             .center_x(Fill),
             button(icon::plus())
-                .size(icedxdy::Size::Sm)
+                .size(icedcn::Size::Sm)
                 .square()
                 .rounded()
                 .style(button::Outline)

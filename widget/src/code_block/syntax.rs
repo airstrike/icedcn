@@ -3,7 +3,7 @@ use crate::highlighter::{self, CAPTURE_NAMES, Highlighter};
 use crate::{Span, span};
 use iced_core::Code;
 use iced_highlighter::{Parser, Settings};
-use icedxdy_core::Color;
+use icedcn_core::Color;
 
 pub(super) fn rows(source: &str, language: &str) -> Vec<Vec<Span<'static>>> {
     tokenize(source, language)

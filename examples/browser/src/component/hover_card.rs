@@ -8,8 +8,8 @@ use std::time::Duration;
 
 use iced::Task;
 
-use icedxdy::widget::{button, column, container, hover_card, row, text};
-use icedxdy::{Slot, Theme};
+use icedcn::widget::{button, column, container, hover_card, row, text};
+use icedcn::{Slot, Theme};
 
 use crate::Message;
 use crate::page;

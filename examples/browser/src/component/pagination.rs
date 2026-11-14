@@ -1,8 +1,8 @@
 use iced::Task;
 
-use icedxdy::Horizontal;
-use icedxdy::Theme;
-use icedxdy::widget::{field, pagination, row, select};
+use icedcn::Horizontal;
+use icedcn::Theme;
+use icedcn::widget::{field, pagination, row, select};
 
 use crate::page;
 use crate::{Message, icon};

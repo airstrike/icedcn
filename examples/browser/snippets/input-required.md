@@ -1,8 +1,8 @@
 ```rust
-use icedxdy::rich_text;
-use icedxdy::theme::tweak::Token;
-use icedxdy::widget::rich_text::span;
-use icedxdy::widget::{field, input, text, Slot};
+use icedcn::rich_text;
+use icedcn::theme::tweak::Token;
+use icedcn::widget::rich_text::span;
+use icedcn::widget::{field, input, text, Slot};
 
 field(
     input("This field is required")

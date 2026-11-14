@@ -1,8 +1,8 @@
 ```rust
 use iced::widget::svg;
 use iced::{Fill, Font, Subscription, Widget, time};
-use icedxdy::widget::{button, code_block, column};
-use icedxdy::{Size, Slot, Theme};
+use icedcn::widget::{button, code_block, column};
+use icedcn::{Size, Slot, Theme};
 use std::time::{Duration, Instant};
 #[derive(Clone, Debug)]
 pub enum Message {

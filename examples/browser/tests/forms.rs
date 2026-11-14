@@ -12,8 +12,8 @@ use iced::keyboard::key::Named;
 use iced::{Point, Size};
 use iced_test::core::Settings;
 use iced_test::simulator::{self, Simulator};
-use icedxdy::Theme;
-use icedxdy::widget::calendar::{Datelike, today};
+use icedcn::Theme;
+use icedcn::widget::calendar::{Datelike, today};
 
 type Preview<'a> = Simulator<'a, Message, Theme, iced::Renderer>;
 
@@ -24,7 +24,7 @@ fn preview<'a>(page: &'a dyn Page, id: &str, width: f32) -> Preview<'a> {
 }
 
 fn snapshot(ui: &mut Preview<'_>, name: &str) {
-    if let Some(dir) = std::env::var_os("ICEDXDY_FORM_SNAPSHOTS") {
+    if let Some(dir) = std::env::var_os("ICEDCN_FORM_SNAPSHOTS") {
         let path = PathBuf::from(dir).join(format!("{name}.png"));
         let image = ui.snapshot(&Theme::light()).expect("render preview");
         assert!(image.matches_image(path).expect("write or compare preview"));

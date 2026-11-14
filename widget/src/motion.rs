@@ -15,7 +15,7 @@ use iced_core::{
     Animation, Element, Event, Layout, Length, Rectangle, Renderer, Shell, Size, Vector, Widget,
     layout, mouse, overlay, renderer, window,
 };
-use icedxdy_core::Theme;
+use icedcn_core::Theme;
 
 use crate::compose::{Compose, Inherited, Slot};
 

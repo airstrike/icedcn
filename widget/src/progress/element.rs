@@ -4,8 +4,8 @@
 use iced_core::Length;
 use iced_widget::Renderer;
 
-use icedxdy_core::Theme;
-use icedxdy_core::theme::progress_bar;
+use icedcn_core::Theme;
+use icedcn_core::theme::progress_bar;
 
 use crate::compose::{Compose, Slot};
 

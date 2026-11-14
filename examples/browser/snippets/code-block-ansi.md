@@ -1,7 +1,7 @@
 ```rust
 use std::sync::LazyLock;
 use iced::Font;
-use icedxdy::widget::{CodeBlock, code_block};
+use icedcn::widget::{CodeBlock, code_block};
 use code_block::ansi;
 
 const TRANSCRIPT: &str = concat!(

@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::accordion;
+use icedcn::widget::accordion;
 
 accordion([
     accordion::item("item-1", "Can I access my account history?")

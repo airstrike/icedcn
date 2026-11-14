@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{button, column, textarea};
+use icedcn::widget::{button, column, textarea};
 
 column![
     textarea("Type your message here."),

@@ -10,10 +10,10 @@ use iced_core::time::Instant;
 use iced_core::{Element, Event, Point, mouse, window};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space};
-use icedxdy_core::Theme;
-use icedxdy_widget::operation::control;
-use icedxdy_widget::radio::radio;
-use icedxdy_widget::{
+use icedcn_core::Theme;
+use icedcn_widget::operation::control;
+use icedcn_widget::radio::radio;
+use icedcn_widget::{
     Inherited, Slot, alert_dialog, button, checkbox, collapsible, column, combobox, context_menu,
     dialog, dropdown_menu, field, hover_card, menu, popover, radio_group, row, select, sheet,
     sidebar, slider, switch, tabs, textarea, toast, toaster, toggle, toggle_group,
@@ -262,7 +262,7 @@ fn a_field_label_chooses_its_radio_group_item() {
     );
 }
 
-fn two_toggles<'a>() -> icedxdy_widget::ToggleGroup<'a, Message> {
+fn two_toggles<'a>() -> icedcn_widget::ToggleGroup<'a, Message> {
     toggle_group(|| {
         [
             toggle_group::item("a", block(16.0, 16.0)),
@@ -358,8 +358,8 @@ fn a_disabled_textarea_ignores_typing() {
 /// A 32px trigger button on top of a content button that publishes
 /// [`Message::Inner`] while shown.
 fn disclosure<'a>(
-    trigger: impl Fn() -> icedxdy_widget::Button<'a, Message> + 'a,
-) -> icedxdy_widget::Collapsible<'a, Message> {
+    trigger: impl Fn() -> icedcn_widget::Button<'a, Message> + 'a,
+) -> icedcn_widget::Collapsible<'a, Message> {
     collapsible(move |c| {
         column![
             c.trigger(trigger()),
@@ -417,7 +417,7 @@ fn a_disabled_trigger_does_not_toggle() {
 
 /// Two 56px triggers on a 32px list, and a panel below that publishes its
 /// own name.
-fn two_tabs<'a>() -> icedxdy_widget::Tabs<'a, Message> {
+fn two_tabs<'a>() -> icedcn_widget::Tabs<'a, Message> {
     tabs(|t| {
         column![
             t.list([
@@ -566,7 +566,7 @@ fn a_toast_times_out_by_itself() {
 /// A dialog whose trigger sits at the window's top left. Its 384px panel is
 /// centered in the 1024×768 window: an inner button at y 352..384 and a
 /// close button below it at y 384..416, both from x 336.
-fn edit_dialog<'a>() -> icedxdy_widget::Dialog<'a, Message> {
+fn edit_dialog<'a>() -> icedcn_widget::Dialog<'a, Message> {
     dialog(
         |d| d.trigger(button(block(40.0, 20.0))),
         |d| {
@@ -670,7 +670,7 @@ fn a_controlled_sidebar_reports_the_toggle() {
 /// A popover whose trigger sits at the window's top left. Its start-aligned
 /// panel opens 4px under the 32px trigger with 10px of padding: an inner
 /// button at y 46..78 and a close button below it at y 78..110, from x 10.
-fn edit_popover<'a>() -> icedxdy_widget::Popover<'a, Message> {
+fn edit_popover<'a>() -> icedcn_widget::Popover<'a, Message> {
     popover(
         |p| p.trigger(button(block(40.0, 20.0))),
         |p| {
@@ -752,7 +752,7 @@ fn a_press_outside_or_escape_dismisses_a_controlled_popover() {
 /// 128px panel opens 4px under the 32px trigger with `p-1`: 28px items at
 /// y 40..68 (selectable), 68..96 (disabled) and 96..124 (a submenu, whose
 /// panel opens to its right with its first item level with it, from x 132).
-fn account_menu<'a>() -> icedxdy_widget::DropdownMenu<'a, Message> {
+fn account_menu<'a>() -> icedcn_widget::DropdownMenu<'a, Message> {
     dropdown_menu(
         |m| m.trigger(button(block(40.0, 20.0))),
         |_| {
@@ -840,7 +840,7 @@ fn a_submenu_item_closes_the_whole_menu() {
 
 /// A 192px select at the window's top left. Its list opens 4px under the
 /// 32px trigger with `p-1`, so its first item starts at y 40.
-fn fruit<'a>() -> icedxdy_widget::Select<'a, Message> {
+fn fruit<'a>() -> icedcn_widget::Select<'a, Message> {
     select([
         select::item("apple", "Apple"),
         select::item("banana", "Banana"),
@@ -881,7 +881,7 @@ fn a_disabled_select_does_not_open() {
 
 /// A 256px combobox at the window's top left; its list opens 6px under the
 /// input with `p-1`, so its first item sits just past y 40.
-fn frameworks<'a>() -> icedxdy_widget::Combobox<'a, Message> {
+fn frameworks<'a>() -> icedcn_widget::Combobox<'a, Message> {
     combobox(["Next.js", "Remix", "Astro"]).on_value_change(Message::Text)
 }
 
@@ -977,7 +977,7 @@ fn a_context_menu_opens_at_the_pointer_and_closes_on_select() {
 fn a_tooltip_shows_while_its_trigger_is_hovered() {
     let element: Element<'_, Message, Theme, Renderer> = column![
         Slot::from(Space::new().height(100)),
-        icedxdy_widget::tooltip(button(block(40.0, 20.0)), block(60.0, 20.0))
+        icedcn_widget::tooltip(button(block(40.0, 20.0)), block(60.0, 20.0))
             .on_open_change(Message::Open),
     ]
     .into();

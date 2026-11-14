@@ -1,6 +1,6 @@
 ```rust
-use icedxdy::theme;
-use icedxdy::widget::{field, input};
+use icedcn::theme;
+use icedcn::widget::{field, input};
 
 field(
     input("you@example.com")

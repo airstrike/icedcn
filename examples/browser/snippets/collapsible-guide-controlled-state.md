@@ -3,8 +3,8 @@
 Use `.open(value)` and `.on_open_change(...)` to control the state. The message carries the requested new value; assign it in `update`. Without `.open(...)`, the widget owns its state. Use `.default_open(true)` to start it open.
 
 ```rust
-use icedxdy::Slot;
-use icedxdy::widget::{button, collapsible, column};
+use icedcn::Slot;
+use icedcn::widget::{button, collapsible, column};
 
 #[derive(Debug, Clone)]
 enum Message { OpenChanged(bool) }

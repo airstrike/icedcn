@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{badge, row, spinner};
+use icedcn::widget::{badge, row, spinner};
 
 row![
     badge![spinner().size(12.0), "Syncing"],

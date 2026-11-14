@@ -2,13 +2,13 @@ use iced::Task;
 use iced::Widget;
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill};
-use icedxdy::widget::slider;
-use icedxdy::widget::{button, column, radio_group, row, select, separator, text, textarea};
-use icedxdy::{Horizontal, Slot};
+use icedcn::widget::slider;
+use icedcn::widget::{button, column, radio_group, row, select, separator, text, textarea};
+use icedcn::{Horizontal, Slot};
 
-use icedxdy::Theme;
+use icedcn::Theme;
 
-use icedxdy::widget::{checkbox, field, input, switch};
+use icedcn::widget::{checkbox, field, input, switch};
 
 use crate::Message;
 use crate::page;

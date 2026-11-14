@@ -12,5 +12,5 @@ static IMAGES: [OnceLock<image::Handle>; 3] = [const { OnceLock::new() }; 3];
 Row::with_children(models.into_iter().zip(&IMAGES).map(|((name, description, asset), cache)| item::item([
     item::header([aspect_ratio(artwork(asset, cache).boxed(), 1.0).into()]),
     item::content([item::title(name).into(), item::description(description).into()]).into()
-]).orientation(icedxdy::Vertical).style(item::Outline).into())).spacing(16).width(Fill)
+]).orientation(icedcn::Vertical).style(item::Outline).into())).spacing(16).width(Fill)
 ```

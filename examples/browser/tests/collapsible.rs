@@ -9,7 +9,7 @@ use iced_test::core::Settings;
 use iced_test::core::widget::Id;
 use iced_test::core::widget::operation::{Operation, Outcome, focusable};
 use iced_test::{Simulator, selector, simulator};
-use icedxdy::Theme;
+use icedcn::Theme;
 
 type Ui<'a> = Simulator<'a, Message, Theme, iced::Renderer>;
 fn preview<'a>(page: &'a dyn Page, id: &str, width: f32) -> Ui<'a> {

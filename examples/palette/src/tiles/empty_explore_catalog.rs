@@ -2,9 +2,9 @@
 
 use iced::Fill;
 use iced::Widget;
-use icedxdy::Theme;
-use icedxdy::card;
-use icedxdy::widget::{button, column, empty};
+use icedcn::Theme;
+use icedcn::card;
+use icedcn::widget::{button, column, empty};
 
 use crate::{Message, State, icon};
 

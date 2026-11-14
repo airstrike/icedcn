@@ -1,4 +1,4 @@
 //! Separator: a thin `bg-border` line between content. See
-//! [`icedxdy_widget::separator`].
+//! [`icedcn_widget::separator`].
 
-pub use icedxdy_widget::separator::{Separator, separator};
+pub use icedcn_widget::separator::{Separator, separator};

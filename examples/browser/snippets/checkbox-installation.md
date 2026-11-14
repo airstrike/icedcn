@@ -1,9 +1,9 @@
 ## Installation
 
-Add the crate from your icedxdy checkout:
+Add the crate from your icedcn checkout:
 
 ```sh
-cargo add icedxdy --path /path/to/icedxdy --features svg
+cargo add icedcn --path /path/to/icedcn --features svg
 ```
 
 Use the same pinned iced dependencies as that checkout. The `svg` feature renders the check indicator without an application-loaded icon font.

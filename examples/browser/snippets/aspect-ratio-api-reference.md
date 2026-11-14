@@ -11,4 +11,4 @@ The `AspectRatio` component displays content within a desired ratio.
 
 A non-positive or non-finite ratio falls back to a square. Apply backgrounds, rounded corners and image fitting to the child.
 
-[Read the aspect_ratio implementation](https://github.com/airstrike/icedxdy/blob/HEAD/widget/src/aspect_ratio.rs).
+[Read the aspect_ratio implementation](https://github.com/airstrike/icedcn/blob/HEAD/widget/src/aspect_ratio.rs).

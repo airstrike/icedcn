@@ -10,7 +10,7 @@ Build the sidebar from a container, a provider and the sections below.
 | `sidebar::floating(content)` | `Container<'a>` | Sidebar floating with margin, rounded corners, border, and shadow. |
 | `sidebar::inset(content)` | `Container<'a>` | Inset sidebar — no border on the sidebar itself; the content area (paired via `sidebar::main_styled`) carries the rounded/border/shadow chrome. |
 
-The three constructors return an icedxdy container with width, padding and style builders.
+The three constructors return an icedcn container with width, padding and style builders.
 
 ### Section helpers
 

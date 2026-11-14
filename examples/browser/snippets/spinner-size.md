@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::{row, spinner};
+use icedcn::widget::{row, spinner};
 
 row![
     spinner().size(12.0),

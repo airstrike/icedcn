@@ -4,7 +4,7 @@ mod sections;
 use crate::{Message, page};
 use iced::widget::Id;
 use iced::{Element, Fill, Task, clipboard};
-use icedxdy::{Theme, widget::container};
+use icedcn::{Theme, widget::container};
 use sections::BLOCKS;
 use iced::time::Instant;
 pub static META: page::Meta = page::Meta {

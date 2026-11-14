@@ -1,7 +1,7 @@
 ```rust
 use iced::widget::image;
-use icedxdy::Theme;
-use icedxdy::widget::avatar;
+use icedcn::Theme;
+use icedcn::widget::avatar;
 
 fn preview(
     portrait: image::Handle,

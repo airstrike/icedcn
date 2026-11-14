@@ -1,6 +1,6 @@
 [package]
-name = "icedxdy_fonts"
-description = "Font definitions and loading for icedxdy"
+name = "icedcn_fonts"
+description = "Font definitions and loading for icedcn"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true

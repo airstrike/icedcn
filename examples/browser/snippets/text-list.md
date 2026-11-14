@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::text;
+use icedcn::widget::text;
 
 text::list([
     "1st level of puns: 5 gold coins",

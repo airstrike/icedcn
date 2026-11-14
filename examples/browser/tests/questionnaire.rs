@@ -4,7 +4,7 @@ use browser::component::questionnaire::QuestionnairePage;
 use browser::page::{self, Page};
 use iced::{Point, Size};
 use iced_test::simulator::Simulator;
-use icedxdy::Theme;
+use icedcn::Theme;
 use std::path::PathBuf;
 
 type Ui<'a> = Simulator<'a, Message, Theme, iced::Renderer>;
@@ -163,7 +163,7 @@ fn every_questionnaire_preview_renders_at_phone_width() {
             ui = ui.rebuild(page.preview(id));
             ui.find("Which files are in scope?").unwrap();
         }
-        if let Some(dir) = std::env::var_os("ICEDXDY_QUESTIONNAIRE_SNAPSHOTS") {
+        if let Some(dir) = std::env::var_os("ICEDCN_QUESTIONNAIRE_SNAPSHOTS") {
             let file = PathBuf::from(dir).join(format!("questionnaire-{id}-375.png"));
             assert!(
                 ui.snapshot(&Theme::light())

@@ -4,7 +4,7 @@ use crate::column::Column;
 use crate::compose::Slot;
 use crate::text::Text;
 use iced_core::Length::Fill;
-use icedxdy_core::theme;
+use icedcn_core::theme;
 
 /// Create a sidebar group.
 ///

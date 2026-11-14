@@ -4,8 +4,8 @@ When a bubble is clickable, use `.interactive(true)` or `.on_press(message)` so 
 
 ```rust
 use iced::alignment::Horizontal;
-use icedxdy::Slot;
-use icedxdy::widget::bubble;
+use icedcn::Slot;
+use icedcn::widget::bubble;
 
 #[derive(Clone)]
 enum Message { Reply }

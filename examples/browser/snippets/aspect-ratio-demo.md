@@ -1,8 +1,8 @@
 ```rust
 use iced::widget::image;
 use iced::{ContentFit, Element, Fill, Widget};
-use icedxdy::widget::aspect_ratio;
-use icedxdy::{Theme, radius};
+use icedcn::widget::aspect_ratio;
+use icedcn::{Theme, radius};
 
 fn preview(photo: image::Handle) -> Element<'static, (), Theme> {
     let photo = image(photo)

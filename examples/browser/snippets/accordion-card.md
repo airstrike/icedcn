@@ -1,8 +1,8 @@
 ```rust
 use iced::widget::text::LineHeight;
 use iced::{Fill, Widget};
-use icedxdy::card;
-use icedxdy::widget::{accordion, column};
+use icedcn::card;
+use icedcn::widget::{accordion, column};
 
 let items = [
     (

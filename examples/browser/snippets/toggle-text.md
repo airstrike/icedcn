@@ -1,5 +1,5 @@
 ```rust
-use icedxdy::widget::toggle;
+use icedcn::widget::toggle;
 
 toggle![italic, "Italic"]
 ```

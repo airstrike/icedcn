@@ -10,10 +10,10 @@ use iced_test::core::widget::{Operation, operation};
 use iced_test::futures::futures::{StreamExt, executor::block_on};
 use iced_test::runtime::{Action, UserInterface, task, user_interface};
 use iced_test::{Selector, simulator};
-use icedxdy::Theme;
-use icedxdy::theme::tweak::Token;
-use icedxdy::widget::markdown::highlighter::Map;
-use icedxdy::widget::{
+use icedcn::Theme;
+use icedcn::theme::tweak::Token;
+use icedcn::widget::markdown::highlighter::Map;
+use icedcn::widget::{
     bubble, button, column, input, markdown, message, rich_text, row, span, text,
 };
 

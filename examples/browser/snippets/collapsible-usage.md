@@ -1,8 +1,8 @@
 ## Usage
 
 ```rust
-use icedxdy::Slot;
-use icedxdy::widget::{button, collapsible, column, text};
+use icedcn::Slot;
+use icedcn::widget::{button, collapsible, column, text};
 
 fn view() -> Slot<'static, ()> {
     collapsible(|c| {

@@ -5,11 +5,11 @@
 //! switch (echo of the header toggle), text (xs / muted), container, row.
 
 use iced::Fill;
-use icedxdy::Slot;
-use icedxdy::card;
-use icedxdy::theme;
-use icedxdy::widget::{alert, button, column, row, space, switch, text};
-use icedxdy::Theme;
+use icedcn::Slot;
+use icedcn::card;
+use icedcn::theme;
+use icedcn::widget::{alert, button, column, row, space, switch, text};
+use icedcn::Theme;
 
 use crate::{Message, State};
 

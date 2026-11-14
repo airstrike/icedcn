@@ -1,8 +1,8 @@
 use super::icons;
 use crate::Message;
-use icedxdy::Size::*;
-use icedxdy::Slot;
-use icedxdy::widget::{Row, button, column, row};
+use icedcn::Size::*;
+use icedcn::Slot;
+use icedcn::widget::{Row, button, column, row};
 
 pub fn view<'a>(wide: bool) -> Slot<'a, Message> {
     let pairs: [Slot<'a, Message>; 4] = [

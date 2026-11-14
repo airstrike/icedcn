@@ -1,6 +1,6 @@
 ```rust
-use icedxdy::Horizontal;
-use icedxdy::widget::{column, field, radio_group};
+use icedcn::Horizontal;
+use icedcn::widget::{column, field, radio_group};
 
 radio_group(|g| {
     column![

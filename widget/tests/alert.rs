@@ -6,8 +6,8 @@ use iced_core::widget::operation::{Outcome, focusable};
 use iced_core::{Point, Size};
 use iced_test::{Simulator, simulator};
 use iced_widget::{Renderer, Space};
-use icedxdy_core::Theme;
-use icedxdy_widget::{Inherited, Slot, alert, button};
+use icedcn_core::Theme;
+use icedcn_widget::{Inherited, Slot, alert, button};
 
 #[test]
 fn actions_respect_inherited_disabled_state() {

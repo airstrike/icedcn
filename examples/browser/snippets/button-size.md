@@ -1,14 +1,14 @@
 Pass the window width to switch layouts at 640px.
 
 ```rust
-use icedxdy::Size::*;
-use icedxdy::widget::{Row, button, column, row};
-use icedxdy::Slot;
+use icedcn::Size::*;
+use icedcn::widget::{Row, button, column, row};
+use icedcn::Slot;
 use crate::Message;
 mod icons {
 use iced::Widget;
 use iced::widget::svg;
-use icedxdy::{Slot, Theme};
+use icedcn::{Slot, Theme};
 
 pub fn arrow_up<'a, M: 'a>(size: f32) -> Slot<'a, M> {
     const SVG: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"></path><path d="M12 19V5"></path></svg>"#;
