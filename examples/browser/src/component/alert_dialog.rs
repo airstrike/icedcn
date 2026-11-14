@@ -201,6 +201,7 @@ impl page::Page for AlertDialogPage {
                         span("Settings").link(()).underline(true),
                         span(" delete any memories saved during this chat."),
                     ])
+                    .selectable(true)
                     .size(14)
                     .align_x(iced::Center)
                     .style(|theme| muted(theme).into())

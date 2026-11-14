@@ -53,6 +53,7 @@ pub struct Text<'a> {
     style: Option<StyleFn<'a, Theme>>,
     width: Option<Length>,
     height: Length,
+    selectable: Option<bool>,
     wrapping: Wrapping,
     ellipsis: Ellipsis,
     align_x: Option<iced_core::text::Alignment>,
@@ -71,6 +72,7 @@ impl<'a> Text<'a> {
             style: None,
             width: None,
             height: Length::Shrink,
+            selectable: None,
             wrapping: Wrapping::default(),
             ellipsis: Ellipsis::None,
             align_x: None,
@@ -130,6 +132,12 @@ impl<'a> Text<'a> {
         self
     }
 
+    /// Allow native text selection. Defaults to true outside button labels.
+    pub fn selectable(mut self, selectable: bool) -> Self {
+        self.selectable = Some(selectable);
+        self
+    }
+
     /// Choose the paragraph's native line-breaking strategy.
     pub fn wrapping(mut self, wrapping: Wrapping) -> Self {
         self.wrapping = wrapping;
@@ -162,6 +170,7 @@ impl<'a> Text<'a> {
     /// Build the iced text widget
     fn build(self) -> iced_widget::Text<'a, Theme> {
         let mut widget = iced_widget::text(self.fragment)
+            .selectable(self.selectable.unwrap_or(true))
             .height(self.height)
             .wrapping(self.wrapping)
             .ellipsis(self.ellipsis);
@@ -228,6 +237,7 @@ impl<'a, Message: 'a> From<Text<'a>> for Slot<'a, Message> {
 
 impl<'a, Message: 'a> Compose<Message> for Text<'a> {
     fn inherit(&mut self, from: &Inherited) {
+        self.selectable = self.selectable.or(from.selectable());
         self.size = self.size.or(from.size().map(Size::text_size));
         self.weight = self.weight.or(from.weight().map(Into::into));
         // The inherited value is absolute logical pixels (nova `leading-4` is

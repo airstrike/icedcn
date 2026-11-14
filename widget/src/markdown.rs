@@ -26,8 +26,8 @@ pub use widget::{
 
 #[cfg(feature = "markdown")]
 pub use widget::{
-    code_block, heading, item, ordered_list, paragraph, parse, quote, rule, table, unordered_list,
-    view, view_with,
+    code, code_block, heading, item, ordered_list, paragraph, parse, quote, rule, table,
+    unordered_list, view, view_with,
 };
 
 // Catalog impl for our own Theme — mirrors iced's default impl on

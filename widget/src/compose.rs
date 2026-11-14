@@ -38,6 +38,7 @@ pub struct Inherited {
     weight: Option<Weight>,
     line_height: Option<f32>,
     disabled: bool,
+    selectable: Option<bool>,
     conversation_alignment: Option<Horizontal>,
 }
 
@@ -59,6 +60,17 @@ impl Inherited {
     pub fn with_line_height(mut self, line_height: f32) -> Self {
         self.line_height = Some(line_height);
         self
+    }
+
+    /// Set the default text selectability for descendants.
+    pub fn with_selectable(mut self, selectable: bool) -> Self {
+        self.selectable = Some(selectable);
+        self
+    }
+
+    /// The inherited text selectability, when set by an ancestor.
+    pub fn selectable(&self) -> Option<bool> {
+        self.selectable
     }
 
     /// Cascade the disabled state.
@@ -105,6 +117,7 @@ impl Inherited {
             weight: self.weight.or(fallback.weight),
             line_height: self.line_height.or(fallback.line_height),
             disabled: self.disabled || fallback.disabled,
+            selectable: self.selectable.or(fallback.selectable),
             conversation_alignment: self
                 .conversation_alignment
                 .or(fallback.conversation_alignment),

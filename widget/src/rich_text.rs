@@ -28,22 +28,22 @@
 //! algorithm here and resolve `Token` → `Color` at draw time, rebuilding
 //! the cached paragraph when the palette changes.
 
+use std::cell::RefCell;
 use std::ops::Add;
 
 use crate::core::alignment;
 use crate::core::font;
-use crate::core::font::{Feature, Variation};
 use crate::core::layout;
 use crate::core::mouse;
 use crate::core::renderer;
 use crate::core::text;
 use crate::core::text::Renderer as _;
 use crate::core::text::paragraph::Paragraph as _;
-use crate::core::widget::Meta;
-use crate::core::widget::text::{Alignment, Catalog, Shaping, Wrapping, draw};
+use crate::core::widget::text::{Alignment, Catalog, Shaping, Wrapping};
 use crate::core::widget::tree::{self, Tree};
+use crate::core::widget::{Meta, Operation, operation};
 use crate::core::{
-    Color, Element, Em, Event, Layout, Length, Pixels, Rectangle, Shell, Size, Text, Widget,
+    Color, Element, Em, Layout, Length, Pixels, Point, Rectangle, Size, Text, Widget,
 };
 use iced_widget::Renderer;
 use icedxdy_core::Theme;
@@ -191,17 +191,6 @@ impl<'a> Span<'a> {
         }
         span
     }
-
-    /// Build the iced span used for *drawing*, with `color` resolved
-    /// against the active theme.
-    fn to_draw_span(&self, theme: &icedxdy_core::Theme) -> text::Span<'static, ()> {
-        let mut span = self.to_layout_span();
-        if let Some(token) = self.color {
-            let color: Color = token.resolve(theme).into();
-            span = span.color(color);
-        }
-        span
-    }
 }
 
 // `&str` / `String` ergonomics: `rich_text![span("..."), "literal"]` works.
@@ -238,6 +227,7 @@ pub struct RichText<'a> {
     height: Length,
     align_x: Alignment,
     align_y: alignment::Vertical,
+    selectable: Option<bool>,
     wrapping: Wrapping,
     letter_spacing: Em,
     /// Default color applied to spans that lack their own `color`. Driven
@@ -257,6 +247,7 @@ pub fn rich_text<'a>(spans: impl IntoIterator<Item = Span<'a>>) -> RichText<'a> 
         height: Length::Shrink,
         align_x: Alignment::Default,
         align_y: alignment::Vertical::Top,
+        selectable: None,
         wrapping: Wrapping::default(),
         letter_spacing: Em::default(),
         class: <Theme as Catalog>::default(),
@@ -264,6 +255,26 @@ pub fn rich_text<'a>(spans: impl IntoIterator<Item = Span<'a>>) -> RichText<'a> 
 }
 
 impl<'a> RichText<'a> {
+    fn format(&self, renderer: &Renderer, bounds: Size) -> Text<()> {
+        Text {
+            content: (),
+            bounds,
+            size: self.size.unwrap_or_else(|| renderer.text_size()),
+            font: self.font.unwrap_or_else(|| renderer.font()),
+            line_height: self.line_height,
+            align_x: self.align_x,
+            align_y: self.align_y,
+            shaping: Shaping::Advanced,
+            wrapping: self.wrapping,
+            ellipsis: text::Ellipsis::default(),
+            letter_spacing: self.letter_spacing,
+            font_features: Vec::new(),
+            font_variations: Vec::new(),
+            weight: None,
+            hint_factor: <Renderer as crate::core::Renderer>::hint_factor(renderer),
+        }
+    }
+
     /// Set the base font used to shape and draw this paragraph.
     pub fn font(mut self, font: iced_core::Font) -> Self {
         self.font = Some(font);
@@ -307,6 +318,12 @@ impl<'a> RichText<'a> {
         self
     }
 
+    /// Allow native text selection. Defaults to true outside button labels.
+    pub fn selectable(mut self, selectable: bool) -> Self {
+        self.selectable = Some(selectable);
+        self
+    }
+
     /// Set the wrapping strategy.
     pub fn wrapping(mut self, wrapping: Wrapping) -> Self {
         self.wrapping = wrapping;
@@ -327,15 +344,56 @@ impl<'a> RichText<'a> {
     }
 }
 
-// Tree state: cached paragraph + the spans + palette signature used to
-// build them. Color isn't part of paragraph shape, but iced's
-// `Paragraph::compare` only diffs the *outer* `Text` (size, font, bounds,
-// etc.), not the per-span list — so `with_spans` is the only path that
-// reshapes when spans change. We therefore rebuild the paragraph whenever
-// our drawn-span list (which IS palette-dependent) differs.
+// Selection belongs to the laid-out paragraph. The renderer retains a weak
+// reference to the colored paragraph, so keep its owner through presentation.
 struct State<P: text::Paragraph> {
     spans: Vec<text::Span<'static, ()>>,
     paragraph: P,
+    colored: RefCell<Option<(Vec<Option<Color>>, P)>>,
+}
+
+struct Operand<'a, P: text::Paragraph> {
+    state: &'a mut State<P>,
+    anchor: Point,
+    selectable: bool,
+}
+
+impl<P: text::Paragraph> operation::Text for Operand<'_, P> {
+    fn text(&self) -> Fragment<'_> {
+        self.state
+            .spans
+            .iter()
+            .map(|span| span.text.as_ref())
+            .collect::<String>()
+            .into()
+    }
+
+    fn select(&mut self, start: Point, end: Point, target: text::Target) {
+        if self.selectable {
+            let offset = self.anchor - Point::ORIGIN;
+            self.state
+                .paragraph
+                .select(start - offset, end - offset, target);
+        }
+    }
+
+    fn select_all(&mut self) {
+        if self.selectable {
+            self.state.paragraph.select_all();
+        }
+    }
+
+    fn deselect(&mut self) {
+        self.state.paragraph.deselect();
+    }
+
+    fn copy(&mut self) -> Option<String> {
+        if self.selectable {
+            self.state.paragraph.copy()
+        } else {
+            None
+        }
+    }
 }
 
 impl Meta for RichText<'_> {}
@@ -350,6 +408,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
         tree::State::new(State {
             spans: Vec::<text::Span<'static, ()>>::new(),
             paragraph,
+            colored: RefCell::default(),
         })
     }
 
@@ -372,67 +431,26 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
 
         tree.size = layout::sized(limits, self.width, self.height, |limits| {
             let bounds = limits.bounds();
-            let size = self.size.unwrap_or_else(|| renderer.text_size());
-            let font = self
-                .font
-                .unwrap_or_else(|| <Renderer as text::Renderer>::font(renderer));
-
-            let text = Text {
-                content: layout_spans.as_slice(),
-                bounds,
-                size,
-                line_height: self.line_height,
-                font,
-                align_x: self.align_x,
-                align_y: self.align_y,
-                shaping: Shaping::Advanced,
-                wrapping: self.wrapping,
-                ellipsis: text::Ellipsis::default(),
-                letter_spacing: self.letter_spacing,
-                font_features: Vec::<Feature>::new(),
-                font_variations: Vec::<Variation>::new(),
-                weight: None,
-                hint_factor: <Renderer as crate::core::Renderer>::hint_factor(renderer),
-            };
-
-            // Reshape the paragraph if our (color-stripped) layout spans
-            // differ. This catches changes in size, weight, font, italic,
-            // letter spacing — anything that affects shape.
-            if state.spans != layout_spans {
-                state.paragraph = <<Renderer as text::Renderer>::Paragraph>::with_spans(text);
-                state.spans = layout_spans
-                    .iter()
-                    .cloned()
-                    .map(text::Span::to_static)
-                    .collect();
+            let text = self
+                .format(renderer, bounds)
+                .with_content(layout_spans.as_slice());
+            let difference = if state.spans == layout_spans {
+                state.paragraph.compare(text.with_content(()))
             } else {
-                let probe = Text {
-                    content: (),
-                    bounds: text.bounds,
-                    size: text.size,
-                    line_height: text.line_height,
-                    font: text.font,
-                    align_x: text.align_x,
-                    align_y: text.align_y,
-                    shaping: text.shaping,
-                    wrapping: text.wrapping,
-                    ellipsis: text.ellipsis,
-                    letter_spacing: text.letter_spacing,
-                    font_features: text.font_features.clone(),
-                    font_variations: text.font_variations.clone(),
-                    weight: text.weight,
-                    hint_factor: text.hint_factor,
-                };
-                match state.paragraph.compare(probe) {
-                    text::Difference::None => {}
-                    text::Difference::Bounds => state.paragraph.resize(bounds),
-                    text::Difference::Shape => {
-                        state.paragraph =
-                            <<Renderer as text::Renderer>::Paragraph>::with_spans(text);
-                    }
+                text::Difference::Shape
+            };
+            match difference {
+                text::Difference::None => {}
+                text::Difference::Bounds => {
+                    state.paragraph.resize(bounds);
+                    *state.colored.get_mut() = None;
+                }
+                text::Difference::Shape => {
+                    state.paragraph = text::Paragraph::with_spans(text);
+                    state.spans = layout_spans;
+                    *state.colored.get_mut() = None;
                 }
             }
-
             state.paragraph.min_bounds()
         });
     }
@@ -454,84 +472,100 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
             .state
             .downcast_ref::<State<<Renderer as text::Renderer>::Paragraph>>();
 
-        // Resolve each span's Token against the live theme. Build a
-        // throwaway paragraph for drawing — we don't want to mutate the
-        // cached layout paragraph from `&self`. The drawn paragraph has
-        // identical *shape* (size/font/weight/italic/letter-spacing match
-        // the layout span); only `color` differs.
-        //
-        // PERF: We reshape the paragraph every draw. For the small
-        // (1–10 span) labels this widget is meant for, the cost is in the
-        // microseconds and not worth optimizing yet. If a future call site
-        // hits perf issues, the right fix is interior mutability + a cached
-        // palette signature on `State`, or moving the resolution into
-        // `update` and triggering a relayout on theme change.
-        let draw_spans: Vec<_> = self.spans.iter().map(|s| s.to_draw_span(theme)).collect();
-
-        let bounds = layout.bounds().size();
-        let size = self.size.unwrap_or_else(|| renderer.text_size());
-        let font = self
-            .font
-            .unwrap_or_else(|| <Renderer as text::Renderer>::font(renderer));
-
-        let draw_paragraph = <<Renderer as text::Renderer>::Paragraph>::with_spans(Text {
-            content: draw_spans.as_slice(),
-            bounds,
-            size,
-            line_height: self.line_height,
-            font,
-            align_x: self.align_x,
-            align_y: self.align_y,
-            shaping: Shaping::Advanced,
-            wrapping: self.wrapping,
-            ellipsis: text::Ellipsis::default(),
-            letter_spacing: self.letter_spacing,
-            font_features: Vec::<Feature>::new(),
-            font_variations: Vec::<Variation>::new(),
-            weight: None,
-            hint_factor: <Renderer as crate::core::Renderer>::hint_factor(renderer),
-        });
-
-        // Match iced's `Rich::draw` underline / strikethrough
-        // / highlight handling — none of our `Span` builder methods enable
-        // those today, but use the cached paragraph's `span_bounds` if a
-        // future caller turns them on. (Skipped for now; revisit when we
-        // surface `.underline()` / `.strikethrough()` in `Span`.)
-        let _ = state; // cached layout paragraph; layout passes already used it
-
+        let paragraph = &state.paragraph;
+        let anchor = layout
+            .bounds()
+            .anchor(paragraph.min_bounds(), self.align_x, self.align_y);
+        let colors = || {
+            self.spans
+                .iter()
+                .map(|span| span.color.map(|token| token.resolve(theme).into()))
+        };
+        let mut colored = state.colored.borrow_mut();
+        let ink = if self.spans.iter().any(|span| span.color.is_some()) {
+            colored.take_if(|(palette, _)| palette.iter().copied().ne(colors()));
+            let (_, ink) = colored.get_or_insert_with(|| {
+                let palette: Vec<_> = colors().collect();
+                let mut spans = state.spans.clone();
+                for (span, color) in spans.iter_mut().zip(&palette) {
+                    span.color = *color;
+                }
+                let text = self
+                    .format(renderer, paragraph.bounds())
+                    .with_content(spans.as_slice());
+                (palette, text::Paragraph::with_spans(text))
+            });
+            ink
+        } else {
+            paragraph
+        };
         let style = <Theme as Catalog>::style(theme, &self.class);
-        draw(
-            renderer,
-            defaults,
-            layout.bounds(),
-            &draw_paragraph,
-            style,
-            <Theme as Catalog>::selection(theme),
-            viewport,
+        renderer.fill_paragraph(
+            ink,
+            anchor,
+            style.color.unwrap_or(defaults.text_color),
+            *viewport,
         );
+        for region in paragraph.selection() {
+            use crate::core::Renderer as _;
+            renderer.fill_quad(
+                renderer::Quad {
+                    bounds: *region + (anchor - Point::ORIGIN),
+                    ..Default::default()
+                },
+                style.selection.unwrap_or_else(|| theme.selection()),
+            );
+        }
     }
 
-    fn update(
+    fn operate(
         &mut self,
-        _tree: &mut Tree,
-        _event: &Event,
-        _layout: Layout,
-        _cursor: mouse::Cursor,
-        _renderer: &Renderer,
-        _shell: &mut Shell<'_, Message>,
+        tree: &mut Tree,
+        layout: Layout,
         _viewport: &Rectangle,
+        _renderer: &Renderer,
+        operation: &mut dyn Operation,
     ) {
+        let state = tree
+            .state
+            .downcast_mut::<State<<Renderer as text::Renderer>::Paragraph>>();
+        let bounds = layout.bounds();
+        let anchor = bounds.anchor(state.paragraph.min_bounds(), self.align_x, self.align_y);
+        operation.text(
+            None,
+            bounds,
+            &mut Operand {
+                state,
+                anchor,
+                selectable: self.selectable.unwrap_or(true),
+            },
+        );
     }
 
     fn mouse_interaction(
         &self,
-        _tree: &Tree,
-        _layout: Layout,
-        _cursor: mouse::Cursor,
-        _viewport: &Rectangle,
+        tree: &Tree,
+        layout: Layout,
+        cursor: mouse::Cursor,
+        viewport: &Rectangle,
         _renderer: &Renderer,
     ) -> mouse::Interaction {
-        mouse::Interaction::None
+        let state = tree
+            .state
+            .downcast_ref::<State<<Renderer as text::Renderer>::Paragraph>>();
+        let bounds = layout.bounds();
+        let anchor = bounds.anchor(state.paragraph.min_bounds(), self.align_x, self.align_y);
+        if self.selectable.unwrap_or(true)
+            && cursor.is_over(*viewport)
+            && cursor.is_over(bounds)
+            && cursor
+                .position_from(anchor)
+                .is_some_and(|point| state.paragraph.hit_glyph(point))
+        {
+            mouse::Interaction::Text
+        } else {
+            mouse::Interaction::None
+        }
     }
 }
 
@@ -549,6 +583,7 @@ impl<'a, Message: 'a> From<RichText<'a>> for Slot<'a, Message> {
 
 impl<'a, Message: 'a> Compose<Message> for RichText<'a> {
     fn inherit(&mut self, from: &Inherited) {
+        self.selectable = self.selectable.or(from.selectable());
         // Spans that set no size or weight of their own take the inherited
         // one, so `.size(Sm)` on an enclosing button cascades into them.
         if let Some(size) = from.size() {

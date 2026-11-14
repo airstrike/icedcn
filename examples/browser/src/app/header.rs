@@ -82,6 +82,9 @@ pub(super) fn shortcuts() -> Subscription<Message> {
         match key.as_ref() {
             Key::Named(Named::Tab) if modifiers.shift() => Some(Message::FocusPrevious),
             Key::Named(Named::Tab) => Some(Message::FocusNext),
+            Key::Character("a") if modifiers == keyboard::Modifiers::COMMAND => {
+                Some(Message::SelectArticle)
+            }
             Key::Character("k") if modifiers.command() || modifiers.control() => {
                 Some(Message::SearchShortcut)
             }

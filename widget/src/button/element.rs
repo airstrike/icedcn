@@ -217,8 +217,12 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
 {
     fn from(mut btn: Button<'a, Message>) -> Self {
         let size = btn.size.unwrap_or_default();
-        btn.content
-            .inherit(&Inherited::default().with_size(size).with_weight(btn.weight));
+        btn.content.inherit(
+            &Inherited::default()
+                .with_size(size)
+                .with_weight(btn.weight)
+                .with_selectable(false),
+        );
 
         let h = btn.size_height();
         let content = btn.content.compose();

@@ -14,7 +14,7 @@ use crate::Slot;
 pub fn shimmer<'a, Message: 'a>(label: impl Into<String>) -> Slot<'a, Message> {
     Slot::from(
         Shimmer {
-            text: text(label.into()).size(14),
+            text: text(label.into()).size(14).selectable(true),
         }
         .boxed(),
     )

@@ -1321,6 +1321,7 @@ where
             None,
         ))
         .on_link_click(on_link_click)
+        .selectable(true)
         .size(match level {
             pulldown_cmark::HeadingLevel::H1 => h1_size,
             pulldown_cmark::HeadingLevel::H2 => h2_size,
@@ -1356,6 +1357,7 @@ where
     ))
     .size(settings.text_size)
     .line_height(settings.line_height)
+    .selectable(true)
     .on_link_click(on_link_click)
     .boxed()
 }
@@ -1437,6 +1439,36 @@ where
     .boxed()
 }
 
+/// Build the selectable highlighted paragraph shared by fenced-code viewers.
+pub fn code<'a, Message, Theme>(
+    settings: Settings,
+    lines: &[Text],
+    #[cfg(feature = "highlighter")] code_theme: Option<&dyn highlighter::Theme>,
+) -> text::Rich<'a, Uri, Message, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    // Keep line breaks in the paragraph so copying preserves empty lines too.
+    let mut spans = Vec::new();
+    for (index, line) in lines.iter().enumerate() {
+        if index > 0 {
+            spans.push(span("\n"));
+        }
+        spans.extend(line.spans.iter().map(|span| {
+            span.view(
+                &settings.style,
+                #[cfg(feature = "highlighter")]
+                code_theme,
+            )
+        }));
+    }
+    rich_text(spans)
+        .selectable(true)
+        .font(settings.style.code_block_font)
+        .size(settings.code_size)
+        .wrapping(text::Wrapping::None)
+}
+
 /// Displays a code block using the default look. The `code_theme`
 /// argument is consulted at draw time to colour `Span::Scoped` tokens —
 /// pass `None` to leave them in the renderer's default text colour
@@ -1444,7 +1476,7 @@ where
 pub fn code_block<'a, Message, Theme, Renderer>(
     settings: Settings,
     lines: &'a [Text],
-    on_link_click: impl Fn(Uri) -> Message + Clone + 'a,
+    on_link_click: impl Fn(Uri) -> Message + 'a,
     #[cfg(feature = "highlighter")] code_theme: Option<&'a dyn highlighter::Theme>,
 ) -> Element<'a, Message, Theme, Renderer>
 where
@@ -1454,17 +1486,15 @@ where
 {
     container(
         scrollable(
-            container(column(lines.iter().map(|line| {
-                let spans = line.spans(
-                    settings.style,
+            container(
+                code(
+                    settings,
+                    lines,
                     #[cfg(feature = "highlighter")]
                     code_theme,
-                );
-                rich_text(spans)
-                    .on_link_click(on_link_click.clone())
-                    .font(settings.style.code_block_font)
-                    .size(settings.code_size)
-            })))
+                )
+                .on_link_click(on_link_click),
+            )
             .padding(settings.code_size),
         )
         .direction(scrollable::Direction::Horizontal(scrollbar())),
@@ -1605,7 +1635,8 @@ where
                 #[cfg(feature = "highlighter")]
                 None,
             ))
-            .on_link_click(Self::on_link_click),
+            .on_link_click(Self::on_link_click)
+            .selectable(true),
         )
         .padding(settings.spacing.0)
         .class(Theme::code_block())

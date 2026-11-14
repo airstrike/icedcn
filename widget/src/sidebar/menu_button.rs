@@ -164,7 +164,8 @@ impl<'a, Message: Clone + 'a> From<SidebarMenuButton<'a, Message>>
             &Inherited::default()
                 .with_size(Size::Custom(text_size))
                 .with_weight(crate::Weight::Medium)
-                .with_line_height(16.0),
+                .with_line_height(16.0)
+                .with_selectable(false),
         );
 
         let content_iced = btn.content.compose();

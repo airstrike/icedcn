@@ -693,7 +693,7 @@ fn toc<'a>(page: &'a dyn Page) -> Slot<'a, super::Message> {
         row
     });
 
-    let header = container(text::muted("On This Page")).padding([0, 8]);
+    let header = container(text::muted("On This Page").selectable(false)).padding([0, 8]);
 
     // Outer spacing(16) = gap between header and item list. Inner items
     // stack with their natural Sm-button height (28px) — shadcn's TOC
@@ -783,8 +783,8 @@ fn inline_style_from_theme(theme: &Theme) -> markdown::Style {
 ///
 /// Overrides `code_block` to skip iced's default container chrome —
 /// bg + radius + padding come from the page-level container, the
-/// markdown widget just emits the highlighted rich-text lines +
-/// horizontal scrollbar.
+/// markdown widget emits a selectable highlighted paragraph inside a horizontal
+/// scrollable.
 pub struct SnippetViewer {
     theme: Theme,
     map: markdown::highlighter::Map,
@@ -827,17 +827,11 @@ impl<'a> markdown::Viewer<'a, markdown::Uri, Theme, iced::Renderer> for SnippetV
         _code: &'a str,
         lines: &'a [markdown::Text],
     ) -> iced::Element<'a, markdown::Uri, Theme, iced::Renderer> {
-        use iced::widget::rich_text;
         use icedxdy::widget::scrollable;
 
-        let body = column(lines.iter().map(|line| {
-            rich_text(line.spans(settings.style, Some(&self.map)))
-                .on_link_click(Self::on_link_click)
-                .font(settings.style.code_block_font)
-                .size(settings.code_size)
-                .boxed()
-        }));
-
+        let body = markdown::code(settings, lines, Some(&self.map))
+            .on_link_click(Self::on_link_click)
+            .boxed();
         let scroll = scrollable::scrollable(body).horizontal().spacing(2);
 
         container(scroll)

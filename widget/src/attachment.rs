@@ -1,7 +1,9 @@
 //! File cards with independent preview and action targets.
 use crate::scrollable::Direction;
 use crate::status_marker::shimmer;
-use crate::{Compose, Inherited, Row, Size, Slot, button, column, container, row, scroll_area};
+use crate::{
+    Compose, Inherited, Row, Size, Slot, button, column, container, row, scroll_area, text,
+};
 use iced_core::Length::{Fill, Shrink};
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::text::{Ellipsis, Wrapping};
@@ -102,15 +104,14 @@ pub fn action<'a, Message: Clone + 'a>(
     button(icon).square().size(Size::Xs).style(button::Ghost)
 }
 fn truncate<'a, Message: 'a>(label: String, pixels: f32, medium: bool) -> Slot<'a, Message> {
-    use iced_core::font::Weight;
-    let mut label = iced_widget::text(label)
+    let mut label = text(label)
         .size(pixels)
         .wrapping(Wrapping::None)
         .ellipsis(Ellipsis::End);
     if medium {
-        label = label.weight(Weight::Medium);
+        label = label.medium();
     }
-    label.boxed().into()
+    label.into()
 }
 impl<'a, Message: 'a> Compose<Message> for Attachment<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {

@@ -60,6 +60,7 @@ pub enum Message {
     SearchShortcut,
     FocusNext,
     FocusPrevious,
+    SelectArticle,
     Fonts(bool),
     Navigate(usize, Option<usize>),
     Stars(Option<u64>),
@@ -318,6 +319,14 @@ impl App {
                 self.fonts_open = false;
                 Task::none()
             }
+            Message::SelectArticle => {
+                use iced::widget::operation::text::select_all;
+                if self.search || self.fonts_open {
+                    Task::none()
+                } else {
+                    select_all(self.pages[self.current_page].scrollable_id())
+                }
+            }
             Message::FocusNext => operation::focus_next(),
             Message::FocusPrevious => operation::focus_previous(),
             Message::SearchShortcut => self.update(Message::Search(!self.search)),
@@ -391,6 +400,7 @@ impl App {
         let header = self.header(width);
         let sidebar_header = container(
             text::xs("Components")
+                .selectable(false)
                 .weight(Weight::Medium)
                 .style(theme::text::Muted),
         )
@@ -419,6 +429,7 @@ impl App {
         }));
         let sections_label = container(
             text::xs("Sections")
+                .selectable(false)
                 .weight(Weight::Medium)
                 .style(theme::text::Muted),
         )
