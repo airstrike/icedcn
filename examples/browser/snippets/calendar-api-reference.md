@@ -13,13 +13,14 @@
 | `.month(Date)` / `.on_month_change(handler)` | Uncontrolled | Control or observe month navigation. |
 | `.number_of_months(usize)` | `1` | Show 1–12 consecutive months. |
 | `.stacked(bool)` | Wrap to available width | Use the application's window breakpoint to choose month direction. |
-| `.caption_dropdown(bool)` | `false` | Open month and year menus while keeping the date grid visible. |
+| `.caption_dropdown(bool)` | `false` | Open month and year menus at the displayed choice. |
 | `.long_months(bool)` | `false` | Use full month names in both dropdown triggers and menu choices. |
 | `.week_numbers(bool)` | `false` | Show Sunday-first locale week numbers; the week containing January 1 is week 01. |
 | `.fixed_weeks(bool)` | `false` | Keep six week rows visible. |
 | `.cell_size(f32)` | `28` | Set each date cell's width and height in logical pixels. |
+| `.bordered(bool)` | `false` | Add the standalone calendar’s rounded border and background. |
 | `.padding(f32)` | `8` | Set space around the months. |
-| `.weekday_line_height(f32)` | `22.4` | Set the weekday line box; small-text cards use `18.285715`. |
+| `.weekday_line_height(f32)` | `22.4` | Override the weekday line box. Inside a Card the default is about 18.3 pixels. |
 | `.disabled(bool)` | `false` | Disable all interaction; disabled ancestors also apply. |
 | `.unavailable(predicate)` | All dates available | Disable matching dates for both pointer and keyboard selection. |
 | `.strike_unavailable(bool)` | `false` | Cross out unavailable dates. |

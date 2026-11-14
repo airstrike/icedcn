@@ -33,9 +33,7 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "basic",
         title: "Basic",
-        description: Some(
-            "A basic calendar component. We used a bordered container with a rounded border to style the calendar.",
-        ),
+        description: Some("Use `.bordered(true)` to give a standalone calendar a rounded border."),
         snippet: "examples/browser/snippets/calendar-basic.md",
     },
     page::Block::Example {
@@ -155,7 +153,7 @@ impl page::Page for CalendarPage {
             "range" => recipes::range(self.wide),
             "caption" => recipes::caption(),
             "presets" => recipes::presets(),
-            "time" => recipes::time(),
+            "time" => recipes::time(self.wide.unwrap_or(true)),
             "booked-dates" => recipes::booked_dates(),
             "custom-days" => recipes::custom_days(self.wide.unwrap_or(true)),
             "week-numbers" => recipes::week_numbers(),

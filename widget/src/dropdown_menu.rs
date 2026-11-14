@@ -57,6 +57,12 @@ pub fn dropdown_menu<'a, Message>(
 }
 
 impl<'a, Message> DropdownMenu<'a, Message> {
+    /// Reveal the existing selection when this menu serves as a calendar caption.
+    pub(crate) fn initial_choice(mut self, index: usize, height: f32) -> Self {
+        self.popover = self.popover.initial_choice(index, height);
+        self
+    }
+
     /// Control the menu: it is open exactly when `open` is.
     pub fn open(mut self, open: bool) -> Self {
         self.popover = self.popover.open(open);

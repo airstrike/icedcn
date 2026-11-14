@@ -1,29 +1,9 @@
 ```rust
-use iced::widget::component::{Component, component};
-use iced::{Element, Fill, Pixels, Widget};
-use icedcn::core::Border;
-use icedcn::theme::container::Style;
-use icedcn::widget::calendar::{Date, Datelike, Duration, Mode, Selection, System, today};
-use icedcn::widget::{
-    Column, Row, button, calendar, column, container, field, input, input_group, rule, text,
-};
-use icedcn::{Size, Slot, Theme, card};
+use iced::Element;
+use icedcn::Theme;
+use icedcn::widget::calendar;
 
-fn bordered<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Element<'a, Message, Theme> {
-    container(content)
-        .padding(1)
-        .style(|theme: &Theme| Style {
-            background: Some(theme.neutral.base.into()),
-            border: Border {
-                width: 1.,
-                radius: 10.0.into(),
-                color: theme.neutral.border,
-            },
-            ..Style::default()
-        })
-        .into()
-}
-pub fn example<Message: 'static>() -> Element<'static, Message, Theme> {
-    bordered(calendar())
+pub fn basic<Message: 'static>() -> Element<'static, Message, Theme> {
+    calendar().bordered(true).into()
 }
 ```

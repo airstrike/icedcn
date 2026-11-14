@@ -54,6 +54,7 @@ pub struct Popover<'a, Message> {
     min_width: f32,
     padding: Padding,
     modal: bool,
+    initial_choice: Option<(usize, f32)>,
     focus_content: Option<bool>,
     open_on_arrow_down: bool,
     hover: Option<(Duration, Duration)>,
@@ -116,6 +117,7 @@ pub fn popover<'a, Message>(
         // `p-2.5`.
         padding: Padding::new(10.0),
         modal: false,
+        initial_choice: None,
         focus_content: None,
         open_on_arrow_down: false,
         hover: None,
@@ -124,6 +126,11 @@ pub fn popover<'a, Message>(
 }
 
 impl<'a, Message> Popover<'a, Message> {
+    pub(crate) fn initial_choice(mut self, index: usize, height: f32) -> Self {
+        self.initial_choice = Some((index, height));
+        self
+    }
+
     /// Control the popover: it is open exactly when `open` is, and its
     /// triggers and dismissals only publish
     /// [`on_open_change`](Self::on_open_change).
@@ -378,11 +385,14 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
 
             let scroll = Id::unique();
             if self.modal {
-                body = crate::scrollable(body)
+                let mut scroller = crate::scrollable(body)
                     .id(scroll.clone())
                     .width(Fill)
-                    .class(theme::scrollable::Hidden)
-                    .into();
+                    .class(theme::scrollable::Hidden);
+                if let Some((_, height)) = self.initial_choice {
+                    scroller = scroller.height(height);
+                }
+                body = scroller.into();
             }
             let panel = Container::new(body)
                 .padding(self.padding)
@@ -403,6 +413,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
                     horizontal: Some(false),
                     autofocus: Initial::Dropdown {
                         keyboard: state.keyboard,
+                        selected: self.initial_choice.map(|(index, _)| index),
                         scroll,
                     },
                     on_move: None,

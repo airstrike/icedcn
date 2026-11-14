@@ -1,87 +1,50 @@
 ```rust
-use iced::widget::component::{Component, component};
-use iced::{Element, Fill, Pixels, Widget};
-use icedcn::core::Border;
-use icedcn::theme::container::Style;
-use icedcn::widget::calendar::{Date, Datelike, Duration, Mode, Selection, System, today};
-use icedcn::widget::{
-    Column, Row, button, calendar, column, container, field, input, input_group, rule, text,
-};
-use icedcn::{Size, Slot, Theme, card};
+use iced::{Element, Fill};
+use icedcn::{Size, Theme, card};
+use icedcn::widget::{Column, Row, button, calendar, column, container};
+use icedcn::widget::calendar::{Date, Datelike, Duration, Selection, today};
 
-pub fn date(month: u32, day: u32) -> Date {
-    Date::from_ymd_opt(today().year(), month, day).unwrap_or_else(today)
-}
-pub fn presets<Message: 'static>() -> Element<'static, Message, Theme> {
-    component(Presets).boxed()
-}
-struct Presets;
-#[derive(Default)]
-struct Dates {
-    value: Option<Option<Selection>>,
-    month: Option<Date>,
-}
 #[derive(Clone, Debug)]
-enum Edit {
-    Pick(Option<Selection>),
-    Show(Date),
-    Offset(i64),
+pub enum Edit { Pick(Option<Selection>), Show(Date), Offset(i64) }
+
+pub struct Dates { selected: Option<Selection>, month: Date }
+
+impl Default for Dates {
+    fn default() -> Self {
+        let month = today();
+        let february = Date::from_ymd_opt(month.year(), 2, 12).expect("valid date");
+        Self { selected: Some(Selection::single(february)), month }
+    }
 }
-impl<'a, Message: 'static> Component<'a, Message, Theme> for Presets {
-    type State = Dates;
-    type Event = Edit;
-    fn update(&self, state: &mut Dates, edit: Edit, _: &iced::Renderer) -> Option<Message> {
+
+impl Dates {
+    pub fn update(&mut self, edit: Edit) {
         match edit {
-            Edit::Pick(value) => state.value = Some(value),
-            Edit::Show(month) => state.month = Some(month),
+            Edit::Pick(value) => self.selected = value,
+            Edit::Show(month) => self.month = month,
             Edit::Offset(days) => {
-                let day = today() + Duration::days(days);
-                state.value = Some(Some(Selection::single(day)));
-                state.month = Some(day);
+                self.month = today() + Duration::days(days);
+                self.selected = Some(Selection::single(self.month));
             }
         }
-        None
     }
-    fn view(&self, state: &Dates) -> impl Widget<Edit, Theme> + 'a {
-        let picker = calendar()
-            .weekday_line_height(18.285715)
-            .padding(0.)
-            .cell_size(38.)
-            .fixed_weeks(true)
-            .selected(state.value.unwrap_or(Some(Selection::single(date(2, 12)))))
-            .month(state.month.unwrap_or_else(today))
-            .on_select(Edit::Pick)
-            .on_month_change(Edit::Show);
-        let presets = [
-            ("Today", 0),
-            ("Tomorrow", 1),
-            ("In 3 days", 3),
-            ("In a week", 7),
-            ("In 2 weeks", 14),
-        ];
-        let actions = presets.chunks(3).map(|chunk| {
+
+    pub fn view(&self) -> Element<'_, Edit, Theme> {
+        let picker = calendar().selected(self.selected).month(self.month)
+            .on_select(Edit::Pick).on_month_change(Edit::Show)
+            .fixed_weeks(true).cell_size(38.).padding(0.);
+        let presets = [("Today", 0), ("Tomorrow", 1), ("In 3 days", 3),
+                       ("In a week", 7), ("In 2 weeks", 14)];
+        let rows = presets.chunks(3).map(|chunk| {
             Row::with_children(chunk.iter().map(|&(label, days)| {
-                button(label)
-                    .style(button::Outline)
-                    .size(Size::Sm)
-                    .width(Fill)
-                    .on_press(Edit::Offset(days))
-                    .into()
-            }))
-            .spacing(8)
-            .into()
+                button(label).style(button::Outline).size(Size::Sm)
+                    .width(Fill).on_press(Edit::Offset(days)).into()
+            })).spacing(8).into()
         });
-        Element::from(
-            card(
-                column![
-                    container(picker).padding(12).center_x(Fill),
-                    card::footer_with_spacing(Column::with_children(actions).spacing(8), 12.),
-                ]
-                .spacing(0)
-                .width(300),
-            )
-            .padding(0),
-        )
+        card(column![
+            container(picker).padding(12).center_x(Fill),
+            card::footer_with_spacing(Column::with_children(rows).spacing(8), 12.),
+        ].spacing(0).width(300)).padding(0).into()
     }
 }
 ```

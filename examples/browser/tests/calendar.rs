@@ -243,6 +243,29 @@ fn caption_controls_match_nova_bounds_and_apply_the_month_formatter_to_options()
 }
 
 #[test]
+fn caption_arrows_start_at_the_displayed_month_and_year() {
+    let view = || {
+        Element::<Message, Theme>::from(
+            calendar().default_month(date(11, 1)).caption_dropdown(true),
+        )
+    };
+    let mut ui = Simulator::new(view());
+    for (label, expected) in [("Nov", "Oct"), ("2026", "2025"), ("2025", "2024")] {
+        ui.click(label).unwrap();
+        ui.draw(&Theme::light());
+        ui.tap_key(Named::ArrowUp);
+        ui.tap_key(Named::Enter);
+        ui = ui.rebuild(view());
+        ui.find(expected)
+            .expect("ArrowUp selects the previous visible choice");
+        assert!(
+            ui.find("Mar").is_err(),
+            "committing a choice dismisses the caption"
+        );
+    }
+}
+
+#[test]
 fn caption_escape_restores_the_trigger_for_keyboard_reopening() {
     let view = || {
         Element::<Message, Theme>::from(calendar().default_month(date(1, 1)).caption_dropdown(true))
@@ -387,7 +410,7 @@ fn time_fields_validate_each_clock_boundary_and_accept_empty_edits() {
         ("12:34:56:7", "12:34:56"),
         ("12:34x:56", "12:34:56"),
     ] {
-        let mut ui = Simulator::new(recipes::time::<Message>());
+        let mut ui = Simulator::new(recipes::time::<Message>(true));
         ui.click("10:30:00").unwrap();
         ui.tap_key(Named::End);
         for _ in 0..8 {

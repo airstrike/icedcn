@@ -28,6 +28,7 @@ pub(crate) enum Initial {
     },
     Dropdown {
         keyboard: bool,
+        selected: Option<usize>,
         scroll: Id,
     },
     Choice {
@@ -109,14 +110,12 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
         if !state.initialized {
             state.initialized = true;
             let index = match &self.autofocus {
-                Initial::Content { .. }
-                | Initial::Menu(true)
-                | Initial::Dropdown { keyboard: true, .. } => Some(0),
+                Initial::Content { .. } | Initial::Menu(true) => Some(0),
+                Initial::Dropdown {
+                    keyboard, selected, ..
+                } => selected.or(keyboard.then_some(0)),
                 Initial::Choice { index, .. } => Some(*index),
-                Initial::Menu(false)
-                | Initial::Dropdown {
-                    keyboard: false, ..
-                } => None,
+                Initial::Menu(false) => None,
             };
             if let Some(index) = index {
                 state.keyboard = true;

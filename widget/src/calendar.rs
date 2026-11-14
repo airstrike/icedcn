@@ -21,9 +21,11 @@ use iced_widget::button::Style;
 use iced_widget::component::{self, Component};
 use iced_widget::text::StyleFn;
 use iced_widget::{Renderer, Widget};
-use iced_widget::{rich_text, scrollable, span};
+use iced_widget::{rich_text, span};
 use icedcn_core::theme;
 use icedcn_core::theme::button::ghost;
+use icedcn_core::theme::container::PageBackground;
+use icedcn_core::theme::tweak::{Token, border, radius};
 use icedcn_core::{Radius, Theme};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -68,7 +70,8 @@ pub struct Calendar<'a, Message> {
     week_numbers: bool,
     cell_size: f32,
     padding: f32,
-    weekday_line_height: f32,
+    weekday_line_height: Option<f32>,
+    bordered: bool,
     fixed_weeks: bool,
     stacked: Option<bool>,
     long_months: bool,
@@ -93,7 +96,8 @@ pub fn calendar<'a, Message>() -> Calendar<'a, Message> {
         week_numbers: false,
         cell_size: 28.,
         padding: 8.,
-        weekday_line_height: 22.4,
+        weekday_line_height: None,
+        bordered: false,
         fixed_weeks: false,
         stacked: None,
         long_months: false,
@@ -152,9 +156,14 @@ impl<'a, Message> Calendar<'a, Message> {
         self.padding = padding.max(0.);
         self
     }
-    /// Weekday line box in logical pixels. Use 18.285715 inside a small-text Card.
+    /// Give a standalone calendar a rounded border and an opaque background.
+    pub fn bordered(mut self, bordered: bool) -> Self {
+        self.bordered = bordered;
+        self
+    }
+    /// Override the weekday line box, normally inherited from the enclosing Card.
     pub fn weekday_line_height(mut self, height: f32) -> Self {
-        self.weekday_line_height = height.max(12.8);
+        self.weekday_line_height = Some(height.max(12.8));
         self
     }
     /// Reserve six week rows even in shorter months.
@@ -310,7 +319,11 @@ impl<Message> Calendar<'_, Message> {
             targets.push(None);
         }
         let title: Slot<'static, Event> = if self.caption {
-            let dropdown = |label: String, choices: Vec<(String, Date)>, newest_last| {
+            let dropdown = |label: String, choices: Vec<(String, Date)>| {
+                let selected = choices
+                    .iter()
+                    .position(|(_, date)| *date == month)
+                    .unwrap_or(0);
                 dropdown_menu(
                     move |handle| {
                         handle.trigger(
@@ -344,21 +357,15 @@ impl<Message> Calendar<'_, Message> {
                         )
                     },
                     move |_| {
-                        let choices = scrollable(Element::from(Column::with_children(
-                            choices.iter().map(|(label, date)| {
-                                menu::item(label.clone())
-                                    .on_select(Event::Month(*date))
-                                    .into()
-                            }),
-                        )))
-                        .height(240);
-                        if newest_last {
-                            choices.anchor_bottom().boxed().into()
-                        } else {
-                            choices.boxed().into()
-                        }
+                        Column::with_children(choices.iter().map(|(label, date)| {
+                            menu::item(label.clone())
+                                .on_select(Event::Month(*date))
+                                .into()
+                        }))
+                        .into()
                     },
                 )
+                .initial_choice(selected, 240.)
                 .align(dropdown_menu::Align::Start)
                 .width(144)
             };
@@ -382,8 +389,8 @@ impl<Message> Calendar<'_, Message> {
                 targets.extend([None, None]);
             }
             row![
-                dropdown(label, months, false),
-                dropdown(system.number(year), years, true)
+                dropdown(label, months),
+                dropdown(system.number(year), years)
             ]
             .spacing(6)
             .into()
@@ -431,6 +438,7 @@ impl<Message> Calendar<'_, Message> {
         targets: &mut Vec<Option<Date>>,
         in_month: &mut Vec<usize>,
     ) -> Slot<'static, Event> {
+        let weekday_line_height = self.weekday_line_height.unwrap_or(22.4);
         let mut labels = match self.system {
             System::Gregorian => ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
             System::Persian => ["ش", "۱ش", "۲ش", "۳ش", "۴ش", "۵ش", "ج"],
@@ -446,7 +454,7 @@ impl<Message> Calendar<'_, Message> {
         weekdays.extend(labels.map(|label| {
             let mut label = iced_widget::text(label)
                 .size(12.8)
-                .line_height(LineHeight::Absolute(self.weekday_line_height.into()))
+                .line_height(LineHeight::Absolute(weekday_line_height.into()))
                 .style(|t: &Theme| {
                     theme::text::Style {
                         color: Some(t.muted.foreground),
@@ -480,7 +488,7 @@ impl<Message> Calendar<'_, Message> {
                     container(
                         text::muted(format!("{:02}", date::week_number(week[0])))
                             .size(12.8)
-                            .line_height(LineHeight::Absolute(self.weekday_line_height.into())),
+                            .line_height(LineHeight::Absolute(weekday_line_height.into())),
                     )
                     .width(self.cell_size)
                     .height(self.cell_size)
@@ -795,8 +803,15 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Calendar<
                     .find(|&i| targets[i] == Some(today))
             })
             .or_else(|| in_month.iter().copied().min_by_key(|&i| targets[i]));
+        let mut surface =
+            container(content).padding(self.padding + if self.bordered { 1. } else { 0. });
+        if self.bordered {
+            surface = surface.class(
+                PageBackground + border::Color(Token::Border) + border::Width(1.) + radius(10.),
+            );
+        }
         grid::Grid {
-            content: container(content).padding(self.padding).into(),
+            content: surface.into(),
             targets,
             preferred,
             in_month,
@@ -809,6 +824,9 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Calendar<
 impl<'a, Message: 'static> Compose<Message> for Calendar<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {
         self.disabled |= from.is_disabled();
+        if from.card_spacing().is_some() && !self.bordered {
+            self.weekday_line_height.get_or_insert(12.8 * 20. / 14.);
+        }
     }
     fn compose<'b>(self: Box<Self>) -> Element<'b, Message, Theme, Renderer>
     where
