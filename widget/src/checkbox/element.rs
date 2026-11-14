@@ -66,6 +66,16 @@ impl widget::Catalog for Theme {
         style
     }
 
+    fn delegated(&self, mut style: widget::Style, is_checked: bool) -> widget::Style {
+        style.ring = None;
+        style.border.color = if is_checked {
+            self.primary.base.into()
+        } else {
+            self.input.into()
+        };
+        style
+    }
+
     fn selection(&self) -> iced_core::Color {
         Theme::selection(self)
     }

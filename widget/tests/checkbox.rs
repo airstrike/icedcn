@@ -231,3 +231,32 @@ fn card_and_label_overlap_with_expanded_target_never_toggle_twice() {
         }
     }
 }
+
+#[test]
+fn complete_card_padding_activates_once_and_inherits_disabled() {
+    for disabled in [false, true] {
+        let mut ui = simulator(Element::from(
+            field(checkbox().on_checked_change(|value| value))
+                .orientation(field::Horizontal)
+                .label(Slot::from(Space::new().width(100).height(20)))
+                .card()
+                .disabled(disabled),
+        ));
+        // Far right/bottom border, beyond both the inner content and expanded box.
+        ui.point_at(Point::new(145.0, 41.0));
+        ui.simulate(simulator::click());
+        ui.tap_key(Named::Enter);
+        assert_eq!(checked(&mut ui), !disabled);
+        assert_eq!(
+            ui.drain().collect::<Vec<_>>(),
+            if disabled { vec![] } else { vec![true] }
+        );
+        ui.simulate(simulator::click());
+        ui.tap_key(Named::Enter);
+        assert!(!checked(&mut ui));
+        assert_eq!(
+            ui.drain().collect::<Vec<_>>(),
+            if disabled { vec![] } else { vec![false] }
+        );
+    }
+}

@@ -149,6 +149,13 @@ fn table_header_and_rows_apply_complete_selection_at_both_widths() {
         page.window_width(window);
         let mut ui = preview(&*page, "table", width);
         let positions = controls(&mut ui).0;
+        let role = ui.find("Role").expect("table role column").bounds();
+        println!("table viewport={width} role={role:?}");
+        if width > 400.0 {
+            // Auto tracks fill the desktop scroller rather than stopping at
+            // their roughly436px intrinsic width in a570px viewport.
+            assert!(role.x > width - 115.0 && role.x < width - 70.0, "{role:?}");
+        }
         click(&mut ui, positions[0].0.center());
         assert!(controls(&mut ui).0.iter().all(|(_, value)| *value));
         click(&mut ui, positions[2].0.center());
@@ -187,5 +194,20 @@ fn table_header_and_rows_apply_complete_selection_at_both_widths() {
                 "{role:?}"
             );
         }
+    }
+}
+
+#[test]
+fn hero_card_reserves_border_outside_padding_at_both_widths() {
+    for (window, width, expected_y) in [(1440.0, 634.0, 58.75), (390.0, 324.0, 37.75)] {
+        let mut page = CheckboxPage::new(0);
+        page.window_width(window);
+        let mut ui = preview(&*page, "demo", width);
+        let boxes = controls(&mut ui).0;
+        assert!((boxes[0].0.y - expected_y).abs() < 0.1, "{boxes:?}");
+        assert!(
+            (boxes[3].0.x - boxes[0].0.x - 11.0).abs() < 0.1,
+            "{boxes:?}"
+        );
     }
 }

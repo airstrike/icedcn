@@ -255,7 +255,7 @@ impl<'a, Message: 'a> Field<'a, Message> {
     /// read through the `checked` operation
     /// ([`control`](crate::operation::control)), so the card needs no flag of its own.
     ///
-    /// The card adds 10px padding (`p-2.5`) on all sides and `rounded-lg`
+    /// The card adds a 1px border around 10px padding (`p-2.5`) on all sides and `rounded-lg`
     /// corners.
     pub fn card(mut self) -> Self {
         self.card = true;
@@ -479,11 +479,6 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
             }
         };
 
-        let inner = if card {
-            marker::marker(inner, widget::Label, Press::Any).into()
-        } else {
-            inner
-        };
         let field = widget::Field::new(inner);
         let field: iced_core::Element<'a, Message, Theme, Renderer> = if card {
             // shadcn FieldLabel: `has-[>[data-slot=field]]:rounded-lg

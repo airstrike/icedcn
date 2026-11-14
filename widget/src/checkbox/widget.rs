@@ -290,6 +290,7 @@ struct Internal<P: text::Paragraph> {
     is_pressed: bool,
     is_focused: bool,
     indicator: focus::Visible,
+    ring: focus::Ring,
     space_pressed: bool,
 }
 
@@ -373,6 +374,7 @@ where
             is_pressed: false,
             is_focused: false,
             indicator: focus::Visible::default(),
+            ring: focus::Ring::default(),
             space_pressed: false,
         })
     }
@@ -391,6 +393,7 @@ where
 
         let internal = tree.state.downcast_mut::<Internal<Renderer::Paragraph>>();
 
+        internal.ring.delegated = false;
         if self.is_controlled {
             internal.value = self.state;
         } else {
@@ -653,7 +656,11 @@ where
         };
 
         let style = if internal.is_focused && internal.indicator.0 && !self.is_disabled {
-            theme.focused(style)
+            if internal.ring.delegated {
+                theme.delegated(style, self.state.is_marked())
+            } else {
+                theme.focused(style)
+            }
         } else {
             style
         };
@@ -797,6 +804,9 @@ where
             operation.focusable(None, layout.bounds(), internal);
             operation.custom(None, layout.bounds(), &mut internal.indicator);
         }
+        internal.ring.visible = internal.is_focused && internal.indicator.0 && !self.is_disabled;
+        internal.ring.disabled = self.is_disabled;
+        operation.custom(None, layout.bounds(), &mut internal.ring);
         internal.control.set_checked(self.state.is_marked());
         operation.custom(None, layout.bounds(), &mut internal.control);
 
@@ -957,6 +967,12 @@ pub trait Catalog: Sized {
                 width: 3.0,
             });
         }
+        style
+    }
+
+    /// Restore the control edge when its Field card paints the focus ring.
+    fn delegated(&self, mut style: Style, _is_checked: bool) -> Style {
+        style.ring = None;
         style
     }
 

@@ -8,6 +8,14 @@ use std::any::Any;
 #[derive(Debug, Default, Clone, Copy)]
 pub(crate) struct Visible(pub bool);
 
+/// A control's focus decoration can be painted by a surrounding Field card.
+#[derive(Debug, Default)]
+pub(crate) struct Ring {
+    pub delegated: bool,
+    pub visible: bool,
+    pub disabled: bool,
+}
+
 /// Read focusable descendants in the order reported by the widget tree.
 pub(crate) fn count(mut visit: impl FnMut(&mut dyn Operation)) -> focusable::Count {
     let mut count = focusable::count();
