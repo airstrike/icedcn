@@ -10,7 +10,7 @@ An iced `Component` that owns the typed text, the open state and, uncontrolled, 
 | `.empty(text)` | `String` | `"No items found."` | `ComboboxEmpty`, shown when nothing matches. |
 | `.default_value(item)` | `String` | `None` | The item an uncontrolled combobox starts with. |
 | `.value(item)` | `String` | uncontrolled | Control the combobox. |
-| `.on_value_change(f)` | `Fn(String) -> Message` | `None` | Receives the chosen item. |
+| `.on_value_change(f)` | `Fn(String) -> Message` | `None` | Publish a message with the chosen item’s value. |
 | `.disabled(bool)` | `bool` | `false` | Disables the input. |
 | `.width(length)` | `Length` | `256` | The input's width. |
 | `.icon(f)` | `Fn() -> Text` | text glyph | The chevron at the input's end. |
@@ -21,7 +21,7 @@ Structured entries use `combobox::options`. Build each option with `combobox::it
 | --- | --- |
 | `.multiple(true)` | Select several choices. Press a chip to remove it. |
 | `.values(items)` / `.default_values(items)` | Set controlled or initial choices for multiple selection. |
-| `.on_values_change(handler)` | Receive the complete updated selection. |
+| `.on_values_change(f)` | Publish a message with the complete updated list of values. |
 | `.auto_highlight(true)` | Highlight the first result after filtering. Up/Down move the highlight and Enter selects it. |
 | `.clearable(true)` | Add a button to clear the current value. |
 | `.invalid(true)` | Apply the invalid input style. |

@@ -8,7 +8,7 @@ A `Popover` holding a menu: as wide as its trigger (at least 128px) unless given
 | --- | --- | --- | --- |
 | `.default_open(bool)` | `bool` | `false` | Whether an uncontrolled menu starts open. |
 | `.open(bool)` | `bool` | uncontrolled | Control the menu. |
-| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Receives the new open state. |
+| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Publish a message with the requested open state. |
 | `.side(side)` | `Side` | `Bottom` | The side of the trigger the menu prefers. |
 | `.align(align)` | `Align` | `Center` | `Start`, `Center` or `End`. |
 | `.side_offset(px)` | `f32` | `4.0` | The gap between the trigger and the menu. |

@@ -36,8 +36,8 @@ The sidebar menu button uses its sidebar accent for hover and the active theme a
 | `.size(size)` | `MenuButtonSize` | `Default` (32px) | Size variant: `Sm` (28px), `Default` (32px), `Lg` (48px). Drives both height and text size. |
 | `.active(bool)` | `bool` | `false` | Selected-state — switches palette to main `palette.accent` and bumps weight to medium. |
 | `.collapsed(bool)` | `bool` | `false` | Icon-only mode for `Collapsible::Icon` sidebars. Pairs with `.tooltip(...)` for the right-side tooltip. |
-| `.tooltip(text)` | `impl ToString` | `None` | Tooltip rendered when collapsed (only fires while `.collapsed(true)`). |
-| `.on_press(message)` | `Message` | `None` | Click handler. |
+| `.tooltip(text)` | `impl ToString` | `None` | Show the tooltip on hover while `.collapsed(true)`. |
+| `.on_press(message)` | `Message` | `None` | Publish `message` when the menu button is activated. |
 
 ### Sub-menu helpers
 
@@ -67,7 +67,7 @@ An iced `Component` around the whole layout that owns whether the sidebar is ope
 | --- | --- | --- | --- |
 | `.default_open(bool)` | `bool` | `true` | Whether an uncontrolled sidebar starts open. |
 | `.open(bool)` | `bool` | uncontrolled | Control the sidebar (shadcn `open`). |
-| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Receives the new open state (shadcn `onOpenChange`). |
+| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Publish a message with the requested open state. |
 | `.collapsible(mode)` | `sidebar::Collapsible` | `Offcanvas` | `Offcanvas` hides it, `Icon` shrinks it to `WIDTH_ICON`, `None` never collapses. |
 
 `sidebar::Side` (`Left` / `Right`) and the `WIDTH`, `WIDTH_ICON`, `WIDTH_MOBILE` constants describe the geometry. Restyle via `core::theme::sidebar::*` style functions or compose your own surface helper.

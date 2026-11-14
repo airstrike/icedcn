@@ -41,32 +41,32 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "multiple",
                 title: "Multiple",
                 description: Some(
-                    "A combobox with multiple selection using `multiple` and `ComboboxChips`.",
+                    "Use `.multiple(true)` to show the selected items as removable chips.",
                 ),
                 snippet: "examples/browser/snippets/combobox-multiple.md",
             },
             page::Block::Example {
                 id: "clear",
                 title: "Clear Button",
-                description: Some("Use the `showClear` prop to show a clear button."),
+                description: Some("Use `.clearable(true)` to show a clear button."),
                 snippet: "examples/browser/snippets/combobox-clear.md",
             },
             page::Block::Example {
                 id: "groups",
                 title: "Groups",
-                description: Some("Use `ComboboxGroup` and `ComboboxSeparator` to group items."),
+                description: Some("Set `.group(label)` on each item to group related results."),
                 snippet: "examples/browser/snippets/combobox-groups.md",
             },
             page::Block::Example {
                 id: "custom",
                 title: "Custom Items",
-                description: Some("You can render a custom component inside `ComboboxItem`."),
+                description: Some("Use `.description(...)` to show more information alongside each item’s label."),
                 snippet: "examples/browser/snippets/combobox-custom.md",
             },
             page::Block::Example {
                 id: "invalid",
                 title: "Invalid",
-                description: Some("Use the `aria-invalid` prop to make the combobox invalid."),
+                description: Some("Set `.invalid(true)` to show the invalid state."),
                 snippet: "examples/browser/snippets/combobox-invalid.md",
             },
             page::Block::Example {
@@ -79,7 +79,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "auto-highlight",
                 title: "Auto Highlight",
                 description: Some(
-                    "Use the `autoHighlight` prop to automatically highlight the first item on filter.",
+                    "Use `.auto_highlight(true)` to highlight the first matching item when the user types.",
                 ),
                 snippet: "examples/browser/snippets/combobox-auto-highlight.md",
             },
@@ -87,7 +87,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "popup",
                 title: "Popup",
                 description: Some(
-                    "You can trigger the combobox from a button or any other component by using the `render` prop. Move the `ComboboxInput` inside the `ComboboxContent`.",
+                    "Use `.popup(true)` to open the search field and results from a separate button.",
                 ),
                 snippet: "examples/browser/snippets/combobox-popup.md",
             },
@@ -95,7 +95,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "input-group",
                 title: "Input Group",
                 description: Some(
-                    "You can add an addon to the combobox by using the `InputGroupAddon` component inside the `ComboboxInput`.",
+                    "Use `.leading_icon(...)` to add an icon at the start of the input.",
                 ),
                 snippet: "examples/browser/snippets/combobox-input-group.md",
             },

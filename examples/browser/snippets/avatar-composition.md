@@ -9,7 +9,7 @@ Avatar
 └── AvatarBadge
 ```
 
-Use the following composition to build an `AvatarGroup`:
+Pass the avatars to `avatar::group(...)` and use `.count(...)` for the final entry.
 
 ```text
 AvatarGroup

@@ -1,10 +1,10 @@
 ## Composition
 
-Pass the listed options to `native_select` and use its value-change callback when the selection matters to your application.
+Pass the options to `native_select`. With `.on_value_change(Message::Selected)`, choosing an option publishes its string value in a `Message::Selected` message.
 
 ### Simple
 
-Options placed directly under `NativeSelect` (no `NativeSelectOptGroup`).
+Pass individual `native_select::item(value, label)` entries directly to `native_select`.
 
 ```text
 NativeSelect
@@ -16,7 +16,7 @@ NativeSelect
 
 ### With groups
 
-Use `NativeSelectOptGroup` to organize options into categories.
+Use `native_select::group(label, items)` to organize options into categories.
 
 ```text
 NativeSelect

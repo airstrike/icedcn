@@ -9,7 +9,7 @@ Constructor for an `Accordion` from any `IntoIterator<Item = accordion::Item>`.
 | `.mode(mode)` | `accordion::Mode` | `Single { collapsible: true }` | Disclosure mode — single-open (with optional collapsible) or multiple-open. |
 | `.default_value(ids)` | `IntoIterator<Item = impl Into<String>>` | `[]` | Items an uncontrolled accordion starts with open. The open set then lives in the widget tree. |
 | `.value(ids)` | `IntoIterator<Item = impl Into<String>>` | uncontrolled | Control the accordion: the given items are always the open ones. |
-| `.on_value_change(f)` | `Fn(Vec<String>) -> Message` | `None` | Receives the complete new open set on every accepted trigger click, after the mode rules are applied. |
+| `.on_value_change(f)` | `Fn(Vec<String>) -> Message` | `None` | Publish a message with the complete set of open item IDs after a trigger changes it. |
 | `.style(style)` | `impl Into<accordion::StyleFn>` | `theme::accordion::Default` | Variant unit structs (`Default`, `Card`) or a hand-rolled `Spec`. |
 | `.padding(padding)` | `impl Into<Padding>` | `Padding::ZERO` | Outer padding. The wrapping container (e.g. card) is normally responsible for breathing room — surfaced as a knob for the `borders` example's `px-4`. |
 

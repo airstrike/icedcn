@@ -46,13 +46,13 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "submenu",
                 title: "Submenu",
-                description: Some("Use `ContextMenuSub` to nest secondary actions."),
+                description: Some("Use `menu::sub(...)` to nest secondary actions."),
                 snippet: "examples/browser/snippets/context-menu-submenu.md",
             },
             page::Block::Example {
                 id: "shortcuts",
                 title: "Shortcuts",
-                description: Some("Add `ContextMenuShortcut` to show keyboard hints."),
+                description: Some("Add `.shortcut(...)` to show a keyboard hint beside a menu item."),
                 snippet: "examples/browser/snippets/context-menu-shortcuts.md",
             },
             page::Block::Example {
@@ -70,20 +70,20 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "checkboxes",
                 title: "Checkboxes",
-                description: Some("Use `ContextMenuCheckboxItem` for toggles."),
+                description: Some("Use `menu::checkbox_item(...)` for choices that toggle independently."),
                 snippet: "examples/browser/snippets/context-menu-checkboxes.md",
             },
             page::Block::Example {
                 id: "radio",
                 title: "Radio",
-                description: Some("Use `ContextMenuRadioItem` for exclusive choices."),
+                description: Some("Use `menu::radio_item(...)` for mutually exclusive choices."),
                 snippet: "examples/browser/snippets/context-menu-radio.md",
             },
             page::Block::Example {
                 id: "destructive",
                 title: "Destructive",
                 description: Some(
-                    "Use `variant=\"destructive\"` to style the menu item as destructive.",
+                    "Use `.style(menu::Destructive)` for a destructive action.",
                 ),
                 snippet: "examples/browser/snippets/context-menu-destructive.md",
             },

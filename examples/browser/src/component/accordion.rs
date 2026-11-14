@@ -49,7 +49,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "multiple",
                 title: "Multiple",
                 description: Some(
-                    "Use `type=\"multiple\"` to allow multiple items to be open at the same time.",
+                    "Use `.mode(accordion::Mode::Multiple)` to keep several items open at once.",
                 ),
                 snippet: "examples/browser/snippets/accordion-multiple.md",
             },
@@ -57,7 +57,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "disabled",
                 title: "Disabled",
                 description: Some(
-                    "Use the `disabled` prop on `AccordionItem` to disable individual items.",
+                    "Set `.disabled(true)` on an item to disable its trigger.",
                 ),
                 snippet: "examples/browser/snippets/accordion-disabled.md",
             },
@@ -65,14 +65,14 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "borders",
                 title: "Borders",
                 description: Some(
-                    "Add `border` to the `Accordion` and `border-b last:border-b-0` to the `AccordionItem` to add borders to the items.",
+                    "Wrap the accordion in a bordered `container`. The accordion draws the dividers between items.",
                 ),
                 snippet: "examples/browser/snippets/accordion-borders.md",
             },
             page::Block::Example {
                 id: "card",
                 title: "Card",
-                description: Some("Wrap the `Accordion` in a `Card` component."),
+                description: Some("Place the accordion in `card::content(...)` below the card header."),
                 snippet: "examples/browser/snippets/accordion-card.md",
             },
         ],

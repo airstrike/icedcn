@@ -36,14 +36,14 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "destructive",
                 title: "Destructive",
-                description: Some("Use variant destructive to create a destructive alert."),
+                description: Some("Use `.style(alert::Destructive)` for a destructive alert."),
                 snippet: "examples/browser/snippets/alert-destructive.md",
             },
             page::Block::Example {
                 id: "action",
                 title: "Action",
                 description: Some(
-                    "Use AlertAction to add a button or other action element to the alert.",
+                    "Use `.action(...)` to add a button or another control to the alert.",
                 ),
                 snippet: "examples/browser/snippets/alert-action.md",
             },

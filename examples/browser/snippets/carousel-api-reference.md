@@ -7,7 +7,7 @@
 | `.orientation(axis)` | Lay out a horizontal or vertical track. |
 | `.default_value(index)` | Start at this zero-based snap. |
 | `.value(index)` | Use an application-owned snap index. |
-| `.on_value_change(f)` | Receive the requested snap after navigation. |
+| `.on_value_change(f)` | Publish a message with the index of the requested snap position. |
 | `.autoplay(duration)` | Advance on a timer while visible and unhovered. Manual navigation stops autoplay. |
 | `.controls(previous, next)` | Supply custom content for both navigation buttons. |
 

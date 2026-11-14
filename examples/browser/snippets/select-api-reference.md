@@ -10,7 +10,7 @@ An iced `Component` that owns its open state and, uncontrolled, its value. The t
 | `.placeholder(text)` | `String` | `""` | Shown while nothing is chosen. |
 | `.default_value(value)` | `String` | `None` | The value an uncontrolled select starts with. |
 | `.value(value)` | `String` | uncontrolled | Control the select. |
-| `.on_value_change(f)` | `Fn(String) -> Message` | `None` | Receives the chosen value. |
+| `.on_value_change(f)` | `Fn(String) -> Message` | `None` | Publish a message with the chosen value. |
 | `.disabled(bool)` | `bool` | `false` | Dims the trigger; it does not open. |
 | `.width(length)` | `Length` | `Shrink` | The trigger's width. |
 | `.size(size)` | `Size` | `Default` | `Size::Sm` is `h-7`. |

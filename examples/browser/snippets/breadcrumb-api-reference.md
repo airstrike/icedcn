@@ -13,7 +13,7 @@ Constructor for a `Breadcrumb` from any `IntoIterator<Item = breadcrumb::Item>`.
 | Constructor | Returns | Description |
 | --- | --- | --- |
 | `breadcrumb::item(content)` | `Item::Content` | Embed a widget, such as a dropdown menu, in the trail. |
-| `breadcrumb::link(content, on_press)` | `Item::Link` | Clickable crumb. Cursor changes to `Pointer`; emits `on_press` on left-button release. Mirrors shadcn's `BreadcrumbLink`. |
+| `breadcrumb::link(content, on_press)` | `Item::Link` | Show a pointer cursor on hover and publish the supplied message when the link is activated. |
 | `breadcrumb::page(content)` | `Item::Page` | Current page — renders content as-is, no click affordance. Mirrors shadcn's `BreadcrumbPage`. |
 | `breadcrumb::ellipsis(Some(message))` | `Item::Ellipsis` | Clickable `…` indicator (e.g. to open a dropdown of elided crumbs). Mirrors shadcn's `BreadcrumbEllipsis`. |
 | `breadcrumb::ellipsis(None)` | `Item::Ellipsis` | Static visual `…` placeholder. |

@@ -53,7 +53,7 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "sizes",
                 title: "Size",
-                description: Some("Use the size prop to change the size of the switch."),
+                description: Some("Use `.size(...)` to change the switch size."),
                 snippet: "examples/browser/snippets/switch-sizes.md",
             },
         ],

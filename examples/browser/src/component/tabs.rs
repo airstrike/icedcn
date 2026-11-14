@@ -36,14 +36,14 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "line",
                 title: "Line",
                 description: Some(
-                    "Use the `variant=\"line\"` prop on `TabsList` for a line style.",
+                    "Use `.line(true)` to underline the active tab.",
                 ),
                 snippet: "examples/browser/snippets/tabs-line.md",
             },
             page::Block::Example {
                 id: "vertical",
                 title: "Vertical",
-                description: Some("Use `orientation=\"vertical\"` for vertical tabs."),
+                description: Some("Use `.orientation(tabs::Orientation::Vertical)` for vertical tabs."),
                 snippet: "examples/browser/snippets/tabs-vertical.md",
             },
             page::Block::Example {

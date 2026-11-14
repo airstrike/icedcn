@@ -8,7 +8,7 @@ An iced `Component` that owns its open state. `body` is a closure that receives 
 | --- | --- | --- | --- |
 | `.default_open(bool)` | `bool` | `false` | Whether an uncontrolled collapsible starts open. |
 | `.open(bool)` | `bool` | uncontrolled | Control the collapsible: open exactly when the app says so. |
-| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Receives the new open state when a trigger is pressed. |
+| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Publish a message with the requested open state when a trigger is pressed. |
 | `.width(width)` | `impl Into<Length>` | `Shrink` | Width of the collapsible. |
 
 ### `collapsible::Handle`
@@ -19,4 +19,4 @@ An iced `Component` that owns its open state. `body` is a closure that receives 
 | `c.content(child)` | Show `child` only while open, like `<CollapsibleContent>`. |
 | `c.is_open()` | Whether the collapsible is open, for content that changes with it (a flipping chevron, a tinted background). |
 
-Cascading props the collapsible inherits (size, weight, disabled) reach the content the closure returns.
+The collapsible passes its inherited size, font weight and disabled state to the content returned by the closure.

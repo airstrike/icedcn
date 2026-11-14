@@ -8,4 +8,4 @@ use icedxdy::widget::button;
 button("Button").style(button::Outline).on_press(Message::Pressed)
 ```
 
-Pair the bare-fn constructor with `.on_press(...)` for the click handler, `.size(Size::Sm)` to switch size variants, and the macro form (`button![icon::git_branch(), "New Branch"]`) when you need an inline icon next to a label. Use `.disabled(true)` to disable the button.
+When pressed, this button publishes `Message::Pressed`. Handle that message in `update`. Use `.size(Size::Sm)` for a smaller button or `button![icon::git_branch(), "New Branch"]` for an icon beside the label. Use `.disabled(true)` to disable the button.

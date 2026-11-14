@@ -16,7 +16,7 @@ row![
 .spacing(8).wrap()
 ```
 
-From your update handler, return the task that tracks creation.
+When `update` handles `Message::CreateEvent`, return the task that tracks creation.
 
 ```rust
 toast::promise::<_, Message, _, _>(

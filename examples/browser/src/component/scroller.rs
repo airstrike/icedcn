@@ -100,7 +100,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "visibility",
                 title: "Tracking the Reader's Position",
                 description: Some(
-                    "The reader callback reports the current anchored turn and the keys intersecting the viewport. Hover over the outline to see which exchange you are reading or jump to another.",
+                    "With `.on_reader_change(...)`, the scroller publishes a message containing the current anchor and the keys of visible rows. Hover over the outline to see which exchange you are reading or jump to another.",
                 ),
                 snippet: "examples/browser/snippets/message-scroller-visibility.md",
             },
@@ -108,7 +108,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "scrollable",
                 title: "Reading Scroll State",
                 description: Some(
-                    "Use `can_scroll_up` and `can_scroll_down` from the reader callback to determine which directions have more content. Scroll the conversation and watch the footer change.",
+                    "Read `can_scroll_up` and `can_scroll_down` from the `scroller::Reader` in your message to find which directions have more content. Scroll the conversation and watch the footer change.",
                 ),
                 snippet: "examples/browser/snippets/message-scroller-scrollable.md",
             },

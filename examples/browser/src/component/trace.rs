@@ -413,7 +413,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "static",
                 title: "Trace Line",
                 description: Some(
-                    "Use a `TraceLine` on its own for a step with no detail to show. It reads as plain text.",
+                    "Use `trace::line(title)` on its own for a step with no detail to show.",
                 ),
                 snippet: "examples/browser/snippets/trace-static.md",
             },
@@ -421,7 +421,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "status",
                 title: "Status",
                 description: Some(
-                    "Set `status` on `TraceLine` when a step is running, has failed or hasn't started yet.",
+                    "Use `.status(...)` on a trace line when a step is running, has failed or has yet to start.",
                 ),
                 snippet: "examples/browser/snippets/trace-status.md",
             },
@@ -429,7 +429,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "description",
                 title: "Description",
                 description: Some(
-                    "Put secondary text such as a diff stat, a duration or a count in a `TraceDescription` after the `TraceTitle`. It does not truncate.",
+                    "Use `.description(...)` to show a diff stat, duration or count after the line title.",
                 ),
                 snippet: "examples/browser/snippets/trace-description.md",
             },
@@ -437,7 +437,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "collapsible",
                 title: "Collapsible",
                 description: Some(
-                    "Wrap the line in a `TraceCollapsible` to show more detail when it expands. Put the `TraceLine` inside `TraceCollapsibleTrigger` and the detail in `TraceCollapsibleContent`.",
+                    "Pass the summary line and detail content to `trace::disclosure` as two closures. Pressing the line expands or collapses the detail.",
                 ),
                 snippet: "examples/browser/snippets/trace-collapsible.md",
             },
@@ -445,7 +445,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "open",
                 title: "Open State",
                 description: Some(
-                    "Rows start closed. Use `defaultOpen` on `TraceCollapsible` to start open, or `open` with `onOpenChange` to control a row.",
+                    "Rows start closed. Use `.default_open(true)` to start open, or `.open(open).on_open_change(Message::Toggle)` to control the row from `update`.",
                 ),
                 snippet: "examples/browser/snippets/trace-open.md",
             },
@@ -453,7 +453,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "link",
                 title: "Link",
                 description: Some(
-                    "Wrap the `TraceLine` in an anchor. For a new tab, use an arrow-up-right icon and sr-only \"(opens in a new tab)\".",
+                    "Wrap the line in `trace::action` and pass a navigation message. The external link uses an arrow-up-right icon.",
                 ),
                 snippet: "examples/browser/snippets/trace-link.md",
             },
@@ -461,7 +461,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "dialog",
                 title: "Dialog",
                 description: Some(
-                    "Wrap the `TraceLine` in the dialog's trigger. The dialog owns its open state, Escape and focus return.",
+                    "Wrap the trace action in the dialog’s `trigger`. The dialog handles its open state, Escape and focus return.",
                 ),
                 snippet: "examples/browser/snippets/trace-dialog.md",
             },
@@ -477,14 +477,14 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "group",
                 title: "Group",
                 description: Some(
-                    "Put rows that sit next to each other in a `Trace`. It also styles any trigger or link that wraps a `TraceLine`.",
+                    "Pass adjacent rows to `trace(...)`. Each row can contain a plain line, a link or a disclosure.",
                 ),
                 snippet: "examples/browser/snippets/trace-group.md",
             },
             page::Block::Example {
                 id: "sources",
                 title: "Sources",
-                description: Some("A collapsible row whose detail is a `Trace` of link rows."),
+                description: Some("A disclosure whose detail contains a list of source links."),
                 snippet: "examples/browser/snippets/trace-sources.md",
             },
             page::Block::Example {
@@ -507,7 +507,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "turn",
                 title: "Whole Turn",
                 description: Some(
-                    "Three levels: the turn, a summary, and the rows. Text between steps sits between two `Trace` lists.",
+                    "The turn contains a summary and its rows. Place text between two `trace(...)` lists to separate steps.",
                 ),
                 snippet: "examples/browser/snippets/trace-turn.md",
             },
@@ -515,7 +515,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "thinking",
                 title: "Reasoning",
                 description: Some(
-                    "Render a `reasoning` part from the AI SDK. The row is a `TraceLine` until the first text arrives. See Open State.",
+                    "Use a disclosure for the reasoning text. Its summary shows a spinner while the step is running. See Open State.",
                 ),
                 snippet: "examples/browser/snippets/trace-thinking.md",
             },
@@ -523,7 +523,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "tool-calls",
                 title: "Tool",
                 description: Some(
-                    "Render tool parts from the AI SDK. Map the tool part as in Tool.",
+                    "Show each tool call as a disclosure with its status in the summary and its output in the detail.",
                 ),
                 snippet: "examples/browser/snippets/trace-tool-calls.md",
             },

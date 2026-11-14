@@ -38,7 +38,7 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "size",
                 title: "Size",
-                description: Some("Use the size prop to change the size of the button."),
+                description: Some("Use `.size(...)` to change the button size."),
                 snippet: "examples/browser/snippets/button-size.md",
             },
             page::Block::Example {

@@ -25,7 +25,7 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "variants",
                 title: "Variants",
-                description: Some("Use the variant prop to change the variant of the badge."),
+                description: Some("Use `.style(...)` to change the badge variant."),
                 snippet: "examples/browser/snippets/badge-variants.md",
             },
             page::Block::Example {

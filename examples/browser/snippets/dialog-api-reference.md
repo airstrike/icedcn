@@ -8,7 +8,7 @@ An iced `Component` that owns its open state. Both closures receive a `dialog::H
 | --- | --- | --- | --- |
 | `.default_open(bool)` | `bool` | `false` | Whether an uncontrolled dialog starts open. |
 | `.open(bool)` | `bool` | uncontrolled | Control the dialog: open exactly when the app says so. |
-| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Receives the new open state when the dialog opens or is dismissed. |
+| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Publish a message with the requested open state when the dialog opens or is dismissed. |
 | `.show_close_button(bool)` | `bool` | `true` | Show the corner close button (shadcn's `showCloseButton`). |
 | `.max_width(f32)` | `f32` | `384.0` | The panel's maximum width (`sm:max-w-sm`). |
 
@@ -17,7 +17,7 @@ An iced `Component` that owns its open state. Both closures receive a `dialog::H
 | Method | Description |
 | --- | --- |
 | `d.trigger(child)` | `<DialogTrigger asChild>`: pressing `child` opens the dialog. |
-| `d.close(child)` | `<DialogClose asChild>`: pressing `child` closes it. The child's own `on_press` still fires. |
+| `d.close(child)` | `<DialogClose asChild>`: pressing `child` closes it. The child also publishes its own `.on_press` message if configured. |
 | `d.is_open()` | Whether the dialog is open. |
 
 A press outside the panel and `Escape` dismiss it too. `dialog::header(title, description)` and `dialog::footer(actions)` lay out `DialogHeader` and `DialogFooter`.

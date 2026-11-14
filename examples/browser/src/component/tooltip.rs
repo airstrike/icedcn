@@ -12,7 +12,7 @@ use crate::page;
 
 pub static META: page::Meta = page::Meta {
     title: "Tooltip",
-    description: "A popup that displays information related to an element when the element receives keyboard focus or the mouse hovers over it.",
+    description: "A popup that shows information about a widget when the pointer rests on it.",
 };
 
 pub static BLOCKS: &[page::Block] = &[

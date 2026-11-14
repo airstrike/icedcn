@@ -1,3 +1,3 @@
 ## Events
 
-`.on_value_change(callback)` receives the target snap for a button press, swipe, arrow key or autoplay advance. An application can supply `.value(index)` to control selection.
+With `.on_value_change(Message::SlideChanged)`, the carousel publishes the requested slide index when the user navigates or autoplay advances. To control the carousel, store the index in `update` and pass it back with `.value(index)`.

@@ -8,7 +8,7 @@ An iced `Component` that owns its open state, over iced's `anchored` overlay. Bo
 | --- | --- | --- | --- |
 | `.default_open(bool)` | `bool` | `false` | Whether an uncontrolled popover starts open. |
 | `.open(bool)` | `bool` | uncontrolled | Control the popover: open exactly when the app says so. |
-| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Receives the new open state when the popover opens or is dismissed. |
+| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Publish a message with the requested open state when the popover opens or is dismissed. |
 | `.side(side)` | `popover::Side` | `Bottom` | The side of the trigger the panel prefers; it flips when there is no room. |
 | `.align(align)` | `popover::Align` | `Center` | `Start`, `Center` or `End` along the trigger. |
 | `.side_offset(px)` | `f32` | `4.0` | The gap between the trigger and the panel. |
@@ -20,7 +20,7 @@ An iced `Component` that owns its open state, over iced's `anchored` overlay. Bo
 | Method | Description |
 | --- | --- |
 | `p.trigger(child)` | `<PopoverTrigger asChild>`: pressing `child` opens or closes the popover. |
-| `p.close(child)` | `<PopoverClose asChild>`: pressing `child` closes it. The child's own `on_press` still fires. |
+| `p.close(child)` | `<PopoverClose asChild>`: pressing `child` closes it. The child also publishes its own `.on_press` message if configured. |
 | `p.is_open()` | Whether the popover is open. |
 
 A press outside the panel (which still reaches the page beneath) and `Escape` dismiss it. `popover::header(title, description)` lays out `PopoverHeader`, `PopoverTitle` and `PopoverDescription`. There is no `PopoverAnchor`: the panel anchors to the widget the trigger closure returns.

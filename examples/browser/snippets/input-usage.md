@@ -8,4 +8,4 @@ use icedxdy::widget::input;
 input("Enter text")
 ```
 
-Use `field(input("Email")).label("Email address")` to give the input a clickable label. Add helper text with `.description(...)`. An uncontrolled input keeps what you type. Use `.on_input(...)` to receive edits and `.disabled(true)` to disable the control.
+Use `field(input("Email")).label("Email address")` to give the input a clickable label. Add helper text with `.description(...)`. An uncontrolled input keeps what you type. For an application-owned value, use `.value(value).on_input(Message::Edited)` and store the new text in `update`. Use `.disabled(true)` to disable the control.

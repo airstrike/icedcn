@@ -8,7 +8,7 @@ Constructor for an off, uncontrolled `Switch`. Radix state: the value lives in t
 | --- | --- | --- | --- |
 | `.default_checked(bool)` | `bool` | `false` | Initial state of an uncontrolled switch (shadcn `defaultChecked`). |
 | `.checked(bool)` | `bool` | uncontrolled | Control the switch: it always shows the given state (shadcn `checked`). |
-| `.on_checked_change(f)` | `Fn(bool) -> Message` | `None` | Receives the new state on every toggle, in either mode (shadcn `onCheckedChange`). |
+| `.on_checked_change(f)` | `Fn(bool) -> Message` | `None` | Publish a message with the new checked state on each toggle in either mode. |
 | `.disabled(bool)` | `bool` | `false` | Disable the switch. A disabled ancestor disables it too. |
 | `.label(label)` | `impl IntoFragment` | `None` | Optional inline label. |
 | `.width(width)` | `impl Into<Length>` | `Length::Shrink` | Outer width. |

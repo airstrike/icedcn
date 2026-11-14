@@ -6,7 +6,7 @@ An iced `Component`: a right press inside the area `trigger` builds opens the me
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `.width(px)` | `f32` | fits its items, min 144 | The menu's width (`className="w-48"`). |
-| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Receives the open state. |
+| `.width(px)` | `f32` | fits its items, min 144 | Width of the menu in logical pixels. |
+| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Publish a message with the new open state. |
 
 No long-press on touch, no keyboard navigation; a right press while the menu is open closes it rather than moving it.

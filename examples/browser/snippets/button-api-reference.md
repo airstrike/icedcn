@@ -10,7 +10,7 @@ Constructor for a `Button`. The single-arg constructor takes any `impl Into<Slot
 | `.square()` | — | — | Make the button square (icon-only). Width matches the size variant's height. |
 | `.rounded()` | — | — | Pill-shaped (`rounded-full`). Combine with `.square()` for a circular icon button. |
 | `.style(style)` | `impl Into<button::StyleFn>` | `button::Default` | Override the button's style — accepts variant unit structs (`Outline`, `Secondary`, `Ghost`, `Destructive`, `Link`) or a hand-rolled `Spec`. |
-| `.on_press(message)` | `Message` | `None` | Click handler. A button without one stays enabled (a trigger marker can still observe it). |
+| `.on_press(message)` | `Message` | `None` | Publish `message` when the button is activated. A button without a message stays enabled and can still act as a trigger. |
 | `.disabled(bool)` | `bool` | `false` | Disable the button (`disabled:opacity-50`, no input, skipped by focus). A disabled ancestor disables it too. |
 | `.weight(weight)` | `impl Into<Weight>` | propagated | Override the inherited font weight. |
 | `.translate(bool)` | `bool` | `true` | Gates the 1px press-down effect (matches shadcn's `active:translate-y-px`). |

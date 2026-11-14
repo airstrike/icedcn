@@ -40,7 +40,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "orientation",
                 title: "Orientation",
                 description: Some(
-                    "Use the orientation prop to set the orientation of the carousel.",
+                    "Use `.orientation(Orientation::Vertical)` for a vertical carousel.",
                 ),
                 snippet: "examples/browser/snippets/carousel-orientation.md",
             },

@@ -1,6 +1,6 @@
 ### AttachmentAction
 
-`attachment::action(content)` returns an icedxdy button. Add an `.on_press(message)` handler and use the usual button builders to change its appearance.
+`attachment::action(content)` returns an icedxdy button. Use `.on_press(message)` to publish a message when the button is activated. Style it with the usual button builders.
 
 | Property | Type | Default |
 | --- | --- | --- |

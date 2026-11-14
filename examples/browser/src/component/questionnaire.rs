@@ -22,14 +22,14 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "multiple",
         title: "Multiple Selection",
-        description: Some("Use `multiple` for an item that accepts more than one fixed answer."),
+        description: Some("Use `.multiple(true)` on an item that accepts more than one fixed answer."),
         snippet: "examples/browser/snippets/questionnaire-multiple.md",
     },
     page::Block::Example {
         id: "freeform",
         title: "Freeform Answer",
         description: Some(
-            "Compose `QuestionnaireInput` with fixed choices when the user can provide another answer.",
+            "Use `.input(label, placeholder)` to offer a freeform answer alongside the fixed choices.",
         ),
         snippet: "examples/browser/snippets/questionnaire-freeform.md",
     },
@@ -37,21 +37,21 @@ pub static BLOCKS: &[page::Block] = &[
         id: "skip",
         title: "Explicit Skip",
         description: Some(
-            "Add `QuestionnaireSkip` when an optional item may be intentionally left unanswered.",
+            "Use `.allow_skip(true)` to let the user skip an optional item.",
         ),
         snippet: "examples/browser/snippets/questionnaire-skip.md",
     },
     page::Block::Example {
         id: "shortcuts",
         title: "Shortcuts",
-        description: Some("Assign a letter or number key to each answer with `shortcuts`."),
+        description: Some("Use `.shortcuts(...)` to assign letter or number keys to the choices."),
         snippet: "examples/browser/snippets/questionnaire-shortcuts.md",
     },
     page::Block::Example {
         id: "validation",
         title: "Custom Validation",
         description: Some(
-            "Combine controlled navigation with an external schema such as Zod to return to an invalid item and present its error.",
+            "Use `.validate(...)` to check the answers. Return `Some(Invalid { item, message })` to take the user back to that item.",
         ),
         snippet: "examples/browser/snippets/questionnaire-validation.md",
     },
@@ -88,7 +88,7 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "progress",
         title: "Custom Progress",
-        description: Some("Use the Progress render state to build a custom progress indicator."),
+        description: Some("Pass a closure to `.progress(...)` to build an indicator from the current question number and total."),
         snippet: "examples/browser/snippets/questionnaire-progress.md",
     },
     page::Block::Example {

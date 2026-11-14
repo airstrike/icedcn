@@ -8,7 +8,7 @@ use crate::page;
 
 pub static META: page::Meta = page::Meta {
     title: "Native Select",
-    description: "A styled native HTML select element with consistent design system integration.",
+    description: "A styled iced pick list for choosing one option.",
 };
 
 pub static BLOCKS: &[page::Block] = &[
@@ -27,7 +27,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "groups",
                 title: "Groups",
                 description: Some(
-                    "Use `NativeSelectOptGroup` to organize options into categories.",
+                    "Use `native_select::group(label, items)` to organize options into categories.",
                 ),
                 snippet: "examples/browser/snippets/native-select-groups.md",
             },

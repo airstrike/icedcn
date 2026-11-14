@@ -16,7 +16,7 @@ Field
 
 ### FieldGroup
 
-Related fields in one group. Use `FieldSeparator` between sections when needed.
+Place related fields in `field::group(...)`. Put a `separator()` between sections when needed.
 
 ```text
 FieldGroup

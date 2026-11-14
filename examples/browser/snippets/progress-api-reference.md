@@ -9,8 +9,8 @@ Constructor for a `Progress` builder. Takes the current value (clamped to `0.0..
 | `.value(value)` | `impl Into<f32>` | constructor arg | Update the value at builder time (clamped to `0..=100`). |
 | `.width(width)` | `impl Into<Length>` | `iced::Fill` | Total width of the bar. Cap with a numeric value or wrap in a `container().max_width(...)` for shadcn's `w-[60%]` / `max-w-sm` patterns. |
 | `.style(style)` | `impl Into<progress_bar::StyleFn>` | `theme::progress_bar::Default` | Override the style. |
-| `.on_idle(callback)` | `Fn(f32) -> Message` | `None` | Fire `callback(value)` once the easing animation settles at its target — useful for gating follow-up actions on the bar reaching a specific value. |
+| `.on_idle(f)` | `Fn(f32) -> Message` | `None` | Publish a message with the target value when the animation settles. |
 
 The bar's height (`h-1` = 4px in nova) is fixed by the wrapper; restyle via `.style(...)` if you need a thicker bar.
 
-The shadcn `value` prop maps to the constructor arg; restyle via the `core::theme::progress_bar::*` style functions; identifier hooks live at the iced `Id` layer. There is no `Indicator` sub-component in icedxdy — the indicator is drawn internally by the vendored progress bar widget.
+The progress bar draws its own indicator. Use the functions in `theme::progress_bar` to style it.

@@ -8,7 +8,7 @@ Constructor for an unchecked, uncontrolled `Checkbox`. Radix state: the value li
 | --- | --- | --- | --- |
 | `.default_checked(state)` | `impl Into<State>` | `Unchecked` | Initial state of an uncontrolled checkbox (shadcn `defaultChecked`). |
 | `.checked(state)` | `impl Into<State>` | uncontrolled | Control the checkbox: it always shows `state` (shadcn `checked`). |
-| `.on_checked_change(f)` | `Fn(bool) -> Message` | `None` | Receives the new checked state on every toggle, in either mode (shadcn `onCheckedChange`). |
+| `.on_checked_change(f)` | `Fn(bool) -> Message` | `None` | Publish a message with the new checked state on each toggle in either mode. |
 | `.disabled(bool)` | `bool` | `false` | Disable the checkbox. A disabled ancestor (a disabled field) disables it too. |
 | `.label(label)` | `impl IntoFragment` | `None` | Optional inline label rendered next to the box. |
 | `.width(width)` | `impl Into<Length>` | `Length::Shrink` | Outer width. |
