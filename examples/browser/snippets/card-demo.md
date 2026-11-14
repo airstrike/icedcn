@@ -1,11 +1,24 @@
 ```rust
+use iced::Alignment::Center;
+use iced::{Element, Fill, Widget};
+use icedxdy::{card, Size, Slot, Theme};
+use icedxdy::widget::{button, column, field, input, row, space, text};
+
 fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
     let password_label = row![
         text::label("Password"),
         space::horizontal(),
-        button("Forgot your password?")
-            .style(button::Link)
-            .on_press(forgot)
+        button(
+            text::small("Forgot your password?")
+                .weight(icedxdy::Weight::Normal)
+                .line_height(iced::Pixels(20.0))
+        )
+        .style(button::Link)
+        .anchor()
+        .translate(false)
+        .height(20)
+        .padding(0)
+        .on_press(forgot)
     ]
     .align_y(Center)
     .width(Fill);
@@ -40,8 +53,12 @@ fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
         .spacing(spacing)
         .padding(iced::Padding::ZERO.top(spacing)),
     )
-    .width(384)
+    .width(Fill.max(384))
     .boxed()
     .into()
+}
+
+fn preview() -> Element<'static, Message, Theme> {
+    login_card(16.0, Message::Forgot).into()
 }
 ```

@@ -1,4 +1,9 @@
 ```rust
+use iced::{Fill, Widget};
+use icedxdy::{card, Slot};
+use icedxdy::theme::container::Style;
+use icedxdy::widget::{button, column, container, row, scroll_area, separator, space, text};
+
 fn terms<'a>() -> Slot<'a, Message> {
     const TERMS: [&str; 4] = [
         "These terms govern your use of the workspace, including access to shared documents, project files, and collaboration tools.",
@@ -38,8 +43,12 @@ fn terms<'a>() -> Slot<'a, Message> {
         .width(Fill)
         .padding(iced::Padding::ZERO.top(16)),
     )
-    .width(384)
+    .width(Fill.max(384))
     .boxed()
     .into()
+}
+
+fn preview() -> Slot<'static, Message> {
+    terms()
 }
 ```

@@ -1,11 +1,26 @@
 ```rust
+use iced::Alignment::Center;
+use iced::{Element, Fill, Widget};
+use icedxdy::{card, Size, Slot, Theme};
+use icedxdy::widget::{button, column, field, input, row, space, text};
+use iced::widget::component::{Component, component};
+use icedxdy::widget::toggle_group;
+
 fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
     let password_label = row![
         text::label("Password"),
         space::horizontal(),
-        button("Forgot your password?")
-            .style(button::Link)
-            .on_press(forgot)
+        button(
+            text::small("Forgot your password?")
+                .weight(icedxdy::Weight::Normal)
+                .line_height(iced::Pixels(20.0))
+        )
+        .style(button::Link)
+        .anchor()
+        .translate(false)
+        .height(20)
+        .padding(0)
+        .on_press(forgot)
     ]
     .align_y(Center)
     .width(Fill);
@@ -40,18 +55,17 @@ fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
         .spacing(spacing)
         .padding(iced::Padding::ZERO.top(spacing)),
     )
-    .width(384)
+    .width(Fill.max(384))
     .boxed()
     .into()
 }
+
 #[derive(Clone)]
 enum Event {
     Spacing(Vec<String>),
     Forgot,
 }
-struct Spacing {
-    page: usize,
-}
+struct Spacing;
 impl<'a> Component<'a, Message, Theme> for Spacing {
     type State = Option<u16>;
     type Event = Event;
@@ -63,10 +77,7 @@ impl<'a> Component<'a, Message, Theme> for Spacing {
                 }
                 None
             }
-            Event::Forgot => Some(Message::Page(
-                self.page,
-                page::Message::LinkClicked("#".into()),
-            )),
+            Event::Forgot => Some(Message::Forgot),
         }
     }
     fn view(&self, state: &Self::State) -> impl Widget<Event, Theme> + 'a {
@@ -82,9 +93,12 @@ impl<'a> Component<'a, Message, Theme> for Spacing {
                 login_card(f32::from(spacing), Event::Forgot),
             ]
             .spacing(16)
-            .align_x(Center)
-            .width(Fill),
+            .width(Fill.max(384)),
         )
     }
+}
+
+fn preview() -> Element<'static, Message, Theme> {
+    component(Spacing).boxed()
 }
 ```

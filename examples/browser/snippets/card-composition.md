@@ -1,6 +1,6 @@
 ## Composition
 
-Arrange `card::header`, `card::content` and `card::footer` inside `card`. Put the title, description and optional action in the header.
+Use the following composition to build a `Card`:
 
 ```text
 Card

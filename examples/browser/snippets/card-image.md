@@ -1,40 +1,27 @@
+Select the light or dark cover when your application theme changes. Prepare the grayscale image with brightness 60% (light) or 40% (dark), then a 35% black shade, before drawing its rounded corners.
+
 ```rust
-use iced::widget::{container, image, space, stack};
-use iced::{Color, ContentFit, Element, Fill, Widget};
-
-use icedxdy::card;
+use iced::widget::image;
+use iced::border;
+use iced::{ContentFit, Element, Fill, Widget};
+use icedxdy::{card, Gap, Theme, radius};
 use icedxdy::widget::{aspect_ratio, badge, button, column};
-use icedxdy::{Gap, Theme};
 
-fn preview(photo: image::Handle) -> Element<'static, Message, Theme> {
+fn preview(light: image::Handle, dark: image::Handle, theme: &Theme) -> Element<'static, Message, Theme> {
+    let photo = if theme.neutral.is_dark { dark } else { light };
     let photo = image(photo)
-        .width(Fill)
-        .height(Fill)
-        .content_fit(ContentFit::Cover);
-    let tint = container(space())
-        .width(Fill)
-        .height(Fill)
-        .style(|theme: &Theme| {
-            let opacity = if theme.neutral.is_dark { 0.74 } else { 0.61 };
-            container::Style::default().background(Color::BLACK.scale_alpha(opacity))
-        });
+        .width(Fill).height(Fill)
+        .content_fit(ContentFit::Cover)
+        .border_radius(border::Radius { top_left: radius::XL, top_right: radius::XL, ..Default::default() });
 
     card(column![
-        aspect_ratio(stack![photo, tint].boxed(), 16.0 / 9.0),
+        aspect_ratio(photo.boxed(), 16.0 / 9.0),
         card::header("Design systems meetup")
-            .description(
-                "A practical talk on component APIs, accessibility, and shipping faster.",
-            )
+            .description("A practical talk on component APIs, accessibility, and shipping faster.")
             .action(card::action(badge("Featured").style(badge::Secondary))),
-        card::footer(
-            button("View Event")
-                .on_press(Message::View)
-                .width(Fill)
-        ),
-    ]
-    .spacing(Gap::G4)
-    .width(Fill))
-    .width(384.0)
+        card::footer(button("View Event").on_press(Message::View).width(Fill)),
+    ].spacing(Gap::G4).width(Fill))
+    .width(Fill.max(384))
     .clip(true)
     .boxed()
 }

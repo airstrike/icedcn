@@ -1,29 +1,21 @@
-// API Reference is rendered via the `card-api-reference.md` snippet at the
-// bottom of BLOCKS. The live docs API Reference table covers `Card.size`
-// (`Default` / `Sm`) plus the `Card`, `CardHeader`, `CardTitle`,
-// `CardDescription`, `CardAction`, `CardContent`, `CardFooter` set; the
-// snippet captures the icedxdy-shaped helper API (`card(...)`,
-// `card::header(...).description(...).action(...)`, plus the section
-// helpers).
-//
-// Intentional skips per CLAUDE.md: card-rtl (RTL).
-//
-use super::aspect_ratio::cover;
+// The upstream RTL example is outside this browser’s scope.
+
 use iced::Alignment::Center;
 use iced::Task;
 use iced::Widget;
+use iced::border;
 use iced::widget::component::{Component, component};
-use iced::widget::{image, stack};
+use iced::widget::image;
 use iced::{ContentFit, Element, Fill};
-use icedxdy::core::Color;
 use icedxdy::theme::container::Style;
+use std::sync::LazyLock;
 
 use icedxdy::card;
 use icedxdy::widget::{
     aspect_ratio, badge, button, column, container, field, input, row, scroll_area, separator,
     space, text, toggle_group,
 };
-use icedxdy::{Gap, Size, Slot, Theme};
+use icedxdy::{Gap, Size, Slot, Theme, radius};
 
 use crate::Message;
 use crate::page;
@@ -40,29 +32,29 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/card-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/card-installation.md"),
+    page::Block::Md("examples/browser/snippets/card-usage.md"),
     page::Block::Md("examples/browser/snippets/card-composition.md"),
+    page::Block::Md("examples/browser/snippets/card-size-guide.md"),
     page::Block::Example {
         id: "small",
-        title: "Size",
-        description: Some("Use the small size for a more compact card."),
+        title: "",
+        description: None,
         snippet: "examples/browser/snippets/card-small.md",
     },
-    page::Block::Group {
-        title: "Spacing",
-        children: &[
-            page::Block::Example {
-                id: "spacing",
-                title: "",
-                description: Some("Set the spacing between the sections of a card."),
-                snippet: "examples/browser/snippets/card-spacing.md",
-            },
-            page::Block::Example {
-                id: "edge-to-edge",
-                title: "",
-                description: Some("Extend the scrollable content to the edges of the card."),
-                snippet: "examples/browser/snippets/card-edge-to-edge.md",
-            },
-        ],
+    page::Block::Md("examples/browser/snippets/card-spacing-guide.md"),
+    page::Block::Example {
+        id: "spacing",
+        title: "",
+        description: None,
+        snippet: "examples/browser/snippets/card-spacing.md",
+    },
+    page::Block::Md("examples/browser/snippets/card-edge-guide.md"),
+    page::Block::Example {
+        id: "edge-to-edge",
+        title: "",
+        description: None,
+        snippet: "examples/browser/snippets/card-edge-to-edge.md",
     },
     page::Block::Example {
         id: "image",
@@ -70,16 +62,41 @@ pub static BLOCKS: &[page::Block] = &[
         description: Some("Add an image before the card header to create a card with an image."),
         snippet: "examples/browser/snippets/card-image.md",
     },
-    page::Block::Md("examples/browser/snippets/card-api-reference.md"),
+    page::Block::Group {
+        title: "API Reference",
+        children: &[
+            page::Block::Md("examples/browser/snippets/card-api-reference.md"),
+            page::Block::Md("examples/browser/snippets/card-api-header.md"),
+            page::Block::Md("examples/browser/snippets/card-api-title.md"),
+            page::Block::Md("examples/browser/snippets/card-api-description.md"),
+            page::Block::Md("examples/browser/snippets/card-api-action.md"),
+            page::Block::Md("examples/browser/snippets/card-api-content.md"),
+            page::Block::Md("examples/browser/snippets/card-api-footer.md"),
+        ],
+    },
+    page::Block::Group {
+        title: "Changelog",
+        children: &[page::Block::Md(
+            "examples/browser/snippets/card-spacing-variable.md",
+        )],
+    },
 ];
 
 fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
     let password_label = row![
         text::label("Password"),
         space::horizontal(),
-        button("Forgot your password?")
-            .style(button::Link)
-            .on_press(forgot)
+        button(
+            text::small("Forgot your password?")
+                .weight(icedxdy::Weight::Normal)
+                .line_height(iced::Pixels(20.0))
+        )
+        .style(button::Link)
+        .anchor()
+        .translate(false)
+        .height(20)
+        .padding(0)
+        .on_press(forgot)
     ]
     .align_y(Center)
     .width(Fill);
@@ -114,7 +131,7 @@ fn login_card<'a, M: Clone + 'a>(spacing: f32, forgot: M) -> Slot<'a, M> {
         .spacing(spacing)
         .padding(iced::Padding::ZERO.top(spacing)),
     )
-    .width(384)
+    .width(Fill.max(384))
     .boxed()
     .into()
 }
@@ -156,8 +173,7 @@ impl<'a> Component<'a, Message, Theme> for Spacing {
                 login_card(f32::from(spacing), Event::Forgot),
             ]
             .spacing(16)
-            .align_x(Center)
-            .width(Fill),
+            .width(Fill.max(384)),
         )
     }
 }
@@ -200,27 +216,32 @@ fn terms<'a>() -> Slot<'a, Message> {
         .width(Fill)
         .padding(iced::Padding::ZERO.top(16)),
     )
-    .width(384)
+    .width(Fill.max(384))
     .boxed()
     .into()
 }
 
-fn cover_image<'a>() -> Element<'a, Message, Theme> {
-    let photo = image(cover())
-        .width(Fill)
-        .height(Fill)
-        .content_fit(ContentFit::Cover);
-    let tint = container("")
-        .width(Fill)
-        .height(Fill)
-        .style(|theme: &Theme| {
-            let opacity = if theme.neutral.is_dark { 0.74 } else { 0.61 };
-            Style {
-                background: Some(Color::BLACK.alpha(opacity).into()),
-                ..Style::default()
-            }
-        });
-    stack![photo, Element::from(tint)].boxed()
+fn cover_image<'a>(theme: &Theme) -> Element<'a, Message, Theme> {
+    static LIGHT: LazyLock<image::Handle> = LazyLock::new(|| {
+        image::Handle::from_bytes(include_bytes!("../../assets/card-cover-light.png").as_slice())
+    });
+    static DARK: LazyLock<image::Handle> = LazyLock::new(|| {
+        image::Handle::from_bytes(include_bytes!("../../assets/card-cover-dark.png").as_slice())
+    });
+    image(if theme.neutral.is_dark {
+        DARK.clone()
+    } else {
+        LIGHT.clone()
+    })
+    .width(Fill)
+    .height(Fill)
+    .content_fit(ContentFit::Cover)
+    .border_radius(border::Radius {
+        top_left: radius::XL,
+        top_right: radius::XL,
+        ..Default::default()
+    })
+    .boxed()
 }
 
 pub struct CardPage {
@@ -264,23 +285,41 @@ impl page::Page for CardPage {
         self.state.reset_volatile();
     }
 
-    fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: 40.into(),
+            ..Default::default()
+        }
+    }
+
+    fn docs_preview(&self, id: &str, outer: &Theme) -> Element<'_, Message, Theme> {
+        let height = match id {
+            "demo" => 480.,
+            "spacing" => 544.,
+            "image" => 512.,
+            _ => 384.,
+        };
+        container(self.themed_preview(id, outer))
+            .center_x(Fill)
+            .center_y(height - 80.)
+            .into()
+    }
+
+    fn preview(&self, id: &str) -> Element<'_, Message, Theme> {
+        self.themed_preview(id, &Theme::default())
+    }
+
+    fn themed_preview(&self, id: &str, theme: &Theme) -> Element<'_, Message, Theme> {
         let pi = self.state.page_index;
         match id {
-            // Demo (hero): full Login form. Verbatim shadcn `card-demo.tsx`:
-            // header (title + description + Sign Up link action), content
-            // (Email + Password fields, Password row has a "Forgot your
-            // password?" link tucked flush-right next to the label), footer
-            // (Login + "Login with Google" buttons stacked column, full-width).
-            // max-w-sm = 24rem = 384px.
             "demo" => login_card(16.0,Message::Page(pi,page::Message::LinkClicked("#".into()))).compose(),
 
             "small" => card(column![
                 card::header(card::title("Small Card").size(14.0)).inset(12.0)
                     .description("This card uses the small size variant."),
-                card::content(text::p(
+                card::content(text::small(
                     "The card component supports a size prop that can be set to \"sm\" for a more compact appearance."
-                )).padding([0,12]),
+                ).line_height(iced::Pixels(20.0))).padding([0,12]),
                 card::footer_with_spacing(
                     button("Action").style(button::Outline)
                         .size(Size::Sm)
@@ -291,12 +330,9 @@ impl page::Page for CardPage {
             .spacing(12)
             .padding(iced::Padding::ZERO.top(12))
             .width(Fill))
-            .width(384.0)
+            .width(Fill.max(384))
             .boxed(),
 
-            // Image: image (16:9) with a 35% black tint overlay above the
-            // header (Featured badge action + title + description) + footer
-            // (full-width "View Event" button). max-w-sm = 384px.
             "image" => {
                 let header: Slot<'_, Message> = card::header("Design systems meetup")
                     .description(
@@ -306,7 +342,7 @@ impl page::Page for CardPage {
                     .into();
 
                 card(column![
-                    aspect_ratio(cover_image(), 16.0 / 9.0),
+                    aspect_ratio(cover_image(theme), 16.0 / 9.0),
                     header,
                     card::footer(
                         button("View Event")
@@ -317,7 +353,7 @@ impl page::Page for CardPage {
                 .spacing(Gap::G4)
 
                 .width(Fill))
-                .width(384.0)
+                .width(Fill.max(384))
                 .clip(true)
                 .boxed()
             }

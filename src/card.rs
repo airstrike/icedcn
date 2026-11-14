@@ -40,9 +40,9 @@ use crate::radius;
 use crate::theme;
 use crate::theme::container;
 use crate::theme::container::Style;
-use crate::widget::Slot;
 use crate::widget::rule;
 use crate::widget::text;
+use crate::widget::{self, Compose, Inherited, Slot};
 
 /// The boxed element a card slot holds.
 type Element<'a, Message> = iced_core::Element<'a, Message, Theme, Renderer>;
@@ -74,7 +74,7 @@ pub fn title<'a>(content: impl IntoFragment<'a>) -> text::Text<'a> {
 /// vocabulary mirrors shadcn's API surface (`<CardTitle>` /
 /// `<CardDescription>` / `<CardAction>` round-trip cleanly).
 pub fn description<'a>(content: impl IntoFragment<'a>) -> text::Text<'a> {
-    text::muted(content)
+    text::muted(content).line_height(iced_core::Pixels(20.0))
 }
 
 /// A `<CardAction>`-shaped passthrough. shadcn positions the action via the
@@ -150,14 +150,27 @@ impl<'a, Message: 'a> Header<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Header<'a, Message>> for Element<'a, Message> {
-    fn from(h: Header<'a, Message>) -> Self {
+impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
+    fn inherit(&mut self, from: &Inherited) {
+        self.title.inherit(from);
+        if let Some(description) = &mut self.description {
+            description.inherit(from);
+        }
+        if let Some(action) = &mut self.action {
+            action.inherit(from);
+        }
+    }
+
+    fn compose<'b>(self: Box<Self>) -> Element<'b, Message>
+    where
+        Self: 'b,
+    {
         let Header {
             title,
             inset,
             description,
             action,
-        } = h;
+        } = *self;
 
         // Stack title above (optional) description in a column with gap-1.
         let mut text_col: Column<Element<'a, Message>> =
@@ -187,9 +200,15 @@ impl<'a, Message: 'a> From<Header<'a, Message>> for Element<'a, Message> {
     }
 }
 
+impl<'a, Message: 'a> From<Header<'a, Message>> for Element<'a, Message> {
+    fn from(header: Header<'a, Message>) -> Self {
+        Box::new(header).compose()
+    }
+}
+
 impl<'a, Message: 'a> From<Header<'a, Message>> for Slot<'a, Message> {
     fn from(h: Header<'a, Message>) -> Self {
-        Slot::from(Element::from(h))
+        Slot::new(h)
     }
 }
 
@@ -276,37 +295,34 @@ pub fn content<'a, Message: 'a>(
 
 /// Card footer section. Caller composes the inner shape (row of buttons,
 /// stacked column, etc.); `footer` applies nova's muted footer surface.
-pub fn footer<'a, Message: 'a>(child: impl Into<Element<'a, Message>>) -> Slot<'a, Message> {
+pub fn footer<'a, Message: 'a>(child: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
     footer_with_spacing(child, 16.0)
 }
 
 /// A footer with a custom card spacing value.
 pub fn footer_with_spacing<'a, Message: 'a>(
-    child: impl Into<Element<'a, Message>>,
+    child: impl Into<Slot<'a, Message>>,
     spacing: f32,
 ) -> Slot<'a, Message> {
     let line: Element<'a, Message> = rule::horizontal(1).style(footer_rule_style()).boxed();
 
-    let body = Container::new(child.into())
+    let body = widget::container(child)
         .padding(spacing.max(0.0))
         .width(Length::Fill)
-        .style(|t| footer_style(t).into());
+        .style(footer_style);
 
-    let footer: Element<'a, Message> = Column::new()
-        .push(line)
-        .push(body.boxed())
+    widget::column([line.into(), body.into()])
+        .spacing(0)
         .width(Length::Fill)
-        .boxed();
-
-    Slot::from(footer)
+        .into()
 }
 
 /// Card footer as a row of children with 8px (`gap-2`) spacing.
 pub fn footer_row<'a, Message: 'a>(
     children: impl IntoIterator<Item = Element<'a, Message>>,
 ) -> Slot<'a, Message> {
-    let row = Row::with_children(children).spacing(Gap::G2);
-    footer(row.boxed())
+    let row = widget::Row::with_children(children.into_iter().map(Slot::from)).spacing(Gap::G2);
+    footer(row)
 }
 
 fn footer_style(theme: &Theme) -> Style {
