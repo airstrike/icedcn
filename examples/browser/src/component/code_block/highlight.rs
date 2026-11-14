@@ -1,16 +1,13 @@
-//! Parse the static samples once; the theme resolves their colors at display time.
+//! Render retained pinned Shiki runs for these fixed fixtures; no parsing in view.
 use super::samples::*;
-use crate::{Message, font};
-use iced::highlighter::{Parser, Settings};
-use iced::widget::text::Wrapping;
-use iced::{Code, Fill, Font, Shrink};
+use super::tokens;
+use crate::font;
+use iced::widget::text::{LineHeight, Wrapping};
+use iced::{Fill, Font, Shrink};
 use icedxdy::theme::tweak::Token;
 use icedxdy::widget::code_block::{CodeBlock, LineStyle};
 use icedxdy::widget::{rich_text, span};
 use icedxdy::{Color, Slot};
-use std::collections::HashMap;
-use std::ops::Range;
-use std::sync::LazyLock;
 
 pub const STREAMS: &[(&str, &str, &str)] = &[
     ("hooks/use-debounce.ts", "ts", STREAMING_0),
@@ -19,73 +16,18 @@ pub const STREAMS: &[(&str, &str, &str)] = &[
     ("app/api/chat/route.ts", "ts", STREAMING_3),
     (".env.local", "sh", STREAMING_4),
 ];
-type Runs = Vec<Vec<(Range<usize>, Code)>>;
-static TOKENS: LazyLock<HashMap<&'static str, Runs>> = LazyLock::new(|| {
-    let mut sources = vec![
-        (DEMO, "ts"),
-        (START_LINE, "tsx"),
-        (HIGHLIGHTED_LINES, "js"),
-        (LINE_NUMBERS, "json"),
-        (HIGHLIGHTING, "json"),
-        (CHAT, "ts"),
-        (TYPESET, "ts"),
-        (SHOW_MORE, "tsx"),
-        (TABS_0, "ts"),
-        (TABS_1, "tsx"),
-        (TABS_2, "sh"),
-        (LANGUAGES_0, "css"),
-        (LANGUAGES_1, "py"),
-        (LANGUAGES_2, "txt"),
-    ];
-    sources.extend(STREAMS.iter().map(|(_, lang, source)| (*source, *lang)));
-    sources
-        .into_iter()
-        .map(|(source, lang)| {
-            let mut parser = Parser::new(&Settings {
-                token: lang.to_string(),
-            });
-            let lines = source
-                .split('\n')
-                .map(|line| {
-                    parser
-                        .parse_line(if source == STREAMING_2 {
-                            line.get(1..).unwrap_or("")
-                        } else {
-                            line
-                        })
-                        .collect()
-                })
-                .collect();
-            (source, lines)
-        })
-        .collect()
-});
-
-// GitHub Light/Dark, matching the pinned Shiki theme choices. The existing
-// parser still owns grammar classification; no shared syntax-engine changes.
-fn color(class: Code, dark: bool) -> Token {
-    let (light, night) = match class {
-        Code::Comment => (0x6a737d, 0x6a737d),
-        Code::String => (0x032f62, 0x9ecbff),
-        Code::Keyword | Code::Invalid => (0xd73a49, 0xf97583),
-        Code::Function => (0x6f42c1, 0xb392f0),
-        Code::Constant | Code::Support => (0x005cc5, 0x79b8ff),
-        Code::Type => (0x22863a, 0x85e89d),
-        _ => (0x24292e, 0xe1e4e8),
-    };
-    rgb(if dark { night } else { light })
-}
 fn rgb(hex: u32) -> Token {
-    Color::from(iced::Color::from_rgb8(
+    Color::from(iced::Color::from_rgba8(
+        (hex >> 24) as u8,
         (hex >> 16) as u8,
         (hex >> 8) as u8,
-        hex as u8,
+        (hex & 255) as f32 / 255.,
     ))
     .into()
 }
 
-/// Render a prefix so one cached parse can also serve a streamed listing.
-pub fn listing(
+/// Render a retained prefix, including the grammar of an unfinished final line.
+pub fn listing<Message: 'static>(
     dark: bool,
     source: &'static str,
     visible: usize,
@@ -97,11 +39,11 @@ pub fn listing(
     } else {
         Wrapping::None
     };
-    let tokens = TOKENS.get(source);
     let mut end = visible.min(source.len());
     while !source.is_char_boundary(end) {
         end -= 1;
     }
+    let last = source[..end].bytes().filter(|b| *b == b'\n').count();
     let lines = source[..end].split('\n').enumerate().map(|(i, line)| {
         let original = line;
         let line = if source == DIFF || source == STREAMING_2 {
@@ -110,16 +52,20 @@ pub fn listing(
             line
         };
         let mut spans = Vec::new();
-        if let Some(runs) = tokens.and_then(|all| all.get(i)) {
+        if let Some(runs) = tokens::row(source, i, end, i == last) {
             let mut pos = 0;
-            for (range, class) in runs {
-                let start = range.start.min(line.len());
-                let end = range.end.min(line.len());
+            for &(end, light, night) in runs {
+                let start = pos;
+                let end = end.min(line.len());
                 if start > pos {
                     spans.push(span(&line[pos..start]));
                 }
                 if end > start {
-                    spans.push(span(&line[start..end]).color(color(*class, dark)));
+                    spans.push(span(&line[start..end]).color(rgb(if dark {
+                        night
+                    } else {
+                        light
+                    })));
                 }
                 pos = end;
             }
@@ -135,7 +81,7 @@ pub fn listing(
         let text = rich_text(spans)
             .font(Font::new(font::GEIST_MONO_NAME))
             .size(14)
-            .line_height(22.75)
+            .line_height(LineHeight::Absolute(22.75.into()))
             .wrapping(wrapping)
             .width(if wrap { Fill } else { Shrink });
         (styles(i, original), Slot::from(text))
@@ -145,49 +91,11 @@ pub fn listing(
         .font(Font::new(font::GEIST_MONO_NAME))
 }
 
-pub fn ansi(dark: bool) -> (CodeBlock<'static, Message>, String) {
-    let mut stripped = Vec::new();
-    let lines = ANSI
-        .lines()
-        .map(|line| {
-            let mut color = Token::CodeForeground;
-            let mut spans = Vec::new();
-            let mut plain = String::new();
-            let mut pieces = line.split("\x1b[");
-            let prefix = pieces.next().unwrap_or_default();
-            plain.push_str(prefix);
-            spans.push(span(prefix));
-            for piece in pieces {
-                if let Some((codes, value)) = piece.split_once('m') {
-                    for code in codes.split(';') {
-                        color = match code {
-                            "2" => Token::MutedForeground,
-                            "31" => rgb(if dark { 0xf97583 } else { 0xb31d28 }),
-                            "32" => rgb(if dark { 0x85e89d } else { 0x22863a }),
-                            "0" | "22" | "39" => Token::CodeForeground,
-                            _ => color,
-                        };
-                    }
-                    plain.push_str(value);
-                    spans.push(span(value).color(color));
-                }
-            }
-            stripped.push(plain);
-            (
-                LineStyle::Default,
-                Slot::from(
-                    rich_text(spans)
-                        .size(14)
-                        .line_height(22.75)
-                        .font(Font::new(font::GEIST_MONO_NAME)),
-                ),
-            )
-        })
-        .collect::<Vec<_>>();
+pub fn ansi<Message: 'static>(dark: bool) -> (CodeBlock<'static, Message>, String) {
     (
-        CodeBlock::lines(lines)
-            .wrap(true)
-            .font(Font::new(font::GEIST_MONO_NAME)),
-        stripped.join("\n"),
+        listing(dark, tokens::ANSI_PLAIN, usize::MAX, true, |_, _| {
+            LineStyle::Default
+        }),
+        tokens::ANSI_PLAIN.to_owned(),
     )
 }

@@ -1,21 +1,21 @@
 //! State regressions that do not need a window or clipboard access.
+use super::super::Event;
 use super::*;
-use tokio::runtime::Runtime;
 
 #[test]
 fn wrap_and_expansion_are_independent_and_repeatable() {
-    let mut page = CodeBlockPage::at(0);
+    let mut page = State::new();
     for _ in 0..2 {
-        let _ = page.update_demo(Event::Wrap("demo"));
+        let _ = page.update(Message::Wrap("demo"));
         assert_eq!(page.wraps["demo"], true);
-        let _ = page.update_demo(Event::Wrap("actions"));
+        let _ = page.update(Message::Wrap("actions"));
         assert_eq!(page.wraps["actions"], false);
-        let _ = page.update_demo(Event::Expand("show-more"));
+        let _ = page.update(Message::Expand("show-more"));
         assert_eq!(page.expanded["show-more"], true);
         assert!(!page.expanded.contains_key("show-more-scroll"));
-        let _ = page.update_demo(Event::Wrap("demo"));
-        let _ = page.update_demo(Event::Wrap("actions"));
-        let _ = page.update_demo(Event::Expand("show-more"));
+        let _ = page.update(Message::Wrap("demo"));
+        let _ = page.update(Message::Wrap("actions"));
+        let _ = page.update(Message::Expand("show-more"));
         assert_eq!(page.wraps["demo"], false);
         assert_eq!(page.wraps["actions"], true);
         assert_eq!(page.expanded["show-more"], false);
@@ -24,38 +24,36 @@ fn wrap_and_expansion_are_independent_and_repeatable() {
 
 #[test]
 fn repeated_copy_rejects_stale_reset_and_cancel_does_not_claim_save() {
-    let runtime = Runtime::new().expect("test runtime");
-    let _guard = runtime.enter();
-    let mut page = CodeBlockPage::at(0);
+    let mut page = State::new();
     let first = Instant::now();
     let second = first + Duration::from_millis(500);
-    let _ = page.update_demo(Event::Copied("demo", first));
-    let _ = page.update_demo(Event::Copied("demo", second));
-    let _ = page.update_demo(Event::ResetCopy("demo", first));
+    let _ = page.update(Message::Copied("demo", first));
+    let _ = page.update(Message::Copied("demo", second));
+    let _ = page.update(Message::ResetCopy("demo", first));
     assert_eq!(page.copied["demo"], second);
-    let _ = page.update_demo(Event::ResetCopy("demo", second));
+    let _ = page.update(Message::ResetCopy("demo", second));
     assert!(!page.copied.contains_key("demo"));
-    let _ = page.update_demo(Event::Saved("route.ts", Ok(false)));
+    let _ = page.update(Message::Saved("route.ts", Ok(false)));
     assert!(page.save_status.is_empty());
-    let _ = page.update_demo(Event::Saved("route.ts", Ok(true)));
+    let _ = page.update(Message::Saved("route.ts", Ok(true)));
     assert_eq!(page.save_status["route.ts"], "Saved route.ts");
 }
 
 #[test]
 fn replay_tracks_all_five_blocks_and_markdown_fence_independently() {
-    let mut page = CodeBlockPage::at(0);
+    let mut page = State::new();
     assert!(page.streaming.is_empty());
     assert_eq!(STREAMS.len(), 5);
     assert_eq!(
         total_length("streaming"),
         STREAMS.iter().map(|(_, _, s)| s.len()).sum::<usize>()
     );
-    let _ = page.update_demo(Event::Replay("streaming"));
-    let _ = page.update_demo(Event::Replay("markdown"));
+    let _ = page.update(Message::Replay("streaming"));
+    let _ = page.update(Message::Replay("markdown"));
     assert_eq!(page.streaming.len(), 2);
     page.streaming
         .insert("streaming", Instant::now() - Duration::from_secs(120));
-    let _ = page.update_demo(Event::Tick);
+    let _ = page.update(Message::Tick(Instant::now()));
     assert!(!page.streaming.contains_key("streaming"));
     assert!(page.streaming.contains_key("markdown"));
     let opening = MARKDOWN.find("```tsx\n").expect("opening fence") + 7;
@@ -67,22 +65,22 @@ fn replay_tracks_all_five_blocks_and_markdown_fence_independently() {
     assert_eq!(after.len(), 1);
     page.streaming
         .insert("markdown", Instant::now() - Duration::from_secs(120));
-    let _ = page.update_demo(Event::Tick);
+    let _ = page.update(Message::Tick(Instant::now()));
     assert!(page.streaming.is_empty());
-    let _ = page.update_demo(Event::Replay("streaming"));
+    let _ = page.update(Message::Replay("streaming"));
     assert!(page.streaming.contains_key("streaming"));
 }
 
 #[test]
 fn full_sources_and_diff_decoration_survive_recipe_transforms() {
-    let page = CodeBlockPage::at(0);
+    let page = State::new();
     assert_eq!(page.logs.lines().count(), 40);
     assert!(page.logs.ends_with("[40] GET /api/chat 200 in 45ms"));
     assert_eq!(diff_style("+added"), LineStyle::Added);
     assert_eq!(diff_style("-removed"), LineStyle::Removed);
     assert_eq!(diff_style(" unchanged"), LineStyle::Default);
     assert!(SHOW_MORE.lines().count() > 20);
-    let (_, copy) = highlight::ansi(false);
+    let (_, copy) = highlight::ansi::<Message>(false);
     assert_eq!(copy.lines().count(), 8);
     assert!(!copy.contains('\x1b'));
     assert!(copy.ends_with("Tests  1 failed | 13 passed (14)"));
@@ -94,4 +92,134 @@ fn markdown_uses_word_plus_whitespace_deltas() {
     assert_eq!(&MARKDOWN[..markdown_prefix(1)], "Wrap ");
     assert_eq!(&MARKDOWN[..markdown_prefix(2)], "Wrap the ");
     assert_eq!(markdown_prefix(usize::MAX), MARKDOWN.len());
+}
+
+#[test]
+fn completion_receipts_are_targeted_replay_safe_and_not_lost_in_a_batch() {
+    let mut first = State::new();
+    let mut second = State::new();
+    let now = Instant::now();
+    let a = Completion {
+        target: first.target.clone(),
+        serial: Id::unique(),
+        message: Message::Copied("route", now),
+    };
+    let b = Completion {
+        target: first.target.clone(),
+        serial: Id::unique(),
+        message: Message::Copied("chat", now),
+    };
+    for completion in [&a, &b] {
+        first.receive(completion);
+        second.receive(completion);
+    }
+    assert_eq!(first.copied.len(), 2);
+    assert!(second.copied.is_empty());
+    first.advance(now + Duration::from_secs(2));
+    assert!(first.copied.is_empty());
+    first.receive(&a);
+    assert!(
+        first.copied.is_empty(),
+        "a rebuild cannot replay an old receipt"
+    );
+    let Some(Event::Acknowledged(ids)) = first.update(Message::Acknowledge) else {
+        panic!("acknowledgement expected");
+    };
+    assert_eq!(ids.len(), 2);
+    assert!(first.acknowledgements.is_empty());
+    let _ = first.update(Message::Wrap("demo"));
+    assert!(first.wraps["demo"]);
+    assert!(second.wraps.is_empty());
+}
+#[test]
+fn chevron_rotates_reverses_continuously_and_settles() {
+    let now = Instant::now();
+    let mut turn = Turn::default();
+    turn.retarget(1., now);
+    assert_eq!(turn.value, 0.);
+    turn.advance(now + Duration::from_millis(75));
+    let midway = turn.value;
+    assert!(midway > 0. && midway < 1.);
+    turn.retarget(0., now + Duration::from_millis(75));
+    assert_eq!(turn.value, midway);
+    turn.advance(now + Duration::from_millis(150));
+    assert!(turn.value > 0. && turn.value < midway);
+    turn.advance(now + Duration::from_millis(225));
+    assert_eq!(turn.value, 0.);
+    assert!(turn.start.is_none());
+}
+#[test]
+fn ansi_fixture_retains_source_and_pinned_alpha() {
+    use super::super::tokens;
+    let mut plain = String::new();
+    let mut escape = false;
+    for ch in ANSI.chars() {
+        if ch == '\x1b' {
+            escape = true;
+        } else if escape {
+            if ch == 'm' {
+                escape = false;
+            }
+        } else {
+            plain.push(ch);
+        }
+    }
+    assert_eq!(plain, tokens::ANSI_PLAIN);
+    let row = tokens::row(tokens::ANSI_PLAIN, 1, usize::MAX, false).expect("retained ANSI tokens");
+    assert!(
+        row.iter()
+            .any(|(_, light, dark)| light & 255 == 128 && dark & 255 == 128)
+    );
+    for items in [
+        &State::new().typeset_before,
+        &State::new().typeset_after,
+        &State::new().markdown_before,
+        &State::new().markdown_after,
+    ] {
+        assert!(
+            items
+                .iter()
+                .all(|item| matches!(item, markdown::Item::Paragraph(_)))
+        );
+    }
+}
+
+#[test]
+fn local_timer_requests_the_next_frame_after_a_published_tick() {
+    let mut state = State::new();
+    let now = Instant::now();
+    state.last_tick = now - Duration::from_millis(20);
+    state
+        .streaming
+        .insert("streaming", now - Duration::from_millis(20));
+    let component = Demo {
+        id: "streaming".into(),
+        dark: false,
+        page: 0,
+        completions: Vec::new(),
+    };
+    let action = component.listen(
+        &state,
+        &iced::Event::Window(window::Event::RedrawRequested(now)),
+        iced::Rectangle::default(),
+        mouse::Cursor::Unavailable,
+    );
+    let (event, redraw, _) = action.into_inner();
+    assert!(matches!(event, Some(Message::Tick(at)) if at == now));
+    assert!(matches!(redraw, window::RedrawRequest::At(at) if at > now));
+}
+
+#[test]
+fn repeated_fixture_text_uses_streaming_tail_tokens() {
+    use super::super::tokens;
+    assert_eq!(CHAT, STREAMING_3);
+    assert_eq!(TABS_2, STREAMING_4);
+    assert_eq!(
+        tokens::row(STREAMING_3, 0, 1, true),
+        Some([(1, 0x24292eff, 0xe1e4e8ff)].as_slice())
+    );
+    assert_eq!(
+        tokens::row(STREAMING_4, 0, 1, true),
+        Some([(1, 0x6f42c1ff, 0xb392f0ff)].as_slice())
+    );
 }

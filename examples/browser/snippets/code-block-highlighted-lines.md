@@ -1,6 +1,7 @@
 ```rust
 use iced::alignment::Horizontal;
 use iced::widget::svg;
+use iced::widget::text::LineHeight;
 use iced::{Element, Fill, Font, Subscription, Task, Widget, clipboard, time};
 use icedxdy::core::Border;
 use icedxdy::widget::code_block::LineStyle;
@@ -67,7 +68,7 @@ fn plain_lines(
                 .selectable(true)
                 .font(Font::new("Geist Mono"))
                 .size(14)
-                .line_height(22.75)
+                .line_height(LineHeight::Absolute(22.75.into()))
                 .into(),
         )
     }))

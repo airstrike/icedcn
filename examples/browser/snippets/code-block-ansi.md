@@ -127,74 +127,142 @@ fn icon(name: &str) -> Slot<'static, Message> {
         .into()
 }
 
-mod highlight {
-    //! Parse the static samples once; the theme resolves their colors at display time.
+mod tokens {
+    //! Fixed recipe tokens generated with pinned Shiki 3.23.0, JavaScript regex engine,
+    //! github-light/github-dark. Partial final lines retain streaming grammar behavior.
+    //! This fixture data does not implement a general-purpose highlighter.
     use super::*;
 
-    use iced::highlighter::{Parser, Settings};
-    use iced::widget::text::Wrapping;
-    use iced::{Code, Fill, Font, Shrink};
+    pub type Run = (usize, u32, u32);
+    struct Fixture {
+        source: &'static str,
+        rows: &'static [usize],
+        tails: &'static [(usize, usize)],
+    }
+    pub const ANSI_PLAIN: &str = "$ pnpm test\n✓ src/format.test.ts (4 tests)\n✓ src/parse.test.ts (7 tests)\n✗ src/stream.test.ts (3 tests | 1 failed)\n\nAssertionError: expected 'hello' to be 'hello world'\n\nTests  1 failed | 13 passed (14)";
+    #[rustfmt::skip]
+static ROWS: &[&[Run]] = &[
+    &[],
+    &[(11, 0x24292eff, 0xe1e4e8ff)],
+    &[(3, 0x28a745ff, 0x34d058ff), (23, 0x24292eff, 0xe1e4e8ff), (32, 0x24292e80, 0xe1e4e880)],
+    &[(3, 0x28a745ff, 0x34d058ff), (22, 0x24292eff, 0xe1e4e8ff), (31, 0x24292e80, 0xe1e4e880)],
+    &[(3, 0xd73a49ff, 0xea4a5aff), (23, 0x24292eff, 0xe1e4e8ff), (43, 0x24292e80, 0xe1e4e880)],
+    &[(52, 0xd73a49ff, 0xea4a5aff)],
+    &[(7, 0x24292eff, 0xe1e4e8ff), (15, 0xd73a49ff, 0xea4a5aff), (18, 0x24292eff, 0xe1e4e8ff), (27, 0x28a745ff, 0x34d058ff), (32, 0x24292eff, 0xe1e4e8ff)],
+];
+    #[rustfmt::skip]
+static FIXTURES: &[Fixture] = &[
+    Fixture { source: ANSI_PLAIN, rows: &[1, 2, 3, 4, 0, 5, 0, 6], tails: &[] },
+];
+    pub fn row(source: &str, index: usize, visible: usize, last: bool) -> Option<&'static [Run]> {
+        let fixture = FIXTURES
+            .iter()
+            .rev()
+            .find(|fixture| fixture.source == source)?;
+        if last
+            && let Ok(i) = fixture
+                .tails
+                .binary_search_by_key(&visible, |(end, _)| *end)
+        {
+            return Some(ROWS[fixture.tails[i].1]);
+        }
+        fixture.rows.get(index).map(|row| ROWS[*row])
+    }
+}
+
+mod highlight {
+    //! Render retained pinned Shiki runs for these fixed fixtures; no parsing in view.
+    use super::tokens;
+    use super::*;
+
+    use iced::widget::text::{LineHeight, Wrapping};
+    use iced::{Fill, Font, Shrink};
     use icedxdy::theme::tweak::Token;
     use icedxdy::widget::code_block::{CodeBlock, LineStyle};
     use icedxdy::widget::{rich_text, span};
     use icedxdy::{Color, Slot};
-    use std::collections::HashMap;
-    use std::ops::Range;
-    use std::sync::LazyLock;
 
     fn rgb(hex: u32) -> Token {
-        Color::from(iced::Color::from_rgb8(
+        Color::from(iced::Color::from_rgba8(
+            (hex >> 24) as u8,
             (hex >> 16) as u8,
             (hex >> 8) as u8,
-            hex as u8,
+            (hex & 255) as f32 / 255.,
         ))
         .into()
     }
 
-    pub fn ansi(dark: bool) -> (CodeBlock<'static, Message>, String) {
-        let mut stripped = Vec::new();
-        let lines = ANSI
-            .lines()
-            .map(|line| {
-                let mut color = Token::CodeForeground;
-                let mut spans = Vec::new();
-                let mut plain = String::new();
-                let mut pieces = line.split("\x1b[");
-                let prefix = pieces.next().unwrap_or_default();
-                plain.push_str(prefix);
-                spans.push(span(prefix));
-                for piece in pieces {
-                    if let Some((codes, value)) = piece.split_once('m') {
-                        for code in codes.split(';') {
-                            color = match code {
-                                "2" => Token::MutedForeground,
-                                "31" => rgb(if dark { 0xf97583 } else { 0xb31d28 }),
-                                "32" => rgb(if dark { 0x85e89d } else { 0x22863a }),
-                                "0" | "22" | "39" => Token::CodeForeground,
-                                _ => color,
-                            };
-                        }
-                        plain.push_str(value);
-                        spans.push(span(value).color(color));
+    /// Render a retained prefix, including the grammar of an unfinished final line.
+    pub fn listing<Message: 'static>(
+        dark: bool,
+        source: &'static str,
+        visible: usize,
+        wrap: bool,
+        styles: impl Fn(usize, &str) -> LineStyle,
+    ) -> CodeBlock<'static, Message> {
+        let wrapping = if wrap {
+            Wrapping::WordOrGlyph
+        } else {
+            Wrapping::None
+        };
+        let mut end = visible.min(source.len());
+        while !source.is_char_boundary(end) {
+            end -= 1;
+        }
+        let last = source[..end].bytes().filter(|b| *b == b'\n').count();
+        let lines = source[..end].split('\n').enumerate().map(|(i, line)| {
+            let original = line;
+            let line = if false {
+                line.get(1..).unwrap_or("")
+            } else {
+                line
+            };
+            let mut spans = Vec::new();
+            if let Some(runs) = tokens::row(source, i, end, i == last) {
+                let mut pos = 0;
+                for &(end, light, night) in runs {
+                    let start = pos;
+                    let end = end.min(line.len());
+                    if start > pos {
+                        spans.push(span(&line[pos..start]));
                     }
+                    if end > start {
+                        spans.push(span(&line[start..end]).color(rgb(if dark {
+                            night
+                        } else {
+                            light
+                        })));
+                    }
+                    pos = end;
                 }
-                stripped.push(plain);
-                (
-                    LineStyle::Default,
-                    Slot::from(
-                        rich_text(spans)
-                            .size(14)
-                            .line_height(22.75)
-                            .font(Font::new("Geist Mono")),
-                    ),
-                )
-            })
-            .collect::<Vec<_>>();
+                if pos < line.len() {
+                    spans.push(span(&line[pos..]));
+                }
+            } else {
+                spans.push(span(line));
+            }
+            if line.is_empty() {
+                spans = vec![span("")];
+            }
+            let text = rich_text(spans)
+                .font(Font::new("Geist Mono"))
+                .size(14)
+                .line_height(LineHeight::Absolute(22.75.into()))
+                .wrapping(wrapping)
+                .width(if wrap { Fill } else { Shrink });
+            (styles(i, original), Slot::from(text))
+        });
+        CodeBlock::lines(lines)
+            .wrap(wrap)
+            .font(Font::new("Geist Mono"))
+    }
+
+    pub fn ansi<Message: 'static>(dark: bool) -> (CodeBlock<'static, Message>, String) {
         (
-            CodeBlock::lines(lines)
-                .wrap(true)
-                .font(Font::new("Geist Mono")),
-            stripped.join("\n"),
+            listing(dark, tokens::ANSI_PLAIN, usize::MAX, true, |_, _| {
+                LineStyle::Default
+            }),
+            tokens::ANSI_PLAIN.to_owned(),
         )
     }
 }

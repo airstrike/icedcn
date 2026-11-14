@@ -136,72 +136,75 @@ fn icon(name: &str) -> Slot<'static, Message> {
         .into()
 }
 
-mod highlight {
-    //! Parse the static samples once; the theme resolves their colors at display time.
+mod tokens {
+    //! Fixed recipe tokens generated with pinned Shiki 3.23.0, JavaScript regex engine,
+    //! github-light/github-dark. Partial final lines retain streaming grammar behavior.
+    //! This fixture data does not implement a general-purpose highlighter.
     use super::*;
 
-    use iced::highlighter::{Parser, Settings};
-    use iced::widget::text::Wrapping;
-    use iced::{Code, Fill, Font, Shrink};
+    pub type Run = (usize, u32, u32);
+    struct Fixture {
+        source: &'static str,
+        rows: &'static [usize],
+        tails: &'static [(usize, usize)],
+    }
+    #[rustfmt::skip]
+static ROWS: &[&[Run]] = &[
+    &[(6, 0xd73a49ff, 0xf97583ff), (22, 0x24292eff, 0xe1e4e8ff), (26, 0xd73a49ff, 0xf97583ff), (27, 0x24292eff, 0xe1e4e8ff), (31, 0x032f62ff, 0x9ecbffff)],
+    &[],
+    &[(6, 0xd73a49ff, 0xf97583ff), (7, 0x24292eff, 0xe1e4e8ff), (12, 0xd73a49ff, 0xf97583ff), (13, 0x24292eff, 0xe1e4e8ff), (21, 0xd73a49ff, 0xf97583ff), (22, 0x24292eff, 0xe1e4e8ff), (26, 0x6f42c1ff, 0xb392f0ff), (27, 0x24292eff, 0xe1e4e8ff), (34, 0xe36209ff, 0xffab70ff), (35, 0xd73a49ff, 0xf97583ff), (36, 0x24292eff, 0xe1e4e8ff), (43, 0x6f42c1ff, 0xb392f0ff), (46, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (21, 0x24292eff, 0xe1e4e8ff), (22, 0xd73a49ff, 0xf97583ff), (23, 0x24292eff, 0xe1e4e8ff), (28, 0xd73a49ff, 0xf97583ff), (37, 0x24292eff, 0xe1e4e8ff), (41, 0x6f42c1ff, 0xb392f0ff), (43, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (8, 0x24292eff, 0xe1e4e8ff), (14, 0x005cc5ff, 0x79b8ffff), (15, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (17, 0x24292eff, 0xe1e4e8ff), (27, 0x6f42c1ff, 0xb392f0ff), (29, 0x24292eff, 0xe1e4e8ff)],
+    &[(11, 0x24292eff, 0xe1e4e8ff), (40, 0x032f62ff, 0x9ecbffff), (41, 0x24292eff, 0xe1e4e8ff)],
+    &[(13, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (8, 0xd73a49ff, 0xf97583ff), (16, 0x24292eff, 0xe1e4e8ff), (41, 0x6f42c1ff, 0xb392f0ff), (43, 0x24292eff, 0xe1e4e8ff)],
+    &[(1, 0x24292eff, 0xe1e4e8ff)],
+];
+    #[rustfmt::skip]
+static FIXTURES: &[Fixture] = &[
+    Fixture { source: CHAT, rows: &[0, 1, 2, 3, 1, 4, 5, 6, 7, 1, 8, 9], tails: &[] },
+];
+    pub fn row(source: &str, index: usize, visible: usize, last: bool) -> Option<&'static [Run]> {
+        let fixture = FIXTURES
+            .iter()
+            .rev()
+            .find(|fixture| fixture.source == source)?;
+        if last
+            && let Ok(i) = fixture
+                .tails
+                .binary_search_by_key(&visible, |(end, _)| *end)
+        {
+            return Some(ROWS[fixture.tails[i].1]);
+        }
+        fixture.rows.get(index).map(|row| ROWS[*row])
+    }
+}
+
+mod highlight {
+    //! Render retained pinned Shiki runs for these fixed fixtures; no parsing in view.
+    use super::tokens;
+    use super::*;
+
+    use iced::widget::text::{LineHeight, Wrapping};
+    use iced::{Fill, Font, Shrink};
     use icedxdy::theme::tweak::Token;
     use icedxdy::widget::code_block::{CodeBlock, LineStyle};
     use icedxdy::widget::{rich_text, span};
     use icedxdy::{Color, Slot};
-    use std::collections::HashMap;
-    use std::ops::Range;
-    use std::sync::LazyLock;
 
-    type Runs = Vec<Vec<(Range<usize>, Code)>>;
-    static TOKENS: LazyLock<HashMap<&'static str, Runs>> = LazyLock::new(|| {
-        let sources: Vec<(&str, &str)> = vec![(CHAT, "ts")];
-        sources
-            .into_iter()
-            .map(|(source, lang)| {
-                let mut parser = Parser::new(&Settings {
-                    token: lang.to_string(),
-                });
-                let lines = source
-                    .split('\n')
-                    .map(|line| {
-                        parser
-                            .parse_line(if false {
-                                line.get(1..).unwrap_or("")
-                            } else {
-                                line
-                            })
-                            .collect()
-                    })
-                    .collect();
-                (source, lines)
-            })
-            .collect()
-    });
-
-    // GitHub Light/Dark, matching the pinned Shiki theme choices. The existing
-    // parser still owns grammar classification; no shared syntax-engine changes.
-    fn color(class: Code, dark: bool) -> Token {
-        let (light, night) = match class {
-            Code::Comment => (0x6a737d, 0x6a737d),
-            Code::String => (0x032f62, 0x9ecbff),
-            Code::Keyword | Code::Invalid => (0xd73a49, 0xf97583),
-            Code::Function => (0x6f42c1, 0xb392f0),
-            Code::Constant | Code::Support => (0x005cc5, 0x79b8ff),
-            Code::Type => (0x22863a, 0x85e89d),
-            _ => (0x24292e, 0xe1e4e8),
-        };
-        rgb(if dark { night } else { light })
-    }
     fn rgb(hex: u32) -> Token {
-        Color::from(iced::Color::from_rgb8(
+        Color::from(iced::Color::from_rgba8(
+            (hex >> 24) as u8,
             (hex >> 16) as u8,
             (hex >> 8) as u8,
-            hex as u8,
+            (hex & 255) as f32 / 255.,
         ))
         .into()
     }
 
-    /// Render a prefix so one cached parse can also serve a streamed listing.
-    pub fn listing(
+    /// Render a retained prefix, including the grammar of an unfinished final line.
+    pub fn listing<Message: 'static>(
         dark: bool,
         source: &'static str,
         visible: usize,
@@ -213,11 +216,11 @@ mod highlight {
         } else {
             Wrapping::None
         };
-        let tokens = TOKENS.get(source);
         let mut end = visible.min(source.len());
         while !source.is_char_boundary(end) {
             end -= 1;
         }
+        let last = source[..end].bytes().filter(|b| *b == b'\n').count();
         let lines = source[..end].split('\n').enumerate().map(|(i, line)| {
             let original = line;
             let line = if false {
@@ -226,16 +229,20 @@ mod highlight {
                 line
             };
             let mut spans = Vec::new();
-            if let Some(runs) = tokens.and_then(|all| all.get(i)) {
+            if let Some(runs) = tokens::row(source, i, end, i == last) {
                 let mut pos = 0;
-                for (range, class) in runs {
-                    let start = range.start.min(line.len());
-                    let end = range.end.min(line.len());
+                for &(end, light, night) in runs {
+                    let start = pos;
+                    let end = end.min(line.len());
                     if start > pos {
                         spans.push(span(&line[pos..start]));
                     }
                     if end > start {
-                        spans.push(span(&line[start..end]).color(color(*class, dark)));
+                        spans.push(span(&line[start..end]).color(rgb(if dark {
+                            night
+                        } else {
+                            light
+                        })));
                     }
                     pos = end;
                 }
@@ -251,7 +258,7 @@ mod highlight {
             let text = rich_text(spans)
                 .font(Font::new("Geist Mono"))
                 .size(14)
-                .line_height(22.75)
+                .line_height(LineHeight::Absolute(22.75.into()))
                 .wrapping(wrapping)
                 .width(if wrap { Fill } else { Shrink });
             (styles(i, original), Slot::from(text))

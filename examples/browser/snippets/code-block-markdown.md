@@ -171,12 +171,8 @@ impl Demo {
     }
 }
 
-fn prose_settings(dark: bool) -> markdown::Settings {
-    let theme = if dark { Theme::dark() } else { Theme::light() };
-    markdown::Settings::with_text_size(14, markdown::Style::from(theme.iced_theme()))
-}
-fn total_length(id: &str) -> usize {
-    if id == "markdown" { MARKDOWN.len() } else { 0 }
+fn markdown_bytes(start: Instant) -> usize {
+    markdown_prefix(start.elapsed().as_millis() as usize / 30)
 }
 fn markdown_parts(end: usize) -> (Vec<markdown::Item>, Vec<markdown::Item>) {
     let body = &MARKDOWN[..end.min(MARKDOWN.len())];
@@ -190,8 +186,12 @@ fn markdown_parts(end: usize) -> (Vec<markdown::Item>, Vec<markdown::Item>) {
         markdown::parse(after).collect(),
     )
 }
-fn markdown_bytes(start: Instant) -> usize {
-    markdown_prefix(start.elapsed().as_millis() as usize / 30)
+fn prose_settings(dark: bool) -> markdown::Settings {
+    let theme = if dark { Theme::dark() } else { Theme::light() };
+    markdown::Settings::with_text_size(14, markdown::Style::from(theme.iced_theme()))
+}
+fn total_length(id: &str) -> usize {
+    if id == "markdown" { MARKDOWN.len() } else { 0 }
 }
 fn markdown_prefix(deltas: usize) -> usize {
     use std::sync::LazyLock;
@@ -234,72 +234,141 @@ fn icon(name: &str) -> Slot<'static, Message> {
         .into()
 }
 
-mod highlight {
-    //! Parse the static samples once; the theme resolves their colors at display time.
+mod tokens {
+    //! Fixed recipe tokens generated with pinned Shiki 3.23.0, JavaScript regex engine,
+    //! github-light/github-dark. Partial final lines retain streaming grammar behavior.
+    //! This fixture data does not implement a general-purpose highlighter.
     use super::*;
 
-    use iced::highlighter::{Parser, Settings};
-    use iced::widget::text::Wrapping;
-    use iced::{Code, Fill, Font, Shrink};
+    pub type Run = (usize, u32, u32);
+    struct Fixture {
+        source: &'static str,
+        rows: &'static [usize],
+        tails: &'static [(usize, usize)],
+    }
+    #[rustfmt::skip]
+static ROWS: &[&[Run]] = &[
+    &[],
+    &[(13, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff)],
+    &[(1, 0x24292eff, 0xe1e4e8ff)],
+    &[(3, 0x24292eff, 0xe1e4e8ff)],
+    &[(12, 0x24292eff, 0xe1e4e8ff)],
+    &[(9, 0x24292eff, 0xe1e4e8ff)],
+    &[(10, 0x24292eff, 0xe1e4e8ff)],
+    &[(7, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff)],
+    &[(5, 0x24292eff, 0xe1e4e8ff)],
+    &[(6, 0xd73a49ff, 0xf97583ff), (8, 0x24292eff, 0xe1e4e8ff)],
+    &[(6, 0xd73a49ff, 0xf97583ff), (9, 0x24292eff, 0xe1e4e8ff)],
+    &[(6, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff)],
+    &[(6, 0xd73a49ff, 0xf97583ff), (11, 0x24292eff, 0xe1e4e8ff)],
+    &[(6, 0xd73a49ff, 0xf97583ff), (12, 0x24292eff, 0xe1e4e8ff)],
+    &[(6, 0xd73a49ff, 0xf97583ff), (13, 0x24292eff, 0xe1e4e8ff)],
+    &[(6, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff)],
+    &[(6, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (9, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (20, 0x24292eff, 0xe1e4e8ff), (32, 0x005cc5ff, 0x79b8ffff), (34, 0x24292eff, 0xe1e4e8ff), (35, 0xd73a49ff, 0xf97583ff), (36, 0x24292eff, 0xe1e4e8ff), (37, 0x005cc5ff, 0x79b8ffff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (9, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (20, 0x24292eff, 0xe1e4e8ff), (32, 0x005cc5ff, 0x79b8ffff), (34, 0x24292eff, 0xe1e4e8ff), (35, 0xd73a49ff, 0xf97583ff), (43, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (9, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (20, 0x24292eff, 0xe1e4e8ff), (32, 0x005cc5ff, 0x79b8ffff), (34, 0x24292eff, 0xe1e4e8ff), (35, 0xd73a49ff, 0xf97583ff), (44, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (9, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (20, 0x24292eff, 0xe1e4e8ff), (32, 0x005cc5ff, 0x79b8ffff), (34, 0x24292eff, 0xe1e4e8ff), (35, 0xd73a49ff, 0xf97583ff), (45, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (9, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (20, 0x24292eff, 0xe1e4e8ff), (32, 0x005cc5ff, 0x79b8ffff), (34, 0x24292eff, 0xe1e4e8ff), (35, 0xd73a49ff, 0xf97583ff), (46, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (9, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (20, 0x24292eff, 0xe1e4e8ff), (32, 0x005cc5ff, 0x79b8ffff), (34, 0x24292eff, 0xe1e4e8ff), (35, 0xd73a49ff, 0xf97583ff), (47, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (9, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (20, 0x24292eff, 0xe1e4e8ff), (32, 0x005cc5ff, 0x79b8ffff), (34, 0x24292eff, 0xe1e4e8ff), (35, 0xd73a49ff, 0xf97583ff), (48, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (9, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (20, 0x24292eff, 0xe1e4e8ff), (32, 0x005cc5ff, 0x79b8ffff), (34, 0x24292eff, 0xe1e4e8ff), (35, 0xd73a49ff, 0xf97583ff), (49, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (9, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (20, 0x24292eff, 0xe1e4e8ff), (32, 0x005cc5ff, 0x79b8ffff), (34, 0x24292eff, 0xe1e4e8ff), (35, 0xd73a49ff, 0xf97583ff), (50, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (3, 0x005cc5ff, 0x79b8ffff)],
+    &[(11, 0x24292eff, 0xe1e4e8ff)],
+    &[(14, 0x24292eff, 0xe1e4e8ff)],
+    &[(15, 0x24292eff, 0xe1e4e8ff)],
+    &[(16, 0x24292eff, 0xe1e4e8ff)],
+    &[(17, 0x24292eff, 0xe1e4e8ff)],
+    &[(8, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (21, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (22, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (23, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (24, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (25, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (26, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (27, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (28, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (29, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (30, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (34, 0x24292eff, 0xe1e4e8ff), (36, 0xd73a49ff, 0xf97583ff), (38, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (34, 0x24292eff, 0xe1e4e8ff), (36, 0xd73a49ff, 0xf97583ff), (39, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (34, 0x24292eff, 0xe1e4e8ff), (36, 0xd73a49ff, 0xf97583ff), (40, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (34, 0x24292eff, 0xe1e4e8ff), (36, 0xd73a49ff, 0xf97583ff), (41, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (34, 0x24292eff, 0xe1e4e8ff), (36, 0xd73a49ff, 0xf97583ff), (42, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (34, 0x24292eff, 0xe1e4e8ff), (36, 0xd73a49ff, 0xf97583ff), (43, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (34, 0x24292eff, 0xe1e4e8ff), (36, 0xd73a49ff, 0xf97583ff), (44, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (34, 0x24292eff, 0xe1e4e8ff), (36, 0xd73a49ff, 0xf97583ff), (45, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (34, 0x24292eff, 0xe1e4e8ff), (36, 0xd73a49ff, 0xf97583ff), (46, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (34, 0x24292eff, 0xe1e4e8ff), (36, 0xd73a49ff, 0xf97583ff), (47, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (34, 0x24292eff, 0xe1e4e8ff), (36, 0xd73a49ff, 0xf97583ff), (48, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (34, 0x24292eff, 0xe1e4e8ff), (36, 0xd73a49ff, 0xf97583ff), (49, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (18, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (19, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (21, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (22, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (23, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (24, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (25, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (26, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (27, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (28, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (29, 0x24292eff, 0xe1e4e8ff)],
+    &[(6, 0xd73a49ff, 0xf97583ff), (7, 0x24292eff, 0xe1e4e8ff), (15, 0xd73a49ff, 0xf97583ff), (16, 0x24292eff, 0xe1e4e8ff), (27, 0x6f42c1ff, 0xb392f0ff), (28, 0x24292eff, 0xe1e4e8ff), (29, 0x6f42c1ff, 0xb392f0ff), (31, 0x24292eff, 0xe1e4e8ff), (36, 0xe36209ff, 0xffab70ff), (37, 0xd73a49ff, 0xf97583ff), (38, 0x24292eff, 0xe1e4e8ff), (39, 0x6f42c1ff, 0xb392f0ff), (41, 0x24292eff, 0xe1e4e8ff), (46, 0xe36209ff, 0xffab70ff), (47, 0x24292eff, 0xe1e4e8ff), (48, 0xd73a49ff, 0xf97583ff), (49, 0x24292eff, 0xe1e4e8ff), (52, 0x005cc5ff, 0x79b8ffff), (55, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (9, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (20, 0x24292eff, 0xe1e4e8ff), (32, 0x005cc5ff, 0x79b8ffff), (34, 0x24292eff, 0xe1e4e8ff), (35, 0xd73a49ff, 0xf97583ff), (42, 0x24292eff, 0xe1e4e8ff), (50, 0x6f42c1ff, 0xb392f0ff), (57, 0x24292eff, 0xe1e4e8ff)],
+    &[(8, 0x24292eff, 0xe1e4e8ff), (17, 0x6f42c1ff, 0xb392f0ff), (21, 0x24292eff, 0xe1e4e8ff), (23, 0xd73a49ff, 0xf97583ff), (25, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (34, 0x24292eff, 0xe1e4e8ff), (36, 0xd73a49ff, 0xf97583ff), (37, 0x24292eff, 0xe1e4e8ff), (49, 0x6f42c1ff, 0xb392f0ff), (64, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (17, 0x24292eff, 0xe1e4e8ff), (29, 0x6f42c1ff, 0xb392f0ff), (38, 0x24292eff, 0xe1e4e8ff)],
+    &[(20, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0x24292eff, 0xe1e4e8ff), (8, 0xd73a49ff, 0xf97583ff), (18, 0x24292eff, 0xe1e4e8ff)],
+];
+    #[rustfmt::skip]
+static FIXTURES: &[Fixture] = &[
+    Fixture { source: STREAMING_0, rows: &[69, 70, 0, 71, 72, 73, 74, 0, 75, 3], tails: &[(1, 3), (2, 9), (3, 4), (4, 2), (5, 10), (8, 11), (9, 12), (10, 13), (11, 14), (12, 15), (13, 16), (14, 17), (59, 4), (60, 2), (61, 10), (62, 18), (93, 19), (99, 20), (100, 21), (101, 22), (102, 23), (103, 24), (104, 25), (105, 26), (106, 27), (118, 28), (124, 6), (125, 7), (126, 29), (127, 5), (128, 1), (129, 30), (130, 31), (131, 32), (132, 33), (146, 10), (147, 18), (148, 8), (149, 34), (162, 35), (163, 36), (164, 37), (165, 38), (166, 39), (167, 40), (168, 41), (169, 42), (170, 43), (171, 44), (179, 45), (180, 46), (181, 47), (182, 48), (183, 49), (184, 50), (185, 51), (186, 52), (187, 53), (188, 54), (189, 55), (190, 56), (211, 10), (212, 18), (213, 8), (214, 34), (215, 6), (224, 57), (225, 58), (226, 59), (227, 60), (228, 61), (229, 62), (230, 63), (231, 64), (232, 65), (233, 66), (234, 67), (235, 68), (270, 4), (271, 2), (272, 10), (273, 18), (274, 8)] },
+];
+    pub fn row(source: &str, index: usize, visible: usize, last: bool) -> Option<&'static [Run]> {
+        let fixture = FIXTURES
+            .iter()
+            .rev()
+            .find(|fixture| fixture.source == source)?;
+        if last
+            && let Ok(i) = fixture
+                .tails
+                .binary_search_by_key(&visible, |(end, _)| *end)
+        {
+            return Some(ROWS[fixture.tails[i].1]);
+        }
+        fixture.rows.get(index).map(|row| ROWS[*row])
+    }
+}
+
+mod highlight {
+    //! Render retained pinned Shiki runs for these fixed fixtures; no parsing in view.
+    use super::tokens;
+    use super::*;
+
+    use iced::widget::text::{LineHeight, Wrapping};
+    use iced::{Fill, Font, Shrink};
     use icedxdy::theme::tweak::Token;
     use icedxdy::widget::code_block::{CodeBlock, LineStyle};
     use icedxdy::widget::{rich_text, span};
     use icedxdy::{Color, Slot};
-    use std::collections::HashMap;
-    use std::ops::Range;
-    use std::sync::LazyLock;
 
-    type Runs = Vec<Vec<(Range<usize>, Code)>>;
-    static TOKENS: LazyLock<HashMap<&'static str, Runs>> = LazyLock::new(|| {
-        let sources: Vec<(&str, &str)> = vec![(STREAMING_0, "ts")];
-        sources
-            .into_iter()
-            .map(|(source, lang)| {
-                let mut parser = Parser::new(&Settings {
-                    token: lang.to_string(),
-                });
-                let lines = source
-                    .split('\n')
-                    .map(|line| {
-                        parser
-                            .parse_line(if false {
-                                line.get(1..).unwrap_or("")
-                            } else {
-                                line
-                            })
-                            .collect()
-                    })
-                    .collect();
-                (source, lines)
-            })
-            .collect()
-    });
-
-    // GitHub Light/Dark, matching the pinned Shiki theme choices. The existing
-    // parser still owns grammar classification; no shared syntax-engine changes.
-    fn color(class: Code, dark: bool) -> Token {
-        let (light, night) = match class {
-            Code::Comment => (0x6a737d, 0x6a737d),
-            Code::String => (0x032f62, 0x9ecbff),
-            Code::Keyword | Code::Invalid => (0xd73a49, 0xf97583),
-            Code::Function => (0x6f42c1, 0xb392f0),
-            Code::Constant | Code::Support => (0x005cc5, 0x79b8ff),
-            Code::Type => (0x22863a, 0x85e89d),
-            _ => (0x24292e, 0xe1e4e8),
-        };
-        rgb(if dark { night } else { light })
-    }
     fn rgb(hex: u32) -> Token {
-        Color::from(iced::Color::from_rgb8(
+        Color::from(iced::Color::from_rgba8(
+            (hex >> 24) as u8,
             (hex >> 16) as u8,
             (hex >> 8) as u8,
-            hex as u8,
+            (hex & 255) as f32 / 255.,
         ))
         .into()
     }
 
-    /// Render a prefix so one cached parse can also serve a streamed listing.
-    pub fn listing(
+    /// Render a retained prefix, including the grammar of an unfinished final line.
+    pub fn listing<Message: 'static>(
         dark: bool,
         source: &'static str,
         visible: usize,
@@ -311,11 +380,11 @@ mod highlight {
         } else {
             Wrapping::None
         };
-        let tokens = TOKENS.get(source);
         let mut end = visible.min(source.len());
         while !source.is_char_boundary(end) {
             end -= 1;
         }
+        let last = source[..end].bytes().filter(|b| *b == b'\n').count();
         let lines = source[..end].split('\n').enumerate().map(|(i, line)| {
             let original = line;
             let line = if false {
@@ -324,16 +393,20 @@ mod highlight {
                 line
             };
             let mut spans = Vec::new();
-            if let Some(runs) = tokens.and_then(|all| all.get(i)) {
+            if let Some(runs) = tokens::row(source, i, end, i == last) {
                 let mut pos = 0;
-                for (range, class) in runs {
-                    let start = range.start.min(line.len());
-                    let end = range.end.min(line.len());
+                for &(end, light, night) in runs {
+                    let start = pos;
+                    let end = end.min(line.len());
                     if start > pos {
                         spans.push(span(&line[pos..start]));
                     }
                     if end > start {
-                        spans.push(span(&line[start..end]).color(color(*class, dark)));
+                        spans.push(span(&line[start..end]).color(rgb(if dark {
+                            night
+                        } else {
+                            light
+                        })));
                     }
                     pos = end;
                 }
@@ -349,7 +422,7 @@ mod highlight {
             let text = rich_text(spans)
                 .font(Font::new("Geist Mono"))
                 .size(14)
-                .line_height(22.75)
+                .line_height(LineHeight::Absolute(22.75.into()))
                 .wrapping(wrapping)
                 .width(if wrap { Fill } else { Shrink });
             (styles(i, original), Slot::from(text))

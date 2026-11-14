@@ -46,7 +46,11 @@ fn demo_and_wrap_keep_their_bounds_at_two_widths_without_truncating_source() {
             content.width > bounds.width,
             "unwrapped source retains long lines"
         );
-        assert!(content.height > 200., "all source lines remain mounted");
+        assert_eq!(
+            content.height,
+            13. * 22.75 + 20.,
+            "13 lines at an absolute 22.75px, plus padding"
+        );
         let mut ui = Simulator::with_size(
             Default::default(),
             Size::new(width, 1600.),
@@ -112,4 +116,42 @@ fn selecting_one_line_does_not_copy_adjacent_blank_rows() {
     let mut copy = text::copy();
     ui.operate(&mut operation::black_box(&mut copy));
     assert!(matches!(copy.finish(), Outcome::Some(value) if value == "first"));
+}
+
+#[test]
+fn show_more_state_stays_local_across_theme_and_width_rebuilds() {
+    let page = CodeBlockPage::new(0);
+    let mut ui = Simulator::with_size(
+        Default::default(),
+        Size::new(558., 1800.),
+        page.docs_preview("show-more", &Theme::light()),
+    );
+    ui.draw(&Theme::light());
+    ui.click("Show more").expect("mounted footer");
+    ui.draw(&Theme::light());
+    assert!(ui.find("Show less").is_ok());
+    assert_eq!(
+        ui.drain().count(),
+        0,
+        "local expansion publishes no page message"
+    );
+    let mut bounds = Viewports::default();
+    ui.operate(&mut bounds);
+    assert!(bounds.0[0].0.height > 256.);
+    ui = ui
+        .rebuild(page.docs_preview("show-more", &Theme::dark()))
+        .resize(Size::new(260., 1800.));
+    ui.draw(&Theme::dark());
+    assert!(ui.find("Show less").is_ok());
+    let mut expanded = Viewports::default();
+    ui.operate(&mut expanded);
+    assert_eq!(expanded.0[0].0.height, 34. * 22.75 + 16.);
+    ui.click("Show less").expect("footer after rebuild");
+    ui.draw(&Theme::dark());
+    let mut bounds = Viewports::default();
+    ui.operate(&mut bounds);
+    assert_eq!(bounds.0[0].0.height, 256.);
+    assert_eq!(bounds.0[0].0.width, 258.);
+    assert!(ui.find("Show more").is_ok());
+    assert_eq!(ui.drain().count(), 0);
 }

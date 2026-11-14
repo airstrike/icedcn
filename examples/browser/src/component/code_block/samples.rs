@@ -7,6 +7,7 @@ apps/web/components/message-list.tsx
 
 ✖ 2 problems (1 error, 1 warning)"##;
 
+#[cfg(test)]
 pub const ANSI: &str = "$ pnpm test\n\x1b[32m✓\x1b[39m src/format.test.ts \x1b[2m(4 tests)\x1b[22m\n\x1b[32m✓\x1b[39m src/parse.test.ts \x1b[2m(7 tests)\x1b[22m\n\x1b[31m✗\x1b[39m src/stream.test.ts \x1b[2m(3 tests | 1 failed)\x1b[22m\n\n\x1b[31mAssertionError: expected 'hello' to be 'hello world'\x1b[39m\n\nTests  \x1b[31m1 failed\x1b[39m | \x1b[32m13 passed\x1b[39m (14)";
 
 pub const BASIC: &str = r##"$ pnpm build

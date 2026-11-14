@@ -1,3 +1,3 @@
-These Rust examples use iced's existing `Parser` and cache token ranges once for each fixed sample. Tokens are styled for GitHub Light and GitHub Dark, matching the upstream theme choices. `CodeBlock::lines` accepts the resulting rich text without depending on a particular syntax engine.
+These fixed Rust recipes retain token ranges and colors generated with the pinned upstream Shiki 3.23.0 JavaScript regex engine and GitHub Light/Dark themes. Streaming fixtures also retain the grammar result for unfinished final lines. `CodeBlock::lines` accepts these rich-text slots without depending on a syntax engine.
 
-The upstream `useHighlightedCode` hook uses Shiki's JavaScript regex engine. The native recipes use the installed Rust parser, so JavaScript and WASM loading do not apply.
+For arbitrary input, tokenize in `update` or an asynchronous task and pass the stored line slots to `CodeBlock::lines`. The public widget does not include a general-purpose Shiki runtime.

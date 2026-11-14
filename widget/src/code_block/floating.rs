@@ -1,6 +1,7 @@
 //! Native iced hover composition, extended to reveal actions on content focus.
 //! Based on iced widget/hover.rs at fd824c8; kept local to Code Block.
 
+use crate::animation::cubic_bezier;
 use crate::core;
 use crate::core::layout::{self, Layout};
 use crate::core::mouse;
@@ -11,6 +12,8 @@ use crate::core::widget::tree::{self, Tree};
 use crate::core::widget::{Meta, Operation};
 use crate::core::window;
 use crate::core::{Event, Length, Rectangle, Shell, Size, Vector, Widget};
+use icedxdy_core::Theme;
+use std::time::{Duration, Instant};
 
 /// A widget that displays another widget on top of it.
 ///
@@ -40,15 +43,18 @@ impl<W, V> Hover<W, V> {
 
 impl<W, V> Meta for Hover<W, V> {}
 
-impl<W, V, Message, Theme, Renderer> Widget<Message, Theme, Renderer> for Hover<W, V>
+impl<W, V, Message, Renderer> Widget<Message, Theme, Renderer> for Hover<W, V>
 where
     Renderer: core::Renderer,
     W: Widget<Message, Theme, Renderer>,
     V: Widget<Message, Theme, Renderer>,
 {
     fn tag(&self) -> tree::Tag {
-        struct Tag;
-        tree::Tag::of::<Tag>()
+        tree::Tag::of::<Fade>()
+    }
+
+    fn state(&self) -> tree::State {
+        tree::State::new(Fade::default())
     }
 
     fn diff(&mut self, tree: &mut Tree) {
@@ -104,14 +110,18 @@ where
                 viewport,
             );
 
-            if cursor.is_over(layout.bounds()) || self.is_top_focused || self.is_top_overlay_active
-            {
+            let opacity = tree.state.downcast_ref::<Fade>().value;
+            if opacity > 0. {
                 let (top_layout, top_tree) =
                     children.next().expect("two children established by diff");
 
+                let theme = fade_theme(theme, opacity);
+                let style = renderer::Style {
+                    text_color: style.text_color.scale_alpha(opacity),
+                };
                 renderer.with_layer(bounds, |renderer| {
                     self.top.draw(
-                        top_tree, renderer, theme, style, top_layout, cursor, viewport,
+                        top_tree, renderer, &theme, &style, top_layout, cursor, viewport,
                     );
                 });
             }
@@ -184,6 +194,16 @@ where
         }
 
         let is_visible = is_hovered || self.is_top_focused || self.is_top_overlay_active;
+        let fade = tree.state.downcast_mut::<Fade>();
+        let now = if let Event::Window(window::Event::RedrawRequested(now)) = event {
+            *now
+        } else {
+            Instant::now()
+        };
+        fade.target(is_visible, now);
+        if fade.advance(now) {
+            shell.request_redraw_at(now + Duration::from_millis(16));
+        }
 
         if matches!(
             event,
@@ -275,5 +295,112 @@ where
         self.is_top_overlay_active = !top_overlays.is_empty();
 
         base_overlays.into_iter().chain(top_overlays).collect()
+    }
+}
+
+#[derive(Default)]
+struct Fade {
+    value: f32,
+    from: f32,
+    to: f32,
+    start: Option<Instant>,
+}
+impl Fade {
+    fn target(&mut self, visible: bool, now: Instant) {
+        let target = if visible { 1. } else { 0. };
+        if self.to != target {
+            self.advance(now);
+            self.from = self.value;
+            self.to = target;
+            self.start = Some(now);
+        }
+    }
+    fn advance(&mut self, now: Instant) -> bool {
+        if let Some(start) = self.start {
+            let p = (now.saturating_duration_since(start).as_secs_f32() / 0.15).min(1.);
+            self.value = self.from + (self.to - self.from) * cubic_bezier(0.4, 0., 0.2, 1., p);
+            if p >= 1. {
+                self.start = None;
+                self.value = self.to;
+            }
+        }
+        self.start.is_some()
+    }
+}
+// Like Motion, fade inherited text and theme-derived paint. Fixed-color artwork
+// is outside the theme's opacity contract; no renderer-wide adapter is involved.
+fn fade_theme(theme: &Theme, opacity: f32) -> Theme {
+    let mut design = theme.design().clone();
+    for palette in [
+        &mut design.neutral,
+        &mut design.primary,
+        &mut design.secondary,
+        &mut design.muted,
+        &mut design.accent,
+        &mut design.destructive,
+        &mut design.info,
+        &mut design.success,
+        &mut design.warning,
+        &mut design.card,
+        &mut design.popover,
+        &mut design.code,
+    ] {
+        palette.base = palette.base.scale_alpha(opacity);
+        palette.foreground = palette.foreground.scale_alpha(opacity);
+        palette.border = palette.border.scale_alpha(opacity);
+        palette.ring = palette.ring.scale_alpha(opacity);
+        palette.tint_text = palette.tint_text.scale_alpha(opacity);
+    }
+    design.input = design.input.scale_alpha(opacity);
+    Theme::new(design)
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn fade_interpolates_reverses_and_reaches_endpoints() {
+        let now = Instant::now();
+        let mut fade = Fade::default();
+        fade.target(true, now);
+        assert_eq!(fade.value, 0.);
+        assert!(fade.advance(now + Duration::from_millis(75)));
+        let middle = fade.value;
+        assert!(middle > 0. && middle < 1.);
+        fade.target(false, now + Duration::from_millis(75));
+        assert_eq!(fade.value, middle);
+        assert!(fade.advance(now + Duration::from_millis(150)));
+        assert!(fade.value > 0. && fade.value < middle);
+        assert!(!fade.advance(now + Duration::from_millis(225)));
+        assert_eq!(fade.value, 0.);
+        fade.target(true, now + Duration::from_millis(225));
+        assert!(!fade.advance(now + Duration::from_millis(375)));
+        assert_eq!(fade.value, 1.);
+        for theme in [Theme::light(), Theme::dark()] {
+            let faded = fade_theme(&theme, 0.25);
+            assert_eq!(
+                faded.neutral.foreground.a,
+                theme.neutral.foreground.a * 0.25
+            );
+            assert_eq!(faded.neutral.base.a, theme.neutral.base.a * 0.25);
+            assert_eq!(faded.muted.base.a, theme.muted.base.a * 0.25);
+        }
+    }
+    #[test]
+    fn fade_state_survives_widget_rebuild() {
+        use crate::core::Element;
+        use iced_widget::{Renderer, Space};
+        let view = || -> Element<'static, (), Theme, Renderer> {
+            Hover::new(Space::new(), Space::new())._boxed()
+        };
+        let mut original = view();
+        let mut tree = Tree::new(&mut original);
+        let now = Instant::now();
+        let fade = tree.state.downcast_mut::<Fade>();
+        fade.target(true, now);
+        fade.advance(now + Duration::from_millis(75));
+        let midpoint = fade.value;
+        let mut rebuilt = view();
+        tree.diff(&mut rebuilt);
+        assert_eq!(tree.state.downcast_ref::<Fade>().value, midpoint);
     }
 }

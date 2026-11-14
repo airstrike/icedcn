@@ -1,8 +1,10 @@
 ```rust
 use iced::alignment::Horizontal;
+use iced::widget::button::Style;
 use iced::widget::svg;
 use iced::{Element, Fill, Font, Subscription, Task, Widget, clipboard, time};
 use icedxdy::core::Border;
+use icedxdy::theme::button::{Status, ghost};
 use icedxdy::widget::code_block::LineStyle;
 use icedxdy::widget::{
     CodeBlock, bubble, button, code_block, column, container, markdown, message, row, tabs, text,
@@ -78,7 +80,7 @@ impl Demo {
                         background: Some(theme.neutral.base.into()),
                         border: Border {
                             width: 1.,
-                            color: theme.neutral.foreground.alpha(0.1),
+                            color: theme.neutral.foreground.scale_alpha(0.1),
                             radius: radius::SM.into(),
                         },
                         ..Default::default()
@@ -90,17 +92,24 @@ impl Demo {
     fn copy(&self, id: &'static str, source: &str) -> Slot<'static, Message> {
         let copied = self.copied.contains_key(id);
         let glyph = if copied { icon("check") } else { icon("copy") };
-        action(
-            glyph,
-            if copied { "Copied" } else { "Copy" },
-            self.event(Message::Copy(id, source.to_owned())),
-        )
+        let event = self.event(Message::Copy(id, source.to_owned()));
+        let label = if copied { "Copied" } else { "Copy" };
+        if id == "floating-actions" {
+            tooltip(
+                button(glyph)
+                    .square()
+                    .size(Size::Xs)
+                    .style(floating_style)
+                    .on_press(event),
+                label,
+            )
+            .into()
+        } else {
+            action(glyph, label, event)
+        }
     }
 }
 
-fn terminal(source: &str) -> CodeBlock<'_, Message> {
-    code_block(source).font(Font::new("Geist Mono"))
-}
 fn action(
     glyph: impl Into<Slot<'static, Message>>,
     label: &'static str,
@@ -115,6 +124,20 @@ fn action(
         label,
     )
     .into()
+}
+fn floating_style(theme: &Theme, status: Status) -> Style {
+    let mut style = ghost(theme, status);
+    // Ghost's dark hover and pressed alpha are explicit CSS opacity values.
+    // Restore the parent's opacity after those values are resolved.
+    if theme.neutral.is_dark || status == Status::Pressed {
+        if let Some(background) = style.background {
+            style.background = Some(background.scale_alpha(theme.neutral.foreground.a));
+        }
+    }
+    style.into()
+}
+fn terminal(source: &str) -> CodeBlock<'_, Message> {
+    code_block(source).font(Font::new("Geist Mono"))
 }
 fn icon(name: &str) -> Slot<'static, Message> {
     let path = match name {
