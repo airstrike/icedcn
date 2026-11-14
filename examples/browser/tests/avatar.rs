@@ -122,6 +122,73 @@ fn fallback_edge_matches_border_token_and_dark_portrait_uses_white_overlay() {
     assert_eq!(pixel(&portrait, 1, 16), [0, 0, 0]);
 }
 
+#[test]
+fn loaded_portraits_replace_the_fallback_surface_and_preserve_transparency() {
+    let mut renderer = renderer();
+    let transparent = solid(&renderer, [0, 0, 0, 0]);
+    let translucent = solid(&renderer, [255, 0, 0, 128]);
+    for theme in [Theme::light(), Theme::dark()] {
+        let clear = pixels(
+            avatar(Some(transparent.clone())).fallback("AC").into(),
+            &mut renderer,
+            &theme,
+        );
+        assert_eq!(
+            pixel(&clear, 16, 16),
+            pixel(&clear, 60, 20),
+            "a loaded image must replace the fallback surface as well as its text"
+        );
+
+        let half = pixels(
+            avatar(Some(translucent.clone())).into(),
+            &mut renderer,
+            &theme,
+        );
+        let background = pixel(&half, 60, 20);
+        for (channel, foreground) in [255.0, 0.0, 0.0].into_iter().enumerate() {
+            let expected = foreground * (128.0 / 255.0)
+                + f32::from(background[channel]) * (127.0 / 255.0);
+            assert!(
+                (f32::from(pixel(&half, 16, 16)[channel]) - expected).abs() <= 1.0,
+                "portrait alpha must composite over the actual backdrop"
+            );
+        }
+
+        let styled = pixels(
+            avatar(Some(transparent.clone()))
+                .style(|_| container::Style {
+                    background: Some(icedxdy::Color::from_srgb(Color::from_rgb8(0, 255, 0)).into()),
+                    ..Default::default()
+                })
+                .into(),
+            &mut renderer,
+            &theme,
+        );
+        assert_eq!(pixel(&styled, 16, 16), [0, 255, 0]);
+    }
+}
+
+#[test]
+fn group_rings_leave_transparent_portrait_interiors_open() {
+    let mut renderer = renderer();
+    let red = solid(&renderer, [255, 0, 0, 255]);
+    let transparent = solid(&renderer, [0, 0, 0, 0]);
+    for theme in [Theme::light(), Theme::dark()] {
+        let group = pixels(
+            avatar::group([avatar(Some(red.clone())), avatar(Some(transparent.clone()))]).into(),
+            &mut renderer,
+            &theme,
+        );
+        assert_eq!(
+            pixel(&group, 27, 16),
+            [255, 0, 0],
+            "an outer ring must not erase the previous portrait inside the next one"
+        );
+        assert_eq!(pixel(&group, 40, 16), pixel(&group, 60, 20));
+        assert_eq!(pixel(&group, 23, 16), pixel(&group, 60, 20));
+    }
+}
+
 #[derive(Default)]
 struct Bounds(Vec<Rectangle>);
 impl Operation for Bounds {

@@ -93,6 +93,9 @@ impl<Message> Widget<Message, Theme, Renderer> for Avatar<'_, Message> {
             .map(|style| style(theme))
             .unwrap_or_else(|| {
                 let mut style = fallback_style(theme, false);
+                if loaded {
+                    style.background = None;
+                }
                 style.border.width = 1.0;
                 // White/10 in dark mode has the same result with normal and
                 // lighten blending. The light fallback can use the border token
@@ -136,7 +139,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Avatar<'_, Message> {
         }
         renderer.end_layer();
         renderer.start_layer(*viewport);
-        // The inset edge sits above the portrait, like the source ::after.
+        // Paint the inset edge above the portrait.
         surface(renderer, style, bounds, true);
         if let Some((child_layout, child_tree)) = children.next() {
             let bounds = child_layout.bounds();
@@ -254,10 +257,14 @@ fn ring(renderer: &mut Renderer, theme: &Theme, bounds: Rectangle) {
     renderer.fill_quad(
         renderer::Quad {
             bounds: bounds.expand(2.0),
-            border: Border::default().rounded(f32::MAX),
+            border: Border {
+                radius: f32::MAX.into(),
+                width: 2.0,
+                color: theme.neutral.base.into(),
+            },
             ..renderer::Quad::default()
         },
-        iced_core::Color::from(theme.neutral.base),
+        Color::TRANSPARENT,
     );
 }
 
