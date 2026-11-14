@@ -87,7 +87,7 @@ pub fn code_block<'a, Message>(source: impl Into<Cow<'a, str>>) -> CodeBlock<'a,
         collapsed: false,
         id: None,
         focusable: true,
-        style: Box::new(surface),
+        style: None,
         font: Font::MONOSPACE,
     }
 }
@@ -115,7 +115,7 @@ pub struct CodeBlock<'a, Message> {
     collapsed: bool,
     id: Option<Id>,
     focusable: bool,
-    style: StyleFn<'static, Theme>,
+    style: Option<StyleFn<'static, Theme>>,
     font: Font,
 }
 
@@ -191,8 +191,9 @@ impl<'a, Message: 'a> CodeBlock<'a, Message> {
         self
     }
     /// Set the panel style, for example [`Destructive`], a container variant or a closure.
+    /// Custom paint replaces the default focus border; the keyboard ring remains.
     pub fn style(mut self, style: impl Into<StyleFn<'static, Theme>>) -> Self {
-        self.style = style.into();
+        self.style = Some(style.into());
         self
     }
 }
@@ -425,12 +426,8 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
             );
         }
         frame::Frame::new(
-            container(panel)
-                .padding(1)
-                .width(Fill)
-                .clip(true)
-                .style(style)
-                .into(),
+            container(panel).padding(1).width(Fill).clip(true).into(),
+            style,
         )
         .boxed()
     }
