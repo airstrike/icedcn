@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use iced_core::Length;
-use iced_core::Length::{Fill, FillPortion, Fixed};
+use iced_core::Length::Fill;
 use iced_core::Padding;
 use iced_core::alignment;
 use iced_core::border;
@@ -333,20 +333,11 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
                 .height(h)
                 .padding(0)
         } else {
-            // Nova centers content in fixed, fill and proportional widths.
-            // Preserve intrinsic and bounded sizing, and the
-            // stock callback's existing Fill-only centering contract.
-            let center = matches!(btn.width, Some(Fill))
-                || (btn.nova && matches!(btn.width, Some(Fixed(_) | FillPortion(_))));
-            let inner: iced_core::Element<'a, Message, Theme, iced_widget::Renderer> = if center {
+            // Stock callbacks retain their original explicit Fill behavior.
+            let inner = if !btn.nova && matches!(btn.width, Some(Fill)) {
                 iced_widget::container(content)
                     .width(Fill)
                     .align_x(alignment::Horizontal::Center)
-                    .align_y(if btn.nova {
-                        alignment::Vertical::Center
-                    } else {
-                        alignment::Vertical::Top
-                    })
                     .boxed()
             } else {
                 content

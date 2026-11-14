@@ -168,7 +168,8 @@ pub fn default(theme: &Theme, status: Status) -> Style {
         border: Border {
             radius: radius::LG.into(),
             width: 1.0,
-            color: p.input,
+            // The CSS border overlays the surface. Iced paints them side by side.
+            color: p.input.over(bg),
         },
         icon: p.neutral.foreground,
         placeholder: p.muted.foreground,
@@ -200,7 +201,7 @@ pub fn default(theme: &Theme, status: Status) -> Style {
             Style {
                 background: dis_bg.scale_alpha(0.5).into(),
                 border: Border {
-                    color: p.input.scale_alpha(0.5),
+                    color: p.input.over(dis_bg).scale_alpha(0.5),
                     ..active.border
                 },
                 value: p.neutral.foreground.scale_alpha(0.5),
@@ -222,7 +223,17 @@ pub fn invalid(theme: &Theme, status: Status) -> Style {
     } else {
         1.0
     };
-    style.border.color = destructive.scale_alpha(if dark { 0.5 * opacity } else { opacity });
+    let surface = if matches!(status, Status::Disabled) {
+        theme.input.scale_alpha(if dark { 0.8 } else { 0.5 })
+    } else if dark {
+        theme.input.scale_alpha(0.3)
+    } else {
+        Color::TRANSPARENT
+    };
+    style.border.color = destructive
+        .scale_alpha(if dark { 0.5 } else { 1.0 })
+        .over(surface)
+        .scale_alpha(opacity);
     style.ring = Some(Ring {
         color: destructive.scale_alpha(if dark { 0.4 * opacity } else { 0.2 * opacity }),
         width: 3.0,

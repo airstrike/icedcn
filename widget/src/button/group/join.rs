@@ -1,6 +1,6 @@
 //! Direct-child geometry shared by grouped control surfaces.
 use iced_core::border::Radius;
-use iced_core::{Background, Padding, Renderer, renderer};
+use iced_core::{Background, Padding, Rectangle, Renderer, renderer};
 use icedcn_core::Orientation;
 
 /// A direct child's position in a button group. Consumed by its control surface.
@@ -53,13 +53,14 @@ impl Join {
     }
 }
 
-/// Paint only the control surface with its inward edge omitted. Focus and content
-/// are painted separately by the control and are never clipped here.
-pub(crate) fn paint(
-    renderer: &mut impl Renderer,
+/// Omit the inward border and keep content above the surface's clip layer.
+pub(crate) fn paint<R: Renderer>(
+    renderer: &mut R,
     mut quad: renderer::Quad,
     background: impl Into<Background>,
     join: Option<Join>,
+    viewport: Rectangle,
+    content: impl FnOnce(&mut R),
 ) {
     let background = background.into();
     if let Some(join) = join {
@@ -77,10 +78,14 @@ pub(crate) fn paint(
                 }
             }
             renderer.with_layer(bounds, |renderer| renderer.fill_quad(quad, background));
+            // Drawing back into the parent layer would put text and icons behind
+            // the clipped quad. A sibling layer keeps the caller's full viewport.
+            renderer.with_layer(viewport, content);
             return;
         }
     }
     renderer.fill_quad(quad, background);
+    content(renderer);
 }
 
 #[cfg(test)]
@@ -135,6 +140,7 @@ mod tests {
                 },
                 ..renderer::Quad::default()
             };
+            let viewport = bounds.expand(20.);
             paint(
                 &mut renderer,
                 surface,
@@ -144,6 +150,8 @@ mod tests {
                     first: false,
                     last: true,
                 }),
+                viewport,
+                |renderer| renderer.fill_quad(surface, Color::BLACK),
             );
             // A focus halo following surface paint must not inherit its clip.
             renderer.fill_quad(
@@ -167,7 +175,8 @@ mod tests {
                     assert_eq!(painted.border.radius.top_left, 0.);
                 }
             }
-            assert_eq!(renderer.quads[1].1, None);
+            assert_eq!(renderer.quads[1].1, Some(viewport));
+            assert_eq!(renderer.quads[2].1, None);
         }
     }
     #[test]
@@ -190,7 +199,7 @@ mod tests {
                 },
                 ..renderer::Quad::default()
             };
-            paint(&mut renderer, quad, Color::WHITE, join);
+            paint(&mut renderer, quad, Color::WHITE, join, quad.bounds, |_| {});
             assert_eq!(renderer.quads, [(quad, None)]);
         }
     }

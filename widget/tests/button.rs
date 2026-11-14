@@ -5,7 +5,7 @@ use iced_core::widget::{Id, Operation};
 use iced_core::{Element, Event, Length, Point, Size, mouse, window};
 use iced_test::core::Settings;
 use iced_test::{Simulator, selector, simulator};
-use iced_widget::{Renderer, Space};
+use iced_widget::{Renderer, Space, Widget};
 use icedcn_core::{Theme, theme};
 use icedcn_widget::Size::{Default, Lg, Sm, Xs};
 use icedcn_widget::{Inherited, Slot, button, container};
@@ -107,6 +107,27 @@ fn explicit_width_centers_nova_content_at_roomy_and_narrow_widths() {
             assert_eq!(inner.center(), outer.center());
         }
     }
+}
+
+#[test]
+fn a_grid_centers_the_label_when_it_stretches_an_intrinsic_button() {
+    let id = Id::unique();
+    let label = container(Space::new().width(20).height(12)).id(id.clone());
+    let button: Element<'_, (), Theme, Renderer> = button(label).into();
+    let grid = iced_widget::grid([button])
+        .columns(1)
+        .height(Length::Shrink);
+    let mut ui: Preview<'_> = Simulator::with_size(
+        Settings::default(),
+        Size::new(260., 100.),
+        grid.boxed(),
+    );
+    next(&mut ui);
+    let outer = ui.find(selector::is_focused()).expect("button").bounds();
+    let inner = ui.find(id).expect("label").bounds();
+    assert_eq!(outer.width, 260.);
+    assert_eq!(inner.width, 20.);
+    assert_eq!(inner.center(), outer.center());
 }
 
 #[test]

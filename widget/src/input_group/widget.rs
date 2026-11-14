@@ -193,21 +193,23 @@ impl<Message> Widget<Message, Theme, Renderer> for Surface<'_, Message> {
             },
             Background::from(surface.background),
             self.join,
-        );
+            *viewport,
+            |renderer| {
+                let (child_layout, child_tree) = layout
+                    .iter(&tree.children)
+                    .next()
+                    .expect("an input group has one child");
 
-        let (child_layout, child_tree) = layout
-            .iter(&tree.children)
-            .next()
-            .expect("an input group has one child");
-
-        self.content.draw(
-            child_tree,
-            renderer,
-            theme,
-            style,
-            child_layout,
-            cursor,
-            viewport,
+                self.content.draw(
+                    child_tree,
+                    renderer,
+                    theme,
+                    style,
+                    child_layout,
+                    cursor,
+                    viewport,
+                );
+            },
         );
     }
 

@@ -568,7 +568,12 @@ where
         let mut children_layout = layout.iter(&tree.children);
         let text_bounds = children_layout.next().unwrap().0.bounds();
 
-        let style = theme.style(&self.class, self.last_status.unwrap_or(Status::Disabled));
+        let status = self.last_status.unwrap_or(if is_disabled {
+            Status::Disabled
+        } else {
+            Status::Active
+        });
+        let style = theme.style(&self.class, status);
         if let Some(slots) = &self.slots {
             let active = state
                 .is_focused
@@ -677,13 +682,27 @@ where
         // Animate the border color over 150 ms. The focus ring follows the current focus state
         // immediately.
         let now = Instant::now();
-        let active_style = theme.style(&self.class, Status::Active);
-        let focused_style = theme.style(&self.class, Status::Focused { is_hovered: false });
-        let border_color = state.focus_anim.interpolate(
-            active_style.border.color,
-            focused_style.border.color,
-            now,
-        );
+        let border_color = if !is_disabled && state.focus_anim.is_animating(now) {
+            let hovered = matches!(
+                status,
+                Status::Hovered | Status::Focused { is_hovered: true }
+            );
+            let rest = if hovered {
+                Status::Hovered
+            } else {
+                Status::Active
+            };
+            let focused = Status::Focused {
+                is_hovered: hovered,
+            };
+            state.focus_anim.interpolate(
+                theme.style(&self.class, rest).border.color,
+                theme.style(&self.class, focused).border.color,
+                now,
+            )
+        } else {
+            style.border.color
+        };
         let mut animated_border = Border {
             color: border_color,
             ..style.border
@@ -693,23 +712,10 @@ where
             animated_border.radius = join.radius(animated_border.radius);
         }
 
-        // Ring: instant-on at the moment of focus, instant-off at blur.
-        // Drawn as a 3px stroke on a transparent quad whose bounds sit
-        // OUTSIDE the input's own bounds. `border.width = ring.width`
-        // paints inward from the expanded bounds, so the visible halo is
-        // around (not over) the field.
-        //
-        // Belt-and-suspenders: also gate on `is_disabled` so a stale
-        // `is_focused = Some(_)` from before disable can't keep painting the
-        // halo. Disabled inputs never show the ring.
-        if state.is_focused()
-            && !self.is_disabled
-            && let Some(ring) = focused_style.ring
-        {
+        // The resolved style owns the ring. Validation can request one at rest.
+        if let Some(ring) = style.ring {
             let r = ring.width;
-            let mut radius = self.join.map_or(focused_style.border.radius, |join| {
-                join.radius(focused_style.border.radius)
-            });
+            let mut radius = animated_border.radius;
             radius.top_left += r;
             radius.top_right += r;
             radius.bottom_right += r;
@@ -742,150 +748,170 @@ where
             },
             style.background,
             self.join,
-        );
+            *viewport,
+            |renderer| {
+                if self.icon.is_some() {
+                    let (icon_layout, _) = children_layout.next().unwrap();
 
-        if self.icon.is_some() {
-            let (icon_layout, _) = children_layout.next().unwrap();
+                    let icon = state.icon.raw();
 
-            let icon = state.icon.raw();
+                    renderer.fill_paragraph(
+                        icon,
+                        icon_layout.bounds().anchor(
+                            icon.min_bounds(),
+                            Alignment::Center,
+                            Alignment::Center,
+                        ),
+                        style.icon,
+                        *viewport,
+                    );
+                }
 
-            renderer.fill_paragraph(
-                icon,
-                icon_layout.bounds().anchor(
-                    icon.min_bounds(),
-                    Alignment::Center,
-                    Alignment::Center,
-                ),
-                style.icon,
-                *viewport,
-            );
-        }
+                let text = value.to_string();
 
-        let text = value.to_string();
+                let offset = if state.is_focused() {
+                    state.scroll_offset
+                } else {
+                    0.0
+                };
 
-        let offset = if state.is_focused() {
-            state.scroll_offset
-        } else {
-            0.0
-        };
+                // Center the caret in the line box and limit its height to the text size.
+                let text_size = self.size.unwrap_or_else(|| renderer.text_size()).0;
+                let caret_height = text_size.min(text_bounds.height);
+                let caret_y = text_bounds.y + (text_bounds.height - caret_height) * 0.5;
 
-        // Center the caret in the line box and limit its height to the text size.
-        let text_size = self.size.unwrap_or_else(|| renderer.text_size()).0;
-        let caret_height = text_size.min(text_bounds.height);
-        let caret_y = text_bounds.y + (text_bounds.height - caret_height) * 0.5;
+                let (highlight, selected_text) = theme.selection_colors(&style);
+                let (cursor, is_selecting) = if let Some(focus) = state
+                    .is_focused
+                    .as_ref()
+                    .filter(|focus| focus.is_window_focused)
+                {
+                    match state.cursor.state(value) {
+                        cursor::State::Index(position) => {
+                            let text_value_width = cursor_x(&state.value, position);
 
-        let (cursor, is_selecting) = if let Some(focus) = state
-            .is_focused
-            .as_ref()
-            .filter(|focus| focus.is_window_focused)
-        {
-            match state.cursor.state(value) {
-                cursor::State::Index(position) => {
-                    let text_value_width = cursor_x(&state.value, position);
+                            let is_cursor_visible = !is_disabled
+                                && ((focus.now - focus.updated_at).as_millis()
+                                    / CURSOR_BLINK_INTERVAL_MILLIS)
+                                    .is_multiple_of(2);
 
-                    let is_cursor_visible = !is_disabled
-                        && ((focus.now - focus.updated_at).as_millis()
-                            / CURSOR_BLINK_INTERVAL_MILLIS)
-                            .is_multiple_of(2);
-
-                    let cursor = if is_cursor_visible {
-                        Some((
-                            renderer::Quad {
-                                bounds: Rectangle {
-                                    x: (text_bounds.x + text_value_width).floor(),
-                                    y: caret_y,
-                                    width: if renderer::CRISP {
-                                        (1.0 / renderer.hint_factor().unwrap_or(1.0)).max(1.0)
-                                    } else {
-                                        1.0
+                            let cursor = if is_cursor_visible {
+                                Some((
+                                    renderer::Quad {
+                                        bounds: Rectangle {
+                                            x: (text_bounds.x + text_value_width).floor(),
+                                            y: caret_y,
+                                            width: if renderer::CRISP {
+                                                (1.0 / renderer.hint_factor().unwrap_or(1.0))
+                                                    .max(1.0)
+                                            } else {
+                                                1.0
+                                            },
+                                            height: caret_height,
+                                        },
+                                        ..renderer::Quad::default()
                                     },
-                                    height: caret_height,
-                                },
-                                ..renderer::Quad::default()
-                            },
-                            style.value,
-                        ))
+                                    style.value,
+                                ))
+                            } else {
+                                None
+                            };
+
+                            (cursor, false)
+                        }
+                        cursor::State::Selection { start, end } => {
+                            let left = start.min(end);
+                            let right = end.max(start);
+
+                            let left_position = cursor_x(&state.value, left);
+                            let right_position = cursor_x(&state.value, right);
+
+                            let width = right_position - left_position;
+
+                            (
+                                Some((
+                                    renderer::Quad {
+                                        bounds: Rectangle {
+                                            x: text_bounds.x + left_position,
+                                            y: text_bounds.y,
+                                            width,
+                                            height: text_bounds.height,
+                                        },
+                                        ..renderer::Quad::default()
+                                    },
+                                    highlight,
+                                )),
+                                true,
+                            )
+                        }
+                    }
+                } else {
+                    (None, false)
+                };
+
+                let draw = |renderer: &mut Renderer, viewport| {
+                    let paragraph = if text.is_empty()
+                        && state
+                            .preedit
+                            .as_ref()
+                            .map(|preedit| preedit.content.is_empty())
+                            .unwrap_or(true)
+                    {
+                        state.placeholder.raw()
                     } else {
-                        None
+                        state.value.raw()
                     };
 
-                    (cursor, false)
-                }
-                cursor::State::Selection { start, end } => {
-                    let left = start.min(end);
-                    let right = end.max(start);
+                    let alignment_offset =
+                        alignment_offset(text_bounds.width, paragraph.min_width(), self.alignment);
 
-                    let left_position = cursor_x(&state.value, left);
-                    let right_position = cursor_x(&state.value, right);
-
-                    let width = right_position - left_position;
-
-                    (
-                        Some((
-                            renderer::Quad {
-                                bounds: Rectangle {
-                                    x: text_bounds.x + left_position,
-                                    y: text_bounds.y,
-                                    width,
-                                    height: text_bounds.height,
-                                },
-                                ..renderer::Quad::default()
+                    if let Some((cursor, color)) = cursor {
+                        renderer.with_translation(
+                            Vector::new(alignment_offset - offset, 0.0),
+                            |renderer| {
+                                renderer.fill_quad(cursor, color);
                             },
-                            style.selection,
-                        )),
-                        true,
-                    )
-                }
-            }
-        } else {
-            (None, false)
-        };
+                        );
+                    } else {
+                        renderer.fill_quad(renderer::Quad::default(), Color::TRANSPARENT);
+                    }
 
-        let draw = |renderer: &mut Renderer, viewport| {
-            let paragraph = if text.is_empty()
-                && state
-                    .preedit
-                    .as_ref()
-                    .map(|preedit| preedit.content.is_empty())
-                    .unwrap_or(true)
-            {
-                state.placeholder.raw()
-            } else {
-                state.value.raw()
-            };
+                    let origin = text_bounds.anchor(
+                        paragraph.min_bounds(),
+                        Alignment::Start,
+                        Alignment::Center,
+                    ) + Vector::new(alignment_offset - offset, 0.);
+                    renderer.fill_paragraph(
+                        paragraph,
+                        origin,
+                        if text.is_empty() {
+                            style.placeholder
+                        } else {
+                            style.value
+                        },
+                        viewport,
+                    );
+                    if is_selecting
+                        && selected_text != style.value
+                        && let Some((selection, _)) = cursor
+                        && let Some(clip) = (selection.bounds
+                            + Vector::new(alignment_offset - offset, 0.))
+                        .intersection(&text_bounds)
+                        .and_then(|bounds| bounds.intersection(&viewport))
+                    {
+                        renderer.with_layer(clip, |renderer| {
+                            renderer.fill_paragraph(paragraph, origin, selected_text, clip);
+                        });
+                    }
+                };
 
-            let alignment_offset =
-                alignment_offset(text_bounds.width, paragraph.min_width(), self.alignment);
-
-            if let Some((cursor, color)) = cursor {
-                renderer.with_translation(
-                    Vector::new(alignment_offset - offset, 0.0),
-                    |renderer| {
-                        renderer.fill_quad(cursor, color);
-                    },
-                );
-            } else {
-                renderer.fill_quad(renderer::Quad::default(), Color::TRANSPARENT);
-            }
-
-            renderer.fill_paragraph(
-                paragraph,
-                text_bounds.anchor(paragraph.min_bounds(), Alignment::Start, Alignment::Center)
-                    + Vector::new(alignment_offset - offset, 0.0),
-                if text.is_empty() {
-                    style.placeholder
+                if is_selecting {
+                    renderer.with_layer(text_bounds, |renderer| draw(renderer, *viewport));
                 } else {
-                    style.value
-                },
-                viewport,
-            );
-        };
-
-        if is_selecting {
-            renderer.with_layer(text_bounds, |renderer| draw(renderer, *viewport));
-        } else {
-            draw(renderer, text_bounds);
-        }
+                    draw(renderer, text_bounds);
+                }
+            },
+        );
     }
 }
 
@@ -2124,6 +2150,11 @@ pub trait Catalog: Sized {
 
     /// The [`Style`] of a class with the given status.
     fn style(&self, class: &Self::Class<'_>, status: Status) -> Style;
+
+    /// The background and glyph colors for a selected range.
+    fn selection_colors(&self, style: &Style) -> (Color, Color) {
+        (style.selection, style.value)
+    }
 }
 
 /// A styling function for a [`TextInput`].

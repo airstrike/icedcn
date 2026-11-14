@@ -57,4 +57,14 @@ impl widget::Catalog for Theme {
     fn style(&self, class: &Self::Class<'_>, status: widget::Status) -> widget::Style {
         class(self, status)
     }
+
+    fn selection_colors(&self, style: &widget::Style) -> (iced_core::Color, iced_core::Color) {
+        // Stock iced only paints a selection wash. Our renderer can also recolor the
+        // selected glyphs, so the shared selection token can use both primary colors.
+        if style.selection == self.selection() {
+            (self.primary.base.into(), self.primary.foreground.into())
+        } else {
+            (style.selection, style.value)
+        }
+    }
 }

@@ -340,6 +340,22 @@ struct State {
     text: Vec<Rectangle>,
 }
 
+impl State {
+    fn status(&self, disabled: bool, is_hovered: bool) -> Status {
+        if disabled {
+            Status::Disabled
+        } else if is_hovered && self.is_pressed {
+            Status::Pressed
+        } else if self.is_focused && self.indicator.0 {
+            Status::Focused { is_hovered }
+        } else if is_hovered {
+            Status::Hovered
+        } else {
+            Status::Active
+        }
+    }
+}
+
 impl Default for State {
     fn default() -> Self {
         Self {
@@ -433,17 +449,25 @@ where
             self.height,
             padding,
             |tree, limits| {
-                // The button owns its height. Measure the child at its natural
-                // height before centering it in the padded content box.
+                // Measure intrinsic content before centering it in the resolved
+                // button, including a width imposed by a parent grid.
                 let mut child_limits = *limits;
                 child_limits.min.height = 0.0;
+                if self.border_box {
+                    child_limits.min.width = 0.0;
+                }
                 self.content.layout(tree, renderer, &child_limits);
 
                 tree.size
             },
             |content, available| {
+                let x = if self.border_box {
+                    (available.width - content.width) / 2.0
+                } else {
+                    0.0
+                };
                 Vector::new(
-                    0.0,
+                    x,
                     (available.height - content.height) / 2.0 + self.inset.top - clearance.top,
                 )
             },
@@ -618,17 +642,7 @@ where
             }
         }
 
-        let current_status = if self.disabled {
-            Status::Disabled
-        } else if is_hovered && state.is_pressed {
-            Status::Pressed
-        } else if state.is_focused && state.indicator.0 {
-            Status::Focused { is_hovered }
-        } else if is_hovered {
-            Status::Hovered
-        } else {
-            Status::Active
-        };
+        let current_status = state.status(self.disabled, is_hovered);
 
         if let Event::Window(window::Event::RedrawRequested(_now)) = event {
             self.status = Some(current_status);
@@ -651,7 +665,7 @@ where
         let (content_layout, content_tree) = layout.iter(&tree.children).next().unwrap();
         let state = tree.state.downcast_ref::<State>();
 
-        let status = self.status.unwrap_or(Status::Disabled);
+        let status = state.status(self.disabled, cursor.is_over(bounds));
         let now = state.frame;
 
         let mut style = if status != Status::Disabled && state.hover.is_animating(now) {
@@ -750,6 +764,41 @@ where
                     Color::TRANSPARENT,
                 );
             }
+            let content = |renderer: &mut Renderer| {
+                let viewport = if self.clip {
+                    visual_bounds.intersection(viewport).unwrap_or(*viewport)
+                } else {
+                    *viewport
+                };
+
+                self.content.draw(
+                    content_tree,
+                    renderer,
+                    theme,
+                    &renderer::Style {
+                        text_color: style.text_color,
+                    },
+                    content_layout,
+                    cursor,
+                    &viewport,
+                );
+                if underline {
+                    for text in &state.text {
+                        renderer.fill_quad(
+                            renderer::Quad {
+                                bounds: Rectangle {
+                                    x: bounds.x + text.x,
+                                    y: bounds.y + text.y + text.height - 1.0,
+                                    width: text.width,
+                                    height: 1.0,
+                                },
+                                ..renderer::Quad::default()
+                            },
+                            style.text_color,
+                        );
+                    }
+                }
+            };
             if style.background.is_some() || style.border.width > 0.0 || style.shadow.color.a > 0.0
             {
                 join::paint(
@@ -764,41 +813,11 @@ where
                         .background
                         .unwrap_or(Background::Color(Color::TRANSPARENT)),
                     self.join,
+                    *viewport,
+                    content,
                 );
-            }
-
-            let viewport = if self.clip {
-                visual_bounds.intersection(viewport).unwrap_or(*viewport)
             } else {
-                *viewport
-            };
-
-            self.content.draw(
-                content_tree,
-                renderer,
-                theme,
-                &renderer::Style {
-                    text_color: style.text_color,
-                },
-                content_layout,
-                cursor,
-                &viewport,
-            );
-            if underline {
-                for text in &state.text {
-                    renderer.fill_quad(
-                        renderer::Quad {
-                            bounds: Rectangle {
-                                x: bounds.x + text.x,
-                                y: bounds.y + text.y + text.height - 1.0,
-                                width: text.width,
-                                height: 1.0,
-                            },
-                            ..renderer::Quad::default()
-                        },
-                        style.text_color,
-                    );
-                }
+                content(renderer);
             }
         });
     }
