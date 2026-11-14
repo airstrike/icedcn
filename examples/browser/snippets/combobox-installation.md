@@ -1,9 +1,9 @@
 ## Installation
 
-From an application in this workspace, add the local crate:
+Add icedcn from your local checkout.
 
 ```sh
-cargo add icedcn --path ../.. --features svg
+cargo add icedcn --path /path/to/icedcn
 ```
 
-For an application outside this workspace, use the path to your checkout and the same iced revisions and patches as the workspace. Enable iced's `svg` feature for the built-in Lucide vectors. Load Geist to match the examples' typography.
+Use the iced revision pinned by that checkout.

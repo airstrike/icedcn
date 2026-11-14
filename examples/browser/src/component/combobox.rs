@@ -167,12 +167,14 @@ const ZONES: &[(&str, &[&str])] = &[
 /// The combobox page. Every combobox is uncontrolled.
 pub struct ComboboxPage {
     state: page::State,
+    text_size: f32,
 }
 
 impl ComboboxPage {
     pub fn new(page_index: usize) -> Box<dyn page::Page> {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
+            text_size: 14.,
         })
     }
 }
@@ -206,36 +208,40 @@ impl page::Page for ComboboxPage {
         self.state.reset_volatile();
     }
 
+    fn window_width(&mut self, width: f32) {
+        self.text_size = if width < 768. { 16. } else { 14. };
+    }
+
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: 40.into(),
+            ..Default::default()
+        }
+    }
+
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
-        match id {
-            "demo" | "basic" => combobox(FRAMEWORKS)
-                .placeholder("Select a framework")
-                .into(),
+        let field = match id {
+            "demo" | "basic" => combobox(FRAMEWORKS).placeholder("Select a framework"),
 
             "disabled" => combobox(FRAMEWORKS)
                 .placeholder("Select a framework")
-                .disabled(true)
-                .into(),
+                .disabled(true),
 
             "multiple" => combobox(FRAMEWORKS)
-                .multiple(true)
                 .auto_highlight(true)
                 .default_values(["iced"])
-                .width(320)
-                .into(),
+                .width(320),
             "clear" => combobox(FRAMEWORKS)
                 .placeholder("Select a framework")
                 .clearable(true)
-                .default_value("iced")
-                .into(),
+                .default_value("iced"),
             "groups" => combobox::options(ZONES.iter().flat_map(|&(group, zones)| {
                 zones
                     .iter()
                     .map(move |&zone| combobox::item(zone, zone).group(group))
             }))
             .placeholder("Select a timezone")
-            .empty("No timezones found.")
-            .into(),
+            .empty("No timezones found."),
             "custom" => combobox::options(
                 COUNTRIES
                     .iter()
@@ -245,16 +251,13 @@ impl page::Page for ComboboxPage {
                     }),
             )
             .placeholder("Search countries...")
-            .empty("No countries found.")
-            .into(),
+            .empty("No countries found."),
             "invalid" => combobox(FRAMEWORKS)
                 .placeholder("Select a framework")
-                .invalid(true)
-                .into(),
+                .invalid(true),
             "auto-highlight" => combobox(FRAMEWORKS)
                 .placeholder("Select a framework")
-                .auto_highlight(true)
-                .into(),
+                .auto_highlight(true),
             "popup" => combobox::options(
                 COUNTRIES
                     .iter()
@@ -262,8 +265,7 @@ impl page::Page for ComboboxPage {
             )
             .popup(true)
             .placeholder("Search")
-            .default_value("")
-            .into(),
+            .default_value(""),
             "input-group" => combobox::options(ZONES.iter().flat_map(|&(group, zones)| {
                 zones
                     .iter()
@@ -274,9 +276,9 @@ impl page::Page for ComboboxPage {
             .leading_icon(combobox::globe)
             .separators(false)
             .content_width(240)
-            .align_offset(-28.0)
-            .into(),
+            .align_offset(-4.),
             _ => unreachable!("unknown combobox preview id: {id}"),
-        }
+        };
+        field.text_size(self.text_size).into()
     }
 }

@@ -1,7 +1,7 @@
 //! A searchable list of options with an input and popup.
 //!
 //! An input that filters a list of items anchored below it. Typing or
-//! focusing the input opens the list, which shows the items containing the
+//! clicking the input opens the list, which shows the items containing the
 //! typed text (ignoring case) or the configured empty message when none do;
 //! choosing one fills the input with it and closes the list. An iced
 //! `Component` that owns the typed text, the open state and, uncontrolled,
@@ -20,6 +20,7 @@
 //! pointer), and closes on `Escape` or a press outside it.
 
 mod behavior;
+mod chips;
 pub(crate) mod keys;
 use crate::Weight;
 use crate::button::widget;
@@ -35,14 +36,16 @@ use iced_core::{Element, Length, Padding, Pixels};
 use iced_widget::button::Status;
 use iced_widget::component::{self, Component};
 use iced_widget::text::LineHeight;
-use iced_widget::{Renderer, Space, Widget, anchored};
+use iced_widget::{Renderer, Space, Widget, anchored, mouse_area};
 use icedcn_core::Theme;
 use icedcn_core::theme::input_group::control;
 use icedcn_core::theme::menu::item;
 use icedcn_core::theme::popover::content;
+use icedcn_core::theme::scrollable::hidden;
 use icedcn_core::theme::text_input::Invalid;
 use icedcn_core::theme::{self, text_input};
 use keys::Keys;
+use unicode_normalization::{UnicodeNormalization, char::is_combining_mark};
 use widget::Button;
 
 use crate::compose::{Compose, Inherited, Slot};
@@ -90,6 +93,7 @@ type Render<'a, T, Message> = dyn Fn(&T) -> Slot<'a, Message> + 'a;
 pub struct Combobox<'a, Message> {
     items: Vec<Item>,
     auto_highlight: bool,
+    text_size: f32,
     clear: bool,
     invalid: bool,
     popup: bool,
@@ -123,9 +127,11 @@ pub enum Event<Message = ()> {
     Edge(bool),
     /// Dismiss without restoring focus (Tab or outside pointer).
     Dismiss,
+    /// The pointer moved over a matching option.
+    Hover(usize),
     /// The input was edited.
     Query(String),
-    /// The input took focus.
+    /// The editable part of the field was pressed.
     Focus,
     /// The list asked to open or close.
     Set(bool),
@@ -169,6 +175,7 @@ pub fn options<'a, Message>(items: impl IntoIterator<Item = Item>) -> Combobox<'
     Combobox {
         items: items.into_iter().collect(),
         auto_highlight: false,
+        text_size: 14.,
         clear: false,
         invalid: false,
         popup: false,
@@ -195,6 +202,12 @@ pub fn options<'a, Message>(items: impl IntoIterator<Item = Item>) -> Combobox<'
 }
 
 impl<'a, Message: 'a> Combobox<'a, Message> {
+    /// Set the editable text size in logical pixels. The field height stays fixed.
+    pub fn text_size(mut self, size: f32) -> Self {
+        self.text_size = size;
+        self
+    }
+
     /// Set the input's placeholder.
     pub fn placeholder(mut self, placeholder: impl Into<String>) -> Self {
         self.placeholder = placeholder.into();
@@ -348,15 +361,34 @@ impl<'a, Message: 'a> Combobox<'a, Message> {
     }
 
     fn filter(&self, state: &mut State) {
-        let needle = state.query.as_deref().unwrap_or("").to_lowercase();
-        state.visible = self
-            .items
-            .iter()
-            .enumerate()
-            .filter_map(|(index, item)| {
-                item.label.to_lowercase().contains(&needle).then_some(index)
-            })
-            .collect();
+        let query = state.query.as_deref().unwrap_or("");
+        state.visible = if query.is_empty() {
+            (0..self.items.len()).collect()
+        } else {
+            let needle = search_text(query);
+            self.items
+                .iter()
+                .enumerate()
+                .filter_map(|(index, item)| {
+                    search_text(&item.label).contains(&needle).then_some(index)
+                })
+                .collect()
+        };
+    }
+
+    fn open(&self, state: &mut State) {
+        state.open = true;
+        self.filter(state);
+        state.highlight = if self.auto_highlight {
+            (!state.visible.is_empty()).then_some(0)
+        } else if !self.multiple {
+            state
+                .visible
+                .iter()
+                .position(|&index| self.current(state) == Some(self.items[index].value.as_str()))
+        } else {
+            None
+        };
     }
 
     fn close(&self, state: &mut State, restore: bool) {
@@ -395,6 +427,14 @@ impl<'a, Message: 'a> Combobox<'a, Message> {
     fn current<'s>(&'s self, state: &'s State) -> Option<&'s str> {
         self.value.as_deref().or(state.value.as_deref())
     }
+}
+
+fn search_text(value: &str) -> String {
+    value
+        .nfd()
+        .filter(|c| !is_combining_mark(*c))
+        .flat_map(char::to_lowercase)
+        .collect()
 }
 
 impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
@@ -456,22 +496,21 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 state.highlight = (self.auto_highlight && !state.visible.is_empty()).then_some(0);
                 None
             }
+            Event::Hover(index) => {
+                state.highlight = Some(index);
+                None
+            }
             Event::Focus => {
-                state.open = true;
-                self.filter(state);
-                state.highlight = (self.auto_highlight && !state.visible.is_empty()).then_some(0);
+                self.open(state);
                 None
             }
             Event::Set(open) => {
                 if open {
-                    state.open = true;
                     state.query = None;
-                    self.filter(state);
+                    self.open(state);
                 } else {
                     self.close(state, true);
                 }
-                state.highlight =
-                    (open && self.auto_highlight && !state.visible.is_empty()).then_some(0);
                 None
             }
             Event::Step(reverse) => {
@@ -531,12 +570,17 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             Length::Shrink
         });
         let inherited = self.inherited.without_join().with_disabled(self.disabled);
+        let disabled = self.disabled;
         let chevron = || -> Slot<'a, Event<Message>> {
             match &self.icon {
                 Some(icon) => icon().map(Event::App),
                 None => Container::new(Icon::Chevron.boxed())
-                    .style(|theme| theme::container::Style {
-                        text_color: Some(theme.muted.foreground),
+                    .style(move |theme| theme::container::Style {
+                        text_color: Some(theme.muted.foreground.scale_alpha(if disabled {
+                            0.25
+                        } else {
+                            1.
+                        })),
                         ..Default::default()
                     })
                     .into(),
@@ -545,17 +589,21 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
         let make_input = || {
             let input = input(self.placeholder.clone())
                 .value(query.to_owned())
+                .text_size(if self.multiple { 14. } else { self.text_size })
                 .on_input(Event::Query)
-                .on_focus(Event::Focus)
                 .disabled(self.disabled);
             let mut field: Slot<'a, Event<Message>> = if self.multiple {
-                let mut chips = Vec::new();
+                let mut chips: Vec<Slot<'a, Event<Message>>> = Vec::new();
                 for value in self.selected(state) {
-                    let remove = button(Icon::Remove.boxed())
+                    let remove = button(Container::new(Icon::Remove.boxed()).width(12).height(12))
                         .style(button::Ghost)
                         .size(crate::Size::Xs)
                         .height(21)
-                        .width(21)
+                        .width(24)
+                        .map_style(|mut style| {
+                            style.text_color = style.text_color.scale_alpha(0.5);
+                            style
+                        })
                         .padding(0)
                         .translate(false)
                         .on_press(Event::Choose(value.clone()));
@@ -587,19 +635,15 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 chips.push(
                     input
                         .size(crate::Size::Xs)
-                        .width(64)
+                        .width(Fill)
                         .style(Box::new(control) as text_input::StyleFn<'a, Theme>)
                         .into(),
                 );
-                let mut content: Slot<'a, Event<Message>> = row::Row::with_children(chips)
-                    .wrap()
-                    .spacing(4)
-                    .width(Fill)
-                    .padding([4, 4])
-                    .into();
-                content.inherit(&inherited);
+                for chip in &mut chips {
+                    chip.inherit(&inherited);
+                }
                 Surface::new(
-                    content.compose(),
+                    chips::Chips::new(chips).boxed(),
                     if self.invalid {
                         Invalid.into()
                     } else {
@@ -617,8 +661,10 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 if self.popup {
                     group = group.style(Box::new(|theme: &Theme, status| {
                         let mut style = text_input::default(theme, status);
-                        style.background = theme.input.alpha(0.3).into();
-                        style.border.color = theme.input.alpha(0.3);
+                        style.background = theme.input.scale_alpha(0.3).into();
+                        if !matches!(status, text_input::Status::Focused { .. }) {
+                            style.border.color = theme.input.scale_alpha(0.3);
+                        }
                         style
                     }) as text_input::StyleFn<'a, Theme>);
                 }
@@ -627,10 +673,15 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 }
                 if !self.popup {
                     let end = if self.clear && !choice.is_empty() {
-                        input_group::button(Icon::Remove.boxed())
-                            .square()
-                            .translate(false)
-                            .on_press(Event::Clear)
+                        input_group::button(Container::new(Icon::Remove.boxed()).style(|theme| {
+                            theme::container::Style {
+                                text_color: Some(theme.muted.foreground),
+                                ..Default::default()
+                            }
+                        }))
+                        .square()
+                        .translate(false)
+                        .on_press(Event::Clear)
                     } else {
                         input_group::button(chevron())
                             .square()
@@ -679,13 +730,23 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 .boxed()
                 .into()
             } else {
-                button(row![text::small(label.to_owned()).width(Fill), chevron()].width(Fill))
-                    .width(width)
-                    .style(button::Outline)
-                    .weight(Weight::Normal)
-                    .disabled(self.disabled)
-                    .on_press(Event::Set(!open))
-                    .into()
+                let child =
+                    button(row![text::small(label.to_owned()).width(Fill), chevron()].width(Fill))
+                        .width(width)
+                        .style(button::Outline)
+                        .weight(Weight::Normal)
+                        .disabled(self.disabled)
+                        .on_press(Event::Set(!open));
+                let mut child: Slot<'a, Event<Message>> = child.into();
+                child.inherit(&inherited);
+                Keys {
+                    content: child.compose(),
+                    on_key: Box::new(|key| {
+                        (key == Key::Named(Named::ArrowDown)).then_some(Event::Set(true))
+                    }),
+                }
+                .boxed()
+                .into()
             };
             trigger.inherit(&inherited);
             trigger.compose()
@@ -701,8 +762,14 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 0
             },
             width,
-            (!self.popup).then_some(if self.leading.is_some() { 69.2 } else { 49.2 }),
+            (!self.popup).then_some((
+                self.text_size,
+                if self.leading.is_some() { 49. } else { 29. },
+            )),
         );
+        if !open && !self.popup && !self.disabled {
+            field = field.open_on_input(Event::Focus);
+        }
         if self.multiple {
             let values = self.selected(state).to_vec();
             field = field.chips(query.is_empty(), move |index| {
@@ -770,14 +837,12 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 let paint: widget::StyleFn<'a, Theme> = Box::new(move |theme: &Theme, status| {
                     let status = if active {
                         Status::Hovered
+                    } else if matches!(status, widget::Status::Hovered) {
+                        Status::Active
                     } else {
                         status.into()
                     };
-                    let mut surface = item::style(theme, status, item::Variant::Default);
-                    if matches!(status, Status::Hovered | Status::Pressed) {
-                        surface.background = Some(theme.neutral.foreground.alpha(0.1).into());
-                    }
-                    surface.into()
+                    item::style(theme, status, item::Variant::Default).into()
                 });
                 let option = Button::new(line.compose())
                     .width(Fill)
@@ -791,8 +856,14 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                     .disabled(self.disabled)
                     .class(paint)
                     .on_press(Event::Choose(item.value.clone()));
+                let hit = mouse_area(option);
+                let hit = if active {
+                    hit
+                } else {
+                    hit.on_move(move |_| Event::Hover(position))
+                };
                 rows.push(
-                    Container::new(option.boxed())
+                    Container::new(hit.boxed())
                         .width(Fill)
                         .id(state.ids[index].clone())
                         .into(),
@@ -822,10 +893,13 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                     .clone()
                     .expect("combobox diff initializes its scroll id"))
                 .width(Fill)
+                .style(hidden)
                 .height(Length::Shrink.max(252));
             let mut body: Slot<'a, Event<Message>> = if self.popup {
                 crate::column![
-                    Container::new(make_input()).padding(Padding::ZERO.top(4).left(4).right(4)),
+                    Container::new(make_input())
+                        .width(Fill)
+                        .padding(Padding::ZERO.top(4).left(4).right(4)),
                     results
                 ]
                 .width(Fill)
@@ -836,11 +910,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             body.inherit(&inherited);
             let content = Container::new(body)
                 .width(self.content_width.map_or(Fill, Length::Fixed))
-                .style(|theme| {
-                    let mut surface = content(theme);
-                    surface.background = Some(theme.popover.base.alpha(0.7).into());
-                    surface
-                });
+                .style(content);
             Behavior::panel(
                 Slot::from(content).compose(),
                 self.popup,
@@ -869,6 +939,10 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 anchored::Width::Content
             } else {
                 anchored::Width::AtLeastAnchor
+            })
+            .min_width(match (self.popup, self.content_width, width) {
+                (true, None, Length::Fixed(w)) => w + 28.,
+                _ => 0.,
             })
             .open(open)
             .on_toggle(|_| Event::Dismiss)

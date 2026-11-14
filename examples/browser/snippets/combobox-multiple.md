@@ -1,10 +1,7 @@
 ```rust
 use icedcn::widget::combobox;
 
-const FRAMEWORKS: [&str; 5] = ["iced", "egui", "Slint", "GTK", "Druid"];
-
-combobox(FRAMEWORKS)
-    .multiple(true)
+combobox(["iced", "egui", "Slint", "GTK", "Druid"])
     .auto_highlight(true)
     .default_values(["iced"])
     .width(320)

@@ -19,16 +19,17 @@ The widget owns query, open state and uncontrolled selection. Defaults are seede
 | `.clearable(enabled)` | `bool` | `false` | Show an X while a single value is selected. |
 | `.invalid(enabled)` | `bool` | `false` | Invalid border and ring. |
 | `.disabled(disabled)` | `bool` | `false` | Disable all interaction. |
+| `.text_size(px)` | `f32` | 14 | Inline and popup input text size. Chips use 14px. |
 | `.width(length)` | `Into<Length>` | 20ch inline; 256px popup | Field width, constrained by available space. |
 | `.icon(f)` | `Fn() -> Into<Slot>` | built-in Lucide chevron | Trigger icon. |
 | `.leading_icon(f)` | `Fn() -> Into<Slot>` | none | Leading addon; `combobox::globe` is provided. |
 | `.format_item(f)` | `Fn(&Item) -> Into<Slot>` | label/description | Custom option content. |
 | `.popup(enabled)` | `bool` | `false` | Put search inside the popup. |
 | `.trigger(f)` | `Fn(&str) -> Into<Slot>` | outline button | Custom popup trigger, receiving the selected label. |
-| `.content_width(px)` | `Into<Pixels>` | anchor width | Independent popup width. |
+| `.content_width(px)` | `Into<Pixels>` | anchor width | Independent popup width. Fixed-width popup buttons allow 28px extra for the inset search. |
 | `.align_offset(px)` | `Into<Pixels>` | `0` | Horizontal popup shift. |
 | `.separators(enabled)` | `bool` | `true` | Separate consecutive groups. |
 
-Up/Down move through matching options and Enter selects. Home/End reach the first/last result while open. Escape dismisses and restores focus; outside click and Tab dismiss without stealing focus. Backspace with an empty multiple input removes its final chip. The focused result scrolls into view.
+Filtering ignores letter case and accents in the option label. Up/Down move through matching options and Enter selects. Home/End reach the first/last result while open. Escape dismisses and restores focus; outside click and Tab dismiss without stealing focus. With an empty multiple input, Backspace removes the last chip. Left and Right move between chips, and Delete removes the focused chip. The focused result scrolls into view.
 
 [Read the combobox implementation](https://github.com/airstrike/icedcn/blob/HEAD/widget/src/combobox.rs).

@@ -4,6 +4,8 @@ use iced_core::alignment::Vertical;
 use iced_core::keyboard::{self, Key, key::Named};
 use iced_core::length::Sizing;
 use iced_core::text::{self, Paragraph as _};
+use iced_core::touch;
+use iced_core::widget::operation::TextInput;
 use iced_core::widget::{Id, Meta, Operation, Tree, tree};
 use iced_core::{
     Element, Event, Layout, Length, Rectangle, Shell, Size, Vector, Widget, layout, mouse, overlay,
@@ -18,7 +20,7 @@ use crate::operation::scroll::Reveal;
 pub(super) struct Behavior<'a, Message> {
     content: Element<'a, Message, Theme, Renderer>,
     width: Option<Length>,
-    intrinsic_extra: Option<f32>,
+    intrinsic: Option<(f32, f32)>,
     autofocus: bool,
     focus_epoch: u64,
     focus_index: usize,
@@ -27,6 +29,7 @@ pub(super) struct Behavior<'a, Message> {
     escape: Option<Message>,
     remove: Option<Box<dyn Fn(usize) -> Message + 'a>>,
     empty: bool,
+    open_on_input: Option<Message>,
 }
 
 impl<'a, Message> Behavior<'a, Message> {
@@ -35,12 +38,12 @@ impl<'a, Message> Behavior<'a, Message> {
         focus_epoch: u64,
         focus_index: usize,
         width: Length,
-        intrinsic_extra: Option<f32>,
+        intrinsic: Option<(f32, f32)>,
     ) -> Self {
         Self {
             content,
             width: Some(width),
-            intrinsic_extra,
+            intrinsic,
             autofocus: false,
             focus_epoch,
             focus_index,
@@ -49,6 +52,7 @@ impl<'a, Message> Behavior<'a, Message> {
             escape: None,
             remove: None,
             empty: false,
+            open_on_input: None,
         }
     }
 
@@ -62,7 +66,7 @@ impl<'a, Message> Behavior<'a, Message> {
         Self {
             content,
             width: None,
-            intrinsic_extra: None,
+            intrinsic: None,
             autofocus,
             focus_epoch: 0,
             focus_index: 0,
@@ -71,7 +75,12 @@ impl<'a, Message> Behavior<'a, Message> {
             escape: Some(escape),
             remove: None,
             empty: false,
+            open_on_input: None,
         }
+    }
+    pub fn open_on_input(mut self, message: Message) -> Self {
+        self.open_on_input = Some(message);
+        self
     }
     pub fn chips(mut self, empty: bool, remove: impl Fn(usize) -> Message + 'a) -> Self {
         self.empty = empty;
@@ -111,7 +120,7 @@ impl<Message: Clone> Widget<Message, Theme, Renderer> for Behavior<'_, Message> 
     fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) {
         let limits = if let Some(width) = self.width {
             let limits = limits.width(width);
-            if let Some(extra) = self.intrinsic_extra
+            if let Some((text_size, extra)) = self.intrinsic
                 && matches!(
                     width,
                     Length::Shrink
@@ -126,7 +135,7 @@ impl<Message: Clone> Widget<Message, Theme, Renderer> for Behavior<'_, Message> 
                 let paragraph = <Renderer as text::Renderer>::Paragraph::with_text(text::Text {
                     content: "0",
                     bounds: Size::new(f32::INFINITY, f32::INFINITY),
-                    size: 14.0.into(),
+                    size: text_size.into(),
                     line_height: text::LineHeight::default(),
                     font: text::Renderer::font(renderer),
                     align_x: text::Alignment::Left,
@@ -142,7 +151,7 @@ impl<Message: Clone> Widget<Message, Theme, Renderer> for Behavior<'_, Message> 
                 });
                 let ch = paragraph.min_width();
                 // Null renderer has no font metrics; retain a usable test layout.
-                limits.width(20.0 * if ch > 0.0 { ch } else { 7.0 } + extra)
+                limits.width(20.0 * if ch > 0.0 { ch } else { text_size * 0.5 } + extra)
             } else {
                 limits
             }
@@ -196,6 +205,23 @@ impl<Message: Clone> Widget<Message, Theme, Renderer> for Behavior<'_, Message> 
             }
         } else {
             state.revealed = None;
+        }
+        if let Some(open) = &self.open_on_input
+            && matches!(
+                event,
+                Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left))
+                    | Event::Touch(touch::Event::FingerPressed { .. })
+            )
+            && cursor.is_over(layout.bounds())
+        {
+            let mut hit = InputHit {
+                cursor,
+                inside: false,
+            };
+            visit(&mut hit);
+            if hit.inside {
+                shell.publish(open.clone());
+            }
         }
         if let Event::Keyboard(keyboard::Event::KeyPressed {
             key: Key::Named(key),
@@ -346,5 +372,18 @@ impl Operation for Find {
         if id == Some(&self.target) {
             self.bounds = Some(bounds);
         }
+    }
+}
+
+struct InputHit {
+    cursor: mouse::Cursor,
+    inside: bool,
+}
+impl Operation for InputHit {
+    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+        visit(self);
+    }
+    fn text_input(&mut self, _: Option<&Id>, bounds: Rectangle, _: &mut dyn TextInput) {
+        self.inside |= self.cursor.is_over(bounds);
     }
 }

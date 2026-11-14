@@ -40,6 +40,7 @@ sweeten = { workspace = true, optional = true }
 tree-sitter = { workspace = true, optional = true }
 tree-sitter-highlight = { workspace = true, optional = true }
 tree-sitter-rust = { workspace = true, optional = true }
+unicode-normalization = "0.1"
 unicode-segmentation = "1.11.0"
 jalali-rs = "0.1.1"
 chrono = { version = "0.4.45", default-features = false, features = ["clock"] }

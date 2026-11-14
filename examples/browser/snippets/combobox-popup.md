@@ -1,35 +1,10 @@
 ```rust
 use icedcn::widget::combobox;
 
-const COUNTRIES: &[(&str, &str, &str)] = &[
-    ("", "Select country", ""),
-    ("ar", "Argentina", "South America"),
-    ("au", "Australia", "Oceania"),
-    ("br", "Brazil", "South America"),
-    ("ca", "Canada", "North America"),
-    ("cn", "China", "Asia"),
-    ("co", "Colombia", "South America"),
-    ("eg", "Egypt", "Africa"),
-    ("fr", "France", "Europe"),
-    ("de", "Germany", "Europe"),
-    ("it", "Italy", "Europe"),
-    ("jp", "Japan", "Asia"),
-    ("ke", "Kenya", "Africa"),
-    ("mx", "Mexico", "North America"),
-    ("nz", "New Zealand", "Oceania"),
-    ("ng", "Nigeria", "Africa"),
-    ("za", "South Africa", "Africa"),
-    ("kr", "South Korea", "Asia"),
-    ("gb", "United Kingdom", "Europe"),
-    ("us", "United States", "North America"),
-];
-
-combobox::options(
-    COUNTRIES
-        .iter()
-        .map(|&(code, label, _)| combobox::item(code, label)),
-)
-.popup(true)
-.placeholder("Search")
-.default_value("")
+let countries = [("", "Select country"), ("ar", "Argentina"), ("au", "Australia")];
+let items = countries.map(|(code, name)| combobox::item(code, name));
+combobox::options(items)
+    .popup(true)
+    .placeholder("Search")
+    .default_value("")
 ```

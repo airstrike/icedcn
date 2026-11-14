@@ -2,8 +2,9 @@
 use iced_core::Length::{Fill, Shrink};
 use iced_core::keyboard::key::Named;
 use iced_core::time::Instant;
-use iced_core::widget::Id;
-use iced_core::{Element, Event, Point, Size, window};
+use iced_core::widget::operation::{Outcome, TextInput, focusable};
+use iced_core::widget::{Id, Operation};
+use iced_core::{Element, Event, Point, Rectangle, Size, window};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space};
 use icedcn_core::Theme;
@@ -255,5 +256,121 @@ fn combobox_chip_arrow_focus_and_delete_remove_the_focused_chip() {
     assert_eq!(
         ui.into_messages().collect::<Vec<_>>(),
         [Message::Values(vec!["One".into(), "Three".into()])]
+    );
+}
+
+#[derive(Default)]
+struct Inputs(Vec<Rectangle>);
+
+impl Operation for Inputs {
+    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+        visit(self);
+    }
+
+    fn text_input(&mut self, _: Option<&Id>, bounds: Rectangle, _: &mut dyn TextInput) {
+        self.0.push(bounds);
+    }
+}
+
+#[test]
+fn chip_input_fills_remaining_line_and_keeps_editing_through_resize() {
+    let field: Element<'_, Message, Theme, Renderer> = combobox(["One", "Two", "Three"])
+        .default_values(["One"])
+        .auto_highlight(true)
+        .width(Fill)
+        .on_values_change(Message::Values)
+        .into();
+    let mut ui = Simulator::with_size(Default::default(), Size::new(320., 400.), field);
+    let mut inputs = Inputs::default();
+    ui.operate(&mut inputs);
+    let room = inputs.0[0];
+    assert!(room.width > 225., "{room:?}");
+    click(&mut ui, 294., 16.);
+    ui.typewrite("Tw");
+    let mut ui = ui.resize(Size::new(90., 400.));
+    ui.tap_key(Named::Enter);
+    frame(&mut ui);
+    ui.tap_key(Named::Backspace);
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        [
+            Message::Values(vec!["One".into(), "Two".into()]),
+            Message::Values(vec!["One".into()]),
+        ]
+    );
+}
+
+#[test]
+fn popup_opens_from_arrow_and_search_spans_the_panel() {
+    let field: Element<'_, Message, Theme, Renderer> = combobox(["One", "Two"])
+        .popup(true)
+        .auto_highlight(true)
+        .on_value_change(Message::Value)
+        .into();
+    let mut ui = simulator(field);
+    let mut next = focusable::focus_next::<()>();
+    ui.operate(&mut next);
+    if let Outcome::Chain(mut step) = next.finish() {
+        ui.operate(step.as_mut());
+    }
+    ui.tap_key(Named::ArrowDown);
+    frame(&mut ui);
+    let mut inputs = Inputs::default();
+    ui.operate(&mut inputs);
+    assert!(
+        inputs
+            .0
+            .iter()
+            .any(|bounds| (bounds.width - 276.).abs() < 1.),
+        "{:?}",
+        inputs.0
+    );
+    ui.typewrite("Tw");
+    ui.tap_key(Named::Enter);
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        [Message::Value("Two".into())]
+    );
+}
+
+#[test]
+fn clicking_the_focused_input_reopens_after_escape() {
+    let option = Id::unique();
+    let view = || -> Element<'static, Message, Theme, Renderer> {
+        let mark = option.clone();
+        combobox(["One"])
+            .format_item(move |_| container(Space::new().width(40).height(16)).id(mark.clone()))
+            .into()
+    };
+    let mut ui = simulator(view());
+    for key in [Named::Escape, Named::Tab] {
+        click(&mut ui, 28., 16.);
+        assert!(ui.find(option.clone()).is_ok());
+        ui.tap_key(key);
+        // The runtime rebuilds after a component's overlay invalidates its view.
+        ui = ui.rebuild(view());
+        frame(&mut ui);
+        assert!(ui.find(option.clone()).is_err());
+    }
+    click(&mut ui, 28., 16.);
+    assert!(ui.find(option.clone()).is_ok());
+    click(&mut ui, 400., 200.);
+    let mut ui = ui.rebuild(view());
+    assert!(ui.find(option).is_err());
+}
+
+#[test]
+fn filter_matches_unaccented_queries_and_publishes_the_original_value() {
+    let field: Element<'_, Message, Theme, Renderer> = combobox(["New York", "São Paulo"])
+        .auto_highlight(true)
+        .on_value_change(Message::Value)
+        .into();
+    let mut ui = simulator(field);
+    click(&mut ui, 28., 16.);
+    ui.typewrite("SAO");
+    ui.tap_key(Named::Enter);
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        [Message::Value("São Paulo".into())]
     );
 }

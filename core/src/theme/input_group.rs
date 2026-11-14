@@ -10,11 +10,17 @@ use crate::{Background, Border, Color};
 
 /// An Input inside a group: the Input's text colors on no surface.
 pub fn control(theme: &Theme, status: Status) -> Style {
+    let mut ink = text_input::default(theme, status);
+    if matches!(status, Status::Disabled) {
+        // The control and its disabled group each apply 50% opacity.
+        ink.value = ink.value.scale_alpha(0.5);
+        ink.placeholder = ink.placeholder.scale_alpha(0.5);
+    }
     Style {
         background: Background::Color(Color::TRANSPARENT),
         border: Border::default(),
         ring: None,
-        ..text_input::default(theme, status)
+        ..ink
     }
 }
 

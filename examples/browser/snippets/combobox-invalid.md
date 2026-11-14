@@ -1,9 +1,7 @@
 ```rust
 use icedcn::widget::combobox;
 
-const FRAMEWORKS: [&str; 5] = ["iced", "egui", "Slint", "GTK", "Druid"];
-
-combobox(FRAMEWORKS)
+combobox(["iced", "egui", "Slint", "GTK", "Druid"])
     .placeholder("Select a framework")
     .invalid(true)
 ```
