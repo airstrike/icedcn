@@ -1,7 +1,9 @@
 //! Badge styling
 //!
-//! `Style` is OKLCH-native — badge reuses container's `Style` field-for-field.
-//! Variant fns + Spec/atom apply tweaks before conversion.
+//! Static variant functions retain their container-compatible projection.
+//! [`state`] keeps variant identity, conditional tweaks and focus-ring paint.
+
+pub mod state;
 
 use std::ops::Add;
 
@@ -131,7 +133,7 @@ pub fn link(theme: &Theme) -> Style {
 
 impl From<Link> for Spec {
     fn from(_: Link) -> Spec {
-        Spec::variant(link)
+        Spec::variant(link, state::Variant::Link)
     }
 }
 impl<'a> From<Link> for iced_widget::container::StyleFn<'a, Theme> {
@@ -147,13 +149,15 @@ impl<'a> From<Link> for iced_widget::container::StyleFn<'a, Theme> {
 #[derive(Debug, Clone)]
 pub struct Spec {
     variant: fn(&Theme) -> Style,
+    kind: state::Variant,
     tweaks: TweakSet,
 }
 
 impl Spec {
-    fn variant(f: fn(&Theme) -> Style) -> Spec {
+    fn variant(f: fn(&Theme) -> Style, kind: state::Variant) -> Spec {
         Spec {
             variant: f,
+            kind,
             tweaks: TweakSet::default(),
         }
     }
@@ -175,31 +179,31 @@ impl Spec {
 
 impl From<Default> for Spec {
     fn from(_: Default) -> Spec {
-        Spec::variant(default)
+        Spec::variant(default, state::Variant::Default)
     }
 }
 
 impl From<Secondary> for Spec {
     fn from(_: Secondary) -> Spec {
-        Spec::variant(secondary)
+        Spec::variant(secondary, state::Variant::Secondary)
     }
 }
 
 impl From<Destructive> for Spec {
     fn from(_: Destructive) -> Spec {
-        Spec::variant(destructive)
+        Spec::variant(destructive, state::Variant::Destructive)
     }
 }
 
 impl From<Outline> for Spec {
     fn from(_: Outline) -> Spec {
-        Spec::variant(outline)
+        Spec::variant(outline, state::Variant::Outline)
     }
 }
 
 impl From<Ghost> for Spec {
     fn from(_: Ghost) -> Spec {
-        Spec::variant(ghost)
+        Spec::variant(ghost, state::Variant::Ghost)
     }
 }
 
@@ -227,8 +231,8 @@ impl<T: Into<Tweak>> Add<T> for Spec {
 
 // --- Resolver ----------------------------------------------------------------
 //
-// Badge has no status, so `Tweak::State(...)` silently drops. Identical body
-// to container.rs::apply.
+// Legacy container projection has no status. Badge itself uses
+// Spec::resolve_state and retains conditional tweaks and rings.
 
 fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme) {
     match tweak {

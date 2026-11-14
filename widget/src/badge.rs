@@ -24,6 +24,8 @@
 //!
 //! shadcn's `variant` prop is a style: `.style(badge::Outline)`.
 
+mod widget;
+
 use iced_widget::Widget;
 /// Create a badge with one or more children.
 ///
@@ -78,34 +80,35 @@ macro_rules! badge {
 }
 
 use crate::Weight;
-use crate::button::widget;
 use crate::compose::{Compose, Inherited, Slot};
-use iced_core::mouse::Interaction;
-use iced_core::{Background, Padding};
+use iced_core::Padding;
 use iced_widget::Renderer;
 use icedxdy_core::Theme;
 
+pub use icedxdy_core::theme::badge::state::{IntoStyle, Status, Style, StyleFn};
 pub use icedxdy_core::theme::badge::{Default, Destructive, Ghost, Link, Outline, Secondary};
 
 /// A small inline pill label.
 pub struct Badge<'a, Message> {
     content: Slot<'a, Message>,
-    style: iced_widget::container::StyleFn<'a, Theme>,
+    style: StyleFn<'a>,
     on_press: Option<Message>,
     start_icon: bool,
     end_icon: bool,
     disabled: bool,
+    invalid: bool,
 }
 
 /// Create a [`Badge`] with the default variant.
 pub fn badge<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Badge<'a, Message> {
     Badge {
         content: content.into(),
-        style: Default.into(),
+        style: Default.into_style(),
         on_press: None,
         start_icon: false,
         end_icon: false,
         disabled: false,
+        invalid: false,
     }
 }
 
@@ -119,16 +122,36 @@ impl<'a, Message: 'a> Badge<'a, Message> {
         self.end_icon = true;
         self
     }
-    /// Set the style: a variant (`badge::Secondary`, `badge::Outline`, ...)
-    /// or a tweaked `Spec`.
-    pub fn style(mut self, style: impl Into<iced_widget::container::StyleFn<'a, Theme>>) -> Self {
-        self.style = style.into();
+    /// Select a Nova variant, tweaked Spec, or legacy static container callback.
+    ///
+    /// Static callbacks supply exact paint in every state, without inferred
+    /// hover/focus effects. The last `style` or `state_style` call wins.
+    pub fn style(mut self, style: impl IntoStyle<'a>) -> Self {
+        self.style = style.into_style();
+        self
+    }
+
+    /// Supply all state-dependent paint, replacing the selected variant/style.
+    pub fn state_style(mut self, style: impl Fn(&Theme, Status) -> Style + 'a) -> Self {
+        self.style = Box::new(style);
+        self
+    }
+
+    /// Paint the Nova invalid border and, when keyboard-focused, its ring.
+    pub fn invalid(mut self, invalid: bool) -> Self {
+        self.invalid = invalid;
+        self
+    }
+
+    /// Suppress interaction, including hover and keyboard focus.
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled |= disabled;
         self
     }
 }
 
 impl<'a, Message: Clone + 'a> Badge<'a, Message> {
-    /// Make the badge clickable, emitting `message` on left-button press.
+    /// Make the badge clickable, emitting `message` on a release inside it.
     ///
     /// Mirrors shadcn's `<Badge asChild><a href=...>` pattern: the badge
     /// keeps its visual styling and gains pointer-cursor + click semantics.
@@ -167,10 +190,9 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Badge<'a, Message> {
             &Inherited::default()
                 .with_size(crate::Size::Xs)
                 .with_weight(Weight::Medium)
-                .with_line_height(16.0),
+                .with_line_height(16.0)
+                .with_disabled(self.disabled),
         );
-
-        let style_fn = self.style;
 
         let pad = Padding {
             top: 2.0,
@@ -180,55 +202,19 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Badge<'a, Message> {
             left: if self.start_icon { 7.0 } else { 9.0 },
             right: if self.end_icon { 7.0 } else { 9.0 },
         };
-        let content = self.content.compose();
-        match self.on_press {
-            Some(message) => {
-                let paint: widget::StyleFn<'_, Theme> = Box::new(move |theme, status| {
-                    let mut base = style_fn(theme);
-                    let hover = matches!(
-                        status,
-                        widget::Status::Hovered
-                            | widget::Status::Pressed
-                            | widget::Status::Focused { is_hovered: true }
-                    );
-                    if hover {
-                        base.background = match base.background {
-                            Some(Background::Color(c)) => {
-                                Some(Background::Color(c.scale_alpha(0.8)))
-                            }
-                            None if base.border.width > 0.0 => Some(theme.muted.base.into()),
-                            background => background,
-                        };
-                    }
-                    if matches!(status, widget::Status::Focused { .. }) {
-                        base.border.color = theme.neutral.ring.into();
-                        base.border.width = 2.0;
-                    }
-                    widget::Style {
-                        background: base.background,
-                        text_color: base.text_color.unwrap_or(theme.neutral.foreground.into()),
-                        border: base.border,
-                        ring: None,
-                        shadow: base.shadow,
-                        snap: base.snap,
-                    }
-                });
-                widget::Button::new(content)
-                    .on_press(message)
-                    .disabled(self.disabled)
-                    .interaction(Interaction::Pointer)
-                    .translate(false)
-                    .height(20)
-                    .padding(pad)
-                    .class(paint)
-                    .boxed()
-            }
-            None => iced_widget::container(content)
-                .padding(pad)
-                .center_y(20)
-                .style(style_fn)
-                .boxed(),
+        if self.on_press.is_some() {
+            self.content
+                .inherit(&Inherited::default().with_selectable(false));
         }
+        widget::Badge {
+            content: self.content.compose(),
+            style: self.style,
+            on_press: self.on_press,
+            disabled: self.disabled,
+            invalid: self.invalid,
+            padding: pad,
+        }
+        .boxed()
     }
 }
 

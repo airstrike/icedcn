@@ -4,7 +4,10 @@ Constructor for a `Badge`. The single-arg constructor takes any `impl Into<Slot>
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `.style(style)` | `impl Into<container::StyleFn>` | `badge::Default` | The variant: `badge::Secondary`, `badge::Destructive`, `badge::Outline`, `badge::Ghost`, `badge::Link`, or a tweaked `Spec`. |
+| `.style(style)` | `impl badge::IntoStyle` | `badge::Default` | The variant: `badge::Secondary`, `badge::Destructive`, `badge::Outline`, `badge::Ghost`, `badge::Link`, or a tweaked `Spec`. |
+| `.state_style(callback)` | `Fn(&Theme, badge::Status) -> badge::Style` | None | Replace all paint with a state-aware callback. |
+| `.invalid(invalid)` | `bool` | `false` | Destructive border and keyboard focus ring. |
+| `.disabled(disabled)` | `bool` | `false` | Suppress input, focus and hover; disabled ancestry also applies. |
 | `.on_press(message)` | `Message` | `None` | Make the badge clickable (pointer, keyboard focus and activation) — the icedxdy equivalent of shadcn rendering the badge as a link. |
 
 Use `.icon_start()` or `.icon_end()` to reduce the padding on the icon side to 6px, plus the 1px border.
@@ -26,7 +29,31 @@ Wraps multiple children in a `Row` with 4px spacing — the iced equivalent of s
 | `badge::Secondary` | Muted background. |
 | `badge::Destructive` | Destructive foreground on a tinted background. |
 | `badge::Outline` | Border-only, transparent background. |
-| `badge::Ghost` | No border, no background — text-only pill. |
-| `badge::Link` | Primary-colored text on a transparent surface. |
+| `badge::Ghost` | Transparent pill with a muted surface on hover, including passive badges. |
+| `badge::Link` | Primary-colored text on a transparent surface, underlined on hover. |
 
-Restyle via the `core::theme::badge::*` style functions (or compose your own).
+Variants retain Nova hover and focus rules. A `Spec` applies its tweaks after those rules, in the order supplied; `hover`, `focus`, `active` and `disabled` conditions are supported. Focus rings require an interactive badge with keyboard-visible focus. Pointer activation retains focus without showing the keyboard ring.
+
+Existing one-argument `container::StyleFn` callbacks remain accepted by `.style()`. They supply static paint in every state, without automatic variant hover, underline or focus effects. Use `.state_style()` for a two-argument callback. The last `.style()` or `.state_style()` call replaces all earlier styling. A callback can extend Nova by resolving a `Spec` for the supplied `Status`.
+
+```rust
+use iced::widget::container;
+use icedxdy::Theme;
+use icedxdy::core::theme::badge::Spec;
+use icedxdy::widget::{badge, row};
+
+fn example() -> iced::Element<'static, (), Theme> {
+    let legacy: container::StyleFn<'static, Theme> = Box::new(|theme| {
+        container::Style::default().color(iced::Color::from(theme.neutral.foreground))
+    });
+    let spec: Spec = badge::Link.into();
+    row![
+        badge("Static").style(legacy),
+        badge("Open Link")
+            .on_press(())
+            .state_style(move |theme, status| spec.resolve_state(theme, status)),
+    ]
+    .spacing(8)
+    .into()
+}
+```

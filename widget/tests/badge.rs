@@ -104,3 +104,149 @@ fn decorative_badge_does_not_capture_pointer_presses() {
     }
     assert_eq!(ui.drain().count(), 0);
 }
+
+#[test]
+fn passive_hover_reports_state_without_joining_keyboard_traversal() {
+    use std::cell::Cell;
+    let observed = Cell::new(badge::Status::default());
+    let content: Element<'_, (), Theme, Renderer> = badge(Space::new().width(24).height(16))
+        .state_style(|_, status| {
+            observed.set(status);
+            badge::Style::default()
+        })
+        .into();
+    let mut ui = simulator(content);
+    ui.point_at(Point::new(20.0, 10.0));
+    let mut next = focusable::focus_next::<()>();
+    ui.operate(&mut next);
+    if let Outcome::Chain(mut second) = next.finish() {
+        ui.operate(second.as_mut());
+    }
+    ui.draw(&Theme::light());
+    assert!(observed.get().hovered);
+    assert!(!observed.get().focused);
+    assert!(!observed.get().interactive);
+    assert!(
+        ui.simulate(simulator::click())
+            .iter()
+            .all(|s| *s == event::Status::Ignored)
+    );
+    ui.tap_key(Named::Enter);
+    assert_eq!(ui.drain().count(), 0);
+}
+
+#[test]
+fn pointer_and_keyboard_focus_have_distinct_paint_contexts() {
+    use std::cell::Cell;
+    let observed = Cell::new(badge::Status::default());
+    let content: Element<'_, (), Theme, Renderer> = badge(Space::new().width(24).height(16))
+        .on_press(())
+        .invalid(true)
+        .state_style(|_, status| {
+            observed.set(status);
+            badge::Style::default()
+        })
+        .into();
+    let mut ui = simulator(content);
+    ui.point_at(Point::new(20.0, 10.0));
+    ui.simulate(simulator::click());
+    assert_eq!(ui.drain().count(), 1);
+    ui.draw(&Theme::light());
+    assert!(observed.get().interactive && observed.get().invalid);
+    assert!(!observed.get().focused);
+    ui.point_at(Point::new(600.0, 300.0));
+    ui.tap_key(Named::Enter);
+    ui.draw(&Theme::light());
+    assert!(observed.get().focused);
+    assert!(!observed.get().hovered);
+    assert_eq!(ui.drain().count(), 1);
+}
+
+#[test]
+fn pointer_release_outside_cancels_and_disabled_rebuild_clears_press() {
+    let mut ui = simulator(linked(false));
+    let press = Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left));
+    let release = Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left));
+    ui.point_at(Point::new(20.0, 10.0));
+    assert_eq!(ui.simulate([press.clone()]), [event::Status::Captured]);
+    ui.point_at(Point::new(100.0, 10.0));
+    ui.simulate([release.clone()]);
+    assert_eq!(ui.drain().count(), 0);
+    ui.point_at(Point::new(20.0, 10.0));
+    ui.simulate([press]);
+    ui = ui.rebuild(linked(true));
+    ui.simulate([release.clone()]);
+    ui.tap_key(Named::Enter);
+    assert_eq!(ui.drain().count(), 0);
+    ui = ui.rebuild(linked(false));
+    ui.simulate([release]);
+    ui.tap_key(Named::Enter);
+    assert_eq!(ui.drain().count(), 0);
+    ui.simulate(simulator::click());
+    assert_eq!(ui.drain().count(), 1);
+}
+
+#[test]
+fn last_style_builder_replaces_the_previous_callback() {
+    use iced_widget::container;
+    use std::cell::Cell;
+    let stale_calls = Cell::new(0);
+    let current_calls = Cell::new(0);
+    let legacy: container::StyleFn<'_, Theme> = Box::new(|_| {
+        stale_calls.set(stale_calls.get() + 1);
+        container::Style::default()
+    });
+    let content: Element<'_, (), Theme, Renderer> = badge(Space::new().width(24).height(16))
+        .style(legacy)
+        .state_style(|_, _| {
+            current_calls.set(current_calls.get() + 1);
+            badge::Style::default()
+        })
+        .into();
+    simulator(content).draw(&Theme::light());
+    assert_eq!(stale_calls.get(), 0);
+    assert!(current_calls.get() > 0);
+    let content: Element<'_, (), Theme, Renderer> = badge(Space::new().width(24).height(16))
+        .state_style(|_, _| {
+            stale_calls.set(stale_calls.get() + 1);
+            badge::Style::default()
+        })
+        .style(badge::Outline)
+        .into();
+    simulator(content).draw(&Theme::light());
+    assert_eq!(stale_calls.get(), 0);
+}
+
+#[test]
+fn touch_release_uses_touch_position_and_cancellation_does_not_activate() {
+    use iced_core::touch;
+    let mut ui = simulator(linked(false));
+    let id = touch::Finger(1);
+    ui.point_at(Point::new(600., 300.));
+    ui.simulate([
+        Event::Touch(touch::Event::FingerPressed {
+            id,
+            position: Point::new(20., 10.),
+        }),
+        Event::Touch(touch::Event::FingerLifted {
+            id,
+            position: Point::new(20., 10.),
+        }),
+    ]);
+    assert_eq!(ui.drain().count(), 1);
+    ui.simulate([
+        Event::Touch(touch::Event::FingerPressed {
+            id,
+            position: Point::new(20., 10.),
+        }),
+        Event::Touch(touch::Event::FingerLost {
+            id,
+            position: Point::new(20., 10.),
+        }),
+        Event::Touch(touch::Event::FingerLifted {
+            id,
+            position: Point::new(20., 10.),
+        }),
+    ]);
+    assert_eq!(ui.drain().count(), 0);
+}
