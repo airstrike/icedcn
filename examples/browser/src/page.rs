@@ -1,3 +1,5 @@
+pub(crate) mod rhea;
+
 use iced::Element;
 use iced::Widget;
 use std::collections::{BTreeSet, HashMap};
@@ -8,10 +10,10 @@ use tokio::fs::read_to_string;
 use iced::Alignment::*;
 use iced::border;
 use iced::mouse::Interaction;
-use iced::widget::{Id, column, sensor, stack};
+use iced::widget::{Id, column, scrollable, sensor, stack, themer};
 use iced::{Background, Fill, Font, Pixels, Subscription, Task};
 
-use icedxdy::Size::*;
+use icedxdy::Size::{Lg, Sm};
 use icedxdy::theme::container::{
     card, card_preview, code_block, code_block_panel, code_fade_overlay,
 };
@@ -182,6 +184,14 @@ fn flatten(blocks: &'static [Block]) -> Vec<(&'static Block, u8)> {
     out
 }
 
+/// Searchable TOC destinations, using the same flat keys as the scroll targets.
+pub(crate) fn sections(page: &dyn Page) -> impl Iterator<Item = (usize, &str)> {
+    flatten(page.blocks())
+        .into_iter()
+        .enumerate()
+        .filter_map(move |(i, (block, _))| block.toc_title(page.state()).map(|title| (i, title)))
+}
+
 /// Messages produced by page infrastructure and component interactions.
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -202,6 +212,23 @@ pub enum Message {
     Noop,
 }
 
+/// Spacing and surfaces around an installed example.
+pub struct Backdrop {
+    pub padding: iced::Padding,
+    pub surface: fn(&Theme) -> theme::container::Style,
+    pub border: fn(&Theme) -> theme::container::Style,
+}
+
+impl Default for Backdrop {
+    fn default() -> Self {
+        Self {
+            padding: PREVIEW_PADDING.into(),
+            surface: card_preview,
+            border: card,
+        }
+    }
+}
+
 /// Object-safe trait for a component page.
 pub trait Page: Send {
     fn meta(&self) -> &'static Meta;
@@ -213,6 +240,25 @@ pub trait Page: Send {
     fn init(&self) -> Task<super::Message>;
     fn update(&mut self, message: Message) -> Task<super::Message>;
     fn preview(&self, id: &str) -> iced::Element<'_, super::Message, Theme>;
+
+    fn backdrop(&self) -> Backdrop {
+        Backdrop::default()
+    }
+
+    /// Some upstream recipes ship a particular palette inside the preview.
+    fn preview_theme(&self, _outer: &Theme) -> Option<Theme> {
+        None
+    }
+
+    fn themed_preview(&self, id: &str, outer: &Theme) -> iced::Element<'_, super::Message, Theme> {
+        let content = self.preview(id);
+        match self.preview_theme(outer) {
+            Some(theme) => themer(Some(theme), content)
+                .text_color(|t| t.neutral.foreground.into())
+                .boxed(),
+            None => content,
+        }
+    }
 
     /// Subscription for pages that drive animations or timers. Default:
     /// `Subscription::none()`. Only the currently active page's subscription
@@ -244,11 +290,7 @@ pub fn view<'a>(
     viewer: &'a SnippetViewer,
 ) -> (Slot<'a, super::Message>, Option<Slot<'a, super::Message>>) {
     let body = render_blocks(page, viewer);
-    let st = page.state();
-    let toc_count = flatten(page.blocks())
-        .into_iter()
-        .filter(|(b, _)| b.toc_title(st).is_some())
-        .count();
+    let toc_count = sections(page).count();
     let nav = (toc_count > 1).then(|| toc(page));
     (body, nav)
 }
@@ -321,7 +363,7 @@ fn walk_blocks<'a>(
                 viewer,
                 page,
             ),
-            Block::Inline { id } => page.preview(id),
+            Block::Inline { id } => page.themed_preview(id, &viewer.theme),
             Block::Group { title, .. } => heading_for(depth, *title),
         };
 
@@ -403,7 +445,17 @@ fn render_example<'a>(
             )
         });
 
-    example_card(depth, title, description, page.preview(id), code)
+    let description = description
+        .and_then(|copy| st.descriptions.get(copy))
+        .map(|items| snippet(page_index, items, viewer).compose());
+    framed_example(
+        depth,
+        title,
+        description,
+        page.themed_preview(id, &viewer.theme),
+        code,
+        page.backdrop(),
+    )
 }
 
 /// Render shadcn's example-card chrome: an optional depth-aware heading
@@ -417,12 +469,31 @@ pub fn example_card<'a>(
     preview: iced::Element<'a, super::Message, Theme>,
     code: Option<iced::Element<'a, super::Message, Theme>>,
 ) -> iced::Element<'a, super::Message, Theme> {
+    let description = description.map(|d| text::p(d).style(theme::text::Muted).into());
+    framed_example(
+        depth,
+        title,
+        description,
+        preview,
+        code,
+        Backdrop::default(),
+    )
+}
+
+fn framed_example<'a>(
+    depth: u8,
+    title: &'a str,
+    description: Option<iced::Element<'a, super::Message, Theme>>,
+    preview: iced::Element<'a, super::Message, Theme>,
+    code: Option<iced::Element<'a, super::Message, Theme>>,
+    backdrop: Backdrop,
+) -> iced::Element<'a, super::Message, Theme> {
     let preview_el: iced::Element<'_, super::Message, Theme> = container(preview)
         .center_x(Fill)
         .align_y(iced::Center)
         .min_height(PREVIEW_HEIGHT)
-        .padding(PREVIEW_PADDING)
-        .style(card_preview)
+        .padding(backdrop.padding)
+        .style(backdrop.surface)
         .into();
 
     let divider: Option<iced::Element<'_, super::Message, Theme>> =
@@ -430,7 +501,7 @@ pub fn example_card<'a>(
 
     let card_el: iced::Element<'_, super::Message, Theme> =
         container(column![preview_el, divider, code])
-            .style(card)
+            .style(backdrop.border)
             .padding(1)
             .clip(true)
             .width(Fill)
@@ -441,12 +512,9 @@ pub fn example_card<'a>(
         return card_el;
     }
 
-    let desc: Option<iced::Element<'_, super::Message, Theme>> =
-        description.map(|d| text::p(d).style(theme::text::Muted).into());
-
     let mut col = column![].spacing(16).width(Fill);
     col = col.push(heading_for(depth, title));
-    if let Some(d) = desc {
+    if let Some(d) = description {
         col = col.push(d);
     }
     col = col.push(card_el);
@@ -529,12 +597,8 @@ pub fn code_panel<'a>(
 /// promotion. "Active" is still computed from the rank-center of the
 /// sensor-visible set so it tracks the reader's scroll position.
 fn toc<'a>(page: &'a dyn Page) -> Slot<'a, super::Message> {
-    /// Minimum alpha applied to off-screen / edge-of-visible entries.
-    /// Higher = more legible; lower = more visual emphasis on the
-    /// rank-center. shadcn ships no fade (1.0 floor); 0.6 keeps a clear
-    /// reading-position cue while staying above the contrast floor for
-    /// `muted_foreground` text.
-    const TOC_ALPHA_FLOOR: f32 = 0.6;
+    /// Keep off-screen links legible against both documentation surfaces.
+    const TOC_ALPHA_FLOOR: f32 = 0.9;
 
     let pi = page.page_index();
     let st = page.state();
@@ -633,11 +697,13 @@ fn toc<'a>(page: &'a dyn Page) -> Slot<'a, super::Message> {
     // entries hit ~28-30px line height with `text-sm` + `gap-2`, so the
     // raw button stack already lands in the right ballpark without an
     // extra inter-item spacing nudge.
+    let items = scrollable(column(nav_items).spacing(2)).height(Fill);
     column![Element::from(header)]
-        .push(column(nav_items).spacing(2).boxed())
+        .push(items.boxed())
         .spacing(16)
         .padding([24, 8])
         .width(220)
+        .height(Fill)
         .into()
 }
 
@@ -715,6 +781,7 @@ fn inline_style_from_theme(theme: &Theme) -> markdown::Style {
 /// markdown widget just emits the highlighted rich-text lines +
 /// horizontal scrollbar.
 pub struct SnippetViewer {
+    theme: Theme,
     map: markdown::highlighter::Map,
     /// Palette-derived markdown style. Inline-code fields (color +
     /// highlight bg) are driven by `palette.code`; everything else
@@ -733,6 +800,7 @@ impl SnippetViewer {
     pub fn new(map: markdown::highlighter::Map, theme: &Theme) -> Self {
         Self {
             map,
+            theme: theme.clone(),
             style: inline_style_from_theme(theme),
         }
     }
@@ -785,6 +853,7 @@ impl<'a> markdown::Viewer<'a, markdown::Uri, Theme, iced::Renderer> for SnippetV
 /// expanding a child example's code block doesn't ripple to siblings.
 pub struct State {
     pub page_index: usize,
+    descriptions: HashMap<&'static str, Vec<markdown::Item>>,
     /// Parsed markdown items keyed by path. For `Block::Example`, this is
     /// the code-snippet body. For `Block::Md`, this is the body with the
     /// first heading peeled off (rendered separately as a depth-aware heading).
@@ -807,9 +876,21 @@ pub struct State {
 
 impl State {
     pub fn new(page_index: usize, blocks: &'static [Block]) -> Self {
-        let flat_count = flatten(blocks).len();
+        let flat = flatten(blocks);
+        let flat_count = flat.len();
+        let descriptions = flat
+            .into_iter()
+            .filter_map(|(block, _)| match block {
+                Block::Example {
+                    description: Some(copy),
+                    ..
+                } => Some((*copy, markdown::parse(copy).collect())),
+                _ => None,
+            })
+            .collect();
         Self {
             page_index,
+            descriptions,
             md_items: HashMap::new(),
             md_raw: HashMap::new(),
             md_titles: HashMap::new(),

@@ -1,6 +1,6 @@
 // Generated automatically by iced_lucide at build time.
 // Do not edit manually.
-// fa7540bbb265dfa3daf44fdf72ed855dbf729881126db89e4f38b1ab81cfc56e
+// e1aca11be80568c0fd84d5e9e4fb7b0db9b7b718a6687bc27a9924d7d954bcc0
 use iced::widget::text::{self, Text};
 
 pub const FONT: &[u8] = include_bytes!("../fonts/lucide.ttf");
@@ -93,6 +93,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("mail_check", "\u{E361}"),
     ("map", "\u{E110}"),
     ("maximize", "\u{E112}"),
+    ("message_circle_dashed", "\u{E563}"),
     ("message_square", "\u{E117}"),
     ("minimize", "\u{E11A}"),
     ("minus", "\u{E11C}"),
@@ -101,9 +102,11 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("octagon_x", "\u{E128}"),
     ("palette", "\u{E1DD}"),
     ("panels_top_left", "\u{E12C}"),
+    ("paperclip", "\u{E12D}"),
     ("pencil", "\u{E1F9}"),
     ("plus", "\u{E13D}"),
     ("refresh_ccw", "\u{E144}"),
+    ("rotate_cw", "\u{E149}"),
     ("save", "\u{E14D}"),
     ("scissors", "\u{E14E}"),
     ("search", "\u{E151}"),
@@ -119,6 +122,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("sun", "\u{E178}"),
     ("table", "\u{E17D}"),
     ("tag", "\u{E17F}"),
+    ("telescope", "\u{E5C5}"),
     ("terminal", "\u{E181}"),
     ("thumbs_down", "\u{E189}"),
     ("thumbs_up", "\u{E18A}"),
@@ -724,6 +728,13 @@ where
     icon("\u{E112}")
 }
 
+pub fn message_circle_dashed<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E563}")
+}
+
 pub fn message_square<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
@@ -780,6 +791,13 @@ where
     icon("\u{E12C}")
 }
 
+pub fn paperclip<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E12D}")
+}
+
 pub fn pencil<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
@@ -799,6 +817,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E144}")
+}
+
+pub fn rotate_cw<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E149}")
 }
 
 pub fn save<'a, Theme>() -> Text<'a, Theme>
@@ -904,6 +929,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E17F}")
+}
+
+pub fn telescope<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E5C5}")
 }
 
 pub fn terminal<'a, Theme>() -> Text<'a, Theme>

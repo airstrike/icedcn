@@ -13,6 +13,7 @@ use icedxdy_core::{Theme, theme::popover::content};
 /// An action in a command list.
 pub struct Item<'a, Message> {
     label: String,
+    search: String,
     group: Option<String>,
     shortcut: Option<&'a str>,
     disabled: bool,
@@ -21,8 +22,10 @@ pub struct Item<'a, Message> {
 }
 /// Build a command option, identified and filtered by its label.
 pub fn item<'a, Message>(label: impl Into<String>) -> Item<'a, Message> {
+    let label = label.into();
     Item {
-        label: label.into(),
+        search: label.to_lowercase(),
+        label,
         group: None,
         shortcut: None,
         disabled: false,
@@ -63,6 +66,7 @@ pub struct Command<'a, Message> {
     placeholder: String,
     empty: String,
     width: Length,
+    limit: usize,
     inherited: Inherited,
 }
 /// Build a list from its source order. Filtering retains all matching groups.
@@ -74,6 +78,7 @@ pub fn command<'a, Message>(
         placeholder: "Type a command or search...".into(),
         empty: "No results found.".into(),
         width: Fill,
+        limit: usize::MAX,
         inherited: Inherited::default(),
     }
 }
@@ -93,12 +98,23 @@ impl<'a, Message> Command<'a, Message> {
         self.width = width.into();
         self
     }
+    /// Cap the visible results after filtering a large command list.
+    pub fn limit(mut self, limit: usize) -> Self {
+        self.limit = limit;
+        self
+    }
+
     fn filtered(&self, query: &str) -> impl Iterator<Item = (usize, &Item<'a, Message>)> {
-        let query = query.trim().to_lowercase();
+        let query = query.to_lowercase();
         self.items
             .iter()
             .enumerate()
-            .filter(move |(_, i)| i.label.to_lowercase().contains(&query))
+            .filter(move |(_, item)| {
+                query
+                    .split_whitespace()
+                    .all(|word| item.search.contains(word))
+            })
+            .take(self.limit)
     }
 }
 #[derive(Default)]
@@ -211,11 +227,14 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             }),
         };
         let list = scrollable(column(results).padding(4)).height(Length::Shrink);
-        let mut palette: Slot<'a, Event> = container(column![
-            search.boxed(),
-            menu::separator(),
-            container(list).max_height(300)
-        ])
+        let mut palette: Slot<'a, Event> = container(
+            column![
+                search.boxed(),
+                menu::separator(),
+                container(list).max_height(300)
+            ]
+            .width(Fill),
+        )
         .padding(4)
         .width(self.width)
         .style(content)

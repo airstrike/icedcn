@@ -1,8 +1,10 @@
+mod header;
+
 use iced::Element;
 use iced::Widget;
-use iced::clipboard;
 use iced::mouse::Interaction;
-use iced::widget::{column, combo_box, row, space, stack, svg};
+use iced::widget::{column, combo_box, operation, row, space, stack};
+use iced::{clipboard, window};
 use icedxdy::widget::scrollable;
 use icedxdy::widget::spinner;
 use std::time::Duration;
@@ -15,13 +17,8 @@ use icedxdy::widget::container;
 use icedxdy::widget::markdown::highlighter::Map;
 use icedxdy::widget::sidebar::MenuButtonSize;
 
-use icedxdy::widget::{button, rule, separator, sidebar, text, toast, toaster};
+use icedxdy::widget::{button, rule, sidebar, text, toast, toaster};
 use icedxdy::{Size, Theme, Weight, theme};
-
-const LOGO_BYTES: &[u8] = include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/../../assets/logo.svg"
-));
 
 use crate::component;
 use crate::fonts;
@@ -32,6 +29,10 @@ const PINNED_FONTS: &[&str] = &["Geist", "Inter"];
 
 pub struct App {
     dark_mode: bool,
+    width: f32,
+    search: bool,
+    fonts_open: bool,
+    stars: Option<u64>,
     current_page: usize,
     pages: Vec<Box<dyn page::Page>>,
     gh_light: Map,
@@ -42,40 +43,10 @@ pub struct App {
     current_font: String,
 }
 
-/// No real routing yet — `Message::NavSelect` is a no-op sink in `update`,
-/// preserving the visual affordance until the navigation backend lands.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum NavSection {
-    Docs,
-    Components,
-    Blocks,
-    Charts,
-    Create,
-}
-
-impl NavSection {
-    const ALL: &'static [Self] = &[
-        Self::Docs,
-        Self::Components,
-        Self::Blocks,
-        Self::Charts,
-        Self::Create,
-    ];
-
-    fn label(self) -> &'static str {
-        match self {
-            Self::Docs => "Docs",
-            Self::Components => "Components",
-            Self::Blocks => "Blocks",
-            Self::Charts => "Charts",
-            Self::Create => "Create",
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 pub enum Message {
     ToggleTheme,
+    Width(f32),
     SelectPage(usize),
     OpenUrl(&'static str),
     CopyText(String),
@@ -85,7 +56,13 @@ pub enum Message {
     FontSelected(String),
     Page(usize, page::Message),
     Font(fonts::Message),
-    NavSelect(NavSection),
+    Search(bool),
+    SearchShortcut,
+    FocusNext,
+    FocusPrevious,
+    Fonts(bool),
+    Navigate(usize, Option<usize>),
+    Stars(Option<u64>),
     /// `App` ignores; `Browser` intercepts the `value == 100` case to dismiss
     /// the splash so it stays up until the bar visibly reaches the right edge.
     SplashIdle(f32),
@@ -181,6 +158,13 @@ impl App {
             pages.push(page);
         }
 
+        tasks.push(
+            window::oldest()
+                .and_then(window::size)
+                .map(|size| Message::Width(size.width)),
+        );
+        tasks.push(Task::future(header::stars()).map(Message::Stars));
+
         let default_font = "Geist".to_string();
 
         let dark_mode = theme::is_dark_mode();
@@ -201,6 +185,10 @@ impl App {
         (
             Self {
                 dark_mode,
+                width: 1440.,
+                search: false,
+                fonts_open: false,
+                stars: None,
                 current_page: 0,
                 pages,
                 gh_light,
@@ -220,17 +208,26 @@ impl App {
 
     pub fn subscription(&self) -> Subscription<Message> {
         let i = self.current_page;
-        match self.pages.get(i) {
+        let page = match self.pages.get(i) {
             Some(page) => page
                 .subscription()
                 .with(i)
                 .map(|(i, m)| Message::Page(i, m)),
             None => Subscription::none(),
-        }
+        };
+        Subscription::batch([
+            page,
+            header::shortcuts(),
+            window::resize_events().map(|(_, size)| Message::Width(size.width)),
+        ])
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
+            Message::Width(width) => {
+                self.width = width;
+                Task::none()
+            }
             Message::ToggleTheme => {
                 self.dark_mode = !self.dark_mode;
                 let map = if self.dark_mode {
@@ -246,7 +243,10 @@ impl App {
                 self.snippet_viewer = SnippetViewer::new(map, &active_theme);
                 Task::none()
             }
-            Message::OpenUrl(url) => page::open_link(url),
+            Message::OpenUrl(url) => {
+                self.search = false;
+                page::open_link(url)
+            }
             Message::CopyText(value) => clipboard::write(value).discard(),
             Message::CreateEvent => toast::promise::<_, Message, _, ()>(
                 "Loading...",
@@ -296,6 +296,7 @@ impl App {
                     .unwrap_or_else(Task::none)
             }
             Message::FontSelected(name) => {
+                self.fonts_open = false;
                 self.current_font = name.clone();
 
                 if self.fount.system_families().contains(&name) {
@@ -312,7 +313,34 @@ impl App {
                     Task::none()
                 }
             }
-            Message::NavSelect(_) => Task::none(),
+            Message::Search(open) => {
+                self.search = open;
+                self.fonts_open = false;
+                Task::none()
+            }
+            Message::FocusNext => operation::focus_next(),
+            Message::FocusPrevious => operation::focus_previous(),
+            Message::SearchShortcut => self.update(Message::Search(!self.search)),
+            Message::Fonts(open) => {
+                self.fonts_open = open;
+                self.search = false;
+                Task::none()
+            }
+            Message::Stars(stars) => {
+                self.stars = stars;
+                Task::none()
+            }
+            Message::Navigate(page, section) => {
+                self.search = false;
+                let activate = self.update(Message::SelectPage(page));
+                match section {
+                    Some(index) => Task::batch([
+                        activate,
+                        Task::done(Message::Page(page, page::Message::ScrollTo(index))),
+                    ]),
+                    None => activate,
+                }
+            }
             Message::SplashIdle(_) => Task::none(),
             Message::Font(msg) => match msg {
                 fonts::Message::SystemFontsLoaded(families) => {
@@ -359,51 +387,8 @@ impl App {
     }
 
     pub fn view(&self) -> iced::Element<'_, Message, Theme> {
-        let branding = svg(svg::Handle::from_memory(LOGO_BYTES))
-            .width(24)
-            .height(24);
-
-        let font_selector = combo_box(
-            &self.font_list,
-            "Font...",
-            Some(&self.current_font),
-            Message::FontSelected,
-        )
-        .width(160)
-        .size(12);
-
-        let theme_icon = if self.dark_mode {
-            icon::sun().size(16)
-        } else {
-            icon::moon().size(16)
-        };
-        let theme_toggle = button(theme_icon)
-            .style(button::Ghost)
-            .square()
-            .on_press(Message::ToggleTheme);
-
-        let nav = row(NavSection::ALL.iter().copied().map(|section| {
-            Element::from(
-                button(section.label())
-                    .style(button::Ghost)
-                    .size(Size::Sm)
-                    .on_press(Message::NavSelect(section)),
-            )
-        }))
-        .spacing(0)
-        .align_y(Center);
-
-        let header = row![
-            branding,
-            nav,
-            space::horizontal(),
-            font_selector,
-            Element::from(theme_toggle)
-        ]
-        .spacing(8)
-        .padding(16)
-        .align_y(Center);
-
+        let width = self.width;
+        let header = self.header(width);
         let sidebar_header = container(
             text::xs("Components")
                 .weight(Weight::Medium)
@@ -424,13 +409,32 @@ impl App {
         }))
         .width(Fill);
 
-        // padding-left=49px aligns item text with "Docs" in the navbar:
-        // header(16) + branding(24) + row_spacing(8) + button_pad_l(10)
-        //   - inset(1) - item_pad_l(8) = 49.
+        let sections = column(header::GUIDES.iter().map(|&(label, url)| {
+            Element::from(
+                sidebar::menu_button(label)
+                    .size(MenuButtonSize::Docs)
+                    .inset(1)
+                    .on_press(Message::OpenUrl(url)),
+            )
+        }));
+        let sections_label = container(
+            text::xs("Sections")
+                .weight(Weight::Medium)
+                .style(theme::text::Muted),
+        )
+        .height(32)
+        .padding([0, 8])
+        .align_y(Center);
         let sidebar_scrollable = scrollable::scrollable(
-            column![Element::from(sidebar_header), sidebar_items]
-                .padding(iced::Padding::ZERO.top(24).right(8).bottom(8).left(49))
-                .width(272),
+            column![
+                Element::from(sections_label),
+                sections,
+                space::vertical().height(16),
+                Element::from(sidebar_header),
+                sidebar_items
+            ]
+            .padding(iced::Padding::ZERO.top(48).right(8).bottom(8).left(24))
+            .width(240),
         )
         .height(Fill);
 
@@ -464,7 +468,7 @@ impl App {
 
         let sidebar = sidebar::fixed(
             stack![Element::from(sidebar_scrollable), fade_overlay]
-                .width(272)
+                .width(240)
                 .height(Fill),
         )
         .height(Fill)
@@ -536,25 +540,21 @@ impl App {
             }
         }) as rule::StyleFn<'_, Theme>);
 
-        let body = if let Some(nav) = page_nav {
-            row![
-                Element::from(sidebar),
-                sidebar_divider,
-                Element::from(main),
-                Element::from(nav)
-            ]
-            .width(Fill)
-            .height(Fill)
-        } else {
-            row![Element::from(sidebar), sidebar_divider, Element::from(main)]
-                .width(Fill)
-                .height(Fill)
-        };
+        let mut body = row![].width(Fill).height(Fill);
+        if width >= 1024.0 {
+            body = body
+                .push(Element::from(sidebar))
+                .push(sidebar_divider.into());
+        }
+        body = body.push(Element::from(main));
+        if width >= 1280.0
+            && let Some(nav) = page_nav
+        {
+            body = body.push(Element::from(nav));
+        }
 
         // shadcn's `<Toaster />` sits once at the root of the layout.
-        let layout = column![header, Element::from(separator()), body]
-            .width(Fill)
-            .height(Fill);
+        let layout = column![header, body].width(Fill).height(Fill);
 
         toaster(layout.boxed())
             .icons(|kind| {

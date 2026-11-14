@@ -183,7 +183,9 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
 
         let mut line = row![content].spacing(6).align_y(Alignment::Center);
 
-        line = line.push(Slot::from(Space::new().width(Fill)));
+        if shortcut.is_some() || indicator != Indicator::None {
+            line = line.push(Slot::from(Space::new().width(Fill)));
+        }
 
         if let Some(shortcut) = shortcut {
             // `ml-auto text-xs tracking-widest text-muted-foreground`.
