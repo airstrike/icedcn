@@ -95,3 +95,45 @@ fn separator_axis_and_text_are_independent_public_parts() {
     assert_eq!(controls.0[0].width, 120.);
     assert_eq!(controls.0[0].y, 33.);
 }
+
+#[test]
+fn adjoining_actions_keep_separate_pointer_and_keyboard_targets() {
+    use iced_core::keyboard::key::Named;
+    use iced_core::widget::operation::Outcome;
+    use iced_core::{Event, mouse};
+
+    let group = button_group![
+        button("Left").width(60).on_press("left"),
+        button("Right").width(60).on_press("right"),
+    ];
+    let mut ui = Simulator::new(Element::<_, Theme, Renderer>::from(group));
+    for (x, expected) in [(59., "left"), (61., "right"), (61., "right")] {
+        ui.point_at(Point::new(x, 10.));
+        let _ = ui.simulate(simulator::click());
+        assert_eq!(ui.drain().collect::<Vec<_>>(), [expected]);
+    }
+    ui.point_at(Point::new(20., 10.));
+    let _ = ui.simulate([Event::Mouse(mouse::Event::ButtonPressed(
+        mouse::Button::Left,
+    ))]);
+    ui.point_at(Point::new(80., 10.));
+    let _ = ui.simulate([Event::Mouse(mouse::Event::ButtonReleased(
+        mouse::Button::Left,
+    ))]);
+    assert!(
+        ui.drain().next().is_none(),
+        "crossing the seam cancels the press"
+    );
+    ui.operate(&mut focusable::unfocus::<()>());
+    for expected in ["left", "right"] {
+        let mut next = focusable::focus_next::<()>();
+        ui.operate(&mut next);
+        if let Outcome::Chain(mut next) = next.finish() {
+            ui.operate(next.as_mut());
+        }
+        for key in [Named::Enter, Named::Space] {
+            ui.tap_key(key);
+            assert_eq!(ui.drain().collect::<Vec<_>>(), [expected]);
+        }
+    }
+}

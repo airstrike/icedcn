@@ -1,23 +1,23 @@
 // Intentional skip per AGENTS.md: button-group-rtl (RTL).
-mod icon;
 
 use iced::widget::component::{Component, component};
-use iced::{Element, Fill, Task, Widget};
+use iced::{Fill, Task, Widget};
 
-use iced::widget::svg;
+use iced::widget::Text;
 use icedcn::theme::button::{IntoStyle, state};
 use icedcn::theme::text_input;
+use icedcn::theme::tweak::{Fg, Token, hover};
 use icedcn::widget::Row;
 use icedcn::widget::button::group;
 use icedcn::widget::input_group::Align;
 use icedcn::widget::{
-    button, button_group, column, container, dropdown_menu, field, input, input_group, menu,
+    button, button_group, column, dropdown_menu, field, input, input_group, menu, menu_group,
     popover, row, select, text, textarea, tooltip,
 };
 use icedcn::{Slot, Theme};
 
-use crate::Message;
 use crate::page;
+use crate::{Message, icon};
 
 pub static META: page::Meta = page::Meta {
     title: "Button Group",
@@ -178,81 +178,67 @@ impl<'a> Component<'a, Message, Theme> for MailActions {
         None
     }
     fn view(&self, state: &Self::State) -> impl Widget<Self::Event, Theme> + 'a {
-        let selected = state.unwrap_or("Personal");
-        Element::from(
-            Row::with_children(
-                self.wide
-                    .then(|| {
-                        Slot::from(button_group![
-                            button(icon::arrow_left().boxed())
-                                .square()
-                                .style(button::Outline)
-                        ])
-                    })
-                    .into_iter()
-                    .chain([
-                        button_group![
-                            button("Archive").style(button::Outline),
-                            button("Report").style(button::Outline)
-                        ]
-                        .into(),
-                        dropdown_menu(
-                            |&m| {
-                                button_group![
-                                    button("Snooze").style(button::Outline),
-                                    m.trigger(
-                                        button(icon::ellipsis().boxed())
-                                            .style(button::Outline)
-                                            .square()
-                                            .has_popup(true)
-                                    )
-                                ]
-                                .into()
-                            },
-                            move |_| {
-                                column![
-                                    menu::item(
-                                        row![icon::mail_check().boxed(), "Mark as Read"].spacing(8)
-                                    ),
-                                    menu::item(row![icon::archive().boxed(), "Archive"].spacing(8)),
-                                    menu::separator(),
-                                    menu::item(row![icon::clock().boxed(), "Snooze"].spacing(8)),
-                                    menu::item(
-                                        row![icon::calendar_plus().boxed(), "Add to Calendar"]
-                                            .spacing(8)
-                                    ),
-                                    menu::item(
-                                        row![icon::list_filter().boxed(), "Add to List"].spacing(8)
-                                    ),
-                                    menu::sub(
-                                        row![icon::tag().boxed(), "Label As..."].spacing(8),
-                                        ["Personal", "Work", "Other"].map(|label| {
-                                            menu::radio_item(
-                                                label,
-                                                label,
-                                                Some(selected),
-                                                |label| label,
-                                            )
-                                            .into()
-                                        })
-                                    ),
-                                    menu::separator(),
-                                    menu::item(row![icon::trash_2().boxed(), "Trash"].spacing(8))
-                                        .style(menu::Destructive)
-                                ]
-                                .width(Fill)
-                                .into()
-                            },
-                        )
-                        .align(dropdown_menu::Align::End)
-                        .width(160)
-                        .into(),
-                    ]),
-            )
-            .spacing(8)
-            .align_y(iced::Center),
-        )
+        mail_actions(self.wide, state.unwrap_or("Personal")).compose()
     }
+}
+
+fn mail_actions(wide: bool, selected: &'static str) -> Slot<'static, &'static str> {
+    let mut actions = Row::new().spacing(8).align_y(iced::Center);
+    if wide {
+        actions = actions.push(
+            button_group![
+                button(icon::arrow_left().size(16).line_height(1.0))
+                    .square()
+                    .style(button::Outline)
+            ]
+            .into(),
+        );
+    }
+    let more = dropdown_menu(
+        |m| {
+            button_group![
+                button("Snooze").style(button::Outline),
+                m.trigger(
+                    button(icon::ellipsis().size(16).line_height(1.0))
+                        .square()
+                        .style(button::Outline)
+                        .has_popup(true)
+                ),
+            ]
+            .into()
+        },
+        move |_| {
+            let caption = |glyph: Text<'static, Theme>, label| {
+                menu::caption(glyph.size(16).line_height(1.0), label)
+            };
+            let item = |glyph, label| menu::item(caption(glyph, label));
+            let labels = ["Personal", "Work", "Other"]
+                .map(|label| menu::radio_item(label, label, Some(selected), |value| value).into());
+            menu_group![
+                item(icon::mail_check(), "Mark as Read"),
+                item(icon::archive(), "Archive"),
+                menu::separator(),
+                item(icon::clock(), "Snooze"),
+                item(icon::calendar_plus(), "Add to Calendar"),
+                item(icon::list_filter(), "Add to List"),
+                menu::sub(caption(icon::tag(), "Label As..."), labels),
+                menu::separator(),
+                item(icon::trash_2(), "Trash").style(menu::Destructive),
+            ]
+        },
+    )
+    .align(dropdown_menu::Align::End)
+    .width(160);
+    actions
+        .push(
+            button_group![
+                button("Archive").style(button::Outline),
+                button("Report").style(button::Outline)
+            ]
+            .into(),
+        )
+        .push(more.into())
+        .into()
 }
 pub(super) fn demo(wide: bool) -> Slot<'static, Message> {
     Slot::from(component(MailActions { wide }).boxed())
@@ -269,49 +255,41 @@ impl<'a> Component<'a, Message, Theme> for Voice {
         None
     }
     fn view(&self, enabled: &bool) -> impl Widget<bool, Theme> + 'a {
-        let enabled = *enabled;
-        let audio = icon::audio_lines().style(move |theme: &Theme, _| svg::Style {
-            color: Some(if enabled {
-                voice_foreground(theme)
-            } else {
-                theme.neutral.foreground.into()
-            }),
-        });
-        let toggle = input_group::button(audio.boxed())
-            .square()
-            .on_press(!enabled);
-        let toggle = if enabled {
-            toggle.style(VoiceActive)
-        } else {
-            toggle
-        };
-        Element::from(button_group![
-            button_group![
-                button(icon::plus().boxed())
-                    .rounded()
-                    .square()
-                    .style(button::Outline)
-            ],
-            button_group![
-                input_group(
-                    input(if enabled {
-                        "Record and send audio..."
-                    } else {
-                        "Send a message..."
-                    })
-                    .text_size(if self.narrow { 16. } else { 14. })
-                    .disabled(enabled)
-                )
-                .style(Box::new(|theme: &Theme, status| {
-                    let mut style = text_input::default(theme, status);
-                    style.border.radius = 9999.0.into();
-                    style
-                }) as text_input::StyleFn<'static, Theme>)
-                .addon(input_group::addon(tooltip(toggle, "Voice Mode")).align(Align::InlineEnd))
-            ]
-            .width(if self.narrow { 220. } else { 215.203 })
-        ])
+        voice_input(self.narrow, *enabled).compose()
     }
+}
+
+fn voice_input(narrow: bool, enabled: bool) -> Slot<'static, bool> {
+    let toggle = input_group::button(icon::audio_lines().size(16).line_height(1.0))
+        .square()
+        .on_press(!enabled);
+    let toggle = if enabled {
+        toggle.style(VoiceActive)
+    } else {
+        toggle.style(button::Ghost + Fg(Token::MutedForeground) + hover(Fg(Token::Foreground)))
+    };
+    let placeholder = if enabled {
+        "Record and send audio..."
+    } else {
+        "Send a message..."
+    };
+    let editor = input_group(
+        input(placeholder)
+            .text_size(if narrow { 16. } else { 14. })
+            .disabled(enabled),
+    )
+    .style(text_input::Default + icedcn::radius(9999.))
+    .addon(input_group::addon(tooltip(toggle, "Voice Mode")).align(Align::InlineEnd));
+    button_group![
+        button_group![
+            button(icon::plus().size(16).line_height(1.0))
+                .rounded()
+                .square()
+                .style(button::Outline)
+        ],
+        button_group![editor].width(if narrow { 220. } else { 215.2 }),
+    ]
+    .into()
 }
 
 /// Keep the Ghost variant's geometry and keyboard decoration in both themes.
@@ -321,88 +299,66 @@ impl<'a> IntoStyle<'a> for VoiceActive {
         let ghost = button::Ghost.into_style();
         Box::new(move |theme, status| {
             let mut style = ghost(theme, status);
-            style.paint.background = Some(
-                if theme.neutral.is_dark {
-                    iced::Color::from_rgb8(154, 52, 18)
-                } else {
-                    iced::Color::from_rgb8(255, 237, 213)
-                }
-                .into(),
-            );
-            style.paint.text_color = voice_foreground(theme);
+            let orange_100 = iced::Color::from_rgb8(255, 237, 213);
+            let (background, foreground) = if theme.neutral.is_dark {
+                (iced::Color::from_rgb8(154, 52, 18), orange_100)
+            } else {
+                (orange_100, iced::Color::from_rgb8(194, 65, 12))
+            };
+            style.paint.background = Some(background.into());
+            style.paint.text_color = foreground;
             style
         })
     }
 }
 
-fn voice_foreground(theme: &Theme) -> iced::Color {
-    if theme.neutral.is_dark {
-        iced::Color::from_rgb8(255, 237, 213)
-    } else {
-        iced::Color::from_rgb8(194, 65, 12)
-    }
-}
-
 pub(super) fn view(id: &str, window_width: f32) -> Slot<'static, Message> {
-    use icedcn::Size::{Lg, Sm};
+    use icedcn::Size::{Default, Lg, Sm};
     let narrow = window_width < 768.;
 
     match id {
-        "demo" => Slot::from(
-            component(MailActions {
-                wide: window_width >= 640.,
-            })
-            .boxed(),
-        ),
+        "demo" => demo(window_width >= 640.),
         "orientation" => button_group![
-            button(icon::plus().boxed()).square().style(button::Outline),
-            button(icon::minus().boxed())
+            button(icon::plus().size(16).line_height(1.0))
+                .square()
+                .style(button::Outline),
+            button(icon::minus().size(16).line_height(1.0))
                 .square()
                 .style(button::Outline),
         ]
         .orientation(group::Vertical)
         .into(),
 
-        "size" => column([
-            button_group![
-                button("Small").style(button::Outline).size(Sm),
-                button("Button").style(button::Outline).size(Sm),
-                button("Group").style(button::Outline).size(Sm),
-                button(icon::plus().boxed())
-                    .square()
-                    .style(button::Outline)
-                    .size(Sm),
-            ]
-            .into(),
-            button_group![
-                button("Default").style(button::Outline),
-                button("Button").style(button::Outline),
-                button("Group").style(button::Outline),
-                button(icon::plus().boxed()).square().style(button::Outline),
-            ]
-            .into(),
-            button_group![
-                button("Large").style(button::Outline).size(Lg),
-                button("Button").style(button::Outline).size(Lg),
-                button("Group").style(button::Outline).size(Lg),
-                button(icon::plus().boxed())
-                    .square()
-                    .style(button::Outline)
-                    .size(Lg),
-            ]
-            .into(),
-        ])
+        "size" => column([(Sm, "Small"), (Default, "Default"), (Lg, "Large")].map(
+            |(size, first)| {
+                let action = |label| button(label).size(size).style(button::Outline);
+                button_group![
+                    action(first),
+                    action("Button"),
+                    action("Group"),
+                    button(icon::plus().size(16).line_height(1.0))
+                        .size(size)
+                        .square()
+                        .style(button::Outline)
+                ]
+                .into()
+            },
+        ))
         .spacing(32)
         .align_x(iced::Left)
         .into(),
 
         "nested" => button_group![
-            button_group![button(icon::plus().boxed()).square().style(button::Outline)],
+            button_group![
+                button(icon::plus().size(16).line_height(1.0))
+                    .square()
+                    .style(button::Outline)
+            ],
             button_group![
                 input_group(input("Send a message...").text_size(if narrow { 16. } else { 14. }))
                     .addon(
                         input_group::addon(tooltip(
-                            container(icon::audio_lines().boxed()).padding([0, 0]),
+                            icon::audio_lines().size(16).line_height(1.0),
                             "Voice Mode"
                         ))
                         .align(Align::InlineEnd)
@@ -422,7 +378,7 @@ pub(super) fn view(id: &str, window_width: f32) -> Slot<'static, Message> {
         "split" => button_group![
             button("Button").style(button::Secondary),
             group::separator(),
-            button(icon::tabler_plus().boxed())
+            button(icon::plus().size(16).line_height(1.0))
                 .square()
                 .style(button::Secondary)
         ]
@@ -432,7 +388,7 @@ pub(super) fn view(id: &str, window_width: f32) -> Slot<'static, Message> {
             input("Search...")
                 .text_size(if narrow { 16. } else { 14. })
                 .width(if narrow { 216. } else { 192. }),
-            button(icon::search().boxed()).style(button::Outline)
+            button(icon::search().size(16).line_height(1.0)).style(button::Outline)
         ]
         .into(),
 
@@ -443,7 +399,7 @@ pub(super) fn view(id: &str, window_width: f32) -> Slot<'static, Message> {
                 button_group![
                     button("Follow").style(button::Outline),
                     m.trigger(
-                        button(icon::chevron_down().boxed())
+                        button(icon::chevron_down().size(16).line_height(1.0))
                             .style(button::Outline)
                             .padding(iced::Padding::ZERO.left(8).right(10))
                             .has_popup(true)
@@ -452,21 +408,19 @@ pub(super) fn view(id: &str, window_width: f32) -> Slot<'static, Message> {
                 .into()
             },
             |_| {
-                column![
-                    menu::item(row![icon::volume_off().boxed(), "Mute Conversation"].spacing(8)),
-                    menu::item(row![icon::check().boxed(), "Mark as Read"].spacing(8)),
-                    menu::item(
-                        row![icon::triangle_alert().boxed(), "Report Conversation"].spacing(8)
-                    ),
-                    menu::item(row![icon::user_round_x().boxed(), "Block User"].spacing(8)),
-                    menu::item(row![icon::share().boxed(), "Share Conversation"].spacing(8)),
-                    menu::item(row![icon::copy().boxed(), "Copy Conversation"].spacing(8)),
+                let item = |glyph: Text<'static, Theme>, label| {
+                    menu::item(menu::caption(glyph.size(16).line_height(1.0), label))
+                };
+                menu_group![
+                    item(icon::volume_off(), "Mute Conversation"),
+                    item(icon::check(), "Mark as Read"),
+                    item(icon::triangle_alert(), "Report Conversation"),
+                    item(icon::user_round_x(), "Block User"),
+                    item(icon::share(), "Share Conversation"),
+                    item(icon::copy(), "Copy Conversation"),
                     menu::separator(),
-                    menu::item(row![icon::trash().boxed(), "Delete Conversation"].spacing(8))
-                        .style(menu::Destructive)
+                    item(icon::trash(), "Delete Conversation").style(menu::Destructive),
                 ]
-                .width(Fill)
-                .into()
             },
         )
         .align(dropdown_menu::Align::End)
@@ -488,15 +442,14 @@ pub(super) fn view(id: &str, window_width: f32) -> Slot<'static, Message> {
                 ]
                 .spacing(4))
                 .width(50.406)
-                .min_width(96.)
-                .icon_content(icon::chevron_down),
+                .min_width(96.),
                 input("10.00")
                     .text_size(if narrow { 16. } else { 14. })
                     .width(Fill)
             ]
             .width(if narrow { 220. } else { 241.406 }),
             button_group![
-                button(icon::arrow_right().boxed())
+                button(icon::arrow_right().size(16).line_height(1.0))
                     .square()
                     .style(button::Outline)
             ]
@@ -506,9 +459,10 @@ pub(super) fn view(id: &str, window_width: f32) -> Slot<'static, Message> {
         "popover" => popover(
             |&p| {
                 button_group![
-                    button![icon::bot().boxed(), "Copilot"].style(button::Outline),
+                    button![icon::bot().size(16).line_height(1.0), "Copilot"]
+                        .style(button::Outline),
                     p.trigger(
-                        button(icon::chevron_down().boxed())
+                        button(icon::chevron_down().size(16).line_height(1.0))
                             .square()
                             .style(button::Outline)
                             .has_popup(true)

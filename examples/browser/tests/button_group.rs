@@ -187,16 +187,58 @@ fn hero_submenu_keeps_the_label_after_reopening() {
     let mut ui = ui.rebuild(page.preview("demo"));
     click_control(&mut ui, 4);
     ui.click("Label As...").expect("reopen label submenu");
-    let work = ui
-        .find("Work")
-        .expect("label choice remains present")
-        .bounds();
-    let check = ui
-        .find("✓")
-        .expect("selected label has a checkmark")
-        .bounds();
-    assert_eq!(work.center_y(), check.center_y());
+    // The selected row mounts a 16px SVG in its trailing indicator slot.
+    // Empty slots have width, but no intrinsic height.
+    struct Indicators(Vec<Rectangle>);
+    impl Operation for Indicators {
+        fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+            visit(self);
+        }
+        fn container(&mut self, _: Option<&Id>, bounds: Rectangle, _: &Rectangle) {
+            if bounds.width == 16. && bounds.height == 16. {
+                self.0.push(bounds);
+            }
+        }
+    }
+    let mut indicators = Indicators(Vec::new());
+    ui.operate(&mut indicators);
+    for label in ["Personal", "Work", "Other"] {
+        let row = ui.find(label).expect("label option").bounds();
+        let checked = indicators
+            .0
+            .iter()
+            .any(|b| b.x >= row.x + row.width && b.center_y() == row.center_y());
+        assert_eq!(
+            checked,
+            label == "Work",
+            "{label}: {row:?}, {:?}",
+            indicators.0
+        );
+    }
     ui.tap_key(Named::Escape);
     ui.tap_key(Named::Escape);
     ui.find("Archive").expect("group remains mounted");
+}
+
+#[test]
+fn copilot_editor_accepts_text_and_an_outside_click_dismisses_it() {
+    let page = ButtonGroupPage::new(0);
+    let mut ui = preview(&*page, "popover", 340.);
+    click_control(&mut ui, 1);
+    let editor = controls(&mut ui)
+        .into_iter()
+        .find(|b| b.height >= 50.)
+        .expect("open task editor");
+    ui.point_at(editor.center());
+    ui.simulate(simulator::click());
+    ui.typewrite("Check the layout");
+    ui.find("Check the layout").expect("typed task");
+    ui.point_at(iced::Point::new(338., 286.));
+    ui.simulate(simulator::click());
+    let mut ui = ui.rebuild(page.preview("popover"));
+    ui.draw(&Theme::light());
+    assert!(ui.find("Start a new task with Copilot").is_err());
+    click_control(&mut ui, 1);
+    ui.find("Start a new task with Copilot")
+        .expect("popover reopens");
 }
