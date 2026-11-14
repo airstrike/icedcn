@@ -1,3 +1,3 @@
 ## Tabs
 
-Show several files with [Tabs](/docs/components/radix/tabs), one `CodeBlock` in each `TabsContent`.
+Give each file a `t.trigger(...)` and a matching `t.content(...)` inside `tabs(...)`. Each tab contains a code block with its own title and copy button.

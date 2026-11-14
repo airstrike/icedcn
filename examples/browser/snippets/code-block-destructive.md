@@ -129,7 +129,7 @@ fn icon(name: &str) -> Slot<'static, Message> {
         .into()
 }
 
-const DESTRUCTIVE: &str = r##"TypeError: Cannot read properties of undefined (reading 'map')
-    at MessageList (components/message-list.tsx:18:22)
-    at renderWithHooks (react-dom.development.js:16305:18)"##;
+const DESTRUCTIVE: &str = r##"thread 'main' panicked at src/notebook.rs:18:22:
+index out of bounds: the len is 0 but the index is 0
+note: run with `RUST_BACKTRACE=1` to display a backtrace"##;
 ```

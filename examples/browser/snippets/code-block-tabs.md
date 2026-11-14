@@ -74,15 +74,15 @@ impl Demo {
         let id = "tabs";
         tabs(move |t| {
             let mut body = column![t.list([
-                t.trigger("route", "route.ts"),
-                t.trigger("chat", "chat.tsx"),
-                t.trigger("env", ".env.local")
+                t.trigger("view", "view.rs"),
+                t.trigger("search", "search.rs"),
+                t.trigger("config", "config.toml")
             ])]
             .spacing(8);
             for (id, title, source) in [
-                ("route", "app/api/chat/route.ts", TABS_0),
-                ("chat", "components/chat.tsx", TABS_1),
-                ("env", ".env.local", TABS_2),
+                ("view", "src/view.rs", TABS_0),
+                ("search", "src/search.rs", TABS_1),
+                ("config", ".cargo/config.toml", TABS_2),
             ] {
                 body = body.push(
                     t.content(
@@ -96,7 +96,7 @@ impl Demo {
             }
             body.into()
         })
-        .default_value("route")
+        .default_value("view")
         .into()
     }
     fn copy(&self, id: &'static str, source: &str) -> Slot<'static, Message> {
@@ -147,7 +147,7 @@ fn icon(name: &str) -> Slot<'static, Message> {
 }
 
 mod tokens {
-    //! Fixed recipe tokens generated with pinned Shiki 3.23.0, JavaScript regex engine,
+    //! Fixed recipe tokens generated with pinned Shiki 3.23.0,
     //! github-light/github-dark. Partial final lines retain streaming grammar behavior.
     //! This fixture data does not implement a general-purpose highlighter.
     use super::*;
@@ -160,25 +160,32 @@ mod tokens {
     }
     #[rustfmt::skip]
 static ROWS: &[&[Run]] = &[
-    &[(6, 0xd73a49ff, 0xf97583ff), (22, 0x24292eff, 0xe1e4e8ff), (26, 0xd73a49ff, 0xf97583ff), (27, 0x24292eff, 0xe1e4e8ff), (31, 0x032f62ff, 0x9ecbffff)],
     &[],
-    &[(6, 0xd73a49ff, 0xf97583ff), (7, 0x24292eff, 0xe1e4e8ff), (12, 0xd73a49ff, 0xf97583ff), (13, 0x24292eff, 0xe1e4e8ff), (21, 0xd73a49ff, 0xf97583ff), (22, 0x24292eff, 0xe1e4e8ff), (26, 0x6f42c1ff, 0xb392f0ff), (27, 0x24292eff, 0xe1e4e8ff), (34, 0xe36209ff, 0xffab70ff), (35, 0xd73a49ff, 0xf97583ff), (36, 0x24292eff, 0xe1e4e8ff), (43, 0x6f42c1ff, 0xb392f0ff), (46, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (21, 0x24292eff, 0xe1e4e8ff), (22, 0xd73a49ff, 0xf97583ff), (23, 0x24292eff, 0xe1e4e8ff), (28, 0xd73a49ff, 0xf97583ff), (37, 0x24292eff, 0xe1e4e8ff), (41, 0x6f42c1ff, 0xb392f0ff), (43, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (8, 0xd73a49ff, 0xf97583ff), (16, 0x24292eff, 0xe1e4e8ff), (41, 0x6f42c1ff, 0xb392f0ff), (43, 0x24292eff, 0xe1e4e8ff)],
+    &[(5, 0x24292eff, 0xe1e4e8ff)],
     &[(1, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (8, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (21, 0x005cc5ff, 0x79b8ffff), (22, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (31, 0xd73a49ff, 0xf97583ff), (44, 0x24292eff, 0xe1e4e8ff)],
-    &[(12, 0x032f62ff, 0x9ecbffff)],
-    &[(6, 0xd73a49ff, 0xf97583ff), (19, 0x24292eff, 0xe1e4e8ff), (23, 0xd73a49ff, 0xf97583ff), (24, 0x24292eff, 0xe1e4e8ff), (39, 0x032f62ff, 0x9ecbffff)],
-    &[(6, 0xd73a49ff, 0xf97583ff), (7, 0x24292eff, 0xe1e4e8ff), (15, 0xd73a49ff, 0xf97583ff), (16, 0x24292eff, 0xe1e4e8ff), (20, 0x6f42c1ff, 0xb392f0ff), (24, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (8, 0x24292eff, 0xe1e4e8ff), (14, 0x005cc5ff, 0x79b8ffff), (15, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (17, 0x24292eff, 0xe1e4e8ff), (27, 0x6f42c1ff, 0xb392f0ff), (37, 0x24292eff, 0xe1e4e8ff), (66, 0x032f62ff, 0x9ecbffff), (79, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (21, 0x24292eff, 0xe1e4e8ff), (22, 0xd73a49ff, 0xf97583ff), (23, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (32, 0x24292eff, 0xe1e4e8ff)],
-    &[(18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (31, 0x032f62ff, 0x9ecbffff)],
+    &[(8, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (13, 0x6f42c1ff, 0xb392f0ff), (15, 0x24292eff, 0xe1e4e8ff)],
+    &[(8, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (16, 0x6f42c1ff, 0xb392f0ff), (18, 0x24292eff, 0xe1e4e8ff)],
+    &[(3, 0xd73a49ff, 0xf97583ff), (4, 0x24292eff, 0xe1e4e8ff), (11, 0x6f42c1ff, 0xb392f0ff), (13, 0xd73a49ff, 0xf97583ff), (17, 0x6f42c1ff, 0xb392f0ff), (18, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0xd73a49ff, 0xf97583ff), (3, 0x24292eff, 0xe1e4e8ff), (10, 0x6f42c1ff, 0xb392f0ff), (16, 0x24292eff, 0xe1e4e8ff), (17, 0xd73a49ff, 0xf97583ff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (22, 0x6f42c1ff, 0xb392f0ff), (29, 0x24292eff, 0xe1e4e8ff), (30, 0xd73a49ff, 0xf97583ff), (31, 0x24292eff, 0xe1e4e8ff), (32, 0xd73a49ff, 0xf97583ff), (35, 0x6f42c1ff, 0xb392f0ff), (37, 0x24292eff, 0xe1e4e8ff), (39, 0xd73a49ff, 0xf97583ff), (40, 0x24292eff, 0xe1e4e8ff), (44, 0x6f42c1ff, 0xb392f0ff), (46, 0x24292eff, 0xe1e4e8ff)],
+    &[(9, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (22, 0x6f42c1ff, 0xb392f0ff), (24, 0x24292eff, 0xe1e4e8ff), (25, 0xd73a49ff, 0xf97583ff), (33, 0x6f42c1ff, 0xb392f0ff), (34, 0x24292eff, 0xe1e4e8ff), (35, 0xd73a49ff, 0xf97583ff), (40, 0x24292eff, 0xe1e4e8ff), (41, 0xd73a49ff, 0xf97583ff), (53, 0x6f42c1ff, 0xb392f0ff), (56, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0xd73a49ff, 0xf97583ff), (3, 0x24292eff, 0xe1e4e8ff), (9, 0x6f42c1ff, 0xb392f0ff), (11, 0x24292eff, 0xe1e4e8ff), (12, 0x6f42c1ff, 0xb392f0ff), (19, 0x24292eff, 0xe1e4e8ff), (20, 0xd73a49ff, 0xf97583ff), (21, 0x24292eff, 0xe1e4e8ff), (22, 0xd73a49ff, 0xf97583ff), (25, 0x6f42c1ff, 0xb392f0ff), (33, 0x24292eff, 0xe1e4e8ff), (34, 0xd73a49ff, 0xf97583ff), (35, 0x24292eff, 0xe1e4e8ff), (36, 0xd73a49ff, 0xf97583ff), (37, 0x24292eff, 0xe1e4e8ff), (38, 0xd73a49ff, 0xf97583ff), (39, 0x24292eff, 0xe1e4e8ff), (40, 0x6f42c1ff, 0xb392f0ff), (41, 0x24292eff, 0xe1e4e8ff), (44, 0x6f42c1ff, 0xb392f0ff), (47, 0x24292eff, 0xe1e4e8ff), (49, 0xd73a49ff, 0xf97583ff), (50, 0x24292eff, 0xe1e4e8ff), (53, 0x6f42c1ff, 0xb392f0ff), (54, 0x24292eff, 0xe1e4e8ff), (55, 0xd73a49ff, 0xf97583ff), (56, 0x24292eff, 0xe1e4e8ff), (57, 0x6f42c1ff, 0xb392f0ff), (58, 0x24292eff, 0xe1e4e8ff), (61, 0x6f42c1ff, 0xb392f0ff), (64, 0x24292eff, 0xe1e4e8ff)],
+    &[(10, 0x24292eff, 0xe1e4e8ff)],
+    &[(8, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (15, 0x6f42c1ff, 0xb392f0ff), (17, 0x24292eff, 0xe1e4e8ff)],
+    &[(8, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (15, 0x6f42c1ff, 0xb392f0ff), (16, 0x24292eff, 0xe1e4e8ff), (17, 0xd73a49ff, 0xf97583ff), (22, 0x24292eff, 0xe1e4e8ff), (23, 0xd73a49ff, 0xf97583ff), (24, 0x24292eff, 0xe1e4e8ff), (31, 0x6f42c1ff, 0xb392f0ff), (46, 0x24292eff, 0xe1e4e8ff)],
+    &[(3, 0xd73a49ff, 0xf97583ff), (4, 0x24292eff, 0xe1e4e8ff), (11, 0x6f42c1ff, 0xb392f0ff), (13, 0xd73a49ff, 0xf97583ff), (19, 0x6f42c1ff, 0xb392f0ff), (21, 0xd73a49ff, 0xf97583ff), (36, 0x24292eff, 0xe1e4e8ff)],
+    &[(3, 0xd73a49ff, 0xf97583ff), (4, 0x24292eff, 0xe1e4e8ff), (6, 0xd73a49ff, 0xf97583ff), (7, 0x24292eff, 0xe1e4e8ff), (11, 0x6f42c1ff, 0xb392f0ff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (21, 0xd73a49ff, 0xf97583ff), (22, 0x24292eff, 0xe1e4e8ff), (28, 0x6f42c1ff, 0xb392f0ff), (31, 0x24292eff, 0xe1e4e8ff), (33, 0xd73a49ff, 0xf97583ff), (34, 0x24292eff, 0xe1e4e8ff), (38, 0x6f42c1ff, 0xb392f0ff), (40, 0x24292eff, 0xe1e4e8ff), (41, 0x6f42c1ff, 0xb392f0ff), (48, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (8, 0x24292eff, 0xe1e4e8ff), (11, 0xd73a49ff, 0xf97583ff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (27, 0x6f42c1ff, 0xb392f0ff), (29, 0x24292eff, 0xe1e4e8ff), (30, 0xd73a49ff, 0xf97583ff), (37, 0x6f42c1ff, 0xb392f0ff), (38, 0x24292eff, 0xe1e4e8ff), (39, 0x005cc5ff, 0x79b8ffff), (41, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (25, 0x24292eff, 0xe1e4e8ff)],
+    &[(14, 0x24292eff, 0xe1e4e8ff), (15, 0xd73a49ff, 0xf97583ff), (21, 0x24292eff, 0xe1e4e8ff), (22, 0xd73a49ff, 0xf97583ff), (26, 0x6f42c1ff, 0xb392f0ff), (27, 0x24292eff, 0xe1e4e8ff), (31, 0x6f42c1ff, 0xb392f0ff), (33, 0xd73a49ff, 0xf97583ff), (34, 0x6f42c1ff, 0xb392f0ff), (40, 0x24292eff, 0xe1e4e8ff), (41, 0xd73a49ff, 0xf97583ff), (47, 0x6f42c1ff, 0xb392f0ff), (50, 0x24292eff, 0xe1e4e8ff), (51, 0xd73a49ff, 0xf97583ff), (55, 0x6f42c1ff, 0xb392f0ff), (59, 0x24292eff, 0xe1e4e8ff)],
+    &[(9, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (14, 0x6f42c1ff, 0xb392f0ff), (16, 0x24292eff, 0xe1e4e8ff)],
+    &[(1, 0x24292eff, 0xe1e4e8ff), (4, 0x6f42c1ff, 0xb392f0ff), (5, 0x24292eff, 0xe1e4e8ff)],
+    &[(11, 0x24292eff, 0xe1e4e8ff), (27, 0x032f62ff, 0x9ecbffff)],
 ];
     #[rustfmt::skip]
 static FIXTURES: &[Fixture] = &[
-    Fixture { source: TABS_0, rows: &[0, 1, 2, 3, 10, 1, 4, 5], tails: &[] },
-    Fixture { source: TABS_1, rows: &[7, 1, 8, 1, 9, 11, 1, 6, 5], tails: &[] },
-    Fixture { source: TABS_2, rows: &[12], tails: &[] },
+    Fixture { source: TABS_0, rows: &[12, 5, 0, 13, 14, 15, 16, 1, 17, 2], tails: &[] },
+    Fixture { source: TABS_1, rows: &[6, 7, 2, 0, 8, 9, 3, 10, 11, 4, 2], tails: &[] },
+    Fixture { source: TABS_2, rows: &[18, 19], tails: &[] },
 ];
     pub fn row(source: &str, index: usize, visible: usize, last: bool) -> Option<&'static [Run]> {
         let fixture = FIXTURES
@@ -284,24 +291,29 @@ mod highlight {
     }
 }
 
-const TABS_0: &str = r##"import { streamText } from "ai"
+const TABS_0: &str = r##"use icedxdy::widget::{column, text};
+use icedxdy::Slot;
 
-export async function POST(request: Request) {
-  const { messages } = await request.json()
-  const result = streamText({ model: "anthropic/claude-sonnet-4.5", messages })
-
-  return result.toUIMessageStreamResponse()
+pub fn view(titles: &[String]) -> Slot<'_, ()> {
+    let mut items = column![].spacing(8);
+    for title in titles {
+        items = items.push(text::p(title.as_str()).into());
+    }
+    items.into()
 }"##;
 
-const TABS_1: &str = r##""use client"
+const TABS_1: &str = r##"fn matches(query: &str, title: &str) -> bool {
+    title.to_lowercase().contains(&query.to_lowercase())
+}
 
-import { useChat } from "@ai-sdk/react"
-
-export function Chat() {
-  const { messages } = useChat()
-
-  return <MessageList messages={messages} />
+fn search<'a>(query: &str, titles: &[&'a str]) -> Vec<&'a str> {
+    titles
+        .iter()
+        .copied()
+        .filter(|title| matches(query, title))
+        .collect()
 }"##;
 
-const TABS_2: &str = r##"AI_GATEWAY_API_KEY=your-api-key"##;
+const TABS_2: &str = r##"[env]
+RUST_LOG = "notebook=debug""##;
 ```

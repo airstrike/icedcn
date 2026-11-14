@@ -1,4 +1,4 @@
-### CodeBlockContent
+### Content viewport
 
 The constructor owns the content. It scrolls horizontally by default and can wrap or cap its vertical viewport.
 

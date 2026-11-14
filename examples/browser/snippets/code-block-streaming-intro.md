@@ -1,3 +1,3 @@
 ## Streaming
 
-While the code streams, the hook tokenizes only the new lines, starting where the last line left off. Lines that did not change keep the same nodes, so React skips them.
+Replay a sequence of Rust files, a Cargo command, a diff and a configuration file. Each listing uses the token colors for the visible prefix.

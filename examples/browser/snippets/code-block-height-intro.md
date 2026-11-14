@@ -1,5 +1,3 @@
 ## Height
 
-Cap the height with a `max-h-*` class on `CodeBlockContent`. The content scrolls inside the block.
-
-Use `.max_height(192.)` in Rust for this example.
+Use `.max_height(192.)` to cap the notebook log. The viewport scrolls when the output exceeds that height.

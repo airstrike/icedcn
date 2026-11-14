@@ -1,4 +1,3 @@
-// The upstream RTL recipe is excluded by project policy; all 24 LTR recipes remain.
 mod demo;
 mod highlight;
 mod samples;

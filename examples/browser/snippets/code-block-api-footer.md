@@ -1,4 +1,4 @@
-### CodeBlockFooter
+### Footer
 
 `.footer(...)` mounts content beneath the viewport. The Show More recipes use a centered ghost extra-small button.
 

@@ -46,13 +46,13 @@ impl Demo {
         let normal = |_: usize, _: &str| LineStyle::Default;
         let id = "highlighting";
         listing(dark, HIGHLIGHTING, usize::MAX, false, normal)
-            .title("getWeather output")
+            .title("src/notebook.rs")
             .into()
     }
 }
 
 mod tokens {
-    //! Fixed recipe tokens generated with pinned Shiki 3.23.0, JavaScript regex engine,
+    //! Fixed recipe tokens generated with pinned Shiki 3.23.0,
     //! github-light/github-dark. Partial final lines retain streaming grammar behavior.
     //! This fixture data does not implement a general-purpose highlighter.
     use super::*;
@@ -66,14 +66,15 @@ mod tokens {
     #[rustfmt::skip]
 static ROWS: &[&[Run]] = &[
     &[(1, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (12, 0x005cc5ff, 0x79b8ffff), (14, 0x24292eff, 0xe1e4e8ff), (29, 0x032f62ff, 0x9ecbffff), (30, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (15, 0x005cc5ff, 0x79b8ffff), (17, 0x24292eff, 0xe1e4e8ff), (19, 0x005cc5ff, 0x79b8ffff), (20, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (8, 0x005cc5ff, 0x79b8ffff), (10, 0x24292eff, 0xe1e4e8ff), (19, 0x032f62ff, 0x9ecbffff), (20, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (14, 0x005cc5ff, 0x79b8ffff), (17, 0x24292eff, 0xe1e4e8ff), (22, 0x032f62ff, 0x9ecbffff), (24, 0x24292eff, 0xe1e4e8ff), (30, 0x032f62ff, 0x9ecbffff), (31, 0x24292eff, 0xe1e4e8ff)],
+    &[(9, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (11, 0x24292eff, 0xe1e4e8ff), (17, 0x6f42c1ff, 0xb392f0ff), (18, 0x24292eff, 0xe1e4e8ff)],
+    &[(9, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (11, 0x24292eff, 0xe1e4e8ff), (14, 0x6f42c1ff, 0xb392f0ff), (15, 0x24292eff, 0xe1e4e8ff), (21, 0x6f42c1ff, 0xb392f0ff), (23, 0x24292eff, 0xe1e4e8ff)],
+    &[(9, 0x24292eff, 0xe1e4e8ff), (14, 0x6f42c1ff, 0xb392f0ff), (16, 0x24292eff, 0xe1e4e8ff), (23, 0x6f42c1ff, 0xb392f0ff), (25, 0x24292eff, 0xe1e4e8ff)],
+    &[(6, 0xd73a49ff, 0xf97583ff), (7, 0x24292eff, 0xe1e4e8ff), (15, 0x6f42c1ff, 0xb392f0ff), (17, 0x24292eff, 0xe1e4e8ff)],
+    &[(12, 0x24292eff, 0xe1e4e8ff), (13, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (18, 0x6f42c1ff, 0xb392f0ff), (19, 0x24292eff, 0xe1e4e8ff)],
 ];
     #[rustfmt::skip]
 static FIXTURES: &[Fixture] = &[
-    Fixture { source: HIGHLIGHTING, rows: &[0, 1, 2, 3, 4, 0], tails: &[] },
+    Fixture { source: HIGHLIGHTING, rows: &[3, 4, 1, 2, 5, 0], tails: &[] },
 ];
     pub fn row(source: &str, index: usize, visible: usize, last: bool) -> Option<&'static [Run]> {
         let fixture = FIXTURES
@@ -179,10 +180,10 @@ mod highlight {
     }
 }
 
-const HIGHLIGHTING: &str = r##"{
-  "location": "San Francisco",
-  "temperature": 18,
-  "unit": "celsius",
-  "conditions": ["fog", "wind"]
+const HIGHLIGHTING: &str = r##"#[derive(Debug, Default)]
+struct Notebook {
+    title: String,
+    pages: Vec<String>,
+    archived: bool,
 }"##;
 ```

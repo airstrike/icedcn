@@ -31,7 +31,7 @@ impl Demo {
             logs: (0..40)
                 .map(|i| {
                     format!(
-                        "[{:02}] GET /api/chat 200 in {}ms",
+                        "[{:02}] Indexed notebook in {}ms",
                         i + 1,
                         12 + (i * 7) % 40
                     )

@@ -71,14 +71,14 @@ impl State {
             copied: BTreeMap::new(),
             streaming: BTreeMap::new(),
             save_status: BTreeMap::new(),
-            typeset_before: markdown::parse("Create a route handler that calls `streamText` and returns the stream to the client.").collect(),
-            typeset_after: markdown::parse("The `useChat` hook reads the stream on the client and renders the answer while it is written.").collect(),
+            typeset_before: markdown::parse("Read the notebook index with `read_to_string` and return one title per line.").collect(),
+            typeset_after: markdown::parse("The caller receives an `io::Result` and can display a read error in the application.").collect(),
             markdown_before: markdown_parts(usize::MAX).0,
             markdown_after: markdown_parts(usize::MAX).1,
             logs: (0..40)
                 .map(|i| {
                     format!(
-                        "[{:02}] GET /api/chat 200 in {}ms",
+                        "[{:02}] Indexed notebook in {}ms",
                         i + 1,
                         12 + (i * 7) % 40
                     )
@@ -311,7 +311,7 @@ impl State {
                     if copied { "Copied" } else { "Copy" },
                 ));
             }
-            if !matches!(title, "Terminal" | ".env.local") {
+            if !matches!(title, "Terminal" | ".cargo/config.toml") {
                 block = block.start_line(1);
             }
             output = output.push(block.into());
@@ -327,7 +327,7 @@ impl State {
             .unwrap_or(usize::MAX)
             .min(MARKDOWN.len());
         let body = &MARKDOWN[..end];
-        let (_, fenced) = body.split_once("```tsx\n").unwrap_or((body, ""));
+        let (_, fenced) = body.split_once("```rust\n").unwrap_or((body, ""));
         let noop = self.event(Message::Idle);
         let mut reply = column![prose(&self.markdown_before, dark, noop)]
             .width(Fill)
@@ -344,7 +344,7 @@ impl State {
                     false,
                     |_, _| LineStyle::Default,
                 )
-                .title(code_block::title("tsx"))
+                .title(code_block::title("rust"))
                 .actions(tooltip(
                     button(if copied {
                         icon::check().size(14)
@@ -364,10 +364,8 @@ impl State {
         let noop = self.event(Message::Idle);
         reply = reply.push(prose(&self.markdown_after, dark, noop));
         let mut items = column![
-            message(
-                bubble("How do I debounce a search input in React?").style(bubble::Variant::Muted)
-            )
-            .align(Horizontal::Right),
+            message(bubble("How do I ignore case when searching?").style(bubble::Variant::Muted))
+                .align(Horizontal::Right),
             message(reply),
         ]
         .width(Fill)
@@ -400,12 +398,12 @@ impl State {
                     }
                 })
                 .start_line(1);
-                self.header("demo", "app/api/chat/route.ts", DEMO, "route.ts", block)
+                self.header("demo", "src/view.rs", DEMO, "view.rs", block)
             }
             "basic" => terminal(BASIC).into(),
             "header" => terminal(HEADER)
                 .title(row![icon::terminal().size(14), code_block::title("Terminal")].spacing(6))
-                .actions(self.copy("header", "pnpm add ai @ai-sdk/react zod"))
+                .actions(self.copy("header", "cargo check -p icedxdy_widget"))
                 .into(),
             "actions" => {
                 let wrap = *self.wraps.get("actions").unwrap_or(&true);
@@ -413,7 +411,7 @@ impl State {
                     "actions",
                     "Terminal",
                     ACTIONS,
-                    "lint.log",
+                    "clippy.log",
                     terminal(ACTIONS).wrap(wrap),
                 )
             }
@@ -434,7 +432,7 @@ impl State {
                 .into(),
             "line-numbers" => terminal(LINE_NUMBERS).start_line(1).into(),
             "start-line" => listing(dark, START_LINE, usize::MAX, false, normal)
-                .title(code_block::title("app/dashboard/page.tsx"))
+                .title(code_block::title("src/notebooks.rs"))
                 .start_line(995)
                 .into(),
             "wrap" => column![terminal(WRAP), terminal(WRAP).wrap(true)]
@@ -450,7 +448,7 @@ impl State {
             .start_line(1)
             .into(),
             "diff" => listing(dark, DIFF, usize::MAX, false, |_, line| diff_style(line))
-                .title(code_block::title("components/greeting.tsx"))
+                .title(code_block::title("src/search.rs"))
                 .actions(self.copy("diff", DIFF))
                 .into(),
             "height" => terminal(self.logs.clone())
@@ -466,7 +464,7 @@ impl State {
                 };
                 let expanded = *self.expanded.get(id).unwrap_or(&false);
                 let mut block = listing(dark, SHOW_MORE, usize::MAX, false, normal)
-                    .title(code_block::title("components/chat.tsx"))
+                    .title(code_block::title("src/notebook.rs"))
                     .start_line(1)
                     .actions(self.copy(id, SHOW_MORE))
                     .footer(
@@ -513,25 +511,25 @@ impl State {
                 .actions(self.copy("destructive", DESTRUCTIVE))
                 .into(),
             "trace" => column![
-                trace_output("Ran node --version", TRACE, false),
-                trace_output("Failed to run pnpm dev", TRACE_ERROR, true)
+                trace_output("Ran cargo --version", TRACE, false),
+                trace_output("Failed to run cargo run --bin notes", TRACE_ERROR, true)
             ]
             .spacing(8)
             .into(),
             "tabs" => {
-                let copies = [("route", TABS_0), ("chat", TABS_1), ("env", TABS_2)]
+                let copies = [("view", TABS_0), ("search", TABS_1), ("config", TABS_2)]
                     .map(|(id, source)| (id, self.copied.contains_key(id), source));
                 tabs(move |t| {
                     let mut body = column![t.list([
-                        t.trigger("route", "route.ts"),
-                        t.trigger("chat", "chat.tsx"),
-                        t.trigger("env", ".env.local")
+                        t.trigger("view", "view.rs"),
+                        t.trigger("search", "search.rs"),
+                        t.trigger("config", "config.toml")
                     ])]
                     .spacing(8);
                     for (id, title, source) in [
-                        ("route", "app/api/chat/route.ts", TABS_0),
-                        ("chat", "components/chat.tsx", TABS_1),
-                        ("env", ".env.local", TABS_2),
+                        ("view", "src/view.rs", TABS_0),
+                        ("search", "src/search.rs", TABS_1),
+                        ("config", ".cargo/config.toml", TABS_2),
                     ] {
                         body = body.push(
                             t.content(
@@ -549,19 +547,19 @@ impl State {
                     }
                     body.into()
                 })
-                .default_value("route")
+                .default_value("view")
                 .into()
             }
             "chat" => column![
-                message(bubble("How do I stream a response?").style(bubble::Variant::Muted))
+                message(bubble("How do I filter notebook titles?").style(bubble::Variant::Muted))
                     .align(Horizontal::Right),
                 message(
                     column![
-                        text::p("Create a route handler that returns the stream:"),
+                        text::p("Compare the query and each title in lowercase."),
                         listing(dark, CHAT, usize::MAX, false, normal)
-                            .title("app/api/chat/route.ts")
+                            .title("src/search.rs")
                             .actions(self.copy("chat-sample", CHAT)),
-                        text::p("The client reads it with useChat.")
+                        text::p("The result borrows the matching titles from the original list.")
                     ]
                     .spacing(12)
                 )
@@ -569,14 +567,14 @@ impl State {
             .spacing(16)
             .into(),
             "typeset" => column![
-                text::h3("Stream a response"),
+                text::h3("Read a notebook index"),
                 prose(&self.typeset_before, dark, self.event(Message::Idle)),
                 listing(dark, TYPESET, usize::MAX, false, normal)
                     .start_line(1)
                     .title(
                         row![
                             icon::file_code().size(14),
-                            code_block::title("app/api/chat/route.ts")
+                            code_block::title("src/index.rs")
                         ]
                         .spacing(6)
                     )
@@ -586,13 +584,13 @@ impl State {
             .spacing(12)
             .into(),
             "highlighting" => listing(dark, HIGHLIGHTING, usize::MAX, false, normal)
-                .title("getWeather output")
+                .title("src/notebook.rs")
                 .into(),
             "languages" => {
                 let mut samples = column![].spacing(16);
                 for (title, source) in [
-                    ("app/globals.css", LANGUAGES_0),
-                    ("main.py", LANGUAGES_1),
+                    ("Cargo.toml", LANGUAGES_0),
+                    ("src/main.rs", LANGUAGES_1),
                     ("notes.txt", LANGUAGES_2),
                 ] {
                     samples = samples.push(
@@ -700,7 +698,7 @@ fn total_length(id: &str) -> usize {
 
 fn markdown_parts(end: usize) -> (Vec<markdown::Item>, Vec<markdown::Item>) {
     let body = &MARKDOWN[..end.min(MARKDOWN.len())];
-    let (before, fenced) = body.split_once("```tsx\n").unwrap_or((body, ""));
+    let (before, fenced) = body.split_once("```rust\n").unwrap_or((body, ""));
     let after = fenced
         .split_once("```")
         .map(|(_, after)| after)

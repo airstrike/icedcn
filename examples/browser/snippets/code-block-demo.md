@@ -120,7 +120,7 @@ impl Demo {
                 }
             })
             .start_line(1);
-            self.header("demo", "app/api/chat/route.ts", DEMO, "route.ts", block)
+            self.header("demo", "src/view.rs", DEMO, "view.rs", block)
         }
     }
     fn copy(&self, id: &'static str, source: &str) -> Slot<'static, Message> {
@@ -215,7 +215,7 @@ fn icon(name: &str) -> Slot<'static, Message> {
 }
 
 mod tokens {
-    //! Fixed recipe tokens generated with pinned Shiki 3.23.0, JavaScript regex engine,
+    //! Fixed recipe tokens generated with pinned Shiki 3.23.0,
     //! github-light/github-dark. Partial final lines retain streaming grammar behavior.
     //! This fixture data does not implement a general-purpose highlighter.
     use super::*;
@@ -228,21 +228,22 @@ mod tokens {
     }
     #[rustfmt::skip]
 static ROWS: &[&[Run]] = &[
-    &[(6, 0xd73a49ff, 0xf97583ff), (22, 0x24292eff, 0xe1e4e8ff), (26, 0xd73a49ff, 0xf97583ff), (27, 0x24292eff, 0xe1e4e8ff), (31, 0x032f62ff, 0x9ecbffff)],
+    &[(3, 0xd73a49ff, 0xf97583ff), (4, 0x24292eff, 0xe1e4e8ff), (11, 0x6f42c1ff, 0xb392f0ff), (13, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (18, 0x6f42c1ff, 0xb392f0ff), (20, 0x24292eff, 0xe1e4e8ff), (26, 0x6f42c1ff, 0xb392f0ff), (28, 0xd73a49ff, 0xf97583ff), (51, 0x24292eff, 0xe1e4e8ff)],
     &[],
-    &[(6, 0xd73a49ff, 0xf97583ff), (7, 0x24292eff, 0xe1e4e8ff), (12, 0xd73a49ff, 0xf97583ff), (13, 0x24292eff, 0xe1e4e8ff), (21, 0xd73a49ff, 0xf97583ff), (22, 0x24292eff, 0xe1e4e8ff), (26, 0x6f42c1ff, 0xb392f0ff), (27, 0x24292eff, 0xe1e4e8ff), (34, 0xe36209ff, 0xffab70ff), (35, 0xd73a49ff, 0xf97583ff), (36, 0x24292eff, 0xe1e4e8ff), (43, 0x6f42c1ff, 0xb392f0ff), (46, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (21, 0x24292eff, 0xe1e4e8ff), (22, 0xd73a49ff, 0xf97583ff), (23, 0x24292eff, 0xe1e4e8ff), (28, 0xd73a49ff, 0xf97583ff), (37, 0x24292eff, 0xe1e4e8ff), (41, 0x6f42c1ff, 0xb392f0ff), (43, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (8, 0x24292eff, 0xe1e4e8ff), (14, 0x005cc5ff, 0x79b8ffff), (15, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (17, 0x24292eff, 0xe1e4e8ff), (27, 0x6f42c1ff, 0xb392f0ff), (29, 0x24292eff, 0xe1e4e8ff)],
-    &[(11, 0x24292eff, 0xe1e4e8ff), (40, 0x032f62ff, 0x9ecbffff), (41, 0x24292eff, 0xe1e4e8ff)],
-    &[(12, 0x24292eff, 0xe1e4e8ff), (73, 0x032f62ff, 0x9ecbffff), (74, 0x24292eff, 0xe1e4e8ff)],
-    &[(13, 0x24292eff, 0xe1e4e8ff)],
-    &[(4, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (8, 0xd73a49ff, 0xf97583ff), (16, 0x24292eff, 0xe1e4e8ff), (41, 0x6f42c1ff, 0xb392f0ff), (43, 0x24292eff, 0xe1e4e8ff)],
+    &[(9, 0x24292eff, 0xe1e4e8ff), (14, 0x6f42c1ff, 0xb392f0ff), (16, 0x24292eff, 0xe1e4e8ff), (21, 0x6f42c1ff, 0xb392f0ff), (23, 0x24292eff, 0xe1e4e8ff)],
+    &[(3, 0xd73a49ff, 0xf97583ff), (4, 0x24292eff, 0xe1e4e8ff), (8, 0xd73a49ff, 0xf97583ff), (9, 0x24292eff, 0xe1e4e8ff), (16, 0x6f42c1ff, 0xb392f0ff), (19, 0x24292eff, 0xe1e4e8ff), (32, 0x6f42c1ff, 0xb392f0ff), (33, 0x24292eff, 0xe1e4e8ff), (39, 0x6f42c1ff, 0xb392f0ff), (42, 0x24292eff, 0xe1e4e8ff)],
+    &[(3, 0xd73a49ff, 0xf97583ff), (4, 0x24292eff, 0xe1e4e8ff), (6, 0xd73a49ff, 0xf97583ff), (7, 0x24292eff, 0xe1e4e8ff), (11, 0x6f42c1ff, 0xb392f0ff), (13, 0x24292eff, 0xe1e4e8ff), (14, 0x6f42c1ff, 0xb392f0ff), (21, 0x24292eff, 0xe1e4e8ff), (22, 0xd73a49ff, 0xf97583ff), (23, 0x24292eff, 0xe1e4e8ff), (24, 0xd73a49ff, 0xf97583ff), (25, 0x24292eff, 0xe1e4e8ff), (26, 0x6f42c1ff, 0xb392f0ff), (27, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (38, 0x24292eff, 0xe1e4e8ff), (39, 0xd73a49ff, 0xf97583ff), (40, 0x24292eff, 0xe1e4e8ff), (41, 0xd73a49ff, 0xf97583ff), (42, 0x24292eff, 0xe1e4e8ff), (43, 0xd73a49ff, 0xf97583ff), (44, 0x24292eff, 0xe1e4e8ff), (45, 0x6f42c1ff, 0xb392f0ff), (46, 0x24292eff, 0xe1e4e8ff), (49, 0x6f42c1ff, 0xb392f0ff), (52, 0x24292eff, 0xe1e4e8ff), (54, 0xd73a49ff, 0xf97583ff), (55, 0x24292eff, 0xe1e4e8ff), (59, 0x6f42c1ff, 0xb392f0ff), (61, 0x24292eff, 0xe1e4e8ff), (62, 0x6f42c1ff, 0xb392f0ff), (64, 0x24292eff, 0xe1e4e8ff), (71, 0x6f42c1ff, 0xb392f0ff), (74, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (15, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (17, 0x24292eff, 0xe1e4e8ff), (22, 0x6f42c1ff, 0xb392f0ff), (23, 0x24292eff, 0xe1e4e8ff), (40, 0x032f62ff, 0x9ecbffff), (41, 0x24292eff, 0xe1e4e8ff), (42, 0xd73a49ff, 0xf97583ff), (47, 0x6f42c1ff, 0xb392f0ff), (53, 0x24292eff, 0xe1e4e8ff), (54, 0xd73a49ff, 0xf97583ff), (62, 0x6f42c1ff, 0xb392f0ff), (65, 0x24292eff, 0xe1e4e8ff), (66, 0xd73a49ff, 0xf97583ff), (74, 0x6f42c1ff, 0xb392f0ff), (75, 0x24292eff, 0xe1e4e8ff), (82, 0x6f42c1ff, 0xb392f0ff), (84, 0xd73a49ff, 0xf97583ff), (97, 0x6f42c1ff, 0xb392f0ff), (99, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (8, 0x24292eff, 0xe1e4e8ff), (11, 0xd73a49ff, 0xf97583ff), (20, 0x24292eff, 0xe1e4e8ff), (21, 0xd73a49ff, 0xf97583ff), (22, 0x24292eff, 0xe1e4e8ff), (29, 0x6f42c1ff, 0xb392f0ff), (37, 0x24292eff, 0xe1e4e8ff), (38, 0xd73a49ff, 0xf97583ff), (45, 0x6f42c1ff, 0xb392f0ff), (46, 0x24292eff, 0xe1e4e8ff), (47, 0x005cc5ff, 0x79b8ffff), (49, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (23, 0x24292eff, 0xe1e4e8ff), (24, 0xd73a49ff, 0xf97583ff), (28, 0x6f42c1ff, 0xb392f0ff), (30, 0x24292eff, 0xe1e4e8ff), (31, 0xd73a49ff, 0xf97583ff), (37, 0x6f42c1ff, 0xb392f0ff), (39, 0x24292eff, 0xe1e4e8ff), (40, 0xd73a49ff, 0xf97583ff), (46, 0x6f42c1ff, 0xb392f0ff), (47, 0x24292eff, 0xe1e4e8ff), (48, 0xd73a49ff, 0xf97583ff), (53, 0x24292eff, 0xe1e4e8ff), (54, 0xd73a49ff, 0xf97583ff), (60, 0x24292eff, 0xe1e4e8ff), (61, 0xd73a49ff, 0xf97583ff), (69, 0x6f42c1ff, 0xb392f0ff), (79, 0x24292eff, 0xe1e4e8ff)],
+    &[(16, 0x24292eff, 0xe1e4e8ff), (17, 0xd73a49ff, 0xf97583ff), (25, 0x24292eff, 0xe1e4e8ff), (26, 0xd73a49ff, 0xf97583ff), (30, 0x6f42c1ff, 0xb392f0ff), (31, 0x24292eff, 0xe1e4e8ff), (35, 0x6f42c1ff, 0xb392f0ff), (37, 0xd73a49ff, 0xf97583ff), (38, 0x6f42c1ff, 0xb392f0ff), (45, 0x24292eff, 0xe1e4e8ff), (46, 0xd73a49ff, 0xf97583ff), (50, 0x6f42c1ff, 0xb392f0ff), (54, 0x24292eff, 0xe1e4e8ff)],
+    &[(5, 0x24292eff, 0xe1e4e8ff)],
+    &[(11, 0x24292eff, 0xe1e4e8ff), (12, 0xd73a49ff, 0xf97583ff), (16, 0x6f42c1ff, 0xb392f0ff), (18, 0x24292eff, 0xe1e4e8ff)],
     &[(1, 0x24292eff, 0xe1e4e8ff)],
 ];
     #[rustfmt::skip]
 static FIXTURES: &[Fixture] = &[
-    Fixture { source: DEMO, rows: &[0, 1, 2, 3, 1, 4, 5, 6, 7, 8, 1, 9, 10], tails: &[] },
+    Fixture { source: DEMO, rows: &[0, 1, 2, 3, 1, 4, 5, 6, 7, 8, 9, 10, 11], tails: &[] },
 ];
     pub fn row(source: &str, index: usize, visible: usize, last: bool) -> Option<&'static [Run]> {
         let fixture = FIXTURES
@@ -348,17 +349,17 @@ mod highlight {
     }
 }
 
-const DEMO: &str = r##"import { streamText } from "ai"
+const DEMO: &str = r##"use icedxdy::{Slot, widget::{column, input, text}};
 
-export async function POST(request: Request) {
-  const { messages } = await request.json()
+#[derive(Clone, Debug)]
+pub enum Message { SearchChanged(String) }
 
-  const result = streamText({
-    model: "anthropic/claude-sonnet-4.5",
-    system: "You are a helpful assistant. Answer in one short paragraph.",
-    messages,
-  })
-
-  return result.toUIMessageStreamResponse()
+pub fn view<'a>(query: &'a str, titles: &[&'a str]) -> Slot<'a, Message> {
+    let search = input("Find a notebook").value(query.to_owned()).on_input(Message::SearchChanged);
+    let mut results = column![search].spacing(8);
+    for title in titles.iter().copied().filter(|title| title.contains(query)) {
+        results = results.push(text::p(title).into());
+    }
+    results.into()
 }"##;
 ```

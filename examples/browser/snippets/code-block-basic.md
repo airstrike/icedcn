@@ -51,14 +51,10 @@ impl Demo {
 fn terminal(source: &str) -> CodeBlock<'_, Message> {
     code_block(source).font(Font::new("Geist Mono"))
 }
-const BASIC: &str = r##"$ pnpm build
-> next build
-
- ✓ Compiled successfully in 4.2s
- ✓ Generating static pages (12/12)
-
-Route (app)                Size  First Load JS
-┌ ○ /                    1.9 kB         112 kB
-├ ○ /_not-found           993 B         103 kB
-└ ƒ /api/chat             141 B         102 kB"##;
+const BASIC: &str = r##"$ cargo build --release
+   Compiling icedxdy_core v0.1.0
+   Compiling icedxdy_widget v0.1.0
+   Compiling icedxdy v0.1.0
+   Compiling notebook v0.1.0
+    Finished `release` profile [optimized] target(s) in 4.20s"##;
 ```

@@ -1,4 +1,4 @@
-### CodeBlockLine
+### Styled lines
 
 Supply `(LineStyle, Slot)` values to `CodeBlock::lines`. Children contain code without diff prefixes; the widget paints separate markers.
 

@@ -128,7 +128,7 @@ fn icon(name: &str) -> Slot<'static, Message> {
 }
 
 mod tokens {
-    //! Fixed recipe tokens generated with pinned Shiki 3.23.0, JavaScript regex engine,
+    //! Fixed recipe tokens generated with pinned Shiki 3.23.0,
     //! github-light/github-dark. Partial final lines retain streaming grammar behavior.
     //! This fixture data does not implement a general-purpose highlighter.
     use super::*;
@@ -139,20 +139,20 @@ mod tokens {
         rows: &'static [usize],
         tails: &'static [(usize, usize)],
     }
-    pub const ANSI_PLAIN: &str = "$ pnpm test\n✓ src/format.test.ts (4 tests)\n✓ src/parse.test.ts (7 tests)\n✗ src/stream.test.ts (3 tests | 1 failed)\n\nAssertionError: expected 'hello' to be 'hello world'\n\nTests  1 failed | 13 passed (14)";
+    pub const ANSI_PLAIN: &str = "$ cargo test --color always\n    Running tests/search.rs\nrunning 3 tests\ntest blank_query ... ok\ntest exact_match ... ok\ntest mixed_case ... FAILED\n\ntest result: FAILED. 2 passed; 1 failed; 0 ignored";
     #[rustfmt::skip]
 static ROWS: &[&[Run]] = &[
     &[],
-    &[(11, 0x24292eff, 0xe1e4e8ff)],
-    &[(3, 0x28a745ff, 0x34d058ff), (23, 0x24292eff, 0xe1e4e8ff), (32, 0x24292e80, 0xe1e4e880)],
-    &[(3, 0x28a745ff, 0x34d058ff), (22, 0x24292eff, 0xe1e4e8ff), (31, 0x24292e80, 0xe1e4e880)],
-    &[(3, 0xd73a49ff, 0xea4a5aff), (23, 0x24292eff, 0xe1e4e8ff), (43, 0x24292e80, 0xe1e4e880)],
-    &[(52, 0xd73a49ff, 0xea4a5aff)],
-    &[(7, 0x24292eff, 0xe1e4e8ff), (15, 0xd73a49ff, 0xea4a5aff), (18, 0x24292eff, 0xe1e4e8ff), (27, 0x28a745ff, 0x34d058ff), (32, 0x24292eff, 0xe1e4e8ff)],
+    &[(27, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (27, 0x24292e80, 0xe1e4e880)],
+    &[(15, 0x24292eff, 0xe1e4e8ff)],
+    &[(21, 0x24292eff, 0xe1e4e8ff), (23, 0x28a745ff, 0x34d058ff)],
+    &[(20, 0x24292eff, 0xe1e4e8ff), (26, 0xd73a49ff, 0xea4a5aff)],
+    &[(13, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xea4a5aff), (50, 0x24292eff, 0xe1e4e8ff)],
 ];
     #[rustfmt::skip]
 static FIXTURES: &[Fixture] = &[
-    Fixture { source: ANSI_PLAIN, rows: &[1, 2, 3, 4, 0, 5, 0, 6], tails: &[] },
+    Fixture { source: ANSI_PLAIN, rows: &[1, 2, 3, 4, 4, 5, 0, 6], tails: &[] },
 ];
     pub fn row(source: &str, index: usize, visible: usize, last: bool) -> Option<&'static [Run]> {
         let fixture = FIXTURES
@@ -267,5 +267,5 @@ mod highlight {
     }
 }
 
-const ANSI: &str = "$ pnpm test\n\x1b[32m✓\x1b[39m src/format.test.ts \x1b[2m(4 tests)\x1b[22m\n\x1b[32m✓\x1b[39m src/parse.test.ts \x1b[2m(7 tests)\x1b[22m\n\x1b[31m✗\x1b[39m src/stream.test.ts \x1b[2m(3 tests | 1 failed)\x1b[22m\n\n\x1b[31mAssertionError: expected 'hello' to be 'hello world'\x1b[39m\n\nTests  \x1b[31m1 failed\x1b[39m | \x1b[32m13 passed\x1b[39m (14)";
+const ANSI: &str = "$ cargo test --color always\n    \x1b[2mRunning tests/search.rs\x1b[22m\nrunning 3 tests\ntest blank_query ... \x1b[32mok\x1b[39m\ntest exact_match ... \x1b[32mok\x1b[39m\ntest mixed_case ... \x1b[31mFAILED\x1b[39m\n\ntest result: \x1b[31mFAILED\x1b[39m. 2 passed; 1 failed; 0 ignored";
 ```

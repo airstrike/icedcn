@@ -1,3 +1,3 @@
 ## Typeset
 
-A `CodeBlock` inside a [`typeset`](/docs/typeset) container keeps its own styles and gets the same space above as a paragraph.
+Use a column with 12 pixels of spacing to place the highlighted Rust listing between Markdown paragraphs.

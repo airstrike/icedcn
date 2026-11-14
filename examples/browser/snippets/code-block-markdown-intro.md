@@ -1,3 +1,3 @@
 ## Markdown
 
-Render the message with [Streamdown](https://streamdown.ai) and route fenced code to a `CodeBlock` with `components.code`. Streamdown sets `data-block` on fenced code only, so inline code stays inline.
+An iced message can contain both Markdown prose and a selectable code block. Replay the reply to see the Rust fence appear as the words arrive.

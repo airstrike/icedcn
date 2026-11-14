@@ -173,7 +173,7 @@ pub static BLOCKS: &[Block] = &[
                 snippet: "examples/browser/snippets/code-block-ansi.md",
             },
             Block::Md("examples/browser/snippets/code-block-ansi-guide.md"),
-            Block::Md("examples/browser/snippets/code-block-server-rendering.md"),
+            Block::Md("examples/browser/snippets/code-block-preparing-tokens.md"),
             Block::Md("examples/browser/snippets/code-block-streaming-intro.md"),
             Block::Example {
                 id: "streaming",

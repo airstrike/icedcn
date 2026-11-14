@@ -166,7 +166,7 @@ fn show_more_state_stays_local_across_theme_and_width_rebuilds() {
     assert!(ui.find("Show less").is_ok());
     let mut expanded = Viewports::default();
     ui.operate(&mut expanded);
-    assert_eq!(expanded.0[0].0.height, 34. * 22.75 + 16.);
+    assert_eq!(expanded.0[0].0.height, 38. * 22.75 + 16.);
     ui.click("Show less").expect("footer after rebuild");
     ui.draw(&Theme::dark());
     let mut bounds = Viewports::default();

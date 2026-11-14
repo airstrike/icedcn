@@ -33,10 +33,10 @@ fn repeated_copy_rejects_stale_reset_and_cancel_does_not_claim_save() {
     assert_eq!(page.copied["demo"], second);
     let _ = page.update(Message::ResetCopy("demo", second));
     assert!(!page.copied.contains_key("demo"));
-    let _ = page.update(Message::Saved("route.ts", Ok(false)));
+    let _ = page.update(Message::Saved("view.rs", Ok(false)));
     assert!(page.save_status.is_empty());
-    let _ = page.update(Message::Saved("route.ts", Ok(true)));
-    assert_eq!(page.save_status["route.ts"], "Saved route.ts");
+    let _ = page.update(Message::Saved("view.rs", Ok(true)));
+    assert_eq!(page.save_status["view.rs"], "Saved view.rs");
 }
 
 #[test]
@@ -56,7 +56,7 @@ fn replay_tracks_all_five_blocks_and_markdown_fence_independently() {
     let _ = page.update(Message::Tick(Instant::now()));
     assert!(!page.streaming.contains_key("streaming"));
     assert!(page.streaming.contains_key("markdown"));
-    let opening = MARKDOWN.find("```tsx\n").expect("opening fence") + 7;
+    let opening = MARKDOWN.find("```rust\n").expect("opening fence") + "```rust\n".len();
     let (before, after) = markdown_parts(opening + 12);
     assert_eq!(before.len(), 1);
     assert!(after.is_empty());
@@ -75,7 +75,7 @@ fn replay_tracks_all_five_blocks_and_markdown_fence_independently() {
 fn full_sources_and_diff_decoration_survive_recipe_transforms() {
     let page = State::new();
     assert_eq!(page.logs.lines().count(), 40);
-    assert!(page.logs.ends_with("[40] GET /api/chat 200 in 45ms"));
+    assert!(page.logs.ends_with("[40] Indexed notebook in 45ms"));
     assert_eq!(diff_style("+added"), LineStyle::Added);
     assert_eq!(diff_style("-removed"), LineStyle::Removed);
     assert_eq!(diff_style(" unchanged"), LineStyle::Default);
@@ -83,14 +83,14 @@ fn full_sources_and_diff_decoration_survive_recipe_transforms() {
     let (_, copy) = highlight::ansi::<Message>(false);
     assert_eq!(copy.lines().count(), 8);
     assert!(!copy.contains('\x1b'));
-    assert!(copy.ends_with("Tests  1 failed | 13 passed (14)"));
+    assert!(copy.ends_with("test result: FAILED. 2 passed; 1 failed; 0 ignored"));
 }
 
 #[test]
 fn markdown_uses_word_plus_whitespace_deltas() {
     assert_eq!(markdown_prefix(0), 0);
-    assert_eq!(&MARKDOWN[..markdown_prefix(1)], "Wrap ");
-    assert_eq!(&MARKDOWN[..markdown_prefix(2)], "Wrap the ");
+    assert_eq!(&MARKDOWN[..markdown_prefix(1)], "Normalize ");
+    assert_eq!(&MARKDOWN[..markdown_prefix(2)], "Normalize the ");
     assert_eq!(markdown_prefix(usize::MAX), MARKDOWN.len());
 }
 
@@ -102,12 +102,12 @@ fn completion_receipts_are_targeted_replay_safe_and_not_lost_in_a_batch() {
     let a = Completion {
         target: first.target.clone(),
         serial: Id::unique(),
-        message: Message::Copied("route", now),
+        message: Message::Copied("view", now),
     };
     let b = Completion {
         target: first.target.clone(),
         serial: Id::unique(),
-        message: Message::Copied("chat", now),
+        message: Message::Copied("search", now),
     };
     for completion in [&a, &b] {
         first.receive(completion);
@@ -220,6 +220,6 @@ fn repeated_fixture_text_uses_streaming_tail_tokens() {
     );
     assert_eq!(
         tokens::row(STREAMING_4, 0, 1, true),
-        Some([(1, 0x6f42c1ff, 0xb392f0ff)].as_slice())
+        Some([(1, 0xb31d28ff, 0xfdaeb7ff)].as_slice())
     );
 }

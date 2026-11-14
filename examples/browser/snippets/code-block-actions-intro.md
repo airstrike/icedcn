@@ -1,3 +1,3 @@
 ## Actions
 
-`CodeBlockActions` holds any number of buttons. For a wrap toggle, keep the state yourself and pass it to `wrap`.
+Pass a row of buttons to `.actions(...)`. This terminal has buttons to wrap the output, save it as `clippy.log`, and copy it.

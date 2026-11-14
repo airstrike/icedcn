@@ -1,4 +1,4 @@
-### CodeBlockHeader
+### Header
 
 `.title(...)` mounts the header row above the content. `.actions(...)` supplies controls at its end.
 

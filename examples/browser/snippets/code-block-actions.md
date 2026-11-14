@@ -115,7 +115,7 @@ impl Demo {
                 "actions",
                 "Terminal",
                 ACTIONS,
-                "lint.log",
+                "clippy.log",
                 terminal(ACTIONS).wrap(wrap),
             )
         }
@@ -214,10 +214,11 @@ fn icon(name: &str) -> Slot<'static, Message> {
         .into()
 }
 
-const ACTIONS: &str = r##"$ pnpm lint
-apps/web/components/message-list.tsx
-  18:22  error  'messages' is possibly 'undefined'. Add a guard before calling map  @typescript-eslint/no-unsafe-call
-  42:7   warning  React Hook React.useEffect has a missing dependency: 'scrollToBottom'  react-hooks/exhaustive-deps
-
-✖ 2 problems (1 error, 1 warning)"##;
+const ACTIONS: &str = r##"$ cargo clippy -- -D warnings
+    Checking notebook v0.1.0
+error: writing `&String` instead of `&str` involves a new object where a slice will do
+ --> src/search.rs:4:18
+  |
+4 | fn matches(query: &String, title: &str) -> bool {
+  |                   ^^^^^^^ help: change this to: `&str`"##;
 ```

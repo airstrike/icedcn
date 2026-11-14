@@ -53,5 +53,5 @@ impl Demo {
 fn terminal(source: &str) -> CodeBlock<'_, Message> {
     code_block(source).font(Font::new("Geist Mono"))
 }
-const WRAP: &str = r##"Error: The model "anthropic/claude-sonnet-4.5" returned an error: Request too large. The prompt is 212,431 tokens and the context window is 200,000 tokens. Remove some messages or summarize the conversation and try again."##;
+const WRAP: &str = r##"error: failed to read notebook index from /home/reader/.local/share/notebook/collections/research/field-notes/archive/index.toml: No such file or directory (os error 2)"##;
 ```

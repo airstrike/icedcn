@@ -45,8 +45,8 @@ impl Demo {
         let normal = |_: usize, _: &str| LineStyle::Default;
         let id = "trace";
         column![
-            trace_output("Ran node --version", TRACE, false),
-            trace_output("Failed to run pnpm dev", TRACE_ERROR, true)
+            trace_output("Ran cargo --version", TRACE, false),
+            trace_output("Failed to run cargo run --bin notes", TRACE_ERROR, true)
         ]
         .spacing(8)
         .into()
@@ -98,10 +98,11 @@ fn icon(name: &str) -> Slot<'static, Message> {
         .into()
 }
 
-const TRACE: &str = r##"$ node --version
-v24.18.0"##;
+const TRACE: &str = r##"$ cargo --version
+cargo 1.85.0 (d73d2caf9 2024-12-31)"##;
 
-const TRACE_ERROR: &str = r##"$ pnpm dev
-Error: listen EADDRINUSE: address already in use :::3000
-    at Server.setupListenHandle [as _listen2] (node:net:1908:16)"##;
+const TRACE_ERROR: &str = r##"$ cargo run --bin notes
+error: no bin target named `notes` in default-run packages
+help: available bin targets:
+    notebook"##;
 ```

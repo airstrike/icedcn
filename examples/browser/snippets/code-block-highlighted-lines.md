@@ -74,13 +74,11 @@ fn plain_lines(
     }))
     .font(Font::new("Geist Mono"))
 }
-const HIGHLIGHTED_LINES: &str = r##"export default {
-  experimental: {
-    reactCompiler: true,
-    viewTransition: true,
-  },
-  images: {
-    remotePatterns: [{ hostname: "avatars.githubusercontent.com" }],
-  },
-}"##;
+const HIGHLIGHTED_LINES: &str = r##"[package]
+name = "notebook"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+icedxdy = { path = "../icedxdy" }"##;
 ```

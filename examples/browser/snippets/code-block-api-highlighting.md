@@ -1,6 +1,6 @@
-### useHighlightedCode
+### Syntax tokens
 
-The upstream hook corresponds to application-side parsing plus `CodeBlock::lines` in Rust. The fixed example helper reads retained Shiki token tables, renders one rich-text slot per line, and falls back to plain spans for unknown input. It is an example helper, not a public general-purpose parser.
+The example’s `listing` helper reads the token ranges for a fixed source and passes one rich-text slot per line to `CodeBlock::lines`. Unknown input displays in the default text color.
 
 | API | Type | Default | Behavior |
 | --- | --- | --- | --- |

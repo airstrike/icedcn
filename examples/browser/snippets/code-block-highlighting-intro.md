@@ -1,1 +1,1 @@
-`useHighlightedCode` highlights with [Shiki](https://shiki.style) and returns one React node per line for `CodeBlockLine`.
+Pass one rich-text slot per source line to `CodeBlock::lines`. Each span uses the token color for the current theme.

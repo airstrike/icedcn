@@ -136,7 +136,7 @@ fn icon(name: &str) -> Slot<'static, Message> {
         .into()
 }
 
-const SIZE: &str = r##"$ pnpm add ai @ai-sdk/react zod
-Progress: resolved 412, reused 398, downloaded 14, added 14, done
-Done in 2.8s using pnpm v10.18.0"##;
+const SIZE: &str = r##"$ cargo check -p notebook
+    Checking notebook v0.1.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.32s"##;
 ```

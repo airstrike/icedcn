@@ -46,14 +46,14 @@ impl Demo {
         let normal = |_: usize, _: &str| LineStyle::Default;
         let id = "start-line";
         listing(dark, START_LINE, usize::MAX, false, normal)
-            .title(code_block::title("app/dashboard/page.tsx"))
+            .title(code_block::title("src/notebooks.rs"))
             .start_line(995)
             .into()
     }
 }
 
 mod tokens {
-    //! Fixed recipe tokens generated with pinned Shiki 3.23.0, JavaScript regex engine,
+    //! Fixed recipe tokens generated with pinned Shiki 3.23.0,
     //! github-light/github-dark. Partial final lines retain streaming grammar behavior.
     //! This fixture data does not implement a general-purpose highlighter.
     use super::*;
@@ -67,19 +67,17 @@ mod tokens {
     #[rustfmt::skip]
 static ROWS: &[&[Run]] = &[
     &[],
-    &[(4, 0x24292eff, 0xe1e4e8ff)],
     &[(1, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (4, 0xd73a49ff, 0xf97583ff), (6, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (17, 0x24292eff, 0xe1e4e8ff)],
-    &[(4, 0x24292eff, 0xe1e4e8ff), (12, 0x6f42c1ff, 0xb392f0ff), (13, 0x24292eff, 0xe1e4e8ff), (21, 0x032f62ff, 0x9ecbffff), (22, 0x24292eff, 0xe1e4e8ff)],
-    &[(3, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (8, 0x24292eff, 0xe1e4e8ff), (16, 0x005cc5ff, 0x79b8ffff), (17, 0x24292eff, 0xe1e4e8ff), (18, 0xd73a49ff, 0xf97583ff), (19, 0x24292eff, 0xe1e4e8ff), (24, 0xd73a49ff, 0xf97583ff), (36, 0x24292eff, 0xe1e4e8ff), (44, 0x6f42c1ff, 0xb392f0ff), (46, 0x24292eff, 0xe1e4e8ff)],
-    &[(40, 0x24292eff, 0xe1e4e8ff)],
-    &[(26, 0x24292eff, 0xe1e4e8ff), (32, 0x032f62ff, 0x9ecbffff), (35, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (8, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (21, 0x005cc5ff, 0x79b8ffff), (22, 0x24292eff, 0xe1e4e8ff), (30, 0x6f42c1ff, 0xb392f0ff), (31, 0xd73a49ff, 0xf97583ff), (44, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (14, 0x24292eff, 0xe1e4e8ff), (15, 0xd73a49ff, 0xf97583ff), (16, 0x24292eff, 0xe1e4e8ff), (20, 0x005cc5ff, 0x79b8ffff), (21, 0xd73a49ff, 0xf97583ff), (26, 0x24292eff, 0xe1e4e8ff), (27, 0xd73a49ff, 0xf97583ff), (31, 0x6f42c1ff, 0xb392f0ff), (33, 0x24292eff, 0xe1e4e8ff), (34, 0xd73a49ff, 0xf97583ff), (46, 0x6f42c1ff, 0xb392f0ff), (49, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (8, 0x005cc5ff, 0x79b8ffff), (9, 0xd73a49ff, 0xf97583ff), (18, 0x24292eff, 0xe1e4e8ff)],
+    &[(8, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (13, 0x6f42c1ff, 0xb392f0ff), (15, 0x24292eff, 0xe1e4e8ff)],
+    &[(8, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (15, 0x6f42c1ff, 0xb392f0ff), (16, 0x24292eff, 0xe1e4e8ff), (17, 0xd73a49ff, 0xf97583ff), (21, 0x24292eff, 0xe1e4e8ff), (22, 0xd73a49ff, 0xf97583ff), (27, 0x24292eff, 0xe1e4e8ff), (28, 0xd73a49ff, 0xf97583ff), (33, 0x24292eff, 0xe1e4e8ff), (34, 0xd73a49ff, 0xf97583ff), (46, 0x6f42c1ff, 0xb392f0ff), (48, 0x24292eff, 0xe1e4e8ff), (49, 0xd73a49ff, 0xf97583ff), (57, 0x6f42c1ff, 0xb392f0ff), (58, 0x24292eff, 0xe1e4e8ff), (59, 0xd73a49ff, 0xf97583ff), (66, 0x24292eff, 0xe1e4e8ff)],
+    &[(8, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (12, 0x6f42c1ff, 0xb392f0ff), (13, 0x24292eff, 0xe1e4e8ff), (14, 0xd73a49ff, 0xf97583ff), (18, 0x24292eff, 0xe1e4e8ff), (19, 0xd73a49ff, 0xf97583ff), (24, 0x24292eff, 0xe1e4e8ff), (25, 0xd73a49ff, 0xf97583ff), (30, 0x24292eff, 0xe1e4e8ff), (31, 0xd73a49ff, 0xf97583ff), (37, 0x6f42c1ff, 0xb392f0ff), (40, 0x24292eff, 0xe1e4e8ff)],
+    &[(8, 0x24292eff, 0xe1e4e8ff), (9, 0xd73a49ff, 0xf97583ff), (16, 0x6f42c1ff, 0xb392f0ff), (18, 0x24292eff, 0xe1e4e8ff)],
 ];
     #[rustfmt::skip]
 static FIXTURES: &[Fixture] = &[
-    Fixture { source: START_LINE, rows: &[3, 4, 5, 0, 6, 7, 8, 1, 0, 9, 2], tails: &[] },
+    Fixture { source: START_LINE, rows: &[2, 0, 3, 4, 5, 6, 7, 1], tails: &[] },
 ];
     pub fn row(source: &str, index: usize, visible: usize, last: bool) -> Option<&'static [Run]> {
         let fixture = FIXTURES
@@ -185,15 +183,12 @@ mod highlight {
     }
 }
 
-const START_LINE: &str = r##"  if (!session) {
-    redirect("/login")
-  }
+const START_LINE: &str = r##"    let query = self.query.trim().to_lowercase();
 
-  const projects = await db.project.findMany({
-    where: { ownerId: session.user.id },
-    orderBy: { updatedAt: "desc" },
-  })
-
-  return <ProjectList projects={projects} />
+    self.notebooks
+        .iter()
+        .filter(|book| book.title.to_lowercase().contains(&query))
+        .map(|book| book.title.as_str())
+        .collect()
 }"##;
 ```

@@ -1,5 +1,3 @@
 ## Header
 
-`CodeBlockHeader` holds a `CodeBlockTitle` and `CodeBlockActions`. `CodeBlockCopyButton` copies its `value`.
-
-The Rust equivalents are `.title(...)`, `code_block::title(...)` and `.actions(...)`. The copy control publishes a typed message; `update` writes its exact source value to the clipboard.
+Use `.title(...)` for a filename or a terminal label. Place the copy button in `.actions(...)`. In this example, Copy puts the Cargo command on the clipboard.

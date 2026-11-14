@@ -51,12 +51,11 @@ impl Demo {
 fn terminal(source: &str) -> CodeBlock<'_, Message> {
     code_block(source).font(Font::new("Geist Mono"))
 }
-const LINE_NUMBERS: &str = r##"{
-  "name": "chat",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build"
-  }
-}"##;
+const LINE_NUMBERS: &str = r##"[package]
+name = "notebook"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+icedxdy = { path = "../icedxdy" }"##;
 ```

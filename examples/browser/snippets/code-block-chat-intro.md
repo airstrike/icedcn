@@ -1,3 +1,3 @@
 ## Message
 
-Put a `CodeBlock` between paragraphs inside a [Message](/docs/components/radix/message).
+Place a `CodeBlock` between two paragraphs in a `message(...)` reply. Its copy button copies the Rust function.

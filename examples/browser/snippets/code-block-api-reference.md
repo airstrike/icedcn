@@ -1,1 +1,1 @@
-The native API maps the upstream parts to a content constructor and composable title, actions, line and footer slots. Copy and download remain application tasks.
+Use the content constructor and the title, actions, line and footer builders below. Clipboard writes and file downloads run as application tasks.

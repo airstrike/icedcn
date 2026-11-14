@@ -73,7 +73,7 @@ impl Demo {
         let normal = |_: usize, _: &str| LineStyle::Default;
         let id = "diff";
         listing(dark, DIFF, usize::MAX, false, |_, line| diff_style(line))
-            .title(code_block::title("components/greeting.tsx"))
+            .title(code_block::title("src/search.rs"))
             .actions(self.copy("diff", DIFF))
             .into()
     }
@@ -134,7 +134,7 @@ fn icon(name: &str) -> Slot<'static, Message> {
 }
 
 mod tokens {
-    //! Fixed recipe tokens generated with pinned Shiki 3.23.0, JavaScript regex engine,
+    //! Fixed recipe tokens generated with pinned Shiki 3.23.0,
     //! github-light/github-dark. Partial final lines retain streaming grammar behavior.
     //! This fixture data does not implement a general-purpose highlighter.
     use super::*;
@@ -147,11 +147,9 @@ mod tokens {
     }
     #[rustfmt::skip]
 static ROWS: &[&[Run]] = &[
-
 ];
     #[rustfmt::skip]
 static FIXTURES: &[Fixture] = &[
-
 ];
     pub fn row(source: &str, index: usize, visible: usize, last: bool) -> Option<&'static [Run]> {
         let fixture = FIXTURES
@@ -257,10 +255,9 @@ mod highlight {
     }
 }
 
-const DIFF: &str = r##" export function Greeting({ name }: { name: string }) {
--  return <p>Hello, {name}</p>
-+  return <p className="text-sm text-muted-foreground">
-+    Hello, {name}!
-+  </p>
+const DIFF: &str = r##" fn matches(query: &str, title: &str) -> bool {
+-    title.contains(query)
++    let query = query.to_lowercase();
++    title.to_lowercase().contains(&query)
  }"##;
 ```

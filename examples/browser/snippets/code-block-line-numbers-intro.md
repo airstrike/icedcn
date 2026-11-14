@@ -1,5 +1,3 @@
 ## Line Numbers
 
-Add `lineNumbers` to `CodeBlockContent`. A string child is split into lines, and the numbers are not copied with a selection.
-
-Use `.start_line(1)` in Rust to enable the nonselectable gutter.
+Call `.start_line(1)` to number the Cargo manifest from its first line. Selecting the source leaves the gutter numbers out of the clipboard.

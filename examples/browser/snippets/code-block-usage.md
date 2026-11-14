@@ -75,7 +75,7 @@ impl Demo {
         let id = "header";
         terminal(HEADER)
             .title(row![icon("terminal"), code_block::title("Terminal")].spacing(6))
-            .actions(self.copy("header", "pnpm add ai @ai-sdk/react zod"))
+            .actions(self.copy("header", "cargo check -p icedxdy_widget"))
             .into()
     }
     fn copy(&self, id: &'static str, source: &str) -> Slot<'static, Message> {
@@ -129,8 +129,8 @@ fn icon(name: &str) -> Slot<'static, Message> {
         .into()
 }
 
-const HEADER: &str = r##"$ pnpm add ai @ai-sdk/react zod
-Packages: +14
-Progress: resolved 412, reused 398, downloaded 14, added 14, done
-Done in 2.8s using pnpm v10.18.0"##;
+const HEADER: &str = r##"$ cargo check -p icedxdy_widget
+    Checking icedxdy_core v0.1.0
+    Checking icedxdy_widget v0.1.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.80s"##;
 ```

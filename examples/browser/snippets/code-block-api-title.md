@@ -1,4 +1,4 @@
-### CodeBlockTitle
+### Title
 
 `code_block::title(text)` supplies a medium-weight title that truncates within the available width. Put an optional icon beside it in a row.
 

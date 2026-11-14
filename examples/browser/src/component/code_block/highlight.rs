@@ -10,11 +10,11 @@ use icedxdy::widget::{rich_text, span};
 use icedxdy::{Color, Slot};
 
 pub const STREAMS: &[(&str, &str, &str)] = &[
-    ("hooks/use-debounce.ts", "ts", STREAMING_0),
+    ("src/matcher.rs", "rust", STREAMING_0),
     ("Terminal", "sh", STREAMING_1),
-    ("components/search.tsx", "tsx", STREAMING_2),
-    ("app/api/chat/route.ts", "ts", STREAMING_3),
-    (".env.local", "sh", STREAMING_4),
+    ("src/search.rs", "rust", STREAMING_2),
+    ("src/search.rs", "rust", STREAMING_3),
+    (".cargo/config.toml", "toml", STREAMING_4),
 ];
 fn rgb(hex: u32) -> Token {
     Color::from(iced::Color::from_rgba8(

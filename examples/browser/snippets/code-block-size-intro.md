@@ -1,5 +1,3 @@
 ## Size
 
-Use `size="sm"` for tool and [Trace](#trace) output. It has tighter padding and `text-xs` text.
-
-Use `.compact(true)` in Rust for the smaller panel.
+Call `.compact(true)` for a smaller terminal block. Both listings show the same Cargo output so you can compare the type size and padding.

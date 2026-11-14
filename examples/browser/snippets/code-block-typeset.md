@@ -30,8 +30,8 @@ impl Demo {
     pub fn new() -> Self {
         Self {
             copied: BTreeMap::new(),
-            typeset_after: markdown::parse("The `useChat` hook reads the stream on the client and renders the answer while it is written.").collect(),
-            typeset_before: markdown::parse("Create a route handler that calls `streamText` and returns the stream to the client.").collect()
+            typeset_after: markdown::parse("The caller receives an `io::Result` and can display a read error in the application.").collect(),
+            typeset_before: markdown::parse("Read the notebook index with `read_to_string` and return one title per line.").collect()
     }
     }
     fn event(&self, event: Message) -> Message {
@@ -77,14 +77,14 @@ impl Demo {
         let normal = |_: usize, _: &str| LineStyle::Default;
         let id = "typeset";
         column![
-            text::h3("Stream a response"),
+            text::h3("Read a notebook index"),
             prose(&self.typeset_before, dark, self.event(Message::Noop)),
             listing(dark, TYPESET, usize::MAX, false, normal)
                 .start_line(1)
                 .title(
                     row![
                         icon("file_code"),
-                        code_block::title("app/api/chat/route.ts")
+                        code_block::title("src/index.rs")
                     ]
                     .spacing(6)
                 )
@@ -155,7 +155,7 @@ fn icon(name: &str) -> Slot<'static, Message> {
 }
 
 mod tokens {
-    //! Fixed recipe tokens generated with pinned Shiki 3.23.0, JavaScript regex engine,
+    //! Fixed recipe tokens generated with pinned Shiki 3.23.0,
     //! github-light/github-dark. Partial final lines retain streaming grammar behavior.
     //! This fixture data does not implement a general-purpose highlighter.
     use super::*;
@@ -168,17 +168,16 @@ mod tokens {
     }
     #[rustfmt::skip]
 static ROWS: &[&[Run]] = &[
-    &[(6, 0xd73a49ff, 0xf97583ff), (22, 0x24292eff, 0xe1e4e8ff), (26, 0xd73a49ff, 0xf97583ff), (27, 0x24292eff, 0xe1e4e8ff), (31, 0x032f62ff, 0x9ecbffff)],
     &[],
-    &[(6, 0xd73a49ff, 0xf97583ff), (7, 0x24292eff, 0xe1e4e8ff), (12, 0xd73a49ff, 0xf97583ff), (13, 0x24292eff, 0xe1e4e8ff), (21, 0xd73a49ff, 0xf97583ff), (22, 0x24292eff, 0xe1e4e8ff), (26, 0x6f42c1ff, 0xb392f0ff), (27, 0x24292eff, 0xe1e4e8ff), (34, 0xe36209ff, 0xffab70ff), (35, 0xd73a49ff, 0xf97583ff), (36, 0x24292eff, 0xe1e4e8ff), (43, 0x6f42c1ff, 0xb392f0ff), (46, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (10, 0x24292eff, 0xe1e4e8ff), (18, 0x005cc5ff, 0x79b8ffff), (21, 0x24292eff, 0xe1e4e8ff), (22, 0xd73a49ff, 0xf97583ff), (23, 0x24292eff, 0xe1e4e8ff), (28, 0xd73a49ff, 0xf97583ff), (37, 0x24292eff, 0xe1e4e8ff), (41, 0x6f42c1ff, 0xb392f0ff), (43, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (8, 0xd73a49ff, 0xf97583ff), (16, 0x24292eff, 0xe1e4e8ff), (41, 0x6f42c1ff, 0xb392f0ff), (43, 0x24292eff, 0xe1e4e8ff)],
     &[(1, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (8, 0x24292eff, 0xe1e4e8ff), (14, 0x005cc5ff, 0x79b8ffff), (15, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (17, 0x24292eff, 0xe1e4e8ff), (27, 0x6f42c1ff, 0xb392f0ff), (37, 0x24292eff, 0xe1e4e8ff), (66, 0x032f62ff, 0x9ecbffff), (79, 0x24292eff, 0xe1e4e8ff)],
+    &[(3, 0xd73a49ff, 0xf97583ff), (4, 0x24292eff, 0xe1e4e8ff), (7, 0x6f42c1ff, 0xb392f0ff), (9, 0xd73a49ff, 0xf97583ff), (13, 0x6f42c1ff, 0xb392f0ff), (15, 0xd73a49ff, 0xf97583ff), (19, 0x6f42c1ff, 0xb392f0ff), (20, 0x24292eff, 0xe1e4e8ff)],
+    &[(2, 0xd73a49ff, 0xf97583ff), (3, 0x24292eff, 0xe1e4e8ff), (14, 0x6f42c1ff, 0xb392f0ff), (19, 0x24292eff, 0xe1e4e8ff), (20, 0xd73a49ff, 0xf97583ff), (21, 0x24292eff, 0xe1e4e8ff), (22, 0xd73a49ff, 0xf97583ff), (26, 0x6f42c1ff, 0xb392f0ff), (28, 0x24292eff, 0xe1e4e8ff), (30, 0xd73a49ff, 0xf97583ff), (31, 0x24292eff, 0xe1e4e8ff), (34, 0x6f42c1ff, 0xb392f0ff), (36, 0xd73a49ff, 0xf97583ff), (38, 0x6f42c1ff, 0xb392f0ff), (40, 0xd73a49ff, 0xf97583ff), (46, 0x6f42c1ff, 0xb392f0ff), (47, 0x24292eff, 0xe1e4e8ff), (50, 0x6f42c1ff, 0xb392f0ff), (51, 0x24292eff, 0xe1e4e8ff), (57, 0x6f42c1ff, 0xb392f0ff), (61, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (7, 0xd73a49ff, 0xf97583ff), (15, 0x24292eff, 0xe1e4e8ff), (16, 0xd73a49ff, 0xf97583ff), (17, 0x24292eff, 0xe1e4e8ff), (20, 0x6f42c1ff, 0xb392f0ff), (22, 0xd73a49ff, 0xf97583ff), (24, 0x6f42c1ff, 0xb392f0ff), (26, 0xd73a49ff, 0xf97583ff), (40, 0x6f42c1ff, 0xb392f0ff), (46, 0x24292eff, 0xe1e4e8ff), (47, 0xd73a49ff, 0xf97583ff), (48, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (6, 0x6f42c1ff, 0xb392f0ff), (13, 0x24292eff, 0xe1e4e8ff), (14, 0xd73a49ff, 0xf97583ff), (19, 0x6f42c1ff, 0xb392f0ff), (21, 0x24292eff, 0xe1e4e8ff), (22, 0xd73a49ff, 0xf97583ff), (25, 0x6f42c1ff, 0xb392f0ff), (26, 0x24292eff, 0xe1e4e8ff), (29, 0x6f42c1ff, 0xb392f0ff), (31, 0xd73a49ff, 0xf97583ff), (40, 0x24292eff, 0xe1e4e8ff), (41, 0xd73a49ff, 0xf97583ff), (48, 0x6f42c1ff, 0xb392f0ff), (51, 0x24292eff, 0xe1e4e8ff)],
 ];
     #[rustfmt::skip]
 static FIXTURES: &[Fixture] = &[
-    Fixture { source: TYPESET, rows: &[0, 1, 2, 3, 6, 1, 4, 5], tails: &[] },
+    Fixture { source: TYPESET, rows: &[2, 0, 3, 4, 5, 1], tails: &[] },
 ];
     pub fn row(source: &str, index: usize, visible: usize, last: bool) -> Option<&'static [Run]> {
         let fixture = FIXTURES
@@ -284,12 +283,10 @@ mod highlight {
     }
 }
 
-const TYPESET: &str = r##"import { streamText } from "ai"
+const TYPESET: &str = r##"use std::path::Path;
 
-export async function POST(request: Request) {
-  const { messages } = await request.json()
-  const result = streamText({ model: "anthropic/claude-sonnet-4.5", messages })
-
-  return result.toUIMessageStreamResponse()
+fn load_titles(path: &Path) -> std::io::Result<Vec<String>> {
+    let source = std::fs::read_to_string(path)?;
+    Ok(source.lines().map(str::to_owned).collect())
 }"##;
 ```

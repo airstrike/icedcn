@@ -48,8 +48,8 @@ impl Demo {
         {
             let mut samples = column![].spacing(16);
             for (title, source) in [
-                ("app/globals.css", LANGUAGES_0),
-                ("main.py", LANGUAGES_1),
+                ("Cargo.toml", LANGUAGES_0),
+                ("src/main.rs", LANGUAGES_1),
                 ("notes.txt", LANGUAGES_2),
             ] {
                 samples = samples.push(
@@ -64,7 +64,7 @@ impl Demo {
 }
 
 mod tokens {
-    //! Fixed recipe tokens generated with pinned Shiki 3.23.0, JavaScript regex engine,
+    //! Fixed recipe tokens generated with pinned Shiki 3.23.0,
     //! github-light/github-dark. Partial final lines retain streaming grammar behavior.
     //! This fixture data does not implement a general-purpose highlighter.
     use super::*;
@@ -77,18 +77,18 @@ mod tokens {
     }
     #[rustfmt::skip]
 static ROWS: &[&[Run]] = &[
-    &[],
     &[(1, 0x24292eff, 0xe1e4e8ff)],
-    &[(7, 0xd73a49ff, 0xf97583ff), (8, 0x24292eff, 0xe1e4e8ff), (21, 0x032f62ff, 0x9ecbffff), (22, 0x24292eff, 0xe1e4e8ff)],
-    &[(5, 0x6f42c1ff, 0xb392f0ff), (7, 0x24292eff, 0xe1e4e8ff)],
-    &[(2, 0x24292eff, 0xe1e4e8ff), (10, 0xe36209ff, 0xffab70ff), (12, 0x24292eff, 0xe1e4e8ff), (17, 0x005cc5ff, 0x79b8ffff), (20, 0xd73a49ff, 0xf97583ff), (21, 0x24292eff, 0xe1e4e8ff)],
-    &[(3, 0xd73a49ff, 0xf97583ff), (4, 0x24292eff, 0xe1e4e8ff), (9, 0x6f42c1ff, 0xb392f0ff), (16, 0x24292eff, 0xe1e4e8ff), (19, 0x005cc5ff, 0x79b8ffff), (24, 0x24292eff, 0xe1e4e8ff), (27, 0x005cc5ff, 0x79b8ffff), (28, 0x24292eff, 0xe1e4e8ff)],
-    &[(4, 0x24292eff, 0xe1e4e8ff), (10, 0xd73a49ff, 0xf97583ff), (11, 0x24292eff, 0xe1e4e8ff), (12, 0xd73a49ff, 0xf97583ff), (20, 0x032f62ff, 0x9ecbffff), (21, 0x005cc5ff, 0x79b8ffff), (25, 0x24292eff, 0xe1e4e8ff), (26, 0x005cc5ff, 0x79b8ffff), (28, 0x032f62ff, 0x9ecbffff)],
+    &[(1, 0x24292eff, 0xe1e4e8ff), (8, 0x6f42c1ff, 0xb392f0ff), (9, 0x24292eff, 0xe1e4e8ff)],
+    &[(7, 0x24292eff, 0xe1e4e8ff), (17, 0x032f62ff, 0x9ecbffff)],
+    &[(10, 0x24292eff, 0xe1e4e8ff), (17, 0x032f62ff, 0x9ecbffff)],
+    &[(10, 0x24292eff, 0xe1e4e8ff), (16, 0x032f62ff, 0x9ecbffff)],
+    &[(2, 0xd73a49ff, 0xf97583ff), (3, 0x24292eff, 0xe1e4e8ff), (7, 0x6f42c1ff, 0xb392f0ff), (11, 0x24292eff, 0xe1e4e8ff)],
+    &[(4, 0x24292eff, 0xe1e4e8ff), (12, 0x6f42c1ff, 0xb392f0ff), (13, 0x24292eff, 0xe1e4e8ff), (33, 0x032f62ff, 0x9ecbffff), (35, 0x24292eff, 0xe1e4e8ff)],
 ];
     #[rustfmt::skip]
 static FIXTURES: &[Fixture] = &[
-    Fixture { source: LANGUAGES_0, rows: &[2, 0, 3, 4, 1], tails: &[] },
-    Fixture { source: LANGUAGES_1, rows: &[5, 6], tails: &[] },
+    Fixture { source: LANGUAGES_0, rows: &[1, 2, 3, 4], tails: &[] },
+    Fixture { source: LANGUAGES_1, rows: &[5, 6, 0], tails: &[] },
 ];
     pub fn row(source: &str, index: usize, visible: usize, last: bool) -> Option<&'static [Run]> {
         let fixture = FIXTURES
@@ -194,14 +194,16 @@ mod highlight {
     }
 }
 
-const LANGUAGES_0: &str = r##"@import "tailwindcss";
+const LANGUAGES_0: &str = r##"[package]
+name = "notebook"
+version = "0.1.0"
+edition = "2024""##;
 
-:root {
-  --radius: 0.625rem;
+const LANGUAGES_1: &str = r##"fn main() {
+    println!("Notebook is ready.");
 }"##;
 
-const LANGUAGES_1: &str = r##"def greet(name: str) -> str:
-    return f"Hello, {name}!""##;
-
-const LANGUAGES_2: &str = r##"A language that is not in the list renders as plain text."##;
+const LANGUAGES_2: &str = r##"Notebook shortcuts
+Enter    Save the current note
+Escape   Close the search field"##;
 ```

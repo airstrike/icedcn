@@ -1,3 +1,3 @@
 ## Terminal Output
 
-Pass `"ansi"` as the language to render the colors in terminal output. Without it, escape codes show as text.
+The test transcript uses ANSI color escapes. Display its styled spans with `CodeBlock::lines` and give the copy button the plain transcript.
