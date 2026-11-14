@@ -1,3 +1,3 @@
-## Basic Table
+### Column Definitions
 
-Define the columns once and build the header and body from the same visible list. The actions and selection columns stay visible. Give the email track the remaining width and let the other data columns size to their contents.
+Each `data_table::column(label, render)` pairs a unique display name with a function that turns a record into cell content. For example, `data_table::column("Status", |p: &Payment| text::small(p.status))` displays the status field.

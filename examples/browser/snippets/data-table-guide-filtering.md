@@ -1,3 +1,3 @@
-## Filtering
+### Match Records
 
-The email input matches a case-insensitive substring. Filtering starts at the first page and an empty result spans the table.
+Call `.filter("Filter emails...", predicate)`. The predicate receives each record and the trimmed query. The demo matches case-insensitive email substrings. Clearing the input restores all records. A query with no matches displays No results.

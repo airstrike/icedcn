@@ -1,3 +1,3 @@
-## Pagination
+### Page Size
 
-Slice the filtered and sorted indices into pages of ten. Previous and Next disable at the ends. The five payments in this example fit on one page.
+The default page size is ten. Set `.page_size(2)` to try multiple pages with the five demo records. Filtering or changing sort order returns to the first page.

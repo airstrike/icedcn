@@ -1,3 +1,3 @@
 ## Introduction
 
-Each data table is built around its own records. This payments table uses `table::grid` for its shared column tracks, and a local component owns the filter, sort order, column visibility, selection and page.
+A data table pairs your records with column definitions. Each column renders a cell and can supply a comparator. The table handles filtering, ordering, visibility, row selection and pagination. Application messages carry effects such as copying a payment ID.

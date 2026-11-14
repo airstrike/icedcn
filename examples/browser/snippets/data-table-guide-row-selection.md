@@ -1,3 +1,3 @@
-## Row Selection
+### Select Rows by Key
 
-The header checkbox selects the current page. Its indeterminate state reflects a partial selection. The footer counts selected records in the current filter.
+Call `.selectable(true)` to add a header checkbox and a checkbox for each visible record. Use a unique key that stays with the record when the source changes order.

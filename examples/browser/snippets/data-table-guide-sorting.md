@@ -1,3 +1,3 @@
-## Sorting
+### Compare Records
 
-Activate the Email heading to alternate ascending and descending order. Sorting retains the selection by record ID.
+Add `.sort_by(|a, b| a.amount.total_cmp(&b.amount))` to Amount for numerical sorting. A comparator receives the original records, so display formatting never affects the ordering.
