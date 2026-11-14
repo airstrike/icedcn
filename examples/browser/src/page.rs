@@ -1,14 +1,17 @@
+mod heading;
 pub(crate) mod rhea;
 
 use iced::Element;
 use iced::Widget;
+use std::cell::{Cell, OnceCell};
 use std::collections::{BTreeSet, HashMap};
 use std::path::Path;
 #[cfg(not(target_arch = "wasm32"))]
 use tokio::fs::read_to_string;
 
-#[cfg(target_arch = "wasm32")]
 mod bundled {
+    include!(concat!(env!("OUT_DIR"), "/headings.rs"));
+    #[cfg(target_arch = "wasm32")]
     include!(concat!(env!("OUT_DIR"), "/snippets.rs"));
 }
 
@@ -120,11 +123,7 @@ impl Block {
     /// Title used for the right-side TOC. `None` skips the entry.
     fn toc_title<'a>(&'a self, state: &'a State) -> Option<&'a str> {
         match self {
-            Block::Md(p) => state
-                .md_titles
-                .get(*p)
-                .and_then(|t| t.as_deref())
-                .filter(|s| !s.is_empty()),
+            Block::Md(p) => state.title(p),
             Block::Example { title, .. } => {
                 if title.is_empty() {
                     None
@@ -202,10 +201,8 @@ pub(crate) fn sections(page: &dyn Page) -> impl Iterator<Item = (usize, &str)> {
 /// Messages produced by page infrastructure and component interactions.
 #[derive(Debug, Clone)]
 pub enum Message {
-    /// Snippet/markdown body finished loading. Keyed by path so blocks
-    /// can share content if needed, and so reordering blocks doesn't
-    /// break dispatch.
-    SnippetLoaded(&'static str, Result<String, String>),
+    /// Markdown bodies for one page, keyed by source path.
+    Loaded(Vec<(&'static str, String)>),
     LinkClicked(markdown::Uri),
     ChooseFile,
     Notice(String, String),
@@ -419,14 +416,8 @@ fn render_md<'a>(
     st: &'a State,
     viewer: &'a SnippetViewer,
 ) -> iced::Element<'a, super::Message, Theme> {
-    let title = st
-        .md_titles
-        .get(path)
-        .and_then(|t| t.as_deref())
-        .filter(|s| !s.is_empty());
-
     let mut col = column![].spacing(16).width(Fill);
-    if let Some(t) = title {
+    if let Some(t) = st.title(path) {
         col = col.push(heading_for(depth, t.to_owned()));
     }
     match st.md_items.get(path) {
@@ -476,7 +467,7 @@ fn render_example<'a>(
         });
 
     let description = description
-        .and_then(|copy| st.descriptions.get(copy))
+        .and_then(|copy| st.descriptions().get(copy))
         .map(|items| snippet(page_index, items, viewer).compose());
     framed_example(
         depth,
@@ -888,7 +879,8 @@ impl<'a> markdown::Viewer<'a, markdown::Uri, Theme, iced::Renderer> for SnippetV
 /// expanding a child example's code block doesn't ripple to siblings.
 pub struct State {
     pub page_index: usize,
-    descriptions: HashMap<&'static str, Vec<markdown::Item>>,
+    load: Cell<Load>,
+    descriptions: OnceCell<HashMap<&'static str, Vec<markdown::Item>>>,
     /// Parsed markdown items keyed by path. For `Block::Example`, this is
     /// the code-snippet body. For `Block::Md`, this is the body with the
     /// first heading peeled off (rendered separately as a depth-aware heading).
@@ -909,23 +901,20 @@ pub struct State {
     blocks: &'static [Block],
 }
 
+#[derive(Clone, Copy)]
+enum Load {
+    Unvisited,
+    Loading { section: Option<usize> },
+    Ready,
+}
+
 impl State {
     pub fn new(page_index: usize, blocks: &'static [Block]) -> Self {
-        let flat = flatten(blocks);
-        let flat_count = flat.len();
-        let descriptions = flat
-            .into_iter()
-            .filter_map(|(block, _)| match block {
-                Block::Example {
-                    description: Some(copy),
-                    ..
-                } => Some((*copy, markdown::parse(copy).collect())),
-                _ => None,
-            })
-            .collect();
+        let flat_count = flatten(blocks).len();
         Self {
             page_index,
-            descriptions,
+            load: Cell::new(Load::Unvisited),
+            descriptions: OnceCell::new(),
             md_items: HashMap::new(),
             md_raw: HashMap::new(),
             md_titles: HashMap::new(),
@@ -937,10 +926,41 @@ impl State {
         }
     }
 
-    /// Clear state that doesn't survive navigation away from this page.
-    /// Currently: dismissed "View Code" overlays.
+    fn descriptions(&self) -> &HashMap<&'static str, Vec<markdown::Item>> {
+        self.descriptions.get_or_init(|| {
+            flatten(self.blocks)
+                .into_iter()
+                .filter_map(|(block, _)| match block {
+                    Block::Example {
+                        description: Some(copy),
+                        ..
+                    } => Some((*copy, markdown::parse(copy).collect())),
+                    _ => None,
+                })
+                .collect()
+        })
+    }
+
+    fn title(&self, path: &str) -> Option<&str> {
+        if let Some(loaded) = self.md_titles.get(path) {
+            return loaded.as_deref().filter(|s| !s.is_empty());
+        }
+        let i = bundled::HEADINGS
+            .binary_search_by_key(&path, |&(key, _)| key)
+            .ok()?;
+        Some(bundled::HEADINGS[i].1)
+    }
+
+    pub(crate) fn unvisited(&self) -> bool {
+        matches!(self.load.get(), Load::Unvisited)
+    }
+
+    /// Collapse the code panels and forget any pending section jump when leaving.
     pub fn reset_volatile(&mut self) {
         self.code_expanded.clear();
+        if matches!(self.load.get(), Load::Loading { .. }) {
+            self.load.set(Load::Loading { section: None });
+        }
     }
 
     pub(crate) fn section(&self, fragment: &str) -> Option<usize> {
@@ -969,43 +989,65 @@ impl State {
     }
 
     pub fn init(&self) -> Task<super::Message> {
-        let pi = self.page_index;
-        let mut paths: Vec<&'static str> = Vec::new();
-        for_each_path(self.blocks, &mut |p| paths.push(p));
-        paths.sort();
+        if !self.unvisited() {
+            return Task::none();
+        }
+        self.load.set(Load::Loading { section: None });
+        self.descriptions();
+        let page = self.page_index;
+        let mut paths = Vec::new();
+        for_each_path(self.blocks, &mut |path| paths.push(path));
+        paths.sort_unstable();
         paths.dedup();
-
-        let tasks: Vec<Task<super::Message>> = paths
-            .into_iter()
-            .map(|path| {
-                Task::perform(load_snippet(path), move |result| {
-                    super::Message::Page(pi, Message::SnippetLoaded(path, result))
-                })
-            })
-            .collect();
-        Task::batch(tasks)
+        Task::perform(
+            async move {
+                let mut sources = Vec::with_capacity(paths.len());
+                for path in paths {
+                    if let Ok(source) = load_snippet(path).await {
+                        sources.push((path, source));
+                    }
+                }
+                sources
+            },
+            move |sources| super::Message::Page(page, Message::Loaded(sources)),
+        )
     }
 
     pub fn update(&mut self, event: &Message) -> Task<super::Message> {
         use icedcn::widget::operation::scroll;
 
         match event {
-            Message::SnippetLoaded(path, result) => {
-                if let Ok(content) = result {
-                    let is_md = flatten(self.blocks)
-                        .iter()
-                        .any(|(b, _)| matches!(b, Block::Md(p) if *p == *path));
-                    let (title, body) = if is_md {
-                        peel_first_heading(content)
-                    } else {
-                        (None, content.clone())
-                    };
-                    self.md_titles.insert(*path, title);
-                    self.md_raw.insert(*path, content.clone());
+            Message::Loaded(sources) => {
+                let articles: BTreeSet<_> = flatten(self.blocks)
+                    .into_iter()
+                    .filter_map(|(block, _)| {
+                        if let Block::Md(path) = block {
+                            Some(*path)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                for (path, content) in sources {
+                    let path = *path;
+                    let mut body = content.as_str();
+                    if articles.contains(path) {
+                        let title = heading::split(content).map(|(title, remainder)| {
+                            body = remainder;
+                            title.to_owned()
+                        });
+                        self.md_titles.insert(path, title);
+                    }
+                    self.md_raw.insert(path, content.clone());
                     self.md_items
-                        .insert(*path, Some(markdown::parse(&body).collect()));
+                        .insert(path, Some(markdown::parse(body).collect()));
                 }
-                Task::none()
+                match self.load.replace(Load::Ready) {
+                    Load::Loading { section: Some(i) } => {
+                        Task::done(super::Message::Page(self.page_index, Message::ScrollTo(i)))
+                    }
+                    _ => Task::none(),
+                }
             }
             Message::ScrollTranscript(id, target, animation) => {
                 scroller::scroll_to(id.clone(), *target, *animation)
@@ -1040,6 +1082,12 @@ impl State {
             }
             Message::BlockHidden(idx) => {
                 self.visible.remove(idx);
+                Task::none()
+            }
+            Message::ScrollTo(idx) if matches!(self.load.get(), Load::Loading { .. }) => {
+                self.load.set(Load::Loading {
+                    section: Some(*idx),
+                });
                 Task::none()
             }
             Message::ScrollTo(idx) => self
@@ -1144,41 +1192,4 @@ pub fn extract_code_from_markdown(raw: &str) -> String {
     } else {
         out.join("\n")
     }
-}
-
-/// Strip the FIRST ATX heading (`# foo`, `## foo`, or `### foo`) from a
-/// markdown source and return `(heading_text, remaining_body)`. The
-/// heading line is consumed; subsequent lines pass through verbatim.
-/// Used to extract a section title for the right-side TOC and render it
-/// via `text::h3` for visual parity with `Block::Example.title`.
-///
-/// Skips leading blank lines before the heading. Returns `(None, original)`
-/// if the first non-blank line isn't a heading.
-fn peel_first_heading(src: &str) -> (Option<String>, String) {
-    let lines: Vec<&str> = src.lines().collect();
-    let mut found: Option<String> = None;
-    let mut rest_index: usize = lines.len();
-
-    for (i, line) in lines.iter().enumerate() {
-        let trimmed = line.trim_start();
-        if trimmed.is_empty() {
-            continue;
-        }
-        if let Some(rest) = trimmed
-            .strip_prefix("### ")
-            .or_else(|| trimmed.strip_prefix("## "))
-            .or_else(|| trimmed.strip_prefix("# "))
-        {
-            found = Some(rest.trim().to_string());
-            rest_index = i + 1;
-        }
-        break;
-    }
-
-    let body = if found.is_some() {
-        lines[rest_index..].join("\n")
-    } else {
-        src.to_string()
-    };
-    (found, body)
 }

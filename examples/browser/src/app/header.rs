@@ -423,4 +423,64 @@ mod tests {
         assert_eq!(app.current_page, target.0);
         assert!(!app.search);
     }
+
+    #[test]
+    fn cold_markdown_sections_load_once_and_scroll_after_the_body_is_ready() {
+        use iced::futures::StreamExt;
+        use iced_test::runtime::{Action, task};
+        use tokio::runtime::Builder;
+
+        let mut app = app();
+        let index = app
+            .pages
+            .iter()
+            .position(|page| page.meta().title == "Button Group")
+            .unwrap();
+        let page = &app.pages[index];
+        assert!(page.state().unvisited());
+        assert!(page.state().md_raw.is_empty());
+        let cold: Vec<_> = page::sections(&**page)
+            .map(|(i, title)| (i, title.to_owned()))
+            .collect();
+        let target = page
+            .state()
+            .section("buttongroupseparator")
+            .expect("unloaded bullet has its actual heading");
+        assert!(
+            cold.iter()
+                .any(|(i, title)| *i == target && title == "ButtonGroupSeparator")
+        );
+        assert_eq!(
+            app.pages
+                .iter()
+                .filter(|page| !page.state().unvisited())
+                .count(),
+            1
+        );
+        let first = app.update(Message::SelectPage(index));
+        let revisit = app.update(Message::SelectPage(index));
+        assert_eq!(revisit.units(), 0);
+        let queued = app.update(Message::Page(index, page::Message::ScrollTo(target)));
+        assert_eq!(queued.units(), 0, "wait for real block heights");
+
+        let runtime = Builder::new_current_thread().enable_all().build().unwrap();
+        runtime.block_on(async {
+            let mut reads = task::into_stream(first).unwrap();
+            let Some(Action::Output(result)) = reads.next().await else { panic!("expected page markdown"); };
+            let mut pending = task::into_stream(app.update(result)).unwrap();
+            assert!(matches!(pending.next().await, Some(Action::Output(Message::Page(p, page::Message::ScrollTo(block)))) if p == index && block == target));
+            assert!(reads.next().await.is_none());
+        });
+        let loaded = &app.pages[index];
+        assert!(!loaded.state().md_items.is_empty());
+        let after: Vec<_> = page::sections(&**loaded)
+            .map(|(i, title)| (i, title.to_owned()))
+            .collect();
+        assert_eq!(
+            cold, after,
+            "search indices and section targets stay stable"
+        );
+        let _ = app.update(Message::SelectPage(0));
+        assert_eq!(app.update(Message::SelectPage(index)).units(), 0);
+    }
 }

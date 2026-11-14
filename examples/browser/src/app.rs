@@ -160,10 +160,10 @@ impl App {
         for (i, ctor) in constructors.into_iter().enumerate() {
             let mut page = ctor(i);
             page.window_width(width);
-            tasks.push(page.init());
             pages.push(page);
         }
 
+        tasks.push(pages[0].init());
         tasks.push(
             window::oldest()
                 .and_then(window::size)
@@ -301,16 +301,22 @@ impl App {
                 |_| Message::AttachmentSaved(Ok(())),
             ),
             Message::SelectPage(page) => {
+                if page >= self.pages.len() {
+                    return Task::none();
+                }
                 if page != self.current_page
                     && let Some(prev) = self.pages.get_mut(self.current_page)
                 {
                     prev.reset_volatile();
                 }
                 self.current_page = page;
-                self.pages
-                    .get_mut(page)
-                    .map(|p| p.on_visible())
-                    .unwrap_or_else(Task::none)
+                let page = &mut self.pages[page];
+                let visible = page.on_visible();
+                if page.state().unvisited() {
+                    Task::batch([page.init(), visible])
+                } else {
+                    visible
+                }
             }
             Message::FontSelected(name) => {
                 self.fonts_open = false;
@@ -326,6 +332,7 @@ impl App {
                     task.map(Message::Font)
                 }
             }
+            Message::Page(i, page::Message::ScrollTo(_)) if i != self.current_page => Task::none(),
             Message::Page(i, message) => {
                 if let Some(page) = self.pages.get_mut(i) {
                     page.update(message)
