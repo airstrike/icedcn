@@ -226,19 +226,15 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 _ => None,
             }),
         };
-        let list = scrollable(column(results).padding(4)).height(Length::Shrink);
-        let mut palette: Slot<'a, Event> = container(
-            column![
-                search.boxed(),
-                menu::separator(),
-                container(list).max_height(300)
-            ]
-            .width(Fill),
-        )
-        .padding(4)
-        .width(self.width)
-        .style(content)
-        .into();
+        let list = scrollable(column(results).width(Fill).padding(4))
+            .width(Fill)
+            .height(Length::Shrink.max(300));
+        let mut palette: Slot<'a, Event> =
+            container(column![search.boxed(), menu::separator(), list].width(Fill))
+                .padding(4)
+                .width(self.width)
+                .style(content)
+                .into();
         palette.inherit(&self.inherited);
         palette.compose()
     }

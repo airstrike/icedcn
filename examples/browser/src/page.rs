@@ -676,8 +676,9 @@ fn toc<'a>(page: &'a dyn Page) -> Slot<'a, super::Message> {
         } else {
             Weight::Normal
         };
-        let entry: Slot<'_, super::Message> = button(title)
+        let entry: Slot<'_, super::Message> = button(text(title).width(Fill))
             .size(Sm)
+            .width(Fill)
             .weight(weight)
             .translate(false)
             .style(toc_style)
@@ -685,8 +686,10 @@ fn toc<'a>(page: &'a dyn Page) -> Slot<'a, super::Message> {
             .interaction(Interaction::Pointer)
             .on_press(super::Message::Page(pi, Message::ScrollTo(i)))
             .into();
-        let row: iced::Element<'_, super::Message, Theme> =
-            container(entry).padding([0.0, indent]).into();
+        let row: iced::Element<'_, super::Message, Theme> = container(entry)
+            .width(Fill)
+            .padding([0.0, 8.0, 0.0, indent])
+            .into();
         row
     });
 
@@ -697,7 +700,9 @@ fn toc<'a>(page: &'a dyn Page) -> Slot<'a, super::Message> {
     // entries hit ~28-30px line height with `text-sm` + `gap-2`, so the
     // raw button stack already lands in the right ballpark without an
     // extra inter-item spacing nudge.
-    let items = scrollable(column(nav_items).spacing(2)).height(Fill);
+    let items = scrollable(column(nav_items).width(Fill).spacing(2))
+        .width(Fill)
+        .height(Fill);
     column![Element::from(header)]
         .push(items.boxed())
         .spacing(16)
