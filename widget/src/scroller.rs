@@ -4,7 +4,7 @@ mod viewport;
 use crate::{Compose, Inherited, Slot, scroll_area};
 use iced_core::Length::Fill;
 use iced_core::{Element, Length};
-use iced_widget::{Renderer, Widget, keyed_column};
+use iced_widget::{Renderer, Widget, column};
 use icedxdy_core::Theme;
 
 /// Where the first layout displays a saved transcript.
@@ -58,7 +58,7 @@ impl<Message> Item<'_, Message> {
 }
 
 /// A native vertical scroll region. Following is opt-in and history preservation is on.
-pub struct MessageScroller<'a, Message> {
+pub struct Scroller<'a, Message> {
     items: Vec<Item<'a, Message>>,
     height: Length,
     spacing: f32,
@@ -68,10 +68,10 @@ pub struct MessageScroller<'a, Message> {
     on_reader: Option<Box<dyn Fn(Reader) -> Message + 'a>>,
 }
 /// Mount keyed rows in a transcript that defaults to the last anchored turn.
-pub fn message_scroller<'a, Message>(
+pub fn scroller<'a, Message>(
     items: impl IntoIterator<Item = Item<'a, Message>>,
-) -> MessageScroller<'a, Message> {
-    MessageScroller {
+) -> Scroller<'a, Message> {
+    Scroller {
         items: items.into_iter().collect(),
         height: Length::Fill,
         spacing: 12.0,
@@ -81,7 +81,7 @@ pub fn message_scroller<'a, Message>(
         on_reader: None,
     }
 }
-impl<'a, Message> MessageScroller<'a, Message> {
+impl<'a, Message> Scroller<'a, Message> {
     pub fn height(mut self, height: impl Into<Length>) -> Self {
         self.height = height.into();
         self
@@ -128,7 +128,7 @@ impl<'a, Message> MessageScroller<'a, Message> {
         self
     }
 }
-impl<'a, Message: 'a> Compose<Message> for MessageScroller<'a, Message> {
+impl<'a, Message: 'a> Compose<Message> for Scroller<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {
         for item in &mut self.items {
             item.content.inherit(from);
@@ -139,7 +139,7 @@ impl<'a, Message: 'a> Compose<Message> for MessageScroller<'a, Message> {
         Self: 'b,
     {
         let ids = self.items.iter().map(|i| (i.id, i.anchor)).collect();
-        let content = keyed_column(self.items.into_iter().map(|i| (i.id, i.content.compose())))
+        let content = column(self.items.into_iter().map(|i| i.content.compose()))
             .width(Fill)
             .spacing(self.spacing)
             .padding(self.padding);
@@ -154,13 +154,13 @@ impl<'a, Message: 'a> Compose<Message> for MessageScroller<'a, Message> {
         .boxed()
     }
 }
-impl<'a, Message: 'a> From<MessageScroller<'a, Message>> for Slot<'a, Message> {
-    fn from(view: MessageScroller<'a, Message>) -> Self {
+impl<'a, Message: 'a> From<Scroller<'a, Message>> for Slot<'a, Message> {
+    fn from(view: Scroller<'a, Message>) -> Self {
         Slot::new(view)
     }
 }
-impl<'a, Message: 'a> From<MessageScroller<'a, Message>> for Element<'a, Message, Theme, Renderer> {
-    fn from(view: MessageScroller<'a, Message>) -> Self {
+impl<'a, Message: 'a> From<Scroller<'a, Message>> for Element<'a, Message, Theme, Renderer> {
+    fn from(view: Scroller<'a, Message>) -> Self {
         Box::new(view).compose()
     }
 }

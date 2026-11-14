@@ -1,5 +1,5 @@
 ```rust
-message_scroller(rows)
+scroller(rows)
     .default_scroll_position(Position::Start)
     .on_reader_change(Event::Reader)
 

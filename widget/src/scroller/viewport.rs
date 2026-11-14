@@ -1,3 +1,5 @@
+use std::collections::{HashMap, HashSet};
+
 use super::{Command, Position, Reader, Target};
 use crate::scrollable::widget::{
     animate_transcript_offset, set_transcript_offset, transcript_offset,
@@ -7,7 +9,7 @@ use iced_core::widget::operation::Focusable;
 use iced_core::widget::{Meta, Operation, Tree, tree};
 use iced_core::{
     Element, Event, Layout, Length, Rectangle, Shell, Size, Vector, Widget, keyboard, layout,
-    mouse, overlay, renderer,
+    mouse, overlay, renderer, touch,
 };
 use iced_widget::Renderer;
 use icedxdy_core::Theme;
@@ -47,8 +49,23 @@ struct Row {
     y: f32,
     height: f32,
 }
+impl Row {
+    fn offset(&self, inset: f32) -> f32 {
+        (self.y - inset).max(0.0)
+    }
+}
+impl Target {
+    fn offset(self, rows: &[Row], end: f32, margin: f32) -> Option<f32> {
+        match self {
+            Target::Start => Some(0.0),
+            Target::End => Some(end),
+            Target::Item(id) => rows.iter().find(|r| r.id == id).map(|r| r.offset(margin)),
+        }
+    }
+}
 #[derive(Default)]
 struct State {
+    keys: Vec<u64>,
     rows: Vec<Row>,
     height: f32,
     total: f32,
@@ -57,7 +74,9 @@ struct State {
     measured_at: Option<(f32, f32)>,
     focused: bool,
     released: bool,
-    pin: Option<u64>,
+    // Item jumps and automatic turn placement reserve different top insets.
+    pin: Option<(u64, f32)>,
+    smooth: Option<Target>,
 }
 impl Focusable for State {
     fn is_focused(&self) -> bool {
@@ -72,7 +91,9 @@ impl Focusable for State {
 }
 impl State {
     fn reader(&self, offset: f32, margin: f32) -> Reader {
-        let first = self.rows.partition_point(|r| r.y + r.height <= offset);
+        let first = self
+            .rows
+            .partition_point(|r| r.y + r.height <= offset + margin);
         let end = self.rows.partition_point(|r| r.y < offset + self.height);
         let top = self.rows.partition_point(|r| r.y <= offset + margin + 1.0);
         Reader {
@@ -99,6 +120,25 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
         tree::State::new(State::default())
     }
     fn diff(&mut self, tree: &mut Tree) {
+        let keys = &mut tree.state.downcast_mut::<State>().keys;
+        if keys.iter().copied().ne(self.ids.iter().map(|&(id, _)| id)) {
+            if let Some(column) = tree
+                .children
+                .first_mut()
+                .and_then(|scroll| scroll.children.first_mut())
+            {
+                // Move mounted widget state by message key before the column diffs its rows.
+                let mut old: HashMap<_, _> =
+                    keys.drain(..).zip(column.children.drain(..)).collect();
+                column.children.extend(
+                    self.ids
+                        .iter()
+                        .map(|(id, _)| old.remove(id).unwrap_or_else(Tree::empty)),
+                );
+            }
+            keys.clear();
+            keys.extend(self.ids.iter().map(|&(id, _)| id));
+        }
         tree.diff_children(std::slice::from_mut(&mut self.child));
     }
     fn size(&self) -> Size<Length> {
@@ -125,85 +165,122 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
                 height: leaf.size.height,
             })
             .collect();
-        let anchor = rows.iter().rfind(|v| v.anchor);
-        let anchor_y = |row: &Row| (row.y - self.options.margin - self.options.peek).max(0.0);
         let natural = content.size.height;
-        let old_last = state.rows.last().map(|r| r.id);
-        let appended = old_last
-            .and_then(|id| rows.iter().position(|r| r.id == id))
-            .and_then(|i| rows[i + 1..].iter().rfind(|v| v.anchor));
-        let old_first = state.rows.first().map(|r| r.id);
-        let prepend = old_first
-            .and_then(|id| rows.iter().find(|r| r.id == id))
-            .filter(|r| rows.first().is_some_and(|f| r.id != f.id));
+        let end = (natural - view).max(0.0);
+        let inset = self.options.margin + self.options.peek;
+        let previous_first = state.rows.first().map(|r| r.id);
+        let first_index = previous_first.and_then(|id| rows.iter().position(|r| r.id == id));
+        let previous_last = state.rows.last().map(|r| r.id);
+        let last_index = previous_last.and_then(|id| rows.iter().position(|r| r.id == id));
+        let appended = last_index.map_or(&[][..], |i| &rows[i + 1..]);
+        let mut new_anchors = appended.iter().filter(|row| row.anchor);
+        let new_anchor = new_anchors.next().or_else(|| {
+            if rows.len() != state.rows.len() {
+                return None;
+            }
+            // A mounted placeholder can acquire a new key and become a turn.
+            rows.iter().zip(&state.rows).find_map(|(row, old)| {
+                if !row.anchor || (row.id == old.id && old.anchor) {
+                    return None;
+                }
+                let newly_anchored = row.id == old.id
+                    || !state
+                        .rows
+                        .iter()
+                        .any(|before| before.id == row.id && before.anchor);
+                newly_anchored.then_some(row)
+            })
+        });
+        let prepended = first_index.is_some_and(|i| i > 0);
+        let following = self.options.follow && !state.released && was_at_end;
         let fresh = !rows.is_empty()
             && (state.rows.is_empty()
-                || old_last.is_some_and(|id| !rows.iter().any(|r| r.id == id))
-                    && old_first.is_some_and(|id| !rows.iter().any(|r| r.id == id)));
+                || first_index.is_none() && last_index.is_none() && {
+                    let ids = rows.iter().map(|row| row.id).collect::<HashSet<_>>();
+                    !state.rows.iter().any(|old| ids.contains(&old.id))
+                });
+        let old_visible = state
+            .rows
+            .get(state.rows.partition_point(|r| r.y + r.height <= old_y));
+        let preserve_visible = || {
+            let old = old_visible?;
+            let current = rows.iter().find(|r| r.id == old.id)?;
+            (current.y != old.y).then_some(old_y + current.y - old.y)
+        };
+        let requested = |dest: Target| dest.offset(&rows, end, self.options.margin);
+        let geometry_changed = state.rows != rows || state.height != view;
         let mut target = None;
         let mut smooth = false;
         if fresh {
             state.pin = None;
+            state.smooth = None;
             state.released = false;
             state.last = None;
             target = Some(match self.options.opening {
                 Position::Start => 0.0,
-                Position::End => (natural - view).max(0.0),
-                Position::LastAnchor => anchor.map_or((natural - view).max(0.0), |v| {
-                    anchor_y(v).min((natural - view).max(0.0))
-                }),
+                Position::End => end,
+                Position::LastAnchor => rows
+                    .iter()
+                    .rfind(|r| r.anchor)
+                    .filter(|r| natural - r.y > view)
+                    .map_or(end, |r| r.offset(inset)),
             });
-        } else if let Some(row) = appended {
-            state.pin = Some(row.id);
-            state.released = false;
-            target = Some(anchor_y(row));
-        } else if self.options.preserve
-            && let Some(first) = prepend
-            && let Some(old) = state.rows.first()
-        {
-            target = Some(old_y + first.y - old.y);
-        } else if self.options.follow && !state.released && was_at_end && natural > state.total {
-            target = Some((natural - view).max(0.0));
-        } else if let Some(previous) = state
-            .rows
-            .get(state.rows.partition_point(|r| r.y + r.height <= old_y))
-            && let Some(current) = rows.iter().find(|r| r.id == previous.id)
-            && current.y != previous.y
-        {
-            // Wrapping, image loads and edits above a visible row should keep
-            // the same part of that row at the viewport edge.
-            if prepend.is_none() {
-                target = Some(old_y + current.y - previous.y);
+        } else if prepended && self.options.preserve {
+            // Restore the first visible key even if rows above it also rewrapped.
+            if state.smooth.is_none() {
+                target = preserve_visible();
             }
+        } else if let Some(row) = new_anchor {
+            state.smooth = None;
+            state.released = false;
+            if following && new_anchors.next().is_some() {
+                state.pin = None;
+                target = Some(end);
+            } else {
+                state.pin = Some((row.id, inset));
+                target = Some(row.offset(inset));
+            }
+        } else if following
+            && (natural > state.total || view != state.height && state.pin.is_none())
+        {
+            target = Some(end);
+        } else if !prepended {
+            target = preserve_visible();
         }
         if let Some(cmd) = self.command
             && state.last != Some(cmd)
             && !rows.is_empty()
         {
-            let requested = match cmd.target {
-                Target::Start => Some(0.0),
-                Target::End => Some((natural - view).max(0.0)),
-                Target::Item(id) => rows.iter().find(|r| r.id == id).map(anchor_y),
-            };
+            let requested = requested(cmd.target);
             // A request may precede the transcript. Once mounted, a missing
             // key is unavailable: a later unrelated append must not steal the view.
             state.last = Some(cmd);
             if let Some(y) = requested {
                 state.pin = match cmd.target {
-                    Target::Item(id) => Some(id),
+                    Target::Item(id) => Some((id, self.options.margin)),
                     _ => None,
                 };
                 state.released = cmd.target != Target::End;
                 target = Some(y);
                 smooth = self.options.smooth_commands;
+                state.smooth = smooth.then_some(cmd.target);
             }
+        }
+        if geometry_changed && let Some(dest) = state.smooth {
+            // A prepend or streaming chunk can arrive before a smooth jump settles.
+            target = requested(dest);
+            smooth = target.is_some();
         }
         let extra = state
             .pin
-            .and_then(|id| rows.iter().find(|r| r.id == id))
-            .map_or(0.0, |r| anchor_y(r) + view);
+            .and_then(|(id, inset)| {
+                rows.iter()
+                    .find(|r| r.id == id)
+                    .map(|r| r.offset(inset) + view)
+            })
+            .unwrap_or(0.0);
         content.size.height = natural.max(extra);
-        if state.height != view || state.total != content.size.height || state.rows != rows {
+        if geometry_changed || state.total != content.size.height {
             state.measured_at = None;
         }
         state.total = content.size.height;
@@ -248,20 +325,34 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
             return;
         };
         let before = transcript_offset(t);
-        self.child.update(t, event, l, c, r, shell, v);
         let state = tree.state.downcast_mut::<State>();
         let bounds = layout.bounds();
-        if let Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) = event {
-            state.focused = c.is_over(bounds) && c.is_over(*v) && !shell.is_event_captured();
-            if state.focused {
-                // A reader can select text at the live edge without losing their place.
-                state.released = true;
+        let inside = c.is_over(bounds) && c.is_over(*v);
+        let pointer_intent = match event {
+            Event::Mouse(
+                mouse::Event::ButtonPressed(mouse::Button::Left)
+                | mouse::Event::WheelScrolled { .. },
+            ) => inside,
+            Event::Touch(touch::Event::FingerMoved { position, .. }) => {
+                bounds.contains(*position) && v.contains(*position)
             }
+            _ => false,
+        };
+        if pointer_intent {
+            if state.smooth.take().is_some() {
+                set_transcript_offset(t, before);
+            }
+            state.released = true;
+        }
+        self.child.update(t, event, l, c, r, shell, v);
+        if let Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) = event {
+            state.focused = inside && !shell.is_event_captured();
         }
         if state.focused
             && !shell.is_event_captured()
             && let Event::Keyboard(keyboard::Event::KeyPressed {
                 key: Key::Named(key),
+                modifiers,
                 ..
             }) = event
         {
@@ -271,11 +362,14 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
                 Named::End => Some(end),
                 Named::PageUp => Some(before - state.height),
                 Named::PageDown => Some(before + state.height),
+                Named::Space if modifiers.shift() => Some(before - state.height),
+                Named::Space => Some(before + state.height),
                 Named::ArrowUp => Some(before - 40.0),
                 Named::ArrowDown => Some(before + 40.0),
                 _ => None,
             };
             if let Some(y) = target {
+                state.smooth = None;
                 let y = y.clamp(0.0, end);
                 set_transcript_offset(t, y);
                 state.released = y < end - 1.0;
@@ -284,7 +378,13 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
             }
         }
         let after = transcript_offset(t);
-        if (after - before).abs() > 0.1 {
+        if let Some(dest) = state.smooth {
+            let max = (state.total - state.height).max(0.0);
+            let target = dest.offset(&state.rows, max, self.options.margin);
+            if target.is_none_or(|y| (y - after).abs() <= 1.0) {
+                state.smooth = None;
+            }
+        } else if (after - before).abs() > 0.1 {
             state.released = after + state.height < state.total - 1.0;
         }
         let margin = self.options.margin + self.options.peek;

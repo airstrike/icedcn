@@ -1,5 +1,5 @@
 //! A streaming fixture schedules its next chunk only while its preview is visible.
-use super::Event;
+use super::demo::Event;
 use iced::time::Instant;
 use iced::{Fill, Length, Rectangle, Renderer, Size, window};
 use iced_widget::core::widget::{Meta, Tree, tree};

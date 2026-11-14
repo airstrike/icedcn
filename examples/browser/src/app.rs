@@ -101,10 +101,10 @@ impl App {
             bubble, button, button_group, calendar, card, carousel, chart, checkbox, code_block,
             collapsible, combobox, command, context_menu, data_table, date_picker, dialog, drawer,
             dropdown_menu, empty, field, hover_card, input, input_group, input_otp, item, kbd,
-            label, marker, menubar, message, message_scroller, native_select, navigation_menu,
-            pagination, popover, progress, questionnaire, radio_group, resizable, scroll_area,
-            select, separator, sheet, sidebar, skeleton, slider, sonner, spinner, switch, table,
-            tabs, text, textarea, toggle, toggle_group, tooltip, trace,
+            label, marker, menubar, message, native_select, navigation_menu, pagination, popover,
+            progress, questionnaire, radio_group, resizable, scroll_area, scroller, select,
+            separator, sheet, sidebar, skeleton, slider, sonner, spinner, switch, table, tabs,
+            text, textarea, toggle, toggle_group, tooltip, trace,
         };
 
         let constructors: Vec<fn(usize) -> Box<dyn page::Page>> = vec![
@@ -146,7 +146,7 @@ impl App {
             marker::MarkerPage::new,
             menubar::MenubarPage::new,
             message::MessagePage::new,
-            message_scroller::MessageScrollerPage::new,
+            scroller::Page::new,
             native_select::NativeSelectPage::new,
             navigation_menu::NavigationMenuPage::new,
             pagination::PaginationPage::new,

@@ -5,8 +5,8 @@ use iced_core::{Element, Event, Rectangle, Size, Vector, window};
 use iced_test::simulator::simulator;
 use iced_widget::{Renderer, Space};
 use icedxdy_core::Theme;
-use icedxdy_widget::message_scroller::{Command, Position, Reader, Target};
-use icedxdy_widget::{container, message_scroller};
+use icedxdy_widget::scroller::{Command, Position, Reader, Target};
+use icedxdy_widget::{container, scroller};
 
 #[derive(Default)]
 struct Offset(f32);
@@ -34,7 +34,7 @@ fn transcript(
 ) -> Element<'static, Reader, Theme, Renderer> {
     let length = ids.len();
     let rows = ids.iter().enumerate().map(|(i, &id)| {
-        message_scroller::item(
+        scroller::item(
             id,
             Space::new()
                 .height(if i + 1 == length { last_height } else { 60 })
@@ -43,7 +43,7 @@ fn transcript(
         .anchor(anchors.contains(&id))
     });
     container(
-        message_scroller(rows)
+        scroller(rows)
             .padding(0.0)
             .spacing(0.0)
             .height(100)
@@ -164,14 +164,10 @@ fn public_defaults_open_at_the_last_turn_and_do_not_follow_token_growth() {
         let rows = [(1, 60), (2, 60), (3, 60), (4, reply_height)]
             .into_iter()
             .map(|(id, height)| {
-                message_scroller::item(id, Space::new().width(100).height(height))
+                scroller::item(id, Space::new().width(100).height(height))
                     .anchor(id == 1 || id == 3)
             });
-        message_scroller(rows)
-            .spacing(0.)
-            .padding(0.)
-            .height(100)
-            .into()
+        scroller(rows).spacing(0.).padding(0.).height(100).into()
     };
     let mut ui = simulator(render(60));
     let mut offset = Offset::default();
