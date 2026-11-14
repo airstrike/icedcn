@@ -1,12 +1,11 @@
 //! Regression coverage for the installed Badge recipes after state painting changes.
 use browser::component::badge::BadgePage;
-use browser::{Message, page};
+use browser::{Message, docs, page};
 use iced::keyboard::key::Named;
 use iced::{Point, Size};
 use iced_test::Simulator;
 use iced_test::core::Settings;
 use iced_test::core::widget::operation::{Operation, Outcome, focusable};
-use icedxdy::Theme;
 
 #[test]
 fn all_badge_labels_fit_both_documentation_frame_widths() {
@@ -25,7 +24,7 @@ fn all_badge_labels_fit_both_documentation_frame_widths() {
     for (window, width) in [(1440., 634.), (390., 324.)] {
         page.window_width(window);
         for &(id, labels) in examples {
-            let theme = Theme::light();
+            let theme = docs::theme(false);
             let mut ui = Simulator::with_size(
                 Settings {
                     text_size: 14.into(),
@@ -111,7 +110,7 @@ fn existing_badge_consumers_keep_their_labels_and_child_interactions() {
     for (page, id, labels) in consumers {
         let mut ui =
             Simulator::with_size(Settings::default(), Size::new(600., 500.), page.preview(id));
-        ui.draw(&Theme::light());
+        ui.draw(&docs::theme(false));
         for &label in labels {
             let bounds = ui.find(label).expect("consumer badge label").bounds();
             assert!(bounds.width > 0. && bounds.height <= 16.01);
@@ -126,7 +125,7 @@ fn existing_badge_consumers_keep_their_labels_and_child_interactions() {
     ui.click("Searched for the checkout build log")
         .expect("open Badge consumer disclosure");
     ui = ui.rebuild(page.preview("steps"));
-    ui.draw(&Theme::light());
+    ui.draw(&docs::theme(false));
     ui.find("vercel.com")
         .expect("first Badge mounts inside disclosure");
     ui.find("github.com")

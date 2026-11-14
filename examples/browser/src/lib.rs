@@ -13,6 +13,7 @@
 
 pub mod app;
 pub mod component;
+pub mod docs;
 pub mod font;
 pub mod fonts;
 pub mod icon;
@@ -110,11 +111,7 @@ impl Browser {
     }
 
     pub fn theme(&self) -> Theme {
-        if self.app.is_dark() {
-            Theme::dark()
-        } else {
-            Theme::light()
-        }
+        docs::theme(self.app.is_dark())
     }
 
     pub fn subscription(&self) -> Subscription<Message> {

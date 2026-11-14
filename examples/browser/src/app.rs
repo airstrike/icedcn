@@ -21,6 +21,7 @@ use icedxdy::widget::{button, rule, sidebar, text, toast, toaster};
 use icedxdy::{Size, Theme, Weight, theme};
 
 use crate::component;
+use crate::docs;
 use crate::fonts;
 use crate::icon;
 use crate::page::{self, SnippetViewer};
@@ -171,11 +172,7 @@ impl App {
         let default_font = "Geist".to_string();
 
         let dark_mode = theme::is_dark_mode();
-        let active_theme = if dark_mode {
-            Theme::dark()
-        } else {
-            Theme::light()
-        };
+        let active_theme = docs::theme(dark_mode);
         let snippet_viewer = SnippetViewer::new(
             if dark_mode {
                 gh_dark.clone()
@@ -241,11 +238,7 @@ impl App {
                 } else {
                     self.gh_light.clone()
                 };
-                let active_theme = if self.dark_mode {
-                    Theme::dark()
-                } else {
-                    Theme::light()
-                };
+                let active_theme = docs::theme(self.dark_mode);
                 self.snippet_viewer = SnippetViewer::new(map, &active_theme);
                 Task::none()
             }
