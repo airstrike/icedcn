@@ -133,6 +133,9 @@ impl<'a, Message: 'a> CodeBlock<'a, Message> {
         self
     }
     /// Header controls, or floating controls when the header is absent.
+    ///
+    /// Floating controls fade inherited text and theme-derived colors over 150ms.
+    /// Explicit child colors and artwork cannot fade with the current renderer.
     pub fn actions(mut self, actions: impl Into<Slot<'a, Message>>) -> Self {
         self.actions = Some(actions.into());
         self
@@ -249,7 +252,7 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
                 .wrapping(wrapping)
                 .selectable(true)
         };
-        let mut panel = column![];
+        let mut panel = column![].width(Fill);
         if let Some(mut title) = title.take() {
             title.inherit(
                 &Inherited::default()
@@ -258,6 +261,7 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
                     .with_line_height(if compact { 16. } else { 20. }),
             );
             let mut header = row![container(title).width(Fill).clip(true)]
+                .width(Fill)
                 .spacing(8)
                 .align_y(Vertical::Center);
             if let Some(actions) = actions.take() {

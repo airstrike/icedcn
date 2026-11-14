@@ -3,7 +3,7 @@ use iced_core::keyboard::key::Named;
 use iced_core::widget::Id;
 use iced_core::widget::operation::{Operation, Outcome, Scrollable, focusable};
 use iced_core::{Element, Event, Point, Rectangle, Size, Vector, mouse};
-use iced_test::Simulator;
+use iced_test::{Simulator, simulator};
 use iced_widget::{Renderer, Space};
 use icedxdy_core::Theme;
 use icedxdy_widget::code_block::LineStyle;
@@ -155,4 +155,49 @@ fn floating_actions_precede_content_and_survive_rebuild() {
     view.draw(&Theme::light());
     view.tap_key(Named::Space);
     assert_eq!(view.drain().count(), 1);
+}
+
+#[test]
+fn header_actions_stay_at_the_end_at_both_widths() {
+    #[derive(Default)]
+    struct Parts {
+        title: Rectangle,
+        actions: Rectangle,
+    }
+    impl Operation for Parts {
+        fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+            visit(self);
+        }
+        fn container(&mut self, id: Option<&Id>, bounds: Rectangle, _: &Rectangle) {
+            if id == Some(&Id::from("title")) {
+                self.title = bounds;
+            } else if id == Some(&Id::from("actions")) {
+                self.actions = bounds;
+            }
+        }
+    }
+    for compact in [false, true] {
+        for width in [512., 260.] {
+            for title_width in [40., 800.] {
+                let block = icedxdy_widget::code_block("output")
+                    .compact(compact)
+                    .title(container(Space::new().width(title_width).height(20)).id("title"))
+                    .actions(
+                        container(button(Space::new().width(68).height(18)).on_press(()))
+                            .id("actions"),
+                    );
+                let mut view = ui(container(block).width(width).into(), width);
+                view.draw(&Theme::light());
+                let mut parts = Parts::default();
+                view.operate(&mut parts);
+                let padding = if compact { 10. } else { 12. };
+                assert_eq!(parts.actions.x + parts.actions.width, width - padding + 5.);
+                assert!(parts.title.x + parts.title.width + 8. <= parts.actions.x);
+                assert!(parts.actions.height > 0.);
+                view.point_at(parts.actions.center());
+                view.simulate(simulator::click());
+                assert_eq!(view.drain().count(), 1, "header action remains clickable");
+            }
+        }
+    }
 }
