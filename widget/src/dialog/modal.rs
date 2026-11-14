@@ -395,7 +395,7 @@ where
                     layout,
                     &Rectangle::with_size(window),
                     renderer,
-                    &mut focus::select(Some(0)),
+                    &mut focus::restore(Some(0), !focus.pointer_opened),
                 );
             }
             overlays.push(overlay::Element::new(Box::new(Panel {

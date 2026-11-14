@@ -50,6 +50,9 @@ use crate::text;
 
 pub use icedxdy_core::theme::alert_dialog::{Destructive, Media};
 
+#[cfg(test)]
+mod tests;
+
 /// A closure that builds part of an [`AlertDialog`].
 type Body<'a, Message> = Box<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
 
