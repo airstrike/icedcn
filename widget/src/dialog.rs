@@ -6,19 +6,19 @@
 //!
 //! dialog(
 //!     |d| d.trigger(button("Open Dialog").style(button::Outline)),
-//!     |d| {
+//!     |_| {
 //!         column![
 //!             dialog::header("Edit profile", "Make changes to your profile here."),
 //!             field(input("").default_value("Pedro Duarte")).label("Name"),
-//!             dialog::footer([
-//!                 d.close(button("Cancel").style(button::Outline)),
-//!                 button("Save changes").on_press(Message::Save).into(),
-//!             ]),
 //!         ]
 //!         .spacing(16)
 //!         .into()
 //!     },
 //! )
+//! .footer(|d| [
+//!     d.close(button("Cancel").style(button::Outline)),
+//!     button("Save changes").on_press(Message::Save).into(),
+//! ])
 //! // Controlled: .open(self.editing).on_open_change(Message::Editing)
 //! ```
 //!
@@ -27,9 +27,12 @@
 
 pub mod modal;
 
+use std::rc::Rc;
+
 use iced_core::Element;
-use iced_core::Length::Fill;
+use iced_core::Length::{Fill, Shrink};
 use iced_core::alignment::Horizontal;
+use iced_core::text::LineHeight;
 use iced_core::time::Instant;
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
@@ -37,14 +40,14 @@ use icedcn_core::Theme;
 use icedcn_core::border;
 use icedcn_core::theme;
 use icedcn_core::theme::container::Style;
-use icedcn_core::theme::dialog;
+use icedcn_core::theme::{alert_dialog, dialog};
 
 use crate::button::{self, button};
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
 use crate::marker::{self, Press};
 use crate::sidebar::viewport::Width;
-use crate::{Size, column, row, text};
+use crate::{Size, column, row, scrollable, separator, text};
 
 pub use modal::{Placement, Side, Signal};
 
@@ -52,6 +55,9 @@ pub use modal::{Placement, Side, Signal};
 pub struct Dialog<'a, Message> {
     trigger: Body<'a, Message>,
     content: Body<'a, Message>,
+    scrollable_body: Option<Body<'a, Message>>,
+    footer: Option<Footer<'a, Message>>,
+    footer_alignment: Horizontal,
     open: Option<bool>,
     default_open: bool,
     on_open_change: Option<Box<dyn Fn(bool) -> Message + 'a>>,
@@ -69,7 +75,8 @@ pub struct Dialog<'a, Message> {
 }
 
 /// A closure that builds part of a [`Dialog`].
-type Body<'a, Message> = Box<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
+type Body<'a, Message> = Rc<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
+type Footer<'a, Message> = Rc<dyn Fn(&Handle, &Inherited) -> Slot<'a, Message> + 'a>;
 
 /// What a [`Dialog`]'s closures receive: whether it is open, and the
 /// wrappers for its triggers and close buttons.
@@ -119,8 +126,11 @@ impl<'a, Message> Dialog<'a, Message> {
         placement: Placement,
     ) -> Self {
         Self {
-            trigger: Box::new(trigger),
-            content: Box::new(content),
+            trigger: Rc::new(trigger),
+            content: Rc::new(content),
+            scrollable_body: None,
+            footer: None,
+            footer_alignment: Horizontal::Right,
             open: None,
             default_open: false,
             on_open_change: None,
@@ -171,6 +181,44 @@ impl<'a, Message> Dialog<'a, Message> {
         if let Placement::Center { .. } = self.placement {
             self.placement = Placement::Center { max_width };
         }
+        self
+    }
+
+    /// Place scrolling content below the header, capped at half the window height.
+    pub fn scrollable_body(mut self, body: impl Fn(&Handle) -> Slot<'a, Message> + 'a) -> Self {
+        self.scrollable_body = Some(Rc::new(body));
+        self
+    }
+
+    /// Place actions in a footer that stays visible while the body scrolls.
+    /// Below 640 pixels, actions fill the panel in reverse visual order.
+    pub fn footer<I>(mut self, actions: impl Fn(&Handle) -> I + 'a) -> Self
+    where
+        I: IntoIterator<Item = Slot<'a, Message>>,
+        Message: 'a,
+    {
+        self.footer = Some(Rc::new(move |handle, inherited| {
+            let actions = actions(handle);
+            if handle.mobile {
+                let cells = actions.into_iter().map(|mut action| {
+                    action.inherit(inherited);
+                    iced_widget::grid([action.compose()])
+                        .columns(1)
+                        .height(Shrink)
+                        .boxed()
+                        .into()
+                });
+                column(cells).width(Fill).reverse().spacing(8).into()
+            } else {
+                row::Row::with_children(actions).spacing(8).into()
+            }
+        }));
+        self
+    }
+
+    /// Align footer actions horizontally on desktop. The default is right.
+    pub fn footer_align_x(mut self, alignment: Horizontal) -> Self {
+        self.footer_alignment = alignment;
         self
     }
 
@@ -274,11 +322,13 @@ pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> Slot<'a,
     column![
         text::Text::new(title)
             .size(text::size::BASE)
+            .line_height(LineHeight::Relative(1.0))
             .medium()
             .style(theme::text::Foreground),
-        text::muted(description),
+        text::muted(description).line_height(LineHeight::Absolute(20.0.into())),
     ]
-    .spacing(8)
+    // Native heading metrics extend below its 16px CSS line box.
+    .spacing(4)
     .into()
 }
 
@@ -290,6 +340,28 @@ pub fn footer<'a, Message: 'a>(
         .width(Fill)
         .align_x(Horizontal::Right)
         .into()
+}
+
+#[cfg(feature = "svg")]
+fn close_icon<'a, Message: 'a>() -> Slot<'a, Message> {
+    use iced_widget::svg::{self, Handle};
+    use std::sync::LazyLock;
+    const X: &[u8] = br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+        stroke="black" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>"#;
+    static ICON: LazyLock<Handle> = LazyLock::new(|| Handle::from_memory(X));
+    iced_widget::svg(ICON.clone())
+        .width(16)
+        .height(16)
+        .style(|theme: &Theme, _| svg::Style {
+            color: Some(theme.popover.foreground.into()),
+        })
+        .boxed()
+        .into()
+}
+
+#[cfg(not(feature = "svg"))]
+fn close_icon<'a, Message: 'a>() -> Slot<'a, Message> {
+    text::Text::new("×").size(text::size::BASE).into()
 }
 
 /// A child that records a [`Signal`] when pressed.
@@ -391,15 +463,46 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
         );
 
         let panel = (handle.is_open || state.closing.is_some()).then(|| {
-            let mut content = (self.content)(&handle);
-            content.inherit(&self.inherited);
-
-            // nova `p-4` on a dialog; a sheet's sections pad themselves.
             let padding = match placement {
                 Placement::Center { .. } => self.padding,
                 Placement::Side(_) => 0,
             };
-            let content = Container::new(content).width(Fill).padding(padding);
+            let inherited = self.inherited;
+            let body = Rc::clone(&self.content);
+            let scrolling = self.scrollable_body.clone();
+            let footer = self.footer.clone();
+            let alignment = self.footer_alignment;
+            let sections = move |window_height: f32| {
+                let mut body = body(&handle);
+                if let Some(scrolling) = &scrolling {
+                    let scroll = scrollable(scrolling(&handle))
+                        .width(Fill)
+                        .height(Shrink.max(window_height * 0.5))
+                        .class(theme::scrollable::Hidden);
+                    body = column![body, scroll].width(Fill).spacing(16).into();
+                }
+                body = Container::new(body).width(Fill).padding(padding).into();
+                if let Some(footer) = &footer {
+                    let band = Container::new(footer(&handle, &inherited))
+                        .width(Fill)
+                        .align_x(alignment)
+                        .padding(16)
+                        .style(alert_dialog::footer);
+                    body = column![body, separator(), band].width(Fill).into();
+                }
+                body.inherit(&inherited);
+                body
+            };
+            let content = if self.scrollable_body.is_some() {
+                // Modal layout gives the panel the window height less its two margins.
+                let margin = self.margin;
+                iced_widget::responsive(move |size| sections(size.height + 2. * margin).compose())
+                    .height(Shrink)
+                    .boxed()
+                    .into()
+            } else {
+                sections(0.)
+            };
 
             let content: Slot<'a, Message> = if self.show_close_button || desktop.is_some() {
                 // nova `absolute top-2 right-2` (sheet: `top-3 right-3`).
@@ -408,7 +511,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                     Placement::Side(_) => 12,
                 };
                 let close = handle.close(
-                    button(text::Text::new("\u{00d7}").size(text::size::BASE))
+                    button(close_icon())
                         .size(Size::Sm)
                         .square()
                         .style(button::Ghost),
@@ -416,7 +519,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
 
                 Slot::from(
                     iced_widget::stack![
-                        Slot::from(content).compose(),
+                        content.compose(),
                         iced_widget::container(close.compose())
                             .width(Fill)
                             .align_right(Fill)
@@ -425,7 +528,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                     .boxed(),
                 )
             } else {
-                content.into()
+                content
             };
 
             let content: Slot<'a, Message> =
@@ -489,12 +592,19 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
             .backdrop(self.backdrop)
             .animation(state.closing, || Event::Exited)
             .drawer_height(drawer_height);
-        if self.responsive.is_some() || self.compact.is_some() {
+        if self.responsive.is_some() || self.compact.is_some() || self.footer.is_some() {
             Width {
                 content: modal.boxed(),
                 mobile: state.mobile,
                 enabled: true,
-                breakpoint: self.compact.map_or(768., |(_, breakpoint)| breakpoint),
+                breakpoint: self.compact.map_or(
+                    if self.responsive.is_some() {
+                        768.
+                    } else {
+                        640.
+                    },
+                    |(_, breakpoint)| breakpoint,
+                ),
                 change: Event::Mobile,
             }
             .boxed()

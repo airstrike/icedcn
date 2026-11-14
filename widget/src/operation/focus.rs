@@ -33,35 +33,71 @@ pub(crate) fn select(target: Option<usize>) -> impl Operation {
 
 /// Return focus with the modality that opened or operated a modal.
 pub(crate) fn restore(target: Option<usize>, visible: bool) -> impl Operation {
-    struct Select {
-        target: Option<usize>,
-        current: usize,
-        visible: bool,
-    }
-    impl Operation for Select {
-        fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
-            visit(self);
-        }
-        fn focusable(&mut self, _: Option<&Id>, _: Rectangle, control: &mut dyn Focusable) {
-            if self.target == Some(self.current) {
-                control.focus();
-            } else {
-                control.unfocus();
-            }
-            self.current += 1;
-        }
-        fn custom(&mut self, _: Option<&Id>, _: Rectangle, state: &mut dyn Any) {
-            if self.current.checked_sub(1) == self.target
-                && let Some(indicator) = state.downcast_mut::<Visible>()
-            {
-                indicator.0 = self.visible;
-            }
-        }
-    }
     Select {
         target,
         current: 0,
         visible,
+        bounds: None,
+    }
+}
+
+/// Enter a modal and select its initially focused text input for replacement or copying.
+pub(crate) fn enter(visible: bool, mut visit: impl FnMut(&mut dyn Operation)) {
+    let mut focus = Select {
+        target: Some(0),
+        current: 0,
+        visible,
+        bounds: None,
+    };
+    visit(&mut focus);
+    if let Some(bounds) = focus.bounds {
+        visit(&mut SelectText(bounds));
+    }
+}
+
+struct SelectText(Rectangle);
+
+impl Operation for SelectText {
+    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+        visit(self);
+    }
+    fn text_input(
+        &mut self,
+        _: Option<&Id>,
+        bounds: Rectangle,
+        input: &mut dyn operation::TextInput,
+    ) {
+        if self.0 == bounds {
+            input.select_all();
+        }
+    }
+}
+
+struct Select {
+    target: Option<usize>,
+    current: usize,
+    visible: bool,
+    bounds: Option<Rectangle>,
+}
+impl Operation for Select {
+    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+        visit(self);
+    }
+    fn focusable(&mut self, _: Option<&Id>, bounds: Rectangle, control: &mut dyn Focusable) {
+        if self.target == Some(self.current) {
+            control.focus();
+            self.bounds = Some(bounds);
+        } else {
+            control.unfocus();
+        }
+        self.current += 1;
+    }
+    fn custom(&mut self, _: Option<&Id>, _: Rectangle, state: &mut dyn Any) {
+        if self.current.checked_sub(1) == self.target
+            && let Some(indicator) = state.downcast_mut::<Visible>()
+        {
+            indicator.0 = self.visible;
+        }
     }
 }
 

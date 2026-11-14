@@ -1,12 +1,11 @@
 ## Composition
 
-Build the opening control in the trigger closure. Place the header, body and footer in the content closure and use the handle to wire up dismissal.
+The content closure builds the panel header and body. Add footer actions with the dialog’s `.footer(...)` builder.
 
 ```text
 dialog(trigger, content)
 ├── d.trigger(button)
-└── column!
-    ├── dialog::header(title, description)
-    ├── body
-    └── dialog::footer(actions)
+├── dialog::header(title, description)
+├── body or .scrollable_body(...)
+└── .footer(...)
 ```

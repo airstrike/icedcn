@@ -66,6 +66,7 @@ pub struct Modal<'a, Message, Theme, Renderer> {
     on_close: Box<dyn Fn() -> Message + 'a>,
     dismiss_outside: bool,
     closing: Option<(Instant, fn() -> Message)>,
+    animated: bool,
     drawer_height: Option<f32>,
     side_width: Option<f32>,
     margin: f32,
@@ -99,6 +100,7 @@ impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
             on_close: Box::new(on_close),
             dismiss_outside: true,
             closing: None,
+            animated: false,
             drawer_height: None,
             side_width: None,
             margin: 16.,
@@ -119,6 +121,7 @@ impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
         self
     }
     pub(super) fn animation(mut self, at: Option<Instant>, exited: fn() -> Message) -> Self {
+        self.animated = true;
         self.closing = at.map(|instant| (instant, exited));
         self
     }
@@ -140,6 +143,7 @@ impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
 #[derive(Default)]
 struct Focus {
     mounted: bool,
+    opened: Option<Instant>,
     placement: Option<Placement>,
     enter: bool,
     restore: Option<usize>,
@@ -166,6 +170,9 @@ where
         let open = self.open();
         if open && (!focus.mounted || focus.placement != Some(self.placement)) {
             focus.enter = true;
+            if self.animated && matches!(self.placement, Placement::Center { .. }) {
+                focus.opened = Some(Instant::now());
+            }
         }
         focus.mounted = open;
         focus.placement = Some(self.placement);
@@ -390,13 +397,15 @@ where
 
             let layout = Layout::new(size).move_to(position);
             if std::mem::take(&mut focus.enter) {
-                panel.operate(
-                    panel_tree,
-                    layout,
-                    &Rectangle::with_size(window),
-                    renderer,
-                    &mut focus::restore(Some(0), !focus.pointer_opened),
-                );
+                focus::enter(!focus.pointer_opened, |operation| {
+                    panel.operate(
+                        panel_tree,
+                        layout,
+                        &Rectangle::with_size(window),
+                        renderer,
+                        operation,
+                    );
+                });
             }
             overlays.push(overlay::Element::new(Box::new(Panel {
                 panel,
@@ -406,6 +415,7 @@ where
                 on_close: self.on_close.as_ref(),
                 dismiss_outside: self.dismiss_outside,
                 closing: self.closing,
+                opened: focus.opened,
                 placement: self.placement,
                 backdrop: self.backdrop,
                 drag: self.drawer_height.map(|_| &mut focus.drag),
@@ -438,10 +448,20 @@ struct Panel<'a, 'b, Message, Theme, Renderer> {
     on_close: &'b dyn Fn() -> Message,
     dismiss_outside: bool,
     closing: Option<(Instant, fn() -> Message)>,
+    opened: Option<Instant>,
     placement: Placement,
     backdrop: bool,
     drag: Option<&'b mut Option<(touch::Finger, Point)>>,
     pointer_opened: &'b mut bool,
+}
+
+impl<Message, Theme, Renderer> Panel<'_, '_, Message, Theme, Renderer> {
+    fn duration(&self) -> Duration {
+        Duration::from_millis(match self.placement {
+            Placement::Center { .. } => 100,
+            Placement::Side(_) => 150,
+        })
+    }
 }
 
 impl<Message, Theme, Renderer> overlay::Overlay<Message, Theme, Renderer>
@@ -458,9 +478,14 @@ where
     ) {
         let viewport = Rectangle::with_size(self.window);
 
-        let progress = self.closing.as_ref().map_or(0., |(start, _)| {
-            (start.elapsed().as_secs_f32() / 0.15).clamp(0., 1.)
-        });
+        let duration = self.duration().as_secs_f32();
+        let progress = if let Some((start, _)) = self.closing {
+            (start.elapsed().as_secs_f32() / duration).min(1.)
+        } else {
+            self.opened.map_or(0., |start| {
+                (1. - start.elapsed().as_secs_f32() / duration).max(0.)
+            })
+        };
         if progress >= 1. {
             return;
         }
@@ -527,13 +552,20 @@ where
     ) {
         if let Some((start, exited)) = &self.closing {
             if let Event::Window(window::Event::RedrawRequested(now)) = event {
-                if now.saturating_duration_since(*start) >= Duration::from_millis(150) {
+                if now.saturating_duration_since(*start) >= self.duration() {
                     shell.publish(exited());
                 } else {
                     shell.request_redraw();
                 }
             }
             return;
+        }
+        if let Event::Window(window::Event::RedrawRequested(now)) = event
+            && self
+                .opened
+                .is_some_and(|start| now.saturating_duration_since(start) < self.duration())
+        {
+            shell.request_redraw();
         }
         if matches!(event, Event::Keyboard(keyboard::Event::KeyPressed { .. })) {
             *self.pointer_opened = false;
