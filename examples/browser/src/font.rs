@@ -1,4 +1,4 @@
-//! Bundled monospace font for inline + fenced code rendering.
+//! Bundled typefaces for the component browser.
 //!
 //! Ships [Geist Mono] (1.8.0, SIL OFL 1.1) so the browser example
 //! renders code with the same family shadcn nova uses on the live
@@ -14,6 +14,9 @@
 //!
 //! [Geist Mono]: https://github.com/vercel/geist-font
 
+use iced::widget::text::Text;
+use icedxdy::Theme;
+
 /// Embedded TTF bytes for Geist Mono Regular. Pass directly to iced's
 /// `Application::font(...)` builder so cosmic-text registers the family
 /// at startup; afterwards any [`iced::Font`] whose family matches
@@ -25,3 +28,11 @@ pub const GEIST_MONO: &[u8] = include_bytes!("../fonts/GeistMono-Regular.ttf");
 /// Mono" + style "Regular"). Use with [`iced::Font::new`] when assigning
 /// the font to a widget or markdown style field.
 pub const GEIST_MONO_NAME: &str = "Geist Mono";
+
+/// shadcn's Message Scroller ships the dashed bubble from before Lucide 0.536.
+pub const LUCIDE: &[u8] = include_bytes!("../fonts/lucide-0.473/message-circle-dashed.ttf");
+
+/// The original Lucide bubble, at the same codepoint as the browser's main icon font.
+pub fn message_circle_dashed() -> Text<'static, Theme> {
+    crate::icon::message_circle_dashed().font("Lucide 0.473")
+}
