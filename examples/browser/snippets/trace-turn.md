@@ -3,12 +3,12 @@ use icedxdy::widget::{trace, text};
 
 trace::disclosure(||trace::line("Worked for 2m 4s, 1 command failed").status(Status::Error),move||column![
     trace([
-        trace::disclosure(||line("Thought",icon::brain).description("12s"),||text("I should check which package managers are installed before I scaffold anything.").into()).into(),
+        trace::disclosure(||line("Thought",icon::brain).description("12s"),||text("I should check which Rust tools are available before creating a project.").into()).into(),
         trace::disclosure(||line("Ran 2 commands, 1 failed",icon::terminal).status(Status::Error),||trace([
-            line("Ran node --version",icon::terminal).into(),result("Failed to run pnpm --version",icon::terminal,"command not found: pnpm",Status::Error,false)
+            line("Ran rustc --version",icon::terminal).into(),result("Failed to run cargo --version",icon::terminal,"command not found: cargo",Status::Error,false)
         ]).into()).default_open(true).into()
     ]),
-    text("Node is installed and pnpm is not. Reading the docs config."),
-    local("Read apps/v4/lib/docs.ts","turn",index)
+    text("Found rustc. Cargo is missing from PATH. Reading the project documentation."),
+    local("Read examples/browser/src/page.rs","turn",index)
 ].spacing(8).into()).default_open(true).into()
 ```

@@ -13,14 +13,14 @@ An iced `Component` that owns its open state, over iced's `anchored` overlay. Bo
 | `.align(align)` | `popover::Align` | `Center` | `Start`, `Center` or `End` along the trigger. |
 | `.side_offset(px)` | `f32` | `4.0` | The gap between the trigger and the panel. |
 | `.align_offset(px)` | `f32` | `0.0` | Moves a start- or end-aligned panel inward. |
-| `.width(px)` | `f32` | `288.0` | The panel's width (`w-72`). |
+| `.width(px)` | `f32` | `288.0` | The panel's width. |
 
 ### `popover::Handle`
 
 | Method | Description |
 | --- | --- |
-| `p.trigger(child)` | `<PopoverTrigger asChild>`: pressing `child` opens or closes the popover. |
-| `p.close(child)` | `<PopoverClose asChild>`: pressing `child` closes it. The child also publishes its own `.on_press` message if configured. |
+| `p.trigger(child)` | Pressing `child` opens or closes the popover. |
+| `p.close(child)` | Pressing `child` closes it. The child also publishes its own `.on_press` message if configured. |
 | `p.is_open()` | Whether the popover is open. |
 
 A press outside the panel (which still reaches the page beneath) and `Escape` dismiss it. `popover::header(title, description)` lays out `PopoverHeader`, `PopoverTitle` and `PopoverDescription`. There is no `PopoverAnchor`: the panel anchors to the widget the trigger closure returns.

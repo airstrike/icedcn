@@ -22,7 +22,7 @@ fn presence(theme: &Theme) -> container::Style {
 
 struct Demo {
     window_width: f32,
-    shadcn: image::Handle,
+    portrait: image::Handle,
     maxleiter: image::Handle,
     evilrabbit: image::Handle,
 }
@@ -37,9 +37,9 @@ impl Demo {
         (
             Self {
                 window_width: 1024.0,
-                shadcn: image::Handle::from_path("shadcn-grayscale.png"),
-                maxleiter: image::Handle::from_path("maxleiter-grayscale.png"),
-                evilrabbit: image::Handle::from_path("evilrabbit.png"),
+                portrait: image::Handle::from_path("assets/avatars/02.png"),
+                maxleiter: image::Handle::from_path("assets/avatars/maxleiter.png"),
+                evilrabbit: image::Handle::from_path("assets/avatars/evilrabbit.png"),
             },
             window::oldest()
                 .and_then(window::size)
@@ -57,14 +57,14 @@ impl Demo {
 
     fn view(&self) -> iced::Element<'_, Message, Theme> {
         row![
-            avatar(Some(self.shadcn.clone())).fallback("CN"),
+            avatar(Some(self.portrait.clone())).fallback("AC"),
             avatar::badge(
                 avatar(Some(self.evilrabbit.clone())).fallback("ER"),
                 avatar::dot()
             )
             .badge_style(presence),
             avatar::group([
-                avatar(Some(self.shadcn.clone())).fallback("CN"),
+                avatar(Some(self.portrait.clone())).fallback("AC"),
                 avatar(Some(self.maxleiter.clone())).fallback("LR"),
                 avatar(Some(self.evilrabbit.clone())).fallback("ER"),
             ])

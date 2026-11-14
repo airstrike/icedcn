@@ -1,16 +1,11 @@
 ## Composition
 
-Use the following composition to build an `AlertDialog`:
-
 ```text
-AlertDialog
-├── AlertDialogTrigger
-└── AlertDialogContent
-    ├── AlertDialogHeader
-    │   ├── AlertDialogMedia
-    │   ├── AlertDialogTitle
-    │   └── AlertDialogDescription
-    └── AlertDialogFooter
-        ├── AlertDialogCancel
-        └── AlertDialogAction
+alert_dialog(trigger, content)
+├── a.trigger(button)
+└── column!
+    ├── a.header(title, description).media(icon)
+    └── a.footer(buttons)
+        ├── a.cancel(button)
+        └── a.action(button)
 ```

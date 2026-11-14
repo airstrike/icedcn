@@ -1,6 +1,6 @@
 ```rust
 fn people() -> [(&'static str, &'static str, image::Handle); 3] {
-    [("shadcn", "shadcn@vercel.com", shadcn_handle()), ("maxleiter", "maxleiter@vercel.com", maxleiter_handle()), ("evilrabbit", "evilrabbit@vercel.com", evilrabbit_handle())]
+    [("Alex Chen", "alex@example.com", alex_handle()), ("maxleiter", "maxleiter@example.com", maxleiter_handle()), ("evilrabbit", "evilrabbit@example.com", evilrabbit_handle())]
 }
 
 column(people().map(|(name, email, portrait)| item::item([

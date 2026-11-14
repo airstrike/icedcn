@@ -8,12 +8,12 @@
 | --- | --- | --- | --- |
 | `.addon(addon)` | `input_group::Addon` | - | Add an addon. |
 | `.disabled(disabled)` | `bool` | `false` | Disable the control and dim the group. |
-| `.style(style)` | `impl Into<text_input::StyleFn>` | `input::Default` | `input::Invalid` paints the invalid surface (shadcn sets `aria-invalid` on the control). |
+| `.style(style)` | `impl Into<text_input::StyleFn>` | `input::Default` | `input::Invalid` paints the invalid surface. |
 
 ### `input_group::addon(content)`
 
-`InputGroupAddon`: muted `text-sm font-medium` content, icons at 16px. `.align(..)` places it: `InlineStart` (default), `InlineEnd`, `BlockStart` or `BlockEnd`.
+`InputGroupAddon`: muted 14px medium-weight content, icons at 16px. `.align(..)` places it: `InlineStart` (default), `InlineEnd`, `BlockStart` or `BlockEnd`.
 
 ### `input_group::text(..)` / `input_group::button(..)`
 
-`InputGroupText` (muted `text-sm`) and `InputGroupButton` (a ghost `Xs` button; chain `.square()` for `icon-xs`).
+`InputGroupText` (muted 14px text) and `InputGroupButton` (a ghost `Xs` button; chain `.square()` for a square icon button).

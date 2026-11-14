@@ -1,4 +1,4 @@
-Pass the application window width to this view; the source breakpoint is 640px.
+Pass the window width to switch layouts at 640px.
 
 ```rust
 use icedxdy::Size::*;

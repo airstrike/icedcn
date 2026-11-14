@@ -2,9 +2,9 @@
 use icedxdy::widget::{trace, text};
 
 result(
-    "Ran node --version",
+    "Ran rustc --version",
     icon::terminal,
-    "$ node --version\nv24.18.0",
+    "$ rustc --version\nrustc 1.89.0",
     Status::Complete,
     false,
 )

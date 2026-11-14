@@ -4,7 +4,7 @@ use icedxdy::widget::{trace, text};
 dialog(
     |d| {
         d.trigger(trace::action(
-            line("Searched the web for cache keys", icon::globe)
+            line("Looked up Cargo build caching", icon::globe)
                 .trailing(icon::chevron_right().size(16)),
             None,
         ))
@@ -12,21 +12,21 @@ dialog(
     |_| {
         column![
             dialog::header(
-                "Searched the web for cache keys",
+                "Looked up Cargo build caching",
                 "Three results were used in the response."
             ),
             trace([
                 source(
                     "Caching build outputs",
-                    "https://nextjs.org/docs/app/guides/caching"
+                    "https://doc.rust-lang.org/cargo/reference/build-cache.html"
                 ),
                 source(
-                    "Image optimization reference",
-                    "https://nextjs.org/docs/app/api-reference/components/image"
+                    "Build profiles",
+                    "https://doc.rust-lang.org/cargo/reference/profiles.html"
                 ),
                 source(
-                    "Deploy hooks and cache keys",
-                    "https://vercel.com/docs/deploy-hooks"
+                    "Build scripts",
+                    "https://doc.rust-lang.org/cargo/reference/build-scripts.html"
                 )
             ])
         ]

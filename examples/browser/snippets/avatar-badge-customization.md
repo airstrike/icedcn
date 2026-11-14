@@ -1,6 +1,4 @@
-Use the `className` prop to add custom styles to the badge such as custom colors, sizes, etc.
-
-In Rust, use `.badge_style(...)` to customize its surface and text color; badge geometry follows `.size(...)` on its Avatar.
+Use `.badge_style(...)` to customize its surface and text color; badge geometry follows `.size(...)` on its Avatar.
 
 ```rust
 use iced::widget::image;
@@ -21,8 +19,8 @@ fn presence(theme: &Theme) -> container::Style {
     style
 }
 
-fn preview(shadcn: image::Handle) -> iced::Element<'static, (), Theme> {
-    avatar::badge(avatar(Some(shadcn)).fallback("CN"), avatar::dot())
+fn preview(portrait: image::Handle) -> iced::Element<'static, (), Theme> {
+    avatar::badge(avatar(Some(portrait)).fallback("AC"), avatar::dot())
         .badge_style(presence)
         .into()
 }

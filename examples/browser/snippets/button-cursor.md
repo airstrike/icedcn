@@ -1,8 +1,6 @@
 ## Cursor
 
-Tailwind v4 [switched](https://tailwindcss.com/docs/upgrade-guide#buttons-use-the-default-cursor) from `cursor: pointer` to `cursor: default` for the button component.
-
-icedxdy also uses the default arrow. To keep the pointer behavior for an action, use `.interaction(Interaction::Pointer)`:
+Buttons use the default arrow cursor. Set `.interaction(Interaction::Pointer)` to show a pointer while hovering.
 
 ```rust
 use iced::mouse::Interaction;

@@ -9,17 +9,17 @@ etc. on.
 
 | Constructor | Returns | Description |
 | --- | --- | --- |
-| `text::h1(content)` | `Text<'a>` | `text-3xl` (30px), semibold, `-0.025em` letter-spacing, foreground. |
-| `text::h2(content)` | `Text<'a>` | `text-xl` (20px), medium, `-0.025em` letter-spacing, foreground. |
-| `text::h3(content)` | `Text<'a>` | `text-lg` (18px), medium, `-0.025em` letter-spacing, foreground. |
-| `text::h4(content)` | `Text<'a>` | `text-base` (16px), medium, `-0.025em` letter-spacing, foreground. |
-| `text::p(content)` | `Text<'a>` | Body paragraph: `text-base` (16px), foreground. |
-| `text::lead(content)` | `Text<'a>` | Lead paragraph: `text-xl` (20px), muted. |
-| `text::large(content)` | `Text<'a>` | `text-lg` (18px), semibold, foreground. |
-| `text::small(content)` | `Text<'a>` | `text-sm` (14px), foreground. |
-| `text::muted(content)` | `Text<'a>` | `text-sm` (14px), muted. |
-| `text::xs(content)` | `Text<'a>` | `text-xs` (12px), foreground. |
-| `text::inline_code(content)` | `Text<'a>` | `text-sm` (14px), semibold, foreground. Wrap in a `bg-muted` container at the call site for the full inline-code chrome. |
+| `text::h1(content)` | `Text<'a>` | 30px, semibold, `-0.025em` letter-spacing, foreground. |
+| `text::h2(content)` | `Text<'a>` | 20px, medium, `-0.025em` letter-spacing, foreground. |
+| `text::h3(content)` | `Text<'a>` | 18px, medium, `-0.025em` letter-spacing, foreground. |
+| `text::h4(content)` | `Text<'a>` | 16px, medium, `-0.025em` letter-spacing, foreground. |
+| `text::p(content)` | `Text<'a>` | Body paragraph: 16px, foreground. |
+| `text::lead(content)` | `Text<'a>` | Lead paragraph: 20px, muted. |
+| `text::large(content)` | `Text<'a>` | 18px, semibold, foreground. |
+| `text::small(content)` | `Text<'a>` | 14px, foreground. |
+| `text::muted(content)` | `Text<'a>` | 14px, muted. |
+| `text::xs(content)` | `Text<'a>` | 12px, foreground. |
+| `text::inline_code(content)` | `Text<'a>` | 14px, semibold, foreground. Wrap in a container with a muted background at the call site for the full inline-code chrome. |
 | `text::blockquote(content)` | `Blockquote<'a>` | 2px left rule + 24px gap + italic body. |
 | `text::list(items)` | `List<'a, Message>` | Bulleted list — 24px left indent, 8px row gap. |
 | `text(content)` | `Text<'a>` | Crate-root shorthand for `text::small`. |
@@ -44,9 +44,7 @@ so all constructors accept owned or borrowed strings.
 ### `Blockquote<'a>`
 
 Composed widget: 2px left rule + 24px gap + italic body in a single
-horizontal row. Mirrors shadcn nova's `border-l-2 pl-6 italic` cascade.
-Vertical spacing (`mt-6` in shadcn) is the caller's responsibility —
-drive it from the enclosing column's `.spacing(...)`.
+horizontal row. Set the space above and below it with the enclosing column’s `.spacing(...)`.
 
 | Builder | Type | Description |
 | --- | --- | --- |
@@ -56,9 +54,7 @@ drive it from the enclosing column's `.spacing(...)`.
 ### `List<'a, Message>`
 
 Composed widget: 24px left indent + 8px row gap + a `\u{2022}` bullet
-prefix per item. Mirrors shadcn nova's `ml-6 list-disc [&>li]:mt-2`
-cascade. Vertical spacing around the list (`my-6` in shadcn) is the
-caller's responsibility.
+prefix per item. Set vertical spacing around the list on its parent.
 
 The `text::list(items)` constructor takes any
 `IntoIterator<Item = impl IntoFragment<'a>>`. Empty input produces an
@@ -67,7 +63,7 @@ color and have no further builder methods today.
 
 ### `text::size` constants
 
-Raw `f32` constants for the Tailwind/shadcn font-size scale, exposed
+Raw `f32` constants for the type scale, exposed
 for call sites that want a literal pixel size (e.g. `Span::size`).
 
 | Constant | Value (px) |
@@ -85,8 +81,8 @@ for call sites that want a literal pixel size (e.g. `Span::size`).
 
 | Variant | `text_size()` (px) | Notes |
 | --- | --- | --- |
-| `Size::Xs` | 12 | Mirrors shadcn's `xs` size variant. |
-| `Size::Sm` | 12.8 | Mirrors shadcn's `sm` size variant (`text-[0.8rem]`). |
+| `Size::Xs` | 12 | Extra-small text. |
+| `Size::Sm` | 12.8 | Small text. |
 | `Size::Default` | 14 | Default body size. |
 | `Size::Lg` | 14 | Same as `Default` — drives container height, not text size. |
 | `Size::Custom(v)` | `v` | Arbitrary pixel size. `From<f32>` / `From<u16>` / `From<i32>` blanket impls let you pass numerics directly. |
@@ -95,7 +91,7 @@ for call sites that want a literal pixel size (e.g. `Span::size`).
 
 `Thin`, `ExtraLight`, `Light`, `Normal`, `Medium`, `Semibold`, `Bold`,
 `ExtraBold`, `Black`, `Custom(u16)`. The numeric variant clamps to the
-nearest CSS weight bucket (100–900).
+nearest supported font weight (100–900).
 
 ### Rich text — `rich_text!` + `Span<'a>`
 

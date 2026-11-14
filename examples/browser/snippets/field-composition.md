@@ -7,11 +7,10 @@ Start with `field(control)`, then add its label and optional description or erro
 A single control with label, helper text, and validation.
 
 ```text
-Field
-├── FieldLabel
-├── Input / Textarea / Switch / Select
-├── FieldDescription
-└── FieldError
+field(control)
+├── .label(text)
+├── .description(text)
+└── .error(text)
 ```
 
 ### FieldGroup
@@ -19,33 +18,19 @@ Field
 Place related fields in `field::group(...)`. Put a `separator()` between sections when needed.
 
 ```text
-FieldGroup
-├── Field
-│   ├── FieldLabel
-│   ├── Input / Textarea / Switch / Select
-│   ├── FieldDescription
-│   └── FieldError
-├── FieldSeparator
-└── Field
-    ├── FieldLabel
-    └── Input / Textarea / Switch / Select
+field::group(items)
+├── field(control).label(text)
+├── separator()
+└── field(control).label(text)
 ```
 
 ### FieldSet
 
-Semantic grouping with a legend and description, usually containing a `FieldGroup`.
+Group controls under a legend and description.
 
 ```text
-FieldSet
-├── FieldLegend
-├── FieldDescription
-└── FieldGroup
-    ├── Field
-    │   ├── FieldLabel
-    │   ├── Input / Textarea / Switch / Select
-    │   ├── FieldDescription
-    │   └── FieldError
-    └── Field
-        ├── FieldLabel
-        └── Input / Textarea / Switch / Select
+field::set(legend, description, controls)
+└── field::group(items)
+    ├── field(control).label(text)
+    └── field(control).label(text)
 ```

@@ -41,7 +41,7 @@ context_menu(
 )
 .width(192)
 
-/// The `aspect-video max-w-xs rounded-xl border` area.
+/// The area that responds to a secondary click.
 fn area<'a>() -> Slot<'a, Message> {
     container(text("Right click here"))
         .center(Fill)

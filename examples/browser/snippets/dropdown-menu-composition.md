@@ -3,29 +3,14 @@
 Wrap the opening control with the handle’s `trigger`. Build the popup from `menu` items, groups, separators and submenus in the content closure.
 
 ```text
-DropdownMenu
-├── DropdownMenuTrigger
-└── DropdownMenuContent
-    ├── DropdownMenuGroup
-    │   ├── DropdownMenuLabel
-    │   ├── DropdownMenuItem
-    │   └── DropdownMenuItem
-    ├── DropdownMenuSeparator
-    ├── DropdownMenuGroup
-    │   ├── DropdownMenuLabel
-    │   ├── DropdownMenuCheckboxItem
-    │   └── DropdownMenuCheckboxItem
-    ├── DropdownMenuSeparator
-    ├── DropdownMenuGroup
-    │   ├── DropdownMenuLabel
-    │   └── DropdownMenuRadioGroup
-    │       ├── DropdownMenuRadioItem
-    │       └── DropdownMenuRadioItem
-    └── DropdownMenuSub
-        ├── DropdownMenuSubTrigger
-        └── DropdownMenuSubContent
-            └── DropdownMenuGroup
-                ├── DropdownMenuLabel
-                ├── DropdownMenuItem
-                └── DropdownMenuItem
+dropdown_menu(trigger, content)
+├── m.trigger(button)
+└── column!
+    ├── menu::group(items)
+    │   ├── menu::label(label)
+    │   └── menu::item(label)
+    ├── menu::separator()
+    ├── menu::checkbox_item(label, checked, on_toggle)
+    ├── menu::radio_item(label, value, selected, on_select)
+    └── menu::sub(label, items)
 ```

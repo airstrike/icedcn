@@ -2,12 +2,12 @@
 
 ### `switch()`
 
-Constructor for an off, uncontrolled `Switch`. Radix state: the value lives in the widget tree unless the app controls it.
+Constructor for an off, uncontrolled `Switch`. The value lives in the widget tree unless the app controls it.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `.default_checked(bool)` | `bool` | `false` | Initial state of an uncontrolled switch (shadcn `defaultChecked`). |
-| `.checked(bool)` | `bool` | uncontrolled | Control the switch: it always shows the given state (shadcn `checked`). |
+| `.default_checked(bool)` | `bool` | `false` | Initial state of an uncontrolled switch. |
+| `.checked(bool)` | `bool` | uncontrolled | Control the switch: it always shows the given state. |
 | `.on_checked_change(f)` | `Fn(bool) -> Message` | `None` | Publish a message with the new checked state on each toggle in either mode. |
 | `.disabled(bool)` | `bool` | `false` | Disable the switch. A disabled ancestor disables it too. |
 | `.label(label)` | `impl IntoFragment` | `None` | Optional inline label. |
@@ -20,15 +20,6 @@ The thumb's position is animated via the vendored `Toggler`'s tree state — no 
 
 ### Labels
 
-Inside `field(switch()).label("...")`, pressing the label toggles the switch, like `<FieldLabel htmlFor>`.
+Inside `field(switch()).label("...")`, pressing the label toggles the switch.
 
-### Mapping from shadcn
-
-| Shadcn prop | icedxdy equivalent |
-| --- | --- |
-| `Switch.defaultChecked` | `.default_checked(bool)`. |
-| `Switch.checked` | `.checked(bool)`. |
-| `Switch.onCheckedChange` | `.on_checked_change(f)`. |
-| `Switch.disabled` | `.disabled(true)`. |
-| `Switch.aria-invalid` | `.style(theme::switch::Invalid)`. |
-| `Switch.size` (`"default" \| "sm"`) | `.size(switch::Size::Default)` or `.size(switch::Size::Sm)`. |
+Use `.size(switch::Size::Sm)` for the compact switch. The default size is `switch::Size::Default`.

@@ -1,3 +1,3 @@
 ## About
 
-The shadcn command palette uses [cmdk](https://github.com/dip/cmdk). The iced widget supports searchable groups, keyboard selection and command shortcuts.
+The command palette groups actions into searchable sections. Use the arrow keys to highlight a match and Enter to select it.

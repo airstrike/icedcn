@@ -1,13 +1,10 @@
 ## Composition
 
-Use the following composition to build a `Card`:
-
 ```text
-Card
-├── CardHeader
-│   ├── CardTitle
-│   ├── CardDescription
-│   └── CardAction
-├── CardContent
-└── CardFooter
+card(column![...])
+├── card::header(title)
+│   ├── .description(text)
+│   └── .action(control)
+├── card::content(body)
+└── card::footer(actions)
 ```

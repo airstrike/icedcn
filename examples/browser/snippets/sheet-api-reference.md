@@ -2,7 +2,7 @@
 
 ### `sheet(trigger, content)`
 
-A `Dialog` pinned to a window edge: the same component, closures and `dialog::Handle` (`s.trigger`, `s.close`, `s.is_open()`). The panel spans the window along its side, `w-3/4 sm:max-w-sm` on the left and right, and pads its sections itself through `sheet::header` and `sheet::footer`.
+A `Dialog` pinned to a window edge: the same component, closures and `dialog::Handle` (`s.trigger`, `s.close`, `s.is_open()`). The panel spans the window along its side, using three quarters of the window width on the left or right, capped at 384px on wider windows, and pads its sections itself through `sheet::header` and `sheet::footer`.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |

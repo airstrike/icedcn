@@ -17,4 +17,4 @@ pub fn example<Message: 'static>() -> Element<'static, Message, Theme> {
 }
 ```
 
-If selecting the 20th highlights the 19th, check that conversion at the application boundary. Calendar does not convert a civil date through UTC. The original web example detects the timezone after mounting to avoid server/client hydration differences; a native iced application has no server-rendered hydration step.
+If selecting the 20th highlights the 19th, check that conversion at the application boundary. Calendar does not convert a civil date through UTC.

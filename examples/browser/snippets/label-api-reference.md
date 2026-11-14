@@ -2,8 +2,8 @@
 
 ### `text::label()`
 
-`text-sm font-medium leading-none` typography for a label.
+A 14px medium-weight label with a 14px line height.
 
 ### `field(..).label(..)`
 
-shadcn's `<Label htmlFor>` links a label to its control by id. In icedxdy a `field` links them: pressing its label presses the control it wraps (a checkbox, switch, radio or toggle toggles; an input takes focus).
+Pressing a field’s label activates its control. A checkbox, switch, radio or toggle responds to activation, and an input takes focus.

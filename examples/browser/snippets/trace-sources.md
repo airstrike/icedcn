@@ -6,16 +6,16 @@ trace::disclosure(
     || {
         trace([
             source(
-                "Install Astro | docs.astro.build",
-                "https://docs.astro.build/en/install-and-setup/",
+                "Getting Started | rust-lang.org",
+                "https://www.rust-lang.org/learn/get-started",
             ),
             source(
-                "create-astro | npmjs.com",
-                "https://www.npmjs.com/package/create-astro",
+                "Creating a package | The Cargo Book",
+                "https://doc.rust-lang.org/cargo/guide/creating-a-new-project.html",
             ),
             source(
-                "Settings: minimumReleaseAge | pnpm.io",
-                "https://pnpm.io/settings#minimumreleaseage",
+                "Configuration | The Cargo Book",
+                "https://doc.rust-lang.org/cargo/reference/config.html",
             ),
         ])
         .into()

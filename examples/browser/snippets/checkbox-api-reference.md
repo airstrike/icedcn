@@ -2,13 +2,13 @@
 
 ### `checkbox()`
 
-Constructor for an unchecked, uncontrolled `Checkbox`. Radix state: the value lives in the widget tree unless the app controls it.
+Constructor for an unchecked, uncontrolled `Checkbox`. The value lives in the widget tree unless the app controls it.
 
 **`.default_checked(state)`** accepts `impl Into<State>`. Default: `Unchecked`.
-Sets the initial state of an uncontrolled checkbox (shadcn `defaultChecked`).
+Sets the initial state of an uncontrolled checkbox.
 
 **`.checked(state)`** accepts `impl Into<State>`. Default: uncontrolled.
-Controls the checkbox: it always shows `state` (shadcn `checked`).
+Controls the checkbox: it always shows `state`.
 
 **`.on_checked_change(f)`** accepts `Fn(bool) -> Message`. Default: `None`.
 Publishes a message with the new checked state on each toggle in either mode.
@@ -37,19 +37,11 @@ Use the variant unit structs `checkbox::Default`, `checkbox::Invalid`,
 
 ### Labels
 
-Inside `field(checkbox()).label("...")`, pressing the label toggles the checkbox, like `<FieldLabel htmlFor>`: the field runs the `activate` operation on its control. With `.card()` the whole card is the label, and its tint follows the checkbox.
+Inside `field(checkbox()).label("...")`, pressing the label toggles the checkbox through the field’s `activate` operation. With `.card()` the whole card is the label, and its tint follows the checkbox.
 
 ### Validation
 
-Apply `theme::checkbox::Invalid` via `.style(...)` to land the destructive border and persistent invalid ring (mirrors `aria-invalid` in shadcn).
-
-### Mapping from shadcn
-
-- `Checkbox.defaultChecked` maps to `.default_checked(state)`.
-- `Checkbox.checked` maps to `.checked(state)`.
-- `Checkbox.onCheckedChange` maps to `.on_checked_change(f)`.
-- `Checkbox.disabled` maps to `.disabled(true)`.
-- `Checkbox.aria-invalid` maps to `.style(theme::checkbox::Invalid)`.
+Apply `theme::checkbox::Invalid` via `.style(...)` to land the destructive border and persistent invalid ring.
 
 ### Keyboard interaction
 

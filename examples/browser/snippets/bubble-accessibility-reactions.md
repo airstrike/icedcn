@@ -1,6 +1,6 @@
 ### Labeling Reactions
 
-Reactions render as a row of emoji. A screen reader reads each glyph with no context, and counters like `+8` are announced as "plus eight". The web component groups the row with a descriptive accessible label. In a native application, include an explicit text alternative when the meaning would otherwise be ambiguous:
+When a reaction row contains only emoji or a count such as `+8`, add text that explains which reactions the count represents.
 
 ```rust
 use iced::alignment::{Horizontal, Vertical};

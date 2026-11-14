@@ -4,11 +4,11 @@ use icedxdy::Theme;
 use icedxdy::widget::avatar;
 use icedxdy::widget::{button, column, dropdown_menu, menu};
 
-fn preview(shadcn: image::Handle) -> iced::Element<'static, (), Theme> {
+fn preview(portrait: image::Handle) -> iced::Element<'static, (), Theme> {
     dropdown_menu(
         move |menu| {
             menu.trigger(
-                button(avatar(Some(shadcn.clone())).fallback("CN"))
+                button(avatar(Some(portrait.clone())).fallback("AC"))
                     .style(button::Ghost)
                     .square()
                     .rounded(),

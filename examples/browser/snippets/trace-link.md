@@ -2,10 +2,10 @@
 use icedxdy::widget::{trace, text};
 
 trace([
-    local("Read apps/v4/lib/docs.ts", "link", index),
+    local("Read examples/browser/src/page.rs", "link", index),
     source(
-        "Install Astro | docs.astro.build",
-        "https://docs.astro.build/en/install-and-setup/",
+        "Getting Started | rust-lang.org",
+        "https://www.rust-lang.org/learn/get-started",
     ),
 ])
 .into()

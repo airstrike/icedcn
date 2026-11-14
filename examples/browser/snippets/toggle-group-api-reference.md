@@ -6,7 +6,7 @@
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `.mode(mode)` | `toggle_group::Mode` | `Single` | `Single` (at most one pressed; pressing it again releases it) or `Multiple`. Radix's `type`. |
+| `.mode(mode)` | `toggle_group::Mode` | `Single` | `Single` (at most one pressed; pressing it again releases it) or `Multiple`. |
 | `.default_value(values)` | `impl IntoIterator<Item = impl Into<String>>` | empty | The pressed set an uncontrolled group starts with. |
 | `.value(values)` | `impl IntoIterator<Item = impl Into<String>>` | - | Control the group: `values` is always the pressed set. |
 | `.on_value_change(f)` | `Fn(Vec<String>) -> Message` | `None` | The message published with the complete new pressed set. |

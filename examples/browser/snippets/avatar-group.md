@@ -4,12 +4,12 @@ use icedxdy::Theme;
 use icedxdy::widget::avatar;
 
 fn preview(
-    shadcn: image::Handle,
+    portrait: image::Handle,
     maxleiter: image::Handle,
     evilrabbit: image::Handle,
 ) -> iced::Element<'static, (), Theme> {
     avatar::group([
-        avatar(Some(shadcn)).fallback("CN"),
+        avatar(Some(portrait)).fallback("AC"),
         avatar(Some(maxleiter)).fallback("LR"),
         avatar(Some(evilrabbit)).fallback("ER"),
     ])

@@ -6,7 +6,7 @@ frame(message::group([
     message(
         bubble("The component and example JSON now live under the UI registry.").style(Muted),
     )
-    .avatar(portrait(0, "CN"))
+    .avatar(portrait(0, "AC"))
     .into(),
 ]))
 ```

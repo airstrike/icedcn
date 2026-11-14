@@ -16,10 +16,10 @@ sheet(
                 "Files read while preparing the response."
             ),
             column![
-                text("apps/v4/lib/docs.ts"),
-                text("apps/v4/lib/components.ts"),
-                text("apps/v4/next.config.mjs"),
-                text("apps/v4/package.json")
+                text("examples/browser/src/page.rs"),
+                text("examples/browser/src/component.rs"),
+                text("examples/browser/src/main.rs"),
+                text("Cargo.toml")
             ]
             .spacing(8)
             .padding([0, 16])

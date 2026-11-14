@@ -2,7 +2,7 @@
 
 ### `tabs(body)`
 
-An iced `Component` that owns the selected value. `body` receives a `tabs::Handle` and builds the list, triggers and panels in your own message type. Only the active panel is mounted, as in Radix.
+An iced `Component` that owns the selected value. `body` receives a `tabs::Handle` and builds the list, triggers and panels in your own message type. Only the active panel is mounted.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |

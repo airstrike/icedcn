@@ -4,7 +4,7 @@ use icedxdy::widget::{column, separator, text};
 
 column![
     column![
-        text::label("shadcn/ui").height(14),
+        text::label("icedxdy").height(14),
         text::muted("The Foundation for your Design System").line_height(Pixels(20.0)),
     ]
     .spacing(6),

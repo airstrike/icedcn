@@ -73,4 +73,4 @@ fn main() -> iced::Result {
 
 Drop the `.icon(...)` call to render a title-and-description-only alert. Drop `.action(...)` for the simple callout. Use `.style(alert::Destructive)` for the destructive variant.
 
-The action stays enabled without a handler, as in the source example. Add `.on_press(Message::Enable)` to the button to publish your application’s message; handle it in `update`. Alert itself has no open or checked state.
+The action stays enabled without a handler. Add `.on_press(Message::Enable)` to the button to publish your application’s message; handle it in `update`. Alert itself has no open or checked state.

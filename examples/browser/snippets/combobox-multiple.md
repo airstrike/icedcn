@@ -1,11 +1,11 @@
 ```rust
 use icedxdy::widget::combobox;
 
-const FRAMEWORKS: [&str; 5] = ["Next.js", "SvelteKit", "Nuxt.js", "Remix", "Astro"];
+const FRAMEWORKS: [&str; 5] = ["iced", "egui", "Slint", "GTK", "Druid"];
 
 combobox(FRAMEWORKS)
     .multiple(true)
     .auto_highlight(true)
-    .default_values(["Next.js"])
+    .default_values(["iced"])
     .width(320)
 ```

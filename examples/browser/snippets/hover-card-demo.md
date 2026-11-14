@@ -6,8 +6,8 @@ use icedxdy::widget::{button, column, container, hover_card, text};
 hover_card(
     button("Hover Here").style(button::Link),
     column![
-        text("@nextjs").semibold(),
-        text("The React Framework – created and maintained by @vercel."),
+        text("@iced_rs").semibold(),
+        text("A cross-platform GUI library for Rust."),
         container(text::muted("Joined December 2021").size(text::size::XS))
             .padding([4, 0, 0, 0]),
     ]

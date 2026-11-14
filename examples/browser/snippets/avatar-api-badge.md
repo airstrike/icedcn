@@ -1,7 +1,5 @@
 ### AvatarBadge
 
-The `AvatarBadge` component displays a badge indicator on the avatar, typically positioned at the bottom right.
-
 | Rust API | Type | Default | Behavior |
 | --- | --- | --- | --- |
 | `avatar::badge(avatar, content)` | `Avatar`, `impl Into<Slot>` | no badge | Returns the Avatar with a retained badge, usable in a group. |
@@ -37,7 +35,7 @@ fn presence(theme: &Theme) -> container::Style {
 
 fn preview() -> iced::Element<'static, (), Theme> {
     avatar::group([
-        avatar::badge(avatar(None).fallback("CN"), avatar::dot()).badge_style(presence),
+        avatar::badge(avatar(None).fallback("AC"), avatar::dot()).badge_style(presence),
         avatar::badge(
             avatar(None).fallback("PP"),
             plus(8.0).style(|theme: &Theme, _| svg::Style {

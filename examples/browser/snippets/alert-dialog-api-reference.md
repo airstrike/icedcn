@@ -6,7 +6,7 @@ Use the `.size(..)` builder on `AlertDialog` to control the size of the alert di
 | --- | --- | --- |
 | `.size(size)` | `Size::Default` or `Size::Sm` | `Size::Default` |
 
-For more information about the other components and their props, see the [Radix UI documentation](https://www.radix-ui.com/primitives/docs/components/alert-dialog#api-reference).
+[Read the alert_dialog implementation](https://github.com/airstrike/icedxdy/blob/HEAD/widget/src/alert_dialog.rs).
 
 **`alert_dialog()`**
 
@@ -23,8 +23,8 @@ For more information about the other components and their props, see the [Radix 
 
 | Method | Description |
 | --- | --- |
-| `a.trigger(child)` | `AlertDialogTrigger`: pressing `child` opens the dialog. |
-| `a.header(title, description)` | `AlertDialogHeader` with its title and description; `.media(icon)` adds an `AlertDialogMedia` tile, `.media_style(alert_dialog::Media + ..)` restyles it. |
-| `a.footer(buttons)` | `AlertDialogFooter`: a `bg-muted/50` band below a border. Give the column holding the header and footer `.width(Fill)` so the band spans the panel. |
-| `a.cancel(button)` | `AlertDialogCancel`: the button closes the dialog. |
-| `a.action(button)` | `AlertDialogAction`: the button closes the dialog and still publishes its `on_press`. |
+| `a.trigger(child)` | Pressing `child` opens the dialog. |
+| `a.header(title, description)` | Set the title and description. Add a media tile with `.media(icon)` and customize its style with `.media_style(...)`. |
+| `a.footer(buttons)` | A muted band below a border. Give the column holding the header and footer `.width(Fill)` so the band spans the panel. |
+| `a.cancel(button)` | The button closes the dialog. |
+| `a.action(button)` | The button closes the dialog and still publishes its `on_press`. |

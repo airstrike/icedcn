@@ -30,7 +30,7 @@ fn example() -> Slot<'static, ()> {
                         ),
                         |_| popover::header(
                             "Command failed with exit code 1",
-                            "ENOENT: no such file or directory, open pnpm-lock.yaml"
+                            "Could not open Cargo.lock: No such file or directory"
                         )
                     ),
                     Right,

@@ -2,7 +2,7 @@
 
 ### `tooltip()`
 
-`tooltip(trigger, content)` shows `content` in `text-xs` on a `bg-foreground` panel with an arrow toward `trigger` while the pointer rests on the trigger, without a delay by default (shadcn's `delayDuration = 0`). It flips and shifts to stay in the window, and `Escape` hides it.
+`tooltip(trigger, content)` shows a small panel and arrow when the pointer rests on the trigger. The default delay is zero. The panel flips and shifts to stay in the window. Press Escape to hide it.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |

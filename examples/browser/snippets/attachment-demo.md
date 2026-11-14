@@ -37,12 +37,12 @@ container(column![
             attachment::action(icon::x().size(12).selectable(false)).on_press(Message::Remove("sales-dashboard.pdf")),
             "Cancel upload",
         )),
-    attachment("message-renderer.tsx")
+    attachment("message_renderer.rs")
         .media(icon::file_code().size(16).selectable(false))
-        .description("TypeScript · 12 KB")
+        .description("Rust · 12 KB")
         .action(tooltip(
-            attachment::action(icon::x().size(12).selectable(false)).on_press(Message::Remove("message-renderer.tsx")),
-            "Remove message-renderer.tsx",
+            attachment::action(icon::x().size(12).selectable(false)).on_press(Message::Remove("message_renderer.rs")),
+            "Remove message_renderer.rs",
         )),
 ].spacing(12).width(iced::Fill))
     .width(iced::Fill).max_width(384).padding([48, 0])

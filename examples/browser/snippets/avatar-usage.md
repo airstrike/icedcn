@@ -6,6 +6,6 @@ use icedxdy::Theme;
 use icedxdy::widget::avatar;
 
 fn preview(image: image::Handle) -> iced::Element<'static, (), Theme> {
-    avatar(Some(image)).fallback("CN").into()
+    avatar(Some(image)).fallback("AC").into()
 }
 ```

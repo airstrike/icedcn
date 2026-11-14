@@ -2,7 +2,7 @@
 
 ### `dropdown_menu(trigger, content)`
 
-A `Popover` holding a menu: as wide as its trigger (at least 128px) unless given a `.width(..)`, with `p-1`, and modal, so the page ignores the pointer while it is open and a press anywhere outside closes it. The closures receive a `dropdown_menu::Handle` (`m.trigger(child)`, `m.close(child)`, `m.is_open()`).
+A `Popover` holding a menu: as wide as its trigger (at least 128px) unless given a `.width(..)`, with 4px padding, and modal, so the page ignores the pointer while it is open and a press anywhere outside closes it. The closures receive a `dropdown_menu::Handle` (`m.trigger(child)`, `m.close(child)`, `m.is_open()`).
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |

@@ -34,4 +34,4 @@ pub fn example<Message: 'static>() -> Element<'static, Message, Theme> {
 }
 ```
 
-Use `.default_selected(...)` when the date only affects the calendar. Use `.selected(value).on_select(Message::Selected)` when the application needs the selection; store the new optional value in `update`. See [React DayPicker](https://react-day-picker.js.org) for the source component.
+Use `.default_selected(...)` when the date only affects the calendar. Use `.selected(value).on_select(Message::Selected)` when the application needs the selection; store the new optional value in `update`.

@@ -8,13 +8,13 @@ Constructor for a `Badge`. The single-arg constructor takes any `impl Into<Slot>
 | `.state_style(callback)` | `Fn(&Theme, badge::Status) -> badge::Style` | None | Replace all paint with a state-aware callback. |
 | `.invalid(invalid)` | `bool` | `false` | Destructive border and keyboard focus ring. |
 | `.disabled(disabled)` | `bool` | `false` | Suppress input, focus and hover; disabled ancestry also applies. |
-| `.on_press(message)` | `Message` | `None` | Make the badge clickable (pointer, keyboard focus and activation) — the icedxdy equivalent of shadcn rendering the badge as a link. |
+| `.on_press(message)` | `Message` | `None` | Make the badge clickable (pointer, keyboard focus and activation). |
 
 Use `.icon_start()` or `.icon_end()` to reduce the padding on the icon side to 6px, plus the 1px border.
 
 **`badge!`**
 
-Wraps multiple children in a `Row` with 4px spacing — the iced equivalent of shadcn's inline-start / inline-end icon slots. The variant is set after the macro.
+Wraps multiple children in a `Row` with 4px spacing. The variant is set after the macro.
 
 | Macro | Description |
 | --- | --- |
@@ -32,9 +32,9 @@ Wraps multiple children in a `Row` with 4px spacing — the iced equivalent of s
 | `badge::Ghost` | Transparent pill with a muted surface on hover, including passive badges. |
 | `badge::Link` | Primary-colored text on a transparent surface, underlined on hover. |
 
-Variants retain Nova hover and focus rules. A `Spec` applies its tweaks after those rules, in the order supplied; `hover`, `focus`, `active` and `disabled` conditions are supported. Focus rings require an interactive badge with keyboard-visible focus. Pointer activation retains focus without showing the keyboard ring.
+Variants retain their hover and focus rules. A `Spec` applies its tweaks after those rules, in the order supplied; `hover`, `focus`, `active` and `disabled` conditions are supported. Focus rings require an interactive badge with keyboard-visible focus. Pointer activation retains focus without showing the keyboard ring.
 
-Existing one-argument `container::StyleFn` callbacks remain accepted by `.style()`. They supply static paint in every state, without automatic variant hover, underline or focus effects. Use `.state_style()` for a two-argument callback. The last `.style()` or `.state_style()` call replaces all earlier styling. A callback can extend Nova by resolving a `Spec` for the supplied `Status`.
+Existing one-argument `container::StyleFn` callbacks remain accepted by `.style()`. They supply static paint in every state, without automatic variant hover, underline or focus effects. Use `.state_style()` for a two-argument callback. The last `.style()` or `.state_style()` call replaces all earlier styling. A callback can extend a variant by resolving a `Spec` for the supplied `Status`.
 
 ```rust
 use iced::widget::container;

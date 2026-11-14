@@ -2,7 +2,7 @@
 
 ### `kbd()`
 
-A keyboard key: `text-xs font-medium` content on a 20px `bg-muted` cap.
+A keyboard key: 12px medium-weight text on a 20px muted keycap.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -10,6 +10,6 @@ A keyboard key: `text-xs font-medium` content on a 20px `bg-muted` cap.
 
 ### `kbd_group!` / `kbd::group()`
 
-Lays keys (and any other children) out in a row with a 4px gap, like `KbdGroup`.
+Lays keys (and any other children) out in a row with a 4px gap.
 
-shadcn restyles a `Kbd` inside `TooltipContent` through a CSS context selector; iced cascades no such context, so the call site picks `kbd::Tooltip`.
+Use `.style(kbd::Tooltip)` when a key appears inside a tooltip.

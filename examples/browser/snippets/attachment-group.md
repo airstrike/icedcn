@@ -16,7 +16,7 @@ let files: [(_, _, Slot<'_, Message>); 4] = [
     ("briefing-notes.pdf", "PDF · 1.4 MB", icon::file_text().size(16).selectable(false).into()),
     ("workspace.png", "PNG · 820 KB", preview.boxed().into()),
     ("customers.csv", "CSV · 18 KB", icon::table().size(16).selectable(false).into()),
-    ("renderer.tsx", "TSX · 12 KB", icon::file_code().size(16).selectable(false).into()),
+    ("renderer.rs", "Rust · 12 KB", icon::file_code().size(16).selectable(false).into()),
 ];
 
 container(attachment::group(files.into_iter().map(|(name, metadata, media)| {

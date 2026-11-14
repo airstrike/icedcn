@@ -6,7 +6,7 @@ dialog(
     |d| {
         column![
             dialog::header("Share link", "Anyone who has this link will be able to view this."),
-            input("").default_value("https://ui.shadcn.com/docs/installation"),
+            input("").default_value("https://github.com/airstrike/icedxdy"),
             dialog::footer([d.close(button("Close"))]),
         ]
         .spacing(16)

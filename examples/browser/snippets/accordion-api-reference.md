@@ -1,6 +1,6 @@
 ## API Reference
 
-See the [Radix Accordion documentation](https://www.radix-ui.com/primitives/docs/components/accordion) for the upstream parts and keyboard interactions.
+[Read the accordion implementation](https://github.com/airstrike/icedxdy/blob/HEAD/widget/src/accordion.rs).
 
 ### `accordion()`
 
@@ -13,7 +13,7 @@ Constructor for an `Accordion` from any `IntoIterator<Item = accordion::Item>`.
 | `.value(ids)` | `IntoIterator<Item = impl Into<String>>` | uncontrolled | Control the accordion: the given items are always the open ones. |
 | `.on_value_change(f)` | `Fn(Vec<String>) -> Message` | `None` | Publish a message with the complete set of open item IDs after a trigger changes it. |
 | `.style(style)` | `impl Into<accordion::StyleFn>` | `theme::accordion::Default` | Variant unit structs (`Default`, `Card`) or a hand-rolled `Spec`. |
-| `.padding(padding)` | `impl Into<Padding>` | `Padding::ZERO` | Outer padding. The wrapping container (e.g. card) is normally responsible for breathing room — surfaced as a knob for the `borders` example's `px-4`. |
+| `.padding(padding)` | `impl Into<Padding>` | `Padding::ZERO` | Space between the accordion and the edges of its container. |
 
 ### `accordion::item()`
 
@@ -36,6 +36,6 @@ Constructor for one disclosure item. Takes a stable `id` (matched against the op
 
 ### State model
 
-Radix state, like every icedxdy control. Uncontrolled by default: the open set lives in the widget tree, seeded by `.default_value(...)`. Controlled with `.value(...)` plus `.on_value_change(...)` when the app needs the open set (the palette's notifications inbox counts it). Either way the widget applies the single/multiple rules itself and publishes the complete new set, never just the clicked id.
+The widget tree holds the open items by default. Use `.default_value(...)` to choose which items start open. When the application needs the selection, store the IDs from `.on_value_change(...)` and pass them back to `.value(...)`. The callback receives the full set after the single- or multiple-open rule has been applied.
 
-Shadcn's `Accordion`/`AccordionItem`/`AccordionTrigger`/`AccordionContent` quad folds into the `accordion(...)` + `accordion::item(id, trigger).content(...)` builders. Restyle via `.style(...)` with a `theme::accordion::*` variant or a hand-rolled `Spec`.
+Use `.style(...)` with a `theme::accordion` variant or a custom `Spec` to change the appearance.

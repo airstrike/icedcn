@@ -3,7 +3,7 @@ frame(
     column![
         message(bubble("I already checked the logs.").style(Muted)).header("Olivia"),
         message(bubble(
-            "Send the report to the team. Ping @shadcn if you need help."
+            "Send the report to the team. Ping @alex if you need help."
         ))
         .align(Right)
         .footer(

@@ -7,11 +7,9 @@ Pass the options to `native_select`. With `.on_value_change(Message::Selected)`,
 Pass individual `native_select::item(value, label)` entries directly to `native_select`.
 
 ```text
-NativeSelect
-├── NativeSelectOption
-├── NativeSelectOption
-├── NativeSelectOption
-└── NativeSelectOption
+native_select(items)
+├── native_select::item(value, label)
+└── native_select::item(value, label)
 ```
 
 ### With groups
@@ -19,11 +17,9 @@ NativeSelect
 Use `native_select::group(label, items)` to organize options into categories.
 
 ```text
-NativeSelect
-├── NativeSelectOptGroup
-│   ├── NativeSelectOption
-│   └── NativeSelectOption
-└── NativeSelectOptGroup
-    ├── NativeSelectOption
-    └── NativeSelectOption
+native_select(groups)
+├── native_select::group(label, items)
+│   └── native_select::item(value, label)
+└── native_select::group(label, items)
+    └── native_select::item(value, label)
 ```

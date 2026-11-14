@@ -3,10 +3,9 @@
 Set the media, title, description and content on the empty-state builder. The content slot can contain a primary action or another control.
 
 ```text
-Empty
-├── EmptyHeader
-│   ├── EmptyMedia
-│   ├── EmptyTitle
-│   └── EmptyDescription
-└── EmptyContent
+empty::empty()
+├── .media(content)
+├── .title(title)
+├── .description(text)
+└── .content(actions)
 ```

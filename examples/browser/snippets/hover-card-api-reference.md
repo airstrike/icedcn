@@ -2,12 +2,12 @@
 
 ### `hover_card(trigger, content)`
 
-Shows `content` in a `w-64` card next to `trigger` once the pointer has rested on the trigger for the open delay. The pointer can cross the gap into the card; the card closes once the pointer has left both for the close delay, or on `Escape`.
+Shows `content` in a 256px-wide card next to `trigger` once the pointer has rested on the trigger for the open delay. The pointer can cross the gap into the card; the card closes once the pointer has left both for the close delay, or on `Escape`.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `.open_delay(duration)` | `Duration` | `700ms` | Radix's `openDelay`. |
-| `.close_delay(duration)` | `Duration` | `300ms` | Radix's `closeDelay`. |
+| `.open_delay(duration)` | `Duration` | `700ms` | Time before the card opens. |
+| `.close_delay(duration)` | `Duration` | `300ms` | Time before the card closes. |
 | `.side(side)` | `hover_card::Side` | `Bottom` | The side of the trigger the card prefers; it flips when there is no room. |
 | `.align(align)` | `hover_card::Align` | `Center` | `Start`, `Center` or `End`. |
 | `.side_offset(px)` | `f32` | `4.0` | The gap between the trigger and the card. |

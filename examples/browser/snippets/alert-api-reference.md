@@ -11,8 +11,6 @@ The optional parts default to `None`:
 
 `.style(style)` takes `impl Into<alert::Spec>` and defaults to `alert::Default`. The default style uses a card background and muted description. `alert::Destructive` uses a destructive foreground and a description at 90% opacity. Both variants retain a neutral border. A tweaked `Spec` is also accepted.
 
-`.max_width(width)` takes `impl Into<Pixels>` and defaults to `f32::INFINITY`. The examples use 448px, matching shadcn's `max-w-md`.
+`.max_width(width)` takes `impl Into<Pixels>` and defaults to `f32::INFINITY`. The examples use 448px.
 
-`.description_wrapping(mode)` takes `text::Wrapping` and defaults to `Word`. The examples choose `Balanced` below a 768px window width, matching Nova's mobile description layout.
-
-Shadcn's `AlertTitle`, `AlertDescription`, and `AlertAction` sub-components map to the `.title(...)`, `.description(...)`, and `.action(...)` builders on the `Alert` itself; there are no separate widget types in icedxdy.
+`.description_wrapping(mode)` takes `text::Wrapping` and defaults to `Word`. The examples choose `Balanced` below a 768px window width.

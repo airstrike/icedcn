@@ -4,11 +4,11 @@ use icedxdy::Theme;
 use icedxdy::widget::avatar;
 use icedxdy::widget::row;
 
-fn preview(shadcn: image::Handle) -> iced::Element<'static, (), Theme> {
+fn preview(portrait: image::Handle) -> iced::Element<'static, (), Theme> {
     row![
-        avatar(Some(shadcn.clone())).fallback("CN").size(avatar::Sm),
-        avatar(Some(shadcn.clone())).fallback("CN"),
-        avatar(Some(shadcn)).fallback("CN").size(avatar::Lg),
+        avatar(Some(portrait.clone())).fallback("AC").size(avatar::Sm),
+        avatar(Some(portrait.clone())).fallback("AC"),
+        avatar(Some(portrait)).fallback("AC").size(avatar::Lg),
     ]
     .spacing(8)
     .wrap()

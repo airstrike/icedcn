@@ -4,7 +4,7 @@ use icedxdy::widget::{avatar, button, dropdown_menu, menu};
 dropdown_menu(
     |m| {
         m.trigger(
-            button(avatar(Some(shadcn_handle())).fallback("LR"))
+            button(avatar(Some(alex_handle())).fallback("AC"))
                 .square()
                 .rounded()
                 .translate(false)

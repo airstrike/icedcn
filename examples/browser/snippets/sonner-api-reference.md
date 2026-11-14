@@ -2,7 +2,7 @@
 
 ### `toaster()`
 
-`toaster(content)` (Sonner's `<Toaster />`) shows the toasts raised inside `content`, usually the whole app, over the window. Each toast leaves by itself after its duration: the toaster asks the runtime for a redraw at the next expiry, so no subscription is needed.
+`toaster(content)` shows the toasts raised inside `content`, usually the whole app, over the window. Each toast leaves by itself after its duration: the toaster asks the runtime for a redraw at the next expiry, so no subscription is needed.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -15,7 +15,7 @@
 | Builder | Type | Description |
 | --- | --- | --- |
 | `.description(text)` | `impl Into<String>` | A muted line below the title. |
-| `.kind(kind)` | `toast::Kind` | `Default`, `Loading`, `Success`, `Info`, `Warning` or `Error` (Sonner's `toast.success(..)` and friends): picks the icon. |
+| `.kind(kind)` | `toast::Kind` | `Default`, `Loading`, `Success`, `Info`, `Warning` or `Error`. The kind determines the icon. |
 | `.action(label, message)` | `impl Into<String>`, `Message` | An action button: publishes `message` and dismisses the toast. |
 | `.position(position)` | `toast::Position` | Stack this toast elsewhere than the toaster's position. |
 | `.duration(duration)` | `Duration` | Show this toast for longer or shorter. |

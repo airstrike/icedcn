@@ -2,7 +2,7 @@
 
 ### `empty::empty()`
 
-A centered empty state (`p-6 gap-4`). shadcn's `EmptyHeader`, `EmptyTitle`, `EmptyDescription` and `EmptyContent` are builder slots.
+A centered empty state with 24px padding and 16px between sections. Set its title, description, media and content with the builder methods below.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |

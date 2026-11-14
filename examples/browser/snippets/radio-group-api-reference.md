@@ -13,7 +13,7 @@
 
 ### `g.item(value)`
 
-A `RadioGroupItem`: a 16px circle, filled with `bg-primary` while checked. `.disabled(true)` disables one item.
+A 16px circle that fills with the primary color when checked. `.disabled(true)` disables one item.
 
 ### `radio(..)`
 

@@ -2,7 +2,7 @@
 
 ### `item::item()`
 
-`item::item(children)` lays its children out in a row (`gap-2.5 px-3 py-2.5`) inside a `rounded-lg` box.
+`item::item(children)` lays its children out in a row with a 10px gap, 12px horizontal padding and 10px vertical padding inside a rounded box.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -15,7 +15,7 @@
 | Function | Description |
 | --- | --- |
 | `item::media(content)` | Unframed media; `.style(item::Icon)` or `.style(item::Image)` (a 40px clipped tile). |
-| `item::content(children)` | A filling column; `.width(Shrink)` for `flex-none`. |
+| `item::content(children)` | A column that fills the available width. Use `.width(Shrink)` to size it to its contents. |
 | `item::title(text)` | `ItemTitle` typography. |
 | `item::description(text)` | `ItemDescription` typography. |
 | `item::actions(children)` | A row of trailing actions. |
