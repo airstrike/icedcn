@@ -98,13 +98,17 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "input-group",
         title: "Input Group",
-        description: Some("Use `input_group` to place text and icons inside the input border."),
+        description: Some(
+            "Use [Input Group](icedcn://component/input-group) to place text and icons inside the input border.",
+        ),
         snippet: "examples/browser/snippets/input-input-group.md",
     },
     page::Block::Example {
         id: "button-group",
         title: "Button Group",
-        description: Some("Use `button_group!` to join an input and its action."),
+        description: Some(
+            "Use [Button Group](icedcn://component/button-group) to join an input and its action.",
+        ),
         snippet: "examples/browser/snippets/input-button-group.md",
     },
     page::Block::Example {
