@@ -1,9 +1,12 @@
-use iced::Task;
+// Custom Colors and RTL are excluded by the browser component scope.
+
+use iced::alignment;
+use iced::widget::{self, svg};
+use iced::{Task, Widget};
 
 use icedxdy::widget::{badge, row, spinner};
 use icedxdy::{Slot, Theme};
 
-use crate::icon;
 use crate::page;
 
 pub static META: page::Meta = page::Meta {
@@ -18,41 +21,44 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/badge-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/badge-installation.md"),
     page::Block::Md("examples/browser/snippets/badge-usage.md"),
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "variants",
-                title: "Variants",
-                description: Some("Use `.style(...)` to change the badge variant."),
-                snippet: "examples/browser/snippets/badge-variants.md",
-            },
-            page::Block::Example {
-                id: "icon",
-                title: "With Icon",
-                description: Some(
-                    "Use .icon_start() or .icon_end() on the badge to set the inset on the side with the icon.",
-                ),
-                snippet: "examples/browser/snippets/badge-icon.md",
-            },
-            page::Block::Example {
-                id: "spinner",
-                title: "With Spinner",
-                description: Some(
-                    "Place the spinner before or after the label and use .icon_start() or .icon_end() on that side.",
-                ),
-                snippet: "examples/browser/snippets/badge-spinner.md",
-            },
-            page::Block::Example {
-                id: "link",
-                title: "Link",
-                description: Some("Use the on_press builder to render a clickable badge."),
-                snippet: "examples/browser/snippets/badge-link.md",
-            },
-        ],
+    page::Block::Example {
+        id: "variants",
+        title: "Variants",
+        description: Some("Use `.style(...)` to change the variant of the badge."),
+        snippet: "examples/browser/snippets/badge-variants.md",
     },
-    page::Block::Md("examples/browser/snippets/badge-api-reference.md"),
+    page::Block::Example {
+        id: "icon",
+        title: "With Icon",
+        description: Some(
+            "You can render an icon inside the badge. Use `.icon_start()` to render the icon on the left and `.icon_end()` to render the icon on the right.",
+        ),
+        snippet: "examples/browser/snippets/badge-icon.md",
+    },
+    page::Block::Example {
+        id: "spinner",
+        title: "With Spinner",
+        description: Some(
+            "You can render a spinner inside the badge. Remember to add `.icon_start()` or `.icon_end()` to the badge on the spinner's side.",
+        ),
+        snippet: "examples/browser/snippets/badge-spinner.md",
+    },
+    page::Block::Example {
+        id: "link",
+        title: "Link",
+        description: Some(
+            "Use `.on_press(...)` to render an interactive badge. Handle the message in your application's `update` to navigate to the link.",
+        ),
+        snippet: "examples/browser/snippets/badge-link.md",
+    },
+    page::Block::Group {
+        title: "API Reference",
+        children: &[page::Block::Md(
+            "examples/browser/snippets/badge-api-reference.md",
+        )],
+    },
 ];
 
 pub struct BadgePage {
@@ -69,57 +75,75 @@ impl BadgePage {
 
 fn view(id: &str) -> Slot<'static, page::Message> {
     match id {
-        // Demo (hero): 4 variants in a row, verbatim shadcn `badge-demo.tsx`.
-        "demo" => row![
-            badge("Badge"),
-            badge("Secondary").style(badge::Secondary),
-            badge("Destructive").style(badge::Destructive),
-            badge("Outline").style(badge::Outline),
-        ]
-        .spacing(8)
-        .wrap()
-        .into(),
-        // Variants (full set incl. ghost)
-        "variants" => row![
-            badge("Default"),
-            badge("Secondary").style(badge::Secondary),
-            badge("Destructive").style(badge::Destructive),
-            badge("Outline").style(badge::Outline),
-            badge("Ghost").style(badge::Ghost),
-        ]
-        .spacing(8)
-        .wrap()
-        .into(),
-        "icon" => row![
-            badge![icon::badge_check().size(12), "Verified"]
-                .icon_start()
-                .style(badge::Secondary),
-            badge!["Bookmark", icon::bookmark().size(12)]
+        "demo" => {
+            widget::row::<iced::Element<'_, _, Theme>>([
+                badge("Badge").into(),
+                badge("Secondary").style(badge::Secondary).into(),
+                badge("Destructive").style(badge::Destructive).into(),
+                badge("Outline").style(badge::Outline).into(),
+            ])
+            .spacing(8)
+            .wrap()
+            .align_x(alignment::Horizontal::Center)
+            .boxed()
+            .into()
+        },
+        "variants" => {
+            row![
+                badge("Default"),
+                badge("Secondary").style(badge::Secondary),
+                badge("Destructive").style(badge::Destructive),
+                badge("Outline").style(badge::Outline),
+                badge("Ghost").style(badge::Ghost),
+            ]
+            .spacing(8)
+            .wrap()
+            .into()
+        },
+        "icon" => {
+            row![
+                badge![svg(svg::Handle::from_memory(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg>"#.as_bytes()))
+                        .width(12)
+                        .height(12)
+                        .style(|theme: &Theme, _| svg::Style { color: Some(theme.secondary.foreground.into()) })
+                        .boxed(), "Verified"]
+                    .icon_start()
+                    .style(badge::Secondary),
+                badge!["Bookmark", svg(svg::Handle::from_memory(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z"/></svg>"#.as_bytes()))
+                        .width(12)
+                        .height(12)
+                        .style(|theme: &Theme, _| svg::Style { color: Some(theme.neutral.foreground.into()) })
+                        .boxed()]
+                    .icon_end()
+                    .style(badge::Outline),
+            ]
+            .spacing(8)
+            .wrap()
+            .into()
+        },
+        "spinner" => {
+            row![
+                badge![spinner().size(12.0), "Deleting"]
+                    .icon_start()
+                    .style(badge::Destructive),
+                badge!["Generating", spinner().size(12.0)]
+                    .icon_end()
+                    .style(badge::Secondary),
+            ]
+            .spacing(8)
+            .wrap()
+            .into()
+        },
+        "link" => {
+            badge!["Open Link", svg(svg::Handle::from_memory(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10M7 17 17 7"/></svg>"#.as_bytes()))
+                        .width(12)
+                        .height(12)
+                        .style(|theme: &Theme, _| svg::Style { color: Some(theme.primary.foreground.into()) })
+                        .boxed()]
                 .icon_end()
-                .style(badge::Outline),
-        ]
-        .spacing(8)
-        .wrap()
-        .into(),
-        "spinner" => row![
-            badge![spinner().size(12.0), "Deleting"]
-                .icon_start()
-                .style(badge::Destructive),
-            badge!["Generating", spinner().size(12.0)]
-                .icon_end()
-                .style(badge::Secondary),
-        ]
-        .spacing(8)
-        .wrap()
-        .into(),
-        "link" => row![
-            badge!["Open Link", icon::arrow_up_right().size(12)]
-                .icon_end()
-                .on_press(page::Message::LinkClicked("#link".into())),
-        ]
-        .spacing(8)
-        .wrap()
-        .into(),
+                .on_press(page::Message::LinkClicked("#link".into()))
+                .into()
+        },
         _ => unreachable!("unknown badge preview id: {id}"),
     }
 }

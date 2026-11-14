@@ -1,15 +1,13 @@
 ## Usage
 
 ```rust
+use iced::Element;
+use icedxdy::Theme;
 use icedxdy::widget::badge;
+
+fn example() -> Element<'static, (), Theme> {
+    badge("Badge").style(badge::Default).into()
+}
 ```
 
-```rust
-badge("Badge")
-badge("Secondary").style(badge::Secondary)
-badge("Destructive").style(badge::Destructive)
-badge("Outline").style(badge::Outline)
-badge("Ghost").style(badge::Ghost)
-```
-
-Pass an icon or other inline content via the macro form, which wraps the children in a row with `gap-1` (4px) automatically. Use `.on_press(...)` to make a badge behave as a link.
+Set `.style(...)` to `badge::Default`, `badge::Secondary`, `badge::Destructive`, `badge::Outline`, `badge::Ghost`, or `badge::Link`. Use `badge![icon, "Label"]` for inline content with a 4px gap, and `.icon_start()` or `.icon_end()` for the corresponding inset. Add `.on_press(Message::OpenLink)` to publish an application message.

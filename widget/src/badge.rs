@@ -162,10 +162,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Badge<'a, Message> {
     where
         Self: 'b,
     {
-        // Push text-xs (12px), medium, and `leading-4` (16px) down to content
-        // (nova `font-medium text-xs leading-none` — the badge wrapper supplies
-        // the explicit `leading-4` parent so the rendered pill height matches
-        // shadcn's 22px vertical extent rather than iced's default 1.3 ratio).
+        // Nova fixes the outer height at 20px with a 16px text line box.
         self.content.inherit(
             &Inherited::default()
                 .with_size(crate::Size::Xs)
@@ -178,8 +175,10 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Badge<'a, Message> {
         let pad = Padding {
             top: 2.0,
             bottom: 2.0,
-            left: if self.start_icon { 6.0 } else { 8.0 },
-            right: if self.end_icon { 6.0 } else { 8.0 },
+            // Iced paints borders inside the layout box. Reserve the CSS
+            // border pixel in addition to the horizontal padding.
+            left: if self.start_icon { 7.0 } else { 9.0 },
+            right: if self.end_icon { 7.0 } else { 9.0 },
         };
         let content = self.content.compose();
         match self.on_press {
@@ -219,13 +218,14 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Badge<'a, Message> {
                     .disabled(self.disabled)
                     .interaction(Interaction::Pointer)
                     .translate(false)
+                    .height(20)
                     .padding(pad)
                     .class(paint)
                     .boxed()
             }
             None => iced_widget::container(content)
                 .padding(pad)
-                .center_y(iced_core::Length::Shrink)
+                .center_y(20)
                 .style(style_fn)
                 .boxed(),
         }
