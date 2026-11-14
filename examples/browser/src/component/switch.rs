@@ -2,9 +2,9 @@ use iced::Task;
 
 use icedcn::Horizontal;
 use icedcn::Theme;
-use icedcn::theme;
+use icedcn::theme::text::{Destructive, Foreground};
 use icedcn::theme::tweak::Alpha;
-use icedcn::widget::{container, field, switch, text};
+use icedcn::widget::{container, field, switch};
 
 use crate::Message;
 use crate::page;
@@ -21,42 +21,39 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/switch-demo.md",
     },
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "description",
-                title: "Description",
-                description: Some("Pair a switch with a label and supporting description."),
-                snippet: "examples/browser/snippets/switch-description.md",
-            },
-            page::Block::Example {
-                id: "choice-card",
-                title: "Choice Card",
-                description: Some("Wrap a horizontal field in a clickable choice card."),
-                snippet: "examples/browser/snippets/switch-choice-card.md",
-            },
-            page::Block::Example {
-                id: "disabled",
-                title: "Disabled",
-                description: Some("A disabled switch cannot be toggled."),
-                snippet: "examples/browser/snippets/switch-disabled.md",
-            },
-            page::Block::Example {
-                id: "invalid",
-                title: "Invalid",
-                description: Some(
-                    "Use the invalid variant to surface validation errors with a destructive border.",
-                ),
-                snippet: "examples/browser/snippets/switch-invalid.md",
-            },
-            page::Block::Example {
-                id: "sizes",
-                title: "Size",
-                description: Some("Use `.size(...)` to change the switch size."),
-                snippet: "examples/browser/snippets/switch-sizes.md",
-            },
-        ],
+    page::Block::Md("examples/browser/snippets/switch-installation.md"),
+    page::Block::Md("examples/browser/snippets/switch-usage.md"),
+    page::Block::Example {
+        id: "description",
+        title: "Description",
+        description: Some("Pair a switch with a label and supporting description."),
+        snippet: "examples/browser/snippets/switch-description.md",
+    },
+    page::Block::Example {
+        id: "choice-card",
+        title: "Choice Card",
+        description: Some("Wrap a horizontal field in a clickable choice card."),
+        snippet: "examples/browser/snippets/switch-choice-card.md",
+    },
+    page::Block::Example {
+        id: "disabled",
+        title: "Disabled",
+        description: Some("A disabled switch cannot be toggled."),
+        snippet: "examples/browser/snippets/switch-disabled.md",
+    },
+    page::Block::Example {
+        id: "invalid",
+        title: "Invalid",
+        description: Some(
+            "Apply the invalid style to the switch and its label to identify a validation error.",
+        ),
+        snippet: "examples/browser/snippets/switch-invalid.md",
+    },
+    page::Block::Example {
+        id: "sizes",
+        title: "Size",
+        description: Some("Use `.size(...)` to change the switch size."),
+        snippet: "examples/browser/snippets/switch-sizes.md",
     },
     page::Block::Md("examples/browser/snippets/switch-api-reference.md"),
 ];
@@ -102,6 +99,13 @@ impl page::Page for SwitchPage {
         self.state.reset_volatile();
     }
 
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: [24, 32].into(),
+            ..Default::default()
+        }
+    }
+
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         let inner: iced::Element<'_, Message, Theme> = match id {
             "demo" => field(switch())
@@ -121,14 +125,14 @@ impl page::Page for SwitchPage {
 
             "disabled" => field(switch())
                 .orientation(Horizontal)
-                .label(text::label("Disabled").style(theme::text::Foreground + Alpha(0.5)))
+                .label(field::label("Disabled").style(Foreground + Alpha(0.5)))
                 .disabled(true)
                 .into(),
 
-            "invalid" => field(switch().style(theme::switch::Invalid))
+            "invalid" => field(switch().style(switch::Invalid))
                 .orientation(Horizontal)
                 .control_last()
-                .label(text::label("Accept terms and conditions").style(theme::text::Destructive))
+                .label(field::label("Accept terms and conditions").style(Destructive))
                 .description("You must accept the terms and conditions to continue.")
                 .width(384)
                 .into(),
@@ -137,7 +141,7 @@ impl page::Page for SwitchPage {
                 field(switch())
                     .orientation(Horizontal)
                     .control_last()
-                    .label("Share across devices")
+                    .label(field::label("Share across devices").line_height(20. / 14.))
                     .description(
                         "Focus is shared across devices, and turns off when you leave the app.",
                     )
@@ -146,7 +150,7 @@ impl page::Page for SwitchPage {
                 field(switch().default_checked(true))
                     .orientation(Horizontal)
                     .control_last()
-                    .label("Enable notifications")
+                    .label(field::label("Enable notifications").line_height(20. / 14.))
                     .description("Receive notifications when focus mode is enabled or disabled.")
                     .card()
                     .into(),

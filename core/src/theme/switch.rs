@@ -213,17 +213,23 @@ pub fn invalid(theme: &Theme, status: Status) -> Style {
         p.destructive.base
     };
 
-    match status {
-        Status::Active { .. } | Status::Hovered { .. } => Style {
-            background_border_color: invalid_border,
-            background_border_width: 1.0,
-            ..base
-        },
-        Status::Disabled { .. } => Style {
-            background_border_color: invalid_border.scale_alpha(0.5),
-            background_border_width: 1.0,
-            ..base
-        },
+    let opacity = if matches!(status, Status::Disabled { .. }) {
+        0.5
+    } else {
+        1.
+    };
+    Style {
+        background_border_color: invalid_border.scale_alpha(opacity),
+        background_border_width: 1.0,
+        ring: Some(Ring {
+            color: p
+                .destructive
+                .base
+                .alpha(if dark { 0.4 } else { 0.2 })
+                .scale_alpha(opacity),
+            width: 3.,
+        }),
+        ..base
     }
 }
 

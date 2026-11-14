@@ -1,8 +1,15 @@
 ```rust
-field(switch().style(theme::switch::Invalid))
-    .orientation(Horizontal)
-    .control_last()
-    .label(text::label("Accept terms and conditions").style(theme::text::Destructive))
-    .description("You must accept the terms and conditions to continue.")
-    .width(384)
+use icedcn::theme::text::Destructive;
+use icedcn::widget::{field, switch};
+use icedcn::{Horizontal, Slot};
+
+fn terms<M: Clone + 'static>() -> Slot<'static, M> {
+    field(switch().style(switch::Invalid))
+        .orientation(Horizontal)
+        .control_last()
+        .label(field::label("Accept terms and conditions").style(Destructive))
+        .description("You must accept the terms and conditions to continue.")
+        .width(384)
+        .into()
+}
 ```

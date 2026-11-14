@@ -269,6 +269,12 @@ where
     }
 }
 
+#[derive(Copy, Clone, PartialEq)]
+enum Pointer {
+    Mouse,
+    Touch(touch::Finger),
+}
+
 /// Internal state for the animated [`Toggler`].
 struct State<P: text::Paragraph> {
     paragraph: paragraph::Plain<P>,
@@ -281,6 +287,7 @@ struct State<P: text::Paragraph> {
     last_is_toggled: bool,
     focused: bool,
     key_down: Option<Named>,
+    pointer_down: Option<Pointer>,
     indicator: focus::Visible,
     ring: focus::Ring,
 }
@@ -296,6 +303,7 @@ impl<P: text::Paragraph> Focusable for State<P> {
     fn unfocus(&mut self) {
         self.focused = false;
         self.key_down = None;
+        self.pointer_down = None;
     }
 }
 
@@ -352,6 +360,7 @@ where
             last_is_toggled: self.is_toggled,
             focused: false,
             key_down: None,
+            pointer_down: None,
             indicator: focus::Visible::default(),
             ring: focus::Ring::default(),
         })
@@ -460,7 +469,7 @@ where
         cursor: mouse::Cursor,
         _renderer: &Renderer,
         shell: &mut Shell<'_, Message>,
-        _viewport: &Rectangle,
+        viewport: &Rectangle,
     ) {
         let state = tree.state.downcast_mut::<State<Renderer::Paragraph>>();
 
@@ -486,12 +495,30 @@ where
         if self.is_toggled != state.last_is_toggled {
             state.last_is_toggled = self.is_toggled;
 
-            if let Some(now) = state.now {
-                state.animation.go_mut(self.is_toggled, now);
-                shell.request_redraw();
-            }
+            let now = match event {
+                Event::Window(window::Event::RedrawRequested(now)) => *now,
+                _ => Instant::now(),
+            };
+            state.now = Some(now);
+            state.animation.go_mut(self.is_toggled, now);
+            shell.request_redraw();
         }
 
+        let target = layout.bounds().expand([8., 12.]);
+        let (pointer, hit) = match event {
+            Event::Touch(
+                touch::Event::FingerPressed { id, position }
+                | touch::Event::FingerLifted { id, position }
+                | touch::Event::FingerLost { id, position },
+            ) => (
+                Pointer::Touch(*id),
+                target.contains(*position) && viewport.contains(*position),
+            ),
+            _ => (
+                Pointer::Mouse,
+                cursor.is_over(target) && cursor.is_over(*viewport),
+            ),
+        };
         let previous = (state.focused, state.indicator.0);
         if self.is_disabled {
             state.unfocus();
@@ -499,12 +526,31 @@ where
             match event {
                 Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left))
                 | Event::Touch(touch::Event::FingerPressed { .. }) => {
-                    state.focused = cursor.is_over(layout.bounds()) && !shell.is_event_captured();
+                    if state.pointer_down.is_some() {
+                        return;
+                    }
+                    state.focused = hit && !shell.is_event_captured();
+                    state.pointer_down = state.focused.then_some(pointer);
                     state.indicator.0 = false;
                     state.key_down = None;
-                    if state.focused {
-                        self.toggle(state, shell);
+                    if state.pointer_down.is_some() {
+                        shell.capture_event();
                     }
+                }
+                Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
+                | Event::Touch(touch::Event::FingerLifted { .. }) => {
+                    if state.pointer_down == Some(pointer) {
+                        state.pointer_down = None;
+                        if hit && !shell.is_event_captured() {
+                            self.toggle(state, shell);
+                        }
+                        shell.capture_event();
+                    }
+                }
+                Event::Touch(touch::Event::FingerLost { .. })
+                    if state.pointer_down == Some(pointer) =>
+                {
+                    state.pointer_down = None
                 }
                 Event::Keyboard(keyboard::Event::KeyPressed {
                     key: Key::Named(key @ (Named::Space | Named::Enter)),
@@ -656,7 +702,11 @@ where
             );
         }
 
-        let scale_factor = renderer.hint_factor().unwrap_or(1.0);
+        let scale_factor = if renderer::CRISP {
+            renderer.hint_factor().unwrap_or(1.0)
+        } else {
+            1.
+        };
         let bounds = toggler_layout.bounds();
 
         let border_radius = style

@@ -1,8 +1,8 @@
 ```rust
 use icedcn::widget::{field, switch};
-use icedcn::widget::field::Horizontal;
+use icedcn::{Horizontal, Slot};
 
-field(switch())
-    .orientation(Horizontal)
-    .label("Airplane Mode")
+fn airplane_mode<M: Clone + 'static>() -> Slot<'static, M> {
+    field(switch()).orientation(Horizontal).label("Airplane Mode").into()
+}
 ```

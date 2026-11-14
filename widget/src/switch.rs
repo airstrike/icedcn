@@ -17,6 +17,7 @@
 pub(crate) mod element;
 pub mod widget;
 
+pub use icedcn_core::theme::switch::{Default, Disabled, Invalid};
 pub use widget::{Catalog, Ring, Status, Style, StyleFn};
 
 use crate::compose::{Compose, Inherited, Slot};
