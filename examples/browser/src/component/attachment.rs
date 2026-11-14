@@ -1,15 +1,13 @@
 use crate::icon;
 use crate::page::rhea;
 use crate::{Message, page};
+use iced::widget::Id;
 use iced::widget::component::{Component, component};
 use iced::widget::image;
-use iced::widget::{Id, button};
 use iced::{ContentFit, Fill, Widget};
 use iced::{Element, Task};
 use icedxdy::Size;
-use icedxdy::theme::button::ghost;
 use icedxdy::widget::attachment::State;
-use icedxdy::widget::button::widget::{Button, Status, StyleFn};
 use icedxdy::widget::{attachment, column, container, dialog, spinner, tooltip};
 use icedxdy::{Slot, Theme};
 use page::Block;
@@ -60,7 +58,7 @@ pub static BLOCKS: &[Block] = &[
         id: "group",
         title: "Group",
         description: Some(
-            "Wrap cards in `attachment::group` to arrange them in a horizontally scrollable row.",
+            "Wrap attachments in `attachment::group` to lay them out in a horizontally scrollable, snapping row with an edge fade.",
         ),
         snippet: "examples/browser/snippets/attachment-group.md",
     },
@@ -68,10 +66,11 @@ pub static BLOCKS: &[Block] = &[
         id: "trigger",
         title: "Trigger",
         description: Some(
-            "Use `.trigger(...)` to open a link or dialog from the card. Its action buttons stay independently clickable.",
+            "Add `.trigger(...)` to make the whole card open a link or dialog. It fills the card behind the actions, so the actions stay clickable.",
         ),
         snippet: "examples/browser/snippets/attachment-trigger.md",
     },
+    Block::Md("examples/browser/snippets/attachment-trigger-composition.md"),
     Block::Group {
         title: "Accessibility",
         children: &[
@@ -99,11 +98,13 @@ pub static BLOCKS: &[Block] = &[
 ];
 pub struct AttachmentPage {
     state: page::State,
+    wide: bool,
 }
 impl AttachmentPage {
     pub fn new(index: usize) -> Box<dyn page::Page> {
         Box::new(Self {
             state: page::State::new(index, BLOCKS),
+            wide: true,
         })
     }
 }
@@ -165,27 +166,13 @@ fn picture(index: usize, side: u32) -> Slot<'static, Edit> {
         .width(side)
         .height(side)
         .content_fit(ContentFit::Cover)
-        .border_radius(8)
-        .boxed()
-        .into()
-}
-fn preview_button(content: Slot<'static, Edit>, message: Option<Edit>) -> Slot<'static, Edit> {
-    // Keep the target's natural height, including the image in a vertical card.
-    Button::new(content.compose())
-        .padding(0)
-        .width(Fill)
-        .translate(false)
-        .style(Box::new(|theme: &Theme, status: Status| {
-            let style: button::Style = ghost(theme, status.into()).into();
-            style.into()
-        }) as StyleFn<Theme>)
-        .on_press_maybe(message)
+        .border_radius(10)
         .boxed()
         .into()
 }
 fn action(name: &'static str, cancel: bool) -> Slot<'static, Edit> {
     tooltip(
-        attachment::action(icon::x()).on_press(Edit::Remove(name)),
+        attachment::action(icon::x().size(12).selectable(false)).on_press(Edit::Remove(name)),
         if cancel {
             "Cancel upload".into()
         } else {
@@ -193,6 +180,13 @@ fn action(name: &'static str, cancel: bool) -> Slot<'static, Edit> {
         },
     )
     .into()
+}
+fn canvas(theme: &Theme) -> icedxdy::Color {
+    if theme.neutral.is_dark {
+        theme.neutral.base
+    } else {
+        icedxdy::core::oklch(0.98, 0., 0.)
+    }
 }
 fn photos(state: &FilesState, interactive: bool) -> Slot<'static, Edit> {
     attachment::group(
@@ -202,17 +196,19 @@ fn photos(state: &FilesState, interactive: bool) -> Slot<'static, Edit> {
             .filter(|(_, p)| !state.removed.contains(p.0))
             .map(|(i, (name, meta, url))| {
                 let mut card = attachment(name)
-                    .media(picture(i, 104))
+                    .media(picture(i, 102))
                     .description(meta)
                     .vertical(true);
                 if interactive {
-                    card = card
-                        .action(action(name, false))
-                        .trigger(move |body| preview_button(body, Some(Edit::Open(url))));
+                    card = card.action(action(name, false)).trigger(move |body| {
+                        attachment::trigger(body).on_press(Edit::Open(url)).into()
+                    });
                 }
                 card.into()
             }),
     )
+    .fade_to(canvas)
+    .into()
 }
 fn status_card(
     name: &'static str,
@@ -223,7 +219,7 @@ fn status_card(
     let mut card = attachment(name).description(meta).state(state).media(media);
     if state == State::Error {
         card = card.action(tooltip(
-            attachment::action(icon::refresh_ccw()).on_press(Edit::Retry),
+            attachment::action(icon::refresh_cw().size(12).selectable(false)).on_press(Edit::Retry),
             "Retry upload",
         ));
     }
@@ -232,12 +228,16 @@ fn status_card(
 fn states_list(state: &FilesState) -> Vec<Slot<'static, Edit>> {
     use State::*;
     let (s, description, glyph) = if state.retried {
-        (Done, "Uploaded", icon::check().into())
+        (
+            Done,
+            "Uploaded",
+            icon::check().size(16).selectable(false).into(),
+        )
     } else {
         (
             Error,
             "Upload failed. Try again.",
-            icon::file_warning().into(),
+            icon::file_warning().size(16).selectable(false).into(),
         )
     };
     [
@@ -245,7 +245,7 @@ fn states_list(state: &FilesState) -> Vec<Slot<'static, Edit>> {
             "selected-file.pdf",
             "Ready to upload",
             Idle,
-            icon::clock().into(),
+            icon::clock().size(16).selectable(false).into(),
         ),
         (
             "design-system.zip",
@@ -257,14 +257,14 @@ fn states_list(state: &FilesState) -> Vec<Slot<'static, Edit>> {
             "market-research.pdf",
             "Processing document",
             Processing,
-            icon::file_text().into(),
+            icon::file_text().size(16).selectable(false).into(),
         ),
         ("financial-model.xlsx", description, s, glyph),
         (
             "uploaded-report.pdf",
             "Uploaded · 1.8 MB",
             Done,
-            icon::check().into(),
+            icon::check().size(16).selectable(false).into(),
         ),
     ]
     .into_iter()
@@ -277,11 +277,19 @@ fn tiles(state: &FilesState) -> Slot<'static, Edit> {
         (
             "briefing-notes.pdf",
             "PDF · 1.4 MB",
-            icon::file_text().into(),
+            icon::file_text().size(16).selectable(false).into(),
         ),
         ("workspace.png", "PNG · 820 KB", picture(0, 40)),
-        ("customers.csv", "CSV · 18 KB", icon::table().into()),
-        ("renderer.tsx", "TSX · 12 KB", icon::file_code().into()),
+        (
+            "customers.csv",
+            "CSV · 18 KB",
+            icon::table().size(16).selectable(false).into(),
+        ),
+        (
+            "renderer.tsx",
+            "TSX · 12 KB",
+            icon::file_code().size(16).selectable(false).into(),
+        ),
     ];
     attachment::group(
         items
@@ -296,6 +304,8 @@ fn tiles(state: &FilesState) -> Slot<'static, Edit> {
                     .into()
             }),
     )
+    .fade_to(canvas)
+    .into()
 }
 fn preview_dialog() -> Slot<'static, Edit> {
     let name = "research-summary.pdf";
@@ -304,10 +314,10 @@ fn preview_dialog() -> Slot<'static, Edit> {
             let opener = *d;
             attachment(name)
                 .description("Open preview dialog")
-                .media(icon::file_search())
-                .trigger(move |body| opener.trigger(preview_button(body, None)))
+                .media(icon::file_search().size(16).selectable(false))
+                .trigger(move |body| opener.trigger(attachment::trigger(body)))
                 .action(tooltip(
-                    attachment::action(icon::copy()).on_press(Edit::Copy),
+                    attachment::action(icon::copy().size(12).selectable(false)).on_press(Edit::Copy),
                     "Copy link",
                 ))
                 .action(action(name, false))
@@ -354,7 +364,7 @@ impl<'a> Component<'a, Message, Theme> for Files {
                         "message-renderer.tsx",
                         "TypeScript · 12 KB",
                         State::Done,
-                        icon::file_code().into(),
+                        icon::file_code().size(16).selectable(false).into(),
                     ));
                 }
             }
@@ -372,7 +382,13 @@ impl<'a> Component<'a, Message, Theme> for Files {
                     ("Small attachment", Size::Sm),
                     ("Extra small attachment", Size::Xs),
                 ] {
-                    let mut a = attachment(name).media(icon::file_text()).size(size);
+                    let mut a = attachment(name)
+                        .media(
+                            icon::file_text()
+                                .size(if size == Size::Xs { 14 } else { 16 })
+                                .selectable(false),
+                        )
+                        .size(size);
                     if size != Size::Xs {
                         a = a.description("PDF · 2.4 MB");
                     }
@@ -439,9 +455,13 @@ impl page::Page for AttachmentPage {
     fn reset_volatile(&mut self) {
         self.state.reset_volatile();
     }
+    fn window_width(&mut self, width: f32) {
+        self.wide = width >= 768.;
+    }
     fn backdrop(&self) -> page::Backdrop {
         page::Backdrop {
-            padding: 40.into(),
+            min_height: 0.,
+            padding: iced::Padding::from([40, if self.wide { 40 } else { 32 }]),
             ..rhea::backdrop()
         }
     }

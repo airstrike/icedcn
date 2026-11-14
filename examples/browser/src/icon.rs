@@ -1,6 +1,6 @@
 // Generated automatically by iced_lucide at build time.
 // Do not edit manually.
-// 7825f1d5c1bd1dfd85c11135b263337e6b8984ff71631ee60be74c2e5cb0236d
+// 3efff343d819cadf57e466505029e04f43afafd1a50ff6da0579a7548d51f3ee
 use iced::widget::text::{self, Text};
 use iced::{Font, font};
 
@@ -67,7 +67,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("file_plus", "\u{E0C9}"),
     ("file_search", "\u{E0CB}"),
     ("file_text", "\u{E0CC}"),
-    ("file_warning", "\u{E0CE}"),
+    ("file_warning", "\u{E319}"),
     ("folder", "\u{E0D7}"),
     ("folder_code", "\u{E5FB}"),
     ("folder_open", "\u{E247}"),
@@ -107,6 +107,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("pencil", "\u{E1F9}"),
     ("plus", "\u{E13D}"),
     ("refresh_ccw", "\u{E144}"),
+    ("refresh_cw", "\u{E145}"),
     ("rotate_cw", "\u{E149}"),
     ("save", "\u{E14D}"),
     ("scissors", "\u{E14E}"),
@@ -544,7 +545,7 @@ pub fn file_warning<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
 {
-    icon("\u{E0CE}")
+    icon("\u{E319}")
 }
 
 pub fn folder<'a, Theme>() -> Text<'a, Theme>
@@ -818,6 +819,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E144}")
+}
+
+pub fn refresh_cw<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E145}")
 }
 
 pub fn rotate_cw<'a, Theme>() -> Text<'a, Theme>

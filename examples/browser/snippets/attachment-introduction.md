@@ -1,1 +1,1 @@
-Show an attachment’s preview, filename, and metadata in a chat composer, message thread, or upload list. Add upload status and file actions as needed.
+The `Attachment` component displays a file or image attachment, its media, name, and metadata, with optional actions and upload state. Use it for files and images in chat composers, message threads, and upload lists.

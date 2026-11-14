@@ -15,12 +15,27 @@ pub fn shimmer<'a, Message: 'a>(label: impl Into<String>) -> Slot<'a, Message> {
     Slot::from(
         Shimmer {
             text: text(label.into()).size(14).selectable(true),
+            period: 2.2,
+            foreground: false,
         }
         .boxed(),
     )
 }
+/// Attachment's CSS shimmer uses its already-styled title and a two-second
+/// foreground-opacity sweep. Other status labels retain their existing paint.
+pub(crate) fn title<'a, Message: 'a>(text: iced_widget::Text<'a, Theme>) -> Slot<'a, Message> {
+    Shimmer {
+        text,
+        period: 2.,
+        foreground: true,
+    }
+    .boxed()
+    .into()
+}
 struct Shimmer<'a> {
     text: iced_widget::Text<'a, Theme>,
+    period: f32,
+    foreground: bool,
 }
 #[derive(Default)]
 struct Phase {
@@ -39,7 +54,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Shimmer<'_> {
         tree.diff_children::<Message, Theme, Renderer>(std::slice::from_mut(&mut self.text));
     }
     fn size(&self) -> Size<Length> {
-        Size::new(Length::Shrink, Length::Shrink)
+        <iced_widget::Text<Theme> as Widget<Message, Theme, Renderer>>::size(&self.text)
     }
     fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) {
         <iced_widget::Text<Theme> as Widget<Message, Theme, Renderer>>::layout(
@@ -65,7 +80,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Shimmer<'_> {
         {
             let state = tree.state.downcast_mut::<Phase>();
             let start = *state.start.get_or_insert(*now);
-            state.offset = now.duration_since(start).as_secs_f32() % 2.2 / 2.2;
+            state.offset = now.duration_since(start).as_secs_f32() % self.period / self.period;
             shell.request_redraw();
         }
     }
@@ -74,7 +89,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Shimmer<'_> {
         tree: &Tree,
         renderer: &mut Renderer,
         theme: &Theme,
-        _: &renderer::Style,
+        style: &renderer::Style,
         layout: Layout,
         cursor: mouse::Cursor,
         viewport: &Rectangle,
@@ -95,8 +110,31 @@ impl<Message> Widget<Message, Theme, Renderer> for Shimmer<'_> {
                 viewport,
             )
         };
-        paint(renderer, theme.muted.foreground.into());
         let offset = tree.state.downcast_ref::<Phase>().offset;
+        if self.foreground {
+            let spread = (bounds.width * 0.25).max(1.);
+            let center = bounds.x - spread + (bounds.width + spread * 2.) * offset;
+            for column in 0..bounds.width.ceil() as usize {
+                let x = bounds.x + column as f32;
+                let alpha = 0.2 + 0.8 * ((x + 0.5 - center).abs() / spread).min(1.);
+                let strip = Rectangle {
+                    x,
+                    y: bounds.y,
+                    width: 1.,
+                    height: bounds.height,
+                };
+                if let Some(clip) = strip
+                    .intersection(viewport)
+                    .and_then(|r| r.intersection(&bounds))
+                {
+                    renderer.with_layer(clip, |renderer| {
+                        paint(renderer, style.text_color.scale_alpha(alpha))
+                    });
+                }
+            }
+            return;
+        }
+        paint(renderer, theme.muted.foreground.into());
         let radius = 20.;
         let center = bounds.x - radius + (bounds.width + radius * 2.) * offset;
         // Successively narrower bands soften the two edges of the highlight.
