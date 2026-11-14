@@ -4,10 +4,10 @@ use crate::{Message, font};
 use iced::highlighter::{Parser, Settings};
 use iced::widget::text::Wrapping;
 use iced::{Code, Fill, Font, Shrink};
-use icedxdy::Slot;
 use icedxdy::theme::tweak::Token;
 use icedxdy::widget::code_block::{CodeBlock, LineStyle};
 use icedxdy::widget::{rich_text, span};
+use icedxdy::{Color, Slot};
 use std::collections::HashMap;
 use std::ops::Range;
 use std::sync::LazyLock;
@@ -46,26 +46,47 @@ static TOKENS: LazyLock<HashMap<&'static str, Runs>> = LazyLock::new(|| {
             });
             let lines = source
                 .split('\n')
-                .map(|line| parser.parse_line(line).collect())
+                .map(|line| {
+                    parser
+                        .parse_line(if source == STREAMING_2 {
+                            line.get(1..).unwrap_or("")
+                        } else {
+                            line
+                        })
+                        .collect()
+                })
                 .collect();
             (source, lines)
         })
         .collect()
 });
 
-fn color(class: Code) -> Token {
-    match class {
-        Code::Comment => Token::MutedForeground,
-        Code::String => Token::Success,
-        Code::Type | Code::Path | Code::Function => Token::Warning,
-        Code::Keyword | Code::Support | Code::Constant => Token::Info,
-        Code::Invalid => Token::Destructive,
-        _ => Token::CodeForeground,
-    }
+// GitHub Light/Dark, matching the pinned Shiki theme choices. The existing
+// parser still owns grammar classification; no shared syntax-engine changes.
+fn color(class: Code, dark: bool) -> Token {
+    let (light, night) = match class {
+        Code::Comment => (0x6a737d, 0x6a737d),
+        Code::String => (0x032f62, 0x9ecbff),
+        Code::Keyword | Code::Invalid => (0xd73a49, 0xf97583),
+        Code::Function => (0x6f42c1, 0xb392f0),
+        Code::Constant | Code::Support => (0x005cc5, 0x79b8ff),
+        Code::Type => (0x22863a, 0x85e89d),
+        _ => (0x24292e, 0xe1e4e8),
+    };
+    rgb(if dark { night } else { light })
+}
+fn rgb(hex: u32) -> Token {
+    Color::from(iced::Color::from_rgb8(
+        (hex >> 16) as u8,
+        (hex >> 8) as u8,
+        hex as u8,
+    ))
+    .into()
 }
 
 /// Render a prefix so one cached parse can also serve a streamed listing.
 pub fn listing(
+    dark: bool,
     source: &'static str,
     visible: usize,
     wrap: bool,
@@ -82,6 +103,12 @@ pub fn listing(
         end -= 1;
     }
     let lines = source[..end].split('\n').enumerate().map(|(i, line)| {
+        let original = line;
+        let line = if source == DIFF || source == STREAMING_2 {
+            line.get(1..).unwrap_or("")
+        } else {
+            line
+        };
         let mut spans = Vec::new();
         if let Some(runs) = tokens.and_then(|all| all.get(i)) {
             let mut pos = 0;
@@ -92,7 +119,7 @@ pub fn listing(
                     spans.push(span(&line[pos..start]));
                 }
                 if end > start {
-                    spans.push(span(&line[start..end]).color(color(*class)));
+                    spans.push(span(&line[start..end]).color(color(*class, dark)));
                 }
                 pos = end;
             }
@@ -103,19 +130,22 @@ pub fn listing(
             spans.push(span(line));
         }
         if line.is_empty() {
-            spans = vec![span(" ")];
+            spans = vec![span("")];
         }
         let text = rich_text(spans)
             .font(Font::new(font::GEIST_MONO_NAME))
-            .size(13)
+            .size(14)
+            .line_height(22.75)
             .wrapping(wrapping)
             .width(if wrap { Fill } else { Shrink });
-        (styles(i, line), Slot::from(text))
+        (styles(i, original), Slot::from(text))
     });
-    CodeBlock::lines(lines).wrap(wrap)
+    CodeBlock::lines(lines)
+        .wrap(wrap)
+        .font(Font::new(font::GEIST_MONO_NAME))
 }
 
-pub fn ansi() -> (CodeBlock<'static, Message>, String) {
+pub fn ansi(dark: bool) -> (CodeBlock<'static, Message>, String) {
     let mut stripped = Vec::new();
     let lines = ANSI
         .lines()
@@ -132,8 +162,8 @@ pub fn ansi() -> (CodeBlock<'static, Message>, String) {
                     for code in codes.split(';') {
                         color = match code {
                             "2" => Token::MutedForeground,
-                            "31" => Token::Destructive,
-                            "32" => Token::Success,
+                            "31" => rgb(if dark { 0xf97583 } else { 0xb31d28 }),
+                            "32" => rgb(if dark { 0x85e89d } else { 0x22863a }),
                             "0" | "22" | "39" => Token::CodeForeground,
                             _ => color,
                         };
@@ -147,11 +177,17 @@ pub fn ansi() -> (CodeBlock<'static, Message>, String) {
                 LineStyle::Default,
                 Slot::from(
                     rich_text(spans)
-                        .size(13)
+                        .size(14)
+                        .line_height(22.75)
                         .font(Font::new(font::GEIST_MONO_NAME)),
                 ),
             )
         })
         .collect::<Vec<_>>();
-    (CodeBlock::lines(lines).wrap(true), stripped.join("\n"))
+    (
+        CodeBlock::lines(lines)
+            .wrap(true)
+            .font(Font::new(font::GEIST_MONO_NAME)),
+        stripped.join("\n"),
+    )
 }

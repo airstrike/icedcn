@@ -1,0 +1,1 @@
+ANSI colors do not carry from one line to the next. The complete recipe strips the supported reset, dim, red and green sequences from the copy payload while applying their colors to the displayed spans.

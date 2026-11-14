@@ -1,0 +1,1 @@
+While the code streams, the upstream hook tokenizes new lines and keeps unchanged nodes. These native fixed-fixture recipes cache the complete parse once, then reveal three bytes every 16 milliseconds at UTF-8 boundaries. All five blocks begin complete; Replay starts again. Each copy button stays disabled until its own source is complete.

@@ -1,0 +1,1 @@
+The content fades its remaining horizontal scroll edges. Wrapping or a capped viewport also enables vertical edge fades. `.max_height(...)` caps content without stretching a short listing; `.height(...)` requests an exact content height.
