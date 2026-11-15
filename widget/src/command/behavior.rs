@@ -1,6 +1,7 @@
 //! Keyboard selection and active-row visibility for a command palette.
 use crate::operation::{focus, scroll::Reveal};
 use iced_core::keyboard::{self, Key};
+use iced_core::shell::Bus;
 use iced_core::widget::{
     Id, Meta, Operation,
     tree::{self, Tree},
@@ -19,6 +20,7 @@ pub(super) struct Behavior<'a, Message> {
     pub reveal: Option<(Id, Id)>,
     pub content: Element<'a, Message, Theme, Renderer>,
     pub on_key: Handler<'a, Message>,
+    pub is_hover: fn(&Message) -> bool,
 }
 impl<Message> Meta for Behavior<'_, Message> {}
 impl<Message> Widget<Message, Theme, Renderer> for Behavior<'_, Message> {
@@ -97,15 +99,34 @@ impl<Message> Widget<Message, Theme, Renderer> for Behavior<'_, Message> {
             shell.capture_event();
             return;
         }
-        self.content.update(
-            child_tree,
-            event,
-            child_layout,
-            cursor,
-            renderer,
-            shell,
-            viewport,
-        );
+        let mut bus = Bus::new();
+        {
+            let mut local = shell.local(&mut bus);
+            self.content.update(
+                child_tree,
+                event,
+                child_layout,
+                cursor,
+                renderer,
+                &mut local,
+                viewport,
+            );
+            if local.is_event_captured() {
+                shell.capture_event();
+            }
+            shell.request_redraw_at(local.redraw_request());
+            shell.invalidate(local.invalidation());
+            shell.request_input_method(local.input_method());
+            shell.clipboard_mut().merge(local.clipboard_mut());
+        }
+        // MouseArea also reports local movement when scrolling changes its bounds.
+        // Only a real pointer move may replace the keyboard's selected command.
+        let moved = matches!(event, Event::Mouse(mouse::Event::CursorMoved { .. }));
+        for (message, receipt) in bus.drain() {
+            if moved || !(self.is_hover)(&message) {
+                shell.forward(message, receipt);
+            }
+        }
     }
 
     fn draw(

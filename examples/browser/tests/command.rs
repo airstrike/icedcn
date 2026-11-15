@@ -523,3 +523,42 @@ fn installed_command_rows_are_32_pixels_and_disabled_labels_dim_with_their_icons
         "disabled text must use half-opacity foreground, brightest={brightest}"
     );
 }
+
+#[test]
+fn command_keyboard_reveal_keeps_selection_under_a_stationary_pointer() {
+    use iced::keyboard::key::Named;
+    use icedcn::widget::command;
+
+    let view = command((0..24).map(|index| {
+        command::item(format!("Action {index}")).on_select(Message::Width(index as f32))
+    }))
+    .width(343.);
+    let mut ui: Simulator<'_, Message, Theme, Renderer> = Simulator::with_size(
+        Settings::default(),
+        Size::new(375., 700.),
+        icedcn::Slot::from(view).compose(),
+    );
+    let mut bounds = Bounds::default();
+    ui.operate(&mut bounds);
+    ui.point_at(bounds.inputs[0].center());
+    ui.simulate(simulator::click());
+    let target = bounds
+        .labels
+        .iter()
+        .find(|(text, _)| text == "Action 0")
+        .unwrap()
+        .1
+        .center();
+    ui.point_at(target);
+    ui.simulate([Event::Mouse(mouse::Event::CursorMoved { position: target })]);
+    ui.tap_key(Named::End);
+    for _ in 0..3 {
+        ui.simulate([redraw()]);
+    }
+    ui.tap_key(Named::Enter);
+    assert!(
+        ui.drain()
+            .any(|message| matches!(message, Message::Width(23.))),
+        "moving rows beneath a stationary pointer must not replace keyboard selection"
+    );
+}

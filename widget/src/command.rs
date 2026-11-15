@@ -438,6 +438,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
         };
         palette.inherit(&self.inherited);
         Behavior {
+            is_hover: |event| matches!(event, Event::Hover(_)),
             content: palette.compose(),
             reveal: if st.keyboard && !embedded {
                 selected.map(|id| (st.scroll.clone().expect("scroll id"), id))
