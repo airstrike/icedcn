@@ -201,10 +201,12 @@ fn scrollable_keeps_child_taps_and_coasts_after_an_unhandled_swipe() {
     ui.point_at(button);
     let _ = ui.simulate([
         Event::Touch(touch::Event::FingerPressed {
+            timestamp: None,
             id,
             position: button,
         }),
         Event::Touch(touch::Event::FingerLifted {
+            timestamp: None,
             id,
             position: button,
         }),
@@ -216,11 +218,20 @@ fn scrollable_keeps_child_taps_and_coasts_after_an_unhandled_swipe() {
     ui.point_at(start);
     let _ = ui.simulate([
         Event::Touch(touch::Event::FingerPressed {
+            timestamp: None,
             id,
             position: start,
         }),
-        Event::Touch(touch::Event::FingerMoved { id, position: end }),
-        Event::Touch(touch::Event::FingerLifted { id, position: end }),
+        Event::Touch(touch::Event::FingerMoved {
+            id,
+            position: end,
+            timestamp: None,
+        }),
+        Event::Touch(touch::Event::FingerLifted {
+            id,
+            position: end,
+            timestamp: None,
+        }),
     ]);
     let now = Instant::now();
     let mut offset = Offset::default();
@@ -299,6 +310,7 @@ fn press(ui: &mut Nested, x: f32, y: f32) {
     contact(
         ui,
         touch::Event::FingerPressed {
+            timestamp: None,
             id: FINGER,
             position,
         },
@@ -311,6 +323,7 @@ fn drag(ui: &mut Nested, x: f32, y: f32) {
     contact(
         ui,
         touch::Event::FingerMoved {
+            timestamp: None,
             id: FINGER,
             position,
         },
@@ -323,6 +336,7 @@ fn lift(ui: &mut Nested, x: f32, y: f32) {
     contact(
         ui,
         touch::Event::FingerLifted {
+            timestamp: None,
             id: FINGER,
             position,
         },

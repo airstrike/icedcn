@@ -501,16 +501,16 @@ impl Contact {
         cursor: mouse::Cursor,
     ) -> Option<(Option<touch::Finger>, Point, Self)> {
         match event {
-            Event::Touch(touch::Event::FingerPressed { id, position }) => {
+            Event::Touch(touch::Event::FingerPressed { id, position, .. }) => {
                 Some((Some(*id), *position, Contact::Press))
             }
-            Event::Touch(touch::Event::FingerMoved { id, position }) => {
+            Event::Touch(touch::Event::FingerMoved { id, position, .. }) => {
                 Some((Some(*id), *position, Contact::Move))
             }
-            Event::Touch(touch::Event::FingerLifted { id, position }) => {
+            Event::Touch(touch::Event::FingerLifted { id, position, .. }) => {
                 Some((Some(*id), *position, Contact::Release))
             }
-            Event::Touch(touch::Event::FingerLost { id, position }) => {
+            Event::Touch(touch::Event::FingerLost { id, position, .. }) => {
                 Some((Some(*id), *position, Contact::Lost))
             }
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {

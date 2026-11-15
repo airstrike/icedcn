@@ -86,7 +86,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Trigger<'_, Message> {
         }
 
         match *event {
-            Event::Touch(touch::Event::FingerPressed { id, position })
+            Event::Touch(touch::Event::FingerPressed { id, position, .. })
                 if layout.bounds().contains(position) =>
             {
                 if state.touch.is_none() {
@@ -97,7 +97,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Trigger<'_, Message> {
                     state.touch = None;
                 }
             }
-            Event::Touch(touch::Event::FingerMoved { id, position }) => {
+            Event::Touch(touch::Event::FingerMoved { id, position, .. }) => {
                 if state
                     .touch
                     .is_some_and(|(finger, start, _)| finger == id && start.distance(position) > 8.)
@@ -126,6 +126,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Trigger<'_, Message> {
                     self.content.update(
                         child_tree,
                         &Event::Touch(touch::Event::FingerLost {
+                            timestamp: None,
                             id,
                             position: start,
                         }),

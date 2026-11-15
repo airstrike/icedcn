@@ -225,10 +225,12 @@ fn touch_release_uses_touch_position_and_cancellation_does_not_activate() {
     ui.point_at(Point::new(600., 300.));
     ui.simulate([
         Event::Touch(touch::Event::FingerPressed {
+            timestamp: None,
             id,
             position: Point::new(20., 10.),
         }),
         Event::Touch(touch::Event::FingerLifted {
+            timestamp: None,
             id,
             position: Point::new(20., 10.),
         }),
@@ -236,14 +238,17 @@ fn touch_release_uses_touch_position_and_cancellation_does_not_activate() {
     assert_eq!(ui.drain().count(), 1);
     ui.simulate([
         Event::Touch(touch::Event::FingerPressed {
+            timestamp: None,
             id,
             position: Point::new(20., 10.),
         }),
         Event::Touch(touch::Event::FingerLost {
+            timestamp: None,
             id,
             position: Point::new(20., 10.),
         }),
         Event::Touch(touch::Event::FingerLifted {
+            timestamp: None,
             id,
             position: Point::new(20., 10.),
         }),

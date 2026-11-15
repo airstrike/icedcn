@@ -119,8 +119,13 @@ fn grip_resizes_with_mouse_and_touch_and_clamps_at_the_minimum() {
     assert_eq!(editor(&mut ui).0.height, 114.);
     let id = Finger(7);
     ui.simulate([
-        Event::Touch(touch::Event::FingerPressed { id, position: end }),
+        Event::Touch(touch::Event::FingerPressed {
+            id,
+            position: end,
+            timestamp: None,
+        }),
         Event::Touch(touch::Event::FingerMoved {
+            timestamp: None,
             id: Finger(8),
             position: Point::ORIGIN,
         }),
@@ -128,14 +133,20 @@ fn grip_resizes_with_mouse_and_touch_and_clamps_at_the_minimum() {
     assert_eq!(editor(&mut ui).0.height, 114.);
     ui.simulate([
         Event::Touch(touch::Event::FingerMoved {
+            timestamp: None,
             id,
             position: Point::ORIGIN,
         }),
         Event::Touch(touch::Event::FingerLost {
+            timestamp: None,
             id,
             position: Point::ORIGIN,
         }),
-        Event::Touch(touch::Event::FingerMoved { id, position: end }),
+        Event::Touch(touch::Event::FingerMoved {
+            id,
+            position: end,
+            timestamp: None,
+        }),
     ]);
     assert_eq!(editor(&mut ui).0.height, 64.);
 }
@@ -176,15 +187,27 @@ fn resizing_a_scrolled_editor_uses_pointer_deltas_in_one_coordinate_space() {
         let id = Finger(11);
         ui.point_at(grip);
         ui.simulate([if touch {
-            Event::Touch(touch::Event::FingerPressed { id, position: grip })
+            Event::Touch(touch::Event::FingerPressed {
+                id,
+                position: grip,
+                timestamp: None,
+            })
         } else {
             Event::Mouse(mouse::Event::ButtonPressed(Button::Left))
         }]);
         ui.point_at(end);
         if touch {
             ui.simulate([
-                Event::Touch(touch::Event::FingerMoved { id, position: end }),
-                Event::Touch(touch::Event::FingerLifted { id, position: end }),
+                Event::Touch(touch::Event::FingerMoved {
+                    id,
+                    position: end,
+                    timestamp: None,
+                }),
+                Event::Touch(touch::Event::FingerLifted {
+                    id,
+                    position: end,
+                    timestamp: None,
+                }),
             ]);
         } else {
             ui.simulate([

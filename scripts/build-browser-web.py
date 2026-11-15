@@ -149,6 +149,7 @@ def main():
             (ROOT / "examples/browser/fonts" / name).read_text()
             for name in ("Geist-OFL.txt", "GeistMono-OFL.txt", "TwemojiMozilla-LICENSE.txt")
         ))
+        shutil.copyfile(ROOT / "assets/Chromium-LICENSE", output / "third-party-licenses.txt")
         # Only generated modules in this dedicated output tree are stale.
         for pattern in ("browser-*.wasm", "browser-*.js"):
             for old in output.glob(pattern):

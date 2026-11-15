@@ -1055,6 +1055,7 @@ fn a_stationary_touch_still_opens_a_context_menu() {
     let mut ui = simulator(element);
     let _ = ui.simulate([
         Event::Touch(touch::Event::FingerPressed {
+            timestamp: None,
             id: touch::Finger(0),
             position: Point::new(100.0, 50.0),
         }),
@@ -1085,6 +1086,7 @@ fn an_inner_context_menu_wins_a_long_press() {
     let mut ui = simulator(element);
     let _ = ui.simulate([
         Event::Touch(touch::Event::FingerPressed {
+            timestamp: None,
             id: touch::Finger(0),
             position: Point::new(100.0, 50.0),
         }),

@@ -420,7 +420,7 @@ where
                 Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
                     Some((cursor.position(), Pointer::Mouse))
                 }
-                Event::Touch(touch::Event::FingerPressed { id, position }) => {
+                Event::Touch(touch::Event::FingerPressed { id, position, .. }) => {
                     Some((Some(*position), Pointer::Touch(*id)))
                 }
                 _ => None,
@@ -452,7 +452,7 @@ where
                             target = Some((i, at(*position)));
                         }
                     }
-                    Event::Touch(touch::Event::FingerMoved { id, position }) => {
+                    Event::Touch(touch::Event::FingerMoved { id, position, .. }) => {
                         if let Some((i, Pointer::Touch(active))) = state.dragging
                             && active == *id
                         {

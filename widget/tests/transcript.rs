@@ -148,10 +148,12 @@ fn touch_intent_at_the_live_edge_holds_position_before_the_next_chunk() {
     let position = Point::new(30., 30.);
     let _ = ui.simulate([
         Event::Touch(touch::Event::FingerPressed {
+            timestamp: None,
             id: touch::Finger(2),
             position,
         }),
         Event::Touch(touch::Event::FingerMoved {
+            timestamp: None,
             id: touch::Finger(2),
             position,
         }),

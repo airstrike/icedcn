@@ -433,14 +433,17 @@ mod track {
             let id = touch::Finger(1);
             ui.simulate([
                 Event::Touch(touch::Event::FingerPressed {
+                    timestamp: None,
                     id,
                     position: Point::new(220.0, 50.0),
                 }),
                 Event::Touch(touch::Event::FingerMoved {
+                    timestamp: None,
                     id,
                     position: Point::new(120.0, 50.0),
                 }),
                 Event::Touch(touch::Event::FingerLifted {
+                    timestamp: None,
                     id,
                     position: Point::new(120.0, 50.0),
                 }),
@@ -468,16 +471,19 @@ mod track {
         let id = touch::Finger(1);
         ui.simulate([
             Event::Touch(touch::Event::FingerPressed {
+                timestamp: None,
                 id,
                 position: Point::new(160.0, 200.0),
             }),
             Event::Touch(touch::Event::FingerMoved {
+                timestamp: None,
                 id,
                 position: Point::new(160.0, 100.0),
             }),
         ]);
         assert!((snapshot(&mut ui).leaves[0].2.y + 52.0).abs() < 0.01);
         ui.simulate([Event::Touch(touch::Event::FingerLost {
+            timestamp: None,
             id,
             position: Point::new(160.0, 100.0),
         })]);
@@ -487,14 +493,17 @@ mod track {
         assert!(ui.drain().next().is_none());
         ui.simulate([
             Event::Touch(touch::Event::FingerPressed {
+                timestamp: None,
                 id,
                 position: Point::new(160.0, 200.0),
             }),
             Event::Touch(touch::Event::FingerMoved {
+                timestamp: None,
                 id,
                 position: Point::new(160.0, 100.0),
             }),
             Event::Touch(touch::Event::FingerLifted {
+                timestamp: None,
                 id,
                 position: Point::new(160.0, 100.0),
             }),

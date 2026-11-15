@@ -476,7 +476,11 @@ fn context_menu_stationary_touch_opens_but_vertical_scrolling_does_not() {
     let position = Point::new(12., 12.);
     ui.point_at(position);
     let id = touch::Finger(0);
-    let down = Event::Touch(touch::Event::FingerPressed { id, position });
+    let down = Event::Touch(touch::Event::FingerPressed {
+        id,
+        position,
+        timestamp: None,
+    });
     let later = || {
         Event::Window(window::Event::RedrawRequested(
             Instant::now() + Duration::from_millis(710),
@@ -485,11 +489,16 @@ fn context_menu_stationary_touch_opens_but_vertical_scrolling_does_not() {
     let _ = ui.simulate([
         down.clone(),
         Event::Touch(touch::Event::FingerMoved {
+            timestamp: None,
             id,
             position: Point::new(12., 48.),
         }),
         later(),
-        Event::Touch(touch::Event::FingerLifted { id, position }),
+        Event::Touch(touch::Event::FingerLifted {
+            id,
+            position,
+            timestamp: None,
+        }),
     ]);
     let _ = ui.simulate([down, later()]);
     assert_eq!(
@@ -516,10 +525,12 @@ fn drawer_outward_swipe_closes_on_the_selected_edge() {
     let id = touch::Finger(1);
     let _ = ui.simulate([
         Event::Touch(touch::Event::FingerPressed {
+            timestamp: None,
             id,
             position: start,
         }),
         Event::Touch(touch::Event::FingerLifted {
+            timestamp: None,
             id,
             position: Point::new(24., 130.),
         }),

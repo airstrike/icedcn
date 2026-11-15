@@ -507,9 +507,9 @@ where
         let target = layout.bounds().expand([8., 12.]);
         let (pointer, hit) = match event {
             Event::Touch(
-                touch::Event::FingerPressed { id, position }
-                | touch::Event::FingerLifted { id, position }
-                | touch::Event::FingerLost { id, position },
+                touch::Event::FingerPressed { id, position, .. }
+                | touch::Event::FingerLifted { id, position, .. }
+                | touch::Event::FingerLost { id, position, .. },
             ) => (
                 Pointer::Touch(*id),
                 target.contains(*position) && viewport.contains(*position),

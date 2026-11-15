@@ -41,6 +41,9 @@
 //! ```
 use iced_widget::container;
 
+mod fling;
+mod velocity;
+
 use crate::core::Em;
 use crate::core::alignment;
 use crate::core::border::{self, Border};
@@ -1415,6 +1418,7 @@ struct State {
     target: Option<Target>,
     source: Option<Source>,
     segment: Segment,
+    fling: Option<fling::Fling>,
     last_frame: Option<Instant>,
     last_translation: Vector,
     interaction: Interaction,
@@ -1484,18 +1488,42 @@ enum Interaction {
 struct Swipe {
     finger: touch::Finger,
     position: Point,
-    moved_at: Instant,
-    velocity: Vector,
+    origin: Instant,
+    timestamp: Option<Duration>,
+    tracker: velocity::Tracker,
 }
 
 impl Swipe {
-    fn drag(&mut self, position: Point, now: Instant) -> Vector {
+    fn new(
+        finger: touch::Finger,
+        position: Point,
+        timestamp: Option<Duration>,
+        now: Instant,
+    ) -> Self {
+        let mut tracker = velocity::Tracker::default();
+        tracker.sample(position, now);
+        Self {
+            finger,
+            position,
+            origin: now,
+            timestamp,
+            tracker,
+        }
+    }
+
+    /// Bind the platform clock once per contact; batched samples retain their
+    /// original spacing instead of borrowing the time spent dispatching them.
+    fn time(&self, timestamp: Option<Duration>, now: Instant) -> Instant {
+        match (self.timestamp, timestamp) {
+            (Some(origin), Some(time)) => self.origin + time.saturating_sub(origin),
+            _ => now,
+        }
+    }
+
+    fn drag(&mut self, position: Point, timestamp: Option<Duration>, now: Instant) -> Vector {
         let delta = self.position - position;
-        // Low-pass the velocity over 25ms, including events batched in the same frame.
-        let dt = now.saturating_duration_since(self.moved_at).as_secs_f32();
-        self.velocity = (self.velocity * 0.025 + delta) / (0.025 + dt);
+        self.tracker.sample(position, self.time(timestamp, now));
         self.position = position;
-        self.moved_at = now;
         delta
     }
 }
@@ -1633,6 +1661,7 @@ impl Default for State {
                 duration: 0.0,
                 slope: 0.0,
             },
+            fling: None,
             last_frame: None,
             last_translation: Vector::ZERO,
             interaction: Interaction::None,
@@ -2113,8 +2142,7 @@ impl State {
         }
     }
 
-    /// Continue a released swipe on the same bounded segment used for wheel and
-    /// programmatic scrolling. Start at the finger's speed and ease down to rest.
+    /// Continue a released swipe using Chromium's Android spline fling.
     fn fling(
         &mut self,
         swipe: Swipe,
@@ -2122,37 +2150,52 @@ impl State {
         bounds: Rectangle,
         content: Size,
         now: Instant,
+        timestamp: Option<Duration>,
     ) {
-        let age = now.saturating_duration_since(swipe.moved_at).as_secs_f32();
-        let mut velocity = direction.align(swipe.velocity) * (1. - age / 0.100).clamp(0., 1.);
+        // Chromium GestureDetector defaults in logical pixels/second. Android
+        // can supply device-specific thresholds; browsers do not expose those.
+        let pointer = swipe.tracker.velocity(swipe.time(timestamp, now));
+        let mut velocity = direction.align(Vector::new(
+            -pointer.x.clamp(-8000., 8000.),
+            -pointer.y.clamp(-8000., 8000.),
+        ));
         if direction.horizontal().is_none() || content.width <= bounds.width {
             velocity.x = 0.;
         }
         if direction.vertical().is_none() || content.height <= bounds.height {
             velocity.y = 0.;
         }
-        let speed = velocity.x.abs().max(velocity.y.abs());
-        if speed < 90. {
+        if velocity.x.abs().max(velocity.y.abs()) <= 50. {
             return;
         }
-
-        // Bound batched input spikes, then decelerate at 1800 logical px/s².
-        // Allow a fast flick to coast beyond one viewport instead of ending
-        // after a short gesture. Average speed is half the initial speed.
-        let speed_limit = speed.min(4000.);
-        let duration = (speed_limit / 1800.).clamp(0.12, 1.8);
-        let travel = velocity * (speed_limit / speed * duration * 0.5);
+        let Some(fling) = fling::Fling::new(velocity) else {
+            return;
+        };
         self.cancel();
-        self.scroll_smoothly(travel, bounds, content, now);
-        if let Some(target) = self.target {
-            let dx = (target.destination.x - self.segment.start.x).abs();
-            let dy = (target.destination.y - self.segment.start.y).abs();
-            self.segment.duration = 2. * dx.max(dy) / speed_limit;
-            self.segment.started = now;
-            self.segment.slope = 2.;
-            self.last_frame = Some(now);
-            self.source = Some(Source::Touch);
+        let start = Point::new(
+            self.offset_x.absolute(bounds.width, content.width),
+            self.offset_y.absolute(bounds.height, content.height),
+        );
+        let destination = start + fling.displacement();
+        let target = Target::new(
+            Offset::Absolute(destination.x.max(0.)),
+            Offset::Absolute(destination.y.max(0.)),
+            bounds,
+            content,
+        );
+        if target.destination.x == start.x && target.destination.y == start.y {
+            return;
         }
+        self.segment = Segment {
+            start,
+            started: now,
+            duration: fling.duration() as f32,
+            slope: 0.,
+        };
+        self.target = Some(target);
+        self.fling = Some(fling);
+        self.last_frame = Some(now);
+        self.source = Some(Source::Touch);
     }
 
     /// Moves the *target* scroll offset by `delta`, for smooth scrolling.
@@ -2223,8 +2266,7 @@ impl State {
         if target.destination.x == current.x && target.destination.y == current.y {
             self.offset_x = target.x;
             self.offset_y = target.y;
-            self.target = None;
-            self.last_frame = None;
+            self.cancel();
             return;
         }
 
@@ -2261,6 +2303,7 @@ impl State {
         // the current velocity
         let start = self.animated_position(now);
         let velocity = self.animated_velocity(now);
+        self.fling = None;
         let new = Vector::new(
             target.destination.x - start.x,
             target.destination.y - start.y,
@@ -2289,8 +2332,7 @@ impl State {
             // The new target is right on top of us: end the animation now
             self.offset_x = target.x;
             self.offset_y = target.y;
-            self.target = None;
-            self.last_frame = None;
+            self.cancel();
             return;
         }
 
@@ -2318,6 +2360,37 @@ impl State {
             return false;
         };
 
+        if let Some(fling) = &self.fling {
+            let sample = fling.sample(
+                now.saturating_duration_since(self.segment.started)
+                    .as_secs_f64(),
+            );
+            let position = self.segment.start + sample.displacement;
+            let resolved = Target::new(target.x, target.y, bounds, content);
+            self.offset_x =
+                Offset::Absolute(Self::clamp_offset(position.x, bounds.width, content.width));
+            self.offset_y = Offset::Absolute(Self::clamp_offset(
+                position.y,
+                bounds.height,
+                content.height,
+            ));
+            // Clip the original trajectory at the content edge. Compressing it
+            // into the available distance would change the launch velocity.
+            let reached =
+                (self.axis_offset(Axis::X, bounds, content) - resolved.destination.x).abs() < 0.1
+                    && (self.axis_offset(Axis::Y, bounds, content) - resolved.destination.y).abs()
+                        < 0.1;
+            if sample.finished || reached {
+                self.offset_x = Offset::Absolute(resolved.destination.x);
+                self.offset_y = Offset::Absolute(resolved.destination.y);
+                self.cancel();
+                return false;
+            }
+            self.target = Some(resolved);
+            self.last_frame = Some(now);
+            return true;
+        }
+
         // The bounds and content may have changed while the animation is
         // running; re-resolve the target, and retarget if it moved
         let resolved = Target::new(target.x, target.y, bounds, content);
@@ -2338,8 +2411,7 @@ impl State {
             // offsets
             self.offset_x = target.x;
             self.offset_y = target.y;
-            self.target = None;
-            self.last_frame = None;
+            self.cancel();
             return false;
         }
 
@@ -2363,6 +2435,7 @@ impl State {
     /// pending wheel animation.
     fn cancel(&mut self) {
         self.target = None;
+        self.fling = None;
         self.last_frame = None;
     }
 
@@ -2383,6 +2456,24 @@ impl State {
             return Point::ORIGIN;
         };
 
+        if let Some(fling) = &self.fling {
+            let sample = fling.sample(
+                now.saturating_duration_since(self.segment.started)
+                    .as_secs_f64(),
+            );
+            let position = self.segment.start + sample.displacement;
+            return Point::new(
+                position.x.clamp(
+                    self.segment.start.x.min(target.destination.x),
+                    self.segment.start.x.max(target.destination.x),
+                ),
+                position.y.clamp(
+                    self.segment.start.y.min(target.destination.y),
+                    self.segment.start.y.max(target.destination.y),
+                ),
+            );
+        }
+
         let started = self.segment.started;
 
         let t = (now - started).as_secs_f32();
@@ -2401,6 +2492,27 @@ impl State {
         let Some(target) = self.target else {
             return 0.0;
         };
+
+        if let Some(fling) = &self.fling {
+            let sample = fling.sample(
+                now.saturating_duration_since(self.segment.started)
+                    .as_secs_f64(),
+            );
+            // An axis clipped at its edge has stopped even while the other
+            // axis continues. Do not carry its old velocity into a retarget.
+            let mut velocity = sample.velocity;
+            if sample.displacement.x.abs() >= (target.destination.x - self.segment.start.x).abs() {
+                velocity.x = 0.;
+            }
+            if sample.displacement.y.abs() >= (target.destination.y - self.segment.start.y).abs() {
+                velocity.y = 0.;
+            }
+            return if velocity.x.abs() > velocity.y.abs() {
+                velocity.x
+            } else {
+                velocity.y
+            };
+        }
 
         let started = self.segment.started;
 
@@ -3218,24 +3330,32 @@ impl State {
 
         if let Event::Touch(contact) = event {
             match *contact {
-                touch::Event::FingerPressed { id, position } => {
+                touch::Event::FingerPressed {
+                    id,
+                    position,
+                    timestamp,
+                } => {
                     // A button may capture the press. Observe it without claiming
                     // the tap, so a later drag can still cancel the pressed child.
                     if cursor_over_scrollable.is_some()
                         && mouse_over_scrollbar.is_none()
                         && matches!(self.interaction, Interaction::None)
                     {
-                        self.interaction = Interaction::TouchPending(Swipe {
-                            finger: id,
+                        self.interaction = Interaction::TouchPending(Swipe::new(
+                            id,
                             position,
-                            moved_at: Instant::now(),
-                            velocity: Vector::ZERO,
-                        });
+                            timestamp,
+                            Instant::now(),
+                        ));
                     }
                 }
-                touch::Event::FingerMoved { id, position } => {
+                touch::Event::FingerMoved {
+                    id,
+                    position,
+                    timestamp,
+                } => {
                     let mut swipe = match self.interaction {
-                        Interaction::TouchPending(swipe) if swipe.finger == id => {
+                        Interaction::TouchPending(mut swipe) if swipe.finger == id => {
                             let delta = swipe.position - position;
                             if is_event_captured {
                                 self.interaction = Interaction::None;
@@ -3243,33 +3363,49 @@ impl State {
                             }
                             // Let a small amount of contact jitter remain a tap.
                             if delta.x.abs().max(delta.y.abs()) < 5. {
+                                swipe
+                                    .tracker
+                                    .sample(position, swipe.time(timestamp, Instant::now()));
+                                self.interaction = Interaction::TouchPending(swipe);
                                 return update;
                             }
                             if !self.can_scroll(direction, delta, bounds, content, None) {
                                 self.interaction = Interaction::None;
                                 return update;
                             }
-                            update.cancel_child = Some(touch::Event::FingerLost { id, position });
+                            update.cancel_child = Some(touch::Event::FingerLost {
+                                id,
+                                position,
+                                timestamp,
+                            });
                             swipe
                         }
                         Interaction::TouchScrolling(swipe) if swipe.finger == id => swipe,
                         _ => return update,
                     };
-                    let delta = swipe.drag(position, Instant::now());
+                    let delta = swipe.drag(position, timestamp, Instant::now());
                     self.interaction = Interaction::TouchScrolling(swipe);
                     self.scroll(direction.align(delta), bounds, content);
                     self.source = Some(Source::Touch);
                     update.scroll = self.notify_viewport(bounds, content);
                     update.capture = true;
                 }
-                touch::Event::FingerLifted { id, .. } | touch::Event::FingerLost { id, .. } => {
+                touch::Event::FingerLifted { id, timestamp, .. }
+                | touch::Event::FingerLost { id, timestamp, .. } => {
                     match self.interaction {
                         Interaction::TouchScrolling(swipe) => {
                             if swipe.finger != id {
                                 return update;
                             }
                             if matches!(contact, touch::Event::FingerLifted { .. }) {
-                                self.fling(swipe, direction, bounds, content, Instant::now());
+                                self.fling(
+                                    swipe,
+                                    direction,
+                                    bounds,
+                                    content,
+                                    Instant::now(),
+                                    timestamp,
+                                );
                                 update.request_redraw = self.target.is_some();
                             }
                             update.capture = true;

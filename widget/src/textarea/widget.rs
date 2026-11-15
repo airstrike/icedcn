@@ -446,12 +446,12 @@ impl Gesture {
                 Some(Self::Move(None, cursor.observe().position()?))
             }
             Event::Mouse(ButtonReleased(Left)) => Some(Self::End(None)),
-            Event::Touch(FingerPressed { id, position }) => Some(Self::Start {
+            Event::Touch(FingerPressed { id, position, .. }) => Some(Self::Start {
                 pointer: Some(id),
                 hit: cursor.position()?,
                 y: position.y,
             }),
-            Event::Touch(FingerMoved { id, position }) => Some(Self::Move(Some(id), position)),
+            Event::Touch(FingerMoved { id, position, .. }) => Some(Self::Move(Some(id), position)),
             Event::Touch(FingerLifted { id, .. } | FingerLost { id, .. }) => {
                 Some(Self::End(Some(id)))
             }

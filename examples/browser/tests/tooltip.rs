@@ -67,10 +67,12 @@ fn touch_tap_activates_without_opening_a_hover_hint() {
     ui.point_at(position);
     ui.simulate([
         Event::Touch(touch::Event::FingerPressed {
+            timestamp: None,
             id: Finger(2),
             position,
         }),
         Event::Touch(touch::Event::FingerLifted {
+            timestamp: None,
             id: Finger(2),
             position,
         }),

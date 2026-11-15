@@ -88,10 +88,12 @@ fn pointer_and_touch_opening_preserve_focus_without_a_keyboard_ring() {
             if touch {
                 ui.simulate([
                     Event::Touch(touch::Event::FingerPressed {
+                        timestamp: None,
                         id: touch::Finger(0),
                         position,
                     }),
                     Event::Touch(touch::Event::FingerLifted {
+                        timestamp: None,
                         id: touch::Finger(0),
                         position,
                     }),

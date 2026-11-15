@@ -100,18 +100,31 @@ fn touch_tracks_the_pressing_finger_and_cancels_a_lost_gesture() {
     let mut ui = Simulator::new(view);
     let position = controls(&mut ui).tracks[0].center();
     let id = Finger(1);
-    let down = Event::Touch(touch::Event::FingerPressed { id, position });
-    let up = Event::Touch(touch::Event::FingerLifted { id, position });
+    let down = Event::Touch(touch::Event::FingerPressed {
+        id,
+        position,
+        timestamp: None,
+    });
+    let up = Event::Touch(touch::Event::FingerLifted {
+        id,
+        position,
+        timestamp: None,
+    });
     ui.simulate([
         down.clone(),
         Event::Touch(touch::Event::FingerLifted {
+            timestamp: None,
             id: Finger(2),
             position,
         }),
     ]);
     assert_eq!(ui.drain().count(), 0);
     ui.simulate([
-        Event::Touch(touch::Event::FingerLost { id, position }),
+        Event::Touch(touch::Event::FingerLost {
+            id,
+            position,
+            timestamp: None,
+        }),
         up.clone(),
     ]);
     assert_eq!(controls(&mut ui).values, [false]);

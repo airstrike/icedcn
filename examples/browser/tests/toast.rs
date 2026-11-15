@@ -119,13 +119,19 @@ fn finger_taps_and_lost_contacts_keep_the_card_but_an_outward_swipe_dismisses_it
     let id = touch::Finger(1);
     for release in [
         touch::Event::FingerLifted {
+            timestamp: None,
             id,
             position: start,
         },
-        touch::Event::FingerLost { id, position: end },
+        touch::Event::FingerLost {
+            id,
+            position: end,
+            timestamp: None,
+        },
     ] {
         ui.simulate([
             Event::Touch(touch::Event::FingerPressed {
+                timestamp: None,
                 id,
                 position: start,
             }),
@@ -136,11 +142,20 @@ fn finger_taps_and_lost_contacts_keep_the_card_but_an_outward_swipe_dismisses_it
     }
     ui.simulate([
         Event::Touch(touch::Event::FingerPressed {
+            timestamp: None,
             id,
             position: start,
         }),
-        Event::Touch(touch::Event::FingerMoved { id, position: end }),
-        Event::Touch(touch::Event::FingerLifted { id, position: end }),
+        Event::Touch(touch::Event::FingerMoved {
+            id,
+            position: end,
+            timestamp: None,
+        }),
+        Event::Touch(touch::Event::FingerLifted {
+            id,
+            position: end,
+            timestamp: None,
+        }),
     ]);
     let mut ui = ui.rebuild(notes());
     assert!(ui.find("Older").is_err());

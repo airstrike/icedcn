@@ -461,7 +461,7 @@ impl<Message> Widget<super::Event<Message>, Theme, Renderer> for Viewport<'_, Me
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
                 cursor.position().map(|point| (Pointer::Mouse, point))
             }
-            Event::Touch(touch::Event::FingerPressed { id, position }) => {
+            Event::Touch(touch::Event::FingerPressed { id, position, .. }) => {
                 Some((Pointer::Touch(*id), *position))
             }
             _ => None,
@@ -484,7 +484,7 @@ impl<Message> Widget<super::Event<Message>, Theme, Renderer> for Viewport<'_, Me
             Event::Mouse(mouse::Event::CursorMoved { position }) => {
                 Some((Pointer::Mouse, *position))
             }
-            Event::Touch(touch::Event::FingerMoved { id, position }) => {
+            Event::Touch(touch::Event::FingerMoved { id, position, .. }) => {
                 Some((Pointer::Touch(*id), *position))
             }
             _ => None,
@@ -516,7 +516,7 @@ impl<Message> Widget<super::Event<Message>, Theme, Renderer> for Viewport<'_, Me
             Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
                 cursor.position().map(|position| (Pointer::Mouse, position))
             }
-            Event::Touch(touch::Event::FingerLifted { id, position }) => {
+            Event::Touch(touch::Event::FingerLifted { id, position, .. }) => {
                 Some((Pointer::Touch(*id), *position))
             }
             _ => None,

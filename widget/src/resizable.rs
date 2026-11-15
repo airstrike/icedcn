@@ -263,7 +263,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Panes<'_, Message> {
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
                 cursor.position().map(|p| (Pointer::Mouse, p))
             }
-            Event::Touch(touch::Event::FingerPressed { id, position }) => {
+            Event::Touch(touch::Event::FingerPressed { id, position, .. }) => {
                 Some((Pointer::Touch(*id), *position))
             }
             _ => None,
@@ -288,7 +288,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Panes<'_, Message> {
             {
                 Some(self.at(bounds, *position))
             }
-            Event::Touch(touch::Event::FingerMoved { id, position })
+            Event::Touch(touch::Event::FingerMoved { id, position, .. })
                 if state.dragging == Some(Pointer::Touch(*id)) =>
             {
                 Some(self.at(bounds, *position))

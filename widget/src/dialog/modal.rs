@@ -609,7 +609,7 @@ where
         }
         if let Some(drag) = self.drag.as_deref_mut() {
             match *event {
-                Event::Touch(touch::Event::FingerPressed { id, position })
+                Event::Touch(touch::Event::FingerPressed { id, position, .. })
                     if self.layout.bounds().contains(position) =>
                 {
                     *drag = Some((id, position))
@@ -619,7 +619,7 @@ where
                 {
                     *drag = None
                 }
-                Event::Touch(touch::Event::FingerLifted { id, position })
+                Event::Touch(touch::Event::FingerLifted { id, position, .. })
                     if drag.is_some_and(|(finger, _)| finger == id) =>
                 {
                     if let Some((_, start)) = drag.take() {

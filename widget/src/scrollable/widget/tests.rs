@@ -1,4 +1,6 @@
-use super::{Direction, Interaction, Scrollbars, Source, State, Swipe};
+use super::{
+    Axis, Direction, Interaction, Offset, Scrollbar, Scrollbars, Source, State, Swipe, Target,
+};
 use iced_core::time::{Duration, Instant};
 use iced_core::{Event, Point, Rectangle, Size, Vector, mouse, touch};
 
@@ -13,6 +15,10 @@ const CONTENT: Size = Size {
     height: 600.,
 };
 const FINGER: touch::Finger = touch::Finger(1);
+
+fn timestamp(milliseconds: u64) -> Option<Duration> {
+    Some(Duration::from_millis(10_000 + milliseconds))
+}
 
 fn event(state: &mut State, touch: touch::Event, visible: bool) {
     let cursor = mouse::Cursor::Available(Point::new(30., 50.));
@@ -35,6 +41,7 @@ fn start() -> State {
         touch::Event::FingerPressed {
             id: FINGER,
             position: Point::new(30., 90.),
+            timestamp: timestamp(0),
         },
         true,
     );
@@ -47,68 +54,232 @@ fn drag(state: &mut State) {
         touch::Event::FingerMoved {
             id: FINGER,
             position: Point::new(30., 30.),
+            timestamp: timestamp(30),
         },
         true,
     );
 }
 
-#[test]
-fn swipe_coasts_with_touch_notifications_and_stops_at_the_content_edge() {
-    let mut state = start();
-    drag(&mut state);
-    assert_eq!(state.axis_offset(super::Axis::Y, VIEW, CONTENT), 60.);
+fn lift(state: &mut State, milliseconds: u64) {
     event(
-        &mut state,
+        state,
         touch::Event::FingerLifted {
             id: FINGER,
             position: Point::new(30., 30.),
+            timestamp: timestamp(milliseconds),
         },
         true,
     );
+}
+
+fn trace(velocity: Vector, now: Instant, dispatch_ms: [u64; 3]) -> Swipe {
+    let mut swipe = Swipe::new(FINGER, Point::ORIGIN, timestamp(0), now);
+    for (i, dispatched) in dispatch_ms.into_iter().enumerate() {
+        let milliseconds = (i as u64 + 1) * 10;
+        let position = Point::ORIGIN - velocity * (milliseconds as f32 / 1000.);
+        swipe.drag(
+            position,
+            timestamp(milliseconds),
+            now + Duration::from_millis(dispatched),
+        );
+    }
+    swipe
+}
+
+fn launch(velocity: Vector, content: Size, now: Instant) -> State {
+    let mut state = State::new();
+    state.fling(
+        trace(velocity, now, [10, 20, 30]),
+        Direction::default(),
+        VIEW,
+        content,
+        now + Duration::from_millis(31),
+        timestamp(31),
+    );
+    state
+}
+
+fn near(actual: f32, expected: f64) {
+    assert!(
+        (f64::from(actual) - expected).abs() < 0.02,
+        "expected {expected}, got {actual}"
+    );
+}
+
+#[test]
+fn swipe_coasts_with_touch_notifications_and_stops_when_content_shrinks() {
+    let mut state = start();
+    drag(&mut state);
+    assert_eq!(state.axis_offset(Axis::Y, VIEW, CONTENT), 60.);
+    lift(&mut state, 31);
     let started = state.segment.started;
     assert_eq!(state.source, Some(Source::Touch));
     assert!(state.step(started + Duration::from_millis(16), VIEW, CONTENT));
-    assert!(state.axis_offset(super::Axis::Y, VIEW, CONTENT) > 60.);
+    assert!(state.axis_offset(Axis::Y, VIEW, CONTENT) > 60.);
     assert_eq!(
         state.notify_viewport(VIEW, CONTENT).unwrap().source,
         Source::Touch
     );
     let smaller = Size::new(160., 250.);
     state.step(started + Duration::from_millis(32), VIEW, smaller);
-    state.step(started + Duration::from_secs(2), VIEW, smaller);
-    assert_eq!(state.axis_offset(super::Axis::Y, VIEW, smaller), 150.);
+    assert!(!state.step(started + Duration::from_secs(2), VIEW, smaller));
+    assert_eq!(state.axis_offset(Axis::Y, VIEW, smaller), 150.);
     assert!(state.target.is_none());
+    assert!(state.fling.is_none());
 }
 
 #[test]
-fn flick_keeps_coasting_after_half_a_second_and_settles_without_overshoot() {
-    let mut state = State::new();
+fn release_velocity_drives_the_chromium_trajectory_and_exact_final_offset() {
+    let content = Size::new(160., 10_000.);
+    let mut state = launch(Vector::new(0., 2000.), content, Instant::now());
+    let started = state.segment.started;
+    // Independently generated from pinned Chromium MobileScroller C++;
+    // see fling.rs for the oracle revision and generation procedure.
+    near(state.target.unwrap().destination.y, 647.398_804);
+    near(state.segment.duration, 0.924_855);
+    assert!(state.step(started + Duration::from_millis(500), VIEW, content));
+    near(state.axis_offset(Axis::Y, VIEW, content), 572.792_48);
+    assert!(!state.step(started + Duration::from_secs(2), VIEW, content));
+    near(state.axis_offset(Axis::Y, VIEW, content), 647.398_804);
+    assert!(state.target.is_none());
+    assert!(state.fling.is_none());
+    assert!(state.last_frame.is_none());
+}
+
+#[test]
+fn original_timestamps_make_batched_and_delayed_dispatch_equivalent() {
     let now = Instant::now();
     let content = Size::new(160., 10_000.);
+    let velocity = Vector::new(0., 2000.);
+    let mut states = [State::new(), State::new(), State::new()];
+    for (state, (dispatch, release)) in
+        states
+            .iter_mut()
+            .zip([([10, 20, 30], 31), ([0, 0, 0], 0), ([70, 90, 200], 350)])
+    {
+        state.fling(
+            trace(velocity, now, dispatch),
+            Direction::default(),
+            VIEW,
+            content,
+            now + Duration::from_millis(release),
+            timestamp(31),
+        );
+        near(state.target.unwrap().destination.y, 647.398_804);
+        let started = state.segment.started;
+        state.step(started + Duration::from_millis(500), VIEW, content);
+        near(state.axis_offset(Axis::Y, VIEW, content), 572.792_48);
+    }
+    assert_eq!(states[0].offset_y, states[1].offset_y);
+    assert_eq!(states[1].offset_y, states[2].offset_y);
+}
+
+#[test]
+fn sixty_and_one_hundred_twenty_hertz_frames_share_the_same_trajectory() {
+    let content = Size::new(160., 10_000.);
+    let now = Instant::now();
+    let mut sixty = launch(Vector::new(0., 2000.), content, now);
+    let mut one_twenty = launch(Vector::new(0., 2000.), content, now);
+    let started = sixty.segment.started;
+    for frame in 1..=120 {
+        let time = started + Duration::from_nanos(frame * 1_000_000_000 / 120);
+        let active = one_twenty.step(time, VIEW, content);
+        if frame % 2 == 0 {
+            assert_eq!(sixty.step(time, VIEW, content), active);
+            assert_eq!(sixty.offset_y, one_twenty.offset_y);
+        }
+    }
+    assert!(sixty.target.is_none());
+    assert!(one_twenty.target.is_none());
+    near(sixty.axis_offset(Axis::Y, VIEW, content), 647.398_804);
+}
+
+#[test]
+fn an_edge_clips_the_original_motion_without_compressing_launch_velocity() {
+    let now = Instant::now();
+    let content = Size::new(160., 250.);
+    let mut state = launch(Vector::new(0., 2000.), content, now);
+    let started = state.segment.started;
+    assert_eq!(state.target.unwrap().destination.y, 150.);
+    assert!(state.step(started + Duration::from_micros(16_666), VIEW, content));
+    near(state.axis_offset(Axis::Y, VIEW, content), 33.283_477_8);
+    assert!(!state.step(started + Duration::from_millis(100), VIEW, content));
+    assert_eq!(state.axis_offset(Axis::Y, VIEW, content), 150.);
+    assert!(state.last_frame.is_none());
+}
+
+#[test]
+fn a_reverse_fling_stops_at_zero_without_a_negative_target_or_offset() {
+    let now = Instant::now();
+    let mut state = State::new();
+    state.offset_y = Offset::Absolute(150.);
     state.fling(
-        Swipe {
-            finger: FINGER,
-            position: Point::ORIGIN,
-            moved_at: now,
-            velocity: Vector::new(0., 2000.),
-        },
+        trace(Vector::new(0., -2000.), now, [10, 20, 30]),
         Direction::default(),
         VIEW,
+        CONTENT,
+        now + Duration::from_millis(31),
+        timestamp(31),
+    );
+    let started = state.segment.started;
+    assert_eq!(state.target.unwrap().destination.y, 0.);
+    assert!(state.step(started + Duration::from_micros(16_666), VIEW, CONTENT));
+    near(state.axis_offset(Axis::Y, VIEW, CONTENT), 116.716_522_2);
+    assert!(!state.step(started + Duration::from_millis(100), VIEW, CONTENT));
+    assert_eq!(state.offset_y, Offset::Absolute(0.));
+    assert!(state.target.is_none());
+    assert!(state.fling.is_none());
+    assert!(state.last_frame.is_none());
+}
+
+#[test]
+fn a_wheel_retarget_leaves_the_fling_and_settles_on_its_new_target() {
+    let content = Size::new(160., 10_000.);
+    let mut state = launch(Vector::new(0., 2000.), content, Instant::now());
+    let now = state.segment.started + Duration::from_millis(500);
+    state.step(now, VIEW, content);
+    state.scroll_smoothly(Vector::new(0., 60.), VIEW, content, now);
+    assert!(state.fling.is_none());
+    near(state.target.unwrap().destination.y, 707.398_804);
+    assert!(!state.step(now + Duration::from_secs(2), VIEW, content));
+    near(state.axis_offset(Axis::Y, VIEW, content), 707.398_804);
+}
+
+#[test]
+fn a_clipped_horizontal_velocity_cannot_reverse_a_vertical_retarget() {
+    let now = Instant::now();
+    let content = Size::new(10_000., 10_000.);
+    let mut state = State::new();
+    state.fling(
+        trace(Vector::new(-2400., 1800.), now, [10, 20, 30]),
+        Direction::Both {
+            horizontal: Scrollbar::default(),
+            vertical: Scrollbar::default(),
+        },
+        VIEW,
         content,
+        now + Duration::from_millis(31),
+        timestamp(31),
+    );
+    let now = state.segment.started + Duration::from_millis(100);
+    assert!(state.step(now, VIEW, content));
+    assert_eq!(state.axis_offset(Axis::X, VIEW, content), 0.);
+    assert!(state.animated_velocity(now) > 0.);
+    let before = state.axis_offset(Axis::Y, VIEW, content);
+    state.retarget(
+        Target::new(
+            Offset::Absolute(0.),
+            Offset::Absolute(before + 200.),
+            VIEW,
+            content,
+        ),
         now,
     );
-    let destination = state.target.unwrap().destination.y;
-    assert!(destination > 1000. && destination < 1200.);
-    state.step(now + Duration::from_millis(500), VIEW, content);
-    let offset = state.axis_offset(super::Axis::Y, VIEW, content);
-    assert!(offset > 700. && offset < destination);
-    assert!(state.target.is_some());
-    state.step(now + Duration::from_secs(2), VIEW, content);
-    assert_eq!(
-        state.axis_offset(super::Axis::Y, VIEW, content),
-        destination
-    );
-    assert!(state.target.is_none());
+    assert!(state.fling.is_none());
+    assert!(state.segment.slope > 0.);
+    assert!(state.step(now + Duration::from_millis(1), VIEW, content));
+    assert!(state.axis_offset(Axis::Y, VIEW, content) > before);
+    assert_eq!(state.axis_offset(Axis::X, VIEW, content), 0.);
 }
 
 #[test]
@@ -118,12 +289,6 @@ fn holds_taps_and_cancellations_stop_without_inertia() {
         if moving {
             drag(&mut state);
         }
-        if moving
-            && !cancel
-            && let Interaction::TouchScrolling(swipe) = &mut state.interaction
-        {
-            swipe.moved_at -= Duration::from_millis(150);
-        }
         let position = Point::new(30., 30.);
         event(
             &mut state,
@@ -131,16 +296,19 @@ fn holds_taps_and_cancellations_stop_without_inertia() {
                 touch::Event::FingerLost {
                     id: FINGER,
                     position,
+                    timestamp: timestamp(31),
                 }
             } else {
                 touch::Event::FingerLifted {
                     id: FINGER,
                     position,
+                    timestamp: timestamp(110),
                 }
             },
             true,
         );
         assert!(state.target.is_none());
+        assert!(state.fling.is_none());
     }
 }
 
@@ -155,6 +323,7 @@ fn only_the_dragging_finger_can_launch_a_coast_and_a_visible_new_press_stops_it(
         touch::Event::FingerMoved {
             id: other,
             position: Point::ORIGIN,
+            timestamp: timestamp(31),
         },
         true,
     );
@@ -163,52 +332,39 @@ fn only_the_dragging_finger_can_launch_a_coast_and_a_visible_new_press_stops_it(
         touch::Event::FingerLifted {
             id: other,
             position,
+            timestamp: timestamp(32),
         },
         true,
     );
     assert!(matches!(state.interaction, Interaction::TouchScrolling(_)));
-    assert_eq!(state.axis_offset(super::Axis::Y, VIEW, CONTENT), 60.);
-    event(
-        &mut state,
-        touch::Event::FingerLifted {
-            id: FINGER,
-            position,
-        },
-        true,
-    );
+    assert_eq!(state.axis_offset(Axis::Y, VIEW, CONTENT), 60.);
+    lift(&mut state, 33);
     assert!(state.target.is_some());
-    event(
-        &mut state,
-        touch::Event::FingerPressed {
-            id: other,
-            position,
-        },
-        false,
-    );
-    assert!(state.target.is_some());
-    event(
-        &mut state,
-        touch::Event::FingerPressed {
-            id: other,
-            position,
-        },
-        true,
-    );
-    assert!(state.target.is_none());
+    for visible in [false, true] {
+        event(
+            &mut state,
+            touch::Event::FingerPressed {
+                id: other,
+                position,
+                timestamp: timestamp(34),
+            },
+            visible,
+        );
+        assert_eq!(state.target.is_none(), visible);
+        assert_eq!(state.fling.is_none(), visible);
+    }
 }
 
 #[test]
-fn coasting_at_the_boundary_or_along_a_non_scrolling_axis_schedules_no_frames() {
-    let mut state = State::new();
-    let now = Instant::now();
-    for velocity in [Vector::new(3000., 0.), Vector::new(0., -500.)] {
-        let swipe = Swipe {
-            finger: FINGER,
-            position: Point::ORIGIN,
-            moved_at: now,
-            velocity,
-        };
-        state.fling(swipe, Direction::default(), VIEW, CONTENT, now);
+fn boundary_non_scrolling_axes_and_subthreshold_releases_schedule_no_frames() {
+    for velocity in [
+        Vector::new(3000., 0.),
+        Vector::new(0., -500.),
+        Vector::new(0., 40.),
+    ] {
+        let state = launch(velocity, CONTENT, Instant::now());
         assert!(state.target.is_none());
+        assert!(state.fling.is_none());
+        assert!(state.last_frame.is_none());
     }
 }
