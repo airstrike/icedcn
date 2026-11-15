@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use iced_core::Length;
-use iced_core::Length::Fill;
+use iced_core::Length::{Fill, Fixed};
 use iced_core::Padding;
 use iced_core::alignment;
 use iced_core::border;
@@ -49,7 +49,7 @@ where
     content: Vec<Slot<'a, Message, Theme, Renderer>>,
     size: Option<Size>,
     weight: Option<crate::Weight>,
-    height: Option<f32>,
+    height: Option<Length>,
     padding: Option<Padding>,
     square: bool,
     rounded: bool,
@@ -153,8 +153,10 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     }
 
     /// Override the control height while keeping the variant's text size.
-    pub fn height(mut self, height: impl Into<iced_core::Pixels>) -> Self {
-        self.height = Some(height.into().0);
+    /// Use `Shrink` to fit the content and padding. Square buttons retain
+    /// the variant's side length unless given a fixed height.
+    pub fn height(mut self, height: impl Into<Length>) -> Self {
+        self.height = Some(height.into());
         self
     }
 
@@ -237,10 +239,12 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
         self
     }
 
-    /// The control's height, including any explicit height override.
+    /// The fixed height override, or the size variant's nominal height.
     pub fn size_height(&self) -> f32 {
-        self.height
-            .unwrap_or_else(|| self.size.unwrap_or_default().height())
+        match self.height {
+            Some(Fixed(height)) => height,
+            _ => self.size.unwrap_or_default().height(),
+        }
     }
 
     /// Adjust the resolved [`iced_widget::button::Style`] after applying the user’s style. A
@@ -350,7 +354,9 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
             } else {
                 content
             };
-            widget::Button::new(inner).height(h).padding(padding)
+            widget::Button::new(inner)
+                .height(btn.height.unwrap_or_else(|| h.into()))
+                .padding(padding)
         };
 
         iced_btn = iced_btn
@@ -455,6 +461,49 @@ mod tests {
 
     fn stock(_: &Theme, _: button::Status) -> button::Style {
         button::Style::default()
+    }
+
+    #[test]
+    fn shrink_height_fits_content_and_padding_without_changing_fixed_defaults() {
+        use iced_core::Length::Shrink;
+        use iced_core::renderer::Headless;
+        use iced_core::widget::Tree;
+        use iced_core::{Element, Pixels, Size, Widget as _, layout};
+        use iced_test::futures::futures::executor::block_on;
+        use iced_widget::{Renderer, Space};
+
+        let renderer =
+            block_on(Renderer::new(Default::default(), None)).expect("headless renderer");
+        let content = || {
+            crate::column![
+                Space::new().width(80).height(13),
+                Space::new().width(60).height(12),
+            ]
+            .spacing(5)
+        };
+        let cases = [
+            (super::button(content()).height(Shrink).padding(10), 50.0),
+            (super::button(content()), 32.0),
+            (super::button(content()).height(48), 48.0),
+            (super::button(content()).height(Pixels(46.0)), 46.0),
+            (super::button(content()).height(40).square(), 40.0),
+            (super::button(content()).height(Shrink).square(), 32.0),
+        ];
+        for (button, expected) in cases {
+            let square = button.square;
+            let mut element: Element<'_, (), Theme, Renderer> = button.into();
+            let mut tree = Tree::new(&element);
+            tree.diff(&mut element);
+            element.layout(
+                &mut tree,
+                &renderer,
+                &layout::Limits::new(Size::ZERO, Size::new(400.0, 400.0)),
+            );
+            assert_eq!(tree.size.height, expected);
+            if square {
+                assert_eq!(tree.size.width, expected);
+            }
+        }
     }
 
     #[test]
