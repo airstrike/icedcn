@@ -1,0 +1,19 @@
+[package]
+name = "icedcn_cli"
+description = "Create standalone icedcn applications"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+repository = "https://github.com/airstrike/icedcn"
+
+[[bin]]
+name = "icedcn"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+
+[dev-dependencies]
+toml = "0.8"
