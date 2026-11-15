@@ -1,6 +1,6 @@
 //! Collapsible sections, controls and a file explorer.
 
-mod chevron;
+// RTL is omitted because the native application uses left-to-right layout.
 
 use iced::alignment::{Horizontal, Vertical};
 use iced::widget::{svg, text::LineHeight};
@@ -12,7 +12,6 @@ use icedcn::widget::{button, collapsible, column, container, input, row, space, 
 use icedcn::{Size, Slot, Theme, card, radius};
 
 use crate::{Message, page};
-use chevron::chevron;
 
 pub static META: page::Meta = page::Meta {
     title: "Collapsible",
@@ -45,7 +44,9 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "file-tree",
         title: "File Tree",
-        description: Some("Open a folder to reveal its files and nested folders."),
+        description: Some(
+            "Use nested collapsibles to build a file tree. Open each folder independently to reveal its contents.",
+        ),
         snippet: "examples/browser/snippets/collapsible-file-tree.md",
     },
     page::Block::Group {
@@ -324,7 +325,7 @@ fn entry<Message: Clone + 'static>(node: &'static Entry) -> Slot<'static, Messag
         Entry::Folder(name, children) => collapsible(move |folder| {
             column![
                 folder.trigger(button(row![
-                    chevron(folder.is_open()),
+                    folder.indicator().size(14),
                     icon(r#"<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>"#, 14.),
                     *name,
                 ]
@@ -333,6 +334,7 @@ fn entry<Message: Clone + 'static>(node: &'static Entry) -> Slot<'static, Messag
                 .width(Fill))
                 .size(Size::Sm)
                 .style(button::Ghost)
+                .animate_hover(false)
                 .width(Fill)),
                 folder.content(
                     column(children.iter().map(entry))
@@ -352,18 +354,8 @@ fn entry<Message: Clone + 'static>(node: &'static Entry) -> Slot<'static, Messag
 fn file_tree<Message: Clone + 'static>() -> Slot<'static, Message> {
     let header = tabs(|tabs| {
         tabs.list([
-            tabs.trigger(
-                "explorer",
-                text::small("Explorer")
-                    .medium()
-                    .line_height(LineHeight::Absolute(20.into())),
-            ),
-            tabs.trigger(
-                "settings",
-                text::small("Outline")
-                    .medium()
-                    .line_height(LineHeight::Absolute(20.into())),
-            ),
+            tabs.trigger("explorer", "Explorer"),
+            tabs.trigger("settings", "Outline"),
         ])
     })
     .default_value("explorer")

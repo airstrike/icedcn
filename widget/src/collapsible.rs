@@ -23,6 +23,10 @@
 //! (`Message: 'static`). Cascading props the collapsible inherits reach
 //! the closure's content.
 
+mod indicator;
+
+pub use indicator::Indicator;
+
 use iced_core::{Element, Length};
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
@@ -127,6 +131,12 @@ impl<'a, Message> Collapsible<'a, Message> {
 }
 
 impl Handle {
+    /// A chevron that turns from right to down as this disclosure opens.
+    /// Inherits text color; defaults to 16 pixels and a 150 ms transition.
+    pub fn indicator(&self) -> Indicator {
+        indicator::indicator(self.is_open)
+    }
+
     /// Whether the collapsible is open, for content that changes with it (a
     /// chevron that flips).
     pub fn is_open(&self) -> bool {

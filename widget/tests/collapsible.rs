@@ -114,3 +114,36 @@ fn keyboard_toggles_once_and_inherited_disabled_cannot_be_overridden() {
     ui.tap_key(Named::Enter);
     assert_eq!(ui.drain().count(), 0);
 }
+
+#[test]
+fn folder_hover_can_change_immediately_without_changing_button_defaults() {
+    use iced_core::time::Instant;
+    use iced_core::{Event, window};
+    use iced_widget::button::{Status, Style};
+    use std::cell::RefCell;
+    use std::rc::Rc;
+
+    for animate in [true, false] {
+        let painted = Rc::new(RefCell::new(Vec::new()));
+        let observed = painted.clone();
+        let control = button::<Message>(Space::new().width(80).height(18))
+            .width(100)
+            .height(32)
+            .animate_hover(animate)
+            .style(move |_: &Theme, status: Status| {
+                observed.borrow_mut().push(status);
+                Style::default()
+            });
+        let element: Element<'_, Message, Theme, Renderer> = control.into();
+        let mut ui: Ui = simulator(element);
+        ui.point_at(Point::new(10., 10.));
+        ui.simulate([Event::Window(
+            window::Event::RedrawRequested(Instant::now()),
+        )]);
+        painted.borrow_mut().clear();
+        ui.draw(&Theme::light());
+        let painted = painted.borrow();
+        assert!(painted.contains(&Status::Hovered));
+        assert_eq!(painted.contains(&Status::Active), animate);
+    }
+}

@@ -54,6 +54,7 @@ where
     square: bool,
     rounded: bool,
     translate: bool,
+    animate_hover: bool,
     inset: Padding,
     interaction: Option<iced_core::mouse::Interaction>,
     width: Option<Length>,
@@ -83,6 +84,7 @@ pub fn button<'a, Message: Clone + 'a>(
         square: false,
         rounded: false,
         translate: true,
+        animate_hover: true,
         inset: Padding::ZERO,
         interaction: None,
         width: None,
@@ -171,6 +173,12 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     /// Make the button fully rounded (pill/circle shape).
     pub fn rounded(mut self) -> Self {
         self.rounded = true;
+        self
+    }
+
+    /// Whether hover colors interpolate over 150 ms. Defaults to `true`.
+    pub fn animate_hover(mut self, animate: bool) -> Self {
+        self.animate_hover = animate;
         self
     }
 
@@ -347,6 +355,7 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
 
         iced_btn = iced_btn
             .translate(btn.translate)
+            .animate_hover(btn.animate_hover)
             .inset(btn.inset)
             .border_box(btn.nova)
             .join(btn.join);

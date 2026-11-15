@@ -117,6 +117,7 @@ where
     inset: Padding,
     clip: bool,
     translate: bool,
+    animate_hover: bool,
     border_box: bool,
     join: Option<Join>,
     interaction: Option<mouse::Interaction>,
@@ -159,6 +160,7 @@ where
             inset: Padding::ZERO,
             clip: false,
             translate: true,
+            animate_hover: true,
             border_box: false,
             join: None,
             interaction: None,
@@ -287,6 +289,12 @@ where
     /// overflow.
     pub fn clip(mut self, clip: bool) -> Self {
         self.clip = clip;
+        self
+    }
+
+    /// Whether hover colors interpolate over 150 ms. Defaults to `true`.
+    pub fn animate_hover(mut self, animate: bool) -> Self {
+        self.animate_hover = animate;
         self
     }
 
@@ -646,7 +654,7 @@ where
             if should_hover != state.hover.value() {
                 state.hover.go_mut(should_hover, *now);
             }
-            if state.hover.is_animating(*now) {
+            if self.animate_hover && state.hover.is_animating(*now) {
                 shell.request_redraw();
             }
         }
@@ -677,7 +685,8 @@ where
         let status = state.status(self.disabled, cursor.is_over(bounds));
         let now = state.frame;
 
-        let mut style = if status != Status::Disabled && state.hover.is_animating(now) {
+        let hovering = self.animate_hover && state.hover.is_animating(now);
+        let mut style = if status != Status::Disabled && hovering {
             // Keep a focused button's ring while its hover colors transition.
             let (active, hovered) = if matches!(status, Status::Focused { .. }) {
                 (
