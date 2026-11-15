@@ -109,8 +109,9 @@ fn solve(time: &[f32], position: &[f32], columns: usize) -> Option<f32> {
         q[j][..count].copy_from_slice(&a[j][..count]);
         for i in 0..j {
             let projection = dot(&q[i][..count], &q[j][..count]);
-            for h in 0..count {
-                q[j][h] -= projection * q[i][h];
+            let (previous, current) = q.split_at_mut(j);
+            for (value, basis) in current[0][..count].iter_mut().zip(&previous[i][..count]) {
+                *value -= projection * basis;
             }
         }
 
@@ -119,8 +120,8 @@ fn solve(time: &[f32], position: &[f32], columns: usize) -> Option<f32> {
             return None;
         }
         let inverse = 1. / norm;
-        for h in 0..count {
-            q[j][h] *= inverse;
+        for value in &mut q[j][..count] {
+            *value *= inverse;
         }
         for i in j..columns {
             r[j][i] = dot(&q[j][..count], &a[i][..count]);
