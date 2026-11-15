@@ -116,3 +116,17 @@ fn guide_header_opens_a_menu_and_help_group_folds() {
     frame(&mut group);
     assert!(group.find("Feedback").is_err());
 }
+
+#[test]
+fn desktop_docs_sidebar_preserves_the_article_column() {
+    use browser::app::App;
+    use browser::component::radio_group::META;
+    use icedcn::widget::markdown::highlighter::Map;
+
+    let theme = Theme::light();
+    let mut app = App::new(Map::from(&theme), Map::from(&theme)).0;
+    let _ = app.update(Message::OpenComponent("radio-group".into()));
+    let mut ui = Ui::with_size(Default::default(), Size::new(1440., 932.), app.view());
+    let article = ui.find(META.description).unwrap().bounds();
+    assert!((article.x - 412.5).abs() < 1., "{article:?}");
+}
