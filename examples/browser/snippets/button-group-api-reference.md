@@ -8,17 +8,21 @@ A container that groups related buttons together with consistent styling. Constr
 | `.width(...)` | `impl Into<Length>` | `Length::Shrink` |
 
 ```rust
-use icedcn::{Slot, widget::{button, button_group}};
+use icedcn::{
+    Slot,
+    widget::{button, button_group},
+};
 
-pub fn actions() -> Slot<'static, ()> {
+pub fn actions<'a>() -> Slot<'a, ()> {
     button_group![button("Button 1"), button("Button 2")].into()
 }
 
-pub fn nested() -> Slot<'static, ()> {
+pub fn nested<'a>() -> Slot<'a, ()> {
     button_group![
         button_group![button("Button 1")],
         button_group![button("Button 2")],
-    ].into()
+    ]
+    .into()
 }
 ```
 

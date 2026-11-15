@@ -5,9 +5,12 @@ Use Tab to navigate between the buttons in the group. Each enabled control keeps
 Give related actions clear text labels and provide descriptive tooltips for icon-only controls.
 
 ```rust
-use icedcn::{Slot, widget::{button, button_group}};
+use icedcn::{
+    Slot,
+    widget::{button, button_group},
+};
 
-pub fn actions() -> Slot<'static, ()> {
+pub fn actions<'a>() -> Slot<'a, ()> {
     button_group![button("Button 1"), button("Button 2")].into()
 }
 ```

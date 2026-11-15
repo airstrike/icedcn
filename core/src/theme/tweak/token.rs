@@ -49,6 +49,11 @@ pub enum Token {
     SidebarBorder,
     SidebarRing,
     Custom(Color),
+    /// A literal color pair that follows the active light or dark theme.
+    Themed {
+        light: Color,
+        dark: Color,
+    },
 }
 
 impl From<Color> for Token {
@@ -58,6 +63,14 @@ impl From<Color> for Token {
 }
 
 impl Token {
+    /// Use one color in light mode and another in dark mode.
+    pub fn themed(light: impl Into<Color>, dark: impl Into<Color>) -> Self {
+        Self::Themed {
+            light: light.into(),
+            dark: dark.into(),
+        }
+    }
+
     /// Resolve this token to a concrete color against the given theme.
     pub fn resolve(self, theme: &Theme) -> Color {
         match self {
@@ -97,6 +110,27 @@ impl Token {
             Token::SidebarBorder => theme.sidebar.border,
             Token::SidebarRing => theme.sidebar.ring,
             Token::Custom(c) => c,
+            Token::Themed { light, dark } => {
+                if theme.neutral.is_dark {
+                    dark
+                } else {
+                    light
+                }
+            }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn themed_token_resolves_literal_colors_in_both_modes() {
+        let light = iced_core::color!(0xffedd5);
+        let dark = iced_core::color!(0x9a3412);
+        let token = Token::themed(light, dark);
+        assert_eq!(token.resolve(&Theme::light()), Color::from(light));
+        assert_eq!(token.resolve(&Theme::dark()), Color::from(dark));
     }
 }

@@ -164,7 +164,7 @@ fn view(id: &str, wide: bool) -> Slot<'static, crate::Message> {
         "with-icon" => with_icon::view(),
         "rounded" => rounded::view(),
         "spinner" => spinner::view(),
-        "button-group" => super::button_group::demo(wide),
+        "button-group" => super::button_group::demo(),
 
         "link-button" => button("Login")
             .anchor()

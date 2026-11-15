@@ -1,10 +1,10 @@
 ```rust
 use crate::icon;
 use iced::widget::Text;
-use icedcn::{Slot, Theme};
 use icedcn::widget::{button, button_group, dropdown_menu, menu, menu_group};
+use icedcn::{Slot, Theme};
 
-pub fn view() -> Slot<'static, ()> {
+pub fn view<'a>() -> Slot<'a, ()> {
     dropdown_menu(
         |&m| {
             button_group![
@@ -19,7 +19,7 @@ pub fn view() -> Slot<'static, ()> {
             .into()
         },
         |_| {
-            let item = |glyph: Text<'static, Theme>, label| {
+            let item = |glyph: Text<'a, Theme>, label| {
                 menu::item(menu::caption(glyph.size(16).line_height(1.0), label))
             };
             menu_group![

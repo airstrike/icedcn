@@ -60,12 +60,11 @@ fn close<'a>(mut ui: Preview<'a>, page: &'a dyn Page, id: &str, label: &str) -> 
 }
 
 #[test]
-fn geometry_keeps_inputs_visible_at_both_widths_and_uses_the_window_breakpoint() {
-    let mut page = ButtonGroupPage::new(0);
-    for (window, width) in [(1440., 558.), (390., 260.)] {
-        page.window_width(window);
+fn geometry_keeps_inputs_visible_and_adapts_to_parent_width() {
+    let page = ButtonGroupPage::new(0);
+    for width in [558., 260.] {
         for (id, count) in [
-            ("demo", if window >= 640. { 5 } else { 4 }),
+            ("demo", if width >= 320. { 5 } else { 4 }),
             ("orientation", 2),
             ("size", 12),
             ("nested", 2),
@@ -79,13 +78,13 @@ fn geometry_keeps_inputs_visible_at_both_widths_and_uses_the_window_breakpoint()
         ] {
             let mut ui = preview(&*page, id, width);
             let bounds = controls(&mut ui);
-            assert_eq!(bounds.len(), count, "{id} at {window}: {bounds:?}");
+            assert_eq!(bounds.len(), count, "{id} at {width}: {bounds:?}");
             assert!(
                 bounds.iter().all(|b| b.width > 0.
                     && b.height > 0.
                     && b.x >= 0.
                     && b.x + b.width <= width + 0.1),
-                "{id} at {window}: {bounds:?}"
+                "{id} at {width}: {bounds:?}"
             );
             if id == "size" {
                 assert_eq!(bounds[0].x, bounds[4].x);
@@ -96,7 +95,7 @@ fn geometry_keeps_inputs_visible_at_both_widths_and_uses_the_window_breakpoint()
                 assert_eq!(bounds[1].y, 32.);
             }
             if id == "input" {
-                assert_eq!(bounds[0].width, if window < 768. { 216. } else { 192. });
+                assert!((bounds[0].width + bounds[1].width - 240.).abs() < 0.1);
                 assert!((bounds[1].x - bounds[0].width).abs() < 0.01);
             }
             if id == "nested" || id == "input-group" {
@@ -106,7 +105,7 @@ fn geometry_keeps_inputs_visible_at_both_widths_and_uses_the_window_breakpoint()
                 );
             }
             if id == "select" {
-                assert!((bounds[1].x - 50.406).abs() < 0.1);
+                assert!((bounds[1].x - 50.).abs() < 0.1);
                 assert!(bounds[1].width > 160.);
             }
         }

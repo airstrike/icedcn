@@ -1,10 +1,10 @@
 ```rust
-use icedcn::Slot;
 use icedcn::Size::Sm;
-use icedcn::widget::{button, button_group};
+use icedcn::Slot;
 use icedcn::widget::button::group;
+use icedcn::widget::{button, button_group};
 
-pub fn view() -> Slot<'static, ()> {
+pub fn view<'a>() -> Slot<'a, ()> {
     button_group![
         button("Copy").style(button::Secondary).size(Sm),
         group::separator(),

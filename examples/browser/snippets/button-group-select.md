@@ -4,8 +4,7 @@ use iced::Fill;
 use icedcn::Slot;
 use icedcn::widget::{button, button_group, input, row, select, text};
 
-pub fn view(window_width: f32) -> Slot<'static, ()> {
-    let narrow = window_width < 768.;
+pub fn view<'a>() -> Slot<'a, ()> {
     button_group![
         button_group![
             select(
@@ -20,17 +19,18 @@ pub fn view(window_width: f32) -> Slot<'static, ()> {
                 text::muted(label.to_owned())
             ]
             .spacing(4))
-            .width(50.406)
+            .width(50)
             .min_width(96.),
-            input("10.00")
-                .text_size(if narrow { 16. } else { 14. })
-                .width(Fill)
+            input("10.00").width(Fill)
         ]
-        .width(if narrow { 220. } else { 241.406 }),
+        .width(Fill),
         button_group![
-            button(icon::arrow_right().size(16).line_height(1.0)).square().style(button::Outline)
+            button(icon::arrow_right().size(16).line_height(1.0))
+                .square()
+                .style(button::Outline)
         ]
     ]
+    .width(Fill.max(280.))
     .into()
 }
 ```

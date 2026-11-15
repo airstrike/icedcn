@@ -1,18 +1,17 @@
 // Intentional skip per AGENTS.md: button-group-rtl (RTL).
 
 use iced::widget::component::{Component, component};
-use iced::{Fill, Task, Widget};
+use iced::{Fill, Shrink, Task, Widget};
 
-use iced::widget::Text;
-use icedcn::theme::button::{IntoStyle, state};
+use iced::widget::{Text, responsive};
 use icedcn::theme::text_input;
-use icedcn::theme::tweak::{Fg, Token, hover};
+use icedcn::theme::tweak::{Bg, Fg, Token, hover};
 use icedcn::widget::Row;
 use icedcn::widget::button::group;
 use icedcn::widget::input_group::Align;
 use icedcn::widget::{
-    button, button_group, column, dropdown_menu, field, input, input_group, menu, menu_group,
-    popover, row, select, text, textarea, tooltip,
+    button, button_group, column, container, dropdown_menu, field, input, input_group, menu,
+    menu_group, popover, row, select, text, textarea, tooltip,
 };
 use icedcn::{Slot, Theme};
 
@@ -111,14 +110,12 @@ pub static BLOCKS: &[page::Block] = &[
 
 pub struct ButtonGroupPage {
     state: page::State,
-    window_width: f32,
 }
 
 impl ButtonGroupPage {
     pub fn new(page_index: usize) -> Box<dyn page::Page> {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
-            window_width: 1440.,
         })
     }
 }
@@ -152,18 +149,12 @@ impl page::Page for ButtonGroupPage {
         self.state.reset_volatile();
     }
 
-    fn window_width(&mut self, width: f32) {
-        self.window_width = width;
-    }
-
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
-        view(id, self.window_width).compose()
+        view(id).compose()
     }
 }
 
-struct MailActions {
-    wide: bool,
-}
+struct MailActions;
 impl<'a> Component<'a, Message, Theme> for MailActions {
     type State = Option<&'static str>;
     type Event = &'static str;
@@ -177,11 +168,16 @@ impl<'a> Component<'a, Message, Theme> for MailActions {
         None
     }
     fn view(&self, state: &Self::State) -> impl Widget<Self::Event, Theme> + 'a {
-        mail_actions(self.wide, state.unwrap_or("Personal")).compose()
+        let selected = state.unwrap_or("Personal");
+        responsive(move |area| {
+            Slot::from(container(mail_actions(area.width >= 320., selected)).center_x(Fill))
+                .compose()
+        })
+        .height(Shrink)
     }
 }
 
-fn mail_actions(wide: bool, selected: &'static str) -> Slot<'static, &'static str> {
+fn mail_actions<'a>(wide: bool, selected: &'static str) -> Slot<'a, &'static str> {
     let mut actions = Row::new().spacing(8).align_y(iced::Center);
     if wide {
         actions = actions.push(
@@ -207,7 +203,7 @@ fn mail_actions(wide: bool, selected: &'static str) -> Slot<'static, &'static st
             .into()
         },
         move |_| {
-            let caption = |glyph: Text<'static, Theme>, label| {
+            let caption = |glyph: Text<'a, Theme>, label| {
                 menu::caption(glyph.size(16).line_height(1.0), label)
             };
             let item = |glyph, label| menu::item(caption(glyph, label));
@@ -239,13 +235,11 @@ fn mail_actions(wide: bool, selected: &'static str) -> Slot<'static, &'static st
         .push(more.into())
         .into()
 }
-pub(super) fn demo(wide: bool) -> Slot<'static, Message> {
-    Slot::from(component(MailActions { wide }).boxed())
+pub(super) fn demo<'a>() -> Slot<'a, Message> {
+    component(MailActions).boxed().into()
 }
 
-struct Voice {
-    narrow: bool,
-}
+struct Voice;
 impl<'a> Component<'a, Message, Theme> for Voice {
     type State = bool;
     type Event = bool;
@@ -254,16 +248,18 @@ impl<'a> Component<'a, Message, Theme> for Voice {
         None
     }
     fn view(&self, enabled: &bool) -> impl Widget<bool, Theme> + 'a {
-        voice_input(self.narrow, *enabled).compose()
+        voice_input(*enabled).compose()
     }
 }
 
-fn voice_input(narrow: bool, enabled: bool) -> Slot<'static, bool> {
+fn voice_input<'a>(enabled: bool) -> Slot<'a, bool> {
     let toggle = input_group::button(icon::audio_lines().size(16).line_height(1.0))
         .square()
         .on_press(!enabled);
     let toggle = if enabled {
-        toggle.style(VoiceActive)
+        let background = Token::themed(iced::color!(0xffedd5), iced::color!(0x9a3412));
+        let foreground = Token::themed(iced::color!(0xc2410c), iced::color!(0xffedd5));
+        toggle.style(button::Ghost + Bg(background) + Fg(foreground))
     } else {
         toggle.style(button::Ghost + Fg(Token::MutedForeground) + hover(Fg(Token::Foreground)))
     };
@@ -272,13 +268,9 @@ fn voice_input(narrow: bool, enabled: bool) -> Slot<'static, bool> {
     } else {
         "Send a message..."
     };
-    let editor = input_group(
-        input(placeholder)
-            .text_size(if narrow { 16. } else { 14. })
-            .disabled(enabled),
-    )
-    .style(text_input::Default + icedcn::radius(9999.))
-    .addon(input_group::addon(tooltip(toggle, "Voice Mode")).align(Align::InlineEnd));
+    let editor = input_group(input(placeholder).disabled(enabled))
+        .style(text_input::Default + icedcn::radius(9999.))
+        .addon(input_group::addon(tooltip(toggle, "Voice Mode")).align(Align::InlineEnd));
     button_group![
         button_group![
             button(icon::plus().size(16).line_height(1.0))
@@ -286,37 +278,17 @@ fn voice_input(narrow: bool, enabled: bool) -> Slot<'static, bool> {
                 .square()
                 .style(button::Outline)
         ],
-        button_group![editor].width(if narrow { 220. } else { 215.2 }),
+        button_group![editor].width(Fill),
     ]
+    .width(Fill.max(256.))
     .into()
 }
 
-/// Keep the Ghost variant's geometry and keyboard decoration in both themes.
-struct VoiceActive;
-impl<'a> IntoStyle<'a> for VoiceActive {
-    fn into_style(self) -> state::StyleFn<'a> {
-        let ghost = button::Ghost.into_style();
-        Box::new(move |theme, status| {
-            let mut style = ghost(theme, status);
-            let orange_100 = iced::Color::from_rgb8(255, 237, 213);
-            let (background, foreground) = if theme.neutral.is_dark {
-                (iced::Color::from_rgb8(154, 52, 18), orange_100)
-            } else {
-                (orange_100, iced::Color::from_rgb8(194, 65, 12))
-            };
-            style.paint.background = Some(background.into());
-            style.paint.text_color = foreground;
-            style
-        })
-    }
-}
-
-pub(super) fn view(id: &str, window_width: f32) -> Slot<'static, Message> {
+pub(super) fn view<'a>(id: &str) -> Slot<'a, Message> {
     use icedcn::Size::{Default, Lg, Sm};
-    let narrow = window_width < 768.;
 
     match id {
-        "demo" => demo(window_width >= 640.),
+        "demo" => demo(),
         "orientation" => button_group![
             button(icon::plus().size(16).line_height(1.0))
                 .square()
@@ -354,17 +326,17 @@ pub(super) fn view(id: &str, window_width: f32) -> Slot<'static, Message> {
                     .style(button::Outline)
             ],
             button_group![
-                input_group(input("Send a message...").text_size(if narrow { 16. } else { 14. }))
-                    .addon(
-                        input_group::addon(tooltip(
-                            icon::audio_lines().size(16).line_height(1.0),
-                            "Voice Mode"
-                        ))
-                        .align(Align::InlineEnd)
-                    )
+                input_group(input("Send a message...")).addon(
+                    input_group::addon(tooltip(
+                        icon::audio_lines().size(16).line_height(1.0),
+                        "Voice Mode"
+                    ))
+                    .align(Align::InlineEnd)
+                )
             ]
-            .width(if narrow { 220. } else { 212. })
+            .width(Fill)
         ]
+        .width(Fill.max(256.))
         .into(),
 
         "separator" => button_group![
@@ -384,14 +356,13 @@ pub(super) fn view(id: &str, window_width: f32) -> Slot<'static, Message> {
         .into(),
 
         "input" => button_group![
-            input("Search...")
-                .text_size(if narrow { 16. } else { 14. })
-                .width(if narrow { 216. } else { 192. }),
+            input("Search...").width(Fill),
             button(icon::search().size(16).line_height(1.0)).style(button::Outline)
         ]
+        .width(Fill.max(240.))
         .into(),
 
-        "input-group" => Slot::from(component(Voice { narrow }).boxed()),
+        "input-group" => Slot::from(component(Voice).boxed()),
 
         "dropdown" => dropdown_menu(
             |&m| {
@@ -407,7 +378,7 @@ pub(super) fn view(id: &str, window_width: f32) -> Slot<'static, Message> {
                 .into()
             },
             |_| {
-                let item = |glyph: Text<'static, Theme>, label| {
+                let item = |glyph: Text<'a, Theme>, label| {
                     menu::item(menu::caption(glyph.size(16).line_height(1.0), label))
                 };
                 menu_group![
@@ -440,19 +411,18 @@ pub(super) fn view(id: &str, window_width: f32) -> Slot<'static, Message> {
                     text::muted(label.to_owned())
                 ]
                 .spacing(4))
-                .width(50.406)
+                .width(50)
                 .min_width(96.),
-                input("10.00")
-                    .text_size(if narrow { 16. } else { 14. })
-                    .width(Fill)
+                input("10.00").width(Fill)
             ]
-            .width(if narrow { 220. } else { 241.406 }),
+            .width(Fill),
             button_group![
                 button(icon::arrow_right().size(16).line_height(1.0))
                     .square()
                     .style(button::Outline)
             ]
         ]
+        .width(Fill.max(280.))
         .into(),
 
         "popover" => popover(
