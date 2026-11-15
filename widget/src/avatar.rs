@@ -238,7 +238,7 @@ impl<'a, Message: 'a> Compose<Message> for Avatar<'a, Message> {
         let mut children = vec![Container::new(fallback).center(Fill).into()];
         if let Some(mut badge) = badge {
             if geometry.badge_icon_size == 0.0 {
-                badge = Slot::from("");
+                badge = Slot::from(iced_widget::Space::new());
             }
             badge.inherit(
                 &Inherited::default()
