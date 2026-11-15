@@ -1,0 +1,46 @@
+--- a/src/util/belt.rs
++++ b/src/util/belt.rs
+@@ -199,11 +199,16 @@
+         // At minimum, we must have alignment sufficient to map the buffer.
+         let alignment = alignment.get().max(crate::MAP_ALIGNMENT);
+-
++
+-        let mut chunk = if let Some(index) = self
+-            .active_chunks
+-            .iter()
+-            .position(|chunk| chunk.can_allocate(size, alignment))
+-        {
++        // WebKit rejects two copies encoded against the same still-mapped
++        // source. Keep each allocation mapped until finish, as the API promises.
++        let active = if cfg!(webgpu) {
++            None
++        } else {
++            self.active_chunks
++                .iter()
++                .position(|chunk| chunk.can_allocate(size, alignment))
++        };
++        let mut chunk = if let Some(index) = active {
+             self.active_chunks.swap_remove(index)
+         } else {
+             self.receive_chunks(); // ensure self.free_chunks is up to date
+@@ -215,10 +220,19 @@
+             {
+                 self.free_chunks.swap_remove(index)
+             } else {
++                let capacity = self.chunk_size.max(size.get());
++                // Dedicated WebGPU transfers still reuse completed chunks. Round
++                // small requests into size classes instead of allocating a whole arena.
++                #[cfg(webgpu)]
++                let capacity = size
++                    .get()
++                    .checked_next_power_of_two()
++                    .unwrap_or(capacity)
++                    .min(capacity);
+                 Chunk {
+                     buffer: self.device.create_buffer(&BufferDescriptor {
+                         label: Some("(wgpu internal) StagingBelt staging buffer"),
+-                        size: self.chunk_size.max(size.get()),
++                        size: capacity,
+                         usage: self.buffer_usages,
+                         mapped_at_creation: true,
+                     }),

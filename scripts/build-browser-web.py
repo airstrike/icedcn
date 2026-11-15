@@ -13,10 +13,10 @@ ROOT = Path(__file__).resolve().parents[1]
 TARGET = "wasm32-unknown-unknown"
 
 
-def patched_source(build, package, crate, file, original, replacement, patch=None):
+def patched_source(build, package, crate, file, original=None, replacement="", patch=None):
     manifest = Path(package["manifest_path"])
     source = manifest.parent
-    revision = package["source"].rsplit("#", 1)[1]
+    revision = package["source"].partition("#")[2] or package["version"]
     inputs = Path(__file__).read_bytes() + replacement.encode()
     if patch:
         inputs += patch.read_bytes()
@@ -39,11 +39,12 @@ def patched_source(build, package, crate, file, original, replacement, patch=Non
                     shared.append(re.sub(r', path = "[^"]+"', "", section.group()))
                 with (staging / "Cargo.toml").open("a") as output:
                     output.write("\n[workspace]\n" + "\n".join(shared))
-            path = staging / file
-            code = path.read_text()
-            if code.count(original) != 1:
-                raise SystemExit(f"Review the web build patch for {package['name']} in {file}")
-            path.write_text(code.replace(original, replacement))
+            if original is not None:
+                path = staging / file
+                code = path.read_text()
+                if code.count(original) != 1:
+                    raise SystemExit(f"Review the web build patch for {package['name']} in {file}")
+                path.write_text(code.replace(original, replacement))
             staging.rename(patched)
     return patched
 
@@ -97,10 +98,30 @@ def main():
             }"""
     gpu = patched_source(build, packages["iced_wgpu"], "wgpu", "src/window/compositor.rs",
                          probe, disposable)
-    subprocess.run([
-        "cargo", "--config", "paths = " + json.dumps([str(sweeten), str(winit), str(gpu)]),
+    # Safari rejects repeated copies from one mapped upload buffer at submit
+    # (gfx-rs/wgpu#10460). Recheck the workaround whenever the locked belt changes.
+    wgpu = packages["wgpu"]
+    belt = "src/util/belt.rs"
+    source = Path(wgpu["manifest_path"]).parent / belt
+    if (wgpu["version"] != "30.0.1"
+            or hashlib.sha256(source.read_bytes()).hexdigest()
+            != "6b5869754341042480cf43e65d83e3006d3b9a506165bd5f2394c8c26d3f0be0"):
+        raise SystemExit("Review the WebGPU staging-belt patch for this wgpu source.")
+    uploads = patched_source(build, wgpu, ".", belt,
+                             patch=ROOT / "examples/browser/web/staging-belt.patch")
+    overrides = [str(path) for path in (sweeten, winit, gpu, uploads)]
+    result = subprocess.run([
+        "cargo", "--config", "paths = " + json.dumps(overrides),
         "build", "--locked", "--release", "--target", TARGET, "-p", "browser", "--bin", "browser",
-    ], env=env, check=True)
+        "--message-format=json-render-diagnostics",
+    ], env=env, stdout=subprocess.PIPE, text=True, check=True)
+    # Cargo can ignore an unused paths override. Check the resolved artifact
+    # on fresh and incremental builds before creating any deployable files.
+    artifacts = (json.loads(line) for line in result.stdout.splitlines())
+    if not any(item.get("reason") == "compiler-artifact"
+               and Path(item["manifest_path"]).resolve() == (uploads / "Cargo.toml").resolve()
+               for item in artifacts):
+        raise SystemExit("The browser build did not use the patched wgpu crate.")
     output = build / "browser-web"
     output.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(dir=build) as tmp:
