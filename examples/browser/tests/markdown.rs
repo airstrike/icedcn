@@ -26,7 +26,7 @@ fn code_only_and_mixed_table_cells_share_the_computed_line_height() {
         (20., LineHeight::Relative(1.5), 30.),
         (16., LineHeight::Absolute(Pixels(28.)), 28.),
     ] {
-        let mut settings = markdown::Settings::with_text_size(size, Theme::light());
+        let mut settings = markdown::Settings::with_text_size(size, Theme::light().seed);
         settings.line_height = line_height;
         let mut ui = Simulator::<markdown::Uri, Theme, Renderer>::with_size(
             renderer.clone(),
