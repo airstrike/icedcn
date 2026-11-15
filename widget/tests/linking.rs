@@ -246,6 +246,26 @@ fn a_radio_group_checks_one_item_at_a_time() {
 }
 
 #[test]
+fn passive_input_addon_focuses_the_field_and_an_addon_button_handles_its_own_press() {
+    use icedcn_widget::{input, input_group};
+
+    let group = input_group(input("").on_input(Message::Text))
+        .addon(input_group::addon(block(20., 20.)))
+        .addon(input_group::addon(
+            input_group::button("Help").on_press(Message::Pressed),
+        ));
+    let mut ui = simulator(Element::from(group));
+    click(&mut ui, 15., 16.);
+    ui.typewrite("q");
+    click(&mut ui, 49., 16.);
+    ui.typewrite("x");
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        [Message::Text("q".into()), Message::Pressed]
+    );
+}
+
+#[test]
 fn a_field_label_chooses_its_radio_group_item() {
     let element: Element<'_, Message, Theme, Renderer> =
         radio_group(|g| labelled(g.item("b")).into())

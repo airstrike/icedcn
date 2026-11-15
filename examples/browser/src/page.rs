@@ -264,6 +264,11 @@ pub trait Page: Send {
         Backdrop::default()
     }
 
+    /// The preview frame for an individual example.
+    fn example_backdrop(&self, _id: &str) -> Backdrop {
+        self.backdrop()
+    }
+
     /// Some upstream recipes ship a particular palette inside the preview.
     fn preview_theme(&self, _outer: &Theme) -> Option<Theme> {
         None
@@ -450,7 +455,7 @@ fn render_example<'a>(
     viewer: &'a SnippetViewer,
     page: &'a dyn Page,
 ) -> iced::Element<'a, super::Message, Theme> {
-    let backdrop = page.backdrop();
+    let backdrop = page.example_backdrop(id);
     let code: Option<iced::Element<'_, super::Message, Theme>> =
         (!snippet_path.is_empty()).then(|| {
             let body = st

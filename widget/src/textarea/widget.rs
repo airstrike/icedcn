@@ -55,6 +55,12 @@ impl<Message> Textarea<'_, Message> {
                     }),
             );
 
+        let editor = if let Some(font) = self.font {
+            editor.font(font)
+        } else {
+            editor
+        };
+
         if self.disabled {
             editor
         } else {

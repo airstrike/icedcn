@@ -21,7 +21,7 @@
 
 mod widget;
 
-use iced_core::Element;
+use iced_core::{Element, Font};
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
 
@@ -41,6 +41,7 @@ pub struct Textarea<'a, Message> {
     disabled: bool,
     min_height: f32,
     text_size: f32,
+    font: Option<Font>,
     resizable: bool,
     style: Appearance<'a>,
 }
@@ -55,6 +56,7 @@ pub fn textarea<'a, Message>(placeholder: impl Into<String>) -> Textarea<'a, Mes
         disabled: false,
         min_height: 64.0,
         text_size: 14.,
+        font: None,
         resizable: true,
         style: Default.into(),
     }
@@ -90,6 +92,12 @@ impl<'a, Message> Textarea<'a, Message> {
     /// default).
     pub fn min_height(mut self, min_height: f32) -> Self {
         self.min_height = min_height;
+        self
+    }
+
+    /// Select the typeface used for the text and placeholder.
+    pub fn font(mut self, font: impl Into<Font>) -> Self {
+        self.font = Some(font.into());
         self
     }
 

@@ -1,48 +1,57 @@
+Pass the favorite state and the message that toggles it. The copy button writes to the clipboard and shows a check for two seconds after a successful copy.
+
 ```rust
-use iced::widget::component::{self, Component};
-use iced::{Element, Fill, Widget};
-use icedcn::{Theme, Slot};
-use icedcn::widget::{Column, button, column, input, input_group, popover, text};
-use icedcn::widget::input_group::Align;
-use crate::{icon, Message};
+use crate::icon;
+use iced::Fill;
+use icedcn::Slot;
+use icedcn::core::radius;
+use icedcn::theme::text_input;
+use icedcn::widget::code_block::copy_button;
+use icedcn::widget::input_group::{Align, addon};
+use icedcn::widget::{button, column, input, input_group, popover, text};
 
-const URL: &str = "https://github.com/airstrike/icedcn";
-
-struct Buttons;
-#[derive(Default)]
-struct State { copied:bool, favorite:bool }
-#[derive(Debug,Clone)]
-enum Event { Copy, Favorite }
-
-pub(super) fn preview<'a>() -> Element<'a,Message,Theme> {
-    component::component(Buttons).boxed()
-}
-
-impl<'a> Component<'a,Message,Theme> for Buttons {
-    type State=State;
-    type Event=Event;
-    fn update(&self,state:&mut State,event:Event,_:&iced::Renderer)->Option<Message> {
-        match event {
-            Event::Copy=>{state.copied=true; Some(Message::CopyText(URL.to_owned()))}
-            Event::Favorite=>{state.favorite=!state.favorite;None}
-        }
+fn buttons<M: Clone + 'static>(size: f32, favorite: bool, toggle: M) -> Slot<'static, M> {
+    let url = "https://github.com/airstrike/icedcn";
+    let info = popover(
+        |p| {
+            p.trigger(
+                input_group::button(icon::info().size(14))
+                    .style(button::Secondary)
+                    .square(),
+            )
+        },
+        |_| {
+            column![
+                text::label("Your connection is not secure."),
+                text::small("You should not enter any sensitive information on this site.")
+            ]
+            .spacing(4)
+            .into()
+        },
+    )
+    .align(popover::Align::Start)
+    .width(264.);
+    let mut star = icon::star().size(14);
+    if favorite {
+        star = star.color(iced::Color::from_rgb8(21, 93, 252));
     }
-    fn view(&self,state:&State)->impl Widget<Event,Theme>+'a {
-        let copy = if state.copied {icon::check()}else{icon::copy()};
-        let info=popover(|p|p.trigger(input_group::button(icon::info()).style(button::Secondary).square()),|_|column![
-            text::label("Your connection is not secure."),
-            text::small("You should not enter any sensitive information on this site.")
-        ].spacing(4).into()).align(popover::Align::Start).width(264.);
-        let mut favorite=input_group::button(icon::star()).square().on_press(Event::Favorite);
-        if state.favorite {favorite=favorite.style(button::Secondary);}
-        let end=|content:Slot<'a,Event>|input_group::addon(content).align(Align::InlineEnd);
-        let groups=[
-            input_group(input(URL).value("")).addon(end(input_group::button(copy).square().on_press(Event::Copy).into())).into(),
-            input_group(input("")).addon(input_group::addon(info)).addon(input_group::addon(input_group::text("https://"))).addon(end(favorite.into())).into(),
-            input_group(input("Type to search...")).addon(end(input_group::button("Search").style(button::Secondary).into())).into(),
-        ];
-        Element::from(Column::with_children(groups).spacing(24).width(Fill).max_width(384.))
-    }
+    column![
+        input_group(input(url).value("").text_size(size))
+            .addon(addon(copy_button(url)).align(Align::InlineEnd)),
+        input_group(input("").text_size(size))
+            .style(text_input::Default + radius(9999))
+            .addon(addon(info))
+            .addon(addon(input_group::text("https://")))
+            .addon(
+                addon(input_group::button(star).square().on_press(toggle)).align(Align::InlineEnd),
+            ),
+        input_group(input("Type to search...").text_size(size)).addon(
+            addon(input_group::button("Search").style(button::Secondary)).align(Align::InlineEnd),
+        ),
+    ]
+    .spacing(24)
+    .width(Fill)
+    .max_width(384.)
+    .into()
 }
-
 ```

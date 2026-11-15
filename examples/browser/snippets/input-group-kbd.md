@@ -1,7 +1,18 @@
 ```rust
-use icedcn::widget::{input, input_group, kbd};
+use crate::icon;
+use iced::Fill;
+use icedcn::Slot;
+use icedcn::widget::input_group::{Align, addon};
+use icedcn::widget::{container, input, input_group, kbd};
 
-input_group(input("Search..."))
-    .addon(input_group::addon(icon::search()))
-    .addon(input_group::addon(kbd("⌘K")).align(input_group::Align::InlineEnd))
+fn shortcut<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+    container(
+        input_group(input("Search...").text_size(size))
+            .addon(addon(icon::search().size(16).line_height(1.0)))
+            .addon(addon(kbd("⌘K")).align(Align::InlineEnd)),
+    )
+    .width(Fill)
+    .max_width(384.)
+    .into()
+}
 ```

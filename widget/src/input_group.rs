@@ -20,7 +20,7 @@ pub(crate) mod widget;
 
 use iced_core::Length::Fill;
 use iced_core::alignment::{Horizontal, Vertical};
-use iced_core::{Alignment, Element, Padding};
+use iced_core::{Alignment, Element, Padding, Pixels};
 use iced_widget::{Renderer, Widget};
 use iced_widget::{container, text_editor};
 use icedcn_core::Theme;
@@ -77,6 +77,7 @@ pub enum Align {
 pub struct Addon<'a, Message> {
     content: Slot<'a, Message>,
     align: Align,
+    divider: bool,
 }
 
 /// Create an [`Addon`] before the control.
@@ -84,10 +85,17 @@ pub fn addon<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Addon<'a
     Addon {
         content: content.into(),
         align: Align::InlineStart,
+        divider: false,
     }
 }
 
 impl<'a, Message: 'a> Addon<'a, Message> {
+    /// Draw a full-width divider between a block addon and the control.
+    pub fn divider(mut self) -> Self {
+        self.divider = true;
+        self
+    }
+
     /// Set where the addon sits.
     pub fn align(mut self, align: Align) -> Self {
         self.align = align;
@@ -97,7 +105,7 @@ impl<'a, Message: 'a> Addon<'a, Message> {
 
 /// Muted `text-sm` text for an addon (`InputGroupText`).
 pub fn text<'a>(content: impl iced_core::text::IntoFragment<'a>) -> Text<'a> {
-    text::muted(content)
+    text::muted(content).line_height(Pixels(20.))
 }
 
 /// A compact ghost button for an addon (`InputGroupButton`, `size="xs"`).
@@ -168,9 +176,19 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
             style,
         } = *self;
 
+        let mut control_padding = Padding::from([4., 10.]);
+        for addon in &addons {
+            match addon.align {
+                Align::InlineStart => control_padding.left = 6.,
+                Align::InlineEnd => control_padding.right = 6.,
+                Align::BlockStart => control_padding.bottom = 12.,
+                Align::BlockEnd => control_padding.top = 12.,
+            }
+        }
         let is_textarea = matches!(field, Control::Textarea(_));
         let mut field: Slot<'a, Message> = match field {
             Control::Input(input) => input
+                .group_padding(control_padding)
                 .width(Fill)
                 .style(Box::new(control) as StyleFn<'a, Theme>)
                 .into(),
@@ -183,7 +201,12 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
 
         let (mut start, mut end, mut above, mut below) = (vec![], vec![], vec![], vec![]);
 
-        for Addon { mut content, align } in addons {
+        for Addon {
+            mut content,
+            align,
+            divider,
+        } in addons
+        {
             // `gap-2 py-1.5 text-sm font-medium text-muted-foreground`,
             // icons at `size-4`; dimmed with a disabled group.
             content.inherit(
@@ -197,8 +220,16 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
             let padding = match align {
                 Align::InlineStart => Padding::ZERO.left(8),
                 Align::InlineEnd => Padding::ZERO.right(8),
-                Align::BlockStart => Padding::ZERO.top(8).left(10).right(10),
-                Align::BlockEnd => Padding::ZERO.bottom(8).left(10).right(10),
+                Align::BlockStart => Padding::ZERO
+                    .top(8)
+                    .bottom(if divider { 8 } else { 6 })
+                    .left(10)
+                    .right(10),
+                Align::BlockEnd => Padding::ZERO
+                    .bottom(8)
+                    .top(if divider { 8 } else { 6 })
+                    .left(10)
+                    .right(10),
             };
 
             let addon = Container::new(content)
@@ -212,7 +243,20 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
                 Align::BlockStart | Align::BlockEnd => addon.width(Fill),
                 _ => addon,
             };
-            let addon = marker::marker(Slot::from(addon).compose(), widget::Focus, Press::Any)
+            let addon: Slot<'a, Message> = match (align, divider) {
+                (Align::BlockStart, true) => {
+                    crate::column![addon, crate::rule::horizontal(1).boxed()]
+                        .width(Fill)
+                        .into()
+                }
+                (Align::BlockEnd, true) => {
+                    crate::column![crate::rule::horizontal(1).boxed(), addon]
+                        .width(Fill)
+                        .into()
+                }
+                _ => addon.into(),
+            };
+            let addon = marker::marker(addon.compose(), widget::Focus, Press::Any)
                 .boxed()
                 .into();
             match align {
@@ -227,6 +271,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
             field
         } else {
             Row::with_children(start.into_iter().chain([field]).chain(end))
+                .padding([0, 1])
                 .align_y(if is_textarea {
                     Alignment::Start
                 } else {
@@ -241,6 +286,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
             line.compose()
         } else {
             Column::with_children(above.into_iter().chain([line]).chain(below))
+                .padding(1)
                 .width(Fill)
                 .align_x(Horizontal::Left)
                 .into()

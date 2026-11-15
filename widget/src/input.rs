@@ -17,7 +17,7 @@ use crate::button::group::Join;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::text_input;
 use crate::text_input::element::from_core;
-use iced_core::text::{Fragment, IntoFragment};
+use iced_core::text::{Fragment, IntoFragment, LineHeight};
 use iced_core::{Length, Padding};
 use iced_widget::Renderer;
 use iced_widget::Widget;
@@ -36,6 +36,7 @@ pub struct Input<'a, Message> {
     disabled: bool,
     size: Option<Size>,
     text_size: Option<f32>,
+    group_padding: Option<Padding>,
     width: Length,
     on_input: Option<Box<dyn Fn(String) -> Message + 'a>>,
     on_submit: Option<Message>,
@@ -59,6 +60,7 @@ pub fn input<'a, Message: Clone + 'a>(placeholder: impl IntoFragment<'a>) -> Inp
         disabled: false,
         size: None,
         text_size: None,
+        group_padding: None,
         width: Length::Shrink,
         on_input: None,
         on_submit: None,
@@ -147,10 +149,20 @@ impl<'a, Message: Clone + 'a> Input<'a, Message> {
         self
     }
 
+    pub(crate) fn group_padding(mut self, padding: Padding) -> Self {
+        self.group_padding = Some(padding);
+        self
+    }
+
     /// Input height — delegates to `Size::height` so size variants stay in
     /// sync with buttons. Nova `h-8` (32px) is `Size::Default`.
     fn height(&self) -> f32 {
-        self.size.unwrap_or_default().height()
+        let height = self.size.unwrap_or_default().height();
+        if let Some(padding) = self.group_padding {
+            let line = LineHeight::default().to_absolute(self.font_size());
+            return height.max(line.0 + padding.top + padding.bottom);
+        }
+        height
     }
 
     /// Text size based on size variant.
@@ -165,12 +177,12 @@ impl<'a, Message: Clone + 'a> Input<'a, Message> {
 
     /// CSS padding plus the one-pixel border, which iced paints inside the bounds.
     fn padding(&self) -> Padding {
-        Padding {
+        self.group_padding.unwrap_or(Padding {
             top: 5.0,
             bottom: 5.0,
             left: 11.0,
             right: 11.0,
-        }
+        })
     }
 }
 

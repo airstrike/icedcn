@@ -13,7 +13,7 @@ use crate::core::layout;
 use crate::core::mouse;
 use crate::core::overlay;
 use crate::core::renderer;
-use crate::core::widget::operation::Focusable;
+use crate::core::widget::operation::{Focusable, TextInput};
 use crate::core::widget::tree::{self, Tree};
 use crate::core::widget::{Id, Meta, Operation};
 use crate::core::{
@@ -116,15 +116,16 @@ impl<Message> Widget<Message, Theme, Renderer> for Surface<'_, Message> {
                 shell.request_redraw();
             }
         }
-        let mut focused = Focused(false);
+        let mut focused = Focused::default();
         self.content
             .operate(child_tree, child_layout, viewport, renderer, &mut focused);
 
         let state = tree.state.downcast_mut::<State>();
         let is_hovered = cursor.is_over(layout.bounds());
 
-        if focused.0 != state.is_focused || is_hovered != state.is_hovered {
-            state.is_focused = focused.0;
+        let is_focused = focused.active.unwrap_or(false);
+        if is_focused != state.is_focused || is_hovered != state.is_hovered {
+            state.is_focused = is_focused;
             state.is_hovered = is_hovered;
             shell.request_redraw();
         }
@@ -278,17 +279,32 @@ struct State {
     is_hovered: bool,
 }
 
-/// An [`Operation`] that finds whether any focusable widget is focused.
-struct Focused(bool);
+/// Only the editable control contributes to the group ring. Addon buttons
+/// render their own focus indicator.
+#[derive(Default)]
+struct Focused {
+    editable: Option<Rectangle>,
+    active: Option<bool>,
+}
 
 impl Operation for Focused {
     fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
         operate(self);
     }
 
-    fn focusable(&mut self, _id: Option<&Id>, _bounds: Rectangle, state: &mut dyn Focusable) {
-        self.0 |= state.is_focused();
+    fn focusable(&mut self, _id: Option<&Id>, bounds: Rectangle, state: &mut dyn Focusable) {
+        if self.active.is_none() && self.editable.take() == Some(bounds) {
+            self.active = Some(state.is_focused());
+        }
     }
 
-    fn custom(&mut self, _id: Option<&Id>, _bounds: Rectangle, _state: &mut dyn Any) {}
+    fn text_input(&mut self, _id: Option<&Id>, bounds: Rectangle, _input: &mut dyn TextInput) {
+        self.editable = Some(bounds);
+    }
+
+    fn custom(&mut self, _id: Option<&Id>, bounds: Rectangle, state: &mut dyn Any) {
+        if state.is::<control::Editable>() {
+            self.editable = Some(bounds);
+        }
+    }
 }
