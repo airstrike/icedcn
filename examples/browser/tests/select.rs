@@ -4,8 +4,8 @@ use browser::component::select::SelectPage;
 use browser::page::Page;
 use iced::keyboard::key::Named;
 use iced::{Point, Size};
-use iced_test::{Simulator, simulator};
 use iced_test::core::Settings;
+use iced_test::{Simulator, simulator};
 use icedcn::Theme;
 
 type Preview<'a> = Simulator<'a, Message, Theme, iced::Renderer>;

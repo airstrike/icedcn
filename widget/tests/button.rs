@@ -117,11 +117,8 @@ fn a_grid_centers_the_label_when_it_stretches_an_intrinsic_button() {
     let grid = iced_widget::grid([button])
         .columns(1)
         .height(Length::Shrink);
-    let mut ui: Preview<'_> = Simulator::with_size(
-        Settings::default(),
-        Size::new(260., 100.),
-        grid.boxed(),
-    );
+    let mut ui: Preview<'_> =
+        Simulator::with_size(Settings::default(), Size::new(260., 100.), grid.boxed());
     next(&mut ui);
     let outer = ui.find(selector::is_focused()).expect("button").bounds();
     let inner = ui.find(id).expect("label").bounds();

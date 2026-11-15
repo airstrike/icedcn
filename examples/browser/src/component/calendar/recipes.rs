@@ -240,7 +240,9 @@ impl<'a, Message: 'static> Component<'a, Message, Theme> for Times {
                     )
                     .padding(12),
                     rule::horizontal(1).boxed(),
-                    container(field::group([start.into(), end.into()])).width(Fill).padding(12),
+                    container(field::group([start.into(), end.into()]))
+                        .width(Fill)
+                        .padding(12),
                 ]
                 .spacing(0)
                 .width(220),

@@ -38,9 +38,7 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "multiple",
         title: "Multiple",
-        description: Some(
-            "Use `.multiple()` to keep several items open at once.",
-        ),
+        description: Some("Use `.multiple()` to keep several items open at once."),
         snippet: "examples/browser/snippets/accordion-multiple.md",
     },
     page::Block::Example {
@@ -86,9 +84,11 @@ fn build_accordion<'a>(
     open: Option<usize>,
     items: impl IntoIterator<Item = (&'a str, &'a str, bool)>,
 ) -> accordion::Accordion<'a, Message> {
-    let view = accordion(items.into_iter().map(|(trigger, body, disabled)| {
-        accordion::item(trigger, body).disabled(disabled)
-    }));
+    let view = accordion(
+        items
+            .into_iter()
+            .map(|(trigger, body, disabled)| accordion::item(trigger, body).disabled(disabled)),
+    );
     match open {
         Some(index) => view.default_value(index),
         None => view,
