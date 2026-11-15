@@ -4,7 +4,7 @@ use icedcn::Slot;
 use icedcn::widget::{bubble, message, motion, scroller};
 use icedcn::widget::motion::Preset;
 
-fn conversation<'a, Message: 'a>(
+pub fn conversation<'a, Message: Clone + 'a>(
     history: &'a str,
     sent: Option<&'a str>,
     preset: Preset,

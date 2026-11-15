@@ -108,8 +108,7 @@ impl Demo {
             .width(Fill)
             .spacing(8)
             .into(),
-            Self::Commands => self.commands(),
-            Self::Visibility => hint("Track the current anchored turn.").into(),
+            Self::Commands | Self::Visibility { .. } => self.commands(state.reader.current_anchor),
             Self::Scrollable => text::muted(
                 match (state.reader.can_scroll_up, state.reader.can_scroll_down) {
                     (true, true) => "You can scroll both ways.",
@@ -125,9 +124,11 @@ impl Demo {
         }
     }
 
-    fn commands(self) -> Slot<'static, Event> {
+    fn commands(self, current: Option<u64>) -> Slot<'static, Event> {
+        let outline = matches!(self, Self::Visibility { .. });
+        let trigger = if outline { "Outline" } else { "Jump to..." };
         dropdown_menu(
-            |menu| menu.trigger(button("Jump to...").rounded().style(secondary_surface())),
+            move |menu| menu.trigger(button(trigger).rounded().style(secondary_surface())),
             move |_| {
                 let title = container(
                     text::muted("Conversations")
@@ -147,8 +148,13 @@ impl Demo {
                         .height(20)
                         .line_height(LineHeight::Absolute(20.into()))
                         .ellipsis(Ellipsis::End);
-                    let item = menu::item(container(label).width(Fill).padding(2))
-                        .on_select(Event::Jump(Target::Item(i as u64)));
+                    let label = container(label).width(Fill).padding(2);
+                    let key = i as u64;
+                    let item = if outline {
+                        menu::radio_item(label, key, current, |key| Event::Jump(Target::Item(key)))
+                    } else {
+                        menu::item(label).on_select(Event::Jump(Target::Item(key)))
+                    };
                     items = items.push(item.into());
                 }
                 items.into()

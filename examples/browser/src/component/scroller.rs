@@ -100,7 +100,7 @@ pub static BLOCKS: &[page::Block] = &[
                 id: "visibility",
                 title: "Tracking the Reader's Position",
                 description: Some(
-                    "With `.on_reader_change(...)`, the scroller publishes a message containing the current anchor and the keys of visible rows. Hover over the outline to see which exchange you are reading or jump to another.",
+                    "With `.on_reader_change(...)`, the scroller publishes a message containing the current anchor and the keys of visible rows. Hover over the outline, or open Outline on a narrow screen, to find the current turn and jump to another.",
                 ),
                 snippet: "examples/browser/snippets/message-scroller-visibility.md",
             },
@@ -122,12 +122,14 @@ pub static BLOCKS: &[page::Block] = &[
 ];
 pub struct Page {
     state: page::State,
+    width: f32,
 }
 
 impl Page {
     pub fn new(page_index: usize) -> Box<dyn page::Page> {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
+            width: 1440.,
         })
     }
 }
@@ -161,8 +163,19 @@ impl page::Page for Page {
         self.state.reset_volatile();
     }
 
+    fn window_width(&mut self, width: f32) {
+        self.width = width;
+    }
+
     fn backdrop(&self) -> page::Backdrop {
-        rhea::backdrop()
+        let mut backdrop = rhea::backdrop();
+        backdrop.padding = match self.width {
+            width if width < 480. => 16.into(),
+            width if width < 560. => 32.into(),
+            width if width < 640. => 40.into(),
+            _ => backdrop.padding,
+        };
+        backdrop
     }
 
     fn preview_theme(&self, outer: &Theme) -> Option<Theme> {
@@ -180,7 +193,9 @@ impl page::Page for Page {
             "load-history" => Demo::History,
             "animation" => Demo::Animation,
             "commands" => Demo::Commands,
-            "visibility" => Demo::Visibility,
+            "visibility" => Demo::Visibility {
+                compact: self.width < 640.,
+            },
             "scrollable" => Demo::Scrollable,
             _ => unreachable!("unknown message-scroller preview id: {id}"),
         };

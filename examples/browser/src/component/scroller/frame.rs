@@ -43,9 +43,13 @@ impl Demo {
         .align_y(iced::Top)
         .width(Fill)
         .padding(20);
-        if self == Self::Commands {
+        let side_outline = matches!(self, Self::Visibility { compact: false });
+        if matches!(self, Self::Commands | Self::Visibility { compact: true }) {
             header = header.push(self.controls(state));
-        } else if !matches!(self, Self::Opening | Self::Visibility | Self::Scrollable) {
+        } else if !matches!(
+            self,
+            Self::Opening | Self::Visibility { .. } | Self::Scrollable
+        ) {
             let reset = button(icon::rotate_cw().size(16))
                 .height(32)
                 .square()
@@ -90,6 +94,9 @@ impl Demo {
                 .style(skin::tile);
             let copy = column![
                 text(title)
+                    .width(Fill)
+                    .align_x(Center)
+                    .wrapping(Wrapping::Balanced)
                     .size(18)
                     .medium()
                     .letter_spacing(-0.025)
@@ -151,7 +158,7 @@ impl Demo {
                 .scroll_margin(match self {
                     Self::Context => 24.0,
                     Self::Opening => 64.0,
-                    Self::Visibility => 12.0,
+                    Self::Visibility { .. } => 12.0,
                     _ => 0.0,
                 })
                 .previous_item_peek(if self == Self::Opening {
@@ -174,7 +181,7 @@ impl Demo {
             .spacing(0)
             .width(Fill)
             .height(Fill);
-        if !matches!(self, Self::Commands | Self::Visibility) {
+        if !matches!(self, Self::Commands | Self::Visibility { .. }) {
             let divided = !matches!(
                 self,
                 Self::Chat | Self::Context | Self::Streaming | Self::Anchoring
@@ -195,7 +202,7 @@ impl Demo {
             .height(560)
             .padding([0, 0, 20, 0])
             .style(skin::card);
-        let card: Slot<'static, Event> = if self == Self::Visibility {
+        let card: Slot<'static, Event> = if side_outline {
             let outline = column(
                 self.turns()
                     .iter()
@@ -293,11 +300,7 @@ impl Demo {
             .spacing(16)
             .align_x(Center)
             .width(Fill)
-            .max_width(if self == Self::Visibility {
-                480.0
-            } else {
-                384.0
-            })
+            .max_width(if side_outline { 480.0 } else { 384.0 })
             .into()
     }
 }

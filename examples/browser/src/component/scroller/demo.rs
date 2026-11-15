@@ -19,7 +19,7 @@ pub(super) enum Demo {
     History,
     Animation,
     Commands,
-    Visibility,
+    Visibility { compact: bool },
     Scrollable,
 }
 impl Demo {
@@ -34,7 +34,7 @@ impl Demo {
             Self::History => fixtures::LOAD_HISTORY,
             Self::Animation => fixtures::ANIMATION,
             Self::Commands => fixtures::COMMANDS,
-            Self::Visibility => fixtures::VISIBILITY,
+            Self::Visibility { .. } => fixtures::VISIBILITY,
             Self::Scrollable => fixtures::SCROLLABLE,
         }
     }
@@ -64,7 +64,7 @@ impl Demo {
                 "Choose how user messages are animated when they are added to the conversation.",
             ),
             Self::Commands => ("Commands", "Drive the transcript from outside."),
-            Self::Visibility => ("Transcript Outline", "Track the current anchored turn."),
+            Self::Visibility { .. } => ("Transcript Outline", "Track the current anchored turn."),
             Self::Scrollable => (
                 "Scroll Status",
                 "See which directions you can scroll from your current position.",
@@ -90,7 +90,9 @@ impl Demo {
             Self::History => "Click Load History to load the entire conversation",
             Self::Animation => "Select an animation then click send to see it in action.",
             Self::Commands => "Use the controls to jump to any message in the conversation.",
-            Self::Visibility => "Open the outline to jump between anchored turns as you read.",
+            Self::Visibility { .. } => {
+                "Open the outline to jump between anchored turns as you read."
+            }
             Self::Scrollable => "Scroll the transcript to see the footer update.",
         }
     }
@@ -447,7 +449,7 @@ mod tests {
             (Demo::Context, 2, Position::End),
             (Demo::Group, 3, Position::End),
             (Demo::Commands, 8, Position::End),
-            (Demo::Visibility, 8, Position::End),
+            (Demo::Visibility { compact: false }, 8, Position::End),
             (Demo::Scrollable, 12, Position::Start),
             (Demo::History, 10, Position::End),
             (Demo::Opening, 4, Position::LastAnchor),

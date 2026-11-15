@@ -593,3 +593,26 @@ fn ellipsis_uses_the_font_and_only_changes_the_last_overflowing_line() {
         "the second line ends with an ellipsis"
     );
 }
+
+#[test]
+fn phone_previews_keep_the_full_transcript_and_an_operable_outline() {
+    use iced::keyboard::key::Named;
+
+    let mut page = scroller::Page::new(0);
+    page.window_width(390.);
+    let padding = page.backdrop().padding;
+    close(padding.left, 16.);
+    close(padding.top, 16.);
+    let theme = Theme::light();
+    let build = || page.docs_preview("visibility", &theme);
+    let mut ui = Preview::with_size(Default::default(), Size::new(308., 608.), build());
+    let initial = geometry(&mut ui);
+    close(initial.viewport.width, 308.);
+    ui.click("Outline").unwrap();
+    ui.tap_key(Named::Home);
+    ui.tap_key(Named::Enter);
+    let mut ui = ui.rebuild(build());
+    dispatch(&mut *scroller::Page::new(0), &mut ui);
+    advance(&mut ui, &mut Instant::now(), 32);
+    assert!(geometry(&mut ui).y < initial.y);
+}
