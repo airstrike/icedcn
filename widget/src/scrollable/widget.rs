@@ -4076,7 +4076,19 @@ impl<Theme> From<Style> for StyleFn<'_, Theme> {
 mod bridge {
     use iced_widget::scrollable;
 
-    use super::{AutoScroll, Rail, Scroller, Status, Style};
+    use super::{AutoScroll, Catalog, Rail, Scroller, Status, Style, StyleFn};
+
+    impl Catalog for iced_core::Theme {
+        type Class<'a> = StyleFn<'a, Self>;
+
+        fn default<'a>() -> Self::Class<'a> {
+            Box::new(|theme, status| scrollable::default(theme, status.into()).into())
+        }
+
+        fn style(&self, class: &Self::Class<'_>, status: Status) -> Style {
+            class(self, status)
+        }
+    }
 
     impl From<scrollable::Style> for Style {
         fn from(s: scrollable::Style) -> Self {

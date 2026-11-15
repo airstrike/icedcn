@@ -46,6 +46,7 @@ use crate::core::font::{self, Font};
 use crate::core::padding;
 use crate::core::theme::palette;
 use crate::core::{self, Color, Element, Padding, Pixels, Theme, color};
+use crate::scrollable::widget;
 use iced_widget::Widget;
 use iced_widget::{checkbox, column, container, rich_text, row, rule, scrollable, span, text};
 
@@ -1478,7 +1479,7 @@ where
     Renderer: core::text::Renderer + 'a,
 {
     container(
-        scrollable(
+        widget::Scrollable::with_direction(
             container(
                 code(
                     settings,
@@ -1489,8 +1490,8 @@ where
                 .on_link_click(on_link_click),
             )
             .padding(settings.code_size),
-        )
-        .direction(scrollable::Direction::Horizontal(scrollbar())),
+            widget::Direction::Horizontal(scrollbar()),
+        ),
     )
     .width(Fill)
     .padding(settings.code_size / 4)
@@ -1571,8 +1572,7 @@ where
     .padding_y(settings.spacing.0 / 2.0)
     .separator_x(0);
 
-    scrollable(table)
-        .direction(scrollable::Direction::Horizontal(scrollbar()))
+    widget::Scrollable::with_direction(table, widget::Direction::Horizontal(scrollbar()))
         .spacing(settings.spacing.0 / 2.0)
         .boxed()
 }
@@ -1772,6 +1772,7 @@ where
 pub trait Catalog:
     container::Catalog
     + scrollable::Catalog
+    + widget::Catalog
     + text::Catalog
     + iced_widget::rule::Catalog
     + checkbox::Catalog
@@ -1787,10 +1788,10 @@ impl Catalog for Theme {
     }
 }
 
-/// The thin scrollbar for the iced scrollables markdown builds; matches
+/// The thin scrollbar for the vendored scrollables markdown builds; matches
 /// [`crate::scrollable::scrollbar`].
-fn scrollbar() -> scrollable::Scrollbar {
-    scrollable::Scrollbar::default()
+fn scrollbar() -> widget::Scrollbar {
+    widget::Scrollbar::default()
         .width(crate::scrollable::RAIL_WIDTH)
         .scroller_width(crate::scrollable::SCROLLER_WIDTH)
 }
