@@ -333,12 +333,14 @@ where
     }
 }
 
+type Handler<'a, S, Message> = Box<dyn Fn(S, &Event) -> Message + 'a>;
+
 /// Wraps the content of a marker's owner: after every event it drains the
 /// content's signals of type `S` and publishes `on_signal` for each, in the
 /// same event.
 pub struct Owner<'a, S, Message, Theme, Renderer> {
     content: Element<'a, Message, Theme, Renderer>,
-    on_signal: Box<dyn Fn(S, &Event) -> Message + 'a>,
+    on_signal: Handler<'a, S, Message>,
 }
 
 /// Wrap `content` in an [`Owner`] publishing `on_signal` for the signals its

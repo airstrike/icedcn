@@ -8,7 +8,6 @@
 
 use super::Textarea;
 use crate::core::Renderer as _;
-use crate::core::text::Position;
 use crate::core::{Border, Color, Point, touch, window};
 use crate::operation::focus;
 use iced_widget::Renderer;
@@ -99,15 +98,17 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
         {
             let mut cursor = state.content.cursor();
             state.content = Content::with_text(value);
-            let clamp = |mut p: Position| {
-                p.line = p.line.min(state.content.line_count().saturating_sub(1));
-                if let Some(line) = state.content.line(p.line) {
-                    p.index = line.text.floor_char_boundary(p.index.min(line.text.len()));
+            for position in std::iter::once(&mut cursor.position).chain(cursor.selection.iter_mut())
+            {
+                position.line = position
+                    .line
+                    .min(state.content.line_count().saturating_sub(1));
+                if let Some(line) = state.content.line(position.line) {
+                    position.index = line
+                        .text
+                        .floor_char_boundary(position.index.min(line.text.len()));
                 }
-                p
-            };
-            cursor.position = clamp(cursor.position);
-            cursor.selection = cursor.selection.map(clamp);
+            }
             state.content.move_to(cursor);
         }
 

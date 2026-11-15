@@ -8,10 +8,12 @@ use iced_core::{
 use iced_widget::Renderer;
 use icedcn_core::Theme;
 
+type Handler<'a, Message> = Box<dyn Fn(Key<&str>) -> Option<Message> + 'a>;
+
 /// Listen to keys only while the wrapped control contains focus.
 pub(crate) struct Keys<'a, Message> {
     pub content: Element<'a, Message, Theme, Renderer>,
-    pub on_key: Box<dyn Fn(Key<&str>) -> Option<Message> + 'a>,
+    pub on_key: Handler<'a, Message>,
 }
 impl<Message> Meta for Keys<'_, Message> {}
 impl<Message> Widget<Message, Theme, Renderer> for Keys<'_, Message> {

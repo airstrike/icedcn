@@ -376,10 +376,7 @@ impl Search {
         }
         self.typed = Some(now);
         self.search.push_str(&key.to_lowercase());
-        let repeated = self
-            .search
-            .chars()
-            .all(|c| Some(c) == self.search.chars().next());
+        let repeated = self.search.chars().all(|c| self.search.starts_with(c));
         let prefix = if repeated {
             key.to_lowercase()
         } else {
