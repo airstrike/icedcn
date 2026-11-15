@@ -11,8 +11,8 @@ use std::f32::consts::PI;
 
 use iced::gradient::Linear;
 use iced::widget::Id;
-use iced::widget::stack;
-use iced::{Bottom, Fill, Right, Task};
+use iced::widget::{responsive, stack};
+use iced::{Bottom, Fill, Padding, Right, Task};
 use iced_widget::button::Status;
 use icedcn::Theme;
 use icedcn::core::{Background, Border};
@@ -92,6 +92,8 @@ pub enum Message {
     SetAccent(String),
     SetChart(String),
     SetMenu(String),
+    ChooseFont,
+    SetFont(iced::Font),
     Reset,
     NextPreset,
     ToggleControls,
@@ -131,6 +133,7 @@ pub struct State {
     pub deploying: bool,
     pub qr_connect: Option<qr_code::Data>,
     pub settings: customize::Settings,
+    pub host_font_picker: bool,
     pub controls_open: bool,
     pub code_open: bool,
     pub copied: bool,
@@ -147,12 +150,14 @@ impl State {
             Mode::Light
         };
 
-        Self::embedded(mode)
+        (Self::with_mode(mode), Task::none())
     }
 
     /// Initialize an embedded designer without network requests or global font changes.
     pub fn embedded(mode: Mode) -> (Self, Task<Message>) {
-        (Self::with_mode(mode), Task::none())
+        let mut state = Self::with_mode(mode);
+        state.host_font_picker = true;
+        (state, Task::none())
     }
 
     pub fn dark() -> Self {
@@ -185,6 +190,7 @@ impl State {
             deploying: false,
             qr_connect: qr_code::Data::new("https://ledger.app/connect/jd-4829").ok(),
             settings: customize::Settings::default(),
+            host_font_picker: false,
             controls_open: false,
             code_open: false,
             copied: false,
@@ -286,7 +292,8 @@ impl State {
             }
             Message::Deploy => self.deploying = !self.deploying,
             Message::NotificationCleared => {}
-            Message::Noop => {}
+            Message::SetFont(font) => self.set_font(font),
+            Message::ChooseFont | Message::Noop => {}
         }
         if design_changed {
             self.refresh();
@@ -318,9 +325,12 @@ impl State {
     }
 
     pub fn view(&self) -> iced::Element<'_, Message, Theme> {
-        column![chrome::view(self), self.view_embedded(1280.0)]
-            .height(Fill)
-            .into()
+        column![
+            chrome::view(self),
+            responsive(|size| self.view_embedded(size.width)),
+        ]
+        .height(Fill)
+        .into()
     }
 
     /// Customizer and dashboard, without an outer navigation bar.
@@ -369,7 +379,7 @@ impl State {
             .width(Fill);
             let controls = if self.controls_open {
                 controls.push(
-                    container(sidebar::view(self, true))
+                    container(sidebar::view(self, width))
                         .width(Fill)
                         .height(300)
                         .into(),
@@ -383,14 +393,23 @@ impl State {
                 .height(Fill)
                 .into()
         } else {
-            row![sidebar::view(self, false), preview]
+            row![sidebar::view(self, width), preview]
                 .spacing(24)
                 .height(Fill)
                 .width(Fill)
                 .into()
         };
         let designer = container(body)
-            .padding(if compact { 12 } else { 24 })
+            .padding(if compact {
+                Padding::new(12.0)
+            } else {
+                Padding {
+                    top: 6.0,
+                    right: 24.0,
+                    bottom: 24.0,
+                    left: 24.0,
+                }
+            })
             .width(Fill)
             .height(Fill)
             .style(section_soft);

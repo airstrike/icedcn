@@ -1,6 +1,6 @@
 // Generated automatically by iced_lucide at build time.
 // Do not edit manually.
-// c8dee0894fb630db44cac260969a33dba98501dcceb711aed2c4a472a61f41a6
+// 09f1f9f18e3dc8536b0b551643e872912bdc19d4a7f0b60daebf5aa512d99bac
 use iced::widget::text::{self, Text};
 use iced::{Font, font};
 
@@ -23,12 +23,16 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("coffee", "\u{E096}"),
     ("copy", "\u{E09E}"),
     ("ellipsis", "\u{E0B6}"),
+    ("fingerprint", "\u{E2CB}"),
+    ("list_filter", "\u{E460}"),
     ("menu", "\u{E115}"),
     ("minus", "\u{E11C}"),
     ("moon", "\u{E11E}"),
+    ("paint_bucket", "\u{E2E6}"),
     ("paintbrush", "\u{E2E7}"),
     ("plus", "\u{E13D}"),
     ("radius", "\u{E52D}"),
+    ("rectangle_horizontal", "\u{E376}"),
     ("refresh_cw", "\u{E145}"),
     ("search", "\u{E151}"),
     ("settings", "\u{E154}"),
@@ -133,6 +137,20 @@ where
     icon("\u{E0B6}")
 }
 
+pub fn fingerprint<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E2CB}")
+}
+
+pub fn list_filter<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E460}")
+}
+
 pub fn menu<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
@@ -154,6 +172,13 @@ where
     icon("\u{E11E}")
 }
 
+pub fn paint_bucket<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E2E6}")
+}
+
 pub fn paintbrush<'a, Theme>() -> Text<'a, Theme>
 where
     Theme: text::Catalog + 'a,
@@ -173,6 +198,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E52D}")
+}
+
+pub fn rectangle_horizontal<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E376}")
 }
 
 pub fn refresh_cw<'a, Theme>() -> Text<'a, Theme>
