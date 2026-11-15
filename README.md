@@ -13,6 +13,8 @@ the `dev` branch of [airstrike/iced](https://github.com/airstrike/iced/tree/dev)
 
 ## Try it
 
+Browse the [components and examples](https://icedcn.airstrike.fyi/), or run them locally.
+
 With [Rust and rustup](https://rustup.rs/) installed:
 
 ```sh
