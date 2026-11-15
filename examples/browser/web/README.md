@@ -41,15 +41,17 @@ Back/Forward restore the selected page; editing state inside examples remains
 in memory. Unknown paths show a not-found page and retain the requested URL; trailing
 slashes are accepted.
 
-The Workers asset configuration serves the app shell for unmatched navigation
-requests. Missing module, WASM, and other subresource requests remain 404s. Use
-Wrangler's local server when testing direct links; Python's static server above
-does not provide navigation fallback. The loader and generated module use
-root-absolute asset paths so nested routes load the same build.
+The Workers asset configuration enables SPA fallback for direct links. Local
+Wrangler also returns the app shell with HTTP 200 for missing asset paths such
+as `/missing.js`, even without a navigation request header; an HTTP 404 for
+missing subresources is not guaranteed. Validate generated asset URLs by their
+content and MIME type. Use Wrangler's local server when testing direct links;
+Python's static server above does not provide navigation fallback. The loader
+and generated module use root-absolute asset paths so nested routes load the
+same build.
 
 The app-local `routing` crate owns pathname resolution and browser history.
 `Router<R>` accepts any application route type implementing `Route`: a name,
 canonical path, optional title, and optional aliases. The browser supplies its
 own definitions and renders the selected view. The not-found view is rendered
-in the client; navigation fallback still returns the app shell with HTTP 200,
-while missing subresources return HTTP 404.
+in the client; its “404” label does not change the app shell's HTTP 200 response.
