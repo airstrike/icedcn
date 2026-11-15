@@ -306,7 +306,7 @@ fn detail<'a>(label: &'static str, value: &'static str, note: &'static str) -> S
         column![
             text::xs(label)
                 .medium()
-                .letter_spacing(0.6)
+                .letter_spacing(0.05)
                 .style(theme::text::Muted)
                 .line_height(Pixels(16.0)),
             text::p(value).semibold().line_height(Pixels(24.0)),
