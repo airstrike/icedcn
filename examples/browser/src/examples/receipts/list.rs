@@ -1,11 +1,15 @@
 //! List sales and navigate to sale details or editing.
 use std::collections::HashMap;
 
+use iced::alignment::Horizontal::Right;
 use iced::{Center, Element, Fill, Shrink};
-use icedcn::widget::{button, column, container, row, space, text};
-use icedcn::{Theme, theme};
+use icedcn::widget::scrollable::scrollable;
+use icedcn::widget::table::Track::Auto;
+use icedcn::widget::{button, column, container, empty, row, space, table, text};
+use icedcn::{Slot, Theme, card};
 
 use super::sale::Sale;
+use crate::icon;
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -15,47 +19,57 @@ pub enum Message {
 
 pub fn view(sales: &HashMap<usize, Sale>) -> Element<'_, Message, Theme> {
     let main_content: Element<'_, Message, Theme> = if sales.is_empty() {
-        container(button("Create your first sale →").on_press(Message::NewSale))
-            .center(Fill)
-            .into()
+        container(
+            empty()
+                .media(empty::media(icon::file_text().size(24)).style(empty::Icon))
+                .content(button("Create your first sale →").on_press(Message::NewSale)),
+        )
+        .center(Fill)
+        .into()
     } else {
-        let mut sales_list = column![].spacing(10).width(Fill);
-        for (id, sale) in sales {
-            sales_list = sales_list.push(
+        let header = table::header([table::row([
+            table::head("Sale"),
+            table::head("Total").align_x(Right).width(140),
+        ])]);
+        let body = table::body(sales.iter().map(|(id, sale)| {
+            table::row([table::cell(
                 button(
                     row![
-                        column![
-                            text(&sale.name).size(13),
-                            text(format!("Total: ${:.2}", sale.calculate_total()))
-                                .size(12)
-                                .style(theme::text::Muted),
-                        ]
-                        .width(Fill)
-                        .padding(10),
+                        text::small(&sale.name).medium().width(Fill),
+                        text::small(format!("${:.2}", sale.calculate_total())).medium(),
                     ]
+                    .spacing(16)
+                    .align_y(Center)
                     .width(Fill),
                 )
-                .style(button::Secondary)
+                .style(button::Ghost)
+                .translate(false)
                 .height(Shrink)
-                .on_press(Message::SelectSale(*id))
+                .padding([12, 8])
                 .width(Fill)
-                .into(),
-            );
-        }
+                .on_press(Message::SelectSale(*id)),
+            )
+            .span(2)
+            .padding(0)])
+        }));
+        let sales_table = table([Slot::from(table::grid([Auto; 2]).header(header).body(body))]);
         column![
             row![
                 space::horizontal(),
-                button(text("New Sale").size(14)).on_press(Message::NewSale),
+                button("New Sale").on_press(Message::NewSale)
             ]
             .align_y(Center)
             .width(Fill),
-            sales_list,
+            card(card::content(scrollable(sales_table).width(Fill).height(Fill)).height(Fill))
+                .width(Fill)
+                .height(Fill),
         ]
         .spacing(20)
         .width(Fill)
+        .height(Fill)
         .into()
     };
-    container(column![main_content].spacing(20).width(Fill).height(Fill))
+    container(main_content)
         .padding(20)
         .id(super::ROOT)
         .width(Fill)

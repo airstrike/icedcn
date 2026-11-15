@@ -1,11 +1,14 @@
 //! A read-only view of a sale.
+use iced::alignment::Horizontal::{Center, Right};
 use iced::{Alignment, Element, Fill};
 use icedcn::widget::scrollable::scrollable;
-use icedcn::widget::{button, column, container, row, space, text};
-use icedcn::{Theme, theme};
+use icedcn::widget::table::Track::Auto;
+use icedcn::widget::{button, column, container, row, space, table, text, tooltip};
+use icedcn::{Slot, Theme, card, separator};
 
 use super::super::{Action, Hotkey};
 use super::{Instruction, Sale};
+use crate::icon;
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -15,108 +18,87 @@ pub enum Message {
 
 pub fn view(sale: &Sale) -> Element<'_, Message, Theme> {
     let header = row![
-        button(text("←").align_x(Alignment::Center))
-            .width(40)
-            .on_press(Message::Back),
-        text(&sale.name).size(16),
+        tooltip(
+            button(icon::arrow_left().size(16))
+                .style(button::Outline)
+                .width(40)
+                .on_press(Message::Back),
+            "Back"
+        ),
+        text::large(&sale.name).semibold(),
         space::horizontal(),
-        button("Edit").on_press(Message::StartEdit),
+        button("Edit")
+            .style(button::Outline)
+            .on_press(Message::StartEdit),
     ]
     .spacing(10)
     .align_y(Alignment::Center)
     .width(Fill);
-    let column_headers = row![
-        text("Item Name").width(Fill),
-        text("Qty").align_x(Alignment::Center).width(80),
-        text("Price").align_x(Alignment::End).width(100),
-        text("Tax Group").width(140),
-        text("Total").align_x(Alignment::End).width(100),
-    ]
-    .spacing(2)
-    .width(Fill);
-    let items_list = sale.items.iter().fold(
-        column![column_headers].spacing(5).width(Fill),
-        |col, item| {
-            col.push(
-                container(
-                    row![
-                        text(&item.name).width(Fill),
-                        text(item.quantity().to_string())
-                            .align_x(Alignment::Center)
-                            .width(80),
-                        text(format!("${:.2}", item.price()))
-                            .align_x(Alignment::End)
-                            .width(100),
-                        text(item.tax_group.to_string()).width(140),
-                        text(format!("${:.2}", item.price() * item.quantity()))
-                            .align_x(Alignment::End)
-                            .width(100),
-                    ]
-                    .spacing(5)
-                    .align_y(Alignment::Center)
-                    .width(Fill),
-                )
-                .class(theme::container::CardMuted)
-                .padding(0)
-                .width(Fill)
-                .into(),
-            )
-        },
-    );
+    let headings = table::header([table::row([
+        table::head("Item Name"),
+        table::head("Qty").align_x(Center).width(96),
+        table::head("Price").align_x(Right).width(116),
+        table::head("Tax Group").width(156),
+        table::head("Total").align_x(Right).width(116),
+    ])]);
+    let body = table::body(sale.items.iter().map(|item| {
+        table::row([
+            table::cell(text::small(&item.name).medium()),
+            table::cell(item.quantity().to_string()).align_x(Center),
+            table::cell(format!("${:.2}", item.price())).align_x(Right),
+            table::cell(text::muted(item.tax_group.to_string())),
+            table::cell(text::small(format!("${:.2}", item.price() * item.quantity())).medium())
+                .align_x(Right),
+        ])
+    }));
+    let items = table([Slot::from(
+        table::grid([Auto; 5]).header(headings).body(body),
+    )]);
     let totals = column![
         row![
-            text("Subtotal").width(150),
+            text::muted("Subtotal"),
             space::horizontal(),
-            text(format!("${:.2}", sale.calculate_subtotal()))
+            text::small(format!("${:.2}", sale.calculate_subtotal()))
         ]
         .width(Fill),
         row![
-            text("Service Charge").width(150),
-            text(format!(
-                "{}%",
-                sale.service_charge_percent.map_or(0.0, |p| p)
-            )),
+            text::muted("Service Charge"),
+            text::muted(format!("{}%", sale.service_charge_percent.unwrap_or(0.))),
             space::horizontal(),
-            text(format!("${:.2}", sale.calculate_service_charge()))
+            text::small(format!("${:.2}", sale.calculate_service_charge()))
+        ]
+        .spacing(12)
+        .width(Fill),
+        row![
+            text::muted("Tax"),
+            space::horizontal(),
+            text::small(format!("${:.2}", sale.calculate_tax()))
         ]
         .width(Fill),
         row![
-            text("Tax").width(150),
+            text::muted("Gratuity"),
             space::horizontal(),
-            text(format!("${:.2}", sale.calculate_tax()))
+            text::small(format!("${:.2}", sale.gratuity_amount.unwrap_or(0.)))
         ]
         .width(Fill),
+        separator(),
         row![
-            text("Gratuity").width(150),
-            text(format!("${:.2}", sale.gratuity_amount.unwrap_or(0.0))),
+            text::label("Total"),
             space::horizontal(),
-            text(format!("${:.2}", sale.gratuity_amount.unwrap_or(0.0)))
+            text::large(format!("${:.2}", sale.calculate_total())).semibold()
         ]
-        .width(Fill),
-        row![
-            text("Total").width(150).size(16),
-            space::horizontal(),
-            text(format!("${:.2}", sale.calculate_total())).size(16)
-        ]
+        .align_y(Alignment::Center)
         .width(Fill),
     ]
-    .spacing(2)
+    .spacing(8)
     .width(Fill);
     container(
         column![
             header,
-            container(
-                scrollable(column![items_list].spacing(10).padding(20).width(Fill))
-                    .height(Fill)
-                    .width(Fill)
-            )
-            .height(Fill)
-            .width(Fill)
-            .class(theme::container::CardMuted),
-            container(totals)
-                .padding(20)
-                .width(Fill)
-                .class(theme::container::CardMuted),
+            card(card::content(scrollable(items).height(Fill).width(Fill)).height(Fill))
+                .height(Fill)
+                .width(Fill),
+            card(card::content(totals)).width(Fill),
         ]
         .spacing(20)
         .height(Fill)
