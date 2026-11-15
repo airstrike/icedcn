@@ -18,7 +18,8 @@ use crate::compose::{Compose, Inherited, Slot};
 use crate::text_input;
 use crate::text_input::element::from_core;
 use iced_core::text::{Fragment, IntoFragment, LineHeight};
-use iced_core::{Length, Padding};
+use iced_core::widget::Id;
+use iced_core::{Length, Padding, alignment};
 use iced_widget::Renderer;
 use iced_widget::Widget;
 use icedcn_core::Theme;
@@ -28,6 +29,7 @@ use icedcn_core::theme;
 /// the widget. Use [`value`](Self::value) and [`on_input`](Self::on_input) to manage the text
 /// in the application. A controlled field without an input handler is read-only.
 pub struct Input<'a, Message> {
+    id: Option<Id>,
     join: Option<Join>,
     placeholder: Fragment<'a>,
     value: Option<Fragment<'a>>,
@@ -36,7 +38,9 @@ pub struct Input<'a, Message> {
     disabled: bool,
     size: Option<Size>,
     text_size: Option<f32>,
+    padding: Option<Padding>,
     group_padding: Option<Padding>,
+    alignment: alignment::Horizontal,
     width: Length,
     on_input: Option<Box<dyn Fn(String) -> Message + 'a>>,
     on_submit: Option<Message>,
@@ -52,6 +56,7 @@ pub struct Input<'a, Message> {
 /// outlive (an iced `Component`'s view, for one).
 pub fn input<'a, Message: Clone + 'a>(placeholder: impl IntoFragment<'a>) -> Input<'a, Message> {
     Input {
+        id: None,
         join: None,
         placeholder: placeholder.into_fragment(),
         value: None,
@@ -60,7 +65,9 @@ pub fn input<'a, Message: Clone + 'a>(placeholder: impl IntoFragment<'a>) -> Inp
         disabled: false,
         size: None,
         text_size: None,
+        padding: None,
         group_padding: None,
+        alignment: alignment::Horizontal::Left,
         width: Length::Shrink,
         on_input: None,
         on_submit: None,
@@ -71,6 +78,24 @@ pub fn input<'a, Message: Clone + 'a>(placeholder: impl IntoFragment<'a>) -> Inp
 }
 
 impl<'a, Message: Clone + 'a> Input<'a, Message> {
+    /// Set the widget ID used by focus operations.
+    pub fn id(mut self, id: impl Into<Id>) -> Self {
+        self.id = Some(id.into());
+        self
+    }
+
+    /// Set the space around the text, overriding the size and group defaults.
+    pub fn padding(mut self, padding: impl Into<Padding>) -> Self {
+        self.padding = Some(padding.into());
+        self
+    }
+
+    /// Set the horizontal alignment of the text.
+    pub fn align_x(mut self, alignment: impl Into<alignment::Horizontal>) -> Self {
+        self.alignment = alignment.into();
+        self
+    }
+
     /// Control the input: it always shows `value`, and edits only publish
     /// [`on_input`](Self::on_input). Owned or borrowed.
     pub fn value(mut self, value: impl IntoFragment<'a>) -> Self {
@@ -158,7 +183,7 @@ impl<'a, Message: Clone + 'a> Input<'a, Message> {
     /// sync with buttons. Nova `h-8` (32px) is `Size::Default`.
     fn height(&self) -> f32 {
         let height = self.size.unwrap_or_default().height();
-        if let Some(padding) = self.group_padding {
+        if let Some(padding) = self.padding.or(self.group_padding) {
             let line = LineHeight::default().to_absolute(self.font_size());
             return height.max(line.0 + padding.top + padding.bottom);
         }
@@ -176,8 +201,8 @@ impl<'a, Message: Clone + 'a> Input<'a, Message> {
     }
 
     /// CSS padding plus the one-pixel border, which iced paints inside the bounds.
-    fn padding(&self) -> Padding {
-        self.group_padding.unwrap_or(Padding {
+    fn resolved_padding(&self) -> Padding {
+        self.padding.or(self.group_padding).unwrap_or(Padding {
             top: 5.0,
             bottom: 5.0,
             left: 11.0,
@@ -192,9 +217,10 @@ impl<'a, Message: Clone + 'a> From<Input<'a, Message>>
     fn from(input: Input<'a, Message>) -> Self {
         let height = input.height();
         let text_size = input.font_size();
-        let padding = input
-            .join
-            .map_or_else(|| input.padding(), |join| join.padding(input.padding(), 1.));
+        let padding = input.join.map_or_else(
+            || input.resolved_padding(),
+            |join| join.padding(input.resolved_padding(), 1.),
+        );
 
         let ti: text_input::TextInput<'a, Message, Theme, Renderer> = match &input.value {
             Some(value) => text_input::TextInput::new(&input.placeholder, value),
@@ -205,10 +231,15 @@ impl<'a, Message: Clone + 'a> From<Input<'a, Message>>
             .secure(input.secure)
             .disabled(input.disabled)
             .padding(padding)
+            .align_x(input.alignment)
             .size(text_size)
             .width(input.width)
             .height(height)
             .join(input.join);
+
+        if let Some(id) = input.id {
+            ti = ti.id(id);
+        }
 
         if let Some(style) = input.style {
             // Wrap the core StyleFn so it produces widget::Style (with ring).
@@ -254,5 +285,38 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Input<'a, Message> {
         Self: 'b,
     {
         (*self).into()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use iced_core::widget::operation::focusable;
+    use iced_core::{Alignment, Element};
+    use iced_test::simulator::simulator;
+
+    #[test]
+    fn composed_inputs_can_be_focused_by_id() {
+        let first = Id::unique();
+        let second = Id::unique();
+        let fields: Element<'_, String, Theme, Renderer> = crate::column![
+            input("Quantity")
+                .id(first.clone())
+                .padding(5)
+                .align_x(Alignment::Center)
+                .on_input(|value| value),
+            input("Price")
+                .id(second.clone())
+                .padding([5, 8])
+                .align_x(Alignment::End)
+                .on_input(|value| value),
+        ]
+        .into();
+        let mut ui = simulator(fields);
+        ui.operate(&mut focusable::focus(first));
+        ui.typewrite("2");
+        ui.operate(&mut focusable::focus(second));
+        ui.typewrite("5");
+        assert_eq!(ui.into_messages().collect::<Vec<_>>(), ["2", "5"]);
     }
 }
