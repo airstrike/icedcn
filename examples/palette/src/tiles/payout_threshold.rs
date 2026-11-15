@@ -1,14 +1,14 @@
 //! Preview 01 payout-threshold form card.
 
-use iced::widget::{space, svg};
-use iced::{Bottom, Center, Fill, Padding};
+use iced::widget::space;
+use iced::{Bottom, Fill, Padding};
 use icedcn::card;
 use icedcn::core::Border;
-use icedcn::widget::{Slot, button, column, container, field, row, slider, text};
+use icedcn::widget::{button, column, field, row, slider, text, textarea};
 use icedcn::{Size, Space, Theme, font_size, radius};
 
-use super::{api_gap, select};
-use crate::{Message, State};
+use super::select;
+use crate::{Message, State, icon};
 
 const CURRENCIES: &[&str] = &[
     "USD — United States Dollar",
@@ -16,27 +16,16 @@ const CURRENCIES: &[&str] = &[
     "GBP — British Pound",
     "JPY — Japanese Yen",
 ];
-const X_ICON: &[u8] = br##"
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
-  <path d="M18 6 6 18"/>
-  <path d="m6 6 12 12"/>
-</svg>
-"##;
-
 pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
     let header = card::header("Payout Threshold")
         .description("Set the minimum balance required before a payout is triggered.")
         .action(
-            row![
-                api_gap::marker(),
-                button(close_icon())
-                    .style(button::Ghost)
-                    .size(Size::Sm)
-                    .square()
-                    .style(close_button_style())
-                    .on_press(Message::Noop),
-            ]
-            .spacing(Space::U2),
+            button(icon::x().size(16))
+                .style(button::Ghost)
+                .size(Size::Sm)
+                .square()
+                .style(close_button_style())
+                .on_press(Message::Noop),
         );
 
     let amount = row![
@@ -73,7 +62,7 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
             .width(Fill),
         )
         .into(),
-        field::field(api_gap::panel(&["Textarea"], 90.0))
+        field::field(textarea("Add a note about your payout preferences.").min_height(90.0))
             .label("Notes")
             .into(),
     ]);
@@ -92,22 +81,6 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
     .padding(0)
     .width(Fill)
     .into()
-}
-
-fn close_icon() -> Slot<'static, Message> {
-    let icon = svg(svg::Handle::from_memory(X_ICON))
-        .width(16.0)
-        .height(16.0)
-        .style(|theme: &Theme, _| iced_widget::svg::Style {
-            color: Some(theme.muted.foreground.into()),
-        });
-
-    container(icon)
-        .width(16.0)
-        .height(16.0)
-        .align_x(Center)
-        .align_y(Center)
-        .into()
 }
 
 fn close_button_style() -> iced_widget::button::StyleFn<'static, Theme> {

@@ -20,7 +20,7 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
 
     let header_body: Slot<'static, Message> = column![
         card::description("Claimable Balance"),
-        text::p("$0.00").size(48.0).semibold(),
+        text::p("$0.00").size(48.0).line_height(1.2).semibold(),
         pending,
     ]
     .spacing(4)

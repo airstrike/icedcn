@@ -4,7 +4,6 @@ use iced::Fill;
 use icedcn::widget::{button, column, field, input, radio, text};
 use icedcn::{Slot, Theme, card};
 
-use super::api_gap;
 use crate::{Message, ReceivingMethod, State};
 
 pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
@@ -34,7 +33,7 @@ pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
 
     card::card(
         column![
-            card::header("Receiving Method").action(api_gap::marker()),
+            card::header("Receiving Method"),
             card::content(
                 column![
                     account,

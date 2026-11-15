@@ -3,10 +3,10 @@
 use iced::widget::space;
 use iced::{Center, Fill};
 use icedcn::widget::{button, column, container, field, input, item, row, rule, text};
-use icedcn::{Slot, Space, Theme, Vertical, card};
+use icedcn::{Size, Slot, Theme, Vertical, card};
 
-use super::{api_gap, select};
-use crate::{Message, State};
+use super::select;
+use crate::{Message, State, icon};
 
 const FROM_ACCOUNTS: &[&str] = &[
     "Main Checking (··8402) — $12,450.00",
@@ -58,11 +58,11 @@ pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
             card::header("Transfer Funds")
                 .description("Move money between your connected accounts.")
                 .action(
-                    row![
-                        api_gap::marker(),
-                        button("x").style(button::Ghost).on_press(Message::Noop),
-                    ]
-                    .spacing(Space::U2)
+                    button(icon::x().size(16))
+                        .style(button::Ghost)
+                        .size(Size::Sm)
+                        .square()
+                        .on_press(Message::Noop)
                 ),
             card::content(column![amount, from, to, summary].spacing(16).width(Fill)),
             card::footer(

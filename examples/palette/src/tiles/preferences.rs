@@ -3,10 +3,10 @@
 use iced::widget::space;
 use iced::{Center, Fill};
 use icedcn::widget::{button, column, field, row, switch};
-use icedcn::{Space, Theme, card};
+use icedcn::{Size, Theme, card};
 
-use super::{api_gap, select};
-use crate::Message;
+use super::select;
+use crate::{Message, icon};
 
 const CURRENCIES: &[&str] = &[
     "USD — United States Dollar",
@@ -35,11 +35,11 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
             card::header("Preferences")
                 .description("Manage your account settings and notifications.")
                 .action(
-                    row![
-                        api_gap::marker(),
-                        button("x").style(button::Ghost).on_press(Message::Noop),
-                    ]
-                    .spacing(Space::U2)
+                    button(icon::x().size(16))
+                        .style(button::Ghost)
+                        .size(Size::Sm)
+                        .square()
+                        .on_press(Message::Noop)
                 ),
             card::content(column![currency, public, email].spacing(16).width(Fill)),
             card::footer(

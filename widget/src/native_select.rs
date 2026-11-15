@@ -20,7 +20,7 @@ use crate::button::widget;
 use std::fmt;
 use std::rc::Rc;
 
-use iced_core::{Element, Padding};
+use iced_core::{Element, Length, Padding};
 use iced_widget::component::{self, Component};
 use iced_widget::pick_list::{Status, Style, StyleFn};
 use iced_widget::{Renderer, Widget};
@@ -99,6 +99,7 @@ pub struct NativeSelect<'a, Message> {
     on_value_change: Option<Box<dyn Fn(String) -> Message + 'a>>,
     disabled: bool,
     size: Size,
+    width: Length,
     style: Paint<'a>,
 }
 
@@ -121,6 +122,7 @@ pub fn native_select<'a, Message>(
         on_value_change: None,
         disabled: false,
         size: Size::Default,
+        width: Length::Shrink,
         style: Rc::from(style),
     }
 }
@@ -155,6 +157,12 @@ impl<'a, Message> NativeSelect<'a, Message> {
     /// Set the size: `Sm` (28px) or `Default` (32px).
     pub fn size(mut self, size: impl Into<Size>) -> Self {
         self.size = size.into();
+        self
+    }
+
+    /// Set the control width, fitting its options by default.
+    pub fn width(mut self, width: impl Into<Length>) -> Self {
+        self.width = width.into();
         self
     }
 
@@ -239,6 +247,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for NativeSel
                     }
                 })
                 .position(Position::Popper)
+                .width(self.width)
                 .size(self.size)
                 .disabled(self.disabled);
             if let Some(current) = self.selected(state).and_then(Item::value) {
@@ -254,6 +263,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for NativeSel
         let style = Rc::clone(&self.style);
 
         let pick_list = iced_widget::pick_list(selected, self.items.clone(), Item::to_string)
+            .width(self.width)
             .text_size(self.size.text_size())
             .padding(Padding {
                 top: vertical,
@@ -297,5 +307,44 @@ impl<'a, Message: 'static> From<NativeSelect<'a, Message>>
 {
     fn from(select: NativeSelect<'a, Message>) -> Self {
         component::component(select).boxed()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use iced_core::Length::Fill;
+    use iced_core::renderer::Headless;
+    use iced_core::widget::Tree;
+    use iced_core::{Element, Size, Widget as _, layout};
+    use iced_test::futures::futures::executor::block_on;
+    use iced_widget::Renderer;
+    use icedcn_core::Theme;
+
+    use super::{group, item, native_select};
+
+    #[test]
+    fn explicit_width_reaches_flat_and_grouped_controls() {
+        let renderer =
+            block_on(Renderer::new(Default::default(), None)).expect("headless renderer");
+        for grouped in [false, true] {
+            for (width, expected) in [(Fill, 400.), (192.into(), 192.)] {
+                let items = vec![item("one", "One"), item("two", "Two")];
+                let items = if grouped {
+                    vec![group("Choices", items)]
+                } else {
+                    items
+                };
+                let mut element: Element<'_, (), Theme, Renderer> =
+                    native_select(items).width(width).into();
+                let mut tree = Tree::new(&element);
+                tree.diff(&mut element);
+                element.layout(
+                    &mut tree,
+                    &renderer,
+                    &layout::Limits::new(Size::ZERO, Size::new(400., 200.)),
+                );
+                assert_eq!(tree.size.width, expected, "grouped: {grouped}");
+            }
+        }
     }
 }

@@ -6,16 +6,10 @@ use icedcn::theme::container::Style;
 use icedcn::widget::{badge, column, container, row, space, text};
 use icedcn::{Space, Theme, card};
 
-use super::api_gap;
 use crate::{Message, State, icon};
 
 pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
-    let action = row![
-        api_gap::marker(),
-        text::muted("Locked"),
-        icon::square().size(16),
-    ]
-    .spacing(Space::U2);
+    let action = row![text::muted("Locked"), icon::square().size(16),].spacing(Space::U2);
 
     let camera = container(
         column![

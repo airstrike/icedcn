@@ -6,7 +6,7 @@ use icedcn::theme;
 use icedcn::widget::{button, column, container, field, input, item, progress, row, text};
 use icedcn::{Slot, Theme, Vertical, card};
 
-use super::{api_gap, select};
+use super::select;
 use crate::Message;
 
 const ORDER_TYPES: &[&str] = &["Market Order", "Limit Order", "Stop Order"];
@@ -64,7 +64,7 @@ fn buy_card() -> Slot<'static, Message> {
 
     card::card(
         column![
-            card::header("Buy Investment").action(api_gap::marker()),
+            card::header("Buy Investment"),
             card::content(field::group([
                 amount.into(),
                 order.into(),

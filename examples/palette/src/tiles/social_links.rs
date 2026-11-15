@@ -4,13 +4,12 @@ use iced::Fill;
 use icedcn::widget::{button, column, field, input, row, space};
 use icedcn::{Theme, card};
 
-use super::api_gap;
 use crate::Message;
 
 pub fn view() -> iced::Element<'static, Message, Theme> {
     card::card(
         column![
-            card::header("Social Links").action(api_gap::marker()),
+            card::header("Social Links"),
             card::content(
                 column![
                     link_field("Spotify Artist URL", "spotify.com/artist/3j...2k"),

@@ -4,7 +4,6 @@ use iced::Fill;
 use icedcn::widget::{button, column, field, input, item};
 use icedcn::{Theme, card};
 
-use super::api_gap;
 use crate::{Message, icon};
 
 pub fn view() -> iced::Element<'static, Message, Theme> {
@@ -32,8 +31,7 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
     card::card(
         column![
             card::header("Account Access")
-                .description("Update your credentials or re-authenticate.")
-                .action(api_gap::marker()),
+                .description("Update your credentials or re-authenticate."),
             card::content(column![email, password].spacing(16).width(Fill)),
             card::footer(
                 column![
