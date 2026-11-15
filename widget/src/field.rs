@@ -95,6 +95,7 @@ pub struct Field<'a, Message> {
     responsive: bool,
     control_last: bool,
     description_above: bool,
+    spacing: f32,
     disabled: bool,
     card: bool,
     width: Option<Length>,
@@ -121,6 +122,7 @@ pub fn field<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Field<'a
         responsive: false,
         control_last: false,
         description_above: false,
+        spacing: 8.,
         disabled: false,
         card: false,
         width: None,
@@ -233,6 +235,13 @@ impl<'a, Message: 'a> Field<'a, Message> {
     /// Place the description between the label and control in a vertical field.
     pub fn description_above(mut self) -> Self {
         self.description_above = true;
+        self
+    }
+
+    /// Set the gap between the field's control and its label or descriptions.
+    /// Defaults to eight logical pixels.
+    pub fn spacing(mut self, spacing: impl Into<iced_core::Pixels>) -> Self {
+        self.spacing = spacing.into().0;
         self
     }
 
@@ -356,6 +365,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
             responsive,
             control_last,
             description_above,
+            spacing,
             card,
             width,
             ..
@@ -395,7 +405,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
                 controls = controls.push(error);
             }
             crate::column![heading, controls]
-                .spacing(8)
+                .spacing(spacing)
                 .width(Fill)
                 .row_at(448.)
                 .stretch()
@@ -403,12 +413,16 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
         } else {
             match orientation {
                 Orientation::Vertical => {
-                    let mut col = iced_widget::Column::new().spacing(8);
+                    let mut col = iced_widget::Column::new().spacing(spacing);
                     let mut description = description.map(Slot::compose);
                     if description_above && let Some(above) = description.take() {
                         // A description immediately before the final control sits
                         // four pixels closer to its label.
-                        let gap = if error.is_none() { 4 } else { 8 };
+                        let gap = if error.is_none() {
+                            (spacing - 4.).max(0.)
+                        } else {
+                            spacing
+                        };
                         let heading = iced_widget::Column::with_children(label)
                             .spacing(gap)
                             .push(above);
@@ -448,7 +462,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
                         if let Some(error) = error {
                             right = right.push(error.compose());
                         }
-                        let row = iced_widget::Row::new().spacing(8).align_y(align);
+                        let row = iced_widget::Row::new().spacing(spacing).align_y(align);
                         if control_last {
                             let right = if card || width.is_some() {
                                 right.width(Fill)
@@ -462,7 +476,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
                     } else {
                         // No right-hand content — just content on its own in a row.
                         iced_widget::Row::new()
-                            .spacing(8)
+                            .spacing(spacing)
                             .align_y(iced_core::Alignment::Center)
                             .push(content.compose())
                             .boxed()

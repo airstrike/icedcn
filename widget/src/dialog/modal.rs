@@ -69,6 +69,7 @@ pub struct Modal<'a, Message, Theme, Renderer> {
     animated: bool,
     drawer_height: Option<f32>,
     side_width: Option<f32>,
+    sheet_height: f32,
     margin: f32,
     backdrop: bool,
 }
@@ -103,6 +104,7 @@ impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
             animated: false,
             drawer_height: None,
             side_width: None,
+            sheet_height: 1.,
             margin: 16.,
             backdrop: true,
         }
@@ -125,7 +127,8 @@ impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
         self.closing = at.map(|instant| (instant, exited));
         self
     }
-    pub(super) fn drawer_height(mut self, height: Option<f32>) -> Self {
+    pub(super) fn side_height(mut self, height: Option<f32>, sheet_height: f32) -> Self {
+        self.sheet_height = sheet_height;
         self.drawer_height = height;
         self
     }
@@ -364,7 +367,13 @@ where
                 ),
                 Placement::Side(Side::Left | Side::Right) => {
                     let width = self.side_width.map_or_else(
-                        || (window.width * 0.75).min(384.),
+                        || {
+                            if window.width < 640. && self.drawer_height.is_none() {
+                                window.width * 0.75
+                            } else {
+                                (window.width * 0.75).min(384.)
+                            }
+                        },
                         |width| width.min(window.width),
                     );
                     layout::Limits::new(
@@ -377,7 +386,7 @@ where
                     Size::new(window.width, 0.0),
                     Size::new(
                         window.width,
-                        window.height * self.drawer_height.unwrap_or(1.0),
+                        window.height * self.drawer_height.unwrap_or(self.sheet_height),
                     ),
                 ),
             };
@@ -418,6 +427,9 @@ where
                 opened: focus.opened,
                 placement: self.placement,
                 backdrop: self.backdrop,
+                sheet: matches!(self.placement, Placement::Side(_))
+                    && self.drawer_height.is_none()
+                    && self.side_width.is_none(),
                 drag: self.drawer_height.map(|_| &mut focus.drag),
                 pointer_opened: &mut focus.pointer_opened,
             })));
@@ -451,6 +463,7 @@ struct Panel<'a, 'b, Message, Theme, Renderer> {
     opened: Option<Instant>,
     placement: Placement,
     backdrop: bool,
+    sheet: bool,
     drag: Option<&'b mut Option<(touch::Finger, Point)>>,
     pointer_opened: &'b mut bool,
 }
@@ -459,6 +472,7 @@ impl<Message, Theme, Renderer> Panel<'_, '_, Message, Theme, Renderer> {
     fn duration(&self) -> Duration {
         Duration::from_millis(match self.placement {
             Placement::Center { .. } => 100,
+            Placement::Side(_) if self.sheet => 200,
             Placement::Side(_) => 150,
         })
     }
@@ -490,6 +504,11 @@ where
             return;
         }
         let bounds = self.layout.bounds();
+        let distance = if self.sheet {
+            Size::new(40., 40.)
+        } else {
+            bounds.size()
+        };
         let transform = match self.placement {
             Placement::Center { .. } => {
                 let center = bounds.center();
@@ -497,11 +516,17 @@ where
                     * Transformation::scale(1. - 0.05 * progress)
                     * Transformation::translate(-center.x, -center.y)
             }
-            Placement::Side(Side::Left) => Transformation::translate(-bounds.width * progress, 0.),
-            Placement::Side(Side::Right) => Transformation::translate(bounds.width * progress, 0.),
-            Placement::Side(Side::Top) => Transformation::translate(0., -bounds.height * progress),
+            Placement::Side(Side::Left) => {
+                Transformation::translate(-distance.width * progress, 0.)
+            }
+            Placement::Side(Side::Right) => {
+                Transformation::translate(distance.width * progress, 0.)
+            }
+            Placement::Side(Side::Top) => {
+                Transformation::translate(0., -distance.height * progress)
+            }
             Placement::Side(Side::Bottom) => {
-                Transformation::translate(0., bounds.height * progress)
+                Transformation::translate(0., distance.height * progress)
             }
         };
         renderer.with_layer(viewport, |renderer| {

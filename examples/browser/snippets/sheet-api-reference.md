@@ -1,13 +1,5 @@
 ## API Reference
 
-### `sheet(trigger, content)`
+Sheet uses the same trigger, close action, focus handling and controlled state as [Dialog](icedcn://component/dialog). Use `.default_open(true)` for an initially open sheet or pair `.open(value)` with `.on_open_change(..)`.
 
-A `Dialog` pinned to a window edge: the same component, closures and `dialog::Handle` (`s.trigger`, `s.close`, `s.is_open()`). The panel spans the window along its side, using three quarters of the window width on the left or right, capped at 384px on wider windows, and pads its sections itself through `sheet::header` and `sheet::footer`.
-
-| Builder | Type | Default | Description |
-| --- | --- | --- | --- |
-| `.side(side)` | `sheet::Side` | `Right` | The edge: `Top`, `Right`, `Bottom`, `Left`. |
-| `.default_open(bool)` | `bool` | `false` | Whether an uncontrolled sheet starts open. |
-| `.open(bool)` | `bool` | uncontrolled | Control the sheet. |
-| `.on_open_change(f)` | `Fn(bool) -> Message` | `None` | Publish a message with the requested open state. |
-| `.show_close_button(bool)` | `bool` | `true` | Show the corner close button. |
+Left and right sheets fill the viewport height and use 75% of its width. Their width is capped at 384 pixels on viewports of at least 640 pixels. Top and bottom sheets fit their content. Set `.max_height_ratio(0.5)` to limit them to half the viewport.

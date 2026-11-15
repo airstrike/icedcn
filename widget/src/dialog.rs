@@ -30,7 +30,7 @@ pub mod modal;
 use std::rc::Rc;
 
 use iced_core::Element;
-use iced_core::Length::{Fill, Shrink};
+use iced_core::Length::{Fill, Fit, Shrink};
 use iced_core::alignment::Horizontal;
 use iced_core::text::LineHeight;
 use iced_core::time::Instant;
@@ -63,6 +63,7 @@ pub struct Dialog<'a, Message> {
     on_open_change: Option<Box<dyn Fn(bool) -> Message + 'a>>,
     placement: Placement,
     drawer_height: Option<f32>,
+    pub(crate) sheet_height: f32,
     responsive: Option<f32>,
     compact: Option<(f32, f32)>,
     show_close_button: bool,
@@ -136,6 +137,7 @@ impl<'a, Message> Dialog<'a, Message> {
             on_open_change: None,
             placement,
             drawer_height: None,
+            sheet_height: 1.,
             responsive: None,
             compact: None,
             show_close_button: true,
@@ -481,7 +483,18 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                         .class(theme::scrollable::Hidden);
                     body = column![body, scroll].width(Fill).spacing(16).into();
                 }
-                body = Container::new(body).width(Fill).padding(padding).into();
+                let body_height = if matches!(placement, Placement::Side(Side::Left | Side::Right))
+                    && drawer_height.is_none()
+                {
+                    Fit
+                } else {
+                    Shrink
+                };
+                body = Container::new(body)
+                    .width(Fill)
+                    .height(body_height)
+                    .padding(padding)
+                    .into();
                 if let Some(footer) = &footer {
                     let band = Container::new(footer(&handle, &inherited))
                         .width(Fill)
@@ -572,15 +585,19 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
             };
             let panel = match placement {
                 Placement::Center { .. } => Container::new(content).width(Fill).style(self.style),
+                Placement::Side(side) if drawer_height.is_none() => {
+                    crate::sheet::panel(content, side)
+                }
                 // A left or right sheet spans the window's height; a top or
                 // bottom one takes its content's (`h-auto`).
                 Placement::Side(Side::Left | Side::Right) => Container::new(content)
                     .width(Fill)
                     .height(Fill)
                     .style(style),
-                Placement::Side(Side::Top | Side::Bottom) => {
-                    Container::new(content).width(Fill).style(style)
-                }
+                Placement::Side(Side::Top | Side::Bottom) => Container::new(content)
+                    .width(Fill)
+                    .height(Shrink)
+                    .style(style),
             };
 
             Slot::from(panel).compose().map(Event::App).boxed()
@@ -591,7 +608,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
             .margin(self.margin)
             .backdrop(self.backdrop)
             .animation(state.closing, || Event::Exited)
-            .drawer_height(drawer_height);
+            .side_height(drawer_height, self.sheet_height);
         if self.responsive.is_some() || self.compact.is_some() || self.footer.is_some() {
             Width {
                 content: modal.boxed(),

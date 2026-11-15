@@ -25,12 +25,13 @@
 //! .side(sheet::Side::Left)
 //! ```
 
-use iced_core::Element;
 use iced_core::Length::Fill;
 use iced_core::alignment::Vertical;
+use iced_core::{Element, Length};
 use iced_widget::Renderer;
 use icedcn_core::Theme;
 use icedcn_core::theme;
+use icedcn_core::theme::{container::Style, dialog};
 
 use crate::column::Column;
 use crate::compose::{Compose, Inherited, Slot};
@@ -58,6 +59,12 @@ impl<'a, Message> Sheet<'a, Message> {
         Self(self.0.side(side))
     }
 
+    /// Limit a top or bottom sheet to a fraction of the viewport height.
+    pub fn max_height_ratio(mut self, fraction: f32) -> Self {
+        self.0.sheet_height = fraction.clamp(0., 1.);
+        self
+    }
+
     /// Control the sheet: it is open exactly when `open` is.
     pub fn open(self, open: bool) -> Self {
         Self(self.0.open(open))
@@ -80,17 +87,48 @@ impl<'a, Message> Sheet<'a, Message> {
     }
 }
 
+/// Paint the one-pixel border only on the edge facing the document.
+pub(crate) fn panel<'a, Message: 'a>(
+    body: Slot<'a, Message>,
+    side: Side,
+) -> Container<'a, Message> {
+    let (height, edge) = match side {
+        Side::Left => (Fill, [0, 1, 0, 0]),
+        Side::Right => (Fill, [0, 0, 0, 1]),
+        Side::Top => (Length::Shrink, [0, 0, 1, 0]),
+        Side::Bottom => (Length::Shrink, [1, 0, 0, 0]),
+    };
+    let surface = Container::new(body)
+        .width(Fill)
+        .height(height)
+        .style(|theme: &Theme| Style {
+            background: Some(theme.popover.base.into()),
+            text_color: Some(theme.popover.foreground),
+            ..Style::default()
+        });
+    Container::new(surface)
+        .width(Fill)
+        .height(height)
+        .padding(edge)
+        .style(|theme: &Theme| Style {
+            background: Some(theme.neutral.border.into()),
+            ..dialog::sheet(theme)
+        })
+}
+
 /// A `SheetHeader`: a `SheetTitle` over a `SheetDescription`, `p-4 gap-0.5`.
 pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> Slot<'a, Message> {
     Container::new(
         column![
             text::Text::new(title)
                 .size(text::size::BASE)
+                .line_height(1.5)
                 .medium()
                 .style(theme::text::Foreground),
-            text::muted(description),
+            text::muted(description).line_height(20. / 14.),
         ]
-        .spacing(2),
+        .spacing(2)
+        .width(Fill),
     )
     .width(Fill)
     .padding(16)
@@ -102,20 +140,46 @@ pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> Slot<'a,
 pub fn footer<'a, Message: 'a>(
     actions: impl IntoIterator<Item = Slot<'a, Message>>,
 ) -> Slot<'a, Message> {
+    actions_column(actions)
+        .height(Fill)
+        .align_y(Vertical::Bottom)
+        .into()
+}
+
+/// Lay out a header, expanding body and fixed footer. A scrollable body scrolls
+/// independently of the heading and actions. The body has 16px side padding.
+pub fn content<'a, Message: 'a>(
+    header: impl Into<Slot<'a, Message>>,
+    body: impl Into<Slot<'a, Message>>,
+    actions: impl IntoIterator<Item = Slot<'a, Message>>,
+) -> Slot<'a, Message> {
+    let header = header.into();
+    column![
+        header,
+        Container::new(body)
+            .width(Fill)
+            .height(Fill)
+            .padding([0, 16]),
+        actions_column(actions),
+    ]
+    .width(Fill)
+    .height(Length::Fit)
+    .spacing(16)
+    .into()
+}
+
+fn actions_column<'a, Message: 'a>(
+    actions: impl IntoIterator<Item = Slot<'a, Message>>,
+) -> Container<'a, Message> {
     Container::new(
-        Column::with_children(
-            actions
-                .into_iter()
-                .map(|action| Slot::from(Container::new(action).width(Fill))),
-        )
-        .spacing(8)
-        .width(Fill),
+        Column::with_children(actions)
+            .stretch()
+            .width(Fill)
+            .spacing(8),
     )
     .width(Fill)
-    .height(Fill)
+    .height(Length::Fit)
     .padding(16)
-    .align_y(Vertical::Bottom)
-    .into()
 }
 
 impl<'a, Message: Clone + 'static> Compose<Message> for Sheet<'a, Message> {

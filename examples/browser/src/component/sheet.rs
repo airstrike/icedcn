@@ -1,12 +1,7 @@
-// API Reference is rendered via the `sheet-api-reference.md` snippet at the
-// bottom of BLOCKS.
-//
-// Intentional skips:
-// - sheet-rtl — RTL is not in scope (per CLAUDE.md).
+use iced::{Fill, Task};
+use icedcn::theme;
 
-use iced::Task;
-
-use icedcn::widget::{button, column, field, input, row, sheet, text};
+use icedcn::widget::{button, column, field, input, row, scrollable, sheet, text};
 use icedcn::{Slot, Theme};
 
 use crate::Message;
@@ -25,25 +20,20 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/sheet-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/sheet-installation.md"),
+    page::Block::Md("examples/browser/snippets/sheet-usage.md"),
     page::Block::Md("examples/browser/snippets/sheet-composition.md"),
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "side",
-                title: "Side",
-                description: Some(
-                    "Use `.side(..)` to set the edge of the screen the sheet appears from.",
-                ),
-                snippet: "examples/browser/snippets/sheet-side.md",
-            },
-            page::Block::Example {
-                id: "no-close-button",
-                title: "No Close Button",
-                description: Some("Use `.show_close_button(false)` to hide the close button."),
-                snippet: "examples/browser/snippets/sheet-no-close-button.md",
-            },
-        ],
+    page::Block::Example {
+        id: "side",
+        title: "Side",
+        description: Some("Set the edge with `.side(..)`. Choose top, right, bottom or left."),
+        snippet: "examples/browser/snippets/sheet-side.md",
+    },
+    page::Block::Example {
+        id: "no-close-button",
+        title: "No Close Button",
+        description: Some("Use `.show_close_button(false)` to hide the corner close button."),
+        snippet: "examples/browser/snippets/sheet-no-close-button.md",
     },
     page::Block::Md("examples/browser/snippets/sheet-api-reference.md"),
 ];
@@ -51,47 +41,78 @@ pub static BLOCKS: &[page::Block] = &[
 /// The sheet page. Every sheet is uncontrolled.
 pub struct SheetPage {
     state: page::State,
+    input_size: f32,
 }
 
 impl SheetPage {
     pub fn new(page_index: usize) -> Box<dyn page::Page> {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
+            input_size: 14.,
         })
     }
 }
 
-/// "Edit profile" sheet, opened by an outline button.
-fn profile<'a>(
-    side: sheet::Side,
-    label: &'static str,
-    show_close_button: bool,
-) -> Slot<'a, Message> {
+const DESCRIPTION: &str = "Make changes to your profile here. Click save when you're done.";
+const PARAGRAPH: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+
+fn profile(input_size: f32) -> Slot<'static, Message> {
+    sheet(
+        |s| s.trigger(button("Open").style(button::Outline)),
+        move |s| {
+            let entry = |label, value| {
+                let control = input("")
+                    .default_value(value)
+                    .text_size(input_size)
+                    .width(Fill);
+                field(control)
+                    .spacing(12)
+                    .label(text::label(label).height(14))
+                    .width(Fill)
+                    .into()
+            };
+            sheet::content(
+                sheet::header("Edit profile", DESCRIPTION),
+                field::group([
+                    entry("Name", "Pedro Duarte"),
+                    entry("Username", "@peduarte"),
+                ])
+                .spacing(24)
+                .width(Fill),
+                [
+                    button("Save changes").into(),
+                    s.close(button("Close").style(button::Outline)),
+                ],
+            )
+        },
+    )
+    .into()
+}
+
+fn side(edge: sheet::Side, label: &'static str) -> Slot<'static, Message> {
     sheet(
         move |s| s.trigger(button(label).style(button::Outline)),
         |s| {
-            column![
-                sheet::header(
-                    "Edit profile",
-                    "Make changes to your profile here. Click save when you're done.",
-                ),
-                column![
-                    field(input("").default_value("Pedro Duarte").width(iced::Fill)).label("Name"),
-                    field(input("").default_value("@peduarte").width(iced::Fill)).label("Username"),
-                ]
-                .spacing(24)
-                .padding([0, 16]),
-                sheet::footer([
-                    s.close(button("Save changes").width(iced::Fill)),
-                    s.close(button("Close").style(button::Outline).width(iced::Fill)),
-                ]),
-            ]
-            .height(iced::Fill)
-            .into()
+            let paragraphs =
+                column((0..10).map(|_| text::small(PARAGRAPH).line_height(1.625).into()))
+                    .spacing(8)
+                    .padding([0, 0, 8, 0])
+                    .width(Fill);
+            sheet::content(
+                sheet::header("Edit profile", DESCRIPTION),
+                scrollable(paragraphs)
+                    .height(Fill)
+                    .width(Fill)
+                    .class(theme::scrollable::Hidden),
+                [
+                    button("Save changes").into(),
+                    s.close(button("Cancel").style(button::Outline)),
+                ],
+            )
         },
     )
-    .side(side)
-    .show_close_button(show_close_button)
+    .side(edge)
+    .max_height_ratio(0.5)
     .into()
 }
 
@@ -124,26 +145,24 @@ impl page::Page for SheetPage {
         self.state.reset_volatile();
     }
 
+    fn window_width(&mut self, width: f32) {
+        self.input_size = if width < 768. { 16. } else { 14. };
+    }
+
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            "demo" => profile(sheet::Side::Right, "Open", true).into(),
-
+            "demo" => profile(self.input_size).into(),
             "side" => row![
-                profile(sheet::Side::Top, "Top", true),
-                profile(sheet::Side::Right, "Right", true),
-                profile(sheet::Side::Bottom, "Bottom", true),
-                profile(sheet::Side::Left, "Left", true),
-            ]
-            .spacing(8)
-            .into(),
-
-            "no-close-button" => column![
-                profile(sheet::Side::Right, "Open Sheet", false),
-                text::muted("Dismiss with Escape, a press outside, or the footer buttons."),
-            ]
-            .spacing(8)
-            .into(),
-
+                side(sheet::Side::Top,"Top"), side(sheet::Side::Right,"Right"),
+                side(sheet::Side::Bottom,"Bottom"), side(sheet::Side::Left,"Left"),
+            ].wrap().spacing(8).into(),
+            "no-close-button" => sheet(
+                |s| s.trigger(button("Open Sheet").style(button::Outline)),
+                |_| sheet::header(
+                    "No Close Button",
+                    "This sheet doesn't have a close button in the top-right corner. Click outside to close.",
+                ),
+            ).show_close_button(false).into(),
             _ => unreachable!("unknown sheet preview id: {id}"),
         }
     }

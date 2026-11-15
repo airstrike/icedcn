@@ -1,6 +1,15 @@
 ```rust
-use icedcn::widget::{button, sheet};
-
-sheet(|s| s.trigger(button("Open Sheet").style(button::Outline)), edit_profile)
-    .show_close_button(false)
+use icedcn::{
+    Slot,
+    widget::{button, sheet},
+};
+pub fn view() -> Slot<'static, ()> {
+    sheet(
+                |s| s.trigger(button("Open Sheet").style(button::Outline)),
+                |_| sheet::header(
+                    "No Close Button",
+                    "This sheet doesn't have a close button in the top-right corner. Click outside to close.",
+                ),
+            ).show_close_button(false).into()
+}
 ```
