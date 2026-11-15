@@ -38,10 +38,18 @@ browser menu.
 Browser navigation uses `/components/<slug>`, `/docs/<slug>`, `/examples`, and
 `/examples/receipts`. The root remains an alias for Accordion. Reload and browser
 Back/Forward restore the selected page; editing state inside examples remains
-in memory. Unknown paths show Accordion, and trailing slashes are accepted.
+in memory. Unknown paths show a not-found page and retain the requested URL; trailing
+slashes are accepted.
 
 The Workers asset configuration serves the app shell for unmatched navigation
 requests. Missing module, WASM, and other subresource requests remain 404s. Use
 Wrangler's local server when testing direct links; Python's static server above
 does not provide navigation fallback. The loader and generated module use
 root-absolute asset paths so nested routes load the same build.
+
+The app-local `routing` crate owns pathname resolution and browser history.
+`Router<R>` accepts any application route type implementing `Route`: a name,
+canonical path, optional title, and optional aliases. The browser supplies its
+own definitions and renders the selected view. The not-found view is rendered
+in the client; navigation fallback still returns the app shell with HTTP 200,
+while missing subresources return HTTP 404.

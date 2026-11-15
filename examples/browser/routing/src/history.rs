@@ -1,13 +1,11 @@
 //! Own the popstate listener for exactly the lifetime of its subscription.
 
-use iced::Subscription;
-use iced::futures::channel::mpsc;
-use iced::futures::{StreamExt, stream};
+use iced_futures::Subscription;
+use iced_futures::futures::channel::mpsc;
+use iced_futures::futures::{StreamExt, stream};
 use wasm_bindgen::closure::Closure;
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{Event, Window, console};
-
-use crate::Message;
 
 struct Listener {
     window: Window,
@@ -39,13 +37,13 @@ pub(super) fn push(path: &str) {
     }
 }
 
-pub(super) fn subscription() -> Subscription<Message> {
+pub(super) fn subscription() -> Subscription<String> {
     Subscription::run(|| {
         let (sender, receiver) = mpsc::unbounded();
         let listener = web_sys::window().and_then(|window| {
             let callback = Closure::new(move |_: Event| {
                 if let Some(path) = location() {
-                    let _ = sender.unbounded_send(Message::History(path));
+                    let _ = sender.unbounded_send(path);
                 }
             });
             window

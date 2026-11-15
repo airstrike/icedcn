@@ -492,6 +492,7 @@ dependencies = [
 name = "browser"
 version = "0.1.0"
 dependencies = [
+ "browser-routing",
  "fount",
  "iced",
  "iced_lucide",
@@ -506,8 +507,16 @@ dependencies = [
  "sweeten",
  "tokio",
  "tree-sitter",
- "wasm-bindgen",
  "wasmtimer",
+ "web-sys",
+]
+
+[[package]]
+name = "browser-routing"
+version = "0.1.0"
+dependencies = [
+ "iced_futures",
+ "wasm-bindgen",
  "web-sys",
 ]
 

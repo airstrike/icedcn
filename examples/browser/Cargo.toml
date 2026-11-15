@@ -6,6 +6,7 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
+browser-routing = { path = "routing" }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 serde.workspace = true
 serde_json.workspace = true
@@ -22,10 +23,9 @@ fount = { git = "https://github.com/airstrike/fount" }
 tokio = { version = "1", features = ["fs"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = "0.2"
 tree-sitter.workspace = true
 wasmtimer = "0.4"
-web-sys = { version = "0.3", features = ["Window", "Navigator", "console", "History", "Location", "Event", "EventTarget", "Document"] }
+web-sys = { version = "0.3", features = ["Window", "Navigator", "console"] }
 
 [build-dependencies]
 iced_lucide = { git = "https://github.com/airstrike/iced_lucide", branch = "codex/configurable-source" }

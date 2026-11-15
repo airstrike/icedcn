@@ -1,7 +1,11 @@
 mod header;
 mod menu;
+mod not_found;
 mod route;
+#[cfg(test)]
+mod tests;
 
+use browser_routing::{Route as _, Router};
 use iced::Element;
 use iced::Widget;
 use iced::font::set_defaults;
@@ -9,6 +13,7 @@ use iced::mouse::Interaction;
 use iced::widget::{column, combo_box, operation, row, space, stack};
 use iced::{clipboard, window};
 use icedcn::widget::scrollable;
+use route::Route;
 use std::time::Duration;
 
 use iced::{Center, Fill, Font, Pixels, Subscription, Task};
@@ -35,6 +40,8 @@ const PINNED_FONTS: &[&str] = &["Geist", "Inter"];
 pub struct App {
     dark_mode: bool,
     showing_examples: bool,
+    not_found: Option<String>,
+    routes: Router<route::Definition>,
     examples: examples::State,
     width: f32,
     search: bool,
@@ -60,6 +67,8 @@ pub enum Message {
     SelectPage(usize),
     /// Restore a browser history entry without creating another entry.
     History(String),
+    /// Navigate to a site path, including the root alias.
+    GoTo(&'static str),
     OpenUrl(&'static str),
     OpenComponent(String),
     CopyText(String),
@@ -175,6 +184,38 @@ impl App {
 
         let component_count = pages.len();
         pages.extend(guide::pages(component_count));
+        let routes = Router::new(
+            pages
+                .iter()
+                .enumerate()
+                .map(|(index, page)| {
+                    let namespace = if index < component_count {
+                        "components"
+                    } else {
+                        "docs"
+                    };
+                    route::Definition {
+                        destination: Route::Page(index),
+                        path: format!("/{namespace}/{}", page::slug(page.meta().title)),
+                        name: page.meta().title,
+                        title: Some(page.meta().title),
+                    }
+                })
+                .chain([
+                    route::Definition {
+                        destination: Route::Examples,
+                        path: "/examples".into(),
+                        name: "Examples",
+                        title: Some("Examples"),
+                    },
+                    route::Definition {
+                        destination: Route::Receipts,
+                        path: "/examples/receipts".into(),
+                        name: "Receipts",
+                        title: Some("Receipts"),
+                    },
+                ]),
+        );
         tasks.push(
             window::oldest()
                 .and_then(window::size)
@@ -198,6 +239,8 @@ impl App {
         let mut app = Self {
             dark_mode,
             showing_examples: false,
+            not_found: None,
+            routes,
             examples: examples::State::default(),
             width,
             search: false,
@@ -213,9 +256,9 @@ impl App {
             font_list: combo_box::State::new(vec![default_font.clone()]),
             current_font: default_font,
         };
-        let initial = route::location()
-            .and_then(|path| route::Route::parse(&path, &app.pages, app.component_count))
-            .unwrap_or(route::Route::Page(0));
+        let initial = browser_routing::location()
+            .map(|path| Route::parse(&path, &app.routes))
+            .unwrap_or(Route::Page(0));
         tasks.push(app.restore(initial));
         (app, Task::batch(tasks))
     }
@@ -231,75 +274,95 @@ impl App {
     pub fn subscription(&self) -> Subscription<Message> {
         let i = self.current_page;
         let page = match self.pages.get(i).filter(|_| !self.showing_examples) {
-            Some(page) => page
+            Some(page) if self.not_found.is_none() => page
                 .subscription()
                 .with(i)
                 .map(|(i, m)| Message::Page(i, m)),
-            None => Subscription::none(),
+            _ => Subscription::none(),
         };
         Subscription::batch([
             page,
             header::shortcuts(),
-            route::subscription(),
+            browser_routing::subscription().map(Message::History),
             window::resize_events().map(|(_, size)| Message::Width(size.width)),
         ])
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
         if let Message::History(path) = message {
-            let destination = route::Route::parse(&path, &self.pages, self.component_count)
-                .unwrap_or(route::Route::Page(0));
+            let destination = Route::parse(&path, &self.routes);
             return self.restore(destination);
+        }
+        if let Message::GoTo(path) = message {
+            let destination = Route::parse(path, &self.routes);
+            let changed = destination != self.route();
+            let task = self.restore(destination);
+            if changed {
+                browser_routing::push(path);
+            }
+            return task;
         }
         let previous = self.route();
         let task = self.update_inner(message);
         let destination = self.route();
         if destination != previous {
-            route::push(&destination.path(&self.pages, self.component_count));
-            route::set_title(&self.title());
+            if let Some(path) = destination.path(&self.routes) {
+                browser_routing::push(path);
+            }
+            browser_routing::set_title(&self.title());
         }
         task
     }
 
-    fn route(&self) -> route::Route {
-        if self.showing_examples {
+    fn route(&self) -> Route {
+        if let Some(path) = &self.not_found {
+            Route::NotFound(path.clone())
+        } else if self.showing_examples {
             if self.examples.is_open() {
-                route::Route::Receipts
+                Route::Receipts
             } else {
-                route::Route::Examples
+                Route::Examples
             }
         } else {
-            route::Route::Page(self.current_page)
+            Route::Page(self.current_page)
         }
     }
 
-    fn restore(&mut self, destination: route::Route) -> Task<Message> {
+    fn restore(&mut self, destination: Route) -> Task<Message> {
         self.search = false;
         self.fonts_open = false;
         let message = match destination {
-            route::Route::Page(index) => Message::SelectPage(index),
-            route::Route::Examples => Message::Example(examples::Event::Gallery),
-            route::Route::Receipts => Message::Example(examples::Event::OpenReceipts),
+            Route::NotFound(path) => {
+                self.not_found = Some(path);
+                self.showing_examples = false;
+                browser_routing::set_title(&self.title());
+                return Task::none();
+            }
+            Route::Page(index) => Message::SelectPage(index),
+            Route::Examples => Message::Example(examples::Event::Gallery),
+            Route::Receipts => Message::Example(examples::Event::OpenReceipts),
         };
         let task = self.update_inner(message);
-        route::set_title(&self.title());
+        browser_routing::set_title(&self.title());
         task
     }
 
     /// Title of the selected documentation page or example.
     pub fn title(&self) -> String {
-        let title = match self.route() {
-            route::Route::Page(index) => self.pages[index].meta().title,
-            route::Route::Examples => "Examples",
-            route::Route::Receipts => "Receipts",
-        };
+        let destination = self.route();
+        let title = destination
+            .path(&self.routes)
+            .and_then(|path| self.routes.find(path))
+            .map(|definition| definition.title().unwrap_or_else(|| definition.name()))
+            .unwrap_or("Page not found");
         format!("{title} — icedcn")
     }
 
     fn update_inner(&mut self, message: Message) -> Task<Message> {
         match message {
-            Message::History(_) => Task::none(),
+            Message::History(_) | Message::GoTo(_) => Task::none(),
             Message::Example(event) => {
+                self.not_found = None;
                 self.search = false;
                 self.showing_examples = true;
                 self.examples.update(event)
@@ -400,6 +463,7 @@ impl App {
                     prev.reset_volatile();
                 }
                 self.showing_examples = false;
+                self.not_found = None;
                 self.current_page = page;
                 let page = &mut self.pages[page];
                 let visible = page.on_visible();
@@ -438,7 +502,11 @@ impl App {
             }
             Message::SelectArticle => {
                 use iced::widget::operation::text::select_all;
-                if self.search || self.fonts_open || self.showing_examples {
+                if self.search
+                    || self.fonts_open
+                    || self.showing_examples
+                    || self.not_found.is_some()
+                {
                     Task::none()
                 } else {
                     select_all(self.pages[self.current_page].scrollable_id())
@@ -631,6 +699,13 @@ impl App {
     fn content(&self) -> iced::Element<'_, Message, Theme> {
         let width = self.width;
         let header = self.header(width);
+
+        if let Some(path) = &self.not_found {
+            return column![header, not_found::view(path)]
+                .width(Fill)
+                .height(Fill)
+                .boxed();
+        }
 
         if self.showing_examples {
             return toaster(

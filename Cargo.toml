@@ -31,6 +31,7 @@ members = [
   "core",
   "widget",
   "examples/browser",
+  "examples/browser/routing",
   "examples/highlight",
   "examples/palette",
 ]
