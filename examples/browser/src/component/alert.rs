@@ -7,7 +7,7 @@ mod destructive;
 use crate::icon;
 use iced::{Fill, Task};
 
-use icedcn::widget::{alert, column, text};
+use icedcn::widget::{alert, column};
 use icedcn::{Slot, Theme};
 
 use crate::page;
@@ -60,7 +60,6 @@ pub static BLOCKS: &[page::Block] = &[
 pub struct AlertPage {
     state: page::State,
     wide: bool,
-    description_wrapping: text::Wrapping,
 }
 
 impl AlertPage {
@@ -68,19 +67,13 @@ impl AlertPage {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
             wide: true,
-            description_wrapping: text::Wrapping::Word,
         })
     }
 }
 
-fn demo<M: Clone + 'static>(wrapping: text::Wrapping) -> Slot<'static, M> {
-    let notice = |icon, title, description| {
-        alert()
-            .icon(icon)
-            .title(title)
-            .description(description)
-            .description_wrapping(wrapping)
-    };
+fn demo<'a, M: 'a>() -> Slot<'a, M> {
+    let notice =
+        |icon, title, description| alert().icon(icon).title(title).description(description);
     column![
         notice(icon::circle_check().size(16).line_height(1.0),
             "Payment successful",
@@ -122,11 +115,6 @@ impl page::Page for AlertPage {
 
     fn window_width(&mut self, width: f32) {
         self.wide = width >= 640.0;
-        self.description_wrapping = if width < 768.0 {
-            text::Wrapping::Balanced
-        } else {
-            text::Wrapping::Word
-        };
     }
 
     fn backdrop(&self) -> page::Backdrop {
@@ -143,10 +131,10 @@ impl page::Page for AlertPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, crate::Message, Theme> {
         let view: Slot<'_, crate::Message> = match id {
-            "demo" => demo(self.description_wrapping),
-            "basic" => default::view(self.description_wrapping),
-            "destructive" => destructive::view(self.description_wrapping),
-            "action" => action::view(self.description_wrapping, None),
+            "demo" => demo(),
+            "basic" => default::view(),
+            "destructive" => destructive::view(),
+            "action" => action::view(None),
             _ => unreachable!("unknown alert preview id: {id}"),
         };
         view.into()

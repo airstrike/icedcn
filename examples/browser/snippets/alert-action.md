@@ -1,12 +1,11 @@
 ```rust
-use icedcn::widget::{alert, button, text};
+use icedcn::widget::{alert, button};
 use icedcn::{Size, Slot};
 
-fn dark_mode<M: Clone + 'static>(wrapping: text::Wrapping, enable: Option<M>) -> Slot<'static, M> {
+fn dark_mode<'a, M: Clone + 'a>(enable: Option<M>) -> Slot<'a, M> {
     alert()
         .title("Dark mode is now available")
         .description("Enable it under your profile settings to get started.")
-        .description_wrapping(wrapping)
         .action(button("Enable").size(Size::Xs).on_press_maybe(enable))
         .max_width(448)
         .into()

@@ -13,4 +13,4 @@ The optional parts default to `None`:
 
 `.max_width(width)` takes `impl Into<Pixels>` and defaults to `f32::INFINITY`. The examples use 448px.
 
-`.description_wrapping(mode)` takes `text::Wrapping` and defaults to `Word`. The examples choose `Balanced` below a 768px window width.
+`.description_wrapping(mode)` takes `text::Wrapping` and defaults to `Word`. Text wraps within the available width without application size state.

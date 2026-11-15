@@ -91,9 +91,8 @@ impl<'a, Message: 'a> Alert<'a, Message> {
         self
     }
 
-    /// Set description wrapping. Defaults to word wrapping. Use
-    /// [`Wrapping::Balanced`] for Nova's description below the 768px
-    /// window breakpoint; the application owns its window size.
+    /// Set description wrapping. Defaults to word wrapping within the
+    /// available width.
     pub fn description_wrapping(mut self, wrapping: Wrapping) -> Self {
         self.description_wrapping = wrapping;
         self

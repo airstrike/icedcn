@@ -2,11 +2,11 @@
 use crate::icon;
 use iced::Fill;
 use icedcn::Slot;
-use icedcn::widget::{alert, column, text};
+use icedcn::widget::{alert, column};
 
-fn demo<M: Clone + 'static>(wrapping: text::Wrapping) -> Slot<'static, M> {
+fn demo<'a, M: 'a>() -> Slot<'a, M> {
     let notice = |icon, title, description| {
-        alert().icon(icon).title(title).description(description).description_wrapping(wrapping)
+        alert().icon(icon).title(title).description(description)
     };
     column![
         notice(icon::circle_check().size(16).line_height(1.0),
