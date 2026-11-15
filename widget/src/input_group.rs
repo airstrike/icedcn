@@ -175,6 +175,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
                 .style(Box::new(control) as StyleFn<'a, Theme>)
                 .into(),
             Control::Textarea(area) => area
+                .resizable(false)
                 .style(Box::new(textarea) as text_editor::StyleFn<'a, Theme>)
                 .into(),
         };

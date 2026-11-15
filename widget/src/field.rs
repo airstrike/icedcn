@@ -404,12 +404,17 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
             match orientation {
                 Orientation::Vertical => {
                     let mut col = iced_widget::Column::new().spacing(8);
-                    if let Some(label) = label {
-                        col = col.push(label);
-                    }
                     let mut description = description.map(Slot::compose);
                     if description_above && let Some(above) = description.take() {
-                        col = col.push(above);
+                        // A description immediately before the final control sits
+                        // four pixels closer to its label.
+                        let gap = if error.is_none() { 4 } else { 8 };
+                        let heading = iced_widget::Column::with_children(label)
+                            .spacing(gap)
+                            .push(above);
+                        col = col.push(heading.boxed());
+                    } else if let Some(label) = label {
+                        col = col.push(label);
                     }
                     col = col.push(content.compose());
                     if let Some(below) = description {

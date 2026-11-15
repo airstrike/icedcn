@@ -1,8 +1,13 @@
 ```rust
-use icedcn::theme::tweak::Alpha;
+use icedcn::Slot;
 use icedcn::theme;
+use icedcn::theme::tweak::Alpha;
 use icedcn::widget::{field, text, textarea};
 
-field(textarea("Type your message here.")).disabled(true)
-    .label(text::label("Message").style(theme::text::Foreground + Alpha(0.5)))
+pub fn view() -> Slot<'static, ()> {
+    field(textarea("Type your message here."))
+        .disabled(true)
+        .label(text::label("Message").style(theme::text::Foreground + Alpha(0.5)))
+        .into()
+}
 ```

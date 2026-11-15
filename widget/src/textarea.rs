@@ -22,13 +22,12 @@
 mod widget;
 
 use iced_core::Element;
-use iced_widget::text_editor::StyleFn;
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
 
 use crate::compose::{Compose, Inherited, Slot};
 
-pub use icedcn_core::theme::textarea::{Default, Invalid};
+pub use icedcn_core::theme::textarea::{Appearance, Default, Invalid};
 
 /// A multi-line text field.
 ///
@@ -41,7 +40,9 @@ pub struct Textarea<'a, Message> {
     on_input: Option<Box<dyn Fn(String) -> Message + 'a>>,
     disabled: bool,
     min_height: f32,
-    style: StyleFn<'a, Theme>,
+    text_size: f32,
+    resizable: bool,
+    style: Appearance<'a>,
 }
 
 /// Create an empty, uncontrolled [`Textarea`] showing `placeholder`.
@@ -53,6 +54,8 @@ pub fn textarea<'a, Message>(placeholder: impl Into<String>) -> Textarea<'a, Mes
         on_input: None,
         disabled: false,
         min_height: 64.0,
+        text_size: 14.,
+        resizable: true,
         style: Default.into(),
     }
 }
@@ -90,8 +93,20 @@ impl<'a, Message> Textarea<'a, Message> {
         self
     }
 
+    /// Set the text size in logical pixels.
+    pub fn text_size(mut self, size: f32) -> Self {
+        self.text_size = size;
+        self
+    }
+
+    /// Show a handle for changing the height by dragging its lower-right corner.
+    pub fn resizable(mut self, resizable: bool) -> Self {
+        self.resizable = resizable;
+        self
+    }
+
     /// Set the style: `textarea::Invalid`, or any text editor style.
-    pub fn style(mut self, style: impl Into<StyleFn<'a, Theme>>) -> Self {
+    pub fn style(mut self, style: impl Into<Appearance<'a>>) -> Self {
         self.style = style.into();
         self
     }
@@ -106,23 +121,7 @@ impl<'a, Message: 'a> Compose<Message> for Textarea<'a, Message> {
     where
         Self: 'b,
     {
-        let Textarea {
-            placeholder,
-            value,
-            default_value,
-            on_input,
-            disabled,
-            min_height,
-            style,
-        } = *self;
-
-        widget::Textarea::new(placeholder, style)
-            .value(value)
-            .default_value(default_value)
-            .on_input(on_input)
-            .disabled(disabled)
-            .min_height(min_height)
-            .boxed()
+        (*self).boxed()
     }
 }
 

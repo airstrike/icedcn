@@ -1,5 +1,8 @@
 ```rust
+use icedcn::Slot;
 use icedcn::widget::textarea;
 
-textarea("Type your message here.")
+pub fn view() -> Slot<'static, ()> {
+    textarea("Type your message here.").into()
+}
 ```

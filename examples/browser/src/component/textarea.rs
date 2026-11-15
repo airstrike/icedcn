@@ -21,53 +21,51 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/textarea-demo.md",
     },
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "field",
-                title: "Field",
-                description: Some("Use `field(..)` to add a label and a description."),
-                snippet: "examples/browser/snippets/textarea-field.md",
-            },
-            page::Block::Example {
-                id: "disabled",
-                title: "Disabled",
-                description: Some("Use `.disabled(true)` to disable the textarea."),
-                snippet: "examples/browser/snippets/textarea-disabled.md",
-            },
-            page::Block::Example {
-                id: "invalid",
-                title: "Invalid",
-                description: Some("Use `.style(textarea::Invalid)` to show an error state."),
-                snippet: "examples/browser/snippets/textarea-invalid.md",
-            },
-            page::Block::Example {
-                id: "button",
-                title: "Button",
-                description: Some("Pair the textarea with a button."),
-                snippet: "examples/browser/snippets/textarea-button.md",
-            },
-        ],
+    page::Block::Md("examples/browser/snippets/textarea-installation.md"),
+    page::Block::Md("examples/browser/snippets/textarea-usage.md"),
+    page::Block::Example {
+        id: "field",
+        title: "Field",
+        description: Some("Use `field(..)` to add a label and a description."),
+        snippet: "examples/browser/snippets/textarea-field.md",
     },
-    page::Block::Md("examples/browser/snippets/textarea-api-reference.md"),
+    page::Block::Example {
+        id: "disabled",
+        title: "Disabled",
+        description: Some("Use `.disabled(true)` to disable the textarea."),
+        snippet: "examples/browser/snippets/textarea-disabled.md",
+    },
+    page::Block::Example {
+        id: "invalid",
+        title: "Invalid",
+        description: Some("Use `.style(textarea::Invalid)` to show an error state."),
+        snippet: "examples/browser/snippets/textarea-invalid.md",
+    },
+    page::Block::Example {
+        id: "button",
+        title: "Button",
+        description: Some("Pair the textarea with a button."),
+        snippet: "examples/browser/snippets/textarea-button.md",
+    },
 ];
 
 pub struct TextareaPage {
     state: page::State,
+    text_size: f32,
 }
 
 impl TextareaPage {
     pub fn new(page_index: usize) -> Box<dyn page::Page> {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
+            text_size: 14.,
         })
     }
 }
 
 /// The preview's `w-full` column, capped like the docs' preview.
 fn full<'a>(content: impl Into<Slot<'a, Message>>) -> iced::Element<'a, Message, Theme> {
-    container(content).width(Fill).max_width(384).into()
+    container(content).width(Fill).max_width(320).into()
 }
 
 impl page::Page for TextareaPage {
@@ -99,36 +97,53 @@ impl page::Page for TextareaPage {
         self.state.reset_volatile();
     }
 
+    fn window_width(&mut self, width: f32) {
+        self.text_size = if width < 768. { 16. } else { 14. };
+    }
+
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: 0.into(),
+            ..Default::default()
+        }
+    }
+
+    fn docs_preview(&self, id: &str, theme: &Theme) -> iced::Element<'_, Message, Theme> {
+        container(self.themed_preview(id, theme))
+            .center_x(Fill)
+            .center_y(288)
+            .padding([0, 40])
+            .into()
+    }
+
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
+        let area = || textarea("Type your message here.").text_size(self.text_size);
         match id {
-            "demo" => full(textarea("Type your message here.")),
+            "demo" => full(area()),
 
             "field" => full(
-                field(textarea("Type your message here."))
+                field(area())
                     .label("Message")
                     .description("Enter your message below.")
                     .description_above(),
             ),
 
             "disabled" => full(
-                field(textarea("Type your message here."))
+                field(area())
                     .disabled(true)
                     .label(text::label("Message").style(theme::text::Foreground + Alpha(0.5))),
             ),
 
             "invalid" => full(
-                field(textarea("Type your message here.").style(textarea::Invalid))
+                field(area().style(textarea::Invalid))
                     .label(text::label("Message").style(theme::text::Destructive))
                     .description("Please enter a valid message."),
             ),
 
             "button" => full(
-                column![
-                    textarea("Type your message here."),
-                    button("Send message").width(Fill),
-                ]
-                .spacing(8)
-                .width(Fill),
+                column![area(), button("Send message").width(Fill),]
+                    .spacing(8)
+                    .width(Fill),
             ),
 
             _ => unreachable!("unknown textarea preview id: {id}"),

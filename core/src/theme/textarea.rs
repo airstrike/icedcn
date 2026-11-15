@@ -65,3 +65,44 @@ impl<'a> From<Invalid> for StyleFn<'a, Theme> {
         Box::new(invalid)
     }
 }
+
+/// Built-in textarea treatments can draw an outer ring. An iced editor style
+/// controls the editor surface directly.
+pub enum Appearance<'a> {
+    Default,
+    Invalid,
+    Custom(StyleFn<'a, Theme>),
+}
+
+impl<'a> Appearance<'a> {
+    /// Resolve the editor surface and any surrounding ring together.
+    pub fn resolve(&self, theme: &Theme, status: Status) -> (Style, Option<text_input::Ring>) {
+        let field = match self {
+            Self::Default => text_input::default(theme, input_status(status)),
+            Self::Invalid => text_input::invalid(theme, input_status(status)),
+            Self::Custom(style) => return (style(theme, status), None),
+        };
+        (project(field), field.ring)
+    }
+}
+
+impl From<Default> for Appearance<'_> {
+    fn from(_: Default) -> Self {
+        Self::Default
+    }
+}
+
+impl From<Invalid> for Appearance<'_> {
+    fn from(_: Invalid) -> Self {
+        Self::Invalid
+    }
+}
+
+impl<'a, F> From<F> for Appearance<'a>
+where
+    F: Fn(&Theme, Status) -> Style + 'a,
+{
+    fn from(style: F) -> Self {
+        Self::Custom(Box::new(style))
+    }
+}

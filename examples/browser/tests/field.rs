@@ -168,3 +168,21 @@ fn responsive_profile_stretches_fixed_controls_only_when_stacked() {
         }
     }
 }
+
+#[test]
+fn description_above_keeps_the_heading_compact_in_the_input_and_slider_recipes() {
+    let page = FieldPage::new(0);
+    for (id, title, detail) in [
+        ("input", "Password", "Must be at least 8 characters long."),
+        (
+            "slider",
+            "Price Range",
+            "Set your budget range ($200 - 800).",
+        ),
+    ] {
+        let mut ui = Simulator::new(page.preview(id));
+        let label = ui.find(title).unwrap().bounds();
+        let description = ui.find(detail).unwrap().bounds();
+        assert_eq!(description.y - (label.y + label.height), 4., "{id}");
+    }
+}
