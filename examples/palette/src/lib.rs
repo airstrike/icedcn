@@ -352,14 +352,21 @@ impl State {
                 .style(button::Outline)
                 .width(Fill)
                 .on_press(Message::ToggleControls),
-            ];
+            ]
+            .width(Fill);
             let controls = if self.controls_open {
-                controls.push(container(sidebar::view(self, true)).height(300).into())
+                controls.push(
+                    container(sidebar::view(self, true))
+                        .width(Fill)
+                        .height(300)
+                        .into(),
+                )
             } else {
                 controls
             };
             column![controls.spacing(8), preview]
                 .spacing(12)
+                .width(Fill)
                 .height(Fill)
                 .into()
         } else {
