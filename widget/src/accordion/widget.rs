@@ -187,63 +187,46 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
     }
 
     fn state(&self) -> tree::State {
-        let items = self
-            .items
-            .iter()
-            .map(|item| {
-                let is_open = self.is_open(&item.id);
-                ItemState::seeded(item.id.clone(), is_open)
-            })
-            .collect();
-
         tree::State::new(State {
             open: self.open.clone(),
-            items,
+            items: Vec::new(),
             now: None,
         })
     }
 
     fn diff(&mut self, tree: &mut Tree) {
-        // One geometry-only tree per item, each holding the item's four
-        // widget trees in this order so layout() and draw() can index by
-        // slot:
-        //   0 — trigger
-        //   1 — chevron-closed
-        //   2 — chevron-open
-        //   3 — body
-        tree.children.resize_with(self.items.len(), Tree::empty);
-
-        for (item_tree, item) in tree.children.iter_mut().zip(&mut self.items) {
-            item_tree.diff_children(&mut [
-                &mut item.trigger,
-                &mut item.chevron_closed,
-                &mut item.chevron_open,
-                &mut item.body,
-            ]);
-        }
-
-        // Reconcile per-item animation state: items added since the last
-        // render get fresh `ItemState`s; items dropped get their state
-        // dropped; surviving items keep their animations + caches by
-        // walking the existing state vector by id.
         let state = tree.state.downcast_mut::<State>();
-
         if self.is_controlled {
             state.open.clone_from(&self.open);
         } else {
             self.open.clone_from(&state.open);
         }
 
-        let mut next: Vec<ItemState> = Vec::with_capacity(self.items.len());
-        for item in &self.items {
-            let is_open = self.is_open(&item.id);
-            let existing = state.items.iter().position(|s| s.id == item.id);
-            match existing {
-                Some(i) => next.push(state.items.swap_remove(i)),
-                None => next.push(ItemState::seeded(item.id.clone(), is_open)),
+        // Reconcile the four child widgets together with their header's interaction
+        // and animation state. A retained key owns the whole row across moves.
+        for (index, item) in self.items.iter_mut().enumerate() {
+            if state.items.get(index).is_none_or(|s| s.id != item.id) {
+                if let Some(offset) = state.items[index..].iter().position(|s| s.id == item.id) {
+                    state.items.swap(index, index + offset);
+                    tree.children.swap(index, index + offset);
+                } else {
+                    let open = self.open.contains(&item.id);
+                    state
+                        .items
+                        .insert(index, ItemState::seeded(item.id.clone(), open));
+                    tree.children.insert(index, Tree::empty());
+                }
             }
+
+            tree.children[index].diff_children(&mut [
+                &mut item.trigger,
+                &mut item.chevron_closed,
+                &mut item.chevron_open,
+                &mut item.body,
+            ]);
         }
-        state.items = next;
+        state.items.truncate(self.items.len());
+        tree.children.truncate(self.items.len());
     }
 
     fn size(&self) -> Size<Length> {
@@ -347,11 +330,7 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
 
             let body_natural_h = body_tree.size.height + BODY_PADDING_BOTTOM;
 
-            let item_state = state
-                .items
-                .iter_mut()
-                .find(|s| s.id == item.id)
-                .expect("ItemState reconciled in diff()");
+            let item_state = &state.items[index];
 
             // Compute the displayed body height — interpolate between 0
             // and `body_natural_h` over the animation progress.
@@ -468,13 +447,8 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
         }
 
         // Detect external is_open drift and kick the animation.
-        for item in &self.items {
+        for (item, s) in self.items.iter().zip(&mut state.items) {
             let is_open = self.is_open(&item.id);
-            let s = state
-                .items
-                .iter_mut()
-                .find(|s| s.id == item.id)
-                .expect("ItemState exists by id (reconciled in diff)");
             if is_open != s.last_is_open {
                 if let Some(now) = state.now {
                     s.animation.go_mut(is_open, now);
@@ -546,9 +520,10 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
             shell.capture_event();
         }
 
-        for (item, (item_layout, item_tree)) in self
+        for ((item, s), (item_layout, item_tree)) in self
             .items
             .iter_mut()
+            .zip(&mut state.items)
             .zip(layout.iter_mut(&mut tree.children))
         {
             let mut children = item_layout.iter_mut(&mut item_tree.children);
@@ -564,12 +539,6 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
                 width: (item_layout.bounds().width - 2.0 * item.inset).max(0.0),
                 height: trigger_row_height,
             };
-
-            let s = state
-                .items
-                .iter_mut()
-                .find(|s| s.id == item.id)
-                .expect("ItemState exists by id");
 
             let over = !item.disabled
                 && match event {
@@ -739,11 +708,7 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
                 children.next().expect("chevron-open layout");
             let (body_layout, body_tree) = children.next().expect("body layout");
 
-            let item_state = state
-                .items
-                .iter()
-                .find(|s| s.id == item.id)
-                .expect("ItemState by id");
+            let item_state = &state.items[item_index];
 
             let is_open_now = self.is_open(&item.id);
             let status = if item.disabled {

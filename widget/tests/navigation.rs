@@ -11,6 +11,7 @@ use icedcn_widget::{accordion, button, column, dialog};
 #[derive(Debug, Clone, PartialEq)]
 enum Message {
     Open(Vec<String>),
+    Edited(&'static str, String),
     Pressed,
 }
 type Simulator<'a> = iced_test::Simulator<'a, Message, Theme, Renderer>;
@@ -114,6 +115,100 @@ fn accordion_arrows_skip_disabled_headers_and_activate_the_selected_item() {
         ui.into_messages().collect::<Vec<_>>(),
         [Message::Open(vec!["three".into()])]
     );
+}
+
+#[test]
+fn accordion_edits_and_input_focus_follow_keys_across_rebuilds() {
+    use iced_core::widget::Id;
+    use icedcn_widget::{container, input};
+
+    fn entries(keys: &[&'static str]) -> Element<'static, Message, Theme, Renderer> {
+        accordion(keys.iter().copied().map(|key| {
+            let draft = input("").on_input(move |value| Message::Edited(key, value));
+            accordion::item(key, key).content(container(draft).id(Id::new(key)))
+        }))
+        .mode(accordion::Mode::Multiple)
+        .value(keys.iter().copied())
+        .into()
+    }
+
+    let mut ui = simulator(entries(&["a", "b"]));
+    ui.click(Id::new("a")).expect("first open editor");
+    ui.typewrite("A");
+    ui.click(Id::new("b")).expect("second open editor");
+    ui.typewrite("B");
+
+    ui = ui.rebuild(entries(&["b", "c", "a"]));
+    ui.typewrite("2");
+    ui.click(Id::new("a")).expect("moved editor");
+    ui.tap_key(Named::End);
+    ui.typewrite("3");
+
+    ui = ui.rebuild(entries(&["c", "b"]));
+    ui.typewrite("x");
+    ui.click(Id::new("c")).expect("inserted editor");
+    ui.typewrite("C");
+    ui = ui.rebuild(entries(&["a", "b", "c"]));
+    ui.click(Id::new("a")).expect("reinserted editor");
+    ui.typewrite("R");
+
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        [
+            Message::Edited("a", "A".into()),
+            Message::Edited("b", "B".into()),
+            Message::Edited("b", "B2".into()),
+            Message::Edited("a", "A3".into()),
+            Message::Edited("c", "C".into()),
+            Message::Edited("a", "R".into()),
+        ]
+    );
+}
+
+#[test]
+fn accordion_keeps_header_focus_and_animation_on_reorder() {
+    use std::time::Duration;
+
+    use iced_core::widget::Id;
+    use iced_widget::Space;
+    use icedcn_widget::container;
+
+    fn rows(keys: &[&'static str]) -> Element<'static, Message, Theme, Renderer> {
+        accordion(keys.iter().copied().map(|key| {
+            accordion::item(
+                key,
+                container(Space::new().width(60).height(16)).id(Id::new(key)),
+            )
+            .content(Space::new().height(100))
+        }))
+        .into()
+    }
+
+    fn header_gap(ui: &mut Simulator<'_>) -> f32 {
+        let a = ui.find(Id::new("a")).expect("opening header").bounds();
+        let b = ui.find(Id::new("b")).expect("following header").bounds();
+        b.y - a.y
+    }
+
+    let mut ui = simulator(rows(&["a", "b", "c"]));
+    let now = Instant::now();
+    ui.simulate([Event::Window(window::Event::RedrawRequested(now))]);
+    let closed = header_gap(&mut ui);
+    ui.click(Id::new("a")).expect("first header");
+    ui.simulate([Event::Window(window::Event::RedrawRequested(now))]);
+    ui.simulate([Event::Window(window::Event::RedrawRequested(
+        now + Duration::from_millis(50),
+    ))]);
+    let opening = header_gap(&mut ui);
+    assert!(opening > closed && opening < closed + 110.);
+
+    ui = ui.rebuild(rows(&["c", "a", "b"]));
+    assert_eq!(focus(&mut ui).focused, Some(1));
+    assert!((header_gap(&mut ui) - opening).abs() < 0.01);
+    ui.simulate([Event::Window(window::Event::RedrawRequested(
+        now + Duration::from_millis(250),
+    ))]);
+    assert!((header_gap(&mut ui) - (closed + 110.)).abs() < 0.01);
 }
 
 #[test]

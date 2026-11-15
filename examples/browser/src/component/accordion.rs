@@ -83,7 +83,6 @@ impl AccordionPage {
 }
 
 fn build_accordion<'a>(
-    mode: accordion::Mode,
     open: &[&'a str],
     items: impl IntoIterator<Item = (&'a str, &'a str, &'a str, bool)>,
 ) -> accordion::Accordion<'a, Message> {
@@ -92,7 +91,6 @@ fn build_accordion<'a>(
             .content(body)
             .disabled(disabled)
     }))
-    .mode(mode)
     .default_value(open.iter().copied())
 }
 
@@ -159,12 +157,8 @@ impl page::Page for AccordionPage {
     }
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
-        let single = accordion::Mode::Single { collapsible: true };
-        let multiple = accordion::Mode::Multiple;
-
         match id {
             "demo" => container(build_accordion(
-                single,
                 &["shipping"],
                 [
                     (
@@ -191,7 +185,6 @@ impl page::Page for AccordionPage {
             .into(),
 
             "basic" => container(build_accordion(
-                single,
                 &["item-1"],
                 [
                     (
@@ -218,7 +211,6 @@ impl page::Page for AccordionPage {
             .into(),
 
             "multiple" => container(build_accordion(
-                multiple,
                 &["notifications"],
                 [
                     (
@@ -240,12 +232,11 @@ impl page::Page for AccordionPage {
                         false,
                     ),
                 ],
-            ))
+            ).mode(accordion::Mode::Multiple))
             .width(Fill.max(512))
             .into(),
 
             "disabled" => container(build_accordion(
-                single,
                 &[],
                 [
                     (
@@ -292,7 +283,6 @@ impl page::Page for AccordionPage {
                 let inner = accordion(items.into_iter().map(|(id, trigger, body)| {
                     accordion::item(id, trigger).content(body).inset(16.0)
                 }))
-                .mode(single)
                 .default_value(["billing"]);
 
                 container(inner)
@@ -312,7 +302,6 @@ impl page::Page for AccordionPage {
 
             "card" => {
                 let inner = build_accordion(
-                    single,
                     &["plans"],
                     [
                         (

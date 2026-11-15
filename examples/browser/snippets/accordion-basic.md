@@ -27,7 +27,6 @@ let items = [
 let items = accordion(items.into_iter().map(|(id, trigger, body)| {
     accordion::item(id, trigger).content(body)
 }))
-.mode(accordion::Mode::Single { collapsible: true })
 .default_value(["item-1"]);
 
 container(items).width(Fill).max_width(512)

@@ -1,6 +1,6 @@
 ```rust
 use iced::widget::text::LineHeight;
-use iced::{Fill, Widget};
+use iced::Fill;
 use icedcn::card;
 use icedcn::widget::{accordion, column};
 
@@ -33,7 +33,6 @@ let items = [
 let inner = accordion(items.into_iter().map(|(id, trigger, body)| {
     accordion::item(id, trigger).content(body)
 }))
-.mode(accordion::Mode::Single { collapsible: true })
 .default_value(["plans"]);
 
 let description = card::description("Common questions about your account, plans, payments and cancellations.")
@@ -41,5 +40,5 @@ let description = card::description("Common questions about your account, plans,
 let header = card::header("Subscription & Billing").description(description);
 
 card(column![header, card::content(inner)].spacing(16).padding([16, 0])).gap(0).padding(0)
-    .width(Fill.max(384)).into()
+    .width(Fill.max(384))
 ```

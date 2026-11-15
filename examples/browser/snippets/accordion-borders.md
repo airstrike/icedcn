@@ -33,7 +33,6 @@ let items = [
 let inner = accordion(items.into_iter().map(|(id, trigger, body)| {
     accordion::item(id, trigger).content(body).inset(16.0)
 }))
-.mode(accordion::Mode::Single { collapsible: true })
 .default_value(["billing"]);
 
 container(inner)

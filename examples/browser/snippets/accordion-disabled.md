@@ -15,5 +15,4 @@ accordion([
              You'll receive a verification email at your new address to \
              confirm the change."),
 ])
-.mode(accordion::Mode::Single { collapsible: true })
 ```

@@ -13,7 +13,6 @@ let items = accordion([
         .content("Reach us via email, live chat, or phone. We respond within 24 \
              hours during business days."),
 ])
-.mode(accordion::Mode::Single { collapsible: true })
 .default_value(["shipping"]);
 
 container(items).width(Fill).max_width(512)
