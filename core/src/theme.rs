@@ -115,6 +115,18 @@ impl Deref for Theme {
     }
 }
 
+/// Finalize a configured design, refreshing the derived iced theme once.
+/// `Theme::new` remains the literal constructor for temporary paint overrides.
+impl From<Design> for Theme {
+    fn from(mut design: Design) -> Self {
+        design.seed.background = design.neutral.base.into();
+        design.seed.text = design.neutral.foreground.into();
+        design.seed.primary = design.primary.base.into();
+        design.theme = iced_core::Theme::custom(design.name.clone(), design.seed);
+        Self::new(design)
+    }
+}
+
 impl Default for Theme {
     fn default() -> Self {
         Self::light()

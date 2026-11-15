@@ -4,7 +4,7 @@ pub mod background;
 pub mod border;
 mod color;
 mod constants;
-mod design;
+pub mod design;
 mod orientation;
 pub mod padding;
 mod palette;

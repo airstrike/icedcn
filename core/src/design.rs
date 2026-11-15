@@ -3,6 +3,12 @@
 //! Holds the full palette field set (per-role + surfaces + sidebar),
 //! the derived iced Theme, fonts, and identity.
 
+mod accent;
+mod base;
+
+pub use accent::Accent;
+pub use base::Base;
+
 use iced_core::Font;
 use iced_core::font::Weight;
 use iced_core::theme::palette::Seed;
@@ -21,12 +27,24 @@ pub struct FontFamily {
 
 impl FontFamily {
     pub fn from_name(name: &'static str) -> Self {
+        Font::from(name).into()
+    }
+}
+
+impl From<Font> for FontFamily {
+    fn from(font: Font) -> Self {
         Self {
-            regular: Font::from(name).weight(Weight::Normal),
-            medium: Font::from(name).weight(Weight::Medium),
-            semibold: Font::from(name).weight(Weight::Semibold),
-            bold: Font::from(name).weight(Weight::Bold),
+            regular: font,
+            medium: font.weight(Weight::Medium),
+            semibold: font.weight(Weight::Semibold),
+            bold: font.weight(Weight::Bold),
         }
+    }
+}
+
+impl From<&'static str> for FontFamily {
+    fn from(name: &'static str) -> Self {
+        Self::from_name(name)
     }
 }
 
@@ -240,13 +258,61 @@ impl Design {
         )
     }
 
-    pub fn with_font_sans(mut self, font: FontFamily) -> Self {
-        self.font_sans = font;
+    /// Name this design and its derived iced theme.
+    pub fn with_name(mut self, name: impl Into<String>) -> Self {
+        self.name = name.into();
         self
     }
 
-    pub fn with_font_mono(mut self, font: Font) -> Self {
-        self.font_mono = font;
+    /// Apply a neutral surface family without changing accent or chart colors.
+    pub fn with_base(mut self, base: Base) -> Self {
+        base.apply(&mut self);
+        self
+    }
+
+    /// Apply an accent to controls, focus rings and sidebar primary colors.
+    pub fn with_accent(mut self, accent: Accent) -> Self {
+        let dark = self.neutral.is_dark;
+        if accent != Accent::Neutral {
+            let base = accent.color(dark);
+            self.primary.base = base;
+            self.primary.foreground = if dark {
+                oklch(0.145, 0.0, 0.0)
+            } else {
+                Color::WHITE
+            };
+            self.primary.border = base;
+            self.primary.ring = base.alpha(0.5);
+            self.primary.tint_text = base;
+            self.neutral.ring = base;
+            self.sidebar.primary.base = base;
+            self.sidebar.primary.foreground = self.primary.foreground;
+            self.sidebar.ring = base;
+        }
+        self
+    }
+
+    /// Set chart colors from a named family or an explicit five-color array.
+    pub fn with_chart(mut self, colors: impl Into<[Color; 5]>) -> Self {
+        self.chart = colors.into();
+        self
+    }
+
+    /// Use primary colors for selected sidebar items.
+    pub fn with_menu_accent(mut self) -> Self {
+        self.sidebar.accent.base = self.primary.base;
+        self.sidebar.accent.foreground = self.primary.foreground;
+        self
+    }
+
+    /// Set a font family, deriving weight variants when given a font or family name.
+    pub fn with_font_sans(mut self, font: impl Into<FontFamily>) -> Self {
+        self.font_sans = font.into();
+        self
+    }
+
+    pub fn with_font_mono(mut self, font: impl Into<Font>) -> Self {
+        self.font_mono = font.into();
         self
     }
 }
@@ -334,16 +400,67 @@ fn build(
         code,
         sidebar,
         input,
-        chart: [
-            oklch(0.809, 0.105, 251.813),
-            oklch(0.623, 0.214, 259.815),
-            oklch(0.546, 0.245, 262.881),
-            oklch(0.488, 0.243, 264.376),
-            oklch(0.424, 0.199, 265.638),
-        ],
+        chart: Accent::Blue.chart(),
         seed,
         theme,
         font_sans: FontFamily::default(),
         font_mono: Font::MONOSPACE,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Accent, Base, Design, FontFamily};
+    use crate::{Theme, oklch};
+    use iced_core::{Font, color, font};
+
+    #[test]
+    fn presets_keep_surface_accent_chart_and_font_choices_independent() {
+        for design in [Design::light(), Design::dark()] {
+            let dark = design.neutral.is_dark;
+            let initial_chart = design.chart;
+            let surface = design.with_base(Base::Slate);
+            assert_eq!(surface.chart, initial_chart);
+            assert_eq!(surface.muted.base.c, 0.016);
+            let font = Font::from("Selected Font").style(font::Style::Italic);
+            let theme: Theme = surface
+                .with_name("Custom")
+                .with_accent(Accent::Violet)
+                .with_chart(Accent::Green)
+                .with_font_sans(font)
+                .with_menu_accent()
+                .into();
+            assert_eq!(theme.primary.base, Accent::Violet.color(dark));
+            assert_eq!(theme.chart, Accent::Green.chart());
+            assert_eq!(theme.sidebar.accent.base, theme.primary.base);
+            assert_eq!(theme.sidebar.accent.foreground, theme.primary.foreground);
+            assert_eq!(theme.font_sans.regular, font);
+            assert_eq!(theme.font_sans.bold, font.weight(font::Weight::Bold));
+            assert_eq!(theme.seed.background, theme.neutral.base.into());
+            assert_eq!(theme.seed.text, theme.neutral.foreground.into());
+            assert_eq!(theme.seed.primary, theme.primary.base.into());
+            assert_eq!(theme.iced_theme().seed(), theme.seed);
+        }
+    }
+
+    #[test]
+    fn finalization_preserves_explicit_colors_fonts_and_other_seed_roles() {
+        let tokens = [oklch(0.7, 0.1, 150.0); 5];
+        let fonts = FontFamily {
+            regular: Font::MONOSPACE,
+            medium: Font::from("Custom Medium"),
+            semibold: Font::from("Custom Semibold"),
+            bold: Font::from("Custom Bold"),
+        };
+        let mut design = Design::light()
+            .with_chart(tokens)
+            .with_font_sans(fonts.clone());
+        design.primary.base = oklch(0.6, 0.15, 50.0);
+        design.seed.success = color!(0xff0077);
+        let theme: Theme = design.into();
+        assert_eq!(theme.chart, tokens);
+        assert_eq!(theme.font_sans, fonts);
+        assert_eq!(theme.seed.success, color!(0xff0077));
+        assert_eq!(theme.seed.primary, theme.primary.base.into());
     }
 }
