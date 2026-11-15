@@ -118,6 +118,11 @@ impl Browser {
         }
     }
 
+    /// Title of the selected documentation page or example.
+    pub fn title(&self) -> String {
+        self.app.title()
+    }
+
     pub fn theme(&self) -> Theme {
         self.app.theme()
     }
@@ -159,7 +164,7 @@ pub fn run() -> iced::Result {
         parser_heap::install();
     }
     let application = iced::application(Browser::new, Browser::update, Browser::view)
-        .title("icedcn \u{2022} components browser")
+        .title(Browser::title)
         .window_size([1440.0, 900.0])
         .antialiasing(true)
         .subscription(Browser::subscription)

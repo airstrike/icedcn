@@ -137,7 +137,7 @@ def main():
         digest = hashlib.sha256(optimized.read_bytes() + js.encode()).hexdigest()[:16]
         wasm_name, js_name = f"browser-{digest}.wasm", f"browser-{digest}.js"
         shutil.copyfile(optimized, output / wasm_name)
-        (output / js_name).write_text(js.replace("browser_bg.wasm", wasm_name))
+        (output / js_name).write_text(js.replace("browser_bg.wasm", f"/{wasm_name}"))
         template = (ROOT / "examples/browser/web/index.html").read_text()
         html = (template.replace("BROWSER_MODULE", js_name)
                 .replace("BROWSER_WASM", wasm_name)

@@ -4,5 +4,5 @@
   "workers_dev": false,
   "preview_urls": false,
   "routes": [{ "pattern": "icedcn.airstrike.fyi", "custom_domain": true }],
-  "assets": { "directory": "../../target/browser-web" }
+  "assets": { "directory": "../../target/browser-web", "not_found_handling": "single-page-application" }
 }

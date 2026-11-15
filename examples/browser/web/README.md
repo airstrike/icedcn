@@ -34,3 +34,14 @@ The loader preserves Cmd/Ctrl+R and Cmd/Ctrl+Shift+R as native browser shortcuts
 preventing the canvas event handler from cancelling them. Right-clicks on the
 canvas use the application's context menu; surrounding HTML retains its native
 browser menu.
+
+Browser navigation uses `/components/<slug>`, `/docs/<slug>`, `/examples`, and
+`/examples/receipts`. The root remains an alias for Accordion. Reload and browser
+Back/Forward restore the selected page; editing state inside examples remains
+in memory. Unknown paths show Accordion, and trailing slashes are accepted.
+
+The Workers asset configuration serves the app shell for unmatched navigation
+requests. Missing module, WASM, and other subresource requests remain 404s. Use
+Wrangler's local server when testing direct links; Python's static server above
+does not provide navigation fallback. The loader and generated module use
+root-absolute asset paths so nested routes load the same build.

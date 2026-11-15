@@ -25,6 +25,10 @@ pub enum Event {
 }
 
 impl State {
+    pub(crate) fn is_open(&self) -> bool {
+        self.open
+    }
+
     pub fn update(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Gallery => self.open = false,

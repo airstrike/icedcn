@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0a0a0a">
   <link rel="icon" href="data:,">
-  <link rel="license" href="./font-licenses.txt">
+  <link rel="license" href="/font-licenses.txt">
   <title>icedcn — Components for iced</title>
   <meta name="description" content="Explore icedcn components, interactive examples, and copyable Rust code for iced applications.">
   <link rel="canonical" href="https://icedcn.airstrike.fyi/">
@@ -68,7 +68,7 @@
     const bar = document.querySelector("#progress");
 
     async function download() {
-      const response = await fetch("./BROWSER_WASM");
+      const response = await fetch("/BROWSER_WASM");
       if (!response.ok) throw new Error(`Wasm download failed (HTTP ${response.status})`);
       if (!response.body || typeof TransformStream === "undefined") return response;
 
@@ -89,7 +89,7 @@
 
     try {
       const [{ default: start }, module_or_path] = await Promise.all([
-        import("./BROWSER_MODULE"), download(),
+        import("/BROWSER_MODULE"), download(),
       ]);
       await start({ module_or_path });
       splash.setAttribute("aria-hidden", "true");

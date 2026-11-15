@@ -1,5 +1,6 @@
 mod header;
 mod menu;
+mod route;
 
 use iced::Element;
 use iced::Widget;
@@ -57,6 +58,8 @@ pub enum Message {
     Escape,
     Width(f32),
     SelectPage(usize),
+    /// Restore a browser history entry without creating another entry.
+    History(String),
     OpenUrl(&'static str),
     OpenComponent(String),
     CopyText(String),
@@ -172,7 +175,6 @@ impl App {
 
         let component_count = pages.len();
         pages.extend(guide::pages(component_count));
-        tasks.push(pages[0].init());
         tasks.push(
             window::oldest()
                 .and_then(window::size)
@@ -193,27 +195,29 @@ impl App {
             &active_theme,
         );
 
-        (
-            Self {
-                dark_mode,
-                showing_examples: false,
-                examples: examples::State::default(),
-                width,
-                search: false,
-                fonts_open: false,
-                stars: None,
-                current_page: 0,
-                pages,
-                component_count,
-                gh_light,
-                gh_dark,
-                snippet_viewer,
-                fount: fonts::Fount::new(),
-                font_list: combo_box::State::new(vec![default_font.clone()]),
-                current_font: default_font,
-            },
-            Task::batch(tasks),
-        )
+        let mut app = Self {
+            dark_mode,
+            showing_examples: false,
+            examples: examples::State::default(),
+            width,
+            search: false,
+            fonts_open: false,
+            stars: None,
+            current_page: 0,
+            pages,
+            component_count,
+            gh_light,
+            gh_dark,
+            snippet_viewer,
+            fount: fonts::Fount::new(),
+            font_list: combo_box::State::new(vec![default_font.clone()]),
+            current_font: default_font,
+        };
+        let initial = route::location()
+            .and_then(|path| route::Route::parse(&path, &app.pages, app.component_count))
+            .unwrap_or(route::Route::Page(0));
+        tasks.push(app.restore(initial));
+        (app, Task::batch(tasks))
     }
 
     pub fn is_dark(&self) -> bool {
@@ -236,12 +240,65 @@ impl App {
         Subscription::batch([
             page,
             header::shortcuts(),
+            route::subscription(),
             window::resize_events().map(|(_, size)| Message::Width(size.width)),
         ])
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
+        if let Message::History(path) = message {
+            let destination = route::Route::parse(&path, &self.pages, self.component_count)
+                .unwrap_or(route::Route::Page(0));
+            return self.restore(destination);
+        }
+        let previous = self.route();
+        let task = self.update_inner(message);
+        let destination = self.route();
+        if destination != previous {
+            route::push(&destination.path(&self.pages, self.component_count));
+            route::set_title(&self.title());
+        }
+        task
+    }
+
+    fn route(&self) -> route::Route {
+        if self.showing_examples {
+            if self.examples.is_open() {
+                route::Route::Receipts
+            } else {
+                route::Route::Examples
+            }
+        } else {
+            route::Route::Page(self.current_page)
+        }
+    }
+
+    fn restore(&mut self, destination: route::Route) -> Task<Message> {
+        self.search = false;
+        self.fonts_open = false;
+        let message = match destination {
+            route::Route::Page(index) => Message::SelectPage(index),
+            route::Route::Examples => Message::Example(examples::Event::Gallery),
+            route::Route::Receipts => Message::Example(examples::Event::OpenReceipts),
+        };
+        let task = self.update_inner(message);
+        route::set_title(&self.title());
+        task
+    }
+
+    /// Title of the selected documentation page or example.
+    pub fn title(&self) -> String {
+        let title = match self.route() {
+            route::Route::Page(index) => self.pages[index].meta().title,
+            route::Route::Examples => "Examples",
+            route::Route::Receipts => "Receipts",
+        };
+        format!("{title} — icedcn")
+    }
+
+    fn update_inner(&mut self, message: Message) -> Task<Message> {
         match message {
+            Message::History(_) => Task::none(),
             Message::Example(event) => {
                 self.search = false;
                 self.showing_examples = true;
@@ -272,9 +329,11 @@ impl App {
             Message::OpenUrl(url) => {
                 self.search = false;
                 match url {
-                    "icedcn://examples" => self.update(Message::Example(examples::Event::Gallery)),
+                    "icedcn://examples" => {
+                        self.update_inner(Message::Example(examples::Event::Gallery))
+                    }
                     "icedcn://examples/receipts" => {
-                        self.update(Message::Example(examples::Event::OpenReceipts))
+                        self.update_inner(Message::Example(examples::Event::OpenReceipts))
                     }
                     _ => page::open_link(url),
                 }
@@ -293,7 +352,7 @@ impl App {
                     return Task::none();
                 };
                 let section = fragment.and_then(|id| self.pages[index].state().section(id));
-                self.update(Message::Navigate(index, section))
+                self.update_inner(Message::Navigate(index, section))
             }
             Message::CopyText(value) => clipboard::write(value).discard(),
             Message::CreateEvent => toast::promise::<_, Message, _, ()>(
@@ -393,7 +452,7 @@ impl App {
             }
             Message::FocusNext => operation::focus_next(),
             Message::FocusPrevious => operation::focus_previous(),
-            Message::SearchShortcut => self.update(Message::Search(!self.search)),
+            Message::SearchShortcut => self.update_inner(Message::Search(!self.search)),
             Message::Fonts(open) => {
                 self.fonts_open = open;
                 self.search = false;
@@ -405,7 +464,7 @@ impl App {
             }
             Message::Navigate(page, section) => {
                 self.search = false;
-                let activate = self.update(Message::SelectPage(page));
+                let activate = self.update_inner(Message::SelectPage(page));
                 match section {
                     Some(index) => Task::batch([
                         activate,
