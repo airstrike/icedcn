@@ -1,6 +1,6 @@
 //! Export the live route registry for static HTML and social previews.
 
-use std::io::Write;
+use std::io;
 
 use serde::Serialize;
 
@@ -57,8 +57,8 @@ fn blocks(source: &[page::Block]) -> Vec<Block> {
         .collect()
 }
 
-/// Write page metadata without opening a window or running startup tasks.
-pub fn write_routes(writer: impl Write) -> serde_json::Result<()> {
+/// Write page metadata to stdout without opening a window or running startup tasks.
+pub fn write_routes() -> serde_json::Result<()> {
     let (app, _) = App::new(parse_code_map(GH_LIGHT), parse_code_map(GH_DARK));
     let routes: Vec<_> = app
         .routes
@@ -91,5 +91,5 @@ pub fn write_routes(writer: impl Write) -> serde_json::Result<()> {
             }
         })
         .collect();
-    serde_json::to_writer(writer, &routes)
+    serde_json::to_writer(io::stdout().lock(), &routes)
 }
