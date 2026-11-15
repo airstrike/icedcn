@@ -158,6 +158,16 @@ fn every_questionnaire_preview_renders_at_phone_width() {
                 "freeform placeholder stays readable on a phone"
             );
         }
+        if let Some(label) = match id {
+            "validation" => Some("Concise summary"),
+            "card" => Some("Fix the failing tests"),
+            _ => None,
+        } {
+            assert!(
+                ui.find(label).unwrap().bounds().width > 80.,
+                "the card leaves room for the choice label on a phone"
+            );
+        }
         if id == "dialog" {
             click(&mut ui, "Open clarification");
             ui = ui.rebuild(page.preview(id));
