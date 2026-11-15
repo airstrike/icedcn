@@ -1,5 +1,5 @@
 ```rust
-use icedcn::widget::text;
+use icedcn::widget::{container, text};
 
-text::small("Email address").medium()
+container(text::label("Email address")).center_y(24)
 ```

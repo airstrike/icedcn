@@ -1,7 +1,9 @@
 ```rust
-use iced::Fill;
-use icedcn::widget::{container, text};
+use iced::{Center, Fill, Pixels};
+use icedcn::Weight;
+use icedcn::widget::text;
 
-container(text::h1("Taxing Laughter: The Joke Tax Chronicles"))
-    .center_x(Fill)
+text::h1("Taxing Laughter: The Joke Tax Chronicles")
+    .size(36).weight(Weight::ExtraBold).line_height(Pixels(40.))
+    .wrapping(text::Wrapping::Balanced).width(Fill).align_x(Center)
 ```

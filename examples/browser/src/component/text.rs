@@ -1,21 +1,21 @@
-use iced::Element;
-use iced::Widget;
-use iced::widget::column;
-use iced::{Fill, Task};
-use icedcn::Size::Sm;
-use icedcn::widget::{container, rule, text};
-use icedcn::{Theme, radius, theme};
-use sweeten::widget::table;
+mod article;
+
+use iced::{Fill, Pixels, Task, Widget};
+use icedcn::core::Border;
+use icedcn::theme::container::Style;
+use icedcn::widget::{column, container, row, rule, text};
+use icedcn::{Slot, Theme, Weight};
 
 use crate::Message;
 use crate::page;
 
 pub static META: page::Meta = page::Meta {
     title: "Typography",
-    description: "Styles for headings, paragraphs, lists...etc.",
+    description: "Styles for headings, paragraphs, lists, and inline code.",
 };
 
 pub static BLOCKS: &[page::Block] = &[
+    page::Block::Md("examples/browser/snippets/text-introduction.md"),
     // Article hero: empty-title example so the Joke Tax article gets the
     // same card chrome every other page's hero uses. `render_example`
     // applies `min_height(PREVIEW_HEIGHT)` (not fixed height) for
@@ -152,82 +152,22 @@ impl page::Page for TextPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            "demo" => column![
-                Element::from(text::h1("Taxing Laughter: The Joke Tax Chronicles")),
-                Element::from(text::lead(
-                    "Once upon a time, in a far-off land, there was a very lazy king \
-                     who spent all day lounging on his throne. One day, his advisors \
-                     came to him with a problem: the kingdom was running out of money."
-                )),
-                Element::from(text::h2("The King's Plan")),
-                Element::from(text::p(
-                    "The king thought long and hard, and finally came up with a \
-                     brilliant plan: he would tax the jokes in the kingdom."
-                )),
-                Element::from(text::blockquote(
-                    "\"After all,\" he said, \"everyone enjoys a good joke, so it's \
-                     only fair that they should pay for the privilege.\""
-                )),
-                Element::from(text::h3("The Joke Tax")),
-                Element::from(text::p(
-                    "The king's subjects were not amused. They grumbled and \
-                     complained, but the king was firm:"
-                )),
-                Element::from(text::list([
-                    "1st level of puns: 5 gold coins",
-                    "2nd level of jokes: 10 gold coins",
-                    "3rd level of one-liners : 20 gold coins",
-                ])),
-                Element::from(text::p(
-                    "As a result, people stopped telling jokes, and the kingdom \
-                     fell into a gloom. But there was one person who refused to let \
-                     the king's foolishness get him down: a court jester named \
-                     Jokester."
-                )),
-                Element::from(text::h3("Jokester's Revolt")),
-                Element::from(text::p(
-                    "Jokester began sneaking into the castle in the middle of the \
-                     night and leaving jokes all over the place: under the king's \
-                     pillow, in his soup, even in the royal toilet. The king was \
-                     furious, but he couldn't seem to stop Jokester."
-                )),
-                Element::from(text::p(
-                    "And then, one day, the people of the kingdom discovered that \
-                     the jokes left by Jokester were so funny that they couldn't \
-                     help but laugh. And once they started laughing, they couldn't \
-                     stop."
-                )),
-                Element::from(text::h3("The People's Rebellion")),
-                Element::from(text::p(
-                    "The people of the kingdom, feeling uplifted by the laughter, \
-                     started to tell jokes and puns again, and soon the entire \
-                     kingdom was in on the joke."
-                )),
-                table_card(),
-                Element::from(text::p(
-                    "The king, seeing how much happier his subjects were, realized \
-                     the error of his ways and repealed the joke tax. Jokester was \
-                     declared a hero, and the kingdom lived happily ever after."
-                )),
-                Element::from(text::p(
-                    "The moral of the story is: never underestimate the power of a \
-                     good laugh and always be careful of bad ideas."
-                )),
-            ]
-            .spacing(16)
-            .width(Fill)
-            .boxed(),
-
-            "h1" => container(text::h1("Taxing Laughter: The Joke Tax Chronicles"))
-                .center_x(Fill)
+            "demo" => article::view(self.page_index()),
+            "h1" => h1("Taxing Laughter: The Joke Tax Chronicles")
+                .width(Fill)
+                .align_x(iced::Center)
                 .into(),
 
-            "h2" => h2_with_border("The People of the Kingdom"),
+            "h2" => h2_with_border("The People of the Kingdom").into(),
 
-            "h3" => text::h3("The Joke Tax").into(),
-            "h4" => text::h4("People stopped telling jokes").into(),
+            "h3" => h3("The Joke Tax").into(),
+            "h4" => text::h4("People stopped telling jokes")
+                .size(20)
+                .semibold()
+                .line_height(Pixels(28.))
+                .into(),
 
-            "p" => text::p(
+            "p" => paragraph(
                 "The king, seeing how much happier his subjects were, realized the \
                  error of his ways and repealed the joke tax.",
             )
@@ -239,7 +179,7 @@ impl page::Page for TextPage {
             )
             .into(),
 
-            "table" => table_card(),
+            "table" => table_card().into(),
 
             "list" => text::list([
                 "1st level of puns: 5 gold coins",
@@ -248,64 +188,102 @@ impl page::Page for TextPage {
             ])
             .into(),
 
-            "inline-code" => inline_code_card("widget::alert_dialog"),
+            "inline-code" => inline_code_card("widget::alert_dialog::AlertDialog").into(),
 
             "lead" => text::lead(
                 "A modal dialog that interrupts the user with important content and \
                  expects a response.",
             )
+            .line_height(Pixels(28.))
             .into(),
 
-            "large" => text::large("Are you absolutely sure?").into(),
-            "small" => text::small("Email address").medium().into(),
-            "muted" => text::muted("Enter your email address.").into(),
+            "large" => text::large("Are you absolutely sure?")
+                .line_height(Pixels(28.))
+                .into(),
+            "small" => container(text::label("Email address")).center_y(24).into(),
+            "muted" => text::muted("Enter your email address.")
+                .line_height(Pixels(20.))
+                .into(),
 
             _ => unreachable!("unknown text preview id: {id}"),
         }
     }
 }
 
-/// Place a horizontal rule below the heading.
-fn h2_with_border<'a>(content: &'a str) -> iced::Element<'a, Message, Theme> {
-    column![Element::from(text::h2(content)), rule::horizontal(1)]
-        .spacing(8)
-        .boxed()
+fn h1(content: &str) -> text::Text<'_> {
+    text::h1(content)
+        .size(36)
+        .weight(Weight::ExtraBold)
+        .line_height(Pixels(40.))
+        .wrapping(text::Wrapping::Balanced)
 }
 
-/// Draw inline code on a padded, muted background.
-fn inline_code_card<'a>(code: &'a str) -> iced::Element<'a, Message, Theme> {
-    container(text::inline_code(code))
-        .padding([3, 5])
-        .class(theme::container::CardMuted + radius(Sm))
+fn h3(content: &str) -> text::Text<'_> {
+    text::h3(content)
+        .size(24)
+        .semibold()
+        .line_height(Pixels(32.))
+}
+
+fn paragraph(content: &str) -> text::Text<'_> {
+    text::p(content).line_height(Pixels(28.)).width(Fill)
+}
+
+fn h2_with_border<'a, M: 'a>(content: &'a str) -> Slot<'a, M> {
+    column![
+        text::h2(content)
+            .size(30)
+            .semibold()
+            .line_height(Pixels(36.)),
+        rule::horizontal(1).boxed()
+    ]
+    .width(Fill)
+    .spacing(8)
+    .into()
+}
+
+fn inline_code_card<'a, M: 'a>(code: &'a str) -> Slot<'a, M> {
+    container(text::inline_code(code).font(iced::Font::new(crate::font::GEIST_MONO_NAME)))
+        .padding([2, 5])
+        .style(|t| Style {
+            background: Some(t.muted.base.into()),
+            border: Border {
+                radius: 4.0.into(),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
         .into()
 }
 
-/// Render the two-column typography example.
-fn table_card<'a>() -> iced::Element<'a, Message, Theme> {
-    let rows = &[
-        ("Empty", "Overflowing"),
-        ("Modest", "Satisfied"),
-        ("Full", "Ecstatic"),
+fn table_card<'a, M: 'a>() -> Slot<'a, M> {
+    let data = [
+        ["King's Treasury", "People's happiness"],
+        ["Empty", "Overflowing"],
+        ["Modest", "Satisfied"],
+        ["Full", "Ecstatic"],
     ];
-
-    let header = |label| Element::from(text::p(label).bold());
-
-    let columns = [
-        table::column(Some(header("King's Treasury")), |row: &(_, _)| {
-            Element::from(text::p(row.0))
-        })
-        .width(Fill),
-        table::column(Some(header("People's happiness")), |row: &(_, _)| {
-            Element::from(text::p(row.1))
-        })
-        .width(Fill),
-    ];
-
-    table::table(columns, rows)
+    let rows = data.into_iter().enumerate().map(|(i, [left, right])| {
+        let cell = |value, share| {
+            let label = text::p(value).line_height(Pixels(24.));
+            container(if i == 0 { label.bold() } else { label })
+                .width(iced::Length::FillPortion(share))
+                .padding([8, 16])
+        };
+        container(row![cell(left, 5), rule::vertical(1).boxed(), cell(right, 6)].width(Fill))
+            .width(Fill)
+            .style(move |t| Style {
+                background: Some((if i == 2 { t.muted.base } else { t.neutral.base }).into()),
+                ..Default::default()
+            })
+            .into()
+    });
+    container(column(rows).spacing(1).width(Fill))
+        .padding(1)
         .width(Fill)
-        .padding_x(16)
-        .padding_y(8)
-        .separator(1)
-        .border(1)
-        .boxed()
+        .style(|t| Style {
+            background: Some(t.neutral.border.into()),
+            ..Default::default()
+        })
+        .into()
 }

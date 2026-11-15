@@ -1,27 +1,24 @@
 ```rust
-use iced::{Element, Fill};
-use icedcn::widget::text;
-use sweeten::widget::table;
+use iced::{Fill, Length, Pixels, Widget};
+use icedcn::theme::container::Style;
+use icedcn::widget::{column, container, row, rule, text};
 
-let rows = &[
-    ("Empty", "Overflowing"),
-    ("Modest", "Satisfied"),
-    ("Full", "Ecstatic"),
+let data = [
+    ["King's Treasury", "People's happiness"], ["Empty", "Overflowing"],
+    ["Modest", "Satisfied"], ["Full", "Ecstatic"],
 ];
-
-let header = |label| Element::from(text::p(label).bold());
-
-let columns = [
-    table::column(Some(header("King's Treasury")), |row: &(_, _)| Element::from(text::p(row.0)))
-        .width(Fill),
-    table::column(Some(header("People's happiness")), |row: &(_, _)| Element::from(text::p(row.1)))
-        .width(Fill),
-];
-
-table::table(columns, rows)
-    .width(Fill)
-    .padding_x(16)
-    .padding_y(8)
-    .separator(1)
-    .border(1)
+let rows = data.into_iter().enumerate().map(|(i, [left, right])| {
+    let cell = |value, share| {
+        let label = text::p(value).line_height(Pixels(24.));
+        container(if i == 0 { label.bold() } else { label })
+            .padding([8, 16]).width(Length::FillPortion(share))
+    };
+    container(row![cell(left, 5), rule::vertical(1).boxed(), cell(right, 6)].width(Fill))
+        .width(Fill).style(move |t| Style {
+            background: Some((if i == 2 { t.muted.base } else { t.neutral.base }).into()),
+            ..Default::default()
+        }).into()
+});
+container(column(rows).spacing(1).width(Fill)).padding(1).width(Fill)
+    .style(|t| Style { background: Some(t.neutral.border.into()), ..Default::default() })
 ```

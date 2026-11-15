@@ -19,13 +19,15 @@ etc. on.
 | `text::small(content)` | `Text<'a>` | 14px, foreground. |
 | `text::muted(content)` | `Text<'a>` | 14px, muted. |
 | `text::xs(content)` | `Text<'a>` | 12px, foreground. |
-| `text::inline_code(content)` | `Text<'a>` | 14px, semibold, foreground. Wrap in a container with a muted background at the call site for the full inline-code chrome. |
+| `text::inline_code(content)` | `Text<'a>` | 14px, semibold, monospace. Wrap in a container with a muted background at the call site for the full inline-code chrome. |
 | `text::blockquote(content)` | `Blockquote<'a>` | 2px left rule + 24px gap + italic body. |
-| `text::list(items)` | `List<'a, Message>` | Bulleted list — 24px left indent, 8px row gap. |
+| `text::list(items)` | `List<'a, Message>` | Bulleted list with a 24px marker column, hanging indent and 8px between rows. |
 | `text(content)` | `Text<'a>` | Crate-root shorthand for `text::small`. |
 
 `content` is `impl IntoFragment<'a>` (`&str`, `String`, `Cow<'a, str>`),
 so all constructors accept owned or borrowed strings.
+
+The Typography examples use a larger article scale than the control-oriented heading defaults. Their h1 is 36/40px and extra-bold. The next levels are semibold at 30/36, 24/32 and 20/28px. The isolated h1 centers its balanced lines. The article title is left aligned.
 
 ### `Text<'a>` builder methods
 
@@ -33,6 +35,9 @@ so all constructors accept owned or borrowed strings.
 | --- | --- | --- |
 | `.size(size)` | `impl Into<Size>` | Override the font size. Accepts `Size::Xs`/`Sm`/`Default`/`Lg`, an `f32` (px), or `Size::Custom(v)`. |
 | `.weight(weight)` | `impl Into<Weight>` | Override the font weight. Accepts `Weight::Medium`/`Semibold`/`Bold`/etc. or a numeric `u16`. |
+| `.font(font)` | `iced::Font` | Select a font family. |
+| `.line_height(height)` | `iced::Pixels` or relative multiplier | Set the line box independently of font size. |
+| `.wrapping(strategy)` | `text::Wrapping` | Choose a line-breaking strategy, including balanced headlines. |
 | `.medium()` | — | Shorthand for `.weight(Weight::Medium)`. |
 | `.semibold()` | — | Shorthand for `.weight(Weight::Semibold)`. |
 | `.bold()` | — | Shorthand for `.weight(Weight::Bold)`. |
@@ -53,8 +58,7 @@ horizontal row. Set the space above and below it with the enclosing column’s `
 
 ### `List<'a, Message>`
 
-Composed widget: 24px left indent + 8px row gap + a `\u{2022}` bullet
-prefix per item. Set vertical spacing around the list on its parent.
+Each item has a separate bullet and a 24px marker column, so wrapped lines align with the item text. Rows are spaced 8px apart. Set vertical spacing around the list on its parent.
 
 The `text::list(items)` constructor takes any
 `IntoIterator<Item = impl IntoFragment<'a>>`. Empty input produces an
@@ -123,6 +127,9 @@ shorthand for `.color(...)`.
 | --- | --- | --- |
 | `.size(size)` | `impl Into<Size>` | Override the span's font size. |
 | `.weight(weight)` | `impl Into<Weight>` | Override the span's font weight. |
+| `.font(font)` | `iced::Font` | Select a font family. |
+| `.line_height(height)` | `iced::Pixels` or relative multiplier | Set the line box independently of font size. |
+| `.wrapping(strategy)` | `text::Wrapping` | Choose a line-breaking strategy, including balanced headlines. |
 | `.medium()` | — | Shorthand for `.weight(Weight::Medium)`. |
 | `.semibold()` | — | Shorthand for `.weight(Weight::Semibold)`. |
 | `.bold()` | — | Shorthand for `.weight(Weight::Bold)`. |

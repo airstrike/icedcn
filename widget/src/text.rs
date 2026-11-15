@@ -15,7 +15,7 @@ use std::marker::PhantomData;
 
 use crate::core::Length;
 use crate::core::Length::Fill;
-use crate::core::Padding;
+use crate::core::alignment::Horizontal;
 use crate::core::font;
 use crate::core::font::Weight;
 pub use crate::core::text::{Ellipsis, Wrapping};
@@ -383,6 +383,7 @@ pub fn blockquote<'a>(content: impl IntoFragment<'a>) -> Blockquote<'a> {
         body: Text::new(content)
             .size(size::BASE)
             .italic()
+            .line_height(LineHeight::Relative(1.5))
             .style(theme::text::Foreground)
             .width(Fill),
     }
@@ -420,6 +421,7 @@ impl<'a, Message: 'a> Compose<Message> for Blockquote<'a> {
 /// background, or rounded corners.
 pub fn inline_code<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     Text::new(content)
+        .font(iced_core::Font::MONOSPACE)
         .size(size::SM)
         .semibold()
         .style(theme::text::Foreground)
@@ -442,8 +444,9 @@ where
     let items = items
         .into_iter()
         .map(|f| {
-            Text::new(format!("\u{2022} {}", f.into_fragment()))
+            Text::new(f)
                 .size(size::BASE)
+                .line_height(LineHeight::Relative(1.5))
                 .style(theme::text::Foreground)
                 .width(Fill)
         })
@@ -474,18 +477,18 @@ impl<'a, Message: 'a> Compose<Message> for List<'a, Message> {
     {
         let List { items, .. } = *self;
 
-        let column = items.into_iter().fold(
-            iced_widget::Column::new().spacing(8).width(Fill),
-            |col, item| col.push(item.build()),
-        );
-
-        iced_widget::container(column)
-            .padding(Padding {
-                left: 24.0,
-                ..Padding::ZERO
-            })
-            .width(Fill)
-            .height(Length::Shrink)
-            .boxed()
+        let rows = items.into_iter().map(|item| {
+            let marker = Text::new("•")
+                .size(size::BASE)
+                .width(24)
+                .line_height(LineHeight::Relative(1.5))
+                .align_x(Horizontal::Center);
+            iced_widget::Row::new()
+                .push(marker.build())
+                .push(item.build())
+                .width(Fill)
+                .boxed()
+        });
+        iced_widget::column(rows).spacing(8).width(Fill).boxed()
     }
 }
