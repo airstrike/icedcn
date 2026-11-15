@@ -1,8 +1,11 @@
 use std::collections::HashSet;
+use std::time::Instant;
 
 use super::route::Route;
 use browser_routing::Route as _;
-use iced::mouse::ScrollDelta;
+use iced::advanced::widget::operation::{Animation, scrollable};
+use iced::widget::scrollable::AbsoluteOffset;
+use iced::{Event, window};
 use iced_test::core::Settings;
 use iced_test::simulator::Simulator;
 
@@ -166,12 +169,18 @@ fn home_actions_route_at_desktop_and_mobile_widths() {
             );
             let bounds = ui.find(label).unwrap().bounds();
             assert!(bounds.x >= 0. && bounds.x + bounds.width <= width);
-            for _ in 0..40 {
-                if ui.find(label).unwrap().visible_bounds().is_some() {
-                    break;
-                }
-                ui.point_at(iced::Point::new(width - 8., 500.));
-                ui.scroll(ScrollDelta::Pixels { x: 0., y: -500. });
+            if ui.find(label).unwrap().visible_bounds().is_none() {
+                ui.operate(&mut scrollable::scroll_to(
+                    "home-gallery".into(),
+                    AbsoluteOffset {
+                        x: None,
+                        y: Some(bounds.y - 100.),
+                    },
+                    Animation::Instant,
+                ));
+                let _ = ui.simulate([Event::Window(
+                    window::Event::RedrawRequested(Instant::now()),
+                )]);
             }
             ui.click(label).unwrap();
             assert!(

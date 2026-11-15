@@ -115,6 +115,7 @@ pub(super) fn view<'a>(width: f32) -> Element<'a, Message, Theme> {
         .padding([0, if mobile { 16 } else { 24 }])
         .center_x(Fill),
     )
+    .id("home-gallery")
     .height(Fill)
     .width(Fill)
     .into()
