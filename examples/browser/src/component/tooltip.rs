@@ -1,6 +1,6 @@
 use iced::Task;
 
-use icedcn::widget::{button, kbd, row, text, tooltip};
+use icedcn::widget::{button, kbd, row, tooltip};
 use icedcn::{Size, Slot, Theme};
 
 use crate::Message;
@@ -9,7 +9,7 @@ use crate::page;
 
 pub static META: page::Meta = page::Meta {
     title: "Tooltip",
-    description: "A popup that shows information about a widget when the pointer rests on it.",
+    description: "A popup that displays information about a widget on hover or keyboard focus.",
 };
 
 pub static BLOCKS: &[page::Block] = &[
@@ -19,29 +19,28 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/tooltip-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/tooltip-installation.md"),
+    page::Block::Md("examples/browser/snippets/tooltip-usage.md"),
     page::Block::Md("examples/browser/snippets/tooltip-composition.md"),
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "sides",
-                title: "Side",
-                description: Some("Use `.side(..)` to change the position of the tooltip."),
-                snippet: "examples/browser/snippets/tooltip-sides.md",
-            },
-            page::Block::Example {
-                id: "keyboard",
-                title: "With Keyboard Shortcut",
-                description: None,
-                snippet: "examples/browser/snippets/tooltip-keyboard.md",
-            },
-            page::Block::Example {
-                id: "disabled",
-                title: "Disabled Button",
-                description: Some("Show a tooltip on a disabled button."),
-                snippet: "examples/browser/snippets/tooltip-disabled.md",
-            },
-        ],
+    page::Block::Example {
+        id: "sides",
+        title: "Side",
+        description: Some(
+            "Use `.side(..)` to choose an edge. The tooltip flips when that edge has too little room.",
+        ),
+        snippet: "examples/browser/snippets/tooltip-sides.md",
+    },
+    page::Block::Example {
+        id: "keyboard",
+        title: "With Keyboard Shortcut",
+        description: None,
+        snippet: "examples/browser/snippets/tooltip-keyboard.md",
+    },
+    page::Block::Example {
+        id: "disabled",
+        title: "Disabled Button",
+        description: Some("Hover a disabled button to explain why its action is unavailable."),
+        snippet: "examples/browser/snippets/tooltip-disabled.md",
     },
     page::Block::Md("examples/browser/snippets/tooltip-api-reference.md"),
 ];
@@ -105,6 +104,7 @@ impl page::Page for TooltipPage {
                 side("Right", tooltip::Side::Right),
             ]
             .spacing(8)
+            .wrap()
             .into(),
 
             "keyboard" => tooltip(
@@ -112,13 +112,11 @@ impl page::Page for TooltipPage {
                     .size(Size::Sm)
                     .square()
                     .style(button::Outline),
-                row![
-                    text::Text::new("Save Changes"),
-                    kbd("S").style(kbd::Tooltip)
-                ]
-                .spacing(6)
-                .align_y(iced::Center),
+                row!["Save Changes", kbd("S").style(kbd::Tooltip)]
+                    .spacing(6)
+                    .align_y(iced::Center),
             )
+            .padding([6, 6, 6, 12])
             .into(),
 
             "disabled" => tooltip(

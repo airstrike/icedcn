@@ -3,6 +3,7 @@
 use crate::operation::focus;
 use iced_core::keyboard::{self, Key, key::Named};
 use iced_core::shell::Bus;
+use iced_core::touch;
 use iced_core::widget::{
     Meta, Operation,
     tree::{self, Tree},
@@ -117,19 +118,22 @@ pub(crate) struct Interaction<'a, Message> {
     inner: Option<Anchor<'a, Message>>,
     mode: Mode,
     controlled: Option<bool>,
+    default_open: bool,
     on_change: Option<Box<dyn Fn(bool) -> Message + 'a>>,
 }
 #[derive(Default, Clone, Copy)]
 struct State {
     hovered: bool,
     keyboard: bool,
+    initial: bool,
+    suppress_hover: bool,
     focused: bool,
     pointer: bool,
     enter: bool,
 }
 impl State {
     fn open(self) -> bool {
-        self.hovered || self.keyboard
+        self.initial || self.hovered || self.keyboard
     }
 }
 impl<'a, M: 'a> Interaction<'a, M> {
@@ -154,10 +158,16 @@ impl<'a, M: 'a> Interaction<'a, M> {
         Self {
             inner: Some(inner),
             controlled,
+            default_open: false,
             on_change,
             mode,
         }
     }
+    pub(crate) fn default_open(mut self, open: bool) -> Self {
+        self.default_open = open;
+        self
+    }
+
     fn inner(&self) -> &Anchor<'a, M> {
         self.inner
             .as_ref()
@@ -220,7 +230,10 @@ impl<'a, M: 'a> Widget<M, Theme, Renderer> for Interaction<'a, M> {
         tree::Tag::of::<Cell<State>>()
     }
     fn state(&self) -> tree::State {
-        tree::State::new(Cell::new(State::default()))
+        tree::State::new(Cell::new(State {
+            initial: self.default_open,
+            ..State::default()
+        }))
     }
     fn diff(&mut self, tree: &mut Tree) {
         self.sync(tree.state.downcast_ref::<Cell<State>>().get());
@@ -259,8 +272,28 @@ impl<'a, M: 'a> Widget<M, Theme, Renderer> for Interaction<'a, M> {
             Event::Keyboard(_) => state.pointer = false,
             _ => {}
         }
+        let hint = self.mode == Mode::Hint;
+        let over_trigger = cursor.is_over(layout.bounds());
+        let activate = hint
+            && match event {
+                Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => over_trigger,
+                Event::Touch(touch::Event::FingerPressed { .. }) => over_trigger,
+                Event::Keyboard(keyboard::Event::KeyPressed {
+                    key: Key::Named(Named::Enter | Named::Space),
+                    ..
+                }) => focus,
+                _ => false,
+            };
+        if hint && matches!(event, Event::Mouse(mouse::Event::CursorMoved { .. })) && !over_trigger
+        {
+            state.suppress_hover = false;
+        }
+        if activate {
+            state.suppress_hover = true;
+        }
         if self.mode == Mode::Hint && focus != state.focused {
             state.keyboard = focus && !state.pointer;
+            state.initial = false;
         }
         state.focused = focus;
         if self.mode == Mode::Submenu
@@ -285,10 +318,25 @@ impl<'a, M: 'a> Widget<M, Theme, Renderer> for Interaction<'a, M> {
                     self.inner_mut()
                         .update(tree, event, layout, cursor, renderer, shell, viewport)
                 },
-                |v| state.hovered = v,
+                |open| {
+                    state.hovered = open && !state.suppress_hover;
+                    if !open {
+                        state.initial = false;
+                    }
+                },
             );
         }
-        notify(previous, state, self.on_change.as_deref(), shell);
+        if activate {
+            state.hovered = false;
+            state.keyboard = false;
+            state.initial = false;
+        }
+        let old = if activate {
+            self.controlled.unwrap_or(previous)
+        } else {
+            previous
+        };
+        notify(old, state, self.on_change.as_deref(), shell);
         cell.set(state);
     }
     fn operate(
@@ -372,6 +420,7 @@ impl<'a, M: 'a> Widget<M, Theme, Renderer> for Interaction<'a, M> {
                     cell,
                     mode: self.mode,
                     primary: true,
+                    controlled: self.controlled,
                     change: self.on_change.as_deref(),
                 }))
             })
@@ -383,6 +432,7 @@ struct Layer<'a, M> {
     cell: &'a Cell<State>,
     mode: Mode,
     primary: bool,
+    controlled: Option<bool>,
     change: Option<&'a dyn Fn(bool) -> M>,
 }
 impl<M> overlay::Overlay<M, Theme, Renderer> for Layer<'_, M> {
@@ -406,7 +456,7 @@ impl<M> overlay::Overlay<M, Theme, Renderer> for Layer<'_, M> {
         shell: &mut Shell<'_, M>,
     ) {
         let mut state = self.cell.get();
-        let previous = state.open();
+        let mut previous = state.open();
         if self.primary
             && self.mode == Mode::Submenu
             && matches!(
@@ -429,7 +479,10 @@ impl<M> overlay::Overlay<M, Theme, Renderer> for Layer<'_, M> {
                         .update(event, cursor, renderer, local)
                 },
                 |open| {
-                    state.hovered = open;
+                    state.hovered = open && !state.suppress_hover;
+                    if !open {
+                        state.initial = false;
+                    }
                     if !open
                         && matches!(
                             event,
@@ -439,6 +492,9 @@ impl<M> overlay::Overlay<M, Theme, Renderer> for Layer<'_, M> {
                         )
                     {
                         state.keyboard = false;
+                        if self.mode == Mode::Hint {
+                            previous = self.controlled.unwrap_or(previous);
+                        }
                     }
                 },
             );
@@ -475,6 +531,7 @@ impl<M> overlay::Overlay<M, Theme, Renderer> for Layer<'_, M> {
                     cell: self.cell,
                     mode: self.mode,
                     primary: false,
+                    controlled: self.controlled,
                     change: self.change,
                 }))
             })

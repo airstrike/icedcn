@@ -1,17 +1,19 @@
 ```rust
+use icedcn::Slot;
 use icedcn::widget::{button, row, tooltip};
+use tooltip::Side::{Bottom, Left, Right, Top};
 
-fn side<'a>(label: &'a str, side: tooltip::Side) -> Slot<'a, Message> {
-    tooltip(button(label).style(button::Outline), "Add to library")
-        .side(side)
-        .into()
+pub fn view() -> Slot<'static, ()> {
+    let hint =
+        |label, side| tooltip(button(label).style(button::Outline), "Add to library").side(side);
+    row![
+        hint("Left", Left),
+        hint("Top", Top),
+        hint("Bottom", Bottom),
+        hint("Right", Right)
+    ]
+    .spacing(8)
+    .wrap()
+    .into()
 }
-
-row![
-    side("Left", tooltip::Side::Left),
-    side("Top", tooltip::Side::Top),
-    side("Bottom", tooltip::Side::Bottom),
-    side("Right", tooltip::Side::Right),
-]
-.spacing(8)
 ```

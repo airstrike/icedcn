@@ -1,5 +1,10 @@
 ```rust
-use icedcn::widget::{button, tooltip};
+use icedcn::{
+    Slot,
+    widget::{button, tooltip},
+};
 
-tooltip(button("Hover").style(button::Outline), "Add to library")
+pub fn view() -> Slot<'static, ()> {
+    tooltip(button("Hover").style(button::Outline), "Add to library").into()
+}
 ```

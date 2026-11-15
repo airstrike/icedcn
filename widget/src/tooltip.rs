@@ -1,7 +1,7 @@
 //! A short hint anchored to a widget.
 //!
 //! A `text-xs` hint on a `bg-foreground` panel with an arrow pointing at its
-//! trigger, shown while the pointer rests on the trigger, on the trigger's
+//! trigger, shown on pointer hover or keyboard focus, on the trigger's
 //! [`Side`] (top by default). Built on iced's
 //! [`anchored`](iced_widget::anchored) overlay in hover mode, so it flips
 //! and shifts to stay in the window, and `Escape` hides it.
@@ -23,6 +23,7 @@ use std::time::Duration;
 
 use iced_core::Pixels;
 use iced_widget::{Renderer, Widget, anchored};
+use icedcn_core::Padding;
 use icedcn_core::Theme;
 use icedcn_core::theme::tooltip::content;
 
@@ -37,6 +38,8 @@ pub struct Tooltip<'a, Message> {
     content: Slot<'a, Message>,
     position: anchored::Position,
     delay: Duration,
+    padding: Padding,
+    default_open: bool,
     open: Option<bool>,
     on_open_change: Option<Box<dyn Fn(bool) -> Message + 'a>>,
 }
@@ -52,6 +55,8 @@ pub fn tooltip<'a, Message: 'a>(
         // Include the arrow height in the distance between the trigger and panel.
         position: anchored::Position::new(Side::Top).offset(10),
         delay: Duration::ZERO,
+        padding: [6, 12].into(),
+        default_open: false,
         open: None,
         on_open_change: None,
     }
@@ -83,6 +88,18 @@ impl<'a, Message: 'a> Tooltip<'a, Message> {
         self
     }
 
+    /// Set the space around the hint. The default is 6px vertically and 12px horizontally.
+    pub fn padding(mut self, padding: impl Into<Padding>) -> Self {
+        self.padding = padding.into();
+        self
+    }
+
+    /// Whether an uncontrolled tooltip starts open.
+    pub fn default_open(mut self, open: bool) -> Self {
+        self.default_open = open;
+        self
+    }
+
     /// Control the tooltip: it shows exactly when `open` is, and hovering
     /// only publishes [`on_open_change`](Self::on_open_change).
     pub fn open(mut self, open: bool) -> Self {
@@ -106,12 +123,14 @@ impl<'a, Message: 'a> Compose<Message> for Tooltip<'a, Message> {
     where
         Self: 'b,
     {
-        self.content
-            .inherit(&Inherited::default().with_size(Size::Xs));
+        self.content.inherit(
+            &Inherited::default()
+                .with_size(Size::Xs)
+                .with_line_height(16.),
+        );
 
-        // `px-3 py-1.5 max-w-xs`.
         let panel = crate::container(self.content)
-            .padding([6, 12])
+            .padding(self.padding)
             .max_width(320)
             .style(|theme: &Theme| content(theme));
 
@@ -124,6 +143,7 @@ impl<'a, Message: 'a> Compose<Message> for Tooltip<'a, Message> {
             self.open,
             self.on_open_change,
         )
+        .default_open(self.default_open)
         .boxed()
     }
 }
