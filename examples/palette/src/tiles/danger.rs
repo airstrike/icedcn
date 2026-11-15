@@ -13,12 +13,11 @@ use icedcn::Theme;
 use icedcn::card;
 use icedcn::core::style::{destructive, outline};
 use icedcn::theme;
-use icedcn::theme::container::code_block;
 use icedcn::widget::{button, checkbox, column, container, field, row, space, text};
 
 use crate::{Message, State};
 
-pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
+pub fn view<'a>(state: &'a State) -> iced::Element<'a, Message, Theme> {
     // The `armed` branch resolves to a bare `destructive` Tint; the
     // idle branch resolves to `outline + destructive`. Both flow through
     // the new style API's `From<...> for iced_widget::button::StyleFn`
@@ -47,10 +46,7 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
     .label("Acknowledge this is irreversible")
     .description("Required before the delete fires.");
 
-    // The container supplies the background and padding around the inline code.
-    let code_chip = container(text::inline_code("delete --hard"))
-        .padding([2, 6])
-        .style(code_block);
+    let code_chip = text::inline_code("delete --hard");
 
     let footnote = row![
         Slot::from(code_chip),

@@ -18,8 +18,8 @@ use crate::core::Length::Fill;
 use crate::core::alignment::Horizontal;
 use crate::core::font;
 use crate::core::font::Weight;
-pub use crate::core::text::{Ellipsis, Wrapping};
-use crate::core::text::{Fragment, IntoFragment, LineHeight};
+pub use crate::core::text::{Ellipsis, LineHeight, Wrapping};
+use crate::core::text::{Fragment, IntoFragment};
 use iced_widget::Renderer;
 use iced_widget::text::StyleFn;
 
@@ -328,6 +328,42 @@ pub fn small<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
         .style(theme::text::Foreground)
 }
 
+/// Alias for [`small`]: 14-pixel foreground text.
+pub fn sm<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
+    small(content)
+}
+
+/// Alias for [`p`]: 16-pixel foreground text.
+pub fn md<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
+    p(content)
+}
+
+/// Alias for [`large`]: 18-pixel semibold foreground text.
+pub fn lg<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
+    large(content)
+}
+
+/// 20-pixel foreground text.
+pub fn xl<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
+    Text::new(content)
+        .size(size::XL)
+        .style(theme::text::Foreground)
+}
+
+/// 24-pixel foreground text.
+pub fn xl2<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
+    Text::new(content)
+        .size(size::XL2)
+        .style(theme::text::Foreground)
+}
+
+/// 30-pixel foreground text.
+pub fn xl3<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
+    Text::new(content)
+        .size(size::XL3)
+        .style(theme::text::Foreground)
+}
+
 /// Medium-weight field label with a tight line height for alignment beside controls.
 pub fn label<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     Text::new(content)
@@ -417,15 +453,22 @@ impl<'a, Message: 'a> Compose<Message> for Blockquote<'a> {
     }
 }
 
-/// Semibold monospace text for inline code. Wrap it in a container to add padding, a
-/// background, or rounded corners.
-pub fn inline_code<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
-    Text::new(content)
-        .font(iced_core::Font::MONOSPACE)
-        .wrapping(Wrapping::WordOrGlyph)
-        .size(size::SM)
+/// Semibold monospace inline code with native span padding and a muted highlight.
+/// The highlight follows wrapped lines; no surrounding container is needed.
+pub fn inline_code<'a>(content: impl IntoFragment<'a>) -> crate::rich_text::RichText<'a> {
+    use crate::core::border;
+    use crate::rich_text::{rich_text, span};
+    use icedcn_core::theme::tweak::Token;
+
+    rich_text([span(content)
         .semibold()
-        .style(theme::text::Foreground)
+        .padding([2, 5])
+        .background(Token::Muted)
+        .border(border::rounded(4))])
+    .font(iced_core::Font::MONOSPACE)
+    .wrapping(Wrapping::WordOrGlyph)
+    .size(size::SM)
+    .style(theme::text::Foreground)
 }
 
 /// A ruled article table. Columns share their intrinsic widths, header cells wrap,

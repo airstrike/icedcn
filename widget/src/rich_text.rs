@@ -43,7 +43,8 @@ use crate::core::widget::text::{Alignment, Catalog, Shaping, Wrapping};
 use crate::core::widget::tree::{self, Tree};
 use crate::core::widget::{Meta, Operation, operation};
 use crate::core::{
-    Color, Element, Em, Layout, Length, Pixels, Point, Rectangle, Size, Text, Widget,
+    Border, Color, Element, Em, Layout, Length, Padding, Pixels, Point, Rectangle, Size, Text,
+    Vector, Widget,
 };
 use iced_widget::Renderer;
 use icedcn_core::Theme;
@@ -71,6 +72,9 @@ pub struct Span<'a> {
     italic: bool,
     color: Option<(Token, Token)>,
     letter_spacing: Option<Em>,
+    padding: Padding,
+    background: Option<Token>,
+    border: Option<Border>,
 }
 
 /// Create a [`Span`] with the given text fragment.
@@ -84,6 +88,9 @@ pub fn span<'a>(fragment: impl text::IntoFragment<'a>) -> Span<'a> {
         italic: false,
         color: None,
         letter_spacing: None,
+        padding: Padding::ZERO,
+        background: None,
+        border: None,
     }
 }
 
@@ -139,6 +146,25 @@ impl<'a> Span<'a> {
         self
     }
 
+    /// Set native span padding. Horizontal padding participates in shaping;
+    /// vertical padding extends the highlight above and below the line box.
+    pub fn padding(mut self, padding: impl Into<Padding>) -> Self {
+        self.padding = padding.into();
+        self
+    }
+
+    /// Paint a theme-aware background behind this span's wrapped regions.
+    pub fn background(mut self, background: impl Into<Token>) -> Self {
+        self.background = Some(background.into());
+        self
+    }
+
+    /// Set the native border of the span highlight.
+    pub fn border(mut self, border: impl Into<Border>) -> Self {
+        self.border = Some(border.into());
+        self
+    }
+
     /// Apply a theme-aware color to this span.
     ///
     /// Resolves against the active palette at draw time, so the same
@@ -174,16 +200,16 @@ impl<'a> Span<'a> {
     /// Build the iced span used for *layout* (color stripped — color is a
     /// rendering concern and including it would needlessly invalidate the
     /// paragraph cache when the palette changes between draws).
-    fn to_layout_span(&self) -> text::Span<'static, ()> {
+    fn to_layout_span(&self, default_font: iced_core::Font) -> text::Span<'static, ()> {
         let mut font = self.font;
         if self.italic {
-            font = Some(font.unwrap_or_default().style(font::Style::Italic));
+            font = Some(font.unwrap_or(default_font).style(font::Style::Italic));
         }
         if let Some(weight) = self.weight {
-            let base = font.unwrap_or(iced_core::Font::DEFAULT);
+            let base = font.unwrap_or(default_font);
             font = Some(base.weight(weight));
         }
-        let mut span = text::Span::new(self.fragment.clone().into_owned());
+        let mut span = text::Span::new(self.fragment.clone().into_owned()).padding(self.padding);
         if let Some(size) = self.size {
             span = span.size(size);
         }
@@ -434,7 +460,12 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
         let state = tree
             .state
             .downcast_mut::<State<<Renderer as text::Renderer>::Paragraph>>();
-        let layout_spans: Vec<_> = self.spans.iter().map(Span::to_layout_span).collect();
+        let default_font = self.font.unwrap_or_else(|| text::Renderer::font(renderer));
+        let layout_spans: Vec<_> = self
+            .spans
+            .iter()
+            .map(|span| span.to_layout_span(default_font))
+            .collect();
 
         tree.size = layout::sized(limits, self.width, self.height, |limits| {
             let bounds = limits.bounds();
@@ -483,6 +514,51 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
         let anchor = layout
             .bounds()
             .anchor(paragraph.min_bounds(), self.align_x, self.align_y);
+        // Match iced's native rich-text highlights: only the first and last
+        // wrapped regions receive horizontal padding and rounded outer ends.
+        for (index, span) in self.spans.iter().enumerate() {
+            if span.background.is_none() && span.border.is_none() {
+                continue;
+            }
+            let highlight = text::Highlight {
+                background: span
+                    .background
+                    .map(|token| token.resolve(theme).into())
+                    .unwrap_or(Color::TRANSPARENT.into()),
+                border: span.border.unwrap_or_default(),
+            };
+            let regions = paragraph.span_bounds(index);
+            for (i, bounds) in regions.iter().enumerate() {
+                use crate::core::Renderer as _;
+                use crate::core::border::Radius;
+
+                let starts = i == 0;
+                let ends = i + 1 == regions.len();
+                let left = if starts { span.padding.left } else { 0.0 };
+                let right = if ends { span.padding.right } else { 0.0 };
+                let bounds = Rectangle::new(
+                    bounds.position() - Vector::new(left, span.padding.top),
+                    bounds.size() + Size::new(left + right, span.padding.y()),
+                );
+                let radius = Radius {
+                    top_left: highlight.border.radius.top_left * f32::from(starts),
+                    bottom_left: highlight.border.radius.bottom_left * f32::from(starts),
+                    top_right: highlight.border.radius.top_right * f32::from(ends),
+                    bottom_right: highlight.border.radius.bottom_right * f32::from(ends),
+                };
+                renderer.fill_quad(
+                    renderer::Quad {
+                        bounds: bounds + (anchor - Point::ORIGIN),
+                        border: Border {
+                            radius,
+                            ..highlight.border
+                        },
+                        ..Default::default()
+                    },
+                    highlight.background,
+                );
+            }
+        }
         let colors = || {
             self.spans.iter().map(|span| {
                 span.color.map(|(light, dark)| {

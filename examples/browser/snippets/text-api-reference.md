@@ -2,7 +2,7 @@
 
 Typography is a collection of helper constructors and two composed
 widgets, not a single component. Each helper returns a `Text<'a>` (or
-`Blockquote` / `List`) builder you can chain `.size(...)`, `.bold()`,
+`RichText`, `Blockquote` / `List`) builder you can chain `.size(...)`, `.bold()`,
 etc. on.
 
 ### Constructors
@@ -19,8 +19,14 @@ etc. on.
 | `text::small(content)` | `Text<'a>` | 14px, foreground. |
 | `text::muted(content)` | `Text<'a>` | 14px, muted. |
 | `text::xs(content)` | `Text<'a>` | 12px, foreground. |
+| `text::sm(content)` | `Text<'a>` | Alias for `small`: 14px, foreground. |
+| `text::md(content)` | `Text<'a>` | Alias for `p`: 16px, foreground. |
+| `text::lg(content)` | `Text<'a>` | Alias for `large`: 18px, semibold, foreground. |
+| `text::xl(content)` | `Text<'a>` | 20px, foreground. |
+| `text::xl2(content)` | `Text<'a>` | 24px, foreground. |
+| `text::xl3(content)` | `Text<'a>` | 30px, foreground. |
 | `text::table(headers, rows)` | `Container` | A ruled article table with intrinsic column widths, wrapping headers and alternating body stripes. |
-| `text::inline_code(content)` | `Text<'a>` | 14px, semibold, monospace. Long names wrap within the available width. Use `theme::container::inline_code` on a padded container for its muted surface. |
+| `text::inline_code(content)` | `RichText<'a>` | 14px, semibold, monospace with a muted highlight and native `[2, 5]` span padding. Wrapped lines retain their own highlight instead of filling a rectangular container. |
 | `text::blockquote(content)` | `Blockquote<'a>` | 2px left rule + 24px gap + italic body. |
 | `text::list(items)` | `List<'a, Message>` | Bulleted list with a 24px marker column, hanging indent and 8px between rows. |
 | `text(content)` | `Text<'a>` | Crate-root shorthand for `text::small`. |
@@ -37,7 +43,7 @@ The Typography examples use a larger article scale than the control-oriented hea
 | `.size(size)` | `impl Into<Size>` | Override the font size. Accepts `Size::Xs`/`Sm`/`Default`/`Lg`, an `f32` (px), or `Size::Custom(v)`. |
 | `.weight(weight)` | `impl Into<Weight>` | Override the font weight. Accepts `Weight::Medium`/`Semibold`/`Bold`/etc. or a numeric `u16`. |
 | `.font(font)` | `iced::Font` | Select a font family. |
-| `.line_height(height)` | `iced::Pixels` or relative multiplier | Set the line box independently of font size. |
+| `.line_height(height)` | `impl Into<text::LineHeight>` | Pass `Pixels(28.)` for an absolute line box or `1.5` for a relative multiplier. |
 | `.wrapping(strategy)` | `text::Wrapping` | Choose a line-breaking strategy, including balanced headlines. |
 | `.medium()` | — | Shorthand for `.weight(Weight::Medium)`. |
 | `.semibold()` | — | Shorthand for `.weight(Weight::Semibold)`. |
@@ -129,8 +135,6 @@ shorthand for `.color(...)`.
 | `.size(size)` | `impl Into<Size>` | Override the span's font size. |
 | `.weight(weight)` | `impl Into<Weight>` | Override the span's font weight. |
 | `.font(font)` | `iced::Font` | Select a font family. |
-| `.line_height(height)` | `iced::Pixels` or relative multiplier | Set the line box independently of font size. |
-| `.wrapping(strategy)` | `text::Wrapping` | Choose a line-breaking strategy, including balanced headlines. |
 | `.medium()` | — | Shorthand for `.weight(Weight::Medium)`. |
 | `.semibold()` | — | Shorthand for `.weight(Weight::Semibold)`. |
 | `.bold()` | — | Shorthand for `.weight(Weight::Bold)`. |
@@ -138,6 +142,9 @@ shorthand for `.color(...)`.
 | `.line_height(line_height)` | `impl Into<text::LineHeight>` | Override the line height. |
 | `.letter_spacing(letter_spacing)` | `impl Into<iced_core::Em>` | Adjust letter spacing. |
 | `.color(token)` | `impl Into<Token>` | Theme-aware color — resolves against the palette at draw time. |
+| `.padding(padding)` | `impl Into<iced::Padding>` | Native horizontal padding participates in text layout; vertical padding extends the highlight. |
+| `.background(token)` | `impl Into<Token>` | Theme-aware highlight behind each wrapped span region. |
+| `.border(border)` | `impl Into<iced::Border>` | Native highlight border and corner radius. |
 
 #### `RichText<'a>` builder methods
 

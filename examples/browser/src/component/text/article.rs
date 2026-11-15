@@ -6,7 +6,7 @@ use iced::{Element, Fill, Pixels, Widget};
 use icedcn::Theme;
 use icedcn::widget::{column, container, text};
 
-pub(super) fn view(index: usize) -> Element<'static, Message, Theme> {
+pub(super) fn view<'a>(index: usize) -> Element<'a, Message, Theme> {
     let blocks = [
         (0, h1("Taxing Laughter: The Joke Tax Chronicles").into()),
         (24, text::lead("Once upon a time, in a far-off land, there was a very lazy king who spent all \
@@ -47,7 +47,7 @@ pub(super) fn view(index: usize) -> Element<'static, Message, Theme> {
     column(
         blocks
             .into_iter()
-            .map(|(top, body): (u16, Element<'static, Message, Theme>)| {
+            .map(|(top, body): (u16, Element<'a, Message, Theme>)| {
                 container(body).width(Fill).padding([top, 0, 0, 0]).into()
             }),
     )
@@ -55,7 +55,7 @@ pub(super) fn view(index: usize) -> Element<'static, Message, Theme> {
     .into()
 }
 
-fn plan_link(index: usize) -> Element<'static, Message, Theme> {
+fn plan_link<'a>(index: usize) -> Element<'a, Message, Theme> {
     rich_text([
         span("The king thought long and hard, and finally came up with "),
         span("a brilliant plan")

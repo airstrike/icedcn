@@ -1,7 +1,6 @@
 mod article;
 
 use iced::{Fill, Pixels, Task, Widget};
-use icedcn::theme::container::inline_code;
 use icedcn::widget::{column, container, rule, text};
 use icedcn::{Slot, Theme, Weight};
 
@@ -187,7 +186,9 @@ impl page::Page for TextPage {
             ])
             .into(),
 
-            "inline-code" => inline_code_card("widget::alert_dialog::AlertDialog").into(),
+            "inline-code" => text::inline_code("widget::alert_dialog::AlertDialog")
+                .font(crate::font::GEIST_MONO_NAME)
+                .into(),
 
             "lead" => text::lead(
                 "A modal dialog that interrupts the user with important content and \
@@ -239,13 +240,6 @@ fn h2_with_border<'a, M: 'a>(content: &'a str) -> Slot<'a, M> {
     .width(Fill)
     .spacing(8)
     .into()
-}
-
-fn inline_code_card<'a, M: 'a>(code: &'a str) -> Slot<'a, M> {
-    container(text::inline_code(code).font(iced::Font::new(crate::font::GEIST_MONO_NAME)))
-        .padding([2, 5])
-        .style(inline_code)
-        .into()
 }
 
 fn table_card<'a, M: 'a>() -> Slot<'a, M> {
