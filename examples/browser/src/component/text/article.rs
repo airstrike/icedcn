@@ -1,6 +1,6 @@
 use super::{h1, h2_with_border, h3, paragraph, table_card};
 use crate::{Message, page};
-use iced::font::Weight;
+use iced::font::{Tag, Variation};
 use iced::widget::{rich_text, span};
 use iced::{Element, Fill, Pixels, Widget};
 use icedcn::Theme;
@@ -59,7 +59,7 @@ fn plan_link(index: usize) -> Element<'static, Message, Theme> {
     rich_text([
         span("The king thought long and hard, and finally came up with "),
         span("a brilliant plan")
-            .font(iced::Font::DEFAULT.weight(Weight::Medium))
+            .font_variation(Variation::new(Tag::new(b"wght"), 500.))
             .link(())
             .underline(true),
         span(": he would tax the jokes in the kingdom."),
