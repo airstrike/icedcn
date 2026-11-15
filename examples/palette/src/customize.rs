@@ -29,7 +29,7 @@ impl Default for Settings {
         Self {
             base: "Neutral",
             accent: "Neutral",
-            chart: "Blue",
+            chart: "Neutral",
             menu: "Subtle",
             font: Font::DEFAULT,
         }

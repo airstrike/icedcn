@@ -5,7 +5,7 @@ use iced::widget::{space, themer};
 use iced::{Center, Fill, Font, Length, Pixels, Widget};
 use iced_widget::button::Status;
 use icedcn::Theme;
-use icedcn::core::{Border, Color, oklch};
+use icedcn::core::{Border, Color, Design, oklch};
 use icedcn::theme::container::Style;
 use icedcn::theme::text::Muted;
 use icedcn::widget::{Slot, button, column, container, dropdown_menu, menu, row, scrollable, text};
@@ -147,7 +147,9 @@ pub fn view(state: &State, viewport_width: f32) -> iced::Element<'_, Message, Th
     .max_height(986)
     .clip(true)
     .style(rail_style);
-    themer(Some(Theme::dark()), iced::Element::from(rail))
+    let mut design = Design::dark();
+    design.popover.base = iced::color!(0x262626).into();
+    themer(Some(Theme::new(design)), iced::Element::from(rail))
         .text_color(|theme| theme.neutral.foreground.into())
         .boxed()
 }
@@ -213,6 +215,18 @@ fn trigger(label: &str, selected: &str, mark: Mark) -> button::Button<'static, M
     .style(control_style())
 }
 
+fn option(label: impl Into<String>) -> Slot<'static, Message> {
+    container(
+        text(label.into())
+            .size(14)
+            .medium()
+            .line_height(Pixels(20.0)),
+    )
+    .padding(2)
+    .width(Fill)
+    .into()
+}
+
 fn picker(
     label: &'static str,
     selected: &'static str,
@@ -224,11 +238,12 @@ fn picker(
         move |menu| menu.trigger(trigger(label, selected, mark)),
         move |_| {
             column::Column::with_children(choices.iter().map(|value| {
-                menu::radio_item(text(*value).size(14), *value, Some(selected), |value| {
+                menu::radio_item(option(*value), *value, Some(selected), |value| {
                     on_change(value.to_owned())
                 })
                 .into()
             }))
+            .padding(2)
             .width(Fill)
             .into()
         },
@@ -250,12 +265,13 @@ fn fixed(
         move |menu| menu.trigger(trigger(label, value, mark)),
         move |_| {
             column![
-                menu::radio_item(text(value).size(14), value, Some(value), |_| Message::Noop),
+                menu::radio_item(option(value), value, Some(value), |_| Message::Noop),
                 menu::separator(),
                 container(text(explanation).size(12).style(Muted))
                     .padding([6, 8])
                     .width(Fill),
             ]
+            .padding(2)
             .width(Fill)
             .into()
         },
@@ -272,11 +288,12 @@ fn inherited_font(font: &str) -> Slot<'static, Message> {
         move |menu| menu.trigger(trigger("Heading", &font, Mark::Font)),
         |_| {
             column![
-                menu::radio_item(text("Inherit body font").size(14), true, Some(true), |_| {
+                menu::radio_item(option("Inherit body font"), true, Some(true), |_| {
                     Message::Noop
                 }),
                 menu::label("Choose the body font below."),
             ]
+            .padding(2)
             .width(Fill)
             .into()
         },
@@ -298,12 +315,13 @@ fn font_picker(font: &str, host: bool) -> Slot<'static, Message> {
         move |menu| menu.trigger(trigger("Font", &font, Mark::Font)),
         |_| {
             column![
-                menu::item(text("Sans Serif").size(14))
+                menu::item(option("Sans Serif"))
                     .on_select(Message::SetFont(Font::with_family(Family::SansSerif))),
-                menu::item(text("Serif").size(14))
+                menu::item(option("Serif"))
                     .on_select(Message::SetFont(Font::with_family(Family::Serif))),
-                menu::item(text("Monospace").size(14)).on_select(Message::SetFont(Font::MONOSPACE)),
+                menu::item(option("Monospace")).on_select(Message::SetFont(Font::MONOSPACE)),
             ]
+            .padding(2)
             .width(Fill)
             .into()
         },
@@ -354,9 +372,9 @@ fn main_menu(mode: Mode) -> Slot<'static, Message> {
         },
         move |_| {
             column![
-                menu::item(text("Get Code").size(14)).on_select(Message::CodeOpen(true)),
-                menu::item(text("Next Preset").size(14)).on_select(Message::NextPreset),
-                menu::item(text("Light / Dark").size(14)).on_select(Message::SetMode(
+                menu::item(option("Get Code")).on_select(Message::CodeOpen(true)),
+                menu::item(option("Next Preset")).on_select(Message::NextPreset),
+                menu::item(option("Light / Dark")).on_select(Message::SetMode(
                     if mode == Mode::Dark {
                         Mode::Light
                     } else {
@@ -364,8 +382,9 @@ fn main_menu(mode: Mode) -> Slot<'static, Message> {
                     }
                 )),
                 menu::separator(),
-                menu::item(text("Reset").size(14)).on_select(Message::Reset),
+                menu::item(option("Reset")).on_select(Message::Reset),
             ]
+            .padding(2)
             .width(Fill)
             .into()
         },
