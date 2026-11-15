@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0a0a0a">
   <link rel="icon" href="data:,">
+  <link rel="license" href="./font-licenses.txt">
   <title>icedcn — Components for iced</title>
   <meta name="description" content="Explore icedcn components, interactive examples, and copyable Rust code for iced applications.">
   <link rel="canonical" href="https://icedcn.airstrike.fyi/">
@@ -49,6 +50,20 @@
     <noscript><style>#progress { display: none; }</style><p>This component browser requires JavaScript and WebAssembly.</p></noscript>
   </main>
   <script type="module">
+    // Keep native browser reload (including Shift-reload) away from winit's
+    // canvas key handler, which prevents the default for every keydown.
+    window.addEventListener("keydown", event => {
+      if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === "r") {
+        event.stopPropagation();
+      }
+    }, { capture: true });
+
+    // The canvas renders icedcn's own context menus; surrounding HTML keeps
+    // the browser's normal context menu.
+    window.addEventListener("contextmenu", event => {
+      if (event.target instanceof HTMLCanvasElement) event.preventDefault();
+    });
+
     const splash = document.querySelector("#splash");
     const bar = document.querySelector("#progress");
 

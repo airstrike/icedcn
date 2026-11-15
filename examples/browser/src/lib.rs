@@ -167,7 +167,7 @@ pub fn run() -> iced::Result {
         .fonts([icon::FONT, font::GEIST_MONO]);
     #[cfg(target_arch = "wasm32")]
     let application = application
-        .fonts([include_bytes!("../fonts/Geist.ttf").as_slice()])
+        .fonts([include_bytes!("../fonts/Geist.ttf").as_slice(), font::EMOJI])
         .font(font::BODY.into());
     application.run()
 }

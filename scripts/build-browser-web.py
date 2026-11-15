@@ -145,6 +145,10 @@ def main():
                 .replace("BROWSER_LOGO", (ROOT / "assets/logo.svg").read_text().strip()))
         (output / "index.html").write_text(html)
         shutil.copyfile(ROOT / "examples/browser/web/og.png", output / "og.png")
+        (output / "font-licenses.txt").write_text("\n\n".join(
+            (ROOT / "examples/browser/fonts" / name).read_text()
+            for name in ("Geist-OFL.txt", "GeistMono-OFL.txt", "TwemojiMozilla-LICENSE.txt")
+        ))
         # Only generated modules in this dedicated output tree are stale.
         for pattern in ("browser-*.wasm", "browser-*.js"):
             for old in output.glob(pattern):

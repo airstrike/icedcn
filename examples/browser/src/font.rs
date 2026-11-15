@@ -26,3 +26,56 @@ pub const GEIST_MONO: &[u8] = include_bytes!("../fonts/GeistMono-Regular.ttf");
 /// Mono" + style "Regular"). Pass this string to `.font(...)` when assigning
 /// the font to a widget or markdown style field.
 pub const GEIST_MONO_NAME: &str = "Geist Mono";
+
+/// Color emoji fallback for WebAssembly, where system fonts are unavailable.
+/// The unmodified COLRv0 font and its license are bundled under `fonts/`.
+#[cfg(any(target_arch = "wasm32", test))]
+pub const EMOJI: &[u8] = include_bytes!("../fonts/TwemojiMozilla.ttf");
+
+#[cfg(test)]
+mod tests {
+    use iced_widget::renderer::graphics::text::cosmic_text::{
+        Attrs, Buffer, Family, FontSystem, Metrics, Shaping, SwashCache, SwashContent, fontdb,
+    };
+
+    use super::{BODY, EMOJI};
+
+    #[test]
+    fn emoji_fallback_shapes_and_rasterizes_in_color_without_system_fonts() {
+        let mut database = fontdb::Database::new();
+        database.load_font_data(include_bytes!("../fonts/Geist.ttf").to_vec());
+        database.load_font_data(EMOJI.to_vec());
+        let mut fonts = FontSystem::new_with_locale_and_db("en-US".into(), database);
+        let mut cache = SwashCache::new();
+        for emoji in ["👍", "👀", "🔥", "😭", "😮", "🚀", "🎉", "👏", "👍🏽", "👩‍💻"]
+        {
+            let mut buffer = Buffer::new(&mut fonts, Metrics::new(20.0, 28.0));
+            buffer.set_text(
+                emoji,
+                &Attrs::new().family(Family::Name(BODY)),
+                Shaping::Advanced,
+                None,
+            );
+            buffer.shape_until_scroll(&mut fonts, false);
+            let glyphs: Vec<_> = buffer
+                .layout_runs()
+                .flat_map(|run| run.glyphs.iter())
+                .collect();
+            assert!(!glyphs.is_empty(), "unshaped emoji: {emoji}");
+            for glyph in glyphs {
+                assert_ne!(glyph.glyph_id, 0, "missing emoji: {emoji}");
+                let physical = glyph.physical((0.0, 0.0), 1.0);
+                let image = cache
+                    .get_image(&mut fonts, physical.cache_key)
+                    .as_ref()
+                    .expect("emoji rasterizes with the locked renderer");
+                assert_eq!(
+                    image.content,
+                    SwashContent::Color,
+                    "monochrome emoji: {emoji}"
+                );
+                assert!(!image.data.is_empty(), "empty emoji: {emoji}");
+            }
+        }
+    }
+}
