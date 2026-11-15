@@ -1347,7 +1347,9 @@ where
         None,
     ))
     .size(settings.text_size)
-    .line_height(settings.line_height)
+    // Inline spans inherit the paragraph's computed line height, including
+    // smaller code spans. Resolving the ratio per span shrinks code-only lines.
+    .line_height(settings.line_height.to_absolute(settings.text_size))
     .selectable(true)
     .on_link_click(on_link_click)
     .boxed()
