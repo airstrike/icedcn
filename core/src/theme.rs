@@ -11,6 +11,8 @@ pub mod alert_dialog;
 pub mod avatar;
 pub mod badge;
 pub mod button;
+#[cfg(feature = "chart")]
+pub mod chart;
 pub mod checkbox;
 pub mod combo_box;
 pub mod container;

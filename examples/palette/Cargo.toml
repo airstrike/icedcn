@@ -6,7 +6,7 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
-icedcn = { workspace = true, features = ["spinner", "svg"] }
+icedcn = { workspace = true, features = ["chart", "spinner", "svg"] }
 iced = { workspace = true, features = ["svg", "tokio"] }
 iced_widget = { workspace = true }
 fount = { git = "https://github.com/airstrike/fount" }

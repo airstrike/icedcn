@@ -1,55 +1,50 @@
-//! Traffic-channels bar chart — 12 stylized bars over a baseline.
+//! Monthly traffic channels rendered by Hyozu.
 
+use iced::Fill;
 use iced::widget::space;
-use iced::{Bottom, Fill};
+use icedcn::Theme;
 use icedcn::card;
-use icedcn::core::Border;
 use icedcn::theme;
-use icedcn::theme::container::Style;
-use icedcn::widget::row::Row;
-use icedcn::widget::{badge, column, container, row, text};
-use icedcn::{Slot, Theme};
+use icedcn::widget::chart::{Data, bar, bars, legend};
+use icedcn::widget::{badge, chart, column, container, row, text};
 
 use crate::{Message, State};
 
-const BARS: [f32; 12] = [
-    40.0, 65.0, 50.0, 80.0, 95.0, 70.0, 110.0, 85.0, 120.0, 100.0, 75.0, 90.0,
-];
-const BAR_WIDTH: f32 = 20.0;
-const CHART_HEIGHT: f32 = 156.0;
+pub fn data() -> Data {
+    chart::data(
+        bars([
+            bar([186, 305, 237, 73, 209, 214]).with_name("Desktop"),
+            bar([80, 200, 120, 190, 130, 140]).with_name("Mobile"),
+        ])
+        .data_labels(None),
+    )
+    .x_axis_labels(["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
+    .x_axis(|axis| axis.show_line(false).show_grid(false))
+    .y_axis(|axis| axis.none().show_grid(true))
+    .legend(legend::Config::below().size(12).interactive(true))
+}
 
-pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
-    let bars: Vec<Slot<'static, Message>> = BARS.iter().map(|h| bar(*h)).collect();
-
-    let chart = Row::with_children(bars)
-        .spacing(6)
-        .align_y(Bottom)
-        .height(CHART_HEIGHT)
-        .width(Fill);
-
+pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
     let footer = row![
-        text::large("1,234"),
+        text::large("2,084"),
         text::xs("visits").style(theme::text::Muted),
         space::horizontal(),
-        badge("+47%").style(badge::Secondary),
+        badge("Jan–Jun").style(badge::Secondary),
     ]
     .spacing(8)
     .width(Fill);
 
-    let body = column([Slot::from(chart), footer.into()])
+    let body = column![chart(&state.traffic).height(156).padding(0), footer]
         .spacing(16)
         .width(Fill);
 
-    card::card(
-        column([
-            card::header("Traffic channels")
-                .description(
-                    "Monthly desktop and mobile traffic for the last six\n\
-                     months--compare volume and mix across...",
-                )
-                .into(),
-            card::content(container(body).padding([0, 16]).width(Fill)).into(),
-        ])
+    card(
+        column![
+            card::header("Traffic channels").description(
+                "Monthly desktop and mobile visitors. Select a legend to compare channels."
+            ),
+            card::content(container(body).padding([0, 16]).width(Fill)),
+        ]
         .spacing(16)
         .padding([16, 0])
         .width(Fill),
@@ -59,19 +54,4 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
     .width(Fill)
     .height(412.0)
     .into()
-}
-
-fn bar(height: f32) -> Slot<'static, Message> {
-    container(space::vertical())
-        .width(BAR_WIDTH)
-        .height(height)
-        .style(|t: &Theme| Style {
-            background: Some(t.primary.base.into()),
-            border: Border {
-                radius: 3.0.into(),
-                ..Border::default()
-            },
-            ..Style::default()
-        })
-        .into()
 }

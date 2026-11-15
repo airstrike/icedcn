@@ -1,9 +1,14 @@
 ```rust
-const LABELS: [&str; 6] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-const DESKTOP: [f32; 6] = [186.0, 305.0, 237.0, 73.0, 209.0, 214.0];
-const MOBILE: [f32; 6] = [80.0, 200.0, 120.0, 190.0, 130.0, 140.0];
-const BLUE: Color = Color::from_rgb8(37, 99, 235);
-const LIGHT_BLUE: Color = Color::from_rgb8(96, 165, 250);
+use iced::widget::button::StyleFn;
+use iced::widget::component::{Component, component};
+use iced::{Color, Element, Fill, Widget, color};
+use icedcn::Theme;
+use icedcn::card;
+use icedcn::widget::chart::{Data, bar, bars, data};
+use icedcn::widget::{button, chart, column, container, row, separator, text};
+
+type Message = ();
+
 const DAYS: [&str; 30] = [
     "Apr 1", "Apr 2", "Apr 3", "Apr 4", "Apr 5", "Apr 6", "Apr 7", "Apr 8", "Apr 9", "Apr 10",
     "Apr 11", "Apr 12", "Apr 13", "Apr 14", "Apr 15", "Apr 16", "Apr 17", "Apr 18", "Apr 19",
@@ -20,9 +25,10 @@ const MOBILE_DAILY: [f32; 30] = [
     220.0, 170.0, 190.0, 360.0, 410.0, 180.0, 150.0, 200.0, 170.0, 230.0, 290.0, 250.0, 130.0,
     420.0, 180.0, 240.0, 380.0,
 ];
-type ButtonStyle = StyleFn<'static, Theme>;
-struct Visitors;
-impl<'a> Component<'a, Message, Theme> for Visitors {
+struct Visitors<'a> {
+    series: &'a [Data; 2],
+}
+impl<'a> Component<'a, Message, Theme> for Visitors<'a> {
     type State = bool;
     type Event = bool;
     fn update(&self, state: &mut bool, mobile: bool, _: &iced::Renderer) -> Option<Message> {
@@ -40,9 +46,9 @@ impl<'a> Component<'a, Message, Theme> for Visitors {
                 .spacing(4),
             )
             .style(if selected {
-                ButtonStyle::from(button::Secondary)
+                StyleFn::from(button::Secondary)
             } else {
-                ButtonStyle::from(button::Ghost)
+                StyleFn::from(button::Ghost)
             })
             .translate(false)
             .on_press(is_mobile)
@@ -53,18 +59,13 @@ impl<'a> Component<'a, Message, Theme> for Visitors {
                 style
             })
         };
-        let series = if *mobile {
-            Series::new("Page Views", LIGHT_BLUE, &MOBILE_DAILY)
-        } else {
-            Series::new("Page Views", BLUE, &DESKTOP_DAILY)
-        };
         Element::from(
             card(
                 column![
                     row![
                         column![
                             card::title("Bar Chart - Interactive"),
-                            card::description("Showing total visitors for the last 3 months")
+                            card::description("Showing daily visitors for April")
                         ]
                         .spacing(4)
                         .width(Fill)
@@ -75,21 +76,41 @@ impl<'a> Component<'a, Message, Theme> for Visitors {
                     .width(Fill),
                     separator(),
                     container(
-                        chart(&DAYS, [series])
+                        chart(&self.series[usize::from(*mobile)])
                             .height(250)
-                            .grid(true)
-                            .axis(true)
-                            .tooltip(true)
-                            .radius(0.0)
+                            .padding(0)
+                            .corners(0)
                     )
                     .padding(12)
                     .width(Fill),
                 ]
                 .width(Fill),
             )
-            .width(Fill)
-            .boxed(),
+            .gap(0)
+            .padding(0)
+            .width(Fill),
         )
     }
+}
+fn daily(values: [f32; 30], color: Color) -> Data {
+    data(bars([bar(values).with_name("Page Views").with_color(color)]).data_labels(None))
+        .x_axis_labels(DAYS)
+        .x_axis(|axis| {
+            axis.show_line(false)
+                .show_grid(false)
+                .with_ticks([0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 29.0])
+        })
+        .y_axis(|axis| axis.none().show_grid(true))
+}
+
+fn visitors() -> [Data; 2] {
+    [
+        daily(DESKTOP_DAILY, color!(0x2563eb)),
+        daily(MOBILE_DAILY, color!(0x60a5fa)),
+    ]
+}
+
+fn view<'a>(series: &'a [Data; 2]) -> Element<'a, Message, Theme> {
+    component(Visitors { series }).boxed()
 }
 ```

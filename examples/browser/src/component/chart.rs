@@ -1,18 +1,16 @@
 use crate::{Message, page};
-use iced::Task;
 use iced::widget::button::StyleFn;
 use iced::widget::component::{Component, component};
-use iced::{Color, Element, Fill, Widget};
-use icedcn::Theme;
-use icedcn::core::Border;
-use icedcn::theme::container::Style;
-use icedcn::widget::chart::{Chart, Series};
+use iced::{Color, Element, Fill, Task, Widget, color};
+use icedcn::theme::tweak::Bg;
+use icedcn::widget::chart::{Data, bar, bars, data, hover, legend};
 use icedcn::widget::{button, chart, column, container, row, separator, space, text};
-use icedcn::{Slot, card};
+use icedcn::{Theme, theme};
+use icedcn::{card, radius};
 
 pub static META: page::Meta = page::Meta {
     title: "Chart",
-    description: "Interactive charts built with iced.",
+    description: "Interactive charts built with Hyozu.",
 };
 pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
@@ -71,17 +69,23 @@ pub static BLOCKS: &[page::Block] = &[
 const LABELS: [&str; 6] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
 const DESKTOP: [f32; 6] = [186.0, 305.0, 237.0, 73.0, 209.0, 214.0];
 const MOBILE: [f32; 6] = [80.0, 200.0, 120.0, 190.0, 130.0, 140.0];
-const BLUE: Color = Color::from_rgb8(37, 99, 235);
-const LIGHT_BLUE: Color = Color::from_rgb8(96, 165, 250);
-fn monthly() -> Chart<'static> {
-    chart(
-        &LABELS,
-        [
-            Series::new("Desktop", BLUE, &DESKTOP),
-            Series::new("Mobile", LIGHT_BLUE, &MOBILE),
-        ],
+const BLUE: Color = color!(0x2563eb);
+const LIGHT_BLUE: Color = color!(0x60a5fa);
+
+fn monthly() -> Data {
+    data(
+        bars([
+            bar(DESKTOP).with_name("Desktop").with_color(BLUE),
+            bar(MOBILE).with_name("Mobile").with_color(LIGHT_BLUE),
+        ])
+        .data_labels(None),
     )
+    .x_axis_labels(LABELS)
+    .x_axis(|axis| axis.none())
+    .y_axis(|axis| axis.none())
+    .show_tooltip(false)
 }
+
 const DAYS: [&str; 30] = [
     "Apr 1", "Apr 2", "Apr 3", "Apr 4", "Apr 5", "Apr 6", "Apr 7", "Apr 8", "Apr 9", "Apr 10",
     "Apr 11", "Apr 12", "Apr 13", "Apr 14", "Apr 15", "Apr 16", "Apr 17", "Apr 18", "Apr 19",
@@ -98,9 +102,10 @@ const MOBILE_DAILY: [f32; 30] = [
     220.0, 170.0, 190.0, 360.0, 410.0, 180.0, 150.0, 200.0, 170.0, 230.0, 290.0, 250.0, 130.0,
     420.0, 180.0, 240.0, 380.0,
 ];
-type ButtonStyle = StyleFn<'static, Theme>;
-struct Visitors;
-impl<'a> Component<'a, Message, Theme> for Visitors {
+struct Visitors<'a> {
+    series: &'a [Data; 2],
+}
+impl<'a> Component<'a, Message, Theme> for Visitors<'a> {
     type State = bool;
     type Event = bool;
     fn update(&self, state: &mut bool, mobile: bool, _: &iced::Renderer) -> Option<Message> {
@@ -118,9 +123,9 @@ impl<'a> Component<'a, Message, Theme> for Visitors {
                 .spacing(4),
             )
             .style(if selected {
-                ButtonStyle::from(button::Secondary)
+                StyleFn::from(button::Secondary)
             } else {
-                ButtonStyle::from(button::Ghost)
+                StyleFn::from(button::Ghost)
             })
             .translate(false)
             .on_press(is_mobile)
@@ -131,18 +136,13 @@ impl<'a> Component<'a, Message, Theme> for Visitors {
                 style
             })
         };
-        let series = if *mobile {
-            Series::new("Page Views", LIGHT_BLUE, &MOBILE_DAILY)
-        } else {
-            Series::new("Page Views", BLUE, &DESKTOP_DAILY)
-        };
         Element::from(
             card(
                 column![
                     row![
                         column![
                             card::title("Bar Chart - Interactive"),
-                            card::description("Showing total visitors for the last 3 months")
+                            card::description("Showing daily visitors for April")
                         ]
                         .spacing(4)
                         .width(Fill)
@@ -153,12 +153,10 @@ impl<'a> Component<'a, Message, Theme> for Visitors {
                     .width(Fill),
                     separator(),
                     container(
-                        chart(&DAYS, [series])
+                        chart(&self.series[usize::from(*mobile)])
                             .height(250)
-                            .grid(true)
-                            .axis(true)
-                            .tooltip(true)
-                            .radius(0.0)
+                            .padding(0)
+                            .corners(0)
                     )
                     .padding(12)
                     .width(Fill),
@@ -171,93 +169,77 @@ impl<'a> Component<'a, Message, Theme> for Visitors {
         )
     }
 }
-fn sample(
-    title: Option<&'static str>,
-    rows: &[(&'static str, &'static str, Color)],
-    style: &str,
-) -> Slot<'static, Message> {
-    let mut items = Vec::new();
-    if let Some(title) = title {
-        items.push(text::small(title).medium().into());
-    }
-    for &(name, value, color) in rows {
-        let swatch = |width, height| {
-            container(space::horizontal())
-                .width(width)
-                .height(height)
-                .style(move |_| Style {
-                    background: Some(icedcn::Color::from(color).into()),
-                    border: Border {
-                        radius: 2.into(),
-                        ..Default::default()
-                    },
-                    ..Style::default()
-                })
-        };
-        let indicator: Slot<'static, Message> = match style {
-            "dashed" => column![swatch(4, 3), swatch(4, 3), swatch(4, 3)]
-                .spacing(2)
-                .into(),
-            "line" => swatch(4, 20).into(),
-            _ => swatch(9, 9).into(),
-        };
-        items.push(
-            row![
-                indicator,
-                text::muted(name).size(12.0).width(Fill),
-                text::small(value).medium()
-            ]
-            .spacing(6)
-            .width(Fill)
-            .into(),
-        );
-    }
-    container(column(items).spacing(4).width(Fill))
-        .width(132)
-        .padding(9)
-        .style(|t| Style {
-            background: Some(t.neutral.base.into()),
-            border: Border {
-                width: 1.0,
-                color: t.neutral.border,
-                radius: 8.into(),
-            },
-            ..Default::default()
+fn daily(values: [f32; 30], color: Color) -> Data {
+    data(bars([bar(values).with_name("Page Views").with_color(color)]).data_labels(None))
+        .x_axis_labels(DAYS)
+        .x_axis(|axis| {
+            axis.show_line(false)
+                .show_grid(false)
+                .with_ticks([0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 29.0])
         })
-        .into()
+        .y_axis(|axis| axis.none().show_grid(true))
 }
-fn anatomy() -> Slot<'static, Message> {
-    let first = sample(
-        Some("Page Views"),
-        &[("Desktop", "186", BLUE), ("Mobile", "80", LIGHT_BLUE)],
-        "dot",
-    );
-    let second = sample(
-        None,
-        &[("Chrome", "1,286", BLUE), ("Firefox", "1,000", LIGHT_BLUE)],
-        "dashed",
-    );
-    let third = sample(Some("Page Views"), &[("Desktop", "12,486", BLUE)], "line");
-    let fourth = sample(None, &[("Chrome", "1,286", LIGHT_BLUE)], "dot");
-    column![
+
+fn tooltip<'a>(entry: &hover::Entry<'_>) -> hover::Annotation<'a, Message, Theme> {
+    let index = match entry {
+        hover::Entry::Cartesian { point_idx, .. } => *point_idx,
+        _ => 0,
+    };
+    let index = index.min(LABELS.len() - 1);
+    let item = |name, value: f32, color: Color| {
         row![
-            column![text::small("Label"), first].spacing(8),
-            column![text::small("Name"), second].spacing(8)
+            container(space::horizontal()).width(8).height(8).class(
+                theme::container::Transparent + Bg::from(icedcn::Color::from(color)) + radius(2)
+            ),
+            text::muted(name).size(12).width(Fill),
+            text::small(value.to_string()).medium(),
         ]
-        .spacing(24),
-        row![third, column![fourth, text::small("Indicator")].spacing(8)].spacing(24),
-    ]
-    .spacing(18)
-    .into()
+        .spacing(8)
+        .align_y(iced::Center)
+    };
+    hover::Annotation::new(Element::from(
+        container(
+            column![
+                text::small(LABELS[index]).medium(),
+                item("Desktop", DESKTOP[index], BLUE),
+                item("Mobile", MOBILE[index], LIGHT_BLUE),
+            ]
+            .spacing(6),
+        )
+        .width(160)
+        .padding(10)
+        .class(theme::container::Card + radius(8)),
+    ))
+    .padding(0)
 }
+
 pub struct ChartPage {
     state: page::State,
+    monthly: [Data; 5],
+    daily: [Data; 2],
 }
 
 impl ChartPage {
     pub fn new(page_index: usize) -> Box<dyn page::Page> {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
+            monthly: [
+                monthly(),
+                monthly().y_axis(|axis| axis.show_grid(true)),
+                monthly()
+                    .y_axis(|axis| axis.show_grid(true))
+                    .x_axis(|axis| axis.show_labels(true)),
+                monthly()
+                    .y_axis(|axis| axis.show_grid(true))
+                    .x_axis(|axis| axis.show_labels(true))
+                    .show_tooltip(true),
+                monthly()
+                    .y_axis(|axis| axis.show_grid(true))
+                    .x_axis(|axis| axis.show_labels(true))
+                    .show_tooltip(true)
+                    .legend(legend::Config::below().size(12).interactive(true)),
+            ],
+            daily: [daily(DESKTOP_DAILY, BLUE), daily(MOBILE_DAILY, LIGHT_BLUE)],
         })
     }
 }
@@ -293,18 +275,21 @@ impl page::Page for ChartPage {
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
-            "demo" => component(Visitors).boxed().into(),
-            "example" => monthly().into(),
-            "example-grid" => monthly().grid(true).into(),
-            "example-axis" => monthly().grid(true).axis(true).into(),
-            "example-tooltip" => monthly().grid(true).axis(true).tooltip(true).into(),
-            "example-legend" => monthly()
-                .grid(true)
-                .axis(true)
-                .tooltip(true)
-                .legend(true)
-                .into(),
-            "tooltip" => anatomy().into(),
+            "demo" => component(Visitors {
+                series: &self.daily,
+            })
+            .boxed()
+            .into(),
+            "example" => chart(&self.monthly[0]).height(200).padding(0).boxed(),
+            "example-grid" => chart(&self.monthly[1]).height(200).padding(0).boxed(),
+            "example-axis" => chart(&self.monthly[2]).height(200).padding(0).boxed(),
+            "example-tooltip" => chart(&self.monthly[3]).height(200).padding(0).boxed(),
+            "example-legend" => chart(&self.monthly[4]).height(200).padding(0).boxed(),
+            "tooltip" => chart(&self.monthly[3])
+                .height(200)
+                .padding(0)
+                .hover(tooltip)
+                .boxed(),
             _ => unreachable!("unknown chart preview id: {id}"),
         }
     }

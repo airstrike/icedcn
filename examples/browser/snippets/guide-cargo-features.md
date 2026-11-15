@@ -5,6 +5,7 @@ The root crate has no default features. Enable the capabilities needed by your a
 | Feature | Capability |
 | --- | --- |
 | `svg` | SVG widget and theme support. |
+| `chart` | Native Hyozu charts with theme and composition support. |
 | `highlighter` | Syntax highlighting support. |
 | `markdown` | Markdown rendering and highlighting. |
 | `spinner` | Canvas-based spinner rendering. |

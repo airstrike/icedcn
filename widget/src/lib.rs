@@ -13,6 +13,7 @@ pub mod bubble;
 pub mod button;
 pub mod calendar;
 pub mod carousel;
+#[cfg(feature = "chart")]
 pub mod chart;
 pub mod checkbox;
 pub mod code_block;
@@ -102,6 +103,7 @@ pub use button::Button;
 pub use button::ButtonGroup;
 pub use calendar::{Calendar, calendar};
 pub use carousel::carousel;
+#[cfg(feature = "chart")]
 pub use chart::chart;
 pub use checkbox::Checkbox;
 pub use code_block::{CodeBlock, code_block};

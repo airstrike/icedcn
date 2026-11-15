@@ -11,11 +11,13 @@ keywords.workspace = true
 
 [features]
 default = []
+chart = ["dep:hyozu"]
 markdown = ["iced_widget/markdown"]
 svg = ["iced_widget/svg"]
 sweeten = ["dep:sweeten"]
 
 [dependencies]
+hyozu = { workspace = true, optional = true }
 iced_core.workspace = true
 iced_widget.workspace = true
 sweeten = { workspace = true, optional = true }

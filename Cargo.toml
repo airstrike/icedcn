@@ -12,6 +12,7 @@ keywords.workspace = true
 
 [features]
 default = []
+chart = ["icedcn_core/chart", "icedcn_widget/chart"]
 highlighter = ["icedcn_widget/highlighter"]
 markdown = ["icedcn_core/markdown", "icedcn_widget/markdown"]
 spinner = ["icedcn_widget/spinner"]
@@ -48,6 +49,7 @@ rust-version = "1.85"
 icedcn = { path = "." }
 icedcn_core = { path = "./core" }
 icedcn_widget = { path = "./widget" }
+hyozu = { git = "https://github.com/airstrike/hyozu", rev = "c07cc08" }
 
 iced = "0.15.0-dev"
 iced_core = "0.15.0-dev"

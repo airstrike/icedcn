@@ -20,9 +20,12 @@ use icedcn::core::{Background, Border};
 use icedcn::theme;
 use icedcn::theme::container::Style;
 use icedcn::widget::Size;
+use icedcn::widget::chart::Data;
 use icedcn::widget::qr_code;
 use icedcn::widget::scrollable::{Direction, scrollbar};
 use icedcn::widget::{button, column, container, row, scrollable};
+
+use crate::tiles::chart;
 
 pub mod chrome;
 pub mod dashboard;
@@ -98,6 +101,7 @@ pub enum Message {
 
 pub struct State {
     pub mode: Mode,
+    pub traffic: Data,
     pub preview_page: PreviewPage,
     pub connected: bool,
     pub receiving_method: ReceivingMethod,
@@ -140,6 +144,7 @@ impl State {
     fn with_mode(mode: Mode) -> Self {
         Self {
             mode,
+            traffic: chart::data(),
             preview_page: PreviewPage::One,
             connected: true,
             receiving_method: ReceivingMethod::BankTransfer,

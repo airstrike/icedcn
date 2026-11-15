@@ -8,6 +8,7 @@ repository.workspace = true
 
 [features]
 default = []
+chart = ["dep:hyozu", "icedcn_core/chart"]
 canvas = ["iced_widget/canvas"]
 crisp = []
 highlighter = [
@@ -25,6 +26,7 @@ svg = ["iced_widget/svg", "icedcn_core/svg"]
 sweeten = ["dep:sweeten", "icedcn_core/sweeten"]
 
 [dependencies]
+hyozu = { workspace = true, optional = true }
 icedcn_core.workspace = true
 iced_core.workspace = true
 iced_highlighter = { workspace = true, optional = true }
