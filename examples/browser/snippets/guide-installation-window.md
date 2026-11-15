@@ -1,6 +1,6 @@
 ## Your first window
 
-Replace `src/main.rs` with this complete application:
+The CLI creates a starter application for you. If you followed the manual setup, put this in `src/main.rs`:
 
 ```rust
 use iced::Element;
@@ -43,7 +43,7 @@ fn main() -> iced::Result {
 }
 ```
 
-Check the application once to update its copied lockfile, then open the window:
+Check the application, then open the window:
 
 ```sh
 cargo check

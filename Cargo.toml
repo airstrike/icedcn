@@ -30,6 +30,7 @@ iced_widget.workspace = true
 
 [workspace]
 members = [
+    "cli",
   "core",
   "widget",
   "vendor/fount",

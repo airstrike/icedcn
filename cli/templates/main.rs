@@ -13,7 +13,7 @@ struct Counter {
 #[derive(Debug, Clone)]
 enum Message {
     Increment,
-    SystemMode(Mode),
+    Mode(Mode),
 }
 
 impl Counter {
@@ -23,14 +23,14 @@ impl Counter {
                 value: 0,
                 theme: theme::create(Mode::None),
             },
-            system::theme().map(Message::SystemMode),
+            system::theme().map(Message::Mode),
         )
     }
 
     fn update(&mut self, message: Message) {
         match message {
             Message::Increment => self.value = self.value.saturating_add(1),
-            Message::SystemMode(mode) => self.theme = theme::create(mode),
+            Message::Mode(mode) => self.theme = theme::create(mode),
         }
     }
 
@@ -51,7 +51,7 @@ impl Counter {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        system::theme_changes().map(Message::SystemMode)
+        system::theme_changes().map(Message::Mode)
     }
 }
 

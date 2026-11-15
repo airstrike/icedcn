@@ -1,4 +1,17 @@
-## Add it to an application
+## Create an application
+
+Install Rust with [rustup](https://rustup.rs/), then install the icedcn CLI:
+
+```sh
+cargo install --git https://github.com/airstrike/icedcn --branch master icedcn_cli --locked
+icedcn new my-app
+cd my-app
+cargo run
+```
+
+The CLI creates a standalone application with its dependencies and Rust toolchain configured. Cargo downloads icedcn from GitHub; you do not need a local checkout. Commit your application's generated `Cargo.lock`.
+
+## Manual setup
 
 Install Rust with [rustup](https://rustup.rs/), then create an application:
 
@@ -20,20 +33,8 @@ icedcn = { git = "https://github.com/airstrike/icedcn", branch = "master" }
 [patch.crates-io]
 iced = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
 iced_core = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
-iced_runtime = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
-iced_selector = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
-iced_test = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
 iced_widget = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
-iced_graphics = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
-iced_renderer = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
-iced_program = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
-iced_winit = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
-iced_wgpu = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
-iced_tiny_skia = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
-iced_futures = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
-iced_debug = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
-iced_highlighter = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
-cosmic-text = { git = "https://github.com/airstrike/cosmic-text", branch = "dev" }
+iced_runtime = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
 
 [patch."https://github.com/hecrj/cosmic-text.git"]
 cosmic-text = { git = "https://github.com/airstrike/cosmic-text", branch = "dev" }

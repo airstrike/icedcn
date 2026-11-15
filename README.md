@@ -29,7 +29,19 @@ screen of controls and theme settings, run `cargo run --locked -p palette`.
 
 ## Use it
 
-Add these dependencies to your application's `Cargo.toml`:
+Create an application with the CLI:
+
+```sh
+cargo install --git https://github.com/airstrike/icedcn --branch master icedcn_cli --locked
+icedcn new my-app
+cd my-app
+cargo run
+```
+
+The CLI configures the dependencies and toolchain. No local icedcn checkout is needed.
+See [Installation](https://icedcn.airstrike.fyi/docs/installation) for the manual setup.
+
+Alternatively, add these dependencies to your application's `Cargo.toml`:
 
 ```toml
 [dependencies]
@@ -37,11 +49,9 @@ iced = "0.15.0-dev"
 icedcn = { git = "https://github.com/airstrike/icedcn", branch = "master" }
 ```
 
-Copy **both `[patch]` tables** from this repository's [Cargo.toml](Cargo.toml)
-into your application's workspace root manifest, and use the same
-[Rust toolchain](rust-toolchain.toml). These patches select the iced and
-cosmic-text forks that icedcn uses; Cargo does not inherit patches from a
-dependency. Keep your application's `Cargo.lock` in version control.
+The manual setup also needs the fork patches and Rust toolchain listed in
+[Installation](https://icedcn.airstrike.fyi/docs/installation#manual-setup).
+Cargo does not inherit patches from a dependency. The CLI configures these for you.
 
 Here is a complete `src/main.rs`:
 
