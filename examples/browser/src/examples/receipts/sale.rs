@@ -128,7 +128,7 @@ pub fn update(sale: &mut Sale, message: Message) -> Action<Instruction, Message>
                 if sale.items.is_empty() {
                     sale.items.push(SaleItem::default());
                 }
-                Action::task(operation::focus_next())
+                Action::task(operation::focus(edit::form_id("name", sale.items[0].id)))
             }
             edit::Message::AddItem => {
                 sale.items.push(SaleItem::default());

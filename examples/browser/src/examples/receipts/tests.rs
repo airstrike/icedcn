@@ -71,9 +71,10 @@ fn original_empty_state_draft_workflow_and_focus_tasks_are_preserved() {
     assert_focused(&state, effect, Id::from("receipts-sale-name"));
     assert!(state.draft.1.items.is_empty());
     let _ = edit_message(&mut state, edit::Message::NameInput("Lunch".into()));
-    let _ = edit_message(&mut state, edit::Message::NameSubmit);
+    let effect = edit_message(&mut state, edit::Message::NameSubmit);
     assert_eq!(state.draft.1.items.len(), 1);
     let item_id = state.draft.1.items[0].id;
+    assert_focused(&state, effect, edit::form_id("name", item_id));
     assert_eq!(state.draft.1.items[0].quantity_string(), "");
     assert_eq!(state.draft.1.items[0].price_string(), "");
     let effect = edit_message(&mut state, edit::Message::SubmitItem(item_id));
