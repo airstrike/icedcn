@@ -573,3 +573,74 @@ impl<'a, Message: 'a> Compose<Message> for List<'a, Message> {
         iced_widget::column(rows).spacing(8).width(Fill).boxed()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::badge::badge;
+    use iced_core::Pixels;
+
+    // Observe the actual Text configuration after its parent has composed it.
+    struct Label {
+        text: Text<'static>,
+        check: fn(&Text<'_>),
+    }
+
+    impl Compose<()> for Label {
+        fn inherit(&mut self, from: &Inherited) {
+            <Text as Compose<()>>::inherit(&mut self.text, from);
+        }
+
+        fn compose<'a>(self: Box<Self>) -> iced_core::Element<'a, (), Theme, Renderer>
+        where
+            Self: 'a,
+        {
+            (self.check)(&self.text);
+            self.text.build().boxed()
+        }
+    }
+
+    #[test]
+    fn badge_typography_overrides_card_cascade() {
+        let label = Label {
+            text: Text::new("Forms"),
+            check: |text| {
+                assert_eq!(text.size, Some(12.0));
+                assert_eq!(text.line_height, Some(LineHeight::Absolute(Pixels(16.0))));
+                assert_eq!(text.weight, Some(Weight::Medium));
+                assert_eq!(text.selectable, Some(false));
+            },
+        };
+        let mut badge = badge(Slot::new(label)).on_press(());
+        badge.inherit(
+            &Inherited::default()
+                .with_size(Size::Default)
+                .with_line_height(20.0)
+                .with_weight(crate::Weight::Bold)
+                .with_selectable(true),
+        );
+        let _ = Box::new(badge).compose();
+    }
+
+    #[test]
+    fn badge_preserves_explicit_label_typography() {
+        let label = Label {
+            text: Text::new("Forms")
+                .size(10.0)
+                .line_height(Pixels(14.0))
+                .bold(),
+            check: |text| {
+                assert_eq!(text.size, Some(10.0));
+                assert_eq!(text.line_height, Some(LineHeight::Absolute(Pixels(14.0))));
+                assert_eq!(text.weight, Some(Weight::Bold));
+            },
+        };
+        let mut badge = badge(Slot::new(label));
+        badge.inherit(
+            &Inherited::default()
+                .with_size(Size::Default)
+                .with_line_height(20.0),
+        );
+        let _ = Box::new(badge).compose();
+    }
+}

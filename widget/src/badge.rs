@@ -97,6 +97,7 @@ pub struct Badge<'a, Message> {
     end_icon: bool,
     disabled: bool,
     invalid: bool,
+    inherited: Inherited,
 }
 
 /// Create a [`Badge`] with the default variant.
@@ -109,6 +110,7 @@ pub fn badge<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Badge<'a
         end_icon: false,
         disabled: false,
         invalid: false,
+        inherited: Inherited::default(),
     }
 }
 
@@ -176,21 +178,26 @@ impl<'a, Message: Clone + 'a> From<Badge<'a, Message>> for Slot<'a, Message> {
 impl<'a, Message: Clone + 'a> Compose<Message> for Badge<'a, Message> {
     fn inherit(&mut self, from: &Inherited) {
         self.disabled |= from.is_disabled();
-        self.content.inherit(from);
+        self.inherited = self.inherited.or(*from);
     }
 
     fn compose<'b>(mut self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
     where
         Self: 'b,
     {
+        // Resolve our typography before forwarding the cascade: Text keeps the
+        // first inherited value, so ancestor line heights must not arrive first.
         // Nova fixes the outer height at 20px with a 16px text line box.
-        self.content.inherit(
-            &Inherited::default()
-                .with_size(crate::Size::Xs)
-                .with_weight(Weight::Medium)
-                .with_line_height(16.0)
-                .with_disabled(self.disabled),
-        );
+        let mut inherited = self
+            .inherited
+            .with_size(crate::Size::Xs)
+            .with_weight(Weight::Medium)
+            .with_line_height(16.0)
+            .with_disabled(self.disabled);
+        if self.on_press.is_some() {
+            inherited = inherited.with_selectable(false);
+        }
+        self.content.inherit(&inherited);
 
         let pad = Padding {
             top: 2.0,
@@ -200,10 +207,6 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Badge<'a, Message> {
             left: if self.start_icon { 7.0 } else { 9.0 },
             right: if self.end_icon { 7.0 } else { 9.0 },
         };
-        if self.on_press.is_some() {
-            self.content
-                .inherit(&Inherited::default().with_selectable(false));
-        }
         widget::Badge {
             content: self.content.compose(),
             style: self.style,
