@@ -1478,21 +1478,19 @@ where
     Theme: Catalog + 'a,
     Renderer: core::text::Renderer + 'a,
 {
-    container(
-        widget::Scrollable::with_direction(
-            container(
-                code(
-                    settings,
-                    lines,
-                    #[cfg(feature = "highlighter")]
-                    code_theme,
-                )
-                .on_link_click(on_link_click),
+    container(widget::Scrollable::with_direction(
+        container(
+            code(
+                settings,
+                lines,
+                #[cfg(feature = "highlighter")]
+                code_theme,
             )
-            .padding(settings.code_size),
-            widget::Direction::Horizontal(scrollbar()),
-        ),
-    )
+            .on_link_click(on_link_click),
+        )
+        .padding(settings.code_size),
+        widget::Direction::Horizontal(scrollbar()),
+    ))
     .width(Fill)
     .padding(settings.code_size / 4)
     .class(Theme::code_block())
