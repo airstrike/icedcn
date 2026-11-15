@@ -189,6 +189,113 @@ fn group_rings_leave_transparent_portrait_interiors_open() {
     }
 }
 
+#[test]
+fn a_real_one_pixel_image_does_not_use_the_failed_image_fallback() {
+    let mut renderer = renderer();
+    let one_pixel = image::Handle::from_rgba(1, 1, [255, 0, 0, 255].to_vec());
+    renderer.load_image(&one_pixel).expect("decode one pixel");
+    let portrait = pixels(
+        avatar(Some(one_pixel)).fallback("AC").into(),
+        &mut renderer,
+        &Theme::light(),
+    );
+    assert_eq!(pixel(&portrait, 16, 16), [255, 0, 0]);
+}
+
+#[test]
+fn registered_dropdown_supports_pointer_keyboard_dismissal_and_focus_return() {
+    use iced::keyboard::key::Named;
+    use iced::time::Instant;
+    use iced::{Event, Point, window};
+    use iced_test::Simulator;
+    use iced_test::core::widget::operation::{Focusable, focusable};
+    use iced_test::simulator;
+
+    type Ui<'a> = Simulator<'a, browser::Message, Theme, Renderer>;
+
+    fn frame(ui: &mut Ui<'_>) {
+        ui.draw(&Theme::light());
+        ui.simulate([Event::Window(
+            window::Event::RedrawRequested(Instant::now()),
+        )]);
+        ui.draw(&Theme::light());
+    }
+
+    #[derive(Default)]
+    struct Focus(Vec<Rectangle>);
+
+    impl Operation for Focus {
+        fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+            visit(self);
+        }
+
+        fn focusable(&mut self, _: Option<&Id>, bounds: Rectangle, state: &mut dyn Focusable) {
+            if state.is_focused() {
+                self.0.push(bounds);
+            }
+        }
+    }
+
+    fn focused(ui: &mut Ui<'_>, point: Point) -> bool {
+        let mut focus = Focus::default();
+        ui.operate(&mut focus);
+        focus.0.iter().any(|bounds| bounds.contains(point))
+    }
+
+    let page = AvatarPage::new(0);
+    let mut ui = Ui::with_size(
+        Default::default(),
+        Size::new(390.0, 300.0),
+        page.preview("dropdown"),
+    );
+    let trigger = Point::new(16.0, 16.0);
+    frame(&mut ui);
+    ui.point_at(trigger);
+    ui.simulate(simulator::click());
+    frame(&mut ui);
+    ui.click("Profile").expect("select profile");
+    frame(&mut ui);
+    ui = ui.rebuild(page.preview("dropdown"));
+    frame(&mut ui);
+    assert!(ui.find("Profile").is_err());
+
+    if !focused(&mut ui, trigger) {
+        ui.operate(&mut focusable::focus_next::<()>());
+    }
+    ui.tap_key(Named::Enter);
+    frame(&mut ui);
+    ui.find("Profile").expect("keyboard opens avatar menu");
+    ui.tap_key(Named::End);
+    let logout = ui.find("Log out").expect("last action").bounds().center();
+    assert!(focused(&mut ui, logout));
+    ui.tap_key(Named::Enter);
+    frame(&mut ui);
+    ui = ui.rebuild(page.preview("dropdown"));
+    frame(&mut ui);
+    assert!(ui.find("Profile").is_err());
+    assert!(focused(&mut ui, trigger), "selection returns trigger focus");
+
+    ui.tap_key(Named::Enter);
+    frame(&mut ui);
+    ui.find("Profile").expect("reopen after selection");
+    ui.tap_key(Named::Escape);
+    frame(&mut ui);
+    ui = ui.rebuild(page.preview("dropdown"));
+    frame(&mut ui);
+    assert!(ui.find("Profile").is_err());
+    assert!(focused(&mut ui, trigger), "Escape returns trigger focus");
+
+    ui.tap_key(Named::Enter);
+    frame(&mut ui);
+    ui.find("Profile").expect("reopen after Escape");
+    ui.point_at(Point::new(300.0, 250.0));
+    ui.simulate(simulator::click());
+    frame(&mut ui);
+    ui = ui.rebuild(page.preview("dropdown"));
+    frame(&mut ui);
+    assert!(ui.find("Profile").is_err());
+}
+
 #[derive(Default)]
 struct Bounds(Vec<Rectangle>);
 impl Operation for Bounds {

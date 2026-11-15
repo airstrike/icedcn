@@ -33,7 +33,7 @@ fn presence(theme: &Theme) -> container::Style {
     style
 }
 
-fn preview() -> iced::Element<'static, (), Theme> {
+fn preview() -> avatar::group::Group<'static, ()> {
     avatar::group([
         avatar::badge(avatar(None).fallback("AC"), avatar::dot()).badge_style(presence),
         avatar::badge(
@@ -43,6 +43,5 @@ fn preview() -> iced::Element<'static, (), Theme> {
             }),
         ),
     ])
-    .into()
 }
 ```

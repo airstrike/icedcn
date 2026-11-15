@@ -15,7 +15,7 @@ fn preview(
     portrait: image::Handle,
     maxleiter: image::Handle,
     evilrabbit: image::Handle,
-) -> iced::Element<'static, (), Theme> {
+) -> avatar::group::Group<'static, ()> {
     avatar::group([
         avatar(Some(portrait)).fallback("AC"),
         avatar(Some(maxleiter)).fallback("LR"),
@@ -24,6 +24,5 @@ fn preview(
     .count(plus(16.0).style(|theme: &Theme, _| svg::Style {
         color: Some(theme.muted.foreground.into()),
     }))
-    .into()
 }
 ```

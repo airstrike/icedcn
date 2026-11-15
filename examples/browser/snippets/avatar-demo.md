@@ -1,12 +1,8 @@
 ```rust
 use iced::widget::image;
-use iced::{Subscription, Task, window};
 use icedcn::Theme;
-use icedcn::widget::avatar;
-use icedcn::widget::row;
-
-use icedcn::theme::avatar::badge_style;
-use icedcn::theme::container;
+use icedcn::theme::{avatar::badge_style, container};
+use icedcn::widget::{avatar, row};
 
 fn presence(theme: &Theme) -> container::Style {
     let mut style = badge_style(theme);
@@ -20,67 +16,28 @@ fn presence(theme: &Theme) -> container::Style {
     style
 }
 
-struct Demo {
-    window_width: f32,
+fn preview(
     portrait: image::Handle,
     maxleiter: image::Handle,
     evilrabbit: image::Handle,
-}
-
-#[derive(Clone, Debug)]
-enum Message {
-    Width(f32),
-}
-
-impl Demo {
-    fn new() -> (Self, Task<Message>) {
-        (
-            Self {
-                window_width: 1024.0,
-                portrait: image::Handle::from_path("assets/avatars/02.png"),
-                maxleiter: image::Handle::from_path("assets/avatars/maxleiter.png"),
-                evilrabbit: image::Handle::from_path("assets/avatars/evilrabbit.png"),
-            },
-            window::oldest()
-                .and_then(window::size)
-                .map(|size| Message::Width(size.width)),
+    window_width: f32,
+) -> row::Row<'static, ()> {
+    row![
+        avatar(Some(portrait.clone())).fallback("AC"),
+        avatar::badge(
+            avatar(Some(evilrabbit.clone())).fallback("ER"),
+            avatar::dot(),
         )
-    }
-
-    fn update(&mut self, Message::Width(width): Message) {
-        self.window_width = width;
-    }
-
-    fn subscription(&self) -> Subscription<Message> {
-        window::resize_events().map(|(_, size)| Message::Width(size.width))
-    }
-
-    fn view(&self) -> iced::Element<'_, Message, Theme> {
-        row![
-            avatar(Some(self.portrait.clone())).fallback("AC"),
-            avatar::badge(
-                avatar(Some(self.evilrabbit.clone())).fallback("ER"),
-                avatar::dot()
-            )
-            .badge_style(presence),
-            avatar::group([
-                avatar(Some(self.portrait.clone())).fallback("AC"),
-                avatar(Some(self.maxleiter.clone())).fallback("LR"),
-                avatar(Some(self.evilrabbit.clone())).fallback("ER"),
-            ])
-            .count("+3"),
-        ]
-        .spacing(if self.window_width >= 768.0 { 48 } else { 24 })
-        .wrap()
-        .align_y(iced::Center)
-        .into()
-    }
-}
-
-fn main() -> iced::Result {
-    iced::application(Demo::new, Demo::update, Demo::view)
-        .subscription(Demo::subscription)
-        .theme(|_: &Demo| Theme::light())
-        .run()
+        .badge_style(presence),
+        avatar::group([
+            avatar(Some(portrait)).fallback("AC"),
+            avatar(Some(maxleiter)).fallback("LR"),
+            avatar(Some(evilrabbit)).fallback("ER"),
+        ])
+        .count("+3"),
+    ]
+    .spacing(if window_width >= 768.0 { 48 } else { 24 })
+    .wrap()
+    .align_y(iced::Center)
 }
 ```
