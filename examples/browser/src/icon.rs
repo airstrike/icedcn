@@ -1,6 +1,6 @@
 // Generated automatically by iced_lucide at build time.
 // Do not edit manually.
-// c10a40e97be4c64e40c42a709fd9ce6e56e22dfeac99a2600f6a8f09979f1ce8
+// 711f70a8922008637a793996927325315aa2b5990e9acbedee13d2d6fc5740f8
 use iced::widget::text::{self, Text};
 use iced::{Font, font};
 
@@ -122,6 +122,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("shield_alert", "\u{E1FE}"),
     ("smile", "\u{E164}"),
     ("sparkles", "\u{E412}"),
+    ("square", "\u{E167}"),
     ("square_terminal", "\u{E20A}"),
     ("star", "\u{E176}"),
     ("sun", "\u{E178}"),
@@ -927,6 +928,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E412}")
+}
+
+pub fn square<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E167}")
 }
 
 pub fn square_terminal<'a, Theme>() -> Text<'a, Theme>

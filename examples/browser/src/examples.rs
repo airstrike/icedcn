@@ -1,5 +1,6 @@
 //! Runnable applications assembled from icedcn components.
 pub mod receipts;
+mod window;
 
 use iced::keyboard::Modifiers;
 use iced::widget::operation;
@@ -13,6 +14,7 @@ use crate::Message;
 pub struct State {
     receipts: receipts::State,
     open: bool,
+    platform: window::Platform,
 }
 
 #[derive(Debug, Clone)]
@@ -73,10 +75,14 @@ impl State {
                         .on_press(Message::Example(Event::Gallery))
                 )
                 .padding([8, 20]),
-                self.receipts
-                    .view()
-                    .map(|message| Message::Example(Event::Receipts(message)))
-                    .boxed(),
+                self.platform.view(
+                    width,
+                    self.receipts.title(),
+                    self.receipts
+                        .view()
+                        .map(|message| Message::Example(Event::Receipts(message)))
+                        .boxed(),
+                ),
             ]
             .width(Fill)
             .height(Fill)
@@ -138,5 +144,43 @@ mod tests {
             });
             assert!(footer, "the footer surface must span the {expected}px card");
         }
+    }
+
+    #[test]
+    fn framed_receipts_updates_title_and_keeps_gallery_navigation_outside() {
+        use iced::widget::Id;
+
+        let mut state = State {
+            open: true,
+            platform: window::Platform::Mac,
+            ..State::default()
+        };
+        let mut ui = Simulator::with_size(
+            Settings::default(),
+            iced::Size::new(1440., 900.),
+            state.view(1440.),
+        );
+        let frame = ui.find(Id::from("example-window")).unwrap().bounds();
+        let back = ui.find("← All examples").unwrap().bounds();
+        assert!(back.y + back.height <= frame.y);
+        ui.find("iced Receipts").unwrap();
+        ui.click("Create your first sale →").unwrap();
+        let Message::Example(event) = ui.into_messages().next().unwrap() else {
+            panic!("the receipt action must retain its message mapping");
+        };
+        let _ = state.update(event);
+        let mut ui = Simulator::with_size(
+            Settings::default(),
+            iced::Size::new(1440., 900.),
+            state.view(1440.),
+        );
+        ui.find(state.receipts.title()).unwrap();
+        ui.find("Save").unwrap();
+        ui.find(Id::from("receipts-sale-name")).unwrap();
+        ui.click("← All examples").unwrap();
+        assert!(matches!(
+            ui.into_messages().next(),
+            Some(Message::Example(Event::Gallery))
+        ));
     }
 }
