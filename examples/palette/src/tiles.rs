@@ -2,9 +2,6 @@
 
 pub mod account_access;
 pub mod alerts;
-pub mod api_gap;
-#[doc(hidden)]
-pub mod audit;
 pub mod banner;
 pub mod card_overview;
 pub mod chart;
