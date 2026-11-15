@@ -1,5 +1,6 @@
 ```rust
-use icedcn::widget::{button, command, dialog};
+use crate::icon;
+use icedcn::widget::command;
 
 command([
     command::item("Calendar")

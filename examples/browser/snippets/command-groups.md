@@ -1,9 +1,10 @@
 ```rust
-use icedcn::widget::{button, command, dialog};
+use crate::icon;
+use icedcn::widget::{button, command};
 
-dialog(
+command::dialog(
     |d| d.trigger(button("Open Menu").style(button::Outline)),
-    |_| {
+    || {
         command([
             command::item("Calendar")
                 .group("Suggestions")
@@ -27,9 +28,6 @@ dialog(
                 .icon(icon::settings)
                 .shortcut("⌘S"),
         ])
-        .into()
     },
 )
-.show_close_button(false)
-.max_width(512.0)
 ```

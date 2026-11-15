@@ -1,6 +1,7 @@
+// RTL is not applicable; the legacy command-dialog recipe is not exposed by the live docs.
 use crate::{Message, icon, page};
 use iced::Task;
-use icedcn::widget::{button, command, dialog};
+use icedcn::widget::{button, command};
 use icedcn::{Slot, Theme};
 
 pub static META: page::Meta = page::Meta {
@@ -15,35 +16,32 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/command-demo.md",
     },
     page::Block::Md("examples/browser/snippets/command-about.md"),
+    page::Block::Md("examples/browser/snippets/command-installation.md"),
+    page::Block::Md("examples/browser/snippets/command-usage.md"),
     page::Block::Md("examples/browser/snippets/command-composition.md"),
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "basic",
-                title: "Basic",
-                description: Some("A simple command menu in a dialog."),
-                snippet: "examples/browser/snippets/command-basic.md",
-            },
-            page::Block::Example {
-                id: "shortcuts",
-                title: "Shortcuts",
-                description: None,
-                snippet: "examples/browser/snippets/command-shortcuts.md",
-            },
-            page::Block::Example {
-                id: "groups",
-                title: "Groups",
-                description: Some("A command menu with groups, icons and separators."),
-                snippet: "examples/browser/snippets/command-groups.md",
-            },
-            page::Block::Example {
-                id: "scrollable",
-                title: "Scrollable",
-                description: Some("Scrollable command menu with multiple items."),
-                snippet: "examples/browser/snippets/command-scrollable.md",
-            },
-        ],
+    page::Block::Example {
+        id: "basic",
+        title: "Basic",
+        description: Some("A simple command menu in a dialog."),
+        snippet: "examples/browser/snippets/command-basic.md",
+    },
+    page::Block::Example {
+        id: "shortcuts",
+        title: "Shortcuts",
+        description: None,
+        snippet: "examples/browser/snippets/command-shortcuts.md",
+    },
+    page::Block::Example {
+        id: "groups",
+        title: "Groups",
+        description: Some("A command menu with groups, icons and separators."),
+        snippet: "examples/browser/snippets/command-groups.md",
+    },
+    page::Block::Example {
+        id: "scrollable",
+        title: "Scrollable",
+        description: Some("Scrollable command menu with multiple items."),
+        snippet: "examples/browser/snippets/command-scrollable.md",
     },
     page::Block::Md("examples/browser/snippets/command-api-reference.md"),
 ];
@@ -88,25 +86,22 @@ fn preview_demo() -> Slot<'static, Message> {
     .into()
 }
 fn preview_basic() -> Slot<'static, Message> {
-    dialog(
+    command::dialog(
         |d| d.trigger(button("Open Menu").style(button::Outline)),
-        |_| {
+        || {
             command([
                 command::item("Calendar").group("Suggestions"),
                 command::item("Search Emoji").group("Suggestions"),
                 command::item("Calculator").group("Suggestions"),
             ])
-            .into()
         },
     )
-    .show_close_button(false)
-    .max_width(512.0)
     .into()
 }
 fn preview_shortcuts() -> Slot<'static, Message> {
-    dialog(
+    command::dialog(
         |d| d.trigger(button("Open Menu").style(button::Outline)),
-        |_| {
+        || {
             command([
                 command::item("Profile")
                     .group("Settings")
@@ -121,17 +116,14 @@ fn preview_shortcuts() -> Slot<'static, Message> {
                     .icon(icon::settings)
                     .shortcut("⌘S"),
             ])
-            .into()
         },
     )
-    .show_close_button(false)
-    .max_width(512.0)
     .into()
 }
 fn preview_groups() -> Slot<'static, Message> {
-    dialog(
+    command::dialog(
         |d| d.trigger(button("Open Menu").style(button::Outline)),
-        |_| {
+        || {
             command([
                 command::item("Calendar")
                     .group("Suggestions")
@@ -155,17 +147,14 @@ fn preview_groups() -> Slot<'static, Message> {
                     .icon(icon::settings)
                     .shortcut("⌘S"),
             ])
-            .into()
         },
     )
-    .show_close_button(false)
-    .max_width(512.0)
     .into()
 }
 fn preview_scrollable() -> Slot<'static, Message> {
-    dialog(
+    command::dialog(
         |d| d.trigger(button("Open Menu").style(button::Outline)),
-        |_| {
+        || {
             command([
                 command::item("Home")
                     .group("Navigation")
@@ -248,11 +237,8 @@ fn preview_scrollable() -> Slot<'static, Message> {
                     .icon(icon::image),
                 command::item("Code Editor").group("Tools").icon(icon::code),
             ])
-            .into()
         },
     )
-    .show_close_button(false)
-    .max_width(512.0)
     .into()
 }
 impl page::Page for CommandPage {

@@ -20,6 +20,9 @@ static PANEL_LEFT: LazyLock<Handle> = LazyLock::new(|| {
 static CALENDAR: LazyLock<Handle> = LazyLock::new(|| {
     Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4m8-4v4M3 10h18"/><rect width="18" height="18" x="3" y="4" rx="2"/></svg>"#)
 });
+static SEARCH: LazyLock<Handle> = LazyLock::new(|| {
+    Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>"#)
+});
 static CHECK: LazyLock<Handle> = LazyLock::new(|| {
     Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>"#)
 });
@@ -59,6 +62,7 @@ pub(crate) enum Icon {
     PanelLeft,
     Remove,
     Check,
+    Search,
     Globe,
     Sort,
     More,
@@ -101,6 +105,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Icon {
             Self::OctagonX => OCTAGON_X.clone(),
             Self::Remove => REMOVE.clone(),
             Self::Check => CHECK.clone(),
+            Self::Search => SEARCH.clone(),
             Self::Calendar => CALENDAR.clone(),
             Self::PanelLeft => PANEL_LEFT.clone(),
             Self::Globe => GLOBE.clone(),

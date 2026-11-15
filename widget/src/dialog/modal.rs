@@ -71,6 +71,7 @@ pub struct Modal<'a, Message, Theme, Renderer> {
     side_width: Option<f32>,
     sheet_height: f32,
     margin: f32,
+    top: Option<f32>,
     backdrop: bool,
 }
 
@@ -106,6 +107,7 @@ impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
             side_width: None,
             sheet_height: 1.,
             margin: 16.,
+            top: None,
             backdrop: true,
         }
     }
@@ -114,6 +116,11 @@ impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
         self.side_width = Some(width);
         self
     }
+    pub(crate) fn top(mut self, fraction: Option<f32>) -> Self {
+        self.top = fraction;
+        self
+    }
+
     pub(super) fn margin(mut self, margin: f32) -> Self {
         self.margin = margin;
         self
@@ -397,7 +404,12 @@ where
             let position = match self.placement {
                 Placement::Center { .. } => [
                     (window.width - size.width) / 2.0,
-                    (window.height - size.height) / 2.0,
+                    self.top
+                        .map_or((window.height - size.height) / 2.0, |fraction| {
+                            (window.height * fraction)
+                                .min(window.height - self.margin - size.height)
+                                .max(self.margin)
+                        }),
                 ],
                 Placement::Side(Side::Left | Side::Top) => [0.0, 0.0],
                 Placement::Side(Side::Right) => [window.width - size.width, 0.0],

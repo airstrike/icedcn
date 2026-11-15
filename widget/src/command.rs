@@ -1,14 +1,24 @@
 //! Filterable command lists with grouped actions, shortcut hints and keyboard selection.
 use iced_core::Length::Fill;
 
-use crate::combobox::keys::Keys;
+mod behavior;
+
+use crate::button::widget;
 use crate::compose::{Compose, Inherited, Slot};
-use crate::{Input, column, container, input, menu, row, scrollable, text};
+use crate::dialog::{Dialog, Handle};
+use crate::icon::Icon;
+use crate::{Input, column, container, input, input_group, menu, row, scrollable, separator, text};
+use behavior::Behavior;
 use iced_core::keyboard::{Key, key::Named};
-use iced_core::{Element, Length};
+use iced_core::widget::Id;
+use iced_core::{Alignment, Element, Length, Padding, Pixels};
 use iced_widget::component::{self, Component};
-use iced_widget::{Renderer, Widget};
-use icedcn_core::{Theme, theme::popover::content};
+use iced_widget::text::StyleFn;
+use iced_widget::{Renderer, Space, Widget, mouse_area};
+use icedcn_core::theme::input_group::control;
+use icedcn_core::theme::scrollable::hidden;
+use icedcn_core::theme::text_input::Status;
+use icedcn_core::{Border, Theme, theme};
 
 /// An action in a command list.
 pub struct Item<'a, Message> {
@@ -68,6 +78,7 @@ pub struct Command<'a, Message> {
     width: Length,
     limit: usize,
     field: Option<Field<'a>>,
+    modal: bool,
     inherited: Inherited,
 }
 type Field<'a> = Box<dyn Fn(Input<'a, Event>) -> Slot<'a, Event> + 'a>;
@@ -83,9 +94,27 @@ pub fn command<'a, Message>(
         width: Fill,
         limit: usize::MAX,
         field: None,
+        modal: false,
         inherited: Inherited::default(),
     }
 }
+/// Build a modal command palette, with an uncontrolled trigger and search focus.
+/// The returned dialog also supports `open`, `default_open`, and `on_open_change`.
+pub fn dialog<'a, Message: Clone + 'static>(
+    trigger: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
+    content: impl Fn() -> Command<'a, Message> + 'a,
+) -> Dialog<'a, Message> {
+    crate::dialog(trigger, move |_| {
+        let mut palette = content();
+        palette.modal = true;
+        palette.into()
+    })
+    .padding(0)
+    .top(1.0 / 3.0)
+    .max_width(512.0)
+    .show_close_button(false)
+}
+
 impl<'a, Message> Command<'a, Message> {
     /// Input placeholder.
     pub fn placeholder(mut self, label: impl Into<String>) -> Self {
@@ -128,15 +157,21 @@ impl<'a, Message> Command<'a, Message> {
             .take(self.limit)
     }
 }
+/// Local query and keyboard selection, retained in the widget tree.
 #[derive(Default)]
 pub struct State {
     query: String,
     active: usize,
+    scroll: Option<Id>,
+    ids: Vec<Id>,
+    keyboard: bool,
 }
+/// Internal events used by an embedded search field.
 #[derive(Debug, Clone)]
 pub enum Event {
     Input(String),
     Step(bool),
+    Hover(usize),
     First,
     Last,
     Choose(usize),
@@ -147,13 +182,26 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
 {
     type State = State;
     type Event = Event;
+    fn diff(&mut self, state: &mut State) {
+        state.scroll.get_or_insert_with(Id::unique);
+        state.ids.resize_with(self.items.len(), Id::unique);
+        let count = self
+            .filtered(&state.query)
+            .filter(|(_, item)| !item.disabled)
+            .count();
+        state.active = state.active.min(count.saturating_sub(1));
+    }
     fn update(&self, st: &mut State, event: Event, _: &Renderer) -> Option<Message> {
+        if self.inherited.is_disabled() {
+            return None;
+        }
         let enabled: Vec<_> = self
             .filtered(&st.query)
             .filter(|(_, item)| !item.disabled)
             .map(|(i, _)| i)
             .collect();
         let n = enabled.len();
+        st.keyboard = !matches!(event, Event::Hover(_) | Event::Choose(_));
         match event {
             Event::Input(q) => {
                 st.query = q;
@@ -161,15 +209,17 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             }
             Event::Step(back) if n > 0 => {
                 st.active = if back {
-                    (st.active + n - 1) % n
+                    st.active.saturating_sub(1)
                 } else {
-                    (st.active + 1) % n
+                    (st.active + 1).min(n - 1)
                 }
             }
+            Event::Hover(position) => st.active = position,
             Event::First => st.active = 0,
             Event::Last => st.active = n.saturating_sub(1),
             Event::Submit => return self.items.get(*enabled.get(st.active)?)?.on_select.clone(),
             Event::Choose(i) => {
+                st.active = enabled.iter().position(|&index| index == i)?;
                 return self
                     .items
                     .get(i)
@@ -182,43 +232,146 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
         None
     }
     fn view(&self, st: &State) -> impl Widget<Event, Theme, Renderer> + 'a {
+        let embedded = self.field.is_some();
         let mut group = None;
         let mut enabled_index = 0;
         let mut results = Vec::new();
+        let mut rows = Vec::new();
+        let mut selected = None;
         for (index, item) in self.filtered(&st.query) {
             if item.group.as_ref() != group {
-                if group.is_some() {
+                if !rows.is_empty() {
+                    results.push(
+                        column(std::mem::take(&mut rows))
+                            .width(Fill)
+                            .padding(4)
+                            .into(),
+                    );
+                    results.push(separator().into());
+                } else if embedded && group.is_some() {
                     results.push(menu::separator());
                 }
                 if let Some(title) = &item.group {
-                    results.push(menu::label(title.clone()));
+                    let heading = if embedded {
+                        menu::label(title.clone())
+                    } else {
+                        container(
+                            text::muted(title.clone())
+                                .size(12)
+                                .line_height(Pixels(16.))
+                                .medium(),
+                        )
+                        .padding([6, 8])
+                        .into()
+                    };
+                    if embedded {
+                        results.push(heading);
+                    } else {
+                        rows.push(heading);
+                    }
                 }
                 group = item.group.as_ref();
             }
             let label: Slot<'a, Event> = if let Some(icon) = &item.icon {
-                row![icon().size(16), item.label.clone()].spacing(8).into()
+                row![
+                    icon().size(16),
+                    text(item.label.clone()).size(14).line_height(Pixels(20.))
+                ]
+                .align_y(Alignment::Center)
+                .spacing(8)
+                .into()
             } else {
-                item.label.clone().into()
+                text(item.label.clone())
+                    .size(14)
+                    .line_height(Pixels(20.))
+                    .into()
             };
             let active = !item.disabled && enabled_index == st.active;
+            let position = enabled_index;
             if !item.disabled {
                 enabled_index += 1;
             }
-            let mut entry = menu::item(label)
-                .disabled(item.disabled)
-                .highlighted(active)
-                .closes(false)
-                .on_select(Event::Choose(index));
-            if let Some(hint) = item.shortcut {
-                entry = entry.shortcut(hint);
+            if active {
+                selected = Some(st.ids[index].clone());
             }
-            results.push(entry.into());
+            if embedded {
+                let mut entry = menu::item(label)
+                    .disabled(item.disabled)
+                    .highlighted(active)
+                    .closes(false)
+                    .on_select(Event::Choose(index));
+                if let Some(hint) = item.shortcut {
+                    entry = entry.shortcut(hint);
+                }
+                results.push(entry.into());
+                continue;
+            }
+            let mut line = row![label, Space::new().width(Fill)]
+                .width(Fill)
+                .align_y(Alignment::Center);
+            if let Some(hint) = item.shortcut {
+                line = line.push(
+                    text(hint)
+                        .size(12)
+                        .line_height(Pixels(16.))
+                        .letter_spacing(0.1)
+                        .style(Box::new(move |theme: &Theme| {
+                            theme::text::Style {
+                                color: Some(if active {
+                                    theme.popover.foreground
+                                } else {
+                                    theme.muted.foreground
+                                }),
+                            }
+                            .into()
+                        }) as StyleFn<'_, Theme>)
+                        .into(),
+                );
+            }
+            let modal = self.modal;
+            let disabled = item.disabled || self.inherited.is_disabled();
+            let mut line: Slot<'a, Event> = line.into();
+            line.inherit(&self.inherited.with_line_height(20.).with_selectable(false));
+            let entry = widget::Button::new(line.compose())
+                .width(Fill)
+                .padding([6, 8])
+                .translate(false)
+                .disabled(disabled)
+                .on_press(Event::Choose(index))
+                .style(Box::new(move |theme: &Theme, _| widget::Style {
+                    background: active.then(|| theme.muted.base.into()),
+                    text_color: if disabled {
+                        theme.popover.foreground.scale_alpha(0.5).into()
+                    } else {
+                        theme.popover.foreground.into()
+                    },
+                    border: iced_core::Border {
+                        radius: if modal { 10. } else { 6. }.into(),
+                        ..Default::default()
+                    },
+                    ..widget::Style::default()
+                }) as widget::StyleFn<'_, Theme>);
+            let entry = mouse_area(entry);
+            let entry = if !active && !disabled {
+                entry.on_move(move |_| Event::Hover(position))
+            } else {
+                entry
+            };
+            rows.push(
+                container(entry.boxed())
+                    .width(Fill)
+                    .id(st.ids[index].clone())
+                    .into(),
+            );
+        }
+        if !rows.is_empty() {
+            results.push(column(rows).width(Fill).padding(4).into());
         }
         if results.is_empty() {
             results.push(
-                container(text::muted(self.empty.clone()))
+                container(text(self.empty.clone()).size(14).line_height(Pixels(20.)))
                     .center_x(Fill)
-                    .padding(16)
+                    .padding([24, 0])
                     .into(),
             );
         }
@@ -228,10 +381,66 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             .width(Fill);
         let search = match &self.field {
             Some(build) => build(search),
-            None => search.into(),
+            None => {
+                let icon = container(Icon::Search.boxed()).style(|theme: &Theme| {
+                    theme::container::Style {
+                        text_color: Some(theme.muted.foreground.scale_alpha(0.5)),
+                        ..Default::default()
+                    }
+                });
+                let field = input_group(search)
+                    .addon(input_group::addon(icon))
+                    .style(Box::new(|theme: &Theme, _| {
+                        let mut style = control(theme, Status::Active);
+                        style.background = theme.input.scale_alpha(0.3).into();
+                        style.border = Border::default()
+                            .width(1)
+                            .rounded(10)
+                            .color(theme.input.scale_alpha(0.3));
+                        style.ring = None;
+                        style
+                    })
+                        as theme::text_input::StyleFn<'_, Theme>);
+                container(field)
+                    .width(Fill)
+                    .padding(Padding::ZERO.top(4).left(4).right(4))
+                    .into()
+            }
         };
-        let search = Keys {
-            content: search.compose(),
+        let list = scrollable(column(results).width(Fill))
+            .id(st
+                .scroll
+                .clone()
+                .expect("command diff initializes scroll id"))
+            .width(Fill)
+            .height(Length::Shrink.max(if embedded { 300 } else { 288 }));
+        let list = if embedded { list } else { list.style(hidden) };
+        let modal = self.modal;
+        let mut palette: Slot<'a, Event> = if embedded {
+            column![search, list].width(self.width).spacing(8).into()
+        } else {
+            container(column![search, list].width(Fill))
+                .padding(if modal { 4 } else { 5 })
+                .width(self.width)
+                .style(move |theme: &Theme| theme::container::Style {
+                    background: Some(theme.popover.base.into()),
+                    text_color: Some(theme.popover.foreground),
+                    border: Border::default()
+                        .rounded(14)
+                        .width(if modal { 0 } else { 1 })
+                        .color(theme.neutral.border),
+                    ..Default::default()
+                })
+                .into()
+        };
+        palette.inherit(&self.inherited);
+        Behavior {
+            content: palette.compose(),
+            reveal: if st.keyboard && !embedded {
+                selected.map(|id| (st.scroll.clone().expect("scroll id"), id))
+            } else {
+                None
+            },
             on_key: Box::new(|key| match key {
                 Key::Named(Named::ArrowUp) => Some(Event::Step(true)),
                 Key::Named(Named::ArrowDown) => Some(Event::Step(false)),
@@ -240,29 +449,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 Key::Named(Named::Enter) => Some(Event::Submit),
                 _ => None,
             }),
-        };
-        let embedded = self.field.is_some();
-        let list = scrollable(
-            column(results)
-                .width(Fill)
-                .padding(if embedded { 0 } else { 4 }),
-        )
-        .width(Fill)
-        .height(Length::Shrink.max(300));
-        let mut palette: Slot<'a, Event> = if embedded {
-            column![search.boxed(), list]
-                .width(self.width)
-                .spacing(8)
-                .into()
-        } else {
-            container(column![search.boxed(), menu::separator(), list].width(Fill))
-                .padding(4)
-                .width(self.width)
-                .style(content)
-                .into()
-        };
-        palette.inherit(&self.inherited);
-        palette.compose()
+        }
     }
 }
 impl<'a, Message: Clone + 'static> Compose<Message> for Command<'a, Message> {

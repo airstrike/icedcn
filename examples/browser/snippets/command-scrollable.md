@@ -1,9 +1,10 @@
 ```rust
-use icedcn::widget::{button, command, dialog};
+use crate::icon;
+use icedcn::widget::{button, command};
 
-dialog(
+command::dialog(
     |d| d.trigger(button("Open Menu").style(button::Outline)),
-    |_| {
+    || {
         command([
             command::item("Home")
                 .group("Navigation")
@@ -86,9 +87,6 @@ dialog(
                 .icon(icon::image),
             command::item("Code Editor").group("Tools").icon(icon::code),
         ])
-        .into()
     },
 )
-.show_close_button(false)
-.max_width(512.0)
 ```

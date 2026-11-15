@@ -71,6 +71,7 @@ pub struct Dialog<'a, Message> {
     padding: u16,
     style: fn(&Theme) -> Style,
     margin: f32,
+    top: Option<f32>,
     backdrop: bool,
     inherited: Inherited,
 }
@@ -145,6 +146,7 @@ impl<'a, Message> Dialog<'a, Message> {
             padding: 16,
             style: dialog::content,
             margin: 16.,
+            top: None,
             backdrop: true,
             inherited: Inherited::default(),
         }
@@ -227,6 +229,13 @@ impl<'a, Message> Dialog<'a, Message> {
     /// Keep the panel open on a press outside it (an alert dialog).
     pub(crate) fn dismiss_outside(mut self, dismiss: bool) -> Self {
         self.dismiss_outside = dismiss;
+        self
+    }
+
+    /// Position a dialog's top edge at a fraction of the viewport height.
+    /// The panel is clamped inside the window margins; the default is centered.
+    pub fn top(mut self, fraction: f32) -> Self {
+        self.top = Some(fraction.clamp(0.0, 1.0));
         self
     }
 
@@ -606,6 +615,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
         let modal = modal::Modal::new(base.into(), panel, placement, Event::Close)
             .dismiss_outside(self.dismiss_outside)
             .margin(self.margin)
+            .top(self.top)
             .backdrop(self.backdrop)
             .animation(state.closing, || Event::Exited)
             .side_height(drawer_height, self.sheet_height);

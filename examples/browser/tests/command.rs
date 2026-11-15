@@ -18,6 +18,7 @@ use icedcn::widget::markdown::highlighter::Map;
 struct Bounds {
     // The open modal is visited after the browser's main view.
     viewports: Vec<Rectangle>,
+    translations: Vec<Vector>,
     buttons: Vec<Rectangle>,
     focused: Option<Rectangle>,
     inputs: Vec<Rectangle>,
@@ -34,10 +35,11 @@ impl Operation for Bounds {
         _: Option<&Id>,
         bounds: Rectangle,
         _: Size,
-        _: Vector,
+        translation: Vector,
         _: &mut dyn operation::Scrollable,
     ) {
         self.viewports.push(bounds);
+        self.translations.push(translation);
     }
 
     fn focusable(
@@ -329,5 +331,122 @@ fn dismissing_search_returns_focus_with_the_opening_and_dismissal_modality() {
             "pointer open={pointer_open}, pointer close={pointer_close}: expected {expected}, got {}",
             pixels[offset]
         );
+    }
+}
+
+#[test]
+fn command_keyboard_skips_disabled_stops_at_edges_and_tracks_pointer_selection() {
+    use iced::keyboard::key::Named;
+    use icedcn::widget::command;
+
+    let view = command([
+        command::item("Calendar").on_select(Message::Width(1.)),
+        command::item("Calculator")
+            .disabled(true)
+            .on_select(Message::Width(2.)),
+        command::item("Settings").on_select(Message::Width(3.)),
+    ])
+    .width(384.);
+    let mut ui: Simulator<'_, Message, Theme, Renderer> = Simulator::with_size(
+        Settings::default(),
+        Size::new(500., 500.),
+        icedcn::Slot::from(view).compose(),
+    );
+    let mut bounds = Bounds::default();
+    ui.operate(&mut bounds);
+    ui.point_at(bounds.inputs[0].center());
+    ui.simulate(simulator::click());
+    ui.tap_key(Named::ArrowUp);
+    ui.tap_key(Named::Enter);
+    assert!(
+        ui.drain()
+            .any(|message| matches!(message, Message::Width(1.)))
+    );
+    ui.tap_key(Named::ArrowDown);
+    ui.tap_key(Named::ArrowDown);
+    ui.tap_key(Named::Enter);
+    assert!(
+        ui.drain()
+            .any(|message| matches!(message, Message::Width(3.)))
+    );
+    let calendar = bounds
+        .labels
+        .iter()
+        .find(|(label, _)| label == "Calendar")
+        .unwrap()
+        .1;
+    ui.point_at(calendar.center());
+    ui.simulate([Event::Mouse(mouse::Event::CursorMoved {
+        position: calendar.center(),
+    })]);
+    ui.tap_key(Named::Enter);
+    assert!(
+        ui.drain()
+            .any(|message| matches!(message, Message::Width(1.)))
+    );
+    ui.typewrite("zzz");
+    ui.tap_key(Named::Enter);
+    assert_eq!(ui.drain().count(), 0);
+    let mut bounds = Bounds::default();
+    ui.operate(&mut bounds);
+    assert!(
+        bounds
+            .labels
+            .iter()
+            .any(|(label, _)| label == "No results found.")
+    );
+}
+
+#[test]
+fn installed_command_modals_focus_search_and_reveal_the_last_item() {
+    use browser::component::command::CommandPage;
+    use iced::keyboard::key::Named;
+
+    for width in [375., 1440.] {
+        for id in ["basic", "shortcuts", "groups", "scrollable"] {
+            let page = CommandPage::new(0);
+            let mut ui: Simulator<'_, Message, Theme, Renderer> = Simulator::with_size(
+                Settings::default(),
+                Size::new(width, 900.),
+                page.preview(id),
+            );
+            ui.click("Open Menu").expect("installed modal trigger");
+            ui.simulate([redraw()]);
+            let mut bounds = Bounds::default();
+            ui.operate(&mut bounds);
+            let input = bounds.inputs.last().expect("modal search");
+            assert_eq!(bounds.focused, Some(*input));
+            assert!(
+                (input.y - 309.).abs() < 8.,
+                "{id}: expected top-third modal, got {input:?}"
+            );
+            let list = *bounds.viewports.last().expect("command results");
+            assert!((list.width - (width - 32.).min(512.) + 8.).abs() < 1.);
+            if id == "scrollable" {
+                assert!((list.height - 288.).abs() < 1.);
+                ui.tap_key(Named::End);
+                ui.simulate([redraw(), redraw()]);
+                let mut scrolled = Bounds::default();
+                ui.operate(&mut scrolled);
+                assert!(
+                    scrolled.translations.last().expect("scroll offset").y > 0.,
+                    "End must reveal the active item in {width}px viewport"
+                );
+                // The final row is hittable after keyboard-driven reveal.
+                ui.click("Code Editor")
+                    .expect("last option is scrolled into view");
+            }
+            ui.tap_key(Named::Escape);
+            std::thread::sleep(Duration::from_millis(120));
+            ui.simulate([redraw()]);
+            ui = ui.rebuild(page.preview(id));
+            ui.simulate([redraw()]);
+            let mut bounds = Bounds::default();
+            ui.operate(&mut bounds);
+            assert!(
+                bounds.inputs.is_empty(),
+                "{id}: dismissed input stays unmounted"
+            );
+        }
     }
 }
