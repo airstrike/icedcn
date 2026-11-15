@@ -11,7 +11,7 @@ use std::f32::consts::PI;
 
 use iced::gradient::Linear;
 use iced::widget::Id;
-use iced::widget::{responsive, stack};
+use iced::widget::{opaque, responsive, stack};
 use iced::{Bottom, Fill, Padding, Pixels, Right, Task, Widget};
 use iced_widget::button::Status;
 use icedcn::Theme;
@@ -369,28 +369,31 @@ impl State {
 
         let compact = width < 760.0;
         let body: Element<'_, Message, Theme> = if compact {
-            let controls = column![
-                button(if self.controls_open {
-                    "Hide customization"
-                } else {
-                    "Customize theme"
-                })
-                .style(button::Outline)
-                .width(Fill)
-                .on_press(Message::ToggleControls),
-            ]
-            .width(Fill);
-            let controls = if self.controls_open {
-                controls.push(
-                    container(sidebar::view(self, width))
-                        .width(Fill)
-                        .height(300)
-                        .into(),
-                )
+            let controls = button(if self.controls_open {
+                "Hide customization"
             } else {
-                controls
-            };
-            column![controls.spacing(8), preview]
+                "Customize theme"
+            })
+            .style(button::Outline)
+            .width(Fill)
+            .on_press(Message::ToggleControls);
+            // Keep the preview mounted so opening the controls preserves its scroll and widget state.
+            let mut content = stack![preview].width(Fill).height(Fill);
+            if self.controls_open {
+                content = content.push(
+                    opaque(Element::from(
+                        container(sidebar::view(self, width))
+                            .width(Fill)
+                            .height(Fill)
+                            .style(|theme: &Theme| Style {
+                                background: Some(theme.neutral.base.into()),
+                                ..Style::default()
+                            }),
+                    ))
+                    .boxed(),
+                );
+            }
+            column![controls, content]
                 .spacing(12)
                 .width(Fill)
                 .height(Fill)
