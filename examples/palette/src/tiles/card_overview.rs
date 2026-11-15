@@ -1,20 +1,18 @@
 //! Card spending and available balance.
 
+use std::borrow::Cow;
+
 use iced::{Fill, Padding};
 use icedcn::widget::chart::{Data, bar, bars};
 use icedcn::widget::{chart, column, progress, row, text};
 use icedcn::{Theme, card};
 
-use crate::{Message, Mode, State, customize};
+use crate::{Message, State};
 
 /// Daily card spending for the last seven days.
-pub fn data(color: &str, mode: Mode) -> Data {
-    let color: iced::Color = customize::accent(color, mode == Mode::Dark).into();
+pub fn data() -> Data {
     chart::data(
-        bars([bar([128, 220, 165, 310, 196, 145, 240])
-            .with_name("Spending")
-            .with_color(color)])
-        .data_labels(None),
+        bars([bar([128, 220, 165, 310, 196, 145, 240]).with_name("Spending")]).data_labels(None),
     )
     .x_axis_labels(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
     .x_axis(|axis| axis.show_line(false).show_grid(false))
@@ -30,6 +28,7 @@ pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
                 column![
                     row![text::h2("$1,404.00"), text::muted("spent this week")].spacing(8),
                     chart(&state.spending)
+                        .design(Cow::<Theme>::Owned(state.theme()))
                         .height(160)
                         .padding(0)
                         .style(chart::transparent),

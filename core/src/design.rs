@@ -65,6 +65,9 @@ pub struct Design {
     /// mode (15% vs 10% alpha) — input fields need higher contrast.
     pub input: Color,
 
+    /// Chart-1 through chart-5 tokens, independent of control intent colors.
+    pub chart: [Color; 5],
+
     pub seed: Seed,
     pub theme: iced_core::Theme,
     pub font_sans: FontFamily,
@@ -331,6 +334,13 @@ fn build(
         code,
         sidebar,
         input,
+        chart: [
+            oklch(0.809, 0.105, 251.813),
+            oklch(0.623, 0.214, 259.815),
+            oklch(0.546, 0.245, 262.881),
+            oklch(0.488, 0.243, 264.376),
+            oklch(0.424, 0.199, 265.638),
+        ],
         seed,
         theme,
         font_sans: FontFamily::default(),

@@ -1,21 +1,21 @@
 //! Stock performance area chart using illustrative prices.
 
+use std::borrow::Cow;
+
 use iced::{Fill, Padding};
 use icedcn::widget::chart::Data;
 use icedcn::widget::chart::hyozu::{area, areas};
 use icedcn::widget::{badge, chart, column, row, text};
 use icedcn::{Theme, card};
 
-use crate::{Message, Mode, State, customize};
+use crate::{Message, State};
 
 /// Illustrative daily closing prices, independent of live market data.
-pub fn data(color: &str, mode: Mode) -> Data {
-    let color: iced::Color = customize::accent(color, mode == Mode::Dark).into();
+pub fn data() -> Data {
     chart::data(areas([area([
         183.2, 184.6, 183.9, 187.3, 186.8, 189.2, 191.4,
     ])
     .with_name("AAPL")
-    .color(color)
     .opacity(0.18)
     .stroke(2.0)]))
     .x_axis_labels(["May 20", "21", "22", "23", "24", "28", "29"])
@@ -33,6 +33,7 @@ pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
                 column![
                     row![text::h2("$191.40"), badge("+4.5%").style(badge::Secondary)].spacing(12),
                     chart(&state.stocks)
+                        .design(Cow::<Theme>::Owned(state.theme()))
                         .height(180)
                         .padding(0)
                         .style(chart::transparent),

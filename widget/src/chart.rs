@@ -2,6 +2,10 @@
 //!
 //! Build [`Data`] in your application's model, then borrow it with [`chart`].
 //! The data, marks, interaction, layout and rendering are Hyozu's native API.
+//! Colors resolve from the active [`Theme`], including its `chart` tokens;
+//! leave marks uncolored or use Hyozu's semantic colors to follow theme changes.
+//! Explicit mark colors and palettes remain overrides. For custom typography,
+//! pass `.design(&theme)` (or an owned `Cow`) so layout can read its fonts too.
 
 pub use hyozu;
 pub use hyozu::chart::{Chart, chart, donut, hover, transparent};

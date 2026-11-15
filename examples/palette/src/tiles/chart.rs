@@ -1,25 +1,24 @@
 //! Monthly traffic channels rendered by Hyozu.
 
+use std::borrow::Cow;
+
 use iced::Fill;
 use iced::widget::space;
 use icedcn::Theme;
 use icedcn::card;
 use icedcn::theme;
-use icedcn::widget::chart::{Data, bar, bars, legend};
+use icedcn::widget::chart::{Data, bar, bars, hyozu, legend};
 use icedcn::widget::{badge, chart, column, container, row, text};
 
-use crate::{Message, Mode, State, customize};
+use crate::{Message, State};
 
-pub fn data(color: &str, mode: Mode) -> Data {
-    let color: iced::Color = customize::accent(color, mode == Mode::Dark).into();
+pub fn data() -> Data {
     chart::data(
         bars([
-            bar([186, 305, 237, 73, 209, 214])
-                .with_name("Desktop")
-                .with_color(color),
+            bar([186, 305, 237, 73, 209, 214]).with_name("Desktop"),
             bar([80, 200, 120, 190, 130, 140])
                 .with_name("Mobile")
-                .with_color(color.scale_alpha(0.5)),
+                .with_color(hyozu::Color::Secondary),
         ])
         .data_labels(None),
     )
@@ -41,6 +40,7 @@ pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
 
     let body = column![
         chart(&state.traffic)
+            .design(Cow::<Theme>::Owned(state.theme()))
             .height(156)
             .padding(0)
             .style(chart::transparent),

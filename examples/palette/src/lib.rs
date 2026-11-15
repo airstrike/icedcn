@@ -162,12 +162,12 @@ impl State {
     fn with_mode(mode: Mode) -> Self {
         Self {
             mode,
-            traffic: chart::data("Blue", mode),
-            contributions: contribution_history::data("Blue", mode),
-            power: power_usage::data("Blue", mode),
-            dividends: dividend_income::data("Blue", mode),
-            stocks: stock_performance::data("Blue", mode),
-            spending: card_overview::data("Blue", mode),
+            traffic: chart::data(),
+            contributions: contribution_history::data(),
+            power: power_usage::data(),
+            dividends: dividend_income::data(),
+            stocks: stock_performance::data(),
+            spending: card_overview::data(),
 
             preview_page: PreviewPage::One,
             connected: true,
@@ -295,13 +295,6 @@ impl State {
     }
 
     fn refresh(&mut self) {
-        self.traffic = chart::data(self.settings.chart, self.mode);
-        self.contributions = contribution_history::data(self.settings.chart, self.mode);
-        self.power = power_usage::data(self.settings.chart, self.mode);
-        self.dividends = dividend_income::data(self.settings.chart, self.mode);
-        self.stocks = stock_performance::data(self.settings.chart, self.mode);
-        self.spending = card_overview::data(self.settings.chart, self.mode);
-
         self.code = self.settings.source(self.mode);
         self.copied = false;
         self.copy_error = None;
@@ -527,4 +520,36 @@ fn page_button_style(active: bool) -> iced_widget::button::StyleFn<'static, Them
 
         style
     })
+}
+
+#[cfg(test)]
+mod chart_tests {
+    use super::{Message, Mode, State};
+
+    #[test]
+    fn appearance_changes_keep_prepared_chart_data() {
+        let mut state = State::with_mode(Mode::Light);
+        let marks = |state: &State| {
+            [
+                state.traffic.marks().as_ptr(),
+                state.contributions.marks().as_ptr(),
+                state.power.marks().as_ptr(),
+                state.dividends.marks().as_ptr(),
+                state.stocks.marks().as_ptr(),
+                state.spending.marks().as_ptr(),
+            ]
+        };
+        let original = marks(&state);
+        for message in [
+            Message::SetChart("Violet".into()),
+            Message::SetMode(Mode::Dark),
+            Message::SetBase("Slate".into()),
+            Message::SetAccent("Orange".into()),
+            Message::NextPreset,
+            Message::Reset,
+        ] {
+            let _ = state.update(message);
+            assert_eq!(marks(&state), original);
+        }
+    }
 }

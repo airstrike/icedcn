@@ -107,6 +107,7 @@ impl Settings {
             design.sidebar.accent.base = design.primary.base;
             design.sidebar.accent.foreground = design.primary.foreground;
         }
+        design.chart = chart(self.chart);
         design.font_sans.regular = self.font;
         design.font_sans.medium = self.font.weight(Weight::Medium);
         design.font_sans.semibold = self.font.weight(Weight::Semibold);
@@ -206,17 +207,20 @@ impl Settings {
                 code.push_str(&format!("    design.{name} = {};\n", literal(color)));
             }
         }
+        for (index, (color, original)) in design.chart.into_iter().zip(baseline.chart).enumerate() {
+            if color != original {
+                code.push_str(&format!(
+                    "    design.chart[{index}] = {};\n",
+                    literal(color)
+                ));
+            }
+        }
         let family = match self.font.family {
             Family::Name(name) => format!("Font::from({name:?})"),
             family => format!("Font::with_family(font::Family::{family:?})"),
         };
         code.push_str(&format!(
             "    let font = {family};\n    design.font_sans.regular = font;\n    design.font_sans.medium = font.weight(font::Weight::Medium);\n    design.font_sans.semibold = font.weight(font::Weight::Semibold);\n    design.font_sans.bold = font.weight(font::Weight::Bold);\n    design.seed.background = design.neutral.base.into();\n    design.seed.text = design.neutral.foreground.into();\n    design.seed.primary = design.primary.base.into();\n    design.theme = iced::Theme::custom(design.name.clone(), design.seed);\n    Theme::new(design)\n}}\n\n// Load your selected font, then return or batch this Task from boot/update:\n// font::set_defaults({family}, iced::Pixels(14.0))\n"
-        ));
-        let chart = accent(self.chart, mode == Mode::Dark);
-        code.push_str(&format!(
-            "\n// Desktop: .with_color(chart_color())\n// Mobile: .with_color(chart_color().scale_alpha(0.5))\npub fn chart_color() -> iced::Color {{\n    {}.into()\n}}\n",
-            literal(chart),
         ));
         code
     }
@@ -233,6 +237,54 @@ pub fn accent(name: &str, dark: bool) -> Color {
         _ => (0.0, 0.0),
     };
     oklch(if dark { 0.76 } else { 0.50 }, chroma, hue)
+}
+
+/// Nova chart tokens in chart-1 through chart-5 order.
+fn chart(name: &str) -> [Color; 5] {
+    match name {
+        "Neutral" => [
+            oklch(0.87, 0.0, 0.0),
+            oklch(0.556, 0.0, 0.0),
+            oklch(0.439, 0.0, 0.0),
+            oklch(0.371, 0.0, 0.0),
+            oklch(0.269, 0.0, 0.0),
+        ],
+        "Violet" => [
+            oklch(0.811, 0.111, 293.571),
+            oklch(0.606, 0.25, 292.717),
+            oklch(0.541, 0.281, 293.009),
+            oklch(0.491, 0.27, 292.581),
+            oklch(0.432, 0.232, 292.759),
+        ],
+        "Green" => [
+            oklch(0.871, 0.15, 154.449),
+            oklch(0.723, 0.219, 149.579),
+            oklch(0.627, 0.194, 149.214),
+            oklch(0.527, 0.154, 150.069),
+            oklch(0.448, 0.119, 151.328),
+        ],
+        "Rose" => [
+            oklch(0.81, 0.117, 11.638),
+            oklch(0.645, 0.246, 16.439),
+            oklch(0.586, 0.253, 17.585),
+            oklch(0.514, 0.222, 16.935),
+            oklch(0.455, 0.188, 13.697),
+        ],
+        "Orange" => [
+            oklch(0.837, 0.128, 66.29),
+            oklch(0.705, 0.213, 47.604),
+            oklch(0.646, 0.222, 41.116),
+            oklch(0.553, 0.195, 38.402),
+            oklch(0.47, 0.157, 37.304),
+        ],
+        _ => [
+            oklch(0.809, 0.105, 251.813),
+            oklch(0.623, 0.214, 259.815),
+            oklch(0.546, 0.245, 262.881),
+            oklch(0.488, 0.243, 264.376),
+            oklch(0.424, 0.199, 265.638),
+        ],
+    }
 }
 
 fn literal(color: Color) -> String {
@@ -269,6 +321,31 @@ mod tests {
     }
 
     #[test]
+    fn chart_selection_is_exported_as_live_design_tokens() {
+        for mode in [Mode::Light, Mode::Dark] {
+            for name in ACCENTS {
+                let settings = Settings {
+                    chart: name,
+                    ..Default::default()
+                };
+                let theme = settings.theme(mode);
+                assert_eq!(theme.chart, chart(name));
+                let source = settings.source(mode);
+                if *name != "Blue" {
+                    for (index, color) in theme.chart.into_iter().enumerate() {
+                        assert!(
+                            source
+                                .contains(&format!("design.chart[{index}] = {};", literal(color)))
+                        );
+                    }
+                }
+                assert!(!source.contains("with_color"));
+                assert_eq!(theme.primary, Settings::default().theme(mode).primary);
+            }
+        }
+    }
+
+    #[test]
     fn export_escapes_font_names_and_omits_unchanged_palette_fields() {
         let settings = Settings {
             font: Font::from("Custom \"Font\""),
@@ -277,7 +354,8 @@ mod tests {
         let source = settings.source(Mode::Dark);
         assert!(source.contains("Font::from(\"Custom \\\"Font\\\"\")"));
         assert!(!source.contains("design.neutral.base ="));
-        assert!(source.contains("scale_alpha(0.5)"));
+        assert!(!source.contains("chart_color"));
+        assert!(!source.contains("design.chart["));
         assert!(source.contains("return or batch this Task"));
     }
 }

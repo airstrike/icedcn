@@ -12,7 +12,8 @@
 | `chart(&data)` | Borrow data into a native chart; fills its available width. |
 | `.height(height)` | Reserve a visible chart height. |
 | `.style(chart::transparent)` | Let the enclosing surface own background and border. |
-| `.design(theme)` | Use the supplied design for layout, fonts and paint. |
+| `.design(&theme)` | Use the supplied design for layout, fonts and paint; accepts an owned `Cow` too. |
+| `design.chart` | Set chart-1 through chart-5 on the active icedcn design. |
 | `.x_axis(...)`, `.y_axis(...)` | Configure axis kind, labels, bounds, lines and grid on the data. |
 | `.show_tooltip(bool)` | Enable or disable inspection; enabled by default. |
 | `.tooltip(hyozu::Tooltip::default().tracking_line(false).category_band(color))` | Configure native inspection feedback on the data. |

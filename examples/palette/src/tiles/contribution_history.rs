@@ -1,5 +1,7 @@
 //! Preview 01 contribution history card.
 
+use std::borrow::Cow;
+
 use iced::{Fill, Padding};
 use icedcn::Slot;
 use icedcn::Theme;
@@ -10,16 +12,13 @@ use icedcn::theme::container::Style;
 use icedcn::widget::chart::{Data, bar, bars};
 use icedcn::widget::{button, chart, column, container, row, text};
 
-use crate::{Message, Mode, PreviewPage, State, customize};
+use crate::{Message, PreviewPage, State};
 
 /// Six months of contributions, tinted by the designer's chart selection.
-pub fn data(color: &str, mode: Mode) -> Data {
-    let color: iced::Color = customize::accent(color, mode == Mode::Dark).into();
+pub fn data() -> Data {
     chart::data(
-        bars([bar([1200, 1650, 1350, 1950, 1100, 2100])
-            .with_name("Contributions")
-            .with_color(color)])
-        .data_labels(None),
+        bars([bar([1200, 1650, 1350, 1950, 1100, 2100]).with_name("Contributions")])
+            .data_labels(None),
     )
     .x_axis_labels(["Dec", "Jan", "Feb", "Mar", "Apr", "May"])
     .x_axis(|axis| axis.show_line(false).show_grid(false))
@@ -29,6 +28,7 @@ pub fn data(color: &str, mode: Mode) -> Data {
 
 pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
     let chart = chart(&state.contributions)
+        .design(Cow::<Theme>::Owned(state.theme()))
         .height(180)
         .padding(0)
         .style(chart::transparent);
