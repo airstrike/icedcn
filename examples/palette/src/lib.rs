@@ -4,16 +4,15 @@
 //! The root scrollable opts into both axes; tiles that genuinely need
 //! horizontal overflow (transactions, etc.) wrap their own.
 
-use iced::Element;
+use iced::{Element, clipboard};
 
 use std::collections::HashSet;
 use std::f32::consts::PI;
 
-use iced::font;
 use iced::gradient::Linear;
 use iced::widget::Id;
 use iced::widget::stack;
-use iced::{Bottom, Fill, Padding, Pixels, Right, Task};
+use iced::{Bottom, Fill, Right, Task};
 use iced_widget::button::Status;
 use icedcn::Theme;
 use icedcn::core::{Background, Border};
@@ -23,13 +22,13 @@ use icedcn::widget::Size;
 use icedcn::widget::chart::Data;
 use icedcn::widget::qr_code;
 use icedcn::widget::scrollable::{Direction, scrollbar};
-use icedcn::widget::{button, column, container, row, scrollable};
+use icedcn::widget::{button, column, container, dialog, row, scrollable, text};
 
 use crate::tiles::chart;
 
 pub mod chrome;
+pub mod customize;
 pub mod dashboard;
-pub mod fonts;
 pub mod icon;
 pub mod sidebar;
 pub mod tiles;
@@ -87,8 +86,16 @@ pub enum Message {
     TransferAmountChanged(String),
     ToggleNotificationSetting(String),
     SetAllNotificationSettings(bool),
-    Font(fonts::Message),
-    GitHubStarsLoaded(Result<String, String>),
+    SetBase(String),
+    SetAccent(String),
+    SetChart(String),
+    SetMenu(String),
+    Reset,
+    NextPreset,
+    ToggleControls,
+    CodeOpen(bool),
+    CopyCode,
+    CodeCopied(Result<(), String>),
     SaveForm,
     CancelForm,
     NotificationsOpened(Vec<String>),
@@ -115,9 +122,13 @@ pub struct State {
     pub armed: bool,
     pub deploying: bool,
     pub qr_connect: Option<qr_code::Data>,
-    fount: fount::Fount,
-    geist_loaded: bool,
-    pub github_stars: Option<String>,
+    pub settings: customize::Settings,
+    pub controls_open: bool,
+    pub code_open: bool,
+    pub copied: bool,
+    copy_error: Option<String>,
+    code: String,
+    preset: usize,
 }
 
 impl State {
@@ -128,13 +139,12 @@ impl State {
             Mode::Light
         };
 
-        (
-            Self::with_mode(mode),
-            Task::batch([
-                fonts::init().map(Message::Font),
-                Task::perform(fetch_github_stars(), Message::GitHubStarsLoaded),
-            ]),
-        )
+        Self::embedded(mode)
+    }
+
+    /// Initialize an embedded designer without network requests or global font changes.
+    pub fn embedded(mode: Mode) -> (Self, Task<Message>) {
+        (Self::with_mode(mode), Task::none())
     }
 
     pub fn dark() -> Self {
@@ -144,7 +154,7 @@ impl State {
     fn with_mode(mode: Mode) -> Self {
         Self {
             mode,
-            traffic: chart::data(),
+            traffic: chart::data("Blue", mode),
             preview_page: PreviewPage::One,
             connected: true,
             receiving_method: ReceivingMethod::BankTransfer,
@@ -160,15 +170,77 @@ impl State {
             armed: false,
             deploying: false,
             qr_connect: qr_code::Data::new("https://ledger.app/connect/jd-4829").ok(),
-            fount: fount::Fount::new(),
-            geist_loaded: false,
-            github_stars: None,
+            settings: customize::Settings::default(),
+            controls_open: false,
+            code_open: false,
+            copied: false,
+            copy_error: None,
+            code: customize::Settings::default().source(mode),
+            preset: 0,
         }
     }
 
     pub fn update(&mut self, msg: Message) -> Task<Message> {
+        let design_changed = matches!(
+            &msg,
+            Message::SetMode(_)
+                | Message::SetBase(_)
+                | Message::SetAccent(_)
+                | Message::SetChart(_)
+                | Message::SetMenu(_)
+                | Message::Reset
+                | Message::NextPreset
+        );
         match msg {
             Message::SetMode(m) => self.mode = m,
+            Message::SetBase(value) => {
+                if let Some(value) = customize::BASES.iter().find(|name| **name == value) {
+                    self.settings.base = value;
+                }
+            }
+            Message::SetAccent(value) => {
+                if let Some(value) = customize::ACCENTS.iter().find(|name| **name == value) {
+                    self.settings.accent = value;
+                }
+            }
+            Message::SetChart(value) => {
+                if let Some(value) = customize::ACCENTS.iter().find(|name| **name == value) {
+                    self.settings.chart = value;
+                }
+            }
+            Message::SetMenu(value) => {
+                if let Some(value) = customize::MENUS.iter().find(|name| **name == value) {
+                    self.settings.menu = value;
+                }
+            }
+            Message::Reset => {
+                self.settings = customize::Settings {
+                    font: self.settings.font,
+                    ..Default::default()
+                };
+                self.preset = 0;
+            }
+            Message::NextPreset => {
+                self.preset = (self.preset + 1) % 5;
+                self.settings.base = customize::BASES[self.preset % customize::BASES.len()];
+                self.settings.accent = customize::ACCENTS[self.preset + 1];
+                self.settings.chart = self.settings.accent;
+                self.settings.menu = customize::MENUS[self.preset % 2];
+            }
+            Message::ToggleControls => self.controls_open = !self.controls_open,
+            Message::CodeOpen(open) => self.code_open = open,
+            Message::CopyCode => {
+                return clipboard::write(self.code.clone()).map(|result| {
+                    Message::CodeCopied(
+                        result
+                            .map_err(|_| "Clipboard unavailable. Select and copy the code.".into()),
+                    )
+                });
+            }
+            Message::CodeCopied(result) => {
+                self.copied = result.is_ok();
+                self.copy_error = result.err();
+            }
             Message::SetPreviewPage(page) => self.preview_page = page,
             Message::ToggleConnection(v) => self.connected = v,
             Message::SetReceivingMethod(v) => self.receiving_method = v,
@@ -192,11 +264,6 @@ impl State {
                     );
                 }
             }
-            Message::Font(msg) => return self.update_font(msg),
-            Message::GitHubStarsLoaded(Ok(stars)) => self.github_stars = Some(stars),
-            Message::GitHubStarsLoaded(Err(e)) => {
-                eprintln!("GitHub star count failed: {e}");
-            }
             Message::SaveForm | Message::CancelForm => {}
             Message::NotificationsOpened(open) => self.open_notifications = open,
             Message::ArmDelete => self.armed = !self.armed,
@@ -207,51 +274,24 @@ impl State {
             Message::NotificationCleared => {}
             Message::Noop => {}
         }
+        if design_changed {
+            self.refresh();
+        }
         Task::none()
     }
 
-    fn update_font(&mut self, msg: fonts::Message) -> Task<Message> {
-        match msg {
-            fonts::Message::SystemFontsLoaded(families) => {
-                let names: Vec<String> = families
-                    .into_iter()
-                    .map(|f| f.to_string())
-                    .filter(|name| !name.starts_with('.'))
-                    .collect();
-                self.fount.set_system_families(names);
+    fn refresh(&mut self) {
+        self.traffic = chart::data(self.settings.chart, self.mode);
+        self.code = self.settings.source(self.mode);
+        self.copied = false;
+        self.copy_error = None;
+    }
 
-                if !self.geist_loaded && self.fount.system_families().iter().any(|n| n == "Geist") {
-                    self.geist_loaded = true;
-                    font::set_defaults("Geist".into(), Pixels(14.0))
-                } else {
-                    Task::none()
-                }
-            }
-            fonts::Message::CatalogLoaded(Ok(catalog)) => {
-                self.fount.set_google_catalog(catalog);
-
-                if self.geist_loaded {
-                    Task::none()
-                } else {
-                    fonts::load("Geist".to_string(), self.fount.google_catalog()).map(Message::Font)
-                }
-            }
-            fonts::Message::CatalogLoaded(Err(e)) => {
-                eprintln!("Font catalog loading failed: {e}");
-                Task::none()
-            }
-            fonts::Message::Loaded(name, Err(e)) => {
-                eprintln!("Font loading failed ({name}): {e}");
-                Task::none()
-            }
-            fonts::Message::Loaded(name, Ok(())) => {
-                if name == "Geist" && !self.geist_loaded {
-                    self.geist_loaded = true;
-                    font::set_defaults("Geist".into(), Pixels(14.0))
-                } else {
-                    Task::none()
-                }
-            }
+    /// Keep exported typography and chart labels in sync with the host's selected font.
+    pub fn set_font(&mut self, font: iced::Font) {
+        if self.settings.font != font {
+            self.settings.font = font;
+            self.refresh();
         }
     }
 
@@ -259,15 +299,19 @@ impl State {
         self.connected
     }
 
+    /// The current design for the host to apply while Create is visible.
     pub fn theme(&self) -> Theme {
-        match self.mode {
-            Mode::Light => Theme::light(),
-            Mode::Dark => Theme::dark(),
-        }
+        self.settings.theme(self.mode)
     }
 
     pub fn view(&self) -> iced::Element<'_, Message, Theme> {
-        let chrome = chrome::view(self);
+        column![chrome::view(self), self.view_embedded(1280.0)]
+            .height(Fill)
+            .into()
+    }
+
+    /// Customizer and dashboard, without an outer navigation bar.
+    fn designer_body(&self, width: f32) -> iced::Element<'_, Message, Theme> {
         let preview = container(
             scrollable(dashboard::view(self))
                 .id(Id::new("create-preview-scroll-v2"))
@@ -297,60 +341,77 @@ impl State {
         .width(Fill)
         .height(Fill);
 
-        let body = row![sidebar::view(self), preview]
-            .spacing(24)
-            .height(Fill)
-            .width(Fill);
-
+        let compact = width < 760.0;
+        let body: Element<'_, Message, Theme> = if compact {
+            let controls = column![
+                button(if self.controls_open {
+                    "Hide customization"
+                } else {
+                    "Customize theme"
+                })
+                .style(button::Outline)
+                .width(Fill)
+                .on_press(Message::ToggleControls),
+            ];
+            let controls = if self.controls_open {
+                controls.push(container(sidebar::view(self, true)).height(300).into())
+            } else {
+                controls
+            };
+            column![controls.spacing(8), preview]
+                .spacing(12)
+                .height(Fill)
+                .into()
+        } else {
+            row![sidebar::view(self, false), preview]
+                .spacing(24)
+                .height(Fill)
+                .width(Fill)
+                .into()
+        };
         let designer = container(body)
-            .padding(Padding {
-                top: 6.0,
-                right: 24.0,
-                bottom: 24.0,
-                left: 24.0,
-            })
-            .width(Fill)
-            .height(Fill);
-
-        let page = column![chrome, designer]
-            .spacing(0)
-            .width(Fill)
-            .height(Fill);
-
-        container(page)
+            .padding(if compact { 12 } else { 24 })
             .width(Fill)
             .height(Fill)
-            .style(section_soft)
-            .into()
+            .style(section_soft);
+
+        designer.into()
     }
-}
 
-#[derive(Debug, serde::Deserialize)]
-struct GithubRepo {
-    stargazers_count: u64,
-}
-
-async fn fetch_github_stars() -> Result<String, String> {
-    let repo = reqwest::Client::new()
-        .get("https://api.github.com/repos/airstrike/icedcn")
-        .header(reqwest::header::USER_AGENT, "icedcn-palette")
-        .send()
-        .await
-        .map_err(|e| e.to_string())?
-        .error_for_status()
-        .map_err(|e| e.to_string())?
-        .json::<GithubRepo>()
-        .await
-        .map_err(|e| e.to_string())?;
-
-    Ok(format_stars(repo.stargazers_count))
-}
-
-fn format_stars(count: u64) -> String {
-    if count >= 1000 {
-        format!("{}k", ((count as f64) / 1000.0).round() as u64)
-    } else {
-        count.to_string()
+    /// Customizer with its export dialog.
+    pub fn view_embedded(&self, width: f32) -> Element<'_, Message, Theme> {
+        // The dialog trigger owns the normal page so its overlay stays inside the host tree.
+        dialog(
+            move |_| {
+                container(self.designer_body(width))
+                    .width(Fill)
+                    .height(Fill)
+                    .into()
+            },
+            |_| {
+                column![
+                    dialog::header(
+                        "Your theme",
+                        "Copy this Rust configuration into your icedcn app."
+                    ),
+                    scrollable(text::small(self.code.as_str()).font(iced::Font::MONOSPACE))
+                        .height(360)
+                        .width(Fill)
+                        .direction(Direction::Both {
+                            vertical: scrollbar(),
+                            horizontal: scrollbar()
+                        }),
+                    button(if self.copied { "Copied" } else { "Copy code" })
+                        .on_press(Message::CopyCode),
+                    text::xs(self.copy_error.as_deref().unwrap_or("")),
+                ]
+                .spacing(16)
+                .into()
+            },
+        )
+        .open(self.code_open)
+        .on_open_change(Message::CodeOpen)
+        .into()
     }
 }
 

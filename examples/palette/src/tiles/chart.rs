@@ -8,13 +8,18 @@ use icedcn::theme;
 use icedcn::widget::chart::{Data, bar, bars, legend};
 use icedcn::widget::{badge, chart, column, container, row, text};
 
-use crate::{Message, State};
+use crate::{Message, Mode, State, customize};
 
-pub fn data() -> Data {
+pub fn data(color: &str, mode: Mode) -> Data {
+    let color: iced::Color = customize::accent(color, mode == Mode::Dark).into();
     chart::data(
         bars([
-            bar([186, 305, 237, 73, 209, 214]).with_name("Desktop"),
-            bar([80, 200, 120, 190, 130, 140]).with_name("Mobile"),
+            bar([186, 305, 237, 73, 209, 214])
+                .with_name("Desktop")
+                .with_color(color),
+            bar([80, 200, 120, 190, 130, 140])
+                .with_name("Mobile")
+                .with_color(color.scale_alpha(0.5)),
         ])
         .data_labels(None),
     )

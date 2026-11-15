@@ -1,6 +1,6 @@
 // Generated automatically by iced_lucide at build time.
 // Do not edit manually.
-// e1535bea20559e2c5f39d00097f68c1713f98aa2dd82da46f19176a3eeed7e77
+// c8dee0894fb630db44cac260969a33dba98501dcceb711aed2c4a472a61f41a6
 use iced::widget::text::{self, Text};
 use iced::{Font, font};
 
@@ -264,7 +264,7 @@ where
     Theme: text::Catalog + 'a,
 {
     Text::new(codepoint).font(Font {
-        family: font::Family::Name("lucide"),
+        family: font::Family::Name("icedcn-palette-icons"),
         ..Font::DEFAULT
     })
 }

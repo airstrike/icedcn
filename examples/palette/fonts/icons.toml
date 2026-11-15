@@ -1,6 +1,7 @@
 # The default iced_lucide font and icon list come from https://lucide.dev/guide/static.
 # See ../../../assets/Lucide-LICENSE for the license of the generated font subset.
 module = "icon"
+family = "icedcn-palette-icons"
 
 [icons]
 archive     = "archive"
