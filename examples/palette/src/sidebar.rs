@@ -22,12 +22,7 @@ pub fn view(state: &State, viewport_width: f32) -> iced::Element<'_, Message, Th
     };
     let fields = column![
         group([
-            fixed(
-                "Style",
-                "Nova",
-                Mark::Style,
-                "Nova is the native icedcn style."
-            ),
+            fixed("Style", "Nova", Mark::Style),
             picker(
                 "Appearance",
                 state.settings.appearance.label(),
@@ -62,32 +57,17 @@ pub fn view(state: &State, viewport_width: f32) -> iced::Element<'_, Message, Th
         ]),
         field_separator(),
         group([
-            inherited_font(&font),
+            fixed("Heading", "Same as Font", Mark::Font),
             font_picker(&font, state.host_font_picker),
         ]),
         field_separator(),
         group([
-            fixed(
-                "Icon Library",
-                "Lucide",
-                Mark::Icon,
-                "Lucide is the installed icon library."
-            ),
-            fixed(
-                "Radius",
-                "Default",
-                Mark::Radius,
-                "Nova's default corner radii are used."
-            ),
+            fixed("Icon Library", "Lucide", Mark::Icon),
+            fixed("Radius", "Nova default", Mark::Radius),
         ]),
         field_separator(),
         group([
-            fixed(
-                "Menu",
-                "Default / Solid",
-                Mark::Menu,
-                "Menus use the preview's solid surface."
-            ),
+            fixed("Menu", "Solid", Mark::Menu),
             picker(
                 "Menu Accent",
                 state.settings.menu,
@@ -199,31 +179,35 @@ impl Mark {
     }
 }
 
-fn trigger(label: &str, selected: &str, mark: Mark) -> button::Button<'static, Message> {
-    button(
-        row![
-            column![
-                text(label.to_owned())
-                    .size(12)
-                    .line_height(Pixels(16.0))
-                    .style(Muted),
-                text(selected.to_owned())
-                    .size(14)
-                    .medium()
-                    .line_height(Pixels(20.0)),
-            ]
-            .width(Fill),
-            mark.view(),
+fn field_content(label: &str, value: &str, mark: Mark) -> row::Row<'static, Message> {
+    row![
+        column![
+            text(label.to_owned())
+                .size(12)
+                .line_height(Pixels(16.0))
+                .selectable(false)
+                .style(Muted),
+            text(value.to_owned())
+                .size(14)
+                .medium()
+                .selectable(false)
+                .line_height(Pixels(20.0)),
         ]
-        .spacing(8)
-        .align_y(Center)
         .width(Fill),
-    )
+        mark.view(),
+    ]
+    .spacing(8)
+    .align_y(Center)
     .width(Fill)
-    .height(52)
-    .padding([8, 10])
-    .translate(false)
-    .style(control_style())
+}
+
+fn trigger(label: &str, selected: &str, mark: Mark) -> button::Button<'static, Message> {
+    button(field_content(label, selected, mark))
+        .width(Fill)
+        .height(52)
+        .padding([8, 10])
+        .translate(false)
+        .style(control_style())
 }
 
 fn option(label: impl Into<String>) -> Slot<'static, Message> {
@@ -266,53 +250,12 @@ fn picker(
     .into()
 }
 
-fn fixed(
-    label: &'static str,
-    value: &'static str,
-    mark: Mark,
-    explanation: &'static str,
-) -> Slot<'static, Message> {
-    dropdown_menu(
-        move |menu| menu.trigger(trigger(label, value, mark)),
-        move |_| {
-            column![
-                menu::radio_item(option(value), value, Some(value), |_| Message::Noop),
-                menu::separator(),
-                container(text(explanation).size(12).style(Muted))
-                    .padding([6, 8])
-                    .width(Fill),
-            ]
-            .padding(2)
-            .width(Fill)
-            .into()
-        },
-    )
-    .side(dropdown_menu::Side::Right)
-    .side_offset(20)
-    .width(208)
-    .into()
-}
-
-fn inherited_font(font: &str) -> Slot<'static, Message> {
-    let font = font.to_owned();
-    dropdown_menu(
-        move |menu| menu.trigger(trigger("Heading", &font, Mark::Font)),
-        |_| {
-            column![
-                menu::radio_item(option("Inherit body font"), true, Some(true), |_| {
-                    Message::Noop
-                }),
-                menu::label("Choose the body font below."),
-            ]
-            .padding(2)
-            .width(Fill)
-            .into()
-        },
-    )
-    .side(dropdown_menu::Side::Right)
-    .side_offset(20)
-    .width(208)
-    .into()
+fn fixed(label: &str, value: &str, mark: Mark) -> Slot<'static, Message> {
+    container(field_content(label, value, mark))
+        .width(Fill)
+        .height(52)
+        .padding([8, 10])
+        .into()
 }
 
 fn font_picker(font: &str, host: bool) -> Slot<'static, Message> {
