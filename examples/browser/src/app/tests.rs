@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use super::route::Route;
 use browser_routing::Route as _;
+use iced::mouse::ScrollDelta;
 use iced_test::core::Settings;
 use iced_test::simulator::Simulator;
 
@@ -151,12 +152,12 @@ fn home_is_the_start_page_and_create_history_keeps_its_state() {
 
 #[test]
 fn home_actions_route_at_desktop_and_mobile_widths() {
-    for width in [375., 1440.] {
+    for width in [375., 1600.] {
         for (label, destination) in [
-            ("Components", "/docs/components"),
-            ("Examples", "/examples"),
-            ("Create", "/create"),
-            ("Installation", "/docs/installation"),
+            ("Get Started", "/docs/installation"),
+            ("View Components", "/docs/components"),
+            ("Button", "/components/button"),
+            ("Create your theme", "/create"),
         ] {
             let mut ui = Simulator::with_size(
                 Settings::default(),
@@ -165,6 +166,13 @@ fn home_actions_route_at_desktop_and_mobile_widths() {
             );
             let bounds = ui.find(label).unwrap().bounds();
             assert!(bounds.x >= 0. && bounds.x + bounds.width <= width);
+            for _ in 0..40 {
+                if ui.find(label).unwrap().visible_bounds().is_some() {
+                    break;
+                }
+                ui.point_at(iced::Point::new(width - 8., 500.));
+                ui.scroll(ScrollDelta::Pixels { x: 0., y: -500. });
+            }
             ui.click(label).unwrap();
             assert!(
                 ui.into_messages().any(|message| {

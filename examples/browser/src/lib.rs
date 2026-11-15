@@ -165,7 +165,7 @@ pub fn run() -> iced::Result {
     }
     let application = iced::application(Browser::new, Browser::update, Browser::view)
         .title(Browser::title)
-        .window_size([1440.0, 900.0])
+        .window_size([1600.0, 1000.0])
         .antialiasing(true)
         .subscription(Browser::subscription)
         .theme(Browser::theme)
