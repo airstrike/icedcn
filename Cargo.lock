@@ -1635,7 +1635,7 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 [[package]]
 name = "hyozu"
 version = "0.3.0"
-source = "git+https://github.com/airstrike/hyozu?rev=f98d3374b3d80b79fc2ff4c94ddf43db50a5671b#f98d3374b3d80b79fc2ff4c94ddf43db50a5671b"
+source = "git+https://github.com/airstrike/hyozu?rev=2892f6c6a99639ad5d4c96cf926ed9fe3c616d86#2892f6c6a99639ad5d4c96cf926ed9fe3c616d86"
 dependencies = [
  "iced_core",
  "iced_widget",

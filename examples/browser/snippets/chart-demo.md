@@ -145,7 +145,7 @@ fn daily(values: [f32; 30], color: hyozu::Color) -> Data {
         .tooltip(
             hyozu::Tooltip::default()
                 .tracking_line(false)
-                .category_band(hyozu::Color::contrast(color!(0xf5f5f5), color!(0x262626))),
+                .category_band(hyozu::Color::themed(color!(0xf5f5f5), color!(0x262626))),
         )
 }
 

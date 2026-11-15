@@ -233,7 +233,7 @@ fn daily(values: [f32; 30], color: hyozu::Color) -> Data {
         .tooltip(
             hyozu::Tooltip::default()
                 .tracking_line(false)
-                .category_band(hyozu::Color::contrast(color!(0xf5f5f5), color!(0x262626))),
+                .category_band(hyozu::Color::themed(color!(0xf5f5f5), color!(0x262626))),
         )
 }
 
@@ -322,7 +322,7 @@ impl ChartPage {
                     .tooltip(
                         hyozu::Tooltip::default()
                             .tracking_line(false)
-                            .category_band(hyozu::Color::contrast(
+                            .category_band(hyozu::Color::themed(
                                 color!(0xf5f5f5),
                                 color!(0x262626),
                             )),
@@ -333,7 +333,7 @@ impl ChartPage {
                     .tooltip(
                         hyozu::Tooltip::default()
                             .tracking_line(false)
-                            .category_band(hyozu::Color::contrast(
+                            .category_band(hyozu::Color::themed(
                                 color!(0xf5f5f5),
                                 color!(0x262626),
                             )),
@@ -425,6 +425,154 @@ impl page::Page for ChartPage {
                 .boxed()
         } else {
             chart.boxed()
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use iced::Rectangle;
+    use iced::advanced::widget::{Id, Operation};
+    use iced_test::core::Settings;
+    use iced_test::simulator::Simulator;
+
+    fn settings() -> Settings {
+        Settings {
+            font: "Geist".into(),
+            fonts: vec![
+                include_bytes!("../../fonts/Geist.ttf").as_slice().into(),
+                crate::font::GEIST_MONO.into(),
+            ],
+            ..Settings::default()
+        }
+    }
+
+    #[test]
+    fn narrow_previews_keep_the_header_and_tooltip_anatomy_inside_the_viewport() {
+        let mut page = ChartPage::new(0);
+        page.window_width(375.0);
+        let theme = Theme::light();
+        let mut ui = Simulator::with_size(
+            settings(),
+            [343.0, 600.0],
+            page.themed_preview("demo", &theme),
+        );
+        for label in [
+            "Bar Chart - Interactive",
+            "Showing total visitors for the last 3 months",
+            "Desktop",
+            "Mobile",
+            "7,324",
+            "7,250",
+        ] {
+            let bounds = ui.find(label).unwrap().bounds();
+            assert!(
+                bounds.x >= 0.0 && bounds.x + bounds.width <= 343.1,
+                "{label}: {bounds:?}"
+            );
+        }
+        let description = ui
+            .find("Showing total visitors for the last 3 months")
+            .unwrap()
+            .bounds();
+        assert!(ui.find("Desktop").unwrap().bounds().y >= description.y + description.height);
+
+        let mut ui = Simulator::with_size(settings(), [343.0, 600.0], anatomy(true));
+        assert!(ui.find("12,486").is_err());
+        for (index, label) in ["Label", "Name", "Indicator"].into_iter().enumerate() {
+            let bounds = ui.find(label).unwrap().bounds();
+            assert!(
+                bounds.x >= 0.0 && bounds.x + bounds.width <= 343.1,
+                "{label}: {bounds:?}"
+            );
+            assert!(
+                bounds.y >= index as f32 * 137.0
+                    && bounds.y + bounds.height <= (index + 1) as f32 * 137.0,
+                "{label}: {bounds:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn tooltip_rows_keep_names_and_values_separate_with_real_fonts() {
+        #[derive(Default)]
+        struct Bounds(Option<Rectangle>);
+        impl Operation for Bounds {
+            fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+                visit(self);
+            }
+            fn container(&mut self, _: Option<&Id>, bounds: Rectangle, _: &Rectangle) {
+                self.0.get_or_insert(bounds);
+            }
+        }
+        for (width, indicator, label, entries) in [
+            (
+                Some(150),
+                tooltip::Dot,
+                "Apr 11, 2024",
+                vec![("Page Views", 327, "327")],
+            ),
+            (
+                None,
+                tooltip::Dot,
+                "January",
+                vec![("Desktop", 186, "186"), ("Mobile", 80, "80")],
+            ),
+            (
+                Some(144),
+                tooltip::Line,
+                "Page Views",
+                vec![("Desktop", 12486, "12,486")],
+            ),
+            (
+                None,
+                tooltip::Dot,
+                "September",
+                vec![("International Desktop Visitors", 1234567, "1,234,567")],
+            ),
+        ] {
+            let mut content =
+                chart::tooltip(entries.iter().map(|(name, value, _)| (*name, *value, BLUE)))
+                    .label(label)
+                    .indicator(indicator)
+                    .font("Geist Mono");
+            if let Some(width) = width {
+                content = content.width(width);
+            }
+            let content: Element<'_, (), Theme> = content.into();
+            let mut ui = Simulator::with_size(settings(), [640.0, 480.0], content);
+            let mut bounds = Bounds::default();
+            ui.operate(&mut bounds);
+            let surface = bounds.0.expect("tooltip surface");
+            if let Some(width) = width {
+                assert_eq!(surface.width, width as f32);
+            } else {
+                let expected = if label == "September" {
+                    220.0..=320.0
+                } else {
+                    128.0..=150.0
+                };
+                assert!(expected.contains(&surface.width), "{surface:?}");
+            }
+            let heading = ui.find(label).unwrap().bounds();
+            assert!(
+                heading.height <= 16.1,
+                "{label} {indicator:?}: heading {heading:?}, surface {surface:?}"
+            );
+            for (name, _, value) in entries {
+                let name = ui.find(name).unwrap().bounds();
+                let value = ui.find(value).unwrap().bounds();
+                assert!(name.height <= 16.1, "name wrapped: {name:?}");
+                assert!(
+                    name.x + name.width <= value.x + 0.1,
+                    "name {name:?}, value {value:?}"
+                );
+                assert!(
+                    (value.x + value.width - (surface.x + surface.width - 10.0)).abs() < 0.1,
+                    "value {value:?}, surface {surface:?}"
+                );
+            }
         }
     }
 }

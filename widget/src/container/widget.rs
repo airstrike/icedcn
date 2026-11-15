@@ -290,9 +290,10 @@ where
                     unbounded.infinite.width = true;
                     self.content.layout(tree, renderer, &unbounded);
                     let width = tree.size.width.min(limits.max.width);
-                    if tree.size.width > width {
-                        self.content.layout(tree, renderer, limits);
-                    }
+                    // Intrinsic measurement does not allocate the remainder to
+                    // nested Fill children. Resolve them at the measured width,
+                    // even when no wrapping was needed to meet the upper bound.
+                    self.content.layout(tree, renderer, &limits.width(width));
                     return Size::new(width, tree.size.height);
                 }
                 self.content.layout(tree, renderer, limits);

@@ -133,12 +133,14 @@ impl<Message> Compose<Message> for Tooltip<Message> {
         let nested = self.entries.len() == 1 && self.indicator != Dot;
         let label = self.label.filter(|_| !self.hide_label);
         let heading = |label: String| text(label).size(12).medium().line_height(Pixels(16.0));
-        let mut content = column([]).spacing(6);
+        // The content owns the surface's inner width. Preserve its minimum
+        // during intrinsic measurement as well: 128px minus horizontal padding.
+        let mut content = column([]).spacing(6).width(Fill.min(128.0 - 20.0));
         if !nested && let Some(label) = &label {
-            content = content.push(heading(label.clone()).into());
+            content = content.push(heading(label.clone()).width(Fill).into());
         }
         for entry in self.entries {
-            let mut names = column([]).spacing(6).width(Fill);
+            let mut names = column([]).spacing(6);
             if nested && let Some(label) = &label {
                 names = names.push(heading(label.clone()).into());
             }
@@ -176,13 +178,13 @@ impl<Message> Compose<Message> for Tooltip<Message> {
             });
             let values = row![
                 names,
+                space::horizontal(),
                 text(number(entry.value))
                     .size(12)
                     .medium()
                     .font(self.font)
                     .line_height(Pixels(12.0)),
             ]
-            .spacing(8)
             .align_y(if nested {
                 Vertical::Bottom
             } else {
@@ -201,12 +203,16 @@ impl<Message> Compose<Message> for Tooltip<Message> {
                     .into(),
             );
         }
-        container(content)
+        let surface = container(content)
             .width(self.width)
             .min_width(128)
             .padding([6, 10])
-            .style(chart::tooltip)
-            .into()
+            .style(chart::tooltip);
+        if self.width == Shrink {
+            surface.fit_content().into()
+        } else {
+            surface.into()
+        }
     }
 }
 

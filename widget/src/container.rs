@@ -219,3 +219,66 @@ impl<'a, Message: 'a> Compose<Message> for Container<'a, Message> {
         c.boxed()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{column, container, row};
+    use iced_core::Length::Fill;
+    use iced_core::widget::Operation;
+    use iced_core::{Element, Rectangle};
+    use iced_test::simulator::simulator;
+    use iced_widget::Space;
+
+    #[test]
+    fn intrinsic_surface_resolves_nested_fill_at_its_finite_width() {
+        #[derive(Default)]
+        struct Bounds(Vec<(Id, Rectangle)>);
+        impl Operation for Bounds {
+            fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+                visit(self);
+            }
+            fn container(&mut self, id: Option<&Id>, bounds: Rectangle, _: &Rectangle) {
+                if let Some(id) = id {
+                    self.0.push((id.clone(), bounds));
+                }
+            }
+        }
+        for (maximum, expected) in [(256.0, 108.0), (80.0, 80.0)] {
+            let content: Element<'_, (), Theme, Renderer> = container(
+                column![
+                    row![
+                        container(Space::new().width(40).height(12))
+                            .width(Fill)
+                            .id("name"),
+                        container(Space::new().width(20).height(12)).id("value"),
+                    ]
+                    .spacing(8)
+                    .width(Fill)
+                ]
+                .width(Fill.min(108)),
+            )
+            .fit_content()
+            .max_width(maximum)
+            .id("surface")
+            .into();
+            let mut ui = simulator(content);
+            let mut bounds = Bounds::default();
+            ui.operate(&mut bounds);
+            let find = |name| {
+                bounds
+                    .0
+                    .iter()
+                    .find(|(id, _)| *id == Id::new(name))
+                    .unwrap()
+                    .1
+            };
+            let surface = find("surface");
+            let name = find("name");
+            let value = find("value");
+            assert_eq!(surface.width, expected);
+            assert_eq!(value.x + value.width, surface.x + surface.width);
+            assert_eq!(name.x + name.width + 8.0, value.x);
+        }
+    }
+}
