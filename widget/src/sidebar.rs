@@ -39,12 +39,15 @@ pub use trigger::trigger;
 
 use crate::compose::Slot;
 use crate::container::Container;
-use iced_core::Length::Fill;
+use iced_core::Length::{Fill, Fit};
 use icedcn_core::theme::sidebar;
 
 /// A sidebar flush against the window edge.
 pub fn fixed<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Container<'a, Message> {
-    Container::new(content).height(Fill).style(sidebar::default)
+    Container::new(content)
+        .width(Fit)
+        .height(Fill)
+        .style(sidebar::default)
 }
 
 /// A sidebar floating with margin, rounded corners, border, and shadow.
