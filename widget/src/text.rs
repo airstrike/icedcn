@@ -578,6 +578,7 @@ impl<'a, Message: 'a> Compose<Message> for List<'a, Message> {
 mod tests {
     use super::*;
     use crate::badge::badge;
+    use crate::button::button;
     use iced_core::Pixels;
 
     // Observe the actual Text configuration after its parent has composed it.
@@ -598,6 +599,35 @@ mod tests {
             (self.check)(&self.text);
             self.text.build().boxed()
         }
+    }
+
+    #[test]
+    fn plain_text_inherits_button_foreground() {
+        let label = Label {
+            text: crate::text("←").align_x(Horizontal::Center),
+            check: |text| {
+                assert!(
+                    text.style.is_none(),
+                    "plain text must inherit its parent's color"
+                );
+                assert_eq!(text.size, Some(14.0));
+            },
+        };
+        let _ = Box::new(button(Slot::new(label)).width(40)).compose();
+    }
+
+    #[test]
+    fn explicit_text_foreground_survives_button_composition() {
+        let label = Label {
+            text: crate::text("←").style(theme::text::Foreground),
+            check: |text| {
+                let style = text.style.as_ref().expect("explicit style remains");
+                for theme in [Theme::light(), Theme::dark()] {
+                    assert_eq!(style(&theme).color, Some(theme.neutral.foreground.into()));
+                }
+            },
+        };
+        let _ = Box::new(button(Slot::new(label)).width(40)).compose();
     }
 
     #[test]

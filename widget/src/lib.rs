@@ -164,10 +164,10 @@ pub fn button<'a, Message: Clone + 'a>(
     button::button(content)
 }
 
-/// Create a [`Text`] widget at the default body size of 14 pixels. See the `text` module for
-/// headings, muted text, and other typography helpers.
+/// Create a [`Text`] widget at the default body size of 14 pixels, inheriting its parent's
+/// color. See the `text` module for headings, muted text, and other typography helpers.
 pub fn text<'a>(content: impl iced_core::text::IntoFragment<'a>) -> Text<'a> {
-    text::small(content)
+    Text::new(content).size(text::size::SM)
 }
 
 /// Create a [`Column`] with the given children.
