@@ -103,8 +103,8 @@ fn nested_middle(state: &State) -> iced::Element<'_, Message, Theme> {
 fn view_two(state: &State) -> iced::Element<'_, Message, Theme> {
     let columns = row![
         stack([
-            showcase::theme_card(),
-            showcase::typography_card(),
+            showcase::theme_card(state),
+            showcase::typography_card(state),
             codespaces::view(state),
         ]),
         stack([

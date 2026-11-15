@@ -4,51 +4,54 @@ use iced::Element;
 
 use iced::widget::{space, stack};
 use iced::{Center, Fill};
-use iced_widget::button::Status;
 use icedcn::Theme;
 use icedcn::card;
-use icedcn::core::{Border, Color, oklch};
+use icedcn::core::{Border, Color};
 use icedcn::theme;
-use icedcn::theme::text_input;
 use icedcn::widget::button::Button;
 use icedcn::widget::row::Row;
 use icedcn::widget::{
     Size, Skeleton, Slot, badge, button, checkbox, column, container, input, row, skeleton, slider,
-    switch, text,
+    switch, text, textarea,
 };
 
-use crate::{Message, State, icon};
+use crate::{Message, Mode, State, customize, icon};
 
 const CARD_THEME_HEIGHT: f32 = 292.0;
-const CARD_TYPE_HEIGHT: f32 = 316.0;
+const CARD_TYPE_HEIGHT: f32 = 360.0;
 const CARD_ICONS_HEIGHT: f32 = 114.0;
 const CARD_CONTROLS_HEIGHT: f32 = 397.0;
 const CARD_SKELETON_HEIGHT: f32 = 190.0;
 
-pub fn theme_card() -> iced::Element<'static, Message, Theme> {
+pub fn theme_card(state: &State) -> iced::Element<'static, Message, Theme> {
+    let theme = state.theme();
+    let chart = customize::accent(state.settings.chart, state.mode == Mode::Dark);
     let swatches = column![
         swatch_row([
-            ("--backgr...", oklch(0.0, 0.0, 0.0)),
-            ("--foregr...", oklch(0.985, 0.0, 0.0)),
-            ("--primary", oklch(0.93, 0.0, 0.0)),
-            ("--second...", oklch(0.17, 0.0, 0.0)),
-            ("--muted", oklch(0.17, 0.0, 0.0)),
-            ("--accent", oklch(0.17, 0.0, 0.0)),
+            ("background", theme.neutral.base),
+            ("foreground", theme.neutral.foreground),
+            ("primary", theme.primary.base),
+            ("secondary", theme.secondary.base),
+            ("muted", theme.muted.base),
+            ("accent", theme.accent.base),
         ]),
         swatch_row([
-            ("--border", oklch(0.22, 0.0, 0.0)),
-            ("--chart-1", oklch(0.78, 0.0, 0.0)),
-            ("--chart-2", oklch(0.55, 0.0, 0.0)),
-            ("--chart-3", oklch(0.37, 0.0, 0.0)),
-            ("--chart-4", oklch(0.29, 0.0, 0.0)),
-            ("--chart-5", oklch(0.17, 0.0, 0.0)),
+            ("border", theme.neutral.border),
+            ("chart", chart),
+            ("chart / 50%", chart.scale_alpha(0.5)),
+            ("ring", theme.neutral.ring),
+            ("card", theme.card.base),
+            ("sidebar", theme.sidebar.background),
         ]),
     ]
     .spacing(16)
     .width(Fill);
 
     let body = column![
-        text::p("Nova - Inter").size(24.0).semibold(),
+        text::p(format!("Nova · {}", state.settings.font.family))
+            .size(24.0)
+            .line_height(iced::Pixels(30.0))
+            .semibold(),
         text::muted(
             "Designers love packing quirky glyphs into\n\
              test phrases. This is a preview of the..."
@@ -62,11 +65,12 @@ pub fn theme_card() -> iced::Element<'static, Message, Theme> {
     panel(body, CARD_THEME_HEIGHT)
 }
 
-pub fn typography_card() -> iced::Element<'static, Message, Theme> {
+pub fn typography_card(state: &State) -> iced::Element<'static, Message, Theme> {
     let body = column![
-        text::xs("INHERIT - INTER").style(theme::text::Muted),
+        text::xs(format!("INHERIT · {}", state.settings.font.family)).style(theme::text::Muted),
         text::p("Designing with rhythm and\nhierarchy.")
             .size(24.0)
+            .line_height(iced::Pixels(30.0))
             .semibold(),
         text::muted(
             "A strong body style keeps long-form content\n\
@@ -84,7 +88,6 @@ pub fn typography_card() -> iced::Element<'static, Message, Theme> {
             .style(button::Outline)
             .size(Size::Sm)
             .width(Fill)
-            .style(control_outline_button_style())
             .on_press(Message::Noop),
     ]
     .spacing(14)
@@ -137,7 +140,6 @@ pub fn controls_card(state: &State) -> iced::Element<'_, Message, Theme> {
         button("Outline")
             .style(button::Outline)
             .size(Size::Sm)
-            .style(control_outline_button_style())
             .on_press(Message::Noop),
         button("Ghost")
             .style(button::Ghost)
@@ -178,7 +180,6 @@ pub fn controls_card(state: &State) -> iced::Element<'_, Message, Theme> {
         button("Alert Dialog")
             .style(button::Outline)
             .size(Size::Sm)
-            .style(control_outline_button_style())
             .on_press(Message::Noop),
         button(
             row![
@@ -193,7 +194,6 @@ pub fn controls_card(state: &State) -> iced::Element<'_, Message, Theme> {
         .style(button::Outline)
         .size(Size::Sm)
         .width(143.0)
-        .style(control_outline_button_style())
         .on_press(Message::Noop),
         space::horizontal(),
         switch()
@@ -209,7 +209,7 @@ pub fn controls_card(state: &State) -> iced::Element<'_, Message, Theme> {
         field,
         slider(0.0..=100.0).default_value(45.0).width(Fill),
         name_input(),
-        textarea_placeholder(),
+        textarea("Message").resizable(false),
         badges,
         footer,
     ]
@@ -241,7 +241,10 @@ fn swatch_row(items: [(&'static str, Color); 6]) -> Slot<'static, Message> {
     Row::with_children(items.into_iter().map(|(label, color)| {
         column![
             swatch(color),
-            text::xs(label).size(10.0).style(theme::text::Muted)
+            text::xs(label)
+                .size(9.0)
+                .line_height(iced::Pixels(12.0))
+                .style(theme::text::Muted)
         ]
         .spacing(7)
         .width(48.0)
@@ -256,12 +259,12 @@ fn swatch(color: Color) -> Slot<'static, Message> {
     container(space::vertical())
         .width(48.0)
         .height(48.0)
-        .style(move |_| theme::container::Style {
+        .style(move |theme: &Theme| theme::container::Style {
             background: Some(color.into()),
             border: Border {
                 radius: 8.0.into(),
                 width: 1.0,
-                color: oklch(0.29, 0.0, 0.0),
+                color: theme.neutral.border,
             },
             ..Default::default()
         })
@@ -273,7 +276,6 @@ fn icon_button<'a>(icon: impl Into<Slot<'a, Message>>) -> Button<'a, Message> {
         .style(button::Outline)
         .size(Size::Sm)
         .square()
-        .style(control_outline_button_style())
         .on_press(Message::Noop)
 }
 
@@ -291,10 +293,7 @@ fn skeleton_line(width: f32, height: f32) -> Skeleton<'static, Message> {
 }
 
 fn name_input() -> Slot<'static, Message> {
-    let input = input("Name")
-        .width(Fill)
-        .style(control_input_style())
-        .on_submit(Message::Noop);
+    let input = input("Name").width(Fill).on_submit(Message::Noop);
 
     let trailing = container(icon::search().size(16))
         .width(Fill)
@@ -309,67 +308,15 @@ fn name_input() -> Slot<'static, Message> {
         .into()
 }
 
-fn textarea_placeholder() -> Slot<'static, Message> {
-    container(text::muted("Message").size(14.0))
-        .width(Fill)
-        .height(64.0)
-        .padding([10, 10])
-        .align_y(iced::Top)
-        .style(control_style)
-        .into()
-}
-
-fn control_style(_theme: &Theme) -> theme::container::Style {
+fn control_style(theme: &Theme) -> theme::container::Style {
     theme::container::Style {
-        background: Some(oklch(0.16, 0.0, 0.0).into()),
+        background: Some(theme.muted.base.scale_alpha(0.4).into()),
+        text_color: Some(theme.neutral.foreground),
         border: Border {
             radius: 8.0.into(),
             width: 1.0,
-            color: oklch(0.29, 0.0, 0.0),
+            color: theme.neutral.border,
         },
         ..Default::default()
     }
-}
-
-fn control_input_style() -> theme::text_input::StyleFn<'static, Theme> {
-    Box::new(|theme, status| {
-        let border = match status {
-            text_input::Status::Focused { .. } => theme.neutral.ring,
-            _ => oklch(0.29, 0.0, 0.0),
-        };
-
-        theme::text_input::Style {
-            background: oklch(0.16, 0.0, 0.0).into(),
-            border: Border {
-                radius: 8.0.into(),
-                width: 1.0,
-                color: border,
-            },
-            icon: theme.muted.foreground,
-            placeholder: theme.muted.foreground,
-            value: theme.neutral.foreground,
-            selection: theme.neutral.foreground.alpha(0.25),
-            ring: None,
-        }
-    })
-}
-
-fn control_outline_button_style() -> iced_widget::button::StyleFn<'static, Theme> {
-    Box::new(|theme, status| {
-        let background = match status {
-            Status::Hovered | Status::Pressed => oklch(0.22, 0.0, 0.0),
-            Status::Active | Status::Disabled => oklch(0.16, 0.0, 0.0),
-        };
-
-        iced_widget::button::Style {
-            background: Some(iced::Background::Color(background.into())),
-            text_color: theme.neutral.foreground.into(),
-            border: iced::Border {
-                radius: 8.0.into(),
-                width: 1.0,
-                color: oklch(0.29, 0.0, 0.0).into(),
-            },
-            ..Default::default()
-        }
-    })
 }
