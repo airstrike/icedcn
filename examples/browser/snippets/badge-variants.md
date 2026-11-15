@@ -1,9 +1,7 @@
 ```rust
-use iced::Element;
-use icedcn::Theme;
 use icedcn::widget::{badge, row};
 
-fn example() -> Element<'static, (), Theme> {
+fn example() -> row::Row<'static, ()> {
     row![
         badge("Default"),
         badge("Secondary").style(badge::Secondary),
@@ -13,6 +11,5 @@ fn example() -> Element<'static, (), Theme> {
     ]
     .spacing(8)
     .wrap()
-    .into()
 }
 ```

@@ -1,9 +1,7 @@
 ```rust
-use iced::Element;
-use icedcn::Theme;
 use icedcn::widget::{badge, row, spinner};
 
-fn example() -> Element<'static, (), Theme> {
+fn example() -> row::Row<'static, ()> {
     row![
         badge![spinner().circle().size(12.0), "Deleting"]
             .icon_start()
@@ -14,6 +12,5 @@ fn example() -> Element<'static, (), Theme> {
     ]
     .spacing(8)
     .wrap()
-    .into()
 }
 ```

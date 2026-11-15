@@ -1,10 +1,9 @@
 ```rust
 use iced::widget::image;
-use icedcn::Theme;
 use icedcn::widget::avatar;
 use icedcn::widget::{button, column, dropdown_menu, menu};
 
-fn preview(portrait: image::Handle) -> iced::Element<'static, (), Theme> {
+fn preview(portrait: image::Handle) -> dropdown_menu::DropdownMenu<'static, ()> {
     dropdown_menu(
         move |menu| {
             menu.trigger(
@@ -27,6 +26,5 @@ fn preview(portrait: image::Handle) -> iced::Element<'static, (), Theme> {
         },
     )
     .width(128)
-    .into()
 }
 ```

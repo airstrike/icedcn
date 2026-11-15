@@ -1,10 +1,9 @@
 ```rust
 use iced::widget::image;
-use icedcn::Theme;
 use icedcn::widget::avatar;
 use icedcn::widget::row;
 
-fn preview(portrait: image::Handle) -> iced::Element<'static, (), Theme> {
+fn preview(portrait: image::Handle) -> row::Row<'static, ()> {
     row![
         avatar(Some(portrait.clone())).fallback("AC").size(avatar::Sm),
         avatar(Some(portrait.clone())).fallback("AC"),
@@ -13,6 +12,5 @@ fn preview(portrait: image::Handle) -> iced::Element<'static, (), Theme> {
     .spacing(8)
     .wrap()
     .align_y(iced::Center)
-    .into()
 }
 ```

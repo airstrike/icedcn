@@ -1,11 +1,11 @@
 ## Usage
 
 ```rust
-use iced::{Element, Fill};
-use icedcn::{card, Theme};
+use iced::Fill;
+use icedcn::card;
 use icedcn::widget::{column, text};
 
-fn preview() -> Element<'static, (), Theme> {
+fn preview() -> card::Card<'static, ()> {
     card(column![
         card::header("Card Title")
             .description("Card Description")
@@ -14,6 +14,5 @@ fn preview() -> Element<'static, (), Theme> {
         card::footer(text::small("Card Footer")),
     ].width(Fill))
     .width(Fill.max(384))
-    .into()
 }
 ```

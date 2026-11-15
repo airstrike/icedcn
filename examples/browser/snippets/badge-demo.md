@@ -4,7 +4,7 @@ use iced::widget;
 use icedcn::Theme;
 use icedcn::widget::badge;
 
-fn example() -> Element<'static, (), Theme> {
+fn example() -> impl Widget<(), Theme> {
     widget::row::<Element<'_, _, Theme>>([
         badge("Badge").into(),
         badge("Secondary").style(badge::Secondary).into(),
@@ -14,7 +14,5 @@ fn example() -> Element<'static, (), Theme> {
     .spacing(8)
     .wrap()
     .align_x(alignment::Horizontal::Center)
-    .boxed()
-    .into()
 }
 ```

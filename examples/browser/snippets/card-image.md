@@ -3,13 +3,13 @@ Select the light or dark cover when your application theme changes. Prepare the 
 ```rust
 use iced::widget::image;
 use iced::border;
-use iced::{ContentFit, Element, Fill, Widget};
+use iced::{ContentFit, Fill, Widget};
 use icedcn::{card, Theme, radius};
 use icedcn::widget::{aspect_ratio, badge, button, column};
 
 fn event_card<Message: Clone + 'static>(
     light: image::Handle, dark: image::Handle, theme: &Theme,
-) -> Element<'static, Message, Theme> {
+) -> card::Card<'static, Message> {
     let photo = if theme.neutral.is_dark { dark } else { light };
     let photo = image(photo)
         .width(Fill).height(Fill)
@@ -25,6 +25,5 @@ fn event_card<Message: Clone + 'static>(
     ].width(Fill))
     .padding(0)
     .width(Fill.max(384))
-    .into()
 }
 ```

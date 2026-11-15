@@ -1,9 +1,9 @@
 ```rust
-use iced::{Element, Fill};
-use icedcn::{card, Size, Theme};
+use iced::Fill;
+use icedcn::{card, Size};
 use icedcn::widget::{button, column, text};
 
-fn small<Message: Clone + 'static>() -> Element<'static, Message, Theme> {
+fn small<Message: Clone + 'static>() -> card::Card<'static, Message> {
     card(column![
         card::header("Small Card")
             .description("This card uses the small size variant."),
@@ -17,6 +17,5 @@ fn small<Message: Clone + 'static>() -> Element<'static, Message, Theme> {
     ].width(Fill))
     .size(Size::Sm)
     .width(Fill.max(384))
-    .into()
 }
 ```

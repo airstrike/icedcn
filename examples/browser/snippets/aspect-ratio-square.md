@@ -1,10 +1,10 @@
 ```rust
 use iced::widget::image;
-use iced::{ContentFit, Element, Fill, Widget};
+use iced::{ContentFit, Fill, Widget};
 use icedcn::widget::aspect_ratio;
-use icedcn::{Theme, radius};
+use icedcn::radius;
 
-fn preview(photo: image::Handle) -> Element<'static, (), Theme> {
+fn preview(photo: image::Handle) -> aspect_ratio::AspectRatio<'static, ()> {
     let photo = image(photo)
         .width(Fill)
         .height(Fill)
@@ -12,6 +12,5 @@ fn preview(photo: image::Handle) -> Element<'static, (), Theme> {
         .border_radius(radius::LG);
     aspect_ratio(photo.boxed(), 1.0)
         .max_width(192)
-        .into()
 }
 ```

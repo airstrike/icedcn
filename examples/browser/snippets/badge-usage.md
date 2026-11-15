@@ -1,12 +1,10 @@
 ## Usage
 
 ```rust
-use iced::Element;
-use icedcn::Theme;
 use icedcn::widget::badge;
 
-fn example() -> Element<'static, (), Theme> {
-    badge("Badge").style(badge::Default).into()
+fn example() -> badge::Badge<'static, ()> {
+    badge("Badge").style(badge::Default)
 }
 ```
 

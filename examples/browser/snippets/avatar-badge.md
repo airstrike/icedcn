@@ -18,9 +18,8 @@ fn presence(theme: &Theme) -> container::Style {
     style
 }
 
-fn preview(portrait: image::Handle) -> iced::Element<'static, (), Theme> {
+fn preview(portrait: image::Handle) -> avatar::Avatar<'static, ()> {
     avatar::badge(avatar(Some(portrait)).fallback("AC"), avatar::dot())
         .badge_style(presence)
-        .into()
 }
 ```

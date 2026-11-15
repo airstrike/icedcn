@@ -42,7 +42,7 @@ use icedcn::Theme;
 use icedcn::core::theme::badge::Spec;
 use icedcn::widget::{badge, row};
 
-fn example() -> iced::Element<'static, (), Theme> {
+fn example() -> row::Row<'static, ()> {
     let legacy: container::StyleFn<'static, Theme> = Box::new(|theme| {
         container::Style::default().color(iced::Color::from(theme.neutral.foreground))
     });
@@ -54,6 +54,5 @@ fn example() -> iced::Element<'static, (), Theme> {
             .state_style(move |theme, status| spec.resolve_state(theme, status)),
     ]
     .spacing(8)
-    .into()
 }
 ```

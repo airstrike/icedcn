@@ -11,13 +11,12 @@ fn plus(size: f32) -> Svg<'static, Theme> {
         .height(size)
 }
 
-fn preview(pranathip: image::Handle) -> iced::Element<'static, (), Theme> {
+fn preview(pranathip: image::Handle) -> avatar::Avatar<'static, ()> {
     avatar::badge(
         avatar(Some(pranathip)).fallback("PP"),
         plus(8.0).style(|theme: &Theme, _| svg::Style {
             color: Some(theme.primary.foreground.into()),
         }),
     )
-    .into()
 }
 ```
