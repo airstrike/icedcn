@@ -19,7 +19,7 @@ etc. on.
 | `text::small(content)` | `Text<'a>` | 14px, foreground. |
 | `text::muted(content)` | `Text<'a>` | 14px, muted. |
 | `text::xs(content)` | `Text<'a>` | 12px, foreground. |
-| `text::inline_code(content)` | `Text<'a>` | 14px, semibold, monospace. Wrap in a container with a muted background at the call site for the full inline-code chrome. |
+| `text::inline_code(content)` | `Text<'a>` | 14px, semibold, monospace. Long names wrap within the available width. Wrap in a container with a muted background at the call site for the full inline-code chrome. |
 | `text::blockquote(content)` | `Blockquote<'a>` | 2px left rule + 24px gap + italic body. |
 | `text::list(items)` | `List<'a, Message>` | Bulleted list with a 24px marker column, hanging indent and 8px between rows. |
 | `text(content)` | `Text<'a>` | Crate-root shorthand for `text::small`. |

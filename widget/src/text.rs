@@ -422,6 +422,7 @@ impl<'a, Message: 'a> Compose<Message> for Blockquote<'a> {
 pub fn inline_code<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     Text::new(content)
         .font(iced_core::Font::MONOSPACE)
+        .wrapping(Wrapping::WordOrGlyph)
         .size(size::SM)
         .semibold()
         .style(theme::text::Foreground)

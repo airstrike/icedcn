@@ -29,6 +29,19 @@ fn the_article_balances_headings_and_keeps_its_inline_link_interactive() {
         assert!((height..height + 8.).contains(&actual), "{actual}");
     }
 
+    let mut code = Simulator::<Message, Theme, iced::Renderer>::with_size(
+        settings.clone(),
+        Size::new(230., 120.),
+        page.preview("inline-code"),
+    );
+    assert!(
+        code.find("widget::alert_dialog::AlertDialog")
+            .unwrap()
+            .bounds()
+            .height
+            > 30.
+    );
+
     let mut ui = Simulator::<Message, Theme, iced::Renderer>::with_size(
         settings,
         Size::new(384., 2200.),
