@@ -433,6 +433,7 @@ impl State {
                     text::xs(self.copy_error.as_deref().unwrap_or("")),
                 ]
                 .spacing(16)
+                .width(Fill)
                 .into()
             },
         )
