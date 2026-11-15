@@ -376,7 +376,25 @@ fn combobox_filters_custom_values_and_selects_the_highlight_from_the_keyboard() 
 
 #[test]
 fn command_search_skips_disabled_results_and_runs_the_highlighted_action() {
+    use iced_core::Rectangle;
+    use iced_core::widget::Id;
     use icedcn_widget::command;
+
+    #[derive(Default)]
+    struct Search(Option<Rectangle>);
+    impl Operation for Search {
+        fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+            visit(self);
+        }
+        fn text_input(
+            &mut self,
+            _: Option<&Id>,
+            bounds: Rectangle,
+            _: &mut dyn operation::TextInput,
+        ) {
+            self.0 = Some(bounds);
+        }
+    }
     let widget: Element<'_, Message, Theme, Renderer> = command([
         command::item("Calendar").disabled(true),
         command::item("Calculate").on_select(Message::Pressed),
@@ -384,9 +402,12 @@ fn command_search_skips_disabled_results_and_runs_the_highlighted_action() {
     ])
     .into();
     let mut ui = simulator(widget);
-    ui.point_at(Point::new(25.0, 16.0));
+    let mut search = Search::default();
+    ui.operate(&mut search);
+    ui.point_at(search.0.expect("command search input").center());
     let _ = ui.simulate(simulator::click());
     frame(&mut ui);
+    assert_eq!(focus(&mut ui).focused, Some(0));
     ui.typewrite("Cal");
     ui.tap_key(Named::Enter);
     assert_eq!(ui.into_messages().collect::<Vec<_>>(), [Message::Pressed]);
