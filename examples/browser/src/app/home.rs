@@ -29,14 +29,16 @@ pub(super) fn view<'a>(width: f32) -> Element<'a, Message, Theme> {
     );
     let destinations: Element<'_, Message, Theme> = if width >= 700. {
         column![
-            row![components, examples].spacing(16),
-            row![create, installation].spacing(16),
+            row![components, examples].spacing(16).width(Fill),
+            row![create, installation].spacing(16).width(Fill),
         ]
         .spacing(16)
+        .width(Fill)
         .into()
     } else {
         column![components, examples, create, installation]
             .spacing(12)
+            .width(Fill)
             .into()
     };
     scrollable(
@@ -49,7 +51,7 @@ pub(super) fn view<'a>(width: f32) -> Element<'a, Message, Theme> {
                 text::p("Composable components for native and web applications, built with Rust and iced.")
                     .style(theme::text::Muted)
                     .width(Fill),
-                container(destinations).padding([24, 0]),
+                container(destinations).padding([24, 0]).width(Fill),
             ]
             .spacing(16)
             .width(Fill)
@@ -70,7 +72,7 @@ fn destination<'a>(
 ) -> Element<'a, Message, Theme> {
     button(
         column![
-            text::h3(label),
+            text::h3(label).width(Fill),
             text::p(description).style(theme::text::Muted).width(Fill),
         ]
         .spacing(8)
