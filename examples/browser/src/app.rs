@@ -1,4 +1,5 @@
 mod header;
+mod menu;
 
 use iced::Element;
 use iced::Widget;
@@ -16,7 +17,7 @@ use icedcn::widget::container;
 use icedcn::widget::markdown::highlighter::Map;
 use icedcn::widget::sidebar::MenuButtonSize;
 
-use icedcn::widget::{button, rule, sidebar, text, toast, toaster};
+use icedcn::widget::{button, context_menu, rule, sidebar, text, toast, toaster};
 use icedcn::{Size, Theme, Weight, theme};
 
 use crate::component;
@@ -553,6 +554,12 @@ impl App {
     }
 
     pub fn view(&self) -> iced::Element<'_, Message, Theme> {
+        context_menu(|_| self.content().into(), |_| menu::view(self))
+            .width(248)
+            .into()
+    }
+
+    fn content(&self) -> iced::Element<'_, Message, Theme> {
         let width = self.width;
         let header = self.header(width);
 

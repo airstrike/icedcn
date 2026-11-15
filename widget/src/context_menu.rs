@@ -21,11 +21,11 @@
 //! ```
 
 mod gesture;
-use gesture::LongPress;
+use gesture::Trigger;
 use iced_core::Length::Fill;
 use iced_core::{Element, Length, Pixels, Point};
 use iced_widget::component::{self, Component};
-use iced_widget::{Renderer, Space, Widget, anchored, mouse_area};
+use iced_widget::{Renderer, Space, Widget, anchored};
 use icedcn_core::Theme;
 use icedcn_core::theme::popover::content;
 
@@ -50,11 +50,7 @@ pub struct ContextMenu<'a, Message> {
 /// The context menu's private events.
 #[derive(Debug, Clone)]
 pub enum Event<Message> {
-    /// The pointer moved over the trigger area, to this point in it.
-    Moved(Point),
-    /// The trigger area was right-pressed.
-    Open,
-    /// A stationary touch opened the menu at this point in the trigger.
+    /// A right press or stationary touch opened the menu at this point in the trigger.
     OpenAt(Point),
     /// The menu asked to close.
     Close,
@@ -62,11 +58,9 @@ pub enum Event<Message> {
     App(Message),
 }
 
-/// Where the pointer last was over the trigger area, and where the menu is
-/// open.
+/// Where the menu is open inside its trigger area.
 #[derive(Debug, Default)]
 pub struct State {
-    pointer: Point,
     open_at: Option<Point>,
 }
 
@@ -113,14 +107,6 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
     ) -> Option<Message> {
         let open = match event {
             Event::App(message) => return Some(message),
-            Event::Moved(pointer) => {
-                state.pointer = pointer;
-                return None;
-            }
-            Event::Open => {
-                state.open_at = Some(state.pointer);
-                true
-            }
             Event::OpenAt(point) => {
                 state.open_at = Some(point);
                 true
@@ -141,12 +127,8 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
 
         let mut area = (self.trigger)(&handle);
         area.inherit(&self.inherited);
-        let area = mouse_area(area.compose().map(Event::App))
-            .on_move(Event::Moved)
-            .on_right_press(Event::Open);
-
-        let area = LongPress {
-            content: area.boxed(),
+        let area = Trigger {
+            content: area.compose().map(Event::App).boxed(),
             open: Event::OpenAt,
         };
 
@@ -187,7 +169,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             .min_width(144)
             .modal(true)
             .open(state.open_at.is_some())
-            .on_toggle(|open| if open { Event::Open } else { Event::Close })
+            .on_toggle(|_| Event::Close)
     }
 }
 

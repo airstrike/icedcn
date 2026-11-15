@@ -12,8 +12,8 @@ use iced_core::{
 use iced_widget::Renderer;
 use icedcn_core::Theme;
 
-/// Recognizes a long press while allowing short taps and vertical scrolling.
-pub(super) struct LongPress<'a, Message> {
+/// Opens at a right press or long touch, leaving normal pointer motion to the content.
+pub(super) struct Trigger<'a, Message> {
     pub content: Element<'a, Message, Theme, Renderer>,
     pub open: fn(Point) -> Message,
 }
@@ -22,8 +22,8 @@ struct State {
     touch: Option<(touch::Finger, Point, Instant)>,
     fired: Option<touch::Finger>,
 }
-impl<Message> Meta for LongPress<'_, Message> {}
-impl<Message> Widget<Message, Theme, Renderer> for LongPress<'_, Message> {
+impl<Message> Meta for Trigger<'_, Message> {}
+impl<Message> Widget<Message, Theme, Renderer> for Trigger<'_, Message> {
     fn tag(&self) -> tree::Tag {
         tree::Tag::of::<State>()
     }
@@ -54,9 +54,37 @@ impl<Message> Widget<Message, Theme, Renderer> for LongPress<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter_mut(&mut tree.children)
             .next()
-            .expect("a keyboard handler has one child");
+            .expect("a context menu trigger has one child");
 
         let state = tree.state.downcast_mut::<State>();
+        if let Event::Touch(
+            touch::Event::FingerLifted { id, .. } | touch::Event::FingerLost { id, .. },
+        ) = *event
+            && state.fired == Some(id)
+        {
+            state.fired = None;
+            shell.capture_event();
+            return;
+        }
+
+        self.content.update(
+            child_tree,
+            event,
+            child_layout,
+            cursor,
+            renderer,
+            shell,
+            viewport,
+        );
+
+        // An inner context menu gets the first chance to finish its long press.
+        if shell.is_event_captured()
+            && matches!(event, Event::Window(window::Event::RedrawRequested(_)))
+        {
+            state.touch = None;
+            return;
+        }
+
         match *event {
             Event::Touch(touch::Event::FingerPressed { id, position })
                 if layout.bounds().contains(position) =>
@@ -83,11 +111,6 @@ impl<Message> Widget<Message, Theme, Renderer> for LongPress<'_, Message> {
                 if state.touch.is_some_and(|(finger, ..)| finger == id) {
                     state.touch = None;
                 }
-                if state.fired == Some(id) {
-                    state.fired = None;
-                    shell.capture_event();
-                    return;
-                }
             }
             Event::Window(window::Event::RedrawRequested(now)) => {
                 if let Some((id, start, deadline)) = state.touch
@@ -112,19 +135,27 @@ impl<Message> Widget<Message, Theme, Renderer> for LongPress<'_, Message> {
                         shell,
                         viewport,
                     );
+                    shell.capture_event();
                 }
             }
             _ => {}
         }
-        self.content.update(
-            child_tree,
-            event,
-            child_layout,
-            cursor,
-            renderer,
-            shell,
-            viewport,
-        );
+
+        if !shell.is_event_captured()
+            && matches!(
+                event,
+                Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Right))
+            )
+            && let Some(position) = cursor.position()
+            && layout.bounds().contains(position)
+            && viewport.contains(position)
+        {
+            shell.publish((self.open)(Point::new(
+                position.x - layout.bounds().x,
+                position.y - layout.bounds().y,
+            )));
+            shell.capture_event();
+        }
     }
 
     fn draw(
@@ -140,7 +171,7 @@ impl<Message> Widget<Message, Theme, Renderer> for LongPress<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter(&tree.children)
             .next()
-            .expect("a keyboard handler has one child");
+            .expect("a context menu trigger has one child");
 
         self.content.draw(
             child_tree,
@@ -164,7 +195,7 @@ impl<Message> Widget<Message, Theme, Renderer> for LongPress<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter(&tree.children)
             .next()
-            .expect("a keyboard handler has one child");
+            .expect("a context menu trigger has one child");
 
         self.content
             .mouse_interaction(child_tree, child_layout, cursor, viewport, renderer)
@@ -181,7 +212,7 @@ impl<Message> Widget<Message, Theme, Renderer> for LongPress<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter_mut(&mut tree.children)
             .next()
-            .expect("a keyboard handler has one child");
+            .expect("a context menu trigger has one child");
 
         self.content
             .operate(child_tree, child_layout, viewport, renderer, operation);
@@ -199,7 +230,7 @@ impl<Message> Widget<Message, Theme, Renderer> for LongPress<'_, Message> {
         let (child_layout, child_tree) = layout
             .iter_mut(&mut tree.children)
             .next()
-            .expect("a keyboard handler has one child");
+            .expect("a context menu trigger has one child");
 
         self.content.overlay(
             child_tree,

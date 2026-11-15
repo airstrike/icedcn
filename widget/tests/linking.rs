@@ -982,7 +982,7 @@ fn a_context_menu_opens_at_the_pointer_and_closes_on_select() {
     .into();
     let mut ui = simulator(element);
 
-    hover(&mut ui, 100.0, 50.0);
+    ui.point_at(Point::new(100.0, 50.0));
     let _ = ui.simulate([Event::Mouse(mouse::Event::ButtonPressed(
         mouse::Button::Right,
     ))]);
@@ -1011,4 +1011,86 @@ fn a_tooltip_shows_while_its_trigger_is_hovered() {
         ui.into_messages().collect::<Vec<_>>(),
         [Message::Open(true), Message::Open(false)],
     );
+}
+
+#[test]
+fn pointer_motion_does_not_rebuild_a_context_menu_trigger() {
+    use std::cell::Cell;
+
+    let builds = Cell::new(0);
+    let element: Element<'_, Message, Theme, Renderer> = context_menu(
+        |_| {
+            builds.set(builds.get() + 1);
+            block(300.0, 200.0)
+        },
+        |_| {
+            menu::group([menu::item(block(60.0, 20.0))
+                .on_select(Message::Inner)
+                .into()])
+        },
+    )
+    .into();
+    let mut ui = simulator(element);
+    let initial = builds.get();
+    hover(&mut ui, 10.0, 10.0);
+    hover(&mut ui, 100.0, 50.0);
+    hover(&mut ui, 200.0, 100.0);
+    assert_eq!(builds.get(), initial);
+}
+
+#[test]
+fn a_stationary_touch_still_opens_a_context_menu() {
+    use iced_core::touch;
+
+    let element: Element<'_, Message, Theme, Renderer> = context_menu(
+        |_| block(300.0, 200.0),
+        |_| {
+            menu::group([menu::item(block(60.0, 20.0))
+                .on_select(Message::Inner)
+                .into()])
+        },
+    )
+    .on_open_change(Message::Open)
+    .into();
+    let mut ui = simulator(element);
+    let _ = ui.simulate([
+        Event::Touch(touch::Event::FingerPressed {
+            id: touch::Finger(0),
+            position: Point::new(100.0, 50.0),
+        }),
+        Event::Window(window::Event::RedrawRequested(
+            Instant::now() + Duration::from_millis(710),
+        )),
+    ]);
+    assert_eq!(ui.drain().collect::<Vec<_>>(), [Message::Open(true)]);
+}
+
+#[test]
+fn an_inner_context_menu_wins_a_long_press() {
+    use iced_core::touch;
+
+    let element: Element<'_, Message, Theme, Renderer> = context_menu(
+        |_| {
+            context_menu(
+                |_| block(300.0, 200.0),
+                |_| menu::group([menu::item(block(60.0, 20.0)).into()]),
+            )
+            .on_open_change(|_| Message::Inner)
+            .into()
+        },
+        |_| menu::group([menu::item(block(60.0, 20.0)).into()]),
+    )
+    .on_open_change(Message::Open)
+    .into();
+    let mut ui = simulator(element);
+    let _ = ui.simulate([
+        Event::Touch(touch::Event::FingerPressed {
+            id: touch::Finger(0),
+            position: Point::new(100.0, 50.0),
+        }),
+        Event::Window(window::Event::RedrawRequested(
+            Instant::now() + Duration::from_millis(710),
+        )),
+    ]);
+    assert_eq!(ui.drain().collect::<Vec<_>>(), [Message::Inner]);
 }
