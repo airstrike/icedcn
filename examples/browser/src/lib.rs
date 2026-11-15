@@ -119,7 +119,7 @@ impl Browser {
     }
 
     pub fn theme(&self) -> Theme {
-        docs::theme(self.app.is_dark())
+        self.app.theme()
     }
 
     pub fn subscription(&self) -> Subscription<Message> {

@@ -34,9 +34,15 @@ pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
     .spacing(8)
     .width(Fill);
 
-    let body = column![chart(&state.traffic).height(156).padding(0), footer]
-        .spacing(16)
-        .width(Fill);
+    let body = column![
+        chart(&state.traffic)
+            .height(156)
+            .padding(0)
+            .style(chart::transparent),
+        footer
+    ]
+    .spacing(16)
+    .width(Fill);
 
     card(
         column![

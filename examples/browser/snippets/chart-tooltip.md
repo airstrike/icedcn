@@ -1,77 +1,71 @@
 ```rust
-use iced::{Color, Element, Fill, Widget, color};
-use icedcn::theme::tweak::Bg;
-use icedcn::widget::chart::{Data, bar, bars, data, hover};
-use icedcn::widget::{chart, column, container, row, space, text};
-use icedcn::{Theme, radius, theme};
+use crate::icon;
+use iced::Element;
+use icedcn::widget::chart::{self, tooltip};
+use icedcn::widget::{column, container, row, text};
+use icedcn::{Slot, Theme, theme};
 
 type Message = ();
 
-const LABELS: [&str; 6] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-const DESKTOP: [f32; 6] = [186.0, 305.0, 237.0, 73.0, 209.0, 214.0];
-const MOBILE: [f32; 6] = [80.0, 200.0, 120.0, 190.0, 130.0, 140.0];
-const BLUE: Color = color!(0x2563eb);
-const LIGHT_BLUE: Color = color!(0x60a5fa);
-
-fn monthly() -> Data {
-    data(
-        bars([
-            bar(DESKTOP).with_name("Desktop").with_color(BLUE),
-            bar(MOBILE).with_name("Mobile").with_color(LIGHT_BLUE),
-        ])
-        .data_labels(None),
-    )
-    .x_axis_labels(LABELS)
-    .x_axis(|axis| axis.none())
-    .y_axis(|axis| axis.none())
-    .show_tooltip(false)
-}
-
-fn tooltip<'a>(entry: &hover::Entry<'_>) -> hover::Annotation<'a, Message, Theme> {
-    let index = match entry {
-        hover::Entry::Cartesian { point_idx, .. } => *point_idx,
-        _ => 0,
+fn view<'a>(window_width: f32) -> Element<'a, Message, Theme> {
+    let [first, second, third, fourth, _] = theme::chart::COLORS;
+    let panel = |content: Slot<'a, Message>| {
+        container(content)
+            .width(224)
+            .height(137)
+            .center_x(224)
+            .center_y(137)
     };
-    let index = index.min(LABELS.len() - 1);
-    let item = |name, value: f32, color: Color| {
+    let label = panel(
         row![
-            container(space::horizontal()).width(8).height(8).class(
-                theme::container::Transparent + Bg::from(icedcn::Color::from(color)) + radius(2)
-            ),
-            text::muted(name).size(12).width(Fill),
-            text::small(value.to_string()).medium(),
+            text("Label").size(14).medium(),
+            icon::arrow_right(),
+            chart::tooltip([("Desktop", 186, first), ("Mobile", 80, second)])
+                .label("Page Views")
+                .font("Geist Mono")
+                .width(128),
         ]
         .spacing(8)
         .align_y(iced::Center)
-    };
-    hover::Annotation::new(Element::from(
-        container(
-            column![
-                text::small(LABELS[index]).medium(),
-                item("Desktop", DESKTOP[index], BLUE),
-                item("Mobile", MOBILE[index], LIGHT_BLUE),
-            ]
-            .spacing(6),
-        )
-        .width(160)
-        .padding(10)
-        .class(theme::container::Card + radius(8)),
-    ))
-    .padding(0)
-}
-
-fn visitors() -> Data {
-    monthly()
-        .y_axis(|axis| axis.show_grid(true))
-        .x_axis(|axis| axis.show_labels(true))
-        .show_tooltip(true)
-}
-
-fn view<'a>(visitors: &'a Data) -> Element<'a, Message, Theme> {
-    chart(visitors)
-        .height(200)
-        .padding(0)
-        .hover(tooltip)
-        .boxed()
+        .into(),
+    );
+    let name = panel(
+        column![
+            row![text("Name").size(14).medium(), icon::arrow_down()].spacing(8),
+            chart::tooltip([("Chrome", 1286, third), ("Firefox", 1000, fourth)])
+                .label("Browser")
+                .hide_label(true)
+                .indicator(tooltip::Dashed)
+                .font("Geist Mono")
+                .width(128),
+        ]
+        .spacing(8)
+        .into(),
+    );
+    let line = panel(
+        chart::tooltip([("Desktop", 12486, third)])
+            .label("Page Views")
+            .indicator(tooltip::Line)
+            .font("Geist Mono")
+            .width(144)
+            .into(),
+    );
+    let indicator = panel(
+        column![
+            chart::tooltip([("Chrome", 1286, first)])
+                .label("Browser")
+                .hide_label(true)
+                .font("Geist Mono")
+                .width(128),
+            row![icon::arrow_up(), text("Indicator").size(14).medium()].spacing(8),
+        ]
+        .spacing(8)
+        .into(),
+    );
+    if window_width < 768.0 {
+        column![label, name, indicator].into()
+    } else {
+        column![row![label, name], row![line, indicator]].into()
+    }
 }
 ```

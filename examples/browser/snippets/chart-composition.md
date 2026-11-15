@@ -5,3 +5,5 @@ Enable the `chart` feature on your icedcn dependency to include Hyozu and its ca
 Build charts with Hyozu's native marks and data. `icedcn::widget::chart` re-exports `bar`, `bars`, `data` and `chart`, and exposes the complete library as `chart::hyozu`. Charts compose directly inside icedcn rows, columns and cards.
 
 Construct `Data` when your model initializes or updates. The view borrows it with `chart(&data)`, so chart preparation stays outside the view. Give each chart a height; its width fills the available space.
+
+The content builder `chart::tooltip(...)` supplies the compact label, series rows and indicator styles. Hyozu still owns inspection, grouping, hidden-series state and overlay placement. Use `.hover_group(...)` to connect the two.

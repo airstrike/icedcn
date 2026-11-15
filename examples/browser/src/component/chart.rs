@@ -1,12 +1,13 @@
+use crate::icon;
 use crate::{Message, page};
-use iced::widget::button::StyleFn;
 use iced::widget::component::{Component, component};
-use iced::{Color, Element, Fill, Task, Widget, color};
+use iced::{Color, Element, Fill, Pixels, Task, Widget, color};
 use icedcn::theme::tweak::Bg;
-use icedcn::widget::chart::{Data, bar, bars, data, hover, legend};
-use icedcn::widget::{button, chart, column, container, row, separator, space, text};
-use icedcn::{Theme, theme};
+use icedcn::widget::chart::{Data, axis, bar, bars, data, hover, hyozu, legend, tooltip};
+use icedcn::widget::{button, chart, column, container, row, separator, text};
+use icedcn::{Slot, Theme, Vertical, theme};
 use icedcn::{card, radius};
+use std::borrow::Cow;
 
 pub static META: page::Meta = page::Meta {
     title: "Chart",
@@ -66,7 +67,7 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Md("examples/browser/snippets/chart-api-reference.md"),
     page::Block::Md("examples/browser/snippets/chart-guide-accessibility.md"),
 ];
-const LABELS: [&str; 6] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+const LABELS: [&str; 6] = ["January", "February", "March", "April", "May", "June"];
 const DESKTOP: [f32; 6] = [186.0, 305.0, 237.0, 73.0, 209.0, 214.0];
 const MOBILE: [f32; 6] = [80.0, 200.0, 120.0, 190.0, 130.0, 140.0];
 const BLUE: Color = color!(0x2563eb);
@@ -81,17 +82,20 @@ fn monthly() -> Data {
         .data_labels(None),
     )
     .x_axis_labels(LABELS)
-    .x_axis(|axis| axis.none())
+    .x_axis(|axis| {
+        axis.none().labels(|month: f64| {
+            LABELS
+                .get(month.round() as usize)
+                .unwrap_or(&"")
+                .chars()
+                .take(3)
+                .collect::<String>()
+        })
+    })
     .y_axis(|axis| axis.none())
     .show_tooltip(false)
 }
 
-const DAYS: [&str; 30] = [
-    "Apr 1", "Apr 2", "Apr 3", "Apr 4", "Apr 5", "Apr 6", "Apr 7", "Apr 8", "Apr 9", "Apr 10",
-    "Apr 11", "Apr 12", "Apr 13", "Apr 14", "Apr 15", "Apr 16", "Apr 17", "Apr 18", "Apr 19",
-    "Apr 20", "Apr 21", "Apr 22", "Apr 23", "Apr 24", "Apr 25", "Apr 26", "Apr 27", "Apr 28",
-    "Apr 29", "Apr 30",
-];
 const DESKTOP_DAILY: [f32; 30] = [
     222.0, 97.0, 167.0, 242.0, 373.0, 301.0, 245.0, 409.0, 59.0, 261.0, 327.0, 292.0, 342.0, 137.0,
     120.0, 138.0, 446.0, 364.0, 243.0, 89.0, 137.0, 224.0, 138.0, 387.0, 215.0, 75.0, 383.0, 122.0,
@@ -104,6 +108,8 @@ const MOBILE_DAILY: [f32; 30] = [
 ];
 struct Visitors<'a> {
     series: &'a [Data; 2],
+    theme: Theme,
+    compact: bool,
 }
 impl<'a> Component<'a, Message, Theme> for Visitors<'a> {
     type State = bool;
@@ -114,109 +120,190 @@ impl<'a> Component<'a, Message, Theme> for Visitors<'a> {
     }
     fn view(&self, mobile: &bool) -> impl Widget<bool, Theme> + 'a {
         let metric = |label: &'static str, total: &'static str, is_mobile: bool| {
-            let selected = *mobile == is_mobile;
             button(
                 column![
-                    text::muted(label).size(12.0),
-                    text::large(total).size(24.0).bold()
+                    text::muted(label).size(12).line_height(Pixels(16.0)),
+                    text(total)
+                        .size(if self.compact { 18 } else { 30 })
+                        .bold()
+                        .line_height(Pixels(if self.compact { 18.0 } else { 30.0 })),
                 ]
-                .spacing(4),
+                .spacing(4)
+                .width(Fill),
             )
-            .style(if selected {
-                StyleFn::from(button::Secondary)
-            } else {
-                StyleFn::from(button::Ghost)
-            })
+            .style(
+                button::Ghost
+                    + Bg::from(if *mobile == is_mobile {
+                        self.theme.muted.base.scale_alpha(0.5)
+                    } else {
+                        icedcn::Color::TRANSPARENT
+                    })
+                    + radius(0),
+            )
             .translate(false)
             .on_press(is_mobile)
-            .height(72)
-            .inset([8, 12])
-            .map_style(|mut style| {
-                style.border.radius = 0.into();
-                style
-            })
+            .width(if self.compact { Fill } else { 144.into() })
+            .height(Fill)
+            .padding(if self.compact { [16, 24] } else { [24, 32] })
+            .inset(0)
+        };
+        let title = container(
+            column![
+                card::title("Bar Chart - Interactive"),
+                card::description("Showing total visitors for the last 3 months"),
+            ]
+            .spacing(4),
+        )
+        .height(Fill)
+        .align_y(iced::Center)
+        .padding([0, 24])
+        .width(Fill);
+        let metrics = row![
+            metric("Desktop", "7,324", false),
+            separator().orientation(Vertical),
+            metric("Mobile", "7,250", true),
+        ]
+        .height(Fill);
+        let header: Element<'_, bool, Theme> = if self.compact {
+            column![
+                container(title).height(68),
+                separator(),
+                metrics.height(70).width(Fill)
+            ]
+            .width(Fill)
+            .into()
+        } else {
+            row![title, separator().orientation(Vertical), metrics]
+                .height(98)
+                .width(Fill)
+                .into()
         };
         Element::from(
             card(
                 column![
-                    row![
-                        column![
-                            card::title("Bar Chart - Interactive"),
-                            card::description("Showing daily visitors for April")
-                        ]
-                        .spacing(4)
-                        .width(Fill)
-                        .padding(12),
-                        metric("Desktop", "7,324", false),
-                        metric("Mobile", "7,250", true)
-                    ]
-                    .width(Fill),
+                    header,
                     separator(),
                     container(
                         chart(&self.series[usize::from(*mobile)])
                             .height(250)
-                            .padding(0)
+                            .padding([0, 12])
+                            .style(chart::transparent)
                             .corners(0)
+                            .hover_group(self.theme.clone(), |group| {
+                                hover::Annotation::new(Element::from(
+                                    chart::tooltip(group.entries.iter())
+                                        .label(format!("{}, 2024", group.label))
+                                        .font("Geist Mono")
+                                        .width(150),
+                                ))
+                                .transparent()
+                                .padding(0)
+                            }),
                     )
-                    .padding(12)
+                    .padding(if self.compact { [0, 8] } else { [24, 24] })
                     .width(Fill),
                 ]
                 .width(Fill),
             )
             .gap(0)
-            .padding(0)
+            .padding([0, 0, 16, 0])
             .width(Fill),
         )
     }
 }
-fn daily(values: [f32; 30], color: Color) -> Data {
-    data(bars([bar(values).with_name("Page Views").with_color(color)]).data_labels(None))
-        .x_axis_labels(DAYS)
+const APRIL: f64 = 1_711_929_600.0;
+
+fn daily(values: [f32; 30], color: hyozu::Color) -> Data {
+    let points = values
+        .into_iter()
+        .enumerate()
+        .map(|(day, value)| (APRIL + day as f64 * 86_400.0, value))
+        .collect::<Vec<_>>();
+    data(bars([bar(points).with_name("Page Views").with_color(color)]).data_labels(None))
         .x_axis(|axis| {
-            axis.show_line(false)
+            axis.with_kind(axis::Kind::Time)
+                .show_line(false)
                 .show_grid(false)
-                .with_ticks([0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 29.0])
+                .labels(|seconds: f64| {
+                    format!("Apr {}", ((seconds - APRIL) / 86_400.0).round() as i32 + 1)
+                })
         })
         .y_axis(|axis| axis.none().show_grid(true))
+        .x_axis_bounds(APRIL - 43_200.0, APRIL + 29.5 * 86_400.0)
+        .tooltip(
+            hyozu::Tooltip::default()
+                .tracking_line(false)
+                .category_band(hyozu::Color::contrast(color!(0xf5f5f5), color!(0x262626))),
+        )
 }
 
-fn tooltip<'a>(entry: &hover::Entry<'_>) -> hover::Annotation<'a, Message, Theme> {
-    let index = match entry {
-        hover::Entry::Cartesian { point_idx, .. } => *point_idx,
-        _ => 0,
+fn anatomy<'a>(compact: bool) -> Element<'a, Message, Theme> {
+    let [first, second, third, fourth, _] = theme::chart::COLORS;
+    let panel = |content: Slot<'a, Message>| {
+        container(content)
+            .width(224)
+            .height(137)
+            .center_x(224)
+            .center_y(137)
     };
-    let index = index.min(LABELS.len() - 1);
-    let item = |name, value: f32, color: Color| {
+    let label = panel(
         row![
-            container(space::horizontal()).width(8).height(8).class(
-                theme::container::Transparent + Bg::from(icedcn::Color::from(color)) + radius(2)
-            ),
-            text::muted(name).size(12).width(Fill),
-            text::small(value.to_string()).medium(),
+            text("Label").size(14).medium(),
+            icon::arrow_right(),
+            chart::tooltip([("Desktop", 186, first), ("Mobile", 80, second)])
+                .label("Page Views")
+                .font("Geist Mono")
+                .width(128),
         ]
         .spacing(8)
         .align_y(iced::Center)
-    };
-    hover::Annotation::new(Element::from(
-        container(
-            column![
-                text::small(LABELS[index]).medium(),
-                item("Desktop", DESKTOP[index], BLUE),
-                item("Mobile", MOBILE[index], LIGHT_BLUE),
-            ]
-            .spacing(6),
-        )
-        .width(160)
-        .padding(10)
-        .class(theme::container::Card + radius(8)),
-    ))
-    .padding(0)
+        .into(),
+    );
+    let name = panel(
+        column![
+            row![text("Name").size(14).medium(), icon::arrow_down()].spacing(8),
+            chart::tooltip([("Chrome", 1286, third), ("Firefox", 1000, fourth)])
+                .label("Browser")
+                .hide_label(true)
+                .indicator(tooltip::Dashed)
+                .font("Geist Mono")
+                .width(128),
+        ]
+        .spacing(8)
+        .into(),
+    );
+    let line = panel(
+        chart::tooltip([("Desktop", 12486, third)])
+            .label("Page Views")
+            .indicator(tooltip::Line)
+            .font("Geist Mono")
+            .width(144)
+            .into(),
+    );
+    let indicator = panel(
+        column![
+            chart::tooltip([("Chrome", 1286, first)])
+                .label("Browser")
+                .hide_label(true)
+                .font("Geist Mono")
+                .width(128),
+            row![icon::arrow_up(), text("Indicator").size(14).medium()].spacing(8),
+        ]
+        .spacing(8)
+        .into(),
+    );
+    if compact {
+        column![label, name, indicator].into()
+    } else {
+        column![row![label, name], row![line, indicator]].into()
+    }
 }
 
 pub struct ChartPage {
     state: page::State,
     monthly: [Data; 5],
     daily: [Data; 2],
+    window_width: f32,
 }
 
 impl ChartPage {
@@ -232,14 +319,32 @@ impl ChartPage {
                 monthly()
                     .y_axis(|axis| axis.show_grid(true))
                     .x_axis(|axis| axis.show_labels(true))
-                    .show_tooltip(true),
+                    .tooltip(
+                        hyozu::Tooltip::default()
+                            .tracking_line(false)
+                            .category_band(hyozu::Color::contrast(
+                                color!(0xf5f5f5),
+                                color!(0x262626),
+                            )),
+                    ),
                 monthly()
                     .y_axis(|axis| axis.show_grid(true))
                     .x_axis(|axis| axis.show_labels(true))
-                    .show_tooltip(true)
+                    .tooltip(
+                        hyozu::Tooltip::default()
+                            .tracking_line(false)
+                            .category_band(hyozu::Color::contrast(
+                                color!(0xf5f5f5),
+                                color!(0x262626),
+                            )),
+                    )
                     .legend(legend::Config::below().size(12).interactive(true)),
             ],
-            daily: [daily(DESKTOP_DAILY, BLUE), daily(MOBILE_DAILY, LIGHT_BLUE)],
+            daily: [
+                daily(DESKTOP_DAILY, hyozu::Color::Secondary),
+                daily(MOBILE_DAILY, hyozu::Color::Primary),
+            ],
+            window_width: 1440.0,
         })
     }
 }
@@ -273,24 +378,53 @@ impl page::Page for ChartPage {
         self.state.reset_volatile();
     }
 
-    fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
-        match id {
-            "demo" => component(Visitors {
+    fn window_width(&mut self, width: f32) {
+        self.window_width = width;
+    }
+
+    fn preview(&self, id: &str) -> Element<'_, Message, Theme> {
+        self.themed_preview(id, &Theme::default())
+    }
+
+    fn themed_preview(&self, id: &str, theme: &Theme) -> Element<'_, Message, Theme> {
+        if id == "demo" {
+            return component(Visitors {
                 series: &self.daily,
+                theme: theme.clone(),
+                compact: self.window_width < 640.0,
             })
-            .boxed()
-            .into(),
-            "example" => chart(&self.monthly[0]).height(200).padding(0).boxed(),
-            "example-grid" => chart(&self.monthly[1]).height(200).padding(0).boxed(),
-            "example-axis" => chart(&self.monthly[2]).height(200).padding(0).boxed(),
-            "example-tooltip" => chart(&self.monthly[3]).height(200).padding(0).boxed(),
-            "example-legend" => chart(&self.monthly[4]).height(200).padding(0).boxed(),
-            "tooltip" => chart(&self.monthly[3])
-                .height(200)
-                .padding(0)
-                .hover(tooltip)
-                .boxed(),
+            .boxed();
+        }
+        if id == "tooltip" {
+            return anatomy(self.window_width < 768.0);
+        }
+        let index = match id {
+            "example" => 0,
+            "example-grid" => 1,
+            "example-axis" => 2,
+            "example-tooltip" => 3,
+            "example-legend" => 4,
             _ => unreachable!("unknown chart preview id: {id}"),
+        };
+        let chart = chart(&self.monthly[index])
+            .height(200)
+            .padding(0)
+            .style(chart::transparent)
+            .design(Cow::<Theme>::Owned(theme.clone()));
+        if index >= 3 {
+            chart
+                .hover_group(theme.clone(), |group| {
+                    hover::Annotation::new(Element::from(
+                        chart::tooltip(group.entries.iter())
+                            .label(&group.label)
+                            .font("Geist Mono"),
+                    ))
+                    .transparent()
+                    .padding(0)
+                })
+                .boxed()
+        } else {
+            chart.boxed()
         }
     }
 }

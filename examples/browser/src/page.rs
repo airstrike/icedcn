@@ -24,6 +24,7 @@ use iced::{Background, Fill, Font, Pixels, Subscription, Task};
 
 use icedcn::Size::{Lg, Sm};
 use icedcn::core::{Border, Radius};
+use icedcn::FontFamily;
 use icedcn::theme::container::{
     Style, code_block, code_block_panel, code_fade_overlay, transparent,
 };
@@ -828,19 +829,37 @@ impl SnippetViewer {
     /// recomputes both whenever the user toggles light/dark, mirroring
     /// the existing `Map` rebuild path.
     pub fn new(map: markdown::highlighter::Map, theme: &Theme) -> Self {
-        Self {
+        let mut viewer = Self {
             map,
             code_theme_id: Id::unique(),
             theme: theme.clone(),
             style: inline_style_from_theme(theme, font::BODY.into()),
-        }
+        };
+        viewer.set_font(font::BODY.into());
+        viewer
     }
 
     pub(crate) fn set_font(&mut self, body: Font) {
         self.style.font = body;
+        self.theme = Theme::new(self.theme.design().clone().with_font_sans(FontFamily {
+            regular: body,
+            medium: body.weight(Weight::Medium.into()),
+            semibold: body.weight(Weight::Semibold.into()),
+            bold: body.weight(Weight::Bold.into()),
+        }));
+    }
+
+    pub(crate) fn theme(&self) -> &Theme {
+        &self.theme
     }
 
     pub(crate) fn set_theme(&mut self, map: markdown::highlighter::Map, theme: Theme) {
+        let theme = Theme::new(
+            theme
+                .design()
+                .clone()
+                .with_font_sans(self.theme.font_sans.clone()),
+        );
         self.style = inline_style_from_theme(&theme, self.style.font);
         self.theme = theme;
         self.map = map;

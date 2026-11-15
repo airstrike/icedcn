@@ -220,6 +220,10 @@ impl App {
         self.dark_mode
     }
 
+    pub(crate) fn theme(&self) -> Theme {
+        self.snippet_viewer.theme().clone()
+    }
+
     pub fn subscription(&self) -> Subscription<Message> {
         let i = self.current_page;
         let page = match self.pages.get(i).filter(|_| !self.showing_examples) {

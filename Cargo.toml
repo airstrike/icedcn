@@ -49,7 +49,7 @@ rust-version = "1.85"
 icedcn = { path = "." }
 icedcn_core = { path = "./core" }
 icedcn_widget = { path = "./widget" }
-hyozu = { git = "https://github.com/airstrike/hyozu", rev = "6fcc098" }
+hyozu = { git = "https://github.com/airstrike/hyozu", rev = "f98d3374b3d80b79fc2ff4c94ddf43db50a5671b" }
 
 iced = "0.15.0-dev"
 iced_core = "0.15.0-dev"

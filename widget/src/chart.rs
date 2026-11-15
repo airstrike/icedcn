@@ -4,8 +4,11 @@
 //! The data, marks, interaction, layout and rendering are Hyozu's native API.
 
 pub use hyozu;
-pub use hyozu::chart::{Chart, chart, donut, hover};
+pub use hyozu::chart::{Chart, chart, donut, hover, transparent};
 pub use hyozu::{Data, axis, bar, bars, data, legend};
+
+pub mod tooltip;
+pub use tooltip::{Tooltip, tooltip};
 
 use iced_core::{Element, Widget};
 use iced_widget::Renderer;

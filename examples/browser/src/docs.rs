@@ -38,6 +38,9 @@ pub fn theme(dark: bool) -> Theme {
 mod tests {
     use super::theme;
     use crate::{Browser, Message};
+    use crate::{font, fonts};
+    use icedcn::FontFamily;
+    use icedcn::widget::chart::hyozu::Design;
     use icedcn::{Color, Theme};
 
     #[test]
@@ -92,11 +95,33 @@ mod tests {
     #[test]
     fn browser_keeps_the_docs_palette_across_repeated_theme_toggles() {
         let (mut browser, _) = Browser::new();
+        // The same loaded font is sent to the renderer and the preview design.
+        let selected = "Courier New";
+        let _ = browser.app.update(Message::FontSelected(selected.into()));
+        let _ = browser.app.update(Message::Font(fonts::Message::Loaded(
+            selected.into(),
+            Ok(()),
+        )));
         for _ in 0..4 {
             let dark = browser.app.is_dark();
-            assert_eq!(browser.theme(), theme(dark));
-            let _ = browser.update(Message::ToggleTheme);
-            assert_eq!(browser.theme(), theme(!dark));
+            let expected = |dark| {
+                Theme::new(
+                    theme(dark)
+                        .design()
+                        .clone()
+                        .with_font_sans(FontFamily::from_name(selected)),
+                )
+            };
+            assert_eq!(browser.theme(), expected(dark));
+            assert_eq!(browser.theme().font(), selected.into());
+            let _ = browser.app.update(Message::ToggleTheme);
+            assert_eq!(browser.theme(), expected(!dark));
         }
+    }
+
+    #[test]
+    fn browser_initial_chart_design_uses_the_body_font() {
+        let (browser, _) = Browser::new();
+        assert_eq!(browser.theme().font(), font::BODY.into());
     }
 }
