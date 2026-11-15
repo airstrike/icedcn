@@ -10,6 +10,7 @@ use icedcn::theme::container::Style;
 use icedcn::theme::text::Muted;
 use icedcn::widget::{Slot, button, column, container, dropdown_menu, menu, row, scrollable, text};
 
+use crate::customize::Target;
 use crate::{Message, Mode, State, customize, icon};
 
 /// The customizer keeps its neutral dark appearance independently of the preview.
@@ -33,27 +34,9 @@ pub fn view(state: &State, viewport_width: f32) -> iced::Element<'_, Message, Th
         ]),
         field_separator(),
         group([
-            picker(
-                "Base Color",
-                state.settings.base,
-                customize::BASES,
-                Mark::Swatch(state.settings.base),
-                Message::SetBase
-            ),
-            picker(
-                "Theme",
-                state.settings.accent,
-                customize::ACCENTS,
-                Mark::Swatch(state.settings.accent),
-                Message::SetAccent
-            ),
-            picker(
-                "Chart Color",
-                state.settings.chart,
-                customize::ACCENTS,
-                Mark::Swatch(state.settings.chart),
-                Message::SetChart
-            ),
+            color_picker(state, Target::Base),
+            color_picker(state, Target::Accent),
+            color_picker(state, Target::Chart),
         ]),
         field_separator(),
         group([
@@ -250,6 +233,46 @@ fn picker(
     .into()
 }
 
+fn color_picker(state: &State, target: Target) -> Slot<'static, Message> {
+    let (label, selected, on_change): (_, _, fn(String) -> Message) = match target {
+        Target::Base => ("Base Color", state.settings.base, Message::SetBase),
+        Target::Accent => ("Theme", state.settings.accent, Message::SetAccent),
+        Target::Chart => ("Chart Color", state.settings.chart, Message::SetChart),
+    };
+    let choices = if target == Target::Base {
+        customize::BASES.to_vec()
+    } else {
+        state.settings.colors()
+    };
+    dropdown_menu(
+        move |menu| menu.trigger(trigger(label, selected, Mark::Swatch(selected))),
+        move |_| {
+            column::Column::with_children(choices.iter().map(|value| {
+                menu::radio_item(option(*value), *value, Some(selected), |value| {
+                    on_change(value.to_owned())
+                })
+                .on_focus(Message::Preview(Some((target, *value))))
+                .into()
+            }))
+            .padding(2)
+            .width(Fill)
+            .into()
+        },
+    )
+    .on_open_change(|open| {
+        if open {
+            Message::Noop
+        } else {
+            Message::Preview(None)
+        }
+    })
+    .side(dropdown_menu::Side::Right)
+    .side_offset(20)
+    .align(dropdown_menu::Align::Start)
+    .width(208)
+    .into()
+}
+
 fn fixed(label: &str, value: &str, mark: Mark) -> Slot<'static, Message> {
     container(field_content(label, value, mark))
         .width(Fill)
@@ -370,12 +393,10 @@ fn divider() -> Slot<'static, Message> {
 }
 
 fn swatch(name: &str) -> Color {
-    match name {
-        "Neutral" => oklch(0.708, 0.0, 0.0),
-        "Slate" => oklch(0.704, 0.04, 256.788),
-        "Stone" => oklch(0.709, 0.01, 56.259),
-        "Zinc" => oklch(0.705, 0.015, 286.067),
-        _ => customize::accent(name, true),
+    if customize::BASES.contains(&name) {
+        customize::base(name).color()
+    } else {
+        customize::accent(name, true)
     }
 }
 

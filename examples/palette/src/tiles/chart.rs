@@ -15,10 +15,12 @@ use crate::{Message, State};
 pub fn data() -> Data {
     chart::data(
         bars([
-            bar([186, 305, 237, 73, 209, 214]).with_name("Desktop"),
+            bar([186, 305, 237, 73, 209, 214])
+                .with_name("Desktop")
+                .with_color(hyozu::Color::Secondary),
             bar([80, 200, 120, 190, 130, 140])
                 .with_name("Mobile")
-                .with_color(hyozu::Color::Secondary),
+                .with_color(hyozu::Color::Primary),
         ])
         .data_labels(None),
     )

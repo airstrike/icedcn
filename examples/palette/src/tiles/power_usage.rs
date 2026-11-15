@@ -3,7 +3,7 @@
 use std::borrow::Cow;
 
 use iced::{Fill, Padding};
-use icedcn::widget::chart::{Data, bar, bars};
+use icedcn::widget::chart::{Data, bar, bars, hyozu};
 use icedcn::widget::{chart, column, row, text};
 use icedcn::{Theme, card};
 
@@ -12,7 +12,10 @@ use crate::{Message, State};
 /// Daily consumption in kilowatt-hours.
 pub fn data() -> Data {
     chart::data(
-        bars([bar([12.4, 10.8, 14.2, 9.6, 11.3, 8.9, 13.5]).with_name("Usage")]).data_labels(None),
+        bars([bar([12.4, 10.8, 14.2, 9.6, 11.3, 8.9, 13.5])
+            .with_name("Usage")
+            .with_color(hyozu::Color::Secondary)])
+        .data_labels(None),
     )
     .x_axis_labels(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
     .x_axis(|axis| axis.show_line(false).show_grid(false))

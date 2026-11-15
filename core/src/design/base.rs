@@ -1,61 +1,418 @@
-//! Surface color families for a design.
+//! Surface color families used by the Create theme builder.
 
-use super::Design;
-use crate::Color;
+use super::{Accent, Design, surface_palette, tinted_palette};
+use crate::{Color, oklch, oklch_alpha};
 
-/// A neutral surface palette; lightness and transparency follow the design mode.
+/// A surface palette; mode determines its light and dark token values.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum Base {
     #[default]
     Neutral,
-    Slate,
     Stone,
     Zinc,
+    Mauve,
+    Olive,
+    Mist,
+    Taupe,
+    /// The original slate surface tint, retained for existing designs.
+    Slate,
 }
 
 impl Base {
+    /// The dark-mode swatch used by palette pickers.
+    pub fn color(self) -> Color {
+        match self {
+            Self::Neutral => oklch(0.708, 0.0, 0.0),
+            Self::Stone => oklch(0.709, 0.01, 56.259),
+            Self::Zinc => oklch(0.705, 0.015, 286.067),
+            Self::Mauve => oklch(0.711, 0.019, 323.02),
+            Self::Olive => oklch(0.737, 0.021, 106.9),
+            Self::Mist => oklch(0.723, 0.014, 214.4),
+            Self::Taupe => oklch(0.714, 0.014, 41.2),
+            Self::Slate => oklch(0.704, 0.04, 256.788),
+        }
+    }
+
     pub(super) fn apply(self, design: &mut Design) {
-        let (chroma, hue) = match self {
-            Self::Slate => (0.016, 260.0),
-            Self::Stone => (0.008, 75.0),
-            Self::Zinc => (0.005, 285.0),
-            Self::Neutral => (0.0, 0.0),
-        };
-        let tint = |color: &mut Color| {
-            if color.l > 0.02 && color.l < 0.99 && color.a == 1.0 {
-                color.c = chroma;
-                color.h = hue;
+        if self == Self::Slate {
+            let tint = |color: &mut Color| {
+                if color.l > 0.02 && color.l < 0.99 && color.a == 1.0 {
+                    color.c = 0.016;
+                    color.h = 260.0;
+                }
+            };
+            for palette in [
+                &mut design.neutral,
+                &mut design.secondary,
+                &mut design.muted,
+                &mut design.accent,
+                &mut design.card,
+                &mut design.popover,
+                &mut design.code,
+            ] {
+                for color in [
+                    &mut palette.base,
+                    &mut palette.foreground,
+                    &mut palette.border,
+                    &mut palette.ring,
+                    &mut palette.tint_text,
+                ] {
+                    tint(color);
+                }
             }
-        };
-        for palette in [
-            &mut design.neutral,
-            &mut design.secondary,
-            &mut design.muted,
-            &mut design.accent,
-            &mut design.card,
-            &mut design.popover,
-            &mut design.code,
-        ] {
             for color in [
-                &mut palette.base,
-                &mut palette.foreground,
-                &mut palette.border,
-                &mut palette.ring,
-                &mut palette.tint_text,
+                &mut design.input,
+                &mut design.sidebar.background,
+                &mut design.sidebar.foreground,
+                &mut design.sidebar.border,
+                &mut design.sidebar.ring,
+                &mut design.sidebar.accent.base,
+                &mut design.sidebar.accent.foreground,
             ] {
                 tint(color);
             }
+            return;
         }
-        for color in [
-            &mut design.input,
-            &mut design.sidebar.background,
-            &mut design.sidebar.foreground,
-            &mut design.sidebar.border,
-            &mut design.sidebar.ring,
-            &mut design.sidebar.accent.base,
-            &mut design.sidebar.accent.foreground,
-        ] {
-            tint(color);
-        }
+        let dark = design.neutral.is_dark;
+        let [
+            background,
+            foreground,
+            card,
+            card_text,
+            popover,
+            popover_text,
+            muted,
+            muted_text,
+            accent,
+            accent_text,
+            border,
+            input,
+            ring,
+            sidebar,
+            sidebar_text,
+            sidebar_accent,
+            sidebar_accent_text,
+            sidebar_border,
+            sidebar_ring,
+        ] = match (self, dark) {
+            (Self::Neutral, false) => [
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.145, 0.0, 0.0),
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.145, 0.0, 0.0),
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.145, 0.0, 0.0),
+                oklch(0.97, 0.0, 0.0),
+                oklch(0.556, 0.0, 0.0),
+                oklch(0.97, 0.0, 0.0),
+                oklch(0.205, 0.0, 0.0),
+                oklch(0.922, 0.0, 0.0),
+                oklch(0.922, 0.0, 0.0),
+                oklch(0.708, 0.0, 0.0),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.145, 0.0, 0.0),
+                oklch(0.97, 0.0, 0.0),
+                oklch(0.205, 0.0, 0.0),
+                oklch(0.922, 0.0, 0.0),
+                oklch(0.708, 0.0, 0.0),
+            ],
+            (Self::Neutral, true) => [
+                oklch(0.145, 0.0, 0.0),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.205, 0.0, 0.0),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.205, 0.0, 0.0),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.269, 0.0, 0.0),
+                oklch(0.708, 0.0, 0.0),
+                oklch(0.269, 0.0, 0.0),
+                oklch(0.985, 0.0, 0.0),
+                oklch_alpha(1.0, 0.0, 0.0, 0.1),
+                oklch_alpha(1.0, 0.0, 0.0, 0.15),
+                oklch(0.556, 0.0, 0.0),
+                oklch(0.205, 0.0, 0.0),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.269, 0.0, 0.0),
+                oklch(0.985, 0.0, 0.0),
+                oklch_alpha(1.0, 0.0, 0.0, 0.1),
+                oklch(0.556, 0.0, 0.0),
+            ],
+            (Self::Stone, false) => [
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.147, 0.004, 49.25),
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.147, 0.004, 49.25),
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.147, 0.004, 49.25),
+                oklch(0.97, 0.001, 106.424),
+                oklch(0.553, 0.013, 58.071),
+                oklch(0.97, 0.001, 106.424),
+                oklch(0.216, 0.006, 56.043),
+                oklch(0.923, 0.003, 48.717),
+                oklch(0.923, 0.003, 48.717),
+                oklch(0.709, 0.01, 56.259),
+                oklch(0.985, 0.001, 106.423),
+                oklch(0.147, 0.004, 49.25),
+                oklch(0.97, 0.001, 106.424),
+                oklch(0.216, 0.006, 56.043),
+                oklch(0.923, 0.003, 48.717),
+                oklch(0.709, 0.01, 56.259),
+            ],
+            (Self::Stone, true) => [
+                oklch(0.147, 0.004, 49.25),
+                oklch(0.985, 0.001, 106.423),
+                oklch(0.216, 0.006, 56.043),
+                oklch(0.985, 0.001, 106.423),
+                oklch(0.216, 0.006, 56.043),
+                oklch(0.985, 0.001, 106.423),
+                oklch(0.268, 0.007, 34.298),
+                oklch(0.709, 0.01, 56.259),
+                oklch(0.268, 0.007, 34.298),
+                oklch(0.985, 0.001, 106.423),
+                oklch_alpha(1.0, 0.0, 0.0, 0.1),
+                oklch_alpha(1.0, 0.0, 0.0, 0.15),
+                oklch(0.553, 0.013, 58.071),
+                oklch(0.216, 0.006, 56.043),
+                oklch(0.985, 0.001, 106.423),
+                oklch(0.268, 0.007, 34.298),
+                oklch(0.985, 0.001, 106.423),
+                oklch_alpha(1.0, 0.0, 0.0, 0.1),
+                oklch(0.553, 0.013, 58.071),
+            ],
+            (Self::Zinc, false) => [
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.141, 0.005, 285.823),
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.141, 0.005, 285.823),
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.141, 0.005, 285.823),
+                oklch(0.967, 0.001, 286.375),
+                oklch(0.552, 0.016, 285.938),
+                oklch(0.967, 0.001, 286.375),
+                oklch(0.21, 0.006, 285.885),
+                oklch(0.92, 0.004, 286.32),
+                oklch(0.92, 0.004, 286.32),
+                oklch(0.705, 0.015, 286.067),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.141, 0.005, 285.823),
+                oklch(0.967, 0.001, 286.375),
+                oklch(0.21, 0.006, 285.885),
+                oklch(0.92, 0.004, 286.32),
+                oklch(0.705, 0.015, 286.067),
+            ],
+            (Self::Zinc, true) => [
+                oklch(0.141, 0.005, 285.823),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.21, 0.006, 285.885),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.21, 0.006, 285.885),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.274, 0.006, 286.033),
+                oklch(0.705, 0.015, 286.067),
+                oklch(0.274, 0.006, 286.033),
+                oklch(0.985, 0.0, 0.0),
+                oklch_alpha(1.0, 0.0, 0.0, 0.1),
+                oklch_alpha(1.0, 0.0, 0.0, 0.15),
+                oklch(0.552, 0.016, 285.938),
+                oklch(0.21, 0.006, 285.885),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.274, 0.006, 286.033),
+                oklch(0.985, 0.0, 0.0),
+                oklch_alpha(1.0, 0.0, 0.0, 0.1),
+                oklch(0.552, 0.016, 285.938),
+            ],
+            (Self::Mauve, false) => [
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.145, 0.008, 326.0),
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.145, 0.008, 326.0),
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.145, 0.008, 326.0),
+                oklch(0.96, 0.003, 325.6),
+                oklch(0.542, 0.034, 322.5),
+                oklch(0.96, 0.003, 325.6),
+                oklch(0.212, 0.019, 322.12),
+                oklch(0.922, 0.005, 325.62),
+                oklch(0.922, 0.005, 325.62),
+                oklch(0.711, 0.019, 323.02),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.145, 0.008, 326.0),
+                oklch(0.96, 0.003, 325.6),
+                oklch(0.212, 0.019, 322.12),
+                oklch(0.922, 0.005, 325.62),
+                oklch(0.711, 0.019, 323.02),
+            ],
+            (Self::Mauve, true) => [
+                oklch(0.145, 0.008, 326.0),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.212, 0.019, 322.12),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.212, 0.019, 322.12),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.263, 0.024, 320.12),
+                oklch(0.711, 0.019, 323.02),
+                oklch(0.263, 0.024, 320.12),
+                oklch(0.985, 0.0, 0.0),
+                oklch_alpha(1.0, 0.0, 0.0, 0.1),
+                oklch_alpha(1.0, 0.0, 0.0, 0.15),
+                oklch(0.542, 0.034, 322.5),
+                oklch(0.212, 0.019, 322.12),
+                oklch(0.985, 0.0, 0.0),
+                oklch(0.263, 0.024, 320.12),
+                oklch(0.985, 0.0, 0.0),
+                oklch_alpha(1.0, 0.0, 0.0, 0.1),
+                oklch(0.542, 0.034, 322.5),
+            ],
+            (Self::Olive, false) => [
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.153, 0.006, 107.1),
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.153, 0.006, 107.1),
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.153, 0.006, 107.1),
+                oklch(0.966, 0.005, 106.5),
+                oklch(0.58, 0.031, 107.3),
+                oklch(0.966, 0.005, 106.5),
+                oklch(0.228, 0.013, 107.4),
+                oklch(0.93, 0.007, 106.5),
+                oklch(0.93, 0.007, 106.5),
+                oklch(0.737, 0.021, 106.9),
+                oklch(0.988, 0.003, 106.5),
+                oklch(0.153, 0.006, 107.1),
+                oklch(0.966, 0.005, 106.5),
+                oklch(0.228, 0.013, 107.4),
+                oklch(0.93, 0.007, 106.5),
+                oklch(0.737, 0.021, 106.9),
+            ],
+            (Self::Olive, true) => [
+                oklch(0.153, 0.006, 107.1),
+                oklch(0.988, 0.003, 106.5),
+                oklch(0.228, 0.013, 107.4),
+                oklch(0.988, 0.003, 106.5),
+                oklch(0.228, 0.013, 107.4),
+                oklch(0.988, 0.003, 106.5),
+                oklch(0.286, 0.016, 107.4),
+                oklch(0.737, 0.021, 106.9),
+                oklch(0.286, 0.016, 107.4),
+                oklch(0.988, 0.003, 106.5),
+                oklch_alpha(1.0, 0.0, 0.0, 0.1),
+                oklch_alpha(1.0, 0.0, 0.0, 0.15),
+                oklch(0.58, 0.031, 107.3),
+                oklch(0.228, 0.013, 107.4),
+                oklch(0.988, 0.003, 106.5),
+                oklch(0.286, 0.016, 107.4),
+                oklch(0.988, 0.003, 106.5),
+                oklch_alpha(1.0, 0.0, 0.0, 0.1),
+                oklch(0.58, 0.031, 107.3),
+            ],
+            (Self::Mist, false) => [
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.148, 0.004, 228.8),
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.148, 0.004, 228.8),
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.148, 0.004, 228.8),
+                oklch(0.963, 0.002, 197.1),
+                oklch(0.56, 0.021, 213.5),
+                oklch(0.963, 0.002, 197.1),
+                oklch(0.218, 0.008, 223.9),
+                oklch(0.925, 0.005, 214.3),
+                oklch(0.925, 0.005, 214.3),
+                oklch(0.723, 0.014, 214.4),
+                oklch(0.987, 0.002, 197.1),
+                oklch(0.148, 0.004, 228.8),
+                oklch(0.963, 0.002, 197.1),
+                oklch(0.218, 0.008, 223.9),
+                oklch(0.925, 0.005, 214.3),
+                oklch(0.723, 0.014, 214.4),
+            ],
+            (Self::Mist, true) => [
+                oklch(0.148, 0.004, 228.8),
+                oklch(0.987, 0.002, 197.1),
+                oklch(0.218, 0.008, 223.9),
+                oklch(0.987, 0.002, 197.1),
+                oklch(0.218, 0.008, 223.9),
+                oklch(0.987, 0.002, 197.1),
+                oklch(0.275, 0.011, 216.9),
+                oklch(0.723, 0.014, 214.4),
+                oklch(0.275, 0.011, 216.9),
+                oklch(0.987, 0.002, 197.1),
+                oklch_alpha(1.0, 0.0, 0.0, 0.1),
+                oklch_alpha(1.0, 0.0, 0.0, 0.15),
+                oklch(0.56, 0.021, 213.5),
+                oklch(0.218, 0.008, 223.9),
+                oklch(0.987, 0.002, 197.1),
+                oklch(0.275, 0.011, 216.9),
+                oklch(0.987, 0.002, 197.1),
+                oklch_alpha(1.0, 0.0, 0.0, 0.1),
+                oklch(0.56, 0.021, 213.5),
+            ],
+            (Self::Taupe, false) => [
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.147, 0.004, 49.3),
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.147, 0.004, 49.3),
+                oklch(1.0, 0.0, 0.0),
+                oklch(0.147, 0.004, 49.3),
+                oklch(0.96, 0.002, 17.2),
+                oklch(0.547, 0.021, 43.1),
+                oklch(0.96, 0.002, 17.2),
+                oklch(0.214, 0.009, 43.1),
+                oklch(0.922, 0.005, 34.3),
+                oklch(0.922, 0.005, 34.3),
+                oklch(0.714, 0.014, 41.2),
+                oklch(0.986, 0.002, 67.8),
+                oklch(0.147, 0.004, 49.3),
+                oklch(0.96, 0.002, 17.2),
+                oklch(0.214, 0.009, 43.1),
+                oklch(0.922, 0.005, 34.3),
+                oklch(0.714, 0.014, 41.2),
+            ],
+            (Self::Taupe, true) => [
+                oklch(0.147, 0.004, 49.3),
+                oklch(0.986, 0.002, 67.8),
+                oklch(0.214, 0.009, 43.1),
+                oklch(0.986, 0.002, 67.8),
+                oklch(0.214, 0.009, 43.1),
+                oklch(0.986, 0.002, 67.8),
+                oklch(0.268, 0.011, 36.5),
+                oklch(0.714, 0.014, 41.2),
+                oklch(0.268, 0.011, 36.5),
+                oklch(0.986, 0.002, 67.8),
+                oklch_alpha(1.0, 0.0, 0.0, 0.1),
+                oklch_alpha(1.0, 0.0, 0.0, 0.15),
+                oklch(0.547, 0.021, 43.1),
+                oklch(0.214, 0.009, 43.1),
+                oklch(0.986, 0.002, 67.8),
+                oklch(0.268, 0.011, 36.5),
+                oklch(0.986, 0.002, 67.8),
+                oklch_alpha(1.0, 0.0, 0.0, 0.1),
+                oklch(0.547, 0.021, 43.1),
+            ],
+            (Self::Slate, _) => return,
+        };
+        design.neutral = surface_palette(background, foreground, border, ring, dark);
+        design.card = surface_palette(card, card_text, border, ring, dark);
+        design.popover = surface_palette(popover, popover_text, border, ring, dark);
+        design.muted = tinted_palette(muted, muted_text, dark);
+        design.accent = tinted_palette(accent, accent_text, dark);
+        design.input = input;
+        design.sidebar.background = sidebar;
+        design.sidebar.foreground = sidebar_text;
+        design.sidebar.accent.base = sidebar_accent;
+        design.sidebar.accent.foreground = sidebar_accent_text;
+        design.sidebar.border = sidebar_border;
+        design.sidebar.ring = sidebar_ring;
+        let accent = match self {
+            Self::Neutral => Accent::Neutral,
+            Self::Stone => Accent::Stone,
+            Self::Zinc => Accent::Zinc,
+            Self::Mauve => Accent::Mauve,
+            Self::Olive => Accent::Olive,
+            Self::Mist => Accent::Mist,
+            Self::Taupe => Accent::Taupe,
+            Self::Slate => return,
+        };
+        accent.apply(design);
     }
 }

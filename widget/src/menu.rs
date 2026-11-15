@@ -48,6 +48,7 @@ pub struct Item<'a, Message> {
     content: Slot<'a, Message>,
     shortcut: Option<&'a str>,
     on_select: Option<Message>,
+    on_focus: Option<Message>,
     disabled: bool,
     inset: bool,
     highlighted: bool,
@@ -73,6 +74,7 @@ pub fn item<'a, Message>(content: impl Into<Slot<'a, Message>>) -> Item<'a, Mess
         content: content.into(),
         shortcut: None,
         on_select: None,
+        on_focus: None,
         disabled: false,
         inset: false,
         highlighted: false,
@@ -127,6 +129,13 @@ impl<'a, Message> Item<'a, Message> {
         self
     }
 
+    /// Publish when pointer or keyboard navigation highlights this item.
+    /// Menu focus is separate from selection; use this for reversible previews.
+    pub fn on_focus(mut self, message: Message) -> Self {
+        self.on_focus = Some(message);
+        self
+    }
+
     /// Disable the item: it dims and ignores the pointer.
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
@@ -174,6 +183,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
             mut content,
             shortcut,
             on_select,
+            on_focus,
             disabled,
             inset,
             highlighted,
@@ -244,13 +254,16 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
                 item::style(theme, status.into(), variant).into()
             });
 
-        let button = Button::new(Slot::from(line).compose())
+        let mut button = Button::new(Slot::from(line).compose())
             .padding(padding)
             .width(Fill)
             .translate(false)
             .disabled(disabled)
             .on_press_maybe(on_select)
             .style(style);
+        if let Some(message) = on_focus {
+            button = button.on_focus(message);
+        }
 
         if closes {
             marker::marker(button.boxed(), Signal::Close, Press::Captured).into()

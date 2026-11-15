@@ -9,14 +9,27 @@ use icedcn::core::{Color, Design};
 use crate::Mode;
 
 /// Supported surface palettes.
-pub const BASES: &[&str] = &["Neutral", "Slate", "Stone", "Zinc"];
-/// Supported primary and chart accents.
-pub const ACCENTS: &[&str] = &["Neutral", "Blue", "Violet", "Green", "Rose", "Orange"];
-/// Sidebar selection treatments.
+pub const BASES: &[&str] = &[
+    "Neutral", "Stone", "Zinc", "Mauve", "Olive", "Mist", "Taupe", "Slate",
+];
+/// Registered colorful families. The selected base color is also offered in each picker.
+pub const ACCENTS: &[&str] = &[
+    "Neutral", "Amber", "Blue", "Cyan", "Emerald", "Fuchsia", "Green", "Indigo", "Lime", "Orange",
+    "Pink", "Purple", "Red", "Rose", "Sky", "Teal", "Violet", "Yellow",
+];
+/// Highlighted menu item treatments.
 pub const MENUS: &[&str] = &["Subtle", "Bold"];
 
 /// Appearance policies offered by the Create builder.
 pub const APPEARANCES: &[&str] = &["System preference", "Always light", "Always dark"];
+
+/// The color family being previewed by an open picker.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Target {
+    Base,
+    Accent,
+    Chart,
+}
 
 /// How a design responds to the host's current appearance.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -70,6 +83,46 @@ impl Default for Settings {
 }
 
 impl Settings {
+    /// Color choices available for this base, in the same order as Create's registry.
+    pub fn colors(&self) -> Vec<&'static str> {
+        let base = if self.base == "Slate" {
+            "Neutral"
+        } else {
+            self.base
+        };
+        std::iter::once(base)
+            .chain(ACCENTS.iter().copied().skip(1))
+            .collect()
+    }
+
+    /// Change the base while keeping its neutral accent and chart selections in step.
+    pub fn set_base(&mut self, value: &'static str) {
+        let previous = if self.base == "Slate" {
+            "Neutral"
+        } else {
+            self.base
+        };
+        let neutral = if value == "Slate" { "Neutral" } else { value };
+        if self.accent == previous {
+            self.accent = neutral;
+        }
+        if self.chart == previous {
+            self.chart = neutral;
+        }
+        self.base = value;
+    }
+
+    /// Apply a transient picker choice to a copy; committed settings stay unchanged.
+    pub fn preview(&self, target: Target, value: &'static str) -> Self {
+        let mut preview = self.clone();
+        match target {
+            Target::Base => preview.set_base(value),
+            Target::Accent => preview.accent = value,
+            Target::Chart => preview.chart = value,
+        }
+        preview
+    }
+
     /// Build the live design without mutating the host application's font defaults.
     pub fn theme(&self, mode: Mode) -> Theme {
         let design = Design::from(theme::Mode::from(self.appearance.resolve(mode)));
@@ -146,22 +199,45 @@ pub fn accent(name: &str, dark: bool) -> Color {
     preset(name).color(dark)
 }
 
-fn base(name: &str) -> Base {
+/// Resolve a named surface family for the picker swatch.
+pub fn base(name: &str) -> Base {
     match name {
-        "Slate" => Base::Slate,
         "Stone" => Base::Stone,
         "Zinc" => Base::Zinc,
+        "Mauve" => Base::Mauve,
+        "Olive" => Base::Olive,
+        "Mist" => Base::Mist,
+        "Taupe" => Base::Taupe,
+        "Slate" => Base::Slate,
         _ => Base::Neutral,
     }
 }
 
 fn preset(name: &str) -> Accent {
     match name {
+        "Stone" => Accent::Stone,
+        "Zinc" => Accent::Zinc,
+        "Mauve" => Accent::Mauve,
+        "Olive" => Accent::Olive,
+        "Mist" => Accent::Mist,
+        "Taupe" => Accent::Taupe,
+        "Amber" => Accent::Amber,
         "Blue" => Accent::Blue,
-        "Violet" => Accent::Violet,
+        "Cyan" => Accent::Cyan,
+        "Emerald" => Accent::Emerald,
+        "Fuchsia" => Accent::Fuchsia,
         "Green" => Accent::Green,
-        "Rose" => Accent::Rose,
+        "Indigo" => Accent::Indigo,
+        "Lime" => Accent::Lime,
         "Orange" => Accent::Orange,
+        "Pink" => Accent::Pink,
+        "Purple" => Accent::Purple,
+        "Red" => Accent::Red,
+        "Rose" => Accent::Rose,
+        "Sky" => Accent::Sky,
+        "Teal" => Accent::Teal,
+        "Violet" => Accent::Violet,
+        "Yellow" => Accent::Yellow,
         _ => Accent::Neutral,
     }
 }
@@ -231,11 +307,40 @@ mod tests {
                     let theme = settings.theme(mode);
                     assert_eq!(theme.seed.background, theme.neutral.base.into());
                     assert_eq!(theme.seed.primary, theme.primary.base.into());
-                    assert_eq!(theme.sidebar.accent.base, theme.primary.base);
-                    assert_eq!(theme.sidebar.accent.foreground, theme.primary.foreground);
+                    assert_eq!(theme.accent.base, theme.primary.base);
+                    assert_eq!(theme.accent.foreground, theme.primary.foreground);
                     assert_eq!(theme.primary.is_dark, mode == Mode::Dark);
                 }
             }
+        }
+    }
+
+    #[test]
+    fn base_choices_keep_neutral_selections_available_without_changing_colorful_choices() {
+        for base in BASES {
+            let mut settings = Settings::default();
+            settings.set_base(base);
+            let choices = settings.colors();
+            assert_eq!(choices.len(), 18);
+            assert_eq!(settings.accent, choices[0]);
+            assert_eq!(settings.chart, choices[0]);
+            for color in &choices {
+                let settings = Settings {
+                    accent: color,
+                    chart: color,
+                    ..settings.clone()
+                };
+                for mode in [Mode::Light, Mode::Dark] {
+                    let theme = settings.theme(mode);
+                    assert_eq!(theme.primary.base, preset(color).color(mode == Mode::Dark));
+                    assert_eq!(theme.chart, preset(color).chart());
+                }
+            }
+            settings.accent = "Cyan";
+            settings.chart = "Fuchsia";
+            settings.set_base("Taupe");
+            assert_eq!(settings.accent, "Cyan");
+            assert_eq!(settings.chart, "Fuchsia");
         }
     }
 

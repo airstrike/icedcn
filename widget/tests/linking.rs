@@ -1096,3 +1096,40 @@ fn an_inner_context_menu_wins_a_long_press() {
     ]);
     assert_eq!(ui.drain().collect::<Vec<_>>(), [Message::Inner]);
 }
+
+#[test]
+fn menu_focus_previews_pointer_and_keyboard_navigation_without_selection() {
+    let element: Element<'_, Message, Theme, Renderer> = dropdown_menu(
+        |menu| menu.trigger(button(block(40.0, 20.0))),
+        |_| {
+            column![
+                menu::item(block(60.0, 20.0))
+                    .on_focus(Message::Panel("first"))
+                    .on_select(Message::Inner),
+                menu::item(block(60.0, 20.0))
+                    .on_focus(Message::Panel("disabled"))
+                    .disabled(true),
+                menu::item(block(60.0, 20.0))
+                    .on_focus(Message::Panel("last"))
+                    .on_select(Message::Pressed),
+            ]
+            .into()
+        },
+    )
+    .align(dropdown_menu::Align::Start)
+    .default_open(true)
+    .on_open_change(Message::Open)
+    .into();
+    let mut ui = simulator(element);
+    hover(&mut ui, 50.0, 54.0);
+    let _ = ui.simulate([
+        simulator::press_key(Named::ArrowDown, None),
+        Event::Window(window::Event::RedrawRequested(Instant::now())),
+    ]);
+    assert_eq!(
+        ui.drain().collect::<Vec<_>>(),
+        [Message::Panel("first"), Message::Panel("last")]
+    );
+    let _ = ui.simulate([simulator::press_key(Named::Escape, None)]);
+    assert_eq!(ui.drain().collect::<Vec<_>>(), [Message::Open(false)]);
+}

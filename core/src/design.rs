@@ -265,31 +265,15 @@ impl Design {
         self
     }
 
-    /// Apply a neutral surface family without changing accent or chart colors.
+    /// Apply a surface family and its neutral control colors; chart colors stay independent.
     pub fn with_base(mut self, base: Base) -> Self {
         base.apply(&mut self);
         self
     }
 
-    /// Apply an accent to controls, focus rings and sidebar primary colors.
+    /// Apply a registered accent to controls and sidebar primary colors.
     pub fn with_accent(mut self, accent: Accent) -> Self {
-        let dark = self.neutral.is_dark;
-        if accent != Accent::Neutral {
-            let base = accent.color(dark);
-            self.primary.base = base;
-            self.primary.foreground = if dark {
-                oklch(0.145, 0.0, 0.0)
-            } else {
-                Color::WHITE
-            };
-            self.primary.border = base;
-            self.primary.ring = base.alpha(0.5);
-            self.primary.tint_text = base;
-            self.neutral.ring = base;
-            self.sidebar.primary.base = base;
-            self.sidebar.primary.foreground = self.primary.foreground;
-            self.sidebar.ring = base;
-        }
+        accent.apply(&mut self);
         self
     }
 
@@ -299,10 +283,9 @@ impl Design {
         self
     }
 
-    /// Use primary colors for selected sidebar items.
+    /// Use primary colors for highlighted menu items.
     pub fn with_menu_accent(mut self) -> Self {
-        self.sidebar.accent.base = self.primary.base;
-        self.sidebar.accent.foreground = self.primary.foreground;
+        self.accent = self.primary;
         self
     }
 
@@ -442,6 +425,7 @@ mod tests {
             let surface = design.with_base(Base::Slate);
             assert_eq!(surface.chart, initial_chart);
             assert_eq!(surface.muted.base.c, 0.016);
+            let sidebar_accent = surface.sidebar.accent;
             let font = Font::from("Selected Font").style(font::Style::Italic);
             let theme: Theme = surface
                 .with_name("Custom")
@@ -452,8 +436,9 @@ mod tests {
                 .into();
             assert_eq!(theme.primary.base, Accent::Violet.color(dark));
             assert_eq!(theme.chart, Accent::Green.chart());
-            assert_eq!(theme.sidebar.accent.base, theme.primary.base);
-            assert_eq!(theme.sidebar.accent.foreground, theme.primary.foreground);
+            assert_eq!(theme.sidebar.accent, sidebar_accent);
+            assert_eq!(theme.accent.base, theme.primary.base);
+            assert_eq!(theme.accent.foreground, theme.primary.foreground);
             assert_eq!(theme.font_sans.regular, font);
             assert_eq!(theme.font_sans.bold, font.weight(font::Weight::Bold));
             assert_eq!(theme.seed.background, theme.neutral.base.into());

@@ -112,6 +112,7 @@ pub enum Message {
     SetBase(String),
     SetAccent(String),
     SetChart(String),
+    Preview(Option<(customize::Target, &'static str)>),
     SetMenu(String),
     ChooseFont,
     SetFont(iced::Font),
@@ -156,6 +157,7 @@ pub struct State {
     pub deploying: bool,
     pub qr_connect: Option<qr_code::Data>,
     pub settings: customize::Settings,
+    preview: Option<(customize::Target, &'static str)>,
     pub host_font_picker: bool,
     pub controls_open: bool,
     pub code_open: bool,
@@ -211,6 +213,7 @@ impl State {
             deploying: false,
             qr_connect: qr_code::Data::new("https://ledger.app/connect/jd-4829").ok(),
             settings: customize::Settings::default(),
+            preview: None,
             host_font_picker: false,
             controls_open: false,
             code_open: false,
@@ -257,18 +260,29 @@ impl State {
                     self.settings.appearance = appearance;
                 }
             }
+            Message::Preview(preview) => self.preview = preview,
             Message::SetBase(value) => {
                 if let Some(value) = customize::BASES.iter().find(|name| **name == value) {
-                    self.settings.base = value;
+                    self.settings.set_base(value);
                 }
             }
             Message::SetAccent(value) => {
-                if let Some(value) = customize::ACCENTS.iter().find(|name| **name == value) {
+                if let Some(value) = self
+                    .settings
+                    .colors()
+                    .into_iter()
+                    .find(|name| *name == value)
+                {
                     self.settings.accent = value;
                 }
             }
             Message::SetChart(value) => {
-                if let Some(value) = customize::ACCENTS.iter().find(|name| **name == value) {
+                if let Some(value) = self
+                    .settings
+                    .colors()
+                    .into_iter()
+                    .find(|name| *name == value)
+                {
                     self.settings.chart = value;
                 }
             }
@@ -286,7 +300,8 @@ impl State {
             }
             Message::NextPreset => {
                 self.preset = (self.preset + 1) % 5;
-                self.settings.base = customize::BASES[self.preset % customize::BASES.len()];
+                self.settings
+                    .set_base(customize::BASES[self.preset % customize::BASES.len()]);
                 self.settings.accent = customize::ACCENTS[self.preset + 1];
                 self.settings.chart = self.settings.accent;
                 self.settings.menu = customize::MENUS[self.preset % 2];
@@ -343,6 +358,7 @@ impl State {
             Message::ChooseFont | Message::Noop => {}
         }
         if design_changed {
+            self.preview = None;
             self.refresh();
         }
         Task::none()
@@ -368,7 +384,11 @@ impl State {
 
     /// The current design for the host to apply while Create is visible.
     pub fn theme(&self) -> Theme {
-        self.settings.theme(self.mode)
+        if let Some((target, value)) = self.preview {
+            self.settings.preview(target, value).theme(self.mode)
+        } else {
+            self.settings.theme(self.mode)
+        }
     }
 
     pub fn view(&self) -> iced::Element<'_, Message, Theme> {
@@ -614,6 +634,72 @@ mod chart_tests {
         assert!(state.theme().neutral.is_dark);
         let _ = state.update(Message::SetAppearance("System preference".into()));
         assert!(!state.theme().neutral.is_dark);
+    }
+
+    #[test]
+    fn color_previews_restore_on_close_and_commit_only_on_selection() {
+        use super::customize::Target;
+
+        let mut state = State::with_mode(Mode::Light);
+        let settings = state.settings.clone();
+        let code = state.code.clone();
+        let data = state.contributions.marks().as_ptr();
+        for (target, value) in [
+            (Target::Base, "Mauve"),
+            (Target::Accent, "Cyan"),
+            (Target::Chart, "Blue"),
+        ] {
+            let _ = state.update(Message::Preview(Some((target, value))));
+            assert_eq!(state.settings, settings);
+            assert_eq!(state.code, code);
+            assert_eq!(
+                state.theme(),
+                settings.preview(target, value).theme(state.mode)
+            );
+            let _ = state.update(Message::Preview(None));
+            assert_eq!(state.theme(), settings.theme(state.mode));
+        }
+        let _ = state.update(Message::Preview(Some((Target::Chart, "Blue"))));
+        let _ = state.update(Message::SetChart("Blue".into()));
+        let _ = state.update(Message::Preview(None));
+        assert_eq!(state.settings.chart, "Blue");
+        assert!(state.code.contains(".with_chart(Accent::Blue)"));
+        assert_eq!(state.contributions.marks().as_ptr(), data);
+    }
+
+    #[test]
+    fn preview_card_bars_use_chart_two_in_both_appearances() {
+        use hyozu::data::mark::Mark;
+        use icedcn::widget::chart::hyozu::{self, Design as _};
+
+        let mut state = State::with_mode(Mode::Light);
+        let _ = state.update(Message::SetChart("Blue".into()));
+        for mode in [Mode::Light, Mode::Dark] {
+            let theme = state.settings.theme(mode);
+            for data in [
+                &state.contributions,
+                &state.power,
+                &state.dividends,
+                &state.spending,
+            ] {
+                let Mark::Bars(bars) = &data.marks()[0] else {
+                    panic!("bar fixture")
+                };
+                let series = &bars.all_series()[0];
+                let color = series
+                    .resolved_color_at(0, &theme.seed(), None, hyozu::Color::Primary)
+                    .resolve(
+                        theme.background_color(),
+                        theme.text_pair(),
+                        &theme.seed(),
+                        None,
+                    );
+                assert_eq!(color, theme.chart[1].into());
+                for (actual, expected) in color.into_rgba8().into_iter().zip([43, 127, 255, 255]) {
+                    assert!(actual.abs_diff(expected) <= 1);
+                }
+            }
+        }
     }
 
     #[test]

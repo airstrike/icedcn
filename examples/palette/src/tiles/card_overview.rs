@@ -3,7 +3,7 @@
 use std::borrow::Cow;
 
 use iced::{Fill, Padding};
-use icedcn::widget::chart::{Data, bar, bars};
+use icedcn::widget::chart::{Data, bar, bars, hyozu};
 use icedcn::widget::{chart, column, progress, row, text};
 use icedcn::{Theme, card};
 
@@ -12,7 +12,10 @@ use crate::{Message, State};
 /// Daily card spending for the last seven days.
 pub fn data() -> Data {
     chart::data(
-        bars([bar([128, 220, 165, 310, 196, 145, 240]).with_name("Spending")]).data_labels(None),
+        bars([bar([128, 220, 165, 310, 196, 145, 240])
+            .with_name("Spending")
+            .with_color(hyozu::Color::Secondary)])
+        .data_labels(None),
     )
     .x_axis_labels(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
     .x_axis(|axis| axis.show_line(false).show_grid(false))

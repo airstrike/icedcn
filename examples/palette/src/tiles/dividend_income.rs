@@ -3,7 +3,7 @@
 use std::borrow::Cow;
 
 use iced::{Fill, Padding};
-use icedcn::widget::chart::{Data, bar, bars};
+use icedcn::widget::chart::{Data, bar, bars, hyozu};
 use icedcn::widget::{chart, column, text};
 use icedcn::{Theme, card};
 
@@ -11,11 +11,16 @@ use crate::{Message, State};
 
 /// Monthly payouts for the quarter.
 pub fn data() -> Data {
-    chart::data(bars([bar([245, 312, 386]).with_name("Dividends")]).data_labels(None))
-        .x_axis_labels(["Apr", "May", "Jun"])
-        .x_axis(|axis| axis.show_line(false).show_grid(false))
-        .y_axis(|axis| axis.none().show_grid(true))
-        .value_format(|value| format!("${value:.2}"))
+    chart::data(
+        bars([bar([245, 312, 386])
+            .with_name("Dividends")
+            .with_color(hyozu::Color::Secondary)])
+        .data_labels(None),
+    )
+    .x_axis_labels(["Apr", "May", "Jun"])
+    .x_axis(|axis| axis.show_line(false).show_grid(false))
+    .y_axis(|axis| axis.none().show_grid(true))
+    .value_format(|value| format!("${value:.2}"))
 }
 
 pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
