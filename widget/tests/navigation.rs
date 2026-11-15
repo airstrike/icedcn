@@ -198,6 +198,27 @@ fn tabs_skip_disabled_triggers_and_activate_on_vertical_arrows() {
 }
 
 #[test]
+fn a_captured_outside_press_clears_a_later_buttons_focus() {
+    let content = column![
+        button("First").width(80).height(24),
+        button("Next")
+            .width(80)
+            .height(24)
+            .on_press(Message::Pressed),
+        button("Last").width(80).height(24),
+    ];
+    let mut ui = simulator(Element::from(content));
+    for y in [60., 12.] {
+        ui.point_at(Point::new(8., y));
+        ui.simulate(simulator::click());
+    }
+    assert_eq!(focus(&mut ui).focused, Some(0));
+    focus_next(&mut ui);
+    ui.tap_key(Named::Enter);
+    assert_eq!(ui.into_messages().collect::<Vec<_>>(), [Message::Pressed]);
+}
+
+#[test]
 fn radio_group_enters_at_selection_skips_disabled_wraps_and_tabs_out() {
     use icedcn_widget::radio_group;
 

@@ -534,7 +534,16 @@ where
         );
 
         if shell.is_event_captured() {
-            return;
+            // A sibling can claim this press before a previously focused button
+            // sees it. The outside press must still clear that button's focus.
+            let outside_press = matches!(
+                event,
+                Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left))
+                    | Event::Touch(touch::Event::FingerPressed { .. })
+            ) && !cursor.is_over(layout.bounds());
+            if !outside_press {
+                return;
+            }
         }
 
         // Detect focus changes from operations (e.g., Tab key)
