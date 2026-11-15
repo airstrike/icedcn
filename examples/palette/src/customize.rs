@@ -349,6 +349,7 @@ mod tests {
     fn export_escapes_font_names_and_omits_unchanged_palette_fields() {
         let settings = Settings {
             font: Font::from("Custom \"Font\""),
+            chart: "Blue",
             ..Default::default()
         };
         let source = settings.source(Mode::Dark);
