@@ -39,7 +39,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "multiple",
         title: "Multiple",
         description: Some(
-            "Use `.mode(accordion::Mode::Multiple)` to keep several items open at once.",
+            "Use `.multiple()` to keep several items open at once.",
         ),
         snippet: "examples/browser/snippets/accordion-multiple.md",
     },
@@ -83,15 +83,16 @@ impl AccordionPage {
 }
 
 fn build_accordion<'a>(
-    open: &[&'a str],
-    items: impl IntoIterator<Item = (&'a str, &'a str, &'a str, bool)>,
+    open: Option<usize>,
+    items: impl IntoIterator<Item = (&'a str, &'a str, bool)>,
 ) -> accordion::Accordion<'a, Message> {
-    accordion(items.into_iter().map(|(id, trigger, body, disabled)| {
-        accordion::item(id, trigger)
-            .content(body)
-            .disabled(disabled)
-    }))
-    .default_value(open.iter().copied())
+    let view = accordion(items.into_iter().map(|(trigger, body, disabled)| {
+        accordion::item(trigger, body).disabled(disabled)
+    }));
+    match open {
+        Some(index) => view.default_value(index),
+        None => view,
+    }
 }
 
 impl page::Page for AccordionPage {
@@ -159,22 +160,22 @@ impl page::Page for AccordionPage {
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
             "demo" => container(build_accordion(
-                &["shipping"],
+                Some(0),
                 [
                     (
-                        "shipping",
+
                         "What are your shipping options?",
                         "We offer standard (5-7 days), express (2-3 days), and overnight shipping. Free shipping on international orders.",
                         false,
                     ),
                     (
-                        "returns",
+
                         "What is your return policy?",
                         "Returns accepted within 30 days. Items must be unused and in original packaging. Refunds processed within 5-7 business days.",
                         false,
                     ),
                     (
-                        "support",
+
                         "How can I contact customer support?",
                         "Reach us via email, live chat, or phone. We respond within 24 hours during business days.",
                         false,
@@ -185,22 +186,22 @@ impl page::Page for AccordionPage {
             .into(),
 
             "basic" => container(build_accordion(
-                &["item-1"],
+                Some(0),
                 [
                     (
-                        "item-1",
+
                         "How do I reset my password?",
                         "Click on 'Forgot Password' on the login page, enter your email address, and we'll send you a link to reset your password. The link will expire in 24 hours.",
                         false,
                     ),
                     (
-                        "item-2",
+
                         "Can I change my subscription plan?",
                         "Yes, you can upgrade or downgrade your plan at any time from your account settings. Changes will be reflected in your next billing cycle.",
                         false,
                     ),
                     (
-                        "item-3",
+
                         "What payment methods do you accept?",
                         "We accept all major credit cards, PayPal, and bank transfers. All payments are processed securely through our payment partners.",
                         false,
@@ -211,48 +212,48 @@ impl page::Page for AccordionPage {
             .into(),
 
             "multiple" => container(build_accordion(
-                &["notifications"],
+                Some(0),
                 [
                     (
-                        "notifications",
+
                         "Notification Settings",
                         "Manage how you receive notifications. You can enable email alerts for updates or push notifications for mobile devices.",
                         false,
                     ),
                     (
-                        "privacy",
+
                         "Privacy & Security",
                         "Control your privacy settings and security preferences. Enable two-factor authentication, manage connected devices, review active sessions, and configure data sharing preferences. You can also download your data or delete your account.",
                         false,
                     ),
                     (
-                        "billing",
+
                         "Billing & Subscription",
                         "View your current plan, payment history, and upcoming invoices. Update your payment method, change your subscription tier, or cancel your subscription.",
                         false,
                     ),
                 ],
-            ).mode(accordion::Mode::Multiple))
+            ).multiple())
             .width(Fill.max(512))
             .into(),
 
             "disabled" => container(build_accordion(
-                &[],
+                None,
                 [
                     (
-                        "item-1",
+
                         "Can I access my account history?",
                         "Yes, you can view your complete account history including all transactions, plan changes, and support tickets in the Account History section of your dashboard.",
                         false,
                     ),
                     (
-                        "item-2",
+
                         "Premium feature information",
                         "This section contains information about premium features. Upgrade your plan to access this content.",
                         true,
                     ),
                     (
-                        "item-3",
+
                         "How do I update my email address?",
                         "You can update your email address in your account settings. You'll receive a verification email at your new address to confirm the change.",
                         false,
@@ -265,25 +266,25 @@ impl page::Page for AccordionPage {
             "borders" => {
                 let items = [
                     (
-                        "billing",
+
                         "How does billing work?",
                         "We offer monthly and annual subscription plans. Billing is charged at the beginning of each cycle, and you can cancel anytime. All plans include automatic backups, 24/7 support, and unlimited team members.",
                     ),
                     (
-                        "security",
+
                         "Is my data secure?",
                         "Yes. We use end-to-end encryption, SOC 2 Type II compliance, and regular third-party security audits. All data is encrypted at rest and in transit using industry-standard protocols.",
                     ),
                     (
-                        "integration",
+
                         "What integrations do you support?",
                         "We integrate with 500+ popular tools including Slack, Zapier, Salesforce, HubSpot, and more. You can also build custom integrations using our REST API and webhooks.",
                     ),
                 ];
-                let inner = accordion(items.into_iter().map(|(id, trigger, body)| {
-                    accordion::item(id, trigger).content(body).inset(16.0)
+                let inner = accordion(items.into_iter().map(|(trigger, body)| {
+                    accordion::item(trigger, body).inset(16.0)
                 }))
-                .default_value(["billing"]);
+                .default_value(0);
 
                 container(inner)
                     .width(Fill.max(512))
@@ -302,22 +303,22 @@ impl page::Page for AccordionPage {
 
             "card" => {
                 let inner = build_accordion(
-                    &["plans"],
+                    Some(0),
                     [
                         (
-                            "plans",
+
                             "What subscription plans do you offer?",
                             "We offer three subscription tiers: Starter ($9/month), Professional ($29/month), and Enterprise ($99/month). Each plan includes increasing storage limits, API access, priority support, and team collaboration features.",
                             false,
                         ),
                         (
-                            "billing",
+
                             "How does billing work?",
                             "Billing occurs automatically at the start of each billing cycle. We accept all major credit cards, PayPal, and ACH transfers for enterprise customers. You'll receive an invoice via email after each payment.",
                             false,
                         ),
                         (
-                            "cancel",
+
                             "How do I cancel my subscription?",
                             "You can cancel your subscription anytime from your account settings. There are no cancellation fees or penalties. Your access will continue until the end of your current billing period.",
                             false,

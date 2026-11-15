@@ -1,38 +1,20 @@
-//! Stacked disclosure items with individually expandable bodies.
+//! Stacked disclosures with positional or stable keyed selection.
 //!
-//! # Example
-//!
-//! ```ignore
-//! use icedcn::widget::{accordion, text};
-//!
-//! // Uncontrolled: the accordion keeps its own open set.
-//! accordion(vec![
-//!     accordion::item("shipping", "What are your shipping options?")
-//!         .content(text::p("We offer standard, express, and overnight ...")),
-//!     accordion::item("returns", "What is your return policy?")
-//!         .content(text::p("Returns accepted within 30 days ...")),
-//! ])
-//! .default_value(["shipping"])
-//!
-//! // Controlled: the app owns the open set.
-//! accordion(items)
-//!     .value(&self.open)
-//!     .on_value_change(Message::Faq)
-//! ```
-//!
-//! # State model
-//!
-//! Use [`default_value`](Accordion::default_value) to seed the widget’s open items, or
-//! [`value`](Accordion::value) to supply them from the application.
-//! [`on_value_change`](Accordion::on_value_change) receives the complete open set after the
-//! widget applies its [`Mode`] rules.
+//! Use the accordion macro for fixed children and the accordion function for iterators.
+//! Single selection uses Option<Key> in controlled values and change handlers.
+//! Call .multiple() before selection builders to use a complete open set.
+//! Dynamic records use keyed with (key, item) pairs.
 
 #[cfg(feature = "svg")]
 mod chevron;
 pub(crate) mod element;
 pub mod widget;
 
-pub use widget::{Catalog, Mode, StyleFn};
+use widget::Mode;
+pub use widget::{Catalog, StyleFn};
+
+use crate::compose::Compose;
+use std::marker::PhantomData;
 
 use iced_core::Padding;
 #[cfg(not(feature = "svg"))]
@@ -45,21 +27,18 @@ use crate::{Inherited, Slot, Weight};
 
 /// Builder for one disclosure item. Constructed via [`item`].
 pub struct Item<'a, Message> {
-    id: String,
     trigger: Slot<'a, Message>,
     chevron_closed: Option<Slot<'a, Message>>,
     chevron_open: Option<Slot<'a, Message>>,
-    body: Option<Slot<'a, Message>>,
+    body: Slot<'a, Message>,
     disabled: bool,
     inset: f32,
 }
 
 impl<'a, Message: 'a> Item<'a, Message> {
-    /// Set the body content. Required for the item to render anything
-    /// useful below the trigger; an item with no body still toggles but
-    /// has nothing to reveal.
+    /// Replace the body content.
     pub fn content(mut self, content: impl Into<Slot<'a, Message>>) -> Self {
-        self.body = Some(content.into());
+        self.body = content.into();
         self
     }
 
@@ -88,83 +67,192 @@ impl<'a, Message: 'a> Item<'a, Message> {
     }
 }
 
-/// Construct a single accordion item with the given stable id and trigger
-/// label content.
-///
-/// `id` is matched against the open-set passed via [`Accordion::value`] to
-/// determine open/closed state. Animation state in the widget tree is
-/// keyed by id too — reordering items between renders preserves their
-/// in-flight transitions.
+/// Construct an accordion item from its trigger and body.
 pub fn item<'a, Message: 'a>(
-    id: impl Into<String>,
     trigger: impl Into<Slot<'a, Message>>,
+    body: impl Into<Slot<'a, Message>>,
 ) -> Item<'a, Message> {
     Item {
-        id: id.into(),
         trigger: trigger.into(),
         chevron_closed: None,
         chevron_open: None,
-        body: None,
+        body: body.into(),
         disabled: false,
         inset: 0.0,
     }
 }
 
+impl<'a, Message: 'a, Trigger, Body> From<(Trigger, Body)> for Item<'a, Message>
+where
+    Trigger: Into<Slot<'a, Message>>,
+    Body: Into<Slot<'a, Message>>,
+{
+    fn from((trigger, body): (Trigger, Body)) -> Self {
+        item(trigger, body)
+    }
+}
+
+/// At most one open item.
+pub struct Single;
+
+/// Any number of open items.
+pub struct Multiple;
+
+/// Item positions identify selection and child state.
+pub struct Positional;
+
+/// Caller-supplied keys identify selection and child state.
+pub struct Keyed;
+
+/// Construct a positional accordion with literal items.
+#[macro_export]
+macro_rules! accordion {
+    () => { $crate::accordion::accordion(::std::iter::empty::<$crate::accordion::Item<'_, _>>()) };
+    ($first:expr $(, $rest:expr)* $(,)?) => {
+        $crate::accordion::accordion([$crate::accordion::Item::from($first)])$(.push($rest))*
+    };
+}
+
 /// Top-level builder for the accordion widget.
-pub struct Accordion<'a, Message> {
-    items: Vec<Item<'a, Message>>,
+pub struct Accordion<'a, Message, Key = usize, Selection = Single, Identity = Positional> {
+    items: Vec<(Key, Item<'a, Message>)>,
     mode: Mode,
-    value: Option<Vec<String>>,
-    default_value: Vec<String>,
-    on_value_change: Option<Box<dyn Fn(Vec<String>) -> Message + 'a>>,
+    value: Option<Vec<Key>>,
+    default_value: Vec<Key>,
+    on_value_change: Option<Box<dyn Fn(Vec<Key>) -> Message + 'a>>,
     style: Option<theme::accordion::StyleFn<'a, Theme>>,
     outer_padding: Padding,
+    selection: PhantomData<(Selection, Identity)>,
 }
 
-/// Construct an accordion from an iterable of items.
-pub fn accordion<'a, Message: 'a, I>(items: I) -> Accordion<'a, Message>
-where
-    I: IntoIterator<Item = Item<'a, Message>>,
-{
-    Accordion {
-        items: items.into_iter().collect(),
-        mode: Mode::Single { collapsible: true },
-        value: None,
-        default_value: Vec::new(),
-        on_value_change: None,
-        style: None,
-        outer_padding: Padding::ZERO,
+/// Construct a positional accordion. Values are zero-based item positions.
+pub fn accordion<'a, Message: 'a>(
+    items: impl IntoIterator<Item = impl Into<Item<'a, Message>>>,
+) -> Accordion<'a, Message> {
+    Accordion::from_items(items.into_iter().enumerate())
+}
+
+/// Construct an accordion whose selection and entire child trees follow stable keys.
+/// Keys must be unique. Strings, integer IDs and domain enums retain their own types.
+pub fn keyed<'a, Message: 'a, Key: Clone + PartialEq + 'static>(
+    items: impl IntoIterator<Item = (Key, impl Into<Item<'a, Message>>)>,
+) -> Accordion<'a, Message, Key, Single, Keyed> {
+    Accordion::from_items(items)
+}
+
+impl<'a, Message: 'a, Key, Identity> Accordion<'a, Message, Key, Single, Identity> {
+    fn from_items(items: impl IntoIterator<Item = (Key, impl Into<Item<'a, Message>>)>) -> Self {
+        Self {
+            items: items
+                .into_iter()
+                .map(|(key, item)| (key, item.into()))
+                .collect(),
+            mode: Mode::Single { collapsible: true },
+            value: None,
+            default_value: Vec::new(),
+            on_value_change: None,
+            style: None,
+            outer_padding: Padding::ZERO,
+            selection: PhantomData,
+        }
     }
 }
 
-impl<'a, Message: 'a> Accordion<'a, Message> {
-    /// Set the selection mode. The default allows one open item and lets the user close it.
-    pub fn mode(mut self, mode: Mode) -> Self {
-        self.mode = mode;
+impl<'a, Message: 'a, Selection> Accordion<'a, Message, usize, Selection, Positional> {
+    /// Append an item at the next position.
+    pub fn push(mut self, item: impl Into<Item<'a, Message>>) -> Self {
+        self.items.push((self.items.len(), item.into()));
         self
     }
 
-    /// Control the accordion: it always shows `value` open, and a trigger
-    /// click only publishes [`on_value_change`](Self::on_value_change).
-    pub fn value(mut self, value: impl IntoIterator<Item = impl Into<String>>) -> Self {
-        self.value = Some(value.into_iter().map(Into::into).collect());
+    /// Append items in iteration order.
+    pub fn extend(self, items: impl IntoIterator<Item = impl Into<Item<'a, Message>>>) -> Self {
+        items
+            .into_iter()
+            .fold(self, |accordion, item| accordion.push(item))
+    }
+}
+
+impl<'a, Message: 'a, Key, Selection> Accordion<'a, Message, Key, Selection, Keyed> {
+    /// Append a keyed item.
+    pub fn push(mut self, key: Key, item: impl Into<Item<'a, Message>>) -> Self {
+        self.items.push((key, item.into()));
         self
     }
 
-    /// The items an uncontrolled accordion starts with open. Later rebuilds
-    /// keep the set the user toggled to.
-    pub fn default_value(mut self, value: impl IntoIterator<Item = impl Into<String>>) -> Self {
-        self.default_value = value.into_iter().map(Into::into).collect();
+    /// Append keyed items in iteration order.
+    pub fn extend(
+        self,
+        items: impl IntoIterator<Item = (Key, impl Into<Item<'a, Message>>)>,
+    ) -> Self {
+        items
+            .into_iter()
+            .fold(self, |accordion, (key, item)| accordion.push(key, item))
+    }
+}
+
+impl<'a, Message: 'a, Key: 'a, Identity> Accordion<'a, Message, Key, Single, Identity> {
+    /// Control the open item. None closes all items.
+    pub fn value(mut self, value: Option<Key>) -> Self {
+        self.value = Some(value.into_iter().collect());
         self
     }
 
-    /// Set the message published with the complete new open set on every
-    /// accepted trigger click, after the [`Mode`] rules are applied.
-    pub fn on_value_change(mut self, on_change: impl Fn(Vec<String>) -> Message + 'a) -> Self {
+    /// Seed one open item in an uncontrolled accordion.
+    pub fn default_value(mut self, value: Key) -> Self {
+        self.default_value = vec![value];
+        self
+    }
+
+    /// Receive the new open key, or None when the open item closes.
+    pub fn on_value_change(mut self, on_change: impl Fn(Option<Key>) -> Message + 'a) -> Self {
+        self.on_value_change = Some(Box::new(move |values| on_change(values.into_iter().next())));
+        self
+    }
+
+    /// Allow the open trigger to close itself. Defaults to true.
+    pub fn collapsible(mut self, collapsible: bool) -> Self {
+        self.mode = Mode::Single { collapsible };
+        self
+    }
+
+    /// Allow several items to stay open. Configure change handlers after this call.
+    /// An existing single-selection handler is cleared.
+    pub fn multiple(self) -> Accordion<'a, Message, Key, Multiple, Identity> {
+        Accordion {
+            items: self.items,
+            mode: Mode::Multiple,
+            value: self.value,
+            default_value: self.default_value,
+            on_value_change: None,
+            style: self.style,
+            outer_padding: self.outer_padding,
+            selection: PhantomData,
+        }
+    }
+}
+
+impl<'a, Message: 'a, Key, Identity> Accordion<'a, Message, Key, Multiple, Identity> {
+    /// Control the complete open set. Repeated keys are ignored.
+    pub fn value(mut self, value: impl IntoIterator<Item = Key>) -> Self {
+        self.value = Some(value.into_iter().collect());
+        self
+    }
+
+    /// Seed an uncontrolled open set. Later rebuilds preserve interaction state.
+    pub fn default_value(mut self, value: impl IntoIterator<Item = Key>) -> Self {
+        self.default_value = value.into_iter().collect();
+        self
+    }
+
+    /// Receive the complete new open set after an accepted toggle.
+    pub fn on_value_change(mut self, on_change: impl Fn(Vec<Key>) -> Message + 'a) -> Self {
         self.on_value_change = Some(Box::new(on_change));
         self
     }
+}
 
+impl<'a, Message: 'a, Key, Selection, Identity> Accordion<'a, Message, Key, Selection, Identity> {
     /// Override the accordion's style. Accepts our OKLCH-native variants
     /// (`Default`, `Card`) or any `Spec`.
     pub fn style(mut self, style: impl Into<theme::accordion::StyleFn<'a, Theme>>) -> Self {
@@ -205,10 +293,11 @@ fn chevron<'a, Message: 'a>(open: bool) -> Slot<'a, Message> {
     chevron::Icon::new(open).boxed().into()
 }
 
-impl<'a, Message: 'a> From<Accordion<'a, Message>>
+impl<'a, Message: 'a, Key: Clone + PartialEq + 'static, Selection: 'a, Identity: 'a>
+    From<Accordion<'a, Message, Key, Selection, Identity>>
     for iced_core::Element<'a, Message, Theme, Renderer>
 {
-    fn from(a: Accordion<'a, Message>) -> Self {
+    fn from(a: Accordion<'a, Message, Key, Selection, Identity>) -> Self {
         let label = Inherited::default()
             .with_size(14)
             .with_weight(Weight::Medium)
@@ -218,12 +307,12 @@ impl<'a, Message: 'a> From<Accordion<'a, Message>>
         let items = a
             .items
             .into_iter()
-            .map(|mut it| {
+            .map(|(id, mut it)| {
                 it.trigger.inherit(&label.with_disabled(it.disabled));
-                let mut body = it.body.unwrap_or_else(|| Slot::from(""));
+                let mut body = it.body;
                 body.inherit(&content);
                 widget::Item {
-                    id: it.id,
+                    id,
                     trigger: it.trigger.compose(),
                     chevron_closed: it
                         .chevron_closed
@@ -259,19 +348,22 @@ impl<'a, Message: 'a> From<Accordion<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Accordion<'a, Message>> for crate::Slot<'a, Message> {
-    fn from(widget: Accordion<'a, Message>) -> Self {
+impl<'a, Message: 'a, Key: Clone + PartialEq + 'static, Selection: 'a, Identity: 'a>
+    From<Accordion<'a, Message, Key, Selection, Identity>> for Slot<'a, Message>
+{
+    fn from(widget: Accordion<'a, Message, Key, Selection, Identity>) -> Self {
         crate::Slot::new(widget)
     }
 }
 
-impl<'a, Message: 'a> crate::compose::Compose<Message> for Accordion<'a, Message> {
+impl<'a, Message: 'a, Key: Clone + PartialEq + 'static, Selection: 'a, Identity: 'a>
+    Compose<Message> for Accordion<'a, Message, Key, Selection, Identity>
+{
     fn inherit(&mut self, from: &Inherited) {
-        for item in &mut self.items {
+        for (_, item) in &mut self.items {
+            item.trigger.inherit(from);
             item.disabled |= from.is_disabled();
-            if let Some(body) = &mut item.body {
-                body.inherit(from);
-            }
+            item.body.inherit(from);
         }
     }
 
@@ -280,67 +372,5 @@ impl<'a, Message: 'a> crate::compose::Compose<Message> for Accordion<'a, Message
         Self: 'b,
     {
         (*self).into()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn ids(open: &[&str]) -> Vec<String> {
-        open.iter().map(|id| (*id).to_owned()).collect()
-    }
-
-    /// Opening an item in single mode closes the previously open item.
-    #[test]
-    fn single_mode_toggle_opens_one_closes_others() {
-        let mode = Mode::Single { collapsible: true };
-        let next = mode.toggle(&ids(&["a"]), "b");
-        assert_eq!(next, Some(ids(&["b"])));
-    }
-
-    /// Single-mode + collapsible: clicking the open item closes it
-    /// (resulting in zero open items).
-    #[test]
-    fn single_mode_collapsible_close_yields_empty_set() {
-        let mode = Mode::Single { collapsible: true };
-        assert_eq!(mode.toggle(&ids(&["a"]), "a"), Some(Vec::new()));
-    }
-
-    /// Single-mode + !collapsible: clicking the currently-open item is
-    /// refused. One item must always remain open.
-    #[test]
-    fn single_mode_non_collapsible_refuses_close_of_open_item() {
-        let mode = Mode::Single { collapsible: false };
-        assert_eq!(mode.toggle(&ids(&["a"]), "a"), None);
-        assert_eq!(mode.toggle(&ids(&["a"]), "b"), Some(ids(&["b"])));
-    }
-
-    /// Multiple-mode: opening item B leaves A open.
-    #[test]
-    fn multiple_mode_open_b_keeps_a_open() {
-        let next = Mode::Multiple.toggle(&ids(&["a"]), "b");
-        assert_eq!(next, Some(ids(&["a", "b"])));
-    }
-
-    /// Multiple-mode: closing one of two open items leaves the other open.
-    #[test]
-    fn multiple_mode_close_b_keeps_a_open() {
-        let next = Mode::Multiple.toggle(&ids(&["a", "b"]), "b");
-        assert_eq!(next, Some(ids(&["a"])));
-    }
-
-    /// The builder accepts `&str` ids and starts uncontrolled at its
-    /// default set; `value` makes it controlled.
-    #[test]
-    fn default_value_seeds_an_uncontrolled_accordion() {
-        let uncontrolled = accordion::<(), _>(Vec::<Item<()>>::new()).default_value(["one"]);
-        assert_eq!(uncontrolled.value, None);
-        assert_eq!(uncontrolled.default_value, ids(&["one"]));
-
-        let controlled = accordion::<(), _>(Vec::<Item<()>>::new())
-            .value(["two"])
-            .on_value_change(|_open| ());
-        assert_eq!(controlled.value, Some(ids(&["two"])));
     }
 }

@@ -39,40 +39,37 @@ const NOTES: &[Note] = &[
 ];
 
 pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
-    let items: Vec<accordion::Item<'_, Message>> = NOTES
-        .iter()
-        .map(|note| {
-            let body_col = column([
-                text::small(note.body).style(theme::text::Muted).into(),
-                row![space::horizontal(), {
-                    let mut b = button("Dismiss").style(outline + destructive);
-                    if state.connected {
-                        b = b.on_press(Message::NotificationCleared);
-                    }
-                    b
-                },]
-                .spacing(8)
-                .width(Fill)
-                .into(),
-            ])
-            .spacing(8);
+    let items = NOTES.iter().map(|note| {
+        let body_col = column([
+            text::small(note.body).style(theme::text::Muted).into(),
+            row![space::horizontal(), {
+                let mut b = button("Dismiss").style(outline + destructive);
+                if state.connected {
+                    b = b.on_press(Message::NotificationCleared);
+                }
+                b
+            },]
+            .spacing(8)
+            .width(Fill)
+            .into(),
+        ])
+        .spacing(8);
 
-            let trigger = row![text::small(note.title).medium()]
-                .spacing(8)
-                .width(Fill);
+        let trigger = row![text::small(note.title).medium()]
+            .spacing(8)
+            .width(Fill);
 
-            accordion::item(note.id.to_owned(), trigger).content(body_col)
-        })
-        .collect();
+        (note.id.to_owned(), accordion::item(trigger, body_col))
+    });
 
     let open_count = state.open_notifications.len();
     let header = card::header("Inbox")
         .description("Multi-mode accordion — open more than one at a time.")
         .action(badge(format!("{open_count} open")));
 
-    let body = accordion(items)
-        .mode(accordion::Mode::Multiple)
-        .value(&state.open_notifications)
+    let body = accordion::keyed(items)
+        .multiple()
+        .value(state.open_notifications.iter().cloned())
         .on_value_change(Message::NotificationsOpened);
 
     card::card(

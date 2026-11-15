@@ -11,6 +11,7 @@ use icedcn_widget::{accordion, button, column, dialog};
 #[derive(Debug, Clone, PartialEq)]
 enum Message {
     Open(Vec<String>),
+    Selected(Option<&'static str>),
     Edited(&'static str, String),
     Pressed,
 }
@@ -40,7 +41,8 @@ fn accordion_header_keeps_its_height_below_a_scrollable_viewport() {
 
     let id = Id::unique();
     let label = container(Space::new().width(80).height(20)).id(id.clone());
-    let disclosure = accordion([accordion::item("shipping", label)]).on_value_change(Message::Open);
+    let disclosure =
+        accordion::keyed([("shipping", (label, ""))]).on_value_change(Message::Selected);
     let content = column![Space::new().height(500), disclosure];
     let mut ui = simulator(Element::from(scrollable::scrollable(content).height(200)));
 
@@ -57,7 +59,7 @@ fn accordion_header_keeps_its_height_below_a_scrollable_viewport() {
     ui.simulate(simulator::click());
     assert_eq!(
         ui.into_messages().collect::<Vec<_>>(),
-        [Message::Open(vec!["shipping".into()])]
+        [Message::Selected(Some("shipping"))]
     );
 }
 
@@ -72,7 +74,7 @@ fn accordion_fill_trigger_uses_its_intrinsic_height_below_a_scrollable_viewport(
     let trigger = container(Space::new().width(80).height(20))
         .height(Fill)
         .id(id.clone());
-    let disclosure = accordion([accordion::item("custom", trigger)]);
+    let disclosure = accordion([(trigger, "")]);
     let content = column![Space::new().height(500), disclosure];
     let mut ui: Simulator<'_> =
         simulator(Element::from(scrollable::scrollable(content).height(200)));
@@ -85,12 +87,12 @@ fn accordion_fill_trigger_uses_its_intrinsic_height_below_a_scrollable_viewport(
 
 #[test]
 fn accordion_arrows_skip_disabled_headers_and_activate_the_selected_item() {
-    let content: Element<'_, Message, Theme, Renderer> = accordion([
-        accordion::item("one", "One"),
-        accordion::item("two", "Two").disabled(true),
-        accordion::item("three", "Three").content(button("Child")),
+    let content: Element<'_, Message, Theme, Renderer> = accordion::keyed([
+        ("one", accordion::item("One", "")),
+        ("two", accordion::item("Two", "").disabled(true)),
+        ("three", accordion::item("Three", button("Child"))),
     ])
-    .on_value_change(Message::Open)
+    .on_value_change(Message::Selected)
     .into();
     let mut ui = simulator(content);
     assert_eq!(
@@ -113,7 +115,7 @@ fn accordion_arrows_skip_disabled_headers_and_activate_the_selected_item() {
     assert_eq!(focus(&mut ui).focused, Some(0));
     assert_eq!(
         ui.into_messages().collect::<Vec<_>>(),
-        [Message::Open(vec!["three".into()])]
+        [Message::Selected(Some("three"))]
     );
 }
 
@@ -123,11 +125,11 @@ fn accordion_edits_and_input_focus_follow_keys_across_rebuilds() {
     use icedcn_widget::{container, input};
 
     fn entries(keys: &[&'static str]) -> Element<'static, Message, Theme, Renderer> {
-        accordion(keys.iter().copied().map(|key| {
+        accordion::keyed(keys.iter().copied().map(|key| {
             let draft = input("").on_input(move |value| Message::Edited(key, value));
-            accordion::item(key, key).content(container(draft).id(Id::new(key)))
+            (key, accordion::item(key, container(draft).id(Id::new(key))))
         }))
-        .mode(accordion::Mode::Multiple)
+        .multiple()
         .value(keys.iter().copied())
         .into()
     }
@@ -174,12 +176,14 @@ fn accordion_keeps_header_focus_and_animation_on_reorder() {
     use icedcn_widget::container;
 
     fn rows(keys: &[&'static str]) -> Element<'static, Message, Theme, Renderer> {
-        accordion(keys.iter().copied().map(|key| {
-            accordion::item(
+        accordion::keyed(keys.iter().copied().map(|key| {
+            (
                 key,
-                container(Space::new().width(60).height(16)).id(Id::new(key)),
+                accordion::item(
+                    container(Space::new().width(60).height(16)).id(Id::new(key)),
+                    Space::new().height(100),
+                ),
             )
-            .content(Space::new().height(100))
         }))
         .into()
     }

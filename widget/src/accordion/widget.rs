@@ -12,7 +12,7 @@ use std::time::Duration;
 use iced_core::Length::{Fill, Shrink};
 use iced_core::animation::Easing;
 use iced_core::border::Border;
-use iced_core::keyboard::{self, Key, key::Named};
+use iced_core::keyboard::{self, key::Named};
 use iced_core::layout;
 use iced_core::mouse;
 use iced_core::overlay;
@@ -51,8 +51,8 @@ const BODY_PADDING_BOTTOM: f32 = 10.0;
 
 /// One disclosure item — the trigger row, the body, and a per-item id for
 /// open-state matching.
-pub struct Item<'a, Message> {
-    pub(crate) id: String,
+pub struct Item<'a, Message, Key> {
+    pub(crate) id: Key,
     pub(crate) trigger: Element<'a, Message, Theme, iced_widget::Renderer>,
     pub(crate) chevron_closed: Element<'a, Message, Theme, iced_widget::Renderer>,
     pub(crate) chevron_open: Element<'a, Message, Theme, iced_widget::Renderer>,
@@ -75,22 +75,19 @@ impl Mode {
     /// The open set after a click on `clicked`'s trigger, or `None` when the
     /// mode refuses the click (closing the open item of a non-collapsible
     /// single accordion).
-    pub fn toggle(self, open: &[String], clicked: &str) -> Option<Vec<String>> {
+    pub fn toggle<Key: Clone + PartialEq>(self, open: &[Key], clicked: &Key) -> Option<Vec<Key>> {
         let is_open = open.iter().any(|id| id == clicked);
 
         match (self, is_open) {
             (Mode::Single { collapsible: false }, true) => None,
             (Mode::Single { collapsible: true }, true) => Some(Vec::new()),
-            (Mode::Single { .. }, false) => Some(vec![clicked.to_owned()]),
-            (Mode::Multiple, true) => Some(
-                open.iter()
-                    .filter(|id| id.as_str() != clicked)
-                    .cloned()
-                    .collect(),
-            ),
+            (Mode::Single { .. }, false) => Some(vec![clicked.clone()]),
+            (Mode::Multiple, true) => {
+                Some(open.iter().filter(|id| *id != clicked).cloned().collect())
+            }
             (Mode::Multiple, false) => {
                 let mut next = open.to_vec();
-                next.push(clicked.to_owned());
+                next.push(clicked.clone());
                 Some(next)
             }
         }
@@ -99,30 +96,30 @@ impl Mode {
 
 /// The disclosure widget proper. Constructed by the public `accordion()`
 /// builder in the parent module; users never name this type directly.
-pub struct Accordion<'a, Message> {
-    pub(crate) items: Vec<Item<'a, Message>>,
+pub struct Accordion<'a, Message, Key> {
+    pub(crate) items: Vec<Item<'a, Message, Key>>,
     pub(crate) mode: Mode,
     /// The open set: the app's when controlled, otherwise synced from the
     /// tree state in `diff`.
-    pub(crate) open: Vec<String>,
+    pub(crate) open: Vec<Key>,
     pub(crate) is_controlled: bool,
-    pub(crate) on_value_change: Option<Box<dyn Fn(Vec<String>) -> Message + 'a>>,
+    pub(crate) on_value_change: Option<Box<dyn Fn(Vec<Key>) -> Message + 'a>>,
     pub(crate) class: <Theme as Catalog>::Class<'a>,
     pub(crate) outer_padding: Padding,
 }
 
-impl<'a, Message> Accordion<'a, Message> {
+impl<'a, Message, Key: PartialEq> Accordion<'a, Message, Key> {
     /// Whether item `id` is open. Used both at update time (to spot
     /// transitions) and at draw time (to pick which chevron to render).
-    fn is_open(&self, id: &str) -> bool {
+    fn is_open(&self, id: &Key) -> bool {
         self.open.iter().any(|s| s == id)
     }
 }
 
 /// Per-item runtime state stored in the widget's tree.
-struct ItemState {
+struct ItemState<Key> {
     /// Stable id for matching across renders.
-    id: String,
+    id: Key,
     /// Last `is_open` value seen by `update` — when this drifts from the
     /// current external value, kick off the animation.
     last_is_open: bool,
@@ -138,7 +135,7 @@ struct ItemState {
     pressed: bool,
 }
 
-impl Focusable for ItemState {
+impl<Key> Focusable for ItemState<Key> {
     fn is_focused(&self) -> bool {
         self.focused
     }
@@ -152,8 +149,8 @@ impl Focusable for ItemState {
     }
 }
 
-impl ItemState {
-    fn seeded(id: String, is_open: bool) -> Self {
+impl<Key> ItemState<Key> {
+    fn seeded(id: Key, is_open: bool) -> Self {
         Self {
             id,
             last_is_open: is_open,
@@ -170,20 +167,22 @@ impl ItemState {
 
 /// Tree state for the whole accordion: one [`ItemState`] per item, keyed
 /// by id so reordering items between renders preserves animation state.
-struct State {
+struct State<Key> {
     /// The open set of an uncontrolled accordion.
-    open: Vec<String>,
-    items: Vec<ItemState>,
+    open: Vec<Key>,
+    items: Vec<ItemState<Key>>,
     /// Most recent frame timestamp from the runtime. `None` until the
     /// first `RedrawRequested` fires.
     now: Option<Instant>,
 }
 
-impl<Message> Meta for Accordion<'_, Message> {}
+impl<Message, Key> Meta for Accordion<'_, Message, Key> {}
 
-impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Message> {
+impl<Message, Key: Clone + PartialEq + 'static> Widget<Message, Theme, iced_widget::Renderer>
+    for Accordion<'_, Message, Key>
+{
     fn tag(&self) -> tree::Tag {
-        tree::Tag::of::<State>()
+        tree::Tag::of::<State<Key>>()
     }
 
     fn state(&self) -> tree::State {
@@ -195,12 +194,27 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
     }
 
     fn diff(&mut self, tree: &mut Tree) {
-        let state = tree.state.downcast_mut::<State>();
+        let state = tree.state.downcast_mut::<State<Key>>();
         if self.is_controlled {
             state.open.clone_from(&self.open);
         } else {
             self.open.clone_from(&state.open);
         }
+
+        self.open
+            .retain(|key| self.items.iter().any(|item| &item.id == key));
+        let mut index = 0;
+        while index < self.open.len() {
+            if self.open[..index].contains(&self.open[index]) {
+                self.open.remove(index);
+            } else {
+                index += 1;
+            }
+        }
+        if matches!(self.mode, Mode::Single { .. }) {
+            self.open.truncate(1);
+        }
+        state.open.clone_from(&self.open);
 
         // Reconcile the four child widgets together with their header's interaction
         // and animation state. A retained key owns the whole row across moves.
@@ -262,7 +276,7 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
         let mut cursor_y = 0.0_f32;
         let mut max_width = 0.0_f32;
 
-        let state = tree.state.downcast_mut::<State>();
+        let state = tree.state.downcast_mut::<State<Key>>();
         let now_ref = state.now;
 
         let last = self.items.len().saturating_sub(1);
@@ -384,7 +398,7 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
         operation: &mut dyn Operation,
     ) {
         operation.container(None, layout.bounds(), viewport);
-        let state = tree.state.downcast_mut::<State>();
+        let state = tree.state.downcast_mut::<State<Key>>();
         for ((item, header), (item_layout, item_tree)) in self
             .items
             .iter_mut()
@@ -419,7 +433,7 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
         shell: &mut Shell<'_, Message>,
         viewport: &Rectangle,
     ) {
-        let state = tree.state.downcast_mut::<State>();
+        let state = tree.state.downcast_mut::<State<Key>>();
 
         // Animation bookkeeping. Order matters: cache `now` BEFORE the
         // is_open-drift detection below so newly-kicked animations see a
@@ -462,7 +476,7 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
         // Hover + click handling per item.
         let mut clicked = None;
         if let Event::Keyboard(keyboard::Event::KeyPressed {
-            key: Key::Named(key),
+            key: keyboard::Key::Named(key),
             ..
         }) = event
             && let Some(index) = state.items.iter().position(|item| item.focused)
@@ -506,7 +520,7 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
         if matches!(
             event,
             Event::Keyboard(KeyReleased {
-                key: Key::Named(Named::Space),
+                key: keyboard::Key::Named(Named::Space),
                 ..
             })
         ) && let Some(index) = state
@@ -669,7 +683,7 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
         cursor: mouse::Cursor,
         viewport: &Rectangle,
     ) {
-        let state = tree.state.downcast_ref::<State>();
+        let state = tree.state.downcast_ref::<State<Key>>();
         let bounds = layout.bounds();
 
         let resolve_style = |status: Status| theme.style(&self.class, status);
@@ -899,7 +913,7 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
         translation: Vector,
         window: Size,
     ) -> Vec<overlay::Element<'b, Message, Theme, iced_widget::Renderer>> {
-        let state = tree.state.downcast_ref::<State>();
+        let state = tree.state.downcast_ref::<State<Key>>();
         let mut overlays: Vec<overlay::Element<'b, Message, Theme, iced_widget::Renderer>> =
             Vec::new();
 
@@ -938,10 +952,10 @@ impl<Message> Widget<Message, Theme, iced_widget::Renderer> for Accordion<'_, Me
     }
 }
 
-impl<'a, Message: 'a> From<Accordion<'a, Message>>
+impl<'a, Message: 'a, Key: Clone + PartialEq + 'static> From<Accordion<'a, Message, Key>>
     for Element<'a, Message, Theme, iced_widget::Renderer>
 {
-    fn from(a: Accordion<'a, Message>) -> Self {
+    fn from(a: Accordion<'a, Message, Key>) -> Self {
         a._boxed()
     }
 }

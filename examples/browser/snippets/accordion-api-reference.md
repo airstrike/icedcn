@@ -1,41 +1,43 @@
 ## API Reference
 
-[Read the accordion implementation](https://github.com/airstrike/icedcn/blob/HEAD/widget/src/accordion.rs).
+### Construction
 
-### `accordion()`
+Use `accordion![(trigger, body), ...]` for fixed items and `accordion(items)` for an iterator. Both assign zero-based positions. A tuple accepts any trigger and body that convert to `Slot`. Use `accordion::item(trigger, body)` to add item-specific properties.
 
-Constructor for an `Accordion` from any `IntoIterator<Item = accordion::Item>`.
+`.push(item)` appends one positional item. `.extend(items)` appends an iterator. `accordion![]` creates an empty accordion.
 
-| Builder | Type | Default | Description |
-| --- | --- | --- | --- |
-| `.mode(mode)` | `accordion::Mode` | `Single { collapsible: true }` | Disclosure mode — single-open (with optional collapsible) or multiple-open. |
-| `.default_value(ids)` | `IntoIterator<Item = impl Into<String>>` | `[]` | Items an uncontrolled accordion starts with open. The open set then lives in the widget tree. |
-| `.value(ids)` | `IntoIterator<Item = impl Into<String>>` | uncontrolled | Control the accordion: the given items are always the open ones. |
-| `.on_value_change(f)` | `Fn(Vec<String>) -> Message` | `None` | Publish a message with the complete set of open item IDs after a trigger changes it. |
-| `.style(style)` | `impl Into<accordion::StyleFn>` | `theme::accordion::Default` | Variant unit structs (`Default`, `Card`) or a hand-rolled `Spec`. |
-| `.padding(padding)` | `impl Into<Padding>` | `Padding::ZERO` | Space between the accordion and the edges of its container. |
+Use `accordion::keyed([(key, item), ...])` for records that can move, be inserted, or be removed. Keys retain their concrete Rust type and must be unique. The open selection, input contents, focus and animation follow each key. Keyed builders accept `.push(key, item)` and `.extend(keyed_items)`.
 
-### `accordion::item()`
+### Selection
 
-Constructor for one disclosure item. Takes a stable `id` (matched against the open-set) and trigger label content.
+An accordion starts closed and owns its selection by default. Single selection allows at most one item open. Use `.multiple()` before selection builders to allow several open items.
 
-| Builder | Type | Default | Description |
-| --- | --- | --- | --- |
-| `.content(body)` | `impl Into<Slot>` | `None` | Body revealed when the item is open. Required for the item to render anything useful below the trigger. |
-| `.chevron_closed(icon)` | `impl Into<Slot>` | down chevron | Closed-state indicator. |
-| `.chevron_open(icon)` | `impl Into<Slot>` | up chevron | Open-state indicator. |
-| `.inset(pixels)` | `f32` | `0.0` | Horizontal inset for the trigger and its content. The divider spans the item. |
-| `.disabled(bool)` | `bool` | `false` | A disabled trigger ignores input and renders at 50% opacity. An already-open body remains usable. |
+| Builder | Single selection | Multiple selection |
+| --- | --- | --- |
+| `.default_value(...)` | One `Key` | `IntoIterator<Item = Key>` |
+| `.value(...)` | `Option<Key>` | `IntoIterator<Item = Key>` |
+| `.on_value_change(...)` | `Fn(Option<Key>) -> Message` | `Fn(Vec<Key>) -> Message` |
+| `.collapsible(false)` | Prevent clicking the open trigger closed | Available only on single selection |
 
-### `accordion::Mode`
+`Key` is `usize` for positional items and the caller's key type for keyed items. A controlled accordion displays the supplied value and publishes the proposed change. An uncontrolled accordion seeds its default only on mount and retains subsequent user interaction across rebuilds. Missing keys and repeated multiple-selection values are ignored. Removed items lose their child state. Reintroduced keys start with fresh controls.
 
-| Variant | Description |
+Call `.multiple()` before setting its change handler. It keeps the current value and defaults, and clears a previously configured single-selection handler.
+
+### Appearance
+
+| Builder | Description |
 | --- | --- |
-| `Mode::Single { collapsible: bool }` | At most one item open at a time. `collapsible = true` allows zero open. |
-| `Mode::Multiple` | Any subset open. |
+| `.style(style)` | Accepts a `theme::accordion` variant, `Spec` or style function. |
+| `.padding(padding)` | Adds space around the accordion's items. |
 
-### State model
+### Item properties
 
-The widget tree holds the open items by default. Use `.default_value(...)` to choose which items start open. When the application needs the selection, store the IDs from `.on_value_change(...)` and pass them back to `.value(...)`. The callback receives the full set after the single- or multiple-open rule has been applied.
+| Builder | Description |
+| --- | --- |
+| `.disabled(bool)` | Disables the trigger. Its already-open body remains usable. |
+| `.inset(pixels)` | Insets trigger and body horizontally while the divider keeps its full width. |
+| `.chevron_closed(icon)` | Replaces the closed-state indicator. |
+| `.chevron_open(icon)` | Replaces the open-state indicator. |
+| `.content(body)` | Replaces the body supplied to the item constructor. |
 
-Use `.style(...)` with a `theme::accordion` variant or a custom `Spec` to change the appearance.
+The trigger and body participate in the parent’s `Compose` inheritance. Explicit child properties take precedence.

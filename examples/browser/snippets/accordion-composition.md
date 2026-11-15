@@ -1,9 +1,3 @@
 ## Composition
 
-Pass the items to `accordion`. Each `accordion::item` pairs its trigger label with a content slot.
-
-```text
-accordion(items)
-├── accordion::item(id, trigger).content(body)
-└── accordion::item(id, trigger).content(body)
-```
+Each item pairs a trigger with its body. Both accept ordinary icedcn content, including rows, columns, buttons and form controls. Positional lists use `accordion![]` or `accordion(items)`. Dynamic collections use `accordion::keyed` with `(key, item)` pairs.

@@ -441,14 +441,7 @@ pub fn spinner<'a>() -> spinner::Spinner<'a> {
     spinner::Spinner::new()
 }
 
-/// Create an [`Accordion`] from an iterable of items.
-pub fn accordion<'a, Message, I>(items: I) -> Accordion<'a, Message>
-where
-    Message: 'a,
-    I: IntoIterator<Item = accordion::Item<'a, Message>>,
-{
-    accordion::accordion(items)
-}
+pub use accordion::accordion;
 
 /// Create a closed, uncontrolled [`Popover`]: `trigger` builds what sits in
 /// place, `content` the panel shown next to it while open.
