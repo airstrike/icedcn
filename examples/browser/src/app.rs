@@ -1,4 +1,5 @@
 mod header;
+mod home;
 mod menu;
 mod not_found;
 mod route;
@@ -39,8 +40,8 @@ const PINNED_FONTS: &[&str] = &["Geist", "Inter"];
 
 pub struct App {
     dark_mode: bool,
-    showing_examples: bool,
-    not_found: Option<String>,
+    destination: Route,
+    create: palette::State,
     routes: Router<route::Definition>,
     examples: examples::State,
     width: f32,
@@ -62,12 +63,13 @@ pub struct App {
 pub enum Message {
     ToggleTheme,
     Example(examples::Event),
+    Create(palette::Message),
     Escape,
     Width(f32),
     SelectPage(usize),
     /// Restore a browser history entry without creating another entry.
     History(String),
-    /// Navigate to a site path, including the root alias.
+    /// Navigate to a registered site path.
     GoTo(&'static str),
     OpenUrl(&'static str),
     OpenComponent(String),
@@ -203,6 +205,18 @@ impl App {
                 })
                 .chain([
                     route::Definition {
+                        destination: Route::Home,
+                        path: "/".into(),
+                        name: "Home",
+                        title: Some("Home"),
+                    },
+                    route::Definition {
+                        destination: Route::Create,
+                        path: "/create".into(),
+                        name: "Create",
+                        title: Some("Create"),
+                    },
+                    route::Definition {
                         destination: Route::Examples,
                         path: "/examples".into(),
                         name: "Examples",
@@ -236,10 +250,18 @@ impl App {
             &active_theme,
         );
 
+        let (mut create, create_init) = palette::State::embedded(if dark_mode {
+            palette::Mode::Dark
+        } else {
+            palette::Mode::Light
+        });
+        create.set_font(font::BODY.into());
+        tasks.push(create_init.map(Message::Create));
+
         let mut app = Self {
             dark_mode,
-            showing_examples: false,
-            not_found: None,
+            destination: Route::Home,
+            create,
             routes,
             examples: examples::State::default(),
             width,
@@ -258,23 +280,35 @@ impl App {
         };
         let initial = browser_routing::location()
             .map(|path| Route::parse(&path, &app.routes))
-            .unwrap_or(Route::Page(0));
+            .unwrap_or(Route::Home);
         tasks.push(app.restore(initial));
         (app, Task::batch(tasks))
     }
 
     pub fn is_dark(&self) -> bool {
-        self.dark_mode
+        if self.destination == Route::Create {
+            self.create.mode == palette::Mode::Dark
+        } else {
+            self.dark_mode
+        }
     }
 
     pub(crate) fn theme(&self) -> Theme {
-        self.snippet_viewer.theme().clone()
+        if self.destination == Route::Create {
+            self.create.theme()
+        } else {
+            self.snippet_viewer.theme().clone()
+        }
     }
 
     pub fn subscription(&self) -> Subscription<Message> {
         let i = self.current_page;
-        let page = match self.pages.get(i).filter(|_| !self.showing_examples) {
-            Some(page) if self.not_found.is_none() => page
+        let page = match self
+            .pages
+            .get(i)
+            .filter(|_| matches!(self.destination, Route::Page(_)))
+        {
+            Some(page) => page
                 .subscription()
                 .with(i)
                 .map(|(i, m)| Message::Page(i, m)),
@@ -315,26 +349,19 @@ impl App {
     }
 
     fn route(&self) -> Route {
-        if let Some(path) = &self.not_found {
-            Route::NotFound(path.clone())
-        } else if self.showing_examples {
-            if self.examples.is_open() {
-                Route::Receipts
-            } else {
-                Route::Examples
-            }
-        } else {
-            Route::Page(self.current_page)
-        }
+        self.destination.clone()
+    }
+
+    fn showing_examples(&self) -> bool {
+        matches!(self.destination, Route::Examples | Route::Receipts)
     }
 
     fn restore(&mut self, destination: Route) -> Task<Message> {
         self.search = false;
         self.fonts_open = false;
         let message = match destination {
-            Route::NotFound(path) => {
-                self.not_found = Some(path);
-                self.showing_examples = false;
+            Route::Home | Route::Create | Route::NotFound(_) => {
+                self.destination = destination;
                 browser_routing::set_title(&self.title());
                 return Task::none();
             }
@@ -347,7 +374,7 @@ impl App {
         task
     }
 
-    /// Title of the selected documentation page or example.
+    /// Title of the active site destination.
     pub fn title(&self) -> String {
         let destination = self.route();
         let title = destination
@@ -362,13 +389,21 @@ impl App {
         match message {
             Message::History(_) | Message::GoTo(_) => Task::none(),
             Message::Example(event) => {
-                self.not_found = None;
                 self.search = false;
-                self.showing_examples = true;
-                self.examples.update(event)
+                let task = self.examples.update(event);
+                self.destination = if self.examples.is_open() {
+                    Route::Receipts
+                } else {
+                    Route::Examples
+                };
+                task
             }
-            Message::Escape if self.showing_examples && !self.search && !self.fonts_open => {
-                self.examples.escape()
+            Message::Escape if self.showing_examples() && !self.search && !self.fonts_open => {
+                let task = self.examples.escape();
+                if !self.examples.is_open() {
+                    self.destination = Route::Examples;
+                }
+                task
             }
             Message::Escape => Task::none(),
             Message::Width(width) => {
@@ -377,6 +412,17 @@ impl App {
                     page.window_width(width);
                 }
                 Task::none()
+            }
+            Message::Create(message) => self.create.update(message).map(Message::Create),
+            Message::ToggleTheme if self.destination == Route::Create => {
+                let mode = if self.is_dark() {
+                    palette::Mode::Light
+                } else {
+                    palette::Mode::Dark
+                };
+                self.create
+                    .update(palette::Message::SetMode(mode))
+                    .map(Message::Create)
             }
             Message::ToggleTheme => {
                 self.dark_mode = !self.dark_mode;
@@ -462,8 +508,7 @@ impl App {
                 {
                     prev.reset_volatile();
                 }
-                self.showing_examples = false;
-                self.not_found = None;
+                self.destination = Route::Page(page);
                 self.current_page = page;
                 let page = &mut self.pages[page];
                 let visible = page.on_visible();
@@ -502,20 +547,18 @@ impl App {
             }
             Message::SelectArticle => {
                 use iced::widget::operation::text::select_all;
-                if self.search
-                    || self.fonts_open
-                    || self.showing_examples
-                    || self.not_found.is_some()
-                {
+                if self.search || self.fonts_open || !matches!(self.destination, Route::Page(_)) {
                     Task::none()
                 } else {
                     select_all(self.pages[self.current_page].scrollable_id())
                 }
             }
-            Message::FocusNext if self.showing_examples && !self.search && !self.fonts_open => {
+            Message::FocusNext if self.showing_examples() && !self.search && !self.fonts_open => {
                 self.examples.focus(false)
             }
-            Message::FocusPrevious if self.showing_examples && !self.search && !self.fonts_open => {
+            Message::FocusPrevious
+                if self.showing_examples() && !self.search && !self.fonts_open =>
+            {
                 self.examples.focus(true)
             }
             Message::FocusNext => operation::focus_next(),
@@ -576,6 +619,7 @@ impl App {
         let name: &'static str = Box::leak(name.into_boxed_str());
         let body = Font::from(name);
         self.snippet_viewer.set_font(body);
+        self.create.set_font(body);
         set_defaults(body, Pixels(14.0))
     }
 
@@ -700,14 +744,31 @@ impl App {
         let width = self.width;
         let header = self.header(width);
 
-        if let Some(path) = &self.not_found {
+        if let Route::NotFound(path) = &self.destination {
             return column![header, not_found::view(path)]
                 .width(Fill)
                 .height(Fill)
                 .boxed();
         }
 
-        if self.showing_examples {
+        if self.destination == Route::Home {
+            return column![header, home::view(width)]
+                .width(Fill)
+                .height(Fill)
+                .boxed();
+        }
+
+        if self.destination == Route::Create {
+            return column![
+                header,
+                self.create.view_embedded(width).map(Message::Create)
+            ]
+            .width(Fill)
+            .height(Fill)
+            .boxed();
+        }
+
+        if self.showing_examples() {
             return toaster(
                 column![header, self.examples.view(width)]
                     .width(Fill)

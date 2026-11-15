@@ -1,3 +1,4 @@
+use super::route::Route;
 use super::{App, Message};
 mod search;
 use crate::{icon, page};
@@ -20,12 +21,13 @@ use std::time::Duration;
 const GITHUB: &str = "https://github.com/airstrike/icedcn";
 
 const NAVIGATION: &[(&str, &str)] = &[
-    ("Home", GITHUB),
+    ("Home", "/"),
     ("Docs", "icedcn://guide/introduction"),
     ("Components", "icedcn://guide/components"),
     ("Examples", "icedcn://examples"),
     ("Charts", "icedcn://component/chart"),
     ("Typography", "icedcn://component/typography"),
+    ("Create", "/create"),
 ];
 
 pub(super) const GUIDES: &[(&str, &str)] = &[
@@ -38,6 +40,14 @@ pub(super) const GUIDES: &[(&str, &str)] = &[
     ("Typography", "icedcn://component/typography"),
     ("Changelog", "icedcn://guide/changelog"),
 ];
+
+fn navigation(url: &'static str) -> Message {
+    if url.starts_with('/') {
+        Message::GoTo(url)
+    } else {
+        Message::OpenUrl(url)
+    }
+}
 
 pub(super) async fn stars() -> Option<u64> {
     #[derive(Deserialize)]
@@ -115,14 +125,20 @@ impl App {
         let nav: Slot<'_, Message> = if desktop {
             Row::with_children(NAVIGATION.iter().map(|&(label, url)| {
                 let link = button(label);
-                let link = if label == "Examples" && self.showing_examples {
+                let active = match url {
+                    "/" => self.destination == Route::Home,
+                    "/create" => self.destination == Route::Create,
+                    "icedcn://examples" => self.showing_examples(),
+                    _ => false,
+                };
+                let link = if active {
                     link.style(button::Secondary)
                 } else {
                     link.style(button::Ghost)
                 };
                 link.height(32)
                     .translate(false)
-                    .on_press(Message::OpenUrl(url))
+                    .on_press(navigation(url))
                     .into()
             }))
             .into()
@@ -137,9 +153,9 @@ impl App {
                     let search = menu::item("Search documentation...")
                         .on_select(Message::Search(true))
                         .into();
-                    let links = NAVIGATION.iter().map(|&(label, url)| {
-                        menu::item(label).on_select(Message::OpenUrl(url)).into()
-                    });
+                    let links = NAVIGATION
+                        .iter()
+                        .map(|&(label, url)| menu::item(label).on_select(navigation(url)).into());
                     column([search, menu::separator()].into_iter().chain(links)).into()
                 },
             )
@@ -301,7 +317,7 @@ impl App {
         let links = NAVIGATION.iter().map(|&(label, url)| {
             command::item(label)
                 .group("Navigation")
-                .on_select(Message::OpenUrl(url))
+                .on_select(navigation(url))
         });
         let guides = GUIDES
             .iter()
@@ -309,7 +325,7 @@ impl App {
             .map(|&(label, url)| {
                 command::item(label)
                     .group("Documentation")
-                    .on_select(Message::OpenUrl(url))
+                    .on_select(navigation(url))
             });
         command(
             pages
@@ -376,10 +392,40 @@ mod tests {
     }
 
     #[test]
+    fn home_and_create_work_in_desktop_navigation_mobile_menu_and_search() {
+        let initial = app();
+        for (label, destination) in [("Home", "/"), ("Create", "/create")] {
+            for width in [375., 1440.] {
+                let mut ui = header(&initial, width);
+                if width < 1024. {
+                    ui.click("Menu").unwrap();
+                }
+                ui.click(label).unwrap();
+                assert!(ui.into_messages().any(|message| {
+                    matches!(message, Message::GoTo(path) if path == destination)
+                }));
+            }
+            let mut app = app();
+            let _ = app.update(Message::Search(true));
+            let mut ui = header(&app, 1440.);
+            ui.simulate([Event::Window(
+                window::Event::RedrawRequested(Instant::now()),
+            )]);
+            ui.typewrite(label);
+            ui.tap_key(Named::Enter);
+            assert!(
+                ui.into_messages().any(|message| {
+                    matches!(message, Message::GoTo(path) if path == destination)
+                })
+            );
+        }
+    }
+
+    #[test]
     fn examples_open_in_app_and_docs_navigation_returns_to_the_article() {
         let mut app = app();
         let _ = app.update(Message::OpenUrl("icedcn://examples"));
-        assert!(app.showing_examples);
+        assert!(app.showing_examples());
         let mut ui = Simulator::with_size(
             Settings::default(),
             iced::Size::new(1200., 900.),
@@ -411,7 +457,7 @@ mod tests {
         ui.find("Save").unwrap();
         drop(ui);
         let _ = app.update(Message::OpenComponent("introduction".into()));
-        assert!(!app.showing_examples);
+        assert!(!app.showing_examples());
         assert_eq!(app.pages[app.current_page].meta().title, "Introduction");
     }
 
@@ -517,7 +563,7 @@ mod tests {
                 .iter()
                 .filter(|page| !page.state().unvisited())
                 .count(),
-            1
+            0
         );
         let first = app.update(Message::SelectPage(index));
         let revisit = app.update(Message::SelectPage(index));

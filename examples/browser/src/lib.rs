@@ -118,7 +118,7 @@ impl Browser {
         }
     }
 
-    /// Title of the selected documentation page or example.
+    /// Title of the active site destination.
     pub fn title(&self) -> String {
         self.app.title()
     }
@@ -169,7 +169,7 @@ pub fn run() -> iced::Result {
         .antialiasing(true)
         .subscription(Browser::subscription)
         .theme(Browser::theme)
-        .fonts([icon::FONT, font::GEIST_MONO]);
+        .fonts([icon::FONT, palette::icon::FONT, font::GEIST_MONO]);
     #[cfg(target_arch = "wasm32")]
     let application = application
         .fonts([include_bytes!("../fonts/Geist.ttf").as_slice(), font::EMOJI])

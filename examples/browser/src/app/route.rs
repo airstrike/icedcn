@@ -4,6 +4,8 @@ use browser_routing::Router;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) enum Route {
+    Home,
+    Create,
     Page(usize),
     Examples,
     Receipts,
@@ -26,13 +28,6 @@ impl browser_routing::Route for Definition {
     }
     fn title(&self) -> Option<&str> {
         self.title
-    }
-    fn aliases(&self) -> &[&str] {
-        if self.destination == Route::Page(0) {
-            &["/"]
-        } else {
-            &[]
-        }
     }
 }
 

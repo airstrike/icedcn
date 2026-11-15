@@ -6,16 +6,19 @@ use icedcn::widget::{column, menu, row, text};
 
 use crate::{icon, page};
 
+use super::route::Route;
 use super::{App, Message};
 
 pub(super) fn view(app: &App) -> Slot<'_, Message> {
     let source = source(app);
-    let title = if app.showing_examples {
-        "Examples"
-    } else {
-        app.pages[app.current_page].meta().title
+    let title = match app.route() {
+        Route::Home => "Home",
+        Route::Create => "Create",
+        Route::NotFound(_) => "Page not found",
+        Route::Examples | Route::Receipts => "Examples",
+        Route::Page(index) => app.pages[index].meta().title,
     };
-    let (theme_icon, theme_label) = if app.dark_mode {
+    let (theme_icon, theme_label) = if app.is_dark() {
         (icon::sun(), "Use light theme")
     } else {
         (icon::moon(), "Use dark theme")
@@ -84,7 +87,11 @@ pub(super) fn view(app: &App) -> Slot<'_, Message> {
 }
 
 fn source(app: &App) -> String {
-    if app.showing_examples {
+    if app.destination == Route::Home {
+        "https://github.com/airstrike/icedcn".into()
+    } else if app.destination == Route::Create {
+        "https://github.com/airstrike/icedcn/tree/HEAD/examples/palette".into()
+    } else if app.showing_examples() {
         "https://github.com/airstrike/icedcn/tree/HEAD/examples/browser/src/examples".into()
     } else if let Some(path) = first_source(app.pages[app.current_page].blocks()) {
         format!("https://github.com/airstrike/icedcn/blob/HEAD/{path}")
@@ -115,6 +122,7 @@ mod tests {
     fn app() -> App {
         let mut app = App::new(Map::from(&Theme::light()), Map::from(&Theme::dark())).0;
         app.width = 1440.0;
+        let _ = app.update(Message::SelectPage(0));
         app
     }
 
@@ -160,6 +168,7 @@ mod tests {
             .iter()
             .position(|page| page.meta().title == "Context Menu")
             .unwrap();
+        let _ = app.update(Message::SelectPage(app.current_page));
         let mut ui = ui(&app);
         let bounds = ui.find("Right click here").unwrap();
         right_click(&mut ui, bounds.bounds().center());
@@ -176,7 +185,7 @@ mod tests {
             "Search documentation",
             "Open documentation",
             "Browse examples",
-            if app.dark_mode {
+            if app.is_dark() {
                 "Use light theme"
             } else {
                 "Use dark theme"
@@ -198,6 +207,7 @@ mod tests {
             .iter()
             .position(|page| page.meta().title == "Chart")
             .unwrap();
+        let _ = app.update(Message::SelectPage(app.current_page));
         let mut ui = ui(&app);
         right_click(&mut ui, Point::new(1400.0, 700.0));
         ui.click("Copy source link").unwrap();

@@ -13,10 +13,10 @@ fn every_registered_page_has_a_unique_round_trip_path() {
     let (browser, _) = Browser::new();
     let app = browser.app;
     let mut paths = HashSet::new();
-    for (index, definition) in app.routes.routes().take(app.pages.len()).enumerate() {
+    for definition in app.routes.routes() {
         let path = definition.path();
         assert!(paths.insert(path), "duplicate route: {path}");
-        assert_eq!(Route::parse(path, &app.routes), Route::Page(index));
+        assert_eq!(Route::parse(path, &app.routes), definition.destination);
     }
 }
 
@@ -52,7 +52,8 @@ fn not_found_survives_history_and_recovers_through_each_destination() {
         "/examples/receipts/extra",
     ] {
         for (destination, title) in [
-            ("/", "Accordion — icedcn"),
+            ("/", "Home — icedcn"),
+            ("/create", "Create — icedcn"),
             ("/docs/components", "Components — icedcn"),
             ("/examples", "Examples — icedcn"),
         ] {
@@ -66,7 +67,7 @@ fn not_found_survives_history_and_recovers_through_each_destination() {
             assert_eq!(app.route().path(&app.routes), Some(path));
             let _ = app.update(Message::GoTo(destination));
             assert_eq!(app.title(), title);
-            assert!(app.not_found.is_none());
+            assert!(!matches!(app.route(), Route::NotFound(_)));
             let _ = app.update(Message::History(path.into()));
             assert_eq!(app.route(), Route::NotFound(path.into()));
         }
@@ -108,5 +109,64 @@ fn long_bad_paths_keep_recovery_buttons_in_the_viewport() {
         let bounds = ui.find(label).unwrap().bounds();
         assert!(bounds.y >= 0. && bounds.y + bounds.height <= 700.);
         assert!(bounds.x >= 0. && bounds.x + bounds.width <= 375.);
+    }
+}
+
+#[test]
+fn home_is_the_start_page_and_create_history_keeps_its_state() {
+    let (browser, _) = Browser::new();
+    let mut app = browser.app;
+    assert_eq!(app.route(), Route::Home);
+    assert_eq!(app.title(), "Home — icedcn");
+    assert_eq!(
+        Route::parse("/components/accordion", &app.routes),
+        Route::Page(0)
+    );
+    let docs_theme = app.theme();
+    let docs_font = app.current_font.clone();
+    let _ = app.update(Message::GoTo("/create"));
+    assert_eq!(app.route(), Route::Create);
+    assert_eq!(app.title(), "Create — icedcn");
+    let _ = app.update(Message::ToggleTheme);
+    let _ = app.update(Message::Create(palette::Message::SetPreviewPage(
+        palette::PreviewPage::Two,
+    )));
+    let create_theme = app.theme();
+    let _ = app.update(Message::GoTo("/components/button"));
+    assert_eq!(app.title(), "Button — icedcn");
+    assert_eq!(app.theme(), docs_theme);
+    assert_eq!(app.current_font, docs_font);
+    let _ = app.update(Message::History("/create/".into()));
+    assert_eq!(app.route(), Route::Create);
+    assert_eq!(app.theme(), create_theme);
+    assert_eq!(app.create.preview_page, palette::PreviewPage::Two);
+    let _ = app.update(Message::History("/".into()));
+    assert_eq!(app.route(), Route::Home);
+    assert_eq!(app.theme(), docs_theme);
+}
+
+#[test]
+fn home_actions_route_at_desktop_and_mobile_widths() {
+    for width in [375., 1440.] {
+        for (label, destination) in [
+            ("Components", "/docs/components"),
+            ("Examples", "/examples"),
+            ("Create", "/create"),
+            ("Installation", "/docs/installation"),
+        ] {
+            let mut ui = Simulator::with_size(
+                Settings::default(),
+                iced::Size::new(width, 1000.),
+                super::home::view(width),
+            );
+            let bounds = ui.find(label).unwrap().bounds();
+            assert!(bounds.x >= 0. && bounds.x + bounds.width <= width);
+            ui.click(label).unwrap();
+            assert!(
+                ui.into_messages().any(|message| {
+                    matches!(message, Message::GoTo(path) if path == destination)
+                })
+            );
+        }
     }
 }

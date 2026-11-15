@@ -35,10 +35,11 @@ preventing the canvas event handler from cancelling them. Right-clicks on the
 canvas use the application's context menu; surrounding HTML retains its native
 browser menu.
 
-Browser navigation uses `/components/<slug>`, `/docs/<slug>`, `/examples`, and
-`/examples/receipts`. The root remains an alias for Accordion. Reload and browser
-Back/Forward restore the selected page; editing state inside examples remains
-in memory. Unknown paths show a not-found page and retain the requested URL; trailing
+Browser navigation uses `/` for Home, `/create` for the theme customizer,
+`/components/<slug>`, `/docs/<slug>`, `/examples`, and `/examples/receipts`.
+Reload and browser Back/Forward restore the selected page; editing state inside
+examples and Create remains in memory. Create uses the palette example library
+and keeps its theme separate from the documentation theme. Unknown paths show a not-found page and retain the requested URL; trailing
 slashes are accepted.
 
 The Workers asset configuration enables SPA fallback for direct links. Local
