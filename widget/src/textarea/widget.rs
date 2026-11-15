@@ -220,12 +220,16 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
                 viewport,
             );
 
-            state.focused = focus::count(|op| {
+            let focused = focus::count(|op| {
                 self.editor(state)
                     .operate(child_tree, child_layout, viewport, renderer, op)
             })
             .focused
             .is_some();
+            if state.focused != focused {
+                state.focused = focused;
+                shell.request_redraw();
+            }
 
             if local.is_event_captured() {
                 shell.capture_event();
@@ -456,6 +460,70 @@ impl Gesture {
                 Some(Self::End(Some(id)))
             }
             _ => None,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::textarea::textarea;
+    use iced_core::keyboard::key::Named;
+    use iced_core::renderer::Headless;
+    use iced_core::shell::Waker;
+    use iced_core::time::Instant;
+    use iced_test::futures::futures::executor::block_on;
+    use iced_test::simulator;
+
+    #[test]
+    fn focus_and_escape_blur_redraw_without_editing_or_moving_the_pointer() {
+        let renderer =
+            block_on(Renderer::new(Default::default(), None)).expect("headless renderer");
+        let mut textarea: Textarea<'_, ()> = textarea("").resizable(false);
+        let mut tree = Tree::new(&textarea);
+        tree.diff(&mut textarea);
+        textarea.layout(
+            &mut tree,
+            &renderer,
+            &layout::Limits::new(Size::ZERO, Size::new(200.0, 100.0)),
+        );
+        let layout = Layout::new(tree.size);
+        let position = Point::new(12.0, 10.0);
+        let cursor = tree.state.downcast_ref::<State>().content.cursor();
+        let events = [
+            (
+                Event::Window(window::Event::RedrawRequested(Instant::now())),
+                false,
+            ),
+            (
+                Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
+                true,
+            ),
+            (simulator::press_key(Named::Escape, None), false),
+        ];
+
+        for (index, (event, focused)) in events.into_iter().enumerate() {
+            let mut bus = Bus::new();
+            let mut shell = Shell::new(&window::Headless, Waker::noop(), &mut bus);
+            textarea.update(
+                &mut tree,
+                &event,
+                layout,
+                mouse::Cursor::Available(position),
+                &renderer,
+                &mut shell,
+                &layout.bounds(),
+            );
+            let state = tree.state.downcast_ref::<State>();
+            assert_eq!(state.focused, focused);
+            assert_eq!(state.content.cursor(), cursor, "the caret did not move");
+            assert!(
+                shell.is_empty(),
+                "focus changes publish no application message"
+            );
+            if index > 0 {
+                assert_eq!(shell.redraw_request(), window::RedrawRequest::NextFrame);
+            }
         }
     }
 }
