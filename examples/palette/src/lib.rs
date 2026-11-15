@@ -24,7 +24,9 @@ use icedcn::widget::qr_code;
 use icedcn::widget::scrollable::{Direction, scrollbar};
 use icedcn::widget::{button, column, container, dialog, row, scrollable, text};
 
-use crate::tiles::chart;
+use crate::tiles::{
+    card_overview, chart, contribution_history, dividend_income, power_usage, stock_performance,
+};
 
 pub mod chrome;
 pub mod customize;
@@ -109,6 +111,12 @@ pub enum Message {
 pub struct State {
     pub mode: Mode,
     pub traffic: Data,
+    pub contributions: Data,
+    pub power: Data,
+    pub dividends: Data,
+    pub stocks: Data,
+    pub spending: Data,
+
     pub preview_page: PreviewPage,
     pub connected: bool,
     pub receiving_method: ReceivingMethod,
@@ -155,6 +163,12 @@ impl State {
         Self {
             mode,
             traffic: chart::data("Blue", mode),
+            contributions: contribution_history::data("Blue", mode),
+            power: power_usage::data("Blue", mode),
+            dividends: dividend_income::data("Blue", mode),
+            stocks: stock_performance::data("Blue", mode),
+            spending: card_overview::data("Blue", mode),
+
             preview_page: PreviewPage::One,
             connected: true,
             receiving_method: ReceivingMethod::BankTransfer,
@@ -282,6 +296,12 @@ impl State {
 
     fn refresh(&mut self) {
         self.traffic = chart::data(self.settings.chart, self.mode);
+        self.contributions = contribution_history::data(self.settings.chart, self.mode);
+        self.power = power_usage::data(self.settings.chart, self.mode);
+        self.dividends = dividend_income::data(self.settings.chart, self.mode);
+        self.stocks = stock_performance::data(self.settings.chart, self.mode);
+        self.spending = card_overview::data(self.settings.chart, self.mode);
+
         self.code = self.settings.source(self.mode);
         self.copied = false;
         self.copy_error = None;

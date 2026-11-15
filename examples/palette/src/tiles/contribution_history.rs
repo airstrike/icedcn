@@ -1,36 +1,37 @@
 //! Preview 01 contribution history card.
 
-use iced::{Center, Fill, Padding};
+use iced::{Fill, Padding};
+use icedcn::Slot;
 use icedcn::Theme;
 use icedcn::card;
 use icedcn::core::Border;
 use icedcn::theme;
 use icedcn::theme::container::Style;
-use icedcn::widget::{button, column, container, row, text};
-use icedcn::{Slot, Space};
+use icedcn::widget::chart::{Data, bar, bars};
+use icedcn::widget::{button, chart, column, container, row, text};
 
-use super::api_gap;
-use crate::{Message, State};
+use crate::{Message, Mode, PreviewPage, State, customize};
 
-pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
-    let chart = column![
-        api_gap::panel(
-            &["ChartContainer", "BarChart", "XAxis", "ChartTooltip"],
-            156.0
-        ),
-        row![
-            month("Dec"),
-            month("Jan"),
-            month("Feb"),
-            month("Mar"),
-            month("Apr"),
-            month("May"),
-        ]
-        .spacing(8)
-        .width(Fill),
-    ]
-    .spacing(Space::U2)
-    .width(Fill);
+/// Six months of contributions, tinted by the designer's chart selection.
+pub fn data(color: &str, mode: Mode) -> Data {
+    let color: iced::Color = customize::accent(color, mode == Mode::Dark).into();
+    chart::data(
+        bars([bar([1200, 1650, 1350, 1950, 1100, 2100])
+            .with_name("Contributions")
+            .with_color(color)])
+        .data_labels(None),
+    )
+    .x_axis_labels(["Dec", "Jan", "Feb", "Mar", "Apr", "May"])
+    .x_axis(|axis| axis.show_line(false).show_grid(false))
+    .y_axis(|axis| axis.none().show_grid(false))
+    .value_format(|value| format!("${value:.0}"))
+}
+
+pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
+    let chart = chart(&state.contributions)
+        .height(180)
+        .padding(0)
+        .style(chart::transparent);
 
     let details = row![
         detail("UPCOMING", "May 25, 2024", "$1,000 scheduled"),
@@ -44,9 +45,9 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
             card::header("Contribution History").description("Last 6 months of activity"),
             card::content(column![chart, details].spacing(16).width(Fill)),
             card::footer(
-                button("View Full Report")
+                button("More chart previews")
                     .width(Fill)
-                    .on_press(Message::Noop)
+                    .on_press(Message::SetPreviewPage(PreviewPage::Two))
             ),
         ]
         .spacing(16)
@@ -57,13 +58,6 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
     .padding(0)
     .width(Fill)
     .into()
-}
-
-fn month(label: &'static str) -> Slot<'static, Message> {
-    container(text::muted(label).size(12.0))
-        .width(Fill)
-        .align_x(Center)
-        .into()
 }
 
 fn detail(

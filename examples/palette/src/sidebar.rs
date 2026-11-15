@@ -44,7 +44,7 @@ pub fn view(state: &State, compact: bool) -> iced::Element<'_, Message, Theme> {
             Message::SetAccent
         ),
         picker(
-            "Chart color · preview 02",
+            "Chart color",
             state.settings.chart,
             customize::ACCENTS,
             Message::SetChart
