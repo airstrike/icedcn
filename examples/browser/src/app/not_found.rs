@@ -18,11 +18,13 @@ pub(super) fn view(path: &str) -> Element<'_, Message, Theme> {
                 .wrapping(text::Wrapping::None)
                 .ellipsis(text::Ellipsis::End),
             row![
-                button("Home").on_press(Message::GoTo("/")),
+                button("Home").anchor().on_press(Message::GoTo("/")),
                 button("Components")
+                    .anchor()
                     .style(button::Outline)
                     .on_press(Message::GoTo("/docs/components")),
                 button("Examples")
+                    .anchor()
                     .style(button::Outline)
                     .on_press(Message::GoTo("/examples")),
             ]

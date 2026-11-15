@@ -26,7 +26,7 @@ pub(crate) mod list;
 
 use iced_core::Length::Fill;
 use iced_core::text::{IntoFragment, LineHeight};
-use iced_core::{Alignment, Element, Padding};
+use iced_core::{Alignment, Element, Padding, mouse};
 use iced_widget::{Renderer, Space, Widget, anchored};
 use icedcn_core::Theme;
 use icedcn_core::theme::menu::item;
@@ -55,6 +55,7 @@ pub struct Item<'a, Message> {
     variant: Variant,
     indicator: Indicator,
     closes: bool,
+    anchor: bool,
 }
 
 /// What an item shows in its trailing indicator slot.
@@ -81,6 +82,7 @@ pub fn item<'a, Message>(content: impl Into<Slot<'a, Message>>) -> Item<'a, Mess
         variant: Variant::Default,
         indicator: Indicator::None,
         closes: true,
+        anchor: false,
     }
 }
 
@@ -120,6 +122,13 @@ impl<'a, Message> Item<'a, Message> {
     /// Show a `MenuShortcut` at the end of the item.
     pub fn shortcut(mut self, shortcut: &'a str) -> Self {
         self.shortcut = Some(shortcut);
+        self
+    }
+
+    /// Mark a navigation item as a link with a pointer cursor.
+    /// The caller supplies its destination message with `on_select`.
+    pub fn anchor(mut self) -> Self {
+        self.anchor = true;
         self
     }
 
@@ -190,6 +199,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
             variant,
             indicator,
             closes,
+            anchor,
         } = *self;
 
         content.inherit(
@@ -261,6 +271,9 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
             .disabled(disabled)
             .on_press_maybe(on_select)
             .style(style);
+        if anchor {
+            button = button.interaction(mouse::Interaction::Pointer);
+        }
         if let Some(message) = on_focus {
             button = button.on_focus(message);
         }

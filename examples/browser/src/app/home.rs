@@ -32,7 +32,7 @@ pub(super) fn view<'a>(width: f32) -> Element<'a, Message, Theme> {
     let hero = column![
         button(row![text::xs("Native components. Built with iced."), icon::arrow_right().size(12)]
             .spacing(6).align_y(Center))
-            .style(button::Secondary).height(24).padding([0, 10])
+            .anchor().style(button::Secondary).height(24).padding([0, 10])
             .on_press(Message::GoTo("/docs/introduction")),
         text::h1("The foundation for your next Rust app.")
             .size(if mobile { 34. } else { 48. })
@@ -44,8 +44,8 @@ pub(super) fn view<'a>(width: f32) -> Element<'a, Message, Theme> {
             .line_height(Pixels(28.)).align_x(Center).width(Fill))
             .max_width(720).center_x(Fill),
         container(row![
-            button("Get Started").on_press(Message::GoTo("/docs/installation")),
-            button("View Components").style(button::Secondary)
+            button("Get Started").anchor().on_press(Message::GoTo("/docs/installation")),
+            button("View Components").anchor().style(button::Secondary)
                 .on_press(Message::GoTo("/docs/components")),
         ].spacing(8).align_y(Center)).padding([8, 0]),
     ].spacing(16).align_x(Center).width(Fill);
@@ -82,6 +82,7 @@ pub(super) fn view<'a>(width: f32) -> Element<'a, Message, Theme> {
 
     let footer_label = text::small("Built with iced. Made to be yours.").style(theme::text::Muted);
     let footer_link = button("Explore examples")
+        .anchor()
         .style(button::Link)
         .on_press(Message::GoTo("/examples"));
     let footer: Slot<'_, Message> = if mobile {
@@ -198,6 +199,7 @@ fn route<'a>(
         .align_y(Center)
         .width(Fill),
     )
+    .anchor()
     .style(button::Ghost)
     .width(Fill)
     .on_press(Message::GoTo(path))
@@ -244,6 +246,7 @@ fn contributions<'a>() -> Slot<'a, Message> {
             .spacing(12)
             .width(Fill),
             button("Explore charts")
+                .anchor()
                 .width(Fill)
                 .on_press(Message::GoTo("/components/chart")),
         ]
@@ -278,6 +281,7 @@ fn team<'a>() -> Slot<'a, Message> {
             member("AT", "Alan Turing", "Developer"),
             separator(),
             button("Build your workspace")
+                .anchor()
                 .style(button::Outline)
                 .width(Fill)
                 .on_press(Message::GoTo("/create")),
@@ -338,6 +342,7 @@ fn dates<'a>() -> Slot<'a, Message> {
             )
             .center_x(Fill),
             button("Explore calendars")
+                .anchor()
                 .style(button::Outline)
                 .width(Fill)
                 .on_press(Message::GoTo("/components/calendar")),
@@ -365,6 +370,7 @@ fn customize<'a>() -> Slot<'a, Message> {
             )
             .width(Fill),
             button(row!["Create your theme", icon::arrow_right().size(14)].spacing(8))
+                .anchor()
                 .width(Fill)
                 .on_press(Message::GoTo("/create")),
         ]

@@ -124,7 +124,7 @@ impl App {
         let mobile = width < 768.;
         let nav: Slot<'_, Message> = if desktop {
             Row::with_children(NAVIGATION.iter().map(|&(label, url)| {
-                let link = button(label);
+                let link = button(label).anchor();
                 let active = match url {
                     "/" => self.destination == Route::Home,
                     "/create" => self.destination == Route::Create,
@@ -153,9 +153,9 @@ impl App {
                     let search = menu::item("Search documentation...")
                         .on_select(Message::Search(true))
                         .into();
-                    let links = NAVIGATION
-                        .iter()
-                        .map(|&(label, url)| menu::item(label).on_select(navigation(url)).into());
+                    let links = NAVIGATION.iter().map(|&(label, url)| {
+                        menu::item(label).anchor().on_select(navigation(url)).into()
+                    });
                     column([search, menu::separator()].into_iter().chain(links)).into()
                 },
             )
@@ -225,6 +225,7 @@ impl App {
             repo = repo.push(text::muted(count).size(12).into());
         }
         let github = button(repo)
+            .anchor()
             .style(button::Ghost)
             .translate(false)
             .on_press(Message::OpenUrl(GITHUB));

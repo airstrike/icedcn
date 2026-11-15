@@ -75,6 +75,7 @@ impl State {
             return column![
                 container(
                     button("← All examples")
+                        .anchor()
                         .style(button::Ghost)
                         .on_press(Message::Example(Event::Gallery))
                 )
@@ -97,8 +98,8 @@ impl State {
             card(column![
                 card::header("Receipts").description("A sales notebook."),
                 card::footer(row![
-                    button("Open Receipts").on_press(Message::Example(Event::OpenReceipts)),
-                    button("View source").style(button::Outline)
+                    button("Open Receipts").anchor().on_press(Message::Example(Event::OpenReceipts)),
+                    button("View source").anchor().style(button::Outline)
                         .on_press(Message::OpenUrl("https://github.com/airstrike/icedcn/tree/HEAD/examples/browser/src/examples")),
                 ].spacing(8).width(Fill)),
             ].width(Fill)).width(Fill),
