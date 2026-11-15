@@ -22,7 +22,8 @@ pub fn view(state: &State, compact: bool) -> iced::Element<'_, Message, Theme> {
             .width(Fill)
             .on_press(Message::SetMode(Mode::Dark)),
     ]
-    .spacing(8);
+    .spacing(8)
+    .width(Fill);
     let fields = column![
         text::small("Customize").semibold(),
         text::muted(if state.mode == Mode::Dark {
@@ -74,7 +75,8 @@ pub fn view(state: &State, compact: bool) -> iced::Element<'_, Message, Theme> {
                 .width(Fill)
                 .on_press(Message::NextPreset),
         ]
-        .spacing(8),
+        .spacing(8)
+        .width(Fill),
         button("Get Code")
             .size(Size::Sm)
             .width(Fill)
@@ -83,7 +85,12 @@ pub fn view(state: &State, compact: bool) -> iced::Element<'_, Message, Theme> {
     ]
     .spacing(8)
     .width(Fill);
-    container(column![scrollable(fields).height(Fill).width(Fill), actions,].spacing(16))
+    container(
+        column![scrollable(fields).height(Fill).width(Fill), actions,]
+            .spacing(16)
+            .width(Fill)
+            .height(Fill),
+    )
         .padding(14)
         .width(if compact { Fill } else { Length::Fixed(224.0) })
         .height(Fill)
