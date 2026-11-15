@@ -169,6 +169,7 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
             hover: None,
             swipe: None,
             region: None,
+            child_overlay: false,
         })
     }
 
@@ -239,7 +240,9 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
         );
 
         let mut toasts = std::mem::take(&mut state.inbox.0);
-        if can_activate(event) {
+        // A child overlay may capture the activation, bypassing this base
+        // update until the next event. Its trigger signal is still in the tree.
+        if std::mem::take(&mut state.child_overlay) || can_activate(event) {
             let mut raised = marker::drain::<Raise<Message>>();
             self.content
                 .operate(child_tree, child_layout, viewport, renderer, &mut raised);
@@ -379,11 +382,11 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
             window,
         );
 
+        let state = state.downcast_mut::<State<Message>>();
+        state.child_overlay |= !overlays.is_empty();
         if self.cards.is_empty() {
             return overlays;
         }
-
-        let state = state.downcast_mut::<State<Message>>();
         let (edge, width) = if window.width <= 600. {
             (MOBILE_OFFSET, (window.width - 2. * MOBILE_OFFSET).max(0.))
         } else {
@@ -481,6 +484,7 @@ struct State<Message> {
     hover: Option<(Position, Instant)>,
     swipe: Option<Swipe>,
     region: Option<Region>,
+    child_overlay: bool,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -831,6 +835,7 @@ mod tests {
             hover: None,
             swipe: None,
             region: None,
+            child_overlay: false,
         };
         let now = Instant::now();
         let second = Duration::from_secs(1);
@@ -868,6 +873,7 @@ mod tests {
             hover: None,
             swipe: None,
             region: None,
+            child_overlay: false,
         };
         let first = Id::unique();
         let second = Id::unique();
