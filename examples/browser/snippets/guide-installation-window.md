@@ -1,6 +1,6 @@
 ## Your first window
 
-Put this complete application in `src/main.rs`, then run `cargo run` from your application's directory:
+Replace `src/main.rs` with this complete application:
 
 ```rust
 use iced::Element;
@@ -43,4 +43,11 @@ fn main() -> iced::Result {
 }
 ```
 
-This example uses the system font. See [Typography](icedcn://component/typography) for text helpers and [Icons](icedcn://guide/installation#icons) for the generated icon module used by other examples.
+Check the application once to update its copied lockfile, then open the window:
+
+```sh
+cargo check
+cargo run --locked
+```
+
+Commit the generated `Cargo.lock` with your application. This example uses the system font. See [Typography](icedcn://component/typography) for text helpers and [Icons](icedcn://guide/installation#icons) for the generated icon module used by other examples.

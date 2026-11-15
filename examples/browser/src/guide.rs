@@ -46,13 +46,13 @@ static ARTICLES: &[Article] = &[
     Article {
         meta: page::Meta {
             title: "Installation",
-            description: "Run the browser and connect an application to the same Rust dependencies.",
+            description: "Add icedcn to a Rust application, open your first window, and explore the examples.",
         },
         blocks: &[
-            page::Block::Md("examples/browser/snippets/guide-installation-browser.md"),
             page::Block::Md("examples/browser/snippets/guide-installation-dependency.md"),
             page::Block::Md("examples/browser/snippets/guide-installation-window.md"),
             page::Block::Md("examples/browser/snippets/guide-installation-icons.md"),
+            page::Block::Md("examples/browser/snippets/guide-installation-browser.md"),
         ],
     },
     Article {

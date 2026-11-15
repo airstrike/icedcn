@@ -1,10 +1,10 @@
 ## Icons
 
-Examples that import `crate::icon` use a generated Lucide font module. Add the generator to your application's `Cargo.toml`:
+This setup is optional for the first window above. Examples that import `crate::icon` use a generated Lucide font module. Add the generator to your application's `Cargo.toml`:
 
 ```toml
 [build-dependencies]
-iced_lucide = { git = "https://github.com/airstrike/iced_lucide", branch = "codex/configurable-source" }
+iced_lucide = { git = "https://github.com/airstrike/iced_lucide", rev = "85fd2f6c533d0a88512a6a74d7db99b5de00b985" }
 ```
 
 Create `build.rs` beside that manifest:
@@ -16,7 +16,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-The build writes `src/icon.rs` and `fonts/lucide.ttf`. Declare the generated module at your crate root with `mod icon;`. Then add `.fonts([icon::FONT])` to your `iced::application(...)` builder before `.run()`. Registering the font is required for the glyphs to display correctly.
+The build writes `src/icon.rs` and `fonts/lucide.ttf`. Declare the generated module at your crate root. Allow unused functions because the module includes every icon:
+
+```rust
+#[allow(dead_code)]
+mod icon;
+```
+
+Then add `.fonts([icon::FONT])` to your `iced::application(...)` builder before `.run()`. Registering the font is required for the glyphs to display correctly.
 
 Call the generated functions as widget content: `button(icon::plus())`. In another module, import `crate::icon` first. The generated module uses iced text widgets; icedcn's composition layer accepts them as children.
 
