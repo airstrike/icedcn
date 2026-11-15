@@ -1,37 +1,40 @@
 use iced::widget::component::{Component, component};
-use iced::widget::scrollable;
-use iced::widget::scrollable::{Direction, Scrollbar};
-use iced::{Element, Fill, Pixels, Widget};
+use iced::{Element, Widget};
+use icedcn::Slot;
 use icedcn::Theme;
-use icedcn::widget::table::Track;
+use icedcn::widget::table::Track::Auto;
 use icedcn::widget::{checkbox, table, text};
 
 use crate::Message;
-
-const USERS: [(&str, &str, &str); 4] = [
-    ("Sarah Chen", "sarah.chen@example.com", "Admin"),
-    ("Marcus Rodriguez", "marcus.rodriguez@example.com", "User"),
-    ("Priya Patel", "priya.patel@example.com", "User"),
-    ("David Kim", "david.kim@example.com", "Editor"),
-];
 
 pub(super) fn preview<'a>() -> Element<'a, Message, Theme> {
     component(Selection).boxed()
 }
 
 struct Selection;
-
-#[derive(Debug, Clone)]
-enum Change {
-    All(bool),
-    Row(usize, bool),
-}
-
-struct Rows([bool; USERS.len()]);
+struct Rows([User<'static>; 4]);
 
 impl Default for Rows {
     fn default() -> Self {
-        Self([true, false, false, false])
+        Self(
+            [
+                ("Sarah Chen", "sarah.chen@example.com", "Admin", true),
+                (
+                    "Marcus Rodriguez",
+                    "marcus.rodriguez@example.com",
+                    "User",
+                    false,
+                ),
+                ("Priya Patel", "priya.patel@example.com", "User", false),
+                ("David Kim", "david.kim@example.com", "Editor", false),
+            ]
+            .map(|(name, email, role, selected)| User {
+                name,
+                email,
+                role,
+                selected,
+            }),
+        )
     }
 }
 
@@ -40,44 +43,61 @@ impl<'a> Component<'a, Message, Theme> for Selection {
     type Event = Change;
 
     fn update(&self, state: &mut Rows, change: Change, _: &iced::Renderer) -> Option<Message> {
-        match change {
-            Change::All(selected) => state.0.fill(selected),
-            Change::Row(row, selected) => state.0[row] = selected,
-        }
+        change.apply(&mut state.0);
         None
     }
 
     fn view(&self, state: &Rows) -> impl Widget<Change, Theme> + 'a {
-        let header = table::header([table::row([
-            table::head(
-                checkbox()
-                    .checked(state.0.iter().all(|checked| *checked))
-                    .on_checked_change(Change::All),
-            )
-            .padding([0, 0, 0, 8]),
-            table::head(text::small("Name").medium().line_height(Pixels(20.0))),
-            table::head(text::small("Email").medium().line_height(Pixels(20.0))),
-            table::head(text::small("Role").medium().line_height(Pixels(20.0))),
-        ])]);
-        let body = table::body(USERS.iter().enumerate().map(|(i, &(name, email, role))| {
-            let selected = state.0[i];
-            table::row([
-                table::cell(
-                    checkbox()
-                        .checked(selected)
-                        .on_checked_change(move |checked| Change::Row(i, checked)),
-                )
-                .padding([8, 0, 8, 8]),
-                table::cell(text::small(name).medium().line_height(Pixels(20.0))),
-                table::cell(text::small(email).line_height(Pixels(20.0))),
-                table::cell(text::small(role).line_height(Pixels(20.0))),
-            ])
-            .selected(selected)
-        }));
-        scrollable(Element::from(
-            table::grid([Track::Auto; 4]).header(header).body(body),
-        ))
-        .width(Fill)
-        .direction(Direction::Horizontal(Scrollbar::default()))
+        users(&state.0).compose()
     }
+}
+
+pub struct User<'a> {
+    pub name: &'a str,
+    pub email: &'a str,
+    pub role: &'a str,
+    pub selected: bool,
+}
+
+#[derive(Debug, Clone)]
+pub enum Change {
+    All(bool),
+    Row(usize, bool),
+}
+
+impl Change {
+    pub fn apply(self, users: &mut [User<'_>]) {
+        match self {
+            Self::All(value) => users.iter_mut().for_each(|user| user.selected = value),
+            Self::Row(index, value) => {
+                if let Some(user) = users.get_mut(index) {
+                    user.selected = value;
+                }
+            }
+        }
+    }
+}
+
+pub fn users<'a>(rows: &[User<'a>]) -> Slot<'a, Change> {
+    let all = !rows.is_empty() && rows.iter().all(|user| user.selected);
+    let select_all = checkbox().checked(all).on_checked_change(Change::All);
+    let header = table::header([table::row([
+        table::head(select_all).padding([0, 0, 0, 8]),
+        table::head("Name"),
+        table::head("Email"),
+        table::head("Role"),
+    ])]);
+    let body = table::body(rows.iter().enumerate().map(|(i, user)| {
+        let check = checkbox()
+            .checked(user.selected)
+            .on_checked_change(move |value| Change::Row(i, value));
+        table::row([
+            table::cell(check).padding([8, 0, 8, 8]),
+            table::cell(text(user.name).medium()),
+            table::cell(user.email),
+            table::cell(user.role),
+        ])
+        .selected(user.selected)
+    }));
+    table([table::grid([Auto; 4]).header(header).body(body)]).into()
 }
