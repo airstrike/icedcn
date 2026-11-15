@@ -91,12 +91,12 @@ pub fn view(state: &State, compact: bool) -> iced::Element<'_, Message, Theme> {
             .width(Fill)
             .height(Fill),
     )
-        .padding(14)
-        .width(if compact { Fill } else { Length::Fixed(224.0) })
-        .height(Fill)
-        .clip(true)
-        .style(rail_style)
-        .into()
+    .padding(14)
+    .width(if compact { Fill } else { Length::Fixed(224.0) })
+    .height(Fill)
+    .clip(true)
+    .style(rail_style)
+    .into()
 }
 
 fn picker(
