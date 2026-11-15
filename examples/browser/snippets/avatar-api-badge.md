@@ -35,9 +35,9 @@ fn presence(theme: &Theme) -> container::Style {
 
 fn preview() -> avatar::group::Group<'static, ()> {
     avatar::group([
-        avatar::badge(avatar(None).fallback("AC"), avatar::dot()).badge_style(presence),
+        avatar::badge(avatar(None).fallback("HR"), avatar::dot()).badge_style(presence),
         avatar::badge(
-            avatar(None).fallback("PP"),
+            avatar(None).fallback("IC"),
             plus(8.0).style(|theme: &Theme, _| svg::Style {
                 color: Some(theme.primary.foreground.into()),
             }),

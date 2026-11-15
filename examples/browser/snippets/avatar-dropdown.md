@@ -7,7 +7,7 @@ fn preview(portrait: image::Handle) -> dropdown_menu::DropdownMenu<'static, ()> 
     dropdown_menu(
         move |menu| {
             menu.trigger(
-                button(avatar(Some(portrait.clone())).fallback("AC"))
+                button(avatar(Some(portrait.clone())).fallback("AT"))
                     .style(button::Ghost)
                     .square()
                     .rounded(),

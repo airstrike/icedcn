@@ -13,13 +13,13 @@ fn plus(size: f32) -> Svg<'static, Theme> {
 
 fn preview(
     portrait: image::Handle,
-    maxleiter: image::Handle,
-    evilrabbit: image::Handle,
+    hecrj: image::Handle,
+    iced_logo: image::Handle,
 ) -> avatar::group::Group<'static, ()> {
     avatar::group([
-        avatar(Some(portrait)).fallback("AC"),
-        avatar(Some(maxleiter)).fallback("LR"),
-        avatar(Some(evilrabbit)).fallback("ER"),
+        avatar(Some(portrait)).fallback("AT"),
+        avatar(Some(hecrj)).fallback("HR"),
+        avatar(Some(iced_logo)).fallback("IC"),
     ])
     .count(plus(16.0).style(|theme: &Theme, _| svg::Style {
         color: Some(theme.muted.foreground.into()),

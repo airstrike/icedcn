@@ -18,8 +18,8 @@ fn presence(theme: &Theme) -> container::Style {
     style
 }
 
-fn preview(portrait: image::Handle) -> avatar::Avatar<'static, ()> {
-    avatar::badge(avatar(Some(portrait)).fallback("AC"), avatar::dot())
+fn preview(hecrj: image::Handle) -> avatar::Avatar<'static, ()> {
+    avatar::badge(avatar(Some(hecrj)).fallback("HR"), avatar::dot())
         .badge_style(presence)
 }
 ```

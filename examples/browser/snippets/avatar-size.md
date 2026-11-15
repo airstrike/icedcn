@@ -5,9 +5,9 @@ use icedcn::widget::row;
 
 fn preview(portrait: image::Handle) -> row::Row<'static, ()> {
     row![
-        avatar(Some(portrait.clone())).fallback("AC").size(avatar::Sm),
-        avatar(Some(portrait.clone())).fallback("AC"),
-        avatar(Some(portrait)).fallback("AC").size(avatar::Lg),
+        avatar(Some(portrait.clone())).fallback("AT").size(avatar::Sm),
+        avatar(Some(portrait.clone())).fallback("AT"),
+        avatar(Some(portrait)).fallback("AT").size(avatar::Lg),
     ]
     .spacing(8)
     .wrap()

@@ -14,7 +14,7 @@ use icedcn::widget::avatar;
 
 fn preview(image: image::Handle) -> avatar::Avatar<'static, ()> {
     avatar(Some(image))
-        .fallback("AC")
+        .fallback("AT")
         .size(avatar::Default)
 }
 ```

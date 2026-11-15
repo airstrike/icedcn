@@ -11,9 +11,9 @@ fn plus(size: f32) -> Svg<'static, Theme> {
         .height(size)
 }
 
-fn preview(pranathip: image::Handle) -> avatar::Avatar<'static, ()> {
+fn preview(iced_logo: image::Handle) -> avatar::Avatar<'static, ()> {
     avatar::badge(
-        avatar(Some(pranathip)).fallback("PP"),
+        avatar(Some(iced_logo)).fallback("IC"),
         plus(8.0).style(|theme: &Theme, _| svg::Style {
             color: Some(theme.primary.foreground.into()),
         }),

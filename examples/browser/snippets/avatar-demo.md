@@ -18,21 +18,21 @@ fn presence(theme: &Theme) -> container::Style {
 
 fn preview(
     portrait: image::Handle,
-    maxleiter: image::Handle,
-    evilrabbit: image::Handle,
+    hecrj: image::Handle,
+    iced_logo: image::Handle,
     window_width: f32,
 ) -> row::Row<'static, ()> {
     row![
-        avatar(Some(portrait.clone())).fallback("AC"),
+        avatar(Some(portrait.clone())).fallback("AT"),
         avatar::badge(
-            avatar(Some(evilrabbit.clone())).fallback("ER"),
+            avatar(Some(hecrj.clone())).fallback("HR"),
             avatar::dot(),
         )
         .badge_style(presence),
         avatar::group([
-            avatar(Some(portrait)).fallback("AC"),
-            avatar(Some(maxleiter)).fallback("LR"),
-            avatar(Some(evilrabbit)).fallback("ER"),
+            avatar(Some(portrait)).fallback("AT"),
+            avatar(Some(hecrj)).fallback("HR"),
+            avatar(Some(iced_logo)).fallback("IC"),
         ])
         .count("+3"),
     ]

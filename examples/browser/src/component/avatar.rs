@@ -1,4 +1,5 @@
 // RTL is omitted under the browser component scope.
+// These examples keep the original Andy Terra, Héctor Ramón and iced logo fixtures.
 
 use std::sync::OnceLock;
 
@@ -43,13 +44,31 @@ pub(crate) fn evilrabbit_handle() -> image::Handle {
         .clone()
 }
 
-pub(crate) fn pranathip_handle() -> image::Handle {
+fn airstrike_handle() -> image::Handle {
     static IMAGE: OnceLock<image::Handle> = OnceLock::new();
     IMAGE
         .get_or_init(|| {
             image::Handle::from_bytes(
-                include_bytes!("../../assets/avatars/pranathip.png").as_slice(),
+                include_bytes!("../../assets/avatars/airstrike.png").as_slice(),
             )
+        })
+        .clone()
+}
+
+fn hecrj_handle() -> image::Handle {
+    static IMAGE: OnceLock<image::Handle> = OnceLock::new();
+    IMAGE
+        .get_or_init(|| {
+            image::Handle::from_bytes(include_bytes!("../../assets/avatars/hecrj.png").as_slice())
+        })
+        .clone()
+}
+
+fn iced_handle() -> image::Handle {
+    static IMAGE: OnceLock<image::Handle> = OnceLock::new();
+    IMAGE
+        .get_or_init(|| {
+            image::Handle::from_bytes(include_bytes!("../../assets/avatars/iced.png").as_slice())
         })
         .clone()
 }
@@ -189,16 +208,13 @@ impl page::Page for AvatarPage {
         match id {
             // The viewport sets the gap. The available content width controls wrapping.
             "demo" => row![
-                avatar(Some(alex_handle())).fallback("AC"),
-                avatar::badge(
-                    avatar(Some(evilrabbit_handle())).fallback("ER"),
-                    avatar::dot(),
-                )
-                .badge_style(presence),
+                avatar(Some(airstrike_handle())).fallback("AT"),
+                avatar::badge(avatar(Some(hecrj_handle())).fallback("HR"), avatar::dot(),)
+                    .badge_style(presence),
                 avatar::group([
-                    avatar(Some(alex_handle())).fallback("AC"),
-                    avatar(Some(maxleiter_handle())).fallback("LR"),
-                    avatar(Some(evilrabbit_handle())).fallback("ER"),
+                    avatar(Some(airstrike_handle())).fallback("AT"),
+                    avatar(Some(hecrj_handle())).fallback("HR"),
+                    avatar(Some(iced_handle())).fallback("IC"),
                 ])
                 .count("+3"),
             ]
@@ -207,14 +223,14 @@ impl page::Page for AvatarPage {
             .align_y(iced::Center)
             .into(),
 
-            "basic" => avatar(Some(alex_handle())).fallback("AC").into(),
+            "basic" => avatar(Some(airstrike_handle())).fallback("AT").into(),
 
-            "badge" => avatar::badge(avatar(Some(alex_handle())).fallback("AC"), avatar::dot())
+            "badge" => avatar::badge(avatar(Some(hecrj_handle())).fallback("HR"), avatar::dot())
                 .badge_style(presence)
                 .into(),
 
             "badge-icon" => avatar::badge(
-                avatar(Some(pranathip_handle())).fallback("PP"),
+                avatar(Some(iced_handle())).fallback("IC"),
                 plus(8.0).style(|theme: &Theme, _| svg::Style {
                     color: Some(theme.primary.foreground.into()),
                 }),
@@ -222,24 +238,24 @@ impl page::Page for AvatarPage {
             .into(),
 
             "group" => avatar::group([
-                avatar(Some(alex_handle())).fallback("AC"),
-                avatar(Some(maxleiter_handle())).fallback("LR"),
-                avatar(Some(evilrabbit_handle())).fallback("ER"),
+                avatar(Some(airstrike_handle())).fallback("AT"),
+                avatar(Some(hecrj_handle())).fallback("HR"),
+                avatar(Some(iced_handle())).fallback("IC"),
             ])
             .into(),
 
             "group-count" => avatar::group([
-                avatar(Some(alex_handle())).fallback("AC"),
-                avatar(Some(maxleiter_handle())).fallback("LR"),
-                avatar(Some(evilrabbit_handle())).fallback("ER"),
+                avatar(Some(airstrike_handle())).fallback("AT"),
+                avatar(Some(hecrj_handle())).fallback("HR"),
+                avatar(Some(iced_handle())).fallback("IC"),
             ])
             .count("+3")
             .into(),
 
             "group-count-icon" => avatar::group([
-                avatar(Some(alex_handle())).fallback("AC"),
-                avatar(Some(maxleiter_handle())).fallback("LR"),
-                avatar(Some(evilrabbit_handle())).fallback("ER"),
+                avatar(Some(airstrike_handle())).fallback("AT"),
+                avatar(Some(hecrj_handle())).fallback("HR"),
+                avatar(Some(iced_handle())).fallback("IC"),
             ])
             .count(plus(16.0).style(|theme: &Theme, _| svg::Style {
                 color: Some(theme.muted.foreground.into()),
@@ -247,9 +263,13 @@ impl page::Page for AvatarPage {
             .into(),
 
             "size" => row![
-                avatar(Some(alex_handle())).fallback("AC").size(avatar::Sm),
-                avatar(Some(alex_handle())).fallback("AC"),
-                avatar(Some(alex_handle())).fallback("AC").size(avatar::Lg),
+                avatar(Some(airstrike_handle()))
+                    .fallback("AT")
+                    .size(avatar::Sm),
+                avatar(Some(airstrike_handle())).fallback("AT"),
+                avatar(Some(airstrike_handle()))
+                    .fallback("AT")
+                    .size(avatar::Lg),
             ]
             .spacing(8)
             .wrap()
@@ -259,7 +279,7 @@ impl page::Page for AvatarPage {
             "dropdown" => dropdown_menu(
                 |m| {
                     m.trigger(
-                        button(avatar(Some(alex_handle())).fallback("AC"))
+                        button(avatar(Some(airstrike_handle())).fallback("AT"))
                             .style(button::Ghost)
                             .square()
                             .rounded(),
