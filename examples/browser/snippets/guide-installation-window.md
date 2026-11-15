@@ -38,7 +38,6 @@ impl Counter {
 fn main() -> iced::Result {
     iced::application(Counter::default, Counter::update, Counter::view)
         .title("My icedcn application")
-        .theme(|_: &Counter| Theme::light())
         .run()
 }
 ```
@@ -50,4 +49,4 @@ cargo check
 cargo run --locked
 ```
 
-Commit the generated `Cargo.lock` with your application. This example uses the system font. See [Typography](icedcn://component/typography) for text helpers and [Icons](icedcn://guide/installation#icons) for the generated icon module used by other examples.
+Commit the generated `Cargo.lock` with your application. This example follows the system appearance and uses the system font. See [Typography](icedcn://component/typography) for text helpers and [Icons](icedcn://guide/installation#icons) for the generated icon module used by other examples.

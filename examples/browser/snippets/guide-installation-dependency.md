@@ -9,7 +9,9 @@ cd my-app
 cargo run
 ```
 
-The CLI creates a standalone application with its dependencies and Rust toolchain configured. Cargo downloads icedcn from GitHub; you do not need a local checkout. Commit your application's generated `Cargo.lock`.
+The CLI configures the application and toolchain. Commit the generated `Cargo.lock`.
+
+For an existing project, run `icedcn toolchain` in its root. A conflicting toolchain is reported without changing the file. Use `icedcn toolchain --update` to change the channel while preserving components, targets, and other settings.
 
 ## Manual setup
 
@@ -18,10 +20,14 @@ Install Rust with [rustup](https://rustup.rs/), then create an application:
 ```sh
 cargo new my-app --edition 2024
 cd my-app
-rustup override set nightly-2026-07-11
 ```
 
-This selects the nightly currently used by icedcn. Cargo downloads the library from GitHub; no local icedcn checkout is needed. Commit the generated `Cargo.lock` to keep dependency revisions reproducible.
+Create `rust-toolchain.toml` in the project root:
+
+```toml
+[toolchain]
+channel = "nightly-2026-07-11"
+```
 
 Replace the generated `[dependencies]` section in your application's `Cargo.toml` with:
 

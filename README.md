@@ -38,7 +38,7 @@ cd my-app
 cargo run
 ```
 
-The CLI configures the dependencies and toolchain. No local icedcn checkout is needed.
+The CLI configures the dependencies and toolchain.
 See [Installation](https://icedcn.airstrike.fyi/docs/installation) for the manual setup.
 
 Alternatively, add these dependencies to your application's `Cargo.toml`:
@@ -93,7 +93,6 @@ impl Counter {
 fn main() -> iced::Result {
     iced::application(Counter::default, Counter::update, Counter::view)
         .title("Counter")
-        .theme(|_: &Counter| Theme::light())
         .run()
 }
 ```

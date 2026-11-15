@@ -8,4 +8,4 @@ cd icedcn
 cargo run --locked -p browser
 ```
 
-Rustup uses the checkout’s pinned toolchain. You do not need this checkout to use icedcn in an application. Selecting an additional font in the browser can require a network connection.
+Rustup uses the checkout’s pinned toolchain. Selecting an additional font in the browser can require a network connection.
