@@ -160,7 +160,7 @@ fn controls<'a>() -> Slot<'a, Message> {
                         menu::item("Block User"),
                         menu::separator(),
                         menu::item("Delete Conversation").style(menu::Destructive),
-                    ].into(),
+                    ].width(Fill).into(),
                 )
                 .side(dropdown_menu::Side::Top)
                 .align(dropdown_menu::Align::End)

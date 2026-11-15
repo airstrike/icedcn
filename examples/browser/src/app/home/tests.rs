@@ -69,6 +69,10 @@ fn alert_and_quick_actions_work_inside_the_showcase() {
     ui = ui.rebuild(Element::from(controls()));
     frame(&mut ui);
     ui.find("Quick Actions").expect("local quick-actions menu");
+    for label in ["Mute Conversation", "Mark as Read", "Delete Conversation"] {
+        let bounds = ui.find(label).expect("quick action").bounds();
+        assert!(bounds.height <= 20.1, "{label}: {bounds:?}");
+    }
     ui.click("Mark as Read").expect("menu action");
     assert!(ui.into_messages().next().is_none());
 }
