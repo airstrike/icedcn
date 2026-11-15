@@ -1,5 +1,3 @@
-This layout takes the workspace switcher, navigation and account controls from the application. Each closure receives the provider handle, so it can show icons when collapsed and place dropdowns below their triggers on mobile.
-
 ```rust
 use iced::{Fill, Shrink};
 use iced::widget::Space;
@@ -28,3 +26,5 @@ pub fn workspace<'a, M: Clone + 'static>(
     .into()
 }
 ```
+
+This layout takes the workspace switcher, navigation and account controls from the application. Each closure receives the provider handle, so it can show icons when collapsed and place dropdowns below their triggers on mobile.
