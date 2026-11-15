@@ -23,10 +23,7 @@ const NAVIGATION: &[(&str, &str)] = &[
     ("Home", GITHUB),
     ("Docs", "icedcn://guide/introduction"),
     ("Components", "icedcn://guide/components"),
-    (
-        "Examples",
-        "https://github.com/airstrike/icedcn/tree/HEAD/examples",
-    ),
+    ("Examples", "icedcn://examples"),
     ("Charts", "icedcn://component/chart"),
     ("Typography", "icedcn://component/typography"),
 ];
@@ -79,6 +76,7 @@ pub(super) fn shortcuts() -> Subscription<Message> {
             return None;
         }
         match key.as_ref() {
+            Key::Named(Named::Escape) => Some(Message::Escape),
             Key::Named(Named::Tab) if modifiers.shift() => Some(Message::FocusPrevious),
             Key::Named(Named::Tab) => Some(Message::FocusNext),
             Key::Character("a") if modifiers == keyboard::Modifiers::COMMAND => {
@@ -116,9 +114,13 @@ impl App {
         let mobile = width < 768.;
         let nav: Slot<'_, Message> = if desktop {
             Row::with_children(NAVIGATION.iter().map(|&(label, url)| {
-                button(label)
-                    .style(button::Ghost)
-                    .height(32)
+                let link = button(label);
+                let link = if label == "Examples" && self.showing_examples {
+                    link.style(button::Secondary)
+                } else {
+                    link.style(button::Ghost)
+                };
+                link.height(32)
                     .translate(false)
                     .on_press(Message::OpenUrl(url))
                     .into()
@@ -270,6 +272,10 @@ impl App {
     }
 
     fn palette(&self) -> Slot<'_, Message> {
+        let receipts = command::item("Receipts")
+            .group("Examples")
+            .icon(icon::book_open)
+            .on_select(Message::OpenUrl("icedcn://examples/receipts"));
         let settings = command::item("Change font…")
             .group("Settings")
             .icon(icon::settings)
@@ -307,7 +313,7 @@ impl App {
             });
         command(
             pages
-                .chain([settings])
+                .chain([settings, receipts])
                 .chain(links)
                 .chain(guides)
                 .chain(sections),
@@ -354,10 +360,11 @@ mod tests {
         );
         assert!(desktop.find("New").is_err());
         desktop.click("Examples").unwrap();
-        assert!(desktop.drain().any(|m| matches!(
-            m,
-            Message::OpenUrl("https://github.com/airstrike/icedcn/tree/HEAD/examples")
-        )));
+        assert!(
+            desktop
+                .drain()
+                .any(|m| matches!(m, Message::OpenUrl("icedcn://examples")))
+        );
         let mut mobile = header(&app, 375.);
         mobile.click("Menu").unwrap();
         mobile.click("Charts").unwrap();
@@ -366,6 +373,45 @@ mod tests {
                 .drain()
                 .any(|m| matches!(m, Message::OpenUrl("icedcn://component/chart")))
         );
+    }
+
+    #[test]
+    fn examples_open_in_app_and_docs_navigation_returns_to_the_article() {
+        let mut app = app();
+        let _ = app.update(Message::OpenUrl("icedcn://examples"));
+        assert!(app.showing_examples);
+        let mut ui = Simulator::with_size(
+            Settings::default(),
+            iced::Size::new(1200., 900.),
+            app.view(),
+        );
+        ui.click("Open Receipts").unwrap();
+        let open = ui
+            .into_messages()
+            .find(|m| matches!(m, Message::Example(_)))
+            .unwrap();
+        let _ = app.update(open);
+        let mut ui = Simulator::with_size(
+            Settings::default(),
+            iced::Size::new(1200., 900.),
+            app.view(),
+        );
+        ui.click("Friday lunch").unwrap();
+        let show = ui
+            .into_messages()
+            .find(|m| matches!(m, Message::Example(_)))
+            .unwrap();
+        let _ = app.update(show);
+        let mut ui = Simulator::with_size(
+            Settings::default(),
+            iced::Size::new(1200., 900.),
+            app.view(),
+        );
+        ui.find("Edit receipt").unwrap();
+        drop(ui);
+        let _ = app.update(Message::OpenComponent("introduction".into()));
+        assert!(!app.showing_examples);
+        assert_eq!(app.pages[app.current_page].meta().title, "Introduction");
     }
 
     #[test]

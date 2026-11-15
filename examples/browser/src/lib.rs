@@ -14,6 +14,7 @@
 pub mod app;
 pub mod component;
 pub mod docs;
+pub mod examples;
 pub mod font;
 pub mod fonts;
 pub mod guide;

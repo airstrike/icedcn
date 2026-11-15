@@ -21,6 +21,7 @@ use icedcn::{Size, Theme, Weight, theme};
 
 use crate::component;
 use crate::docs;
+use crate::examples;
 use crate::guide;
 use crate::icon;
 use crate::page::{self, SnippetViewer};
@@ -31,6 +32,8 @@ const PINNED_FONTS: &[&str] = &["Geist", "Inter"];
 
 pub struct App {
     dark_mode: bool,
+    showing_examples: bool,
+    examples: examples::State,
     width: f32,
     search: bool,
     fonts_open: bool,
@@ -49,6 +52,8 @@ pub struct App {
 #[derive(Debug, Clone)]
 pub enum Message {
     ToggleTheme,
+    Example(examples::Event),
+    Escape,
     Width(f32),
     SelectPage(usize),
     OpenUrl(&'static str),
@@ -190,6 +195,8 @@ impl App {
         (
             Self {
                 dark_mode,
+                showing_examples: false,
+                examples: examples::State::default(),
                 width,
                 search: false,
                 fonts_open: false,
@@ -214,7 +221,7 @@ impl App {
 
     pub fn subscription(&self) -> Subscription<Message> {
         let i = self.current_page;
-        let page = match self.pages.get(i) {
+        let page = match self.pages.get(i).filter(|_| !self.showing_examples) {
             Some(page) => page
                 .subscription()
                 .with(i)
@@ -230,6 +237,15 @@ impl App {
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
+            Message::Example(event) => {
+                self.search = false;
+                self.showing_examples = true;
+                self.examples.update(event)
+            }
+            Message::Escape if self.showing_examples && !self.search && !self.fonts_open => {
+                self.examples.escape()
+            }
+            Message::Escape => Task::none(),
             Message::Width(width) => {
                 self.width = width;
                 for page in &mut self.pages {
@@ -250,7 +266,13 @@ impl App {
             }
             Message::OpenUrl(url) => {
                 self.search = false;
-                page::open_link(url)
+                match url {
+                    "icedcn://examples" => self.update(Message::Example(examples::Event::Gallery)),
+                    "icedcn://examples/receipts" => {
+                        self.update(Message::Example(examples::Event::OpenReceipts))
+                    }
+                    _ => page::open_link(url),
+                }
             }
             Message::OpenComponent(target) => {
                 let (name, fragment) = target
@@ -313,6 +335,7 @@ impl App {
                 {
                     prev.reset_volatile();
                 }
+                self.showing_examples = false;
                 self.current_page = page;
                 let page = &mut self.pages[page];
                 let visible = page.on_visible();
@@ -351,7 +374,7 @@ impl App {
             }
             Message::SelectArticle => {
                 use iced::widget::operation::text::select_all;
-                if self.search || self.fonts_open {
+                if self.search || self.fonts_open || self.showing_examples {
                     Task::none()
                 } else {
                     select_all(self.pages[self.current_page].scrollable_id())
@@ -532,6 +555,17 @@ impl App {
     pub fn view(&self) -> iced::Element<'_, Message, Theme> {
         let width = self.width;
         let header = self.header(width);
+
+        if self.showing_examples {
+            return toaster(
+                column![header, self.examples.view(width)]
+                    .width(Fill)
+                    .height(Fill)
+                    .boxed(),
+            )
+            .position(toast::Position::TopCenter)
+            .into();
+        }
 
         let current = &*self.pages[self.current_page];
         let meta = current.meta();
