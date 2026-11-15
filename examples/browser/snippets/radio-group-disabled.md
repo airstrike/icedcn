@@ -1,19 +1,27 @@
 ```rust
+use iced::Shrink;
 use icedcn::theme;
 use icedcn::theme::tweak::Alpha;
-use icedcn::Horizontal;
-use icedcn::widget::{column, field, radio_group, text};
+use icedcn::widget::{field, radio_group, text};
+use icedcn::{Horizontal, Slot};
 
-radio_group(|g| {
-    column![
-        field(g.item("option1").disabled(true))
-            .orientation(Horizontal)
-            .label(text::small("Disabled").style(theme::text::Foreground + Alpha(0.5))),
-        field(g.item("option2")).orientation(Horizontal).label(text::small("Option 2")),
-        field(g.item("option3")).orientation(Horizontal).label(text::small("Option 3")),
-    ]
-    .spacing(8)
+fn availability<M: Clone + 'static>() -> Slot<'static, M> {
+    radio_group(|g| {
+        field::group(["Disabled", "Option 2", "Option 3"].map(|name| {
+            let disabled = name == "Disabled";
+            let label = text::small(name)
+                .style(theme::text::Foreground + Alpha(if disabled { 0.5 } else { 1. }));
+            field(g.item(name))
+                .orientation(Horizontal)
+                .label(label)
+                .disabled(disabled)
+                .into()
+        }))
+        .spacing(8)
+        .width(Shrink)
+        .into()
+    })
+    .default_value("Option 2")
     .into()
-})
-.default_value("option2")
+}
 ```

@@ -238,6 +238,7 @@ impl Handle {
             list::List {
                 content: content.compose(),
                 orientation: Some((self.orientation, horizontal.then(|| self.scroll.clone()))),
+                single_tab_stop: true,
             }
             .boxed(),
         )

@@ -19,6 +19,7 @@ use std::any::Any;
 pub(crate) struct List<'a, Message> {
     pub content: Element<'a, Message, Theme, Renderer>,
     pub orientation: Option<(Orientation, Option<Id>)>,
+    pub single_tab_stop: bool,
 }
 
 struct Activate {
@@ -178,7 +179,7 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
             self.content
                 .operate(child_tree, child_layout, viewport, renderer, op)
         };
-        if self.orientation.is_some() {
+        if self.single_tab_stop {
             let mut active = Active::default();
             visit(&mut active);
             let index = focus::count(&mut visit)

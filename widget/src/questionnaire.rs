@@ -418,6 +418,7 @@ impl<'a, M: 'static> Component<'a, M, Theme, Renderer> for Questionnaire<'a, M> 
             List {
                 content: choices.into(),
                 orientation: None,
+                single_tab_stop: false,
             }
             .boxed()
             .into()

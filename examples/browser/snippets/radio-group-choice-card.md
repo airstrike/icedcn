@@ -1,9 +1,28 @@
 ```rust
-radio_group(|g| field::group([
-    ("plus", "Plus", "For individuals and small teams."),
-    ("pro", "Pro", "For growing businesses."),
-    ("enterprise", "Enterprise", "For large teams and enterprises."),
-].map(|(value,label,description)| field(g.item(value)).orientation(Horizontal)
-    .control_last().label(label).description(description).card().into())).spacing(8).width(384).into())
-.default_value("plus")
+use icedcn::widget::{field, radio_group};
+use icedcn::{Horizontal, Slot};
+
+fn plans<M: Clone + 'static>() -> Slot<'static, M> {
+    let plans = [
+        ("Plus", "For individuals and small teams."),
+        ("Pro", "For growing businesses."),
+        ("Enterprise", "For large teams and enterprises."),
+    ];
+    radio_group(move |g| {
+        field::group(plans.map(|(name, detail)| {
+            field(g.item(name))
+                .orientation(Horizontal)
+                .control_last()
+                .label(name)
+                .description(detail)
+                .card()
+                .into()
+        }))
+        .spacing(8)
+        .width(384)
+        .into()
+    })
+    .default_value("Plus")
+    .into()
+}
 ```

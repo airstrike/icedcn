@@ -42,7 +42,7 @@ pub fn default(theme: &Theme, status: Status) -> iced_widget::radio::Style {
     let background = if selected {
         p.primary.base
     } else if is_dark(theme) {
-        p.input.alpha(0.3)
+        p.input.scale_alpha(0.3)
     } else {
         Color::TRANSPARENT
     };

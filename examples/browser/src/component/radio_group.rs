@@ -1,8 +1,8 @@
-use iced::Task;
+use iced::{Shrink, Task};
 
 use icedcn::theme;
 use icedcn::theme::tweak::Alpha;
-use icedcn::widget::{column, field, radio_group, text};
+use icedcn::widget::{field, radio_group, text};
 use icedcn::{Horizontal, Slot, Theme};
 
 use crate::Message;
@@ -20,6 +20,8 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/radio-group-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/radio-group-installation.md"),
+    page::Block::Md("examples/browser/snippets/radio-group-usage.md"),
     page::Block::Md("examples/browser/snippets/radio-group-composition.md"),
     page::Block::Group {
         title: "Examples",
@@ -73,19 +75,6 @@ impl RadioGroupPage {
     }
 }
 
-/// `field-description` typography under a label, beside its item.
-fn described<'a>(
-    item: impl Into<Slot<'a, Message>>,
-    label: &'a str,
-    description: &'a str,
-) -> Slot<'a, Message> {
-    field(item)
-        .orientation(Horizontal)
-        .label(label)
-        .description(description)
-        .into()
-}
-
 impl page::Page for RadioGroupPage {
     fn page_index(&self) -> usize {
         self.state.page_index
@@ -115,121 +104,126 @@ impl page::Page for RadioGroupPage {
         self.state.reset_volatile();
     }
 
-    fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
-        match id {
-            "demo" => radio_group(|g| {
-                column![
-                    field(g.item("default"))
-                        .orientation(Horizontal)
-                        .label("Default"),
-                    field(g.item("comfortable"))
-                        .orientation(Horizontal)
-                        .label("Comfortable"),
-                    field(g.item("compact"))
-                        .orientation(Horizontal)
-                        .label("Compact"),
-                ]
-                .spacing(8)
-                .into()
-            })
-            .default_value("comfortable")
-            .into(),
-
-            "description" => radio_group(|g| {
-                column![
-                    described(
-                        g.item("default"),
-                        "Default",
-                        "Standard spacing for most use cases."
-                    ),
-                    described(
-                        g.item("comfortable"),
-                        "Comfortable",
-                        "More space between elements."
-                    ),
-                    described(
-                        g.item("compact"),
-                        "Compact",
-                        "Minimal spacing for dense layouts."
-                    ),
-                ]
-                .spacing(8)
-                .into()
-            })
-            .default_value("comfortable")
-            .into(),
-
-            "disabled" => radio_group(|g| {
-                column![
-                    field(g.item("option1").disabled(true))
-                        .orientation(Horizontal)
-                        .label(text::small("Disabled").style(theme::text::Foreground + Alpha(0.5))),
-                    field(g.item("option2"))
-                        .orientation(Horizontal)
-                        .label(text::small("Option 2")),
-                    field(g.item("option3"))
-                        .orientation(Horizontal)
-                        .label(text::small("Option 3")),
-                ]
-                .spacing(8)
-                .into()
-            })
-            .default_value("option2")
-            .into(),
-
-            "choice-card" => radio_group(|g| {
-                field::group(
-                    [
-                        ("plus", "Plus", "For individuals and small teams."),
-                        ("pro", "Pro", "For growing businesses."),
-                        (
-                            "enterprise",
-                            "Enterprise",
-                            "For large teams and enterprises.",
-                        ),
-                    ]
-                    .map(|(value, label, description)| {
-                        field(g.item(value))
-                            .orientation(Horizontal)
-                            .control_last()
-                            .label(label)
-                            .description(description)
-                            .card()
-                            .into()
-                    }),
-                )
-                .spacing(8)
-                .width(384)
-                .into()
-            })
-            .default_value("plus")
-            .into(),
-            "fieldset" => super::field::subscription_plan().into(),
-            "invalid" => field::set(
-                text::label("Notification Preferences"),
-                Some("Choose how you want to receive notifications."),
-                radio_group(|g| {
-                    field::group(
-                        [
-                            ("email", "Email only"),
-                            ("sms", "SMS only"),
-                            ("both", "Both Email & SMS"),
-                        ]
-                        .map(|(value, label)| {
-                            field(g.item(value).invalid(true))
-                                .orientation(Horizontal)
-                                .label(text::small(label).style(theme::text::Destructive))
-                                .into()
-                        }),
-                    )
-                    .spacing(8)
-                    .into()
-                })
-                .default_value("email"),
-            )
-            .max_width(320.)
-            .into(),
-            _ => unreachable!("unknown radio group preview id: {id}"),
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: 40.into(),
+            ..Default::default()
         }
     }
+
+    fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
+        let view = match id {
+            "demo" => density(),
+            "description" => described(),
+            "choice-card" => plans(),
+            "fieldset" => super::field::subscription_plan(),
+            "disabled" => availability(),
+            "invalid" => notifications(),
+            _ => unreachable!("unknown radio group preview id: {id}"),
+        };
+        view.into()
+    }
+}
+
+fn density<M: Clone + 'static>() -> Slot<'static, M> {
+    radio_group(|g| {
+        field::group(["Default", "Comfortable", "Compact"].map(|name| {
+            field(g.item(name))
+                .orientation(Horizontal)
+                .label(text::label(name))
+                .into()
+        }))
+        .spacing(8)
+        .width(Shrink)
+        .into()
+    })
+    .default_value("Comfortable")
+    .into()
+}
+
+fn described<M: Clone + 'static>() -> Slot<'static, M> {
+    let choices = [
+        ("Default", "Standard spacing for most use cases."),
+        ("Comfortable", "More space between elements."),
+        ("Compact", "Minimal spacing for dense layouts."),
+    ];
+    radio_group(move |g| {
+        field::group(choices.map(|(name, detail)| {
+            field(g.item(name))
+                .orientation(Horizontal)
+                .label(name)
+                .description(detail)
+                .into()
+        }))
+        .spacing(8)
+        .width(Shrink)
+        .into()
+    })
+    .default_value("Comfortable")
+    .into()
+}
+
+fn plans<M: Clone + 'static>() -> Slot<'static, M> {
+    let plans = [
+        ("Plus", "For individuals and small teams."),
+        ("Pro", "For growing businesses."),
+        ("Enterprise", "For large teams and enterprises."),
+    ];
+    radio_group(move |g| {
+        field::group(plans.map(|(name, detail)| {
+            field(g.item(name))
+                .orientation(Horizontal)
+                .control_last()
+                .label(name)
+                .description(detail)
+                .card()
+                .into()
+        }))
+        .spacing(8)
+        .width(384)
+        .into()
+    })
+    .default_value("Plus")
+    .into()
+}
+
+fn availability<M: Clone + 'static>() -> Slot<'static, M> {
+    radio_group(|g| {
+        field::group(["Disabled", "Option 2", "Option 3"].map(|name| {
+            let disabled = name == "Disabled";
+            let label = text::small(name)
+                .style(theme::text::Foreground + Alpha(if disabled { 0.5 } else { 1. }));
+            field(g.item(name))
+                .orientation(Horizontal)
+                .label(label)
+                .disabled(disabled)
+                .into()
+        }))
+        .spacing(8)
+        .width(Shrink)
+        .into()
+    })
+    .default_value("Option 2")
+    .into()
+}
+
+fn notifications<M: Clone + 'static>() -> Slot<'static, M> {
+    let choices = radio_group(|g| {
+        field::group(["Email only", "SMS only", "Both Email & SMS"].map(|name| {
+            field(g.item(name).invalid(true))
+                .orientation(Horizontal)
+                .label(text::small(name).style(theme::text::Destructive))
+                .into()
+        }))
+        .spacing(8)
+        .into()
+    })
+    .default_value("Email only");
+    field::set(
+        field::label("Notification Preferences"),
+        Some("Choose how you want to receive notifications."),
+        choices,
+    )
+    .max_width(320.)
+    .into()
 }

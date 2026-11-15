@@ -13,10 +13,10 @@
 
 ### `g.item(value)`
 
-A 16px circle that fills with the primary color when checked. `.disabled(true)` disables one item.
+A 16px circle that fills with the primary color when checked. Use `.disabled(true)` to disable one item and `.invalid(true)` to show the validation ring.
+
+Tab enters at the checked item, or the first enabled item when none is checked. The next Tab leaves the group. Arrow keys select the previous or next enabled item, wrapping at the ends. Home and End select the first or last enabled item.
 
 ### `radio(..)`
 
 The standalone radio, `radio(label, value, selected, on_click)`, stays for app-owned values; it takes `.disabled(..)` too.
-
-Use an arrow key to select the previous or next enabled item. Home and End select the first or last enabled item.

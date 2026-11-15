@@ -1,15 +1,21 @@
 ```rust
-use icedcn::Horizontal;
-use icedcn::widget::{column, field, radio_group};
+use iced::Shrink;
+use icedcn::widget::{field, radio_group, text};
+use icedcn::{Horizontal, Slot};
 
-radio_group(|g| {
-    column![
-        field(g.item("default")).orientation(Horizontal).label("Default"),
-        field(g.item("comfortable")).orientation(Horizontal).label("Comfortable"),
-        field(g.item("compact")).orientation(Horizontal).label("Compact"),
-    ]
-    .spacing(8)
+fn density<M: Clone + 'static>() -> Slot<'static, M> {
+    radio_group(|g| {
+        field::group(["Default", "Comfortable", "Compact"].map(|name| {
+            field(g.item(name))
+                .orientation(Horizontal)
+                .label(text::label(name))
+                .into()
+        }))
+        .spacing(8)
+        .width(Shrink)
+        .into()
+    })
+    .default_value("Comfortable")
     .into()
-})
-.default_value("comfortable")
+}
 ```

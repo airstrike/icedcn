@@ -207,58 +207,52 @@ impl<Message: 'static> Compose<Message> for Item {
             Slot::from(Space::new())
         };
 
-        // `size-4 rounded-full border`.
-        let circle: Element<'b, Infallible, Theme, Renderer> = Container::new(dot)
+        let centered = Container::new(dot)
             .width(16)
             .height(16)
             .align_x(Horizontal::Center)
-            .align_y(Vertical::Center)
-            .class(Box::new(move |theme: &Theme| {
+            .align_y(Vertical::Center);
+        let hit = widget::Button::new(Element::from(centered))
+            .width(16)
+            .height(16)
+            .padding(0)
+            .translate(false)
+            .disabled(disabled)
+            .style(Box::new(move |theme: &Theme, status| {
                 let style = paint(theme);
+                let focused = matches!(status, widget::Status::Focused { .. });
+                let dark = theme.neutral.base.l < 0.5;
+                let destructive = theme.destructive.base;
+                let ring = if invalid {
+                    Some(destructive.scale_alpha(if dark { 0.4 } else { 0.2 }))
+                } else if focused {
+                    Some(theme.neutral.ring.alpha(0.5))
+                } else {
+                    None
+                };
 
-                container::Style::default()
-                    .background(style.background)
-                    .border(Border {
-                        color: if invalid {
-                            theme
-                                .destructive
-                                .base
-                                .scale_alpha(if theme.neutral.base.l < 0.5 { 0.5 } else { 1. })
-                                .into()
+                widget::Style {
+                    background: Some(style.background),
+                    border: Border::default().width(1).rounded(8).color(
+                        if invalid && !is_checked {
+                            destructive.scale_alpha(if dark { 0.5 } else { 1. }).into()
+                        } else if focused && !invalid {
+                            theme.neutral.ring.into()
                         } else {
                             style.border_color
                         },
-                        width: style.border_width,
-                        radius: 8.0.into(),
-                    })
-            }) as container::StyleFn<'static, Theme>)
-            .into();
-
+                    ),
+                    ring: ring.map(|color| Border::default().width(3).rounded(11).color(color)),
+                    ..widget::Style::default()
+                }
+            }) as widget::StyleFn<'b, Theme>);
+        let hit = hit.boxed().map(|never| match never {}).boxed();
         if disabled {
-            circle.map(|never| match never {}).boxed()
+            hit
         } else {
-            let hit = widget::Button::new(circle)
-                .width(16)
-                .height(16)
-                .padding(0)
-                .translate(false)
-                .style(Box::new(|theme: &Theme, status| {
-                    let mut style = widget::Style::default();
-                    if matches!(status, widget::Status::Focused { .. }) {
-                        style.border = Border::default()
-                            .color(theme.neutral.ring)
-                            .width(2)
-                            .rounded(8);
-                    }
-                    style
-                }) as widget::StyleFn<'b, Theme>);
-            marker::marker(
-                hit.boxed().map(|never| match never {}).boxed(),
-                Select(value),
-                Press::Captured,
-            )
-            .control(is_checked)
-            .into()
+            marker::marker(hit, Select(value), Press::Captured)
+                .control(is_checked)
+                .into()
         }
     }
 }
@@ -317,6 +311,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Group<'a,
         let list = List {
             content: body.boxed(),
             orientation: None,
+            single_tab_stop: true,
         };
         marker::owner(list.boxed(), |Select(value)| Event::Select(value))
     }

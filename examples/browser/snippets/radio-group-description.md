@@ -1,24 +1,27 @@
 ```rust
-use icedcn::Horizontal;
-use icedcn::widget::{column, field, radio_group};
+use iced::Shrink;
+use icedcn::widget::{field, radio_group};
+use icedcn::{Horizontal, Slot};
 
-radio_group(|g| {
-    column![
-        field(g.item("default"))
-            .orientation(Horizontal)
-            .label("Default")
-            .description("Standard spacing for most use cases."),
-        field(g.item("comfortable"))
-            .orientation(Horizontal)
-            .label("Comfortable")
-            .description("More space between elements."),
-        field(g.item("compact"))
-            .orientation(Horizontal)
-            .label("Compact")
-            .description("Minimal spacing for dense layouts."),
-    ]
-    .spacing(8)
+fn described<M: Clone + 'static>() -> Slot<'static, M> {
+    let choices = [
+        ("Default", "Standard spacing for most use cases."),
+        ("Comfortable", "More space between elements."),
+        ("Compact", "Minimal spacing for dense layouts."),
+    ];
+    radio_group(move |g| {
+        field::group(choices.map(|(name, detail)| {
+            field(g.item(name))
+                .orientation(Horizontal)
+                .label(name)
+                .description(detail)
+                .into()
+        }))
+        .spacing(8)
+        .width(Shrink)
+        .into()
+    })
+    .default_value("Comfortable")
     .into()
-})
-.default_value("comfortable")
+}
 ```

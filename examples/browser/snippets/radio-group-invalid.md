@@ -1,8 +1,26 @@
 ```rust
-field::set(text::label("Notification Preferences"), Some("Choose how you want to receive notifications."),
-    radio_group(|g| field::group([
-        ("email", "Email only"), ("sms", "SMS only"), ("both", "Both Email & SMS"),
-    ].map(|(value,label)| field(g.item(value).invalid(true)).orientation(Horizontal)
-        .label(text::small(label).style(theme::text::Destructive)).into())).spacing(8).into())
-    .default_value("email")).max_width(320.)
+use icedcn::theme;
+use icedcn::widget::{field, radio_group, text};
+use icedcn::{Horizontal, Slot};
+
+fn notifications<M: Clone + 'static>() -> Slot<'static, M> {
+    let choices = radio_group(|g| {
+        field::group(["Email only", "SMS only", "Both Email & SMS"].map(|name| {
+            field(g.item(name).invalid(true))
+                .orientation(Horizontal)
+                .label(text::small(name).style(theme::text::Destructive))
+                .into()
+        }))
+        .spacing(8)
+        .into()
+    })
+    .default_value("Email only");
+    field::set(
+        field::label("Notification Preferences"),
+        Some("Choose how you want to receive notifications."),
+        choices,
+    )
+    .max_width(320.)
+    .into()
+}
 ```

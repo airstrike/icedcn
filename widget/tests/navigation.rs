@@ -198,6 +198,40 @@ fn tabs_skip_disabled_triggers_and_activate_on_vertical_arrows() {
 }
 
 #[test]
+fn radio_group_enters_at_selection_skips_disabled_wraps_and_tabs_out() {
+    use icedcn_widget::radio_group;
+
+    let group = radio_group(|g| {
+        column![g.item("a"), g.item("b").disabled(true), g.item("c")]
+            .spacing(8)
+            .into()
+    })
+    .default_value("c")
+    .on_value_change(|value| Message::Open(vec![value]));
+    let mut ui = simulator(Element::from(column![
+        group,
+        button("After").on_press(Message::Pressed)
+    ]));
+
+    assert_eq!(focus(&mut ui).total, 2);
+    focus_next(&mut ui);
+    ui.tap_key(Named::ArrowLeft);
+    ui.tap_key(Named::ArrowUp);
+    ui.tap_key(Named::Home);
+    focus_next(&mut ui);
+    ui.tap_key(Named::Enter);
+    assert_eq!(
+        ui.into_messages().collect::<Vec<_>>(),
+        [
+            Message::Open(vec!["a".into()]),
+            Message::Open(vec!["c".into()]),
+            Message::Open(vec!["a".into()]),
+            Message::Pressed,
+        ]
+    );
+}
+
+#[test]
 fn combobox_filters_custom_values_and_selects_the_highlight_from_the_keyboard() {
     use icedcn_widget::combobox;
     let widget: Element<'_, Message, Theme, Renderer> = combobox::options([
