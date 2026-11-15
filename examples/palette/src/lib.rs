@@ -16,7 +16,6 @@ use iced::{Bottom, Fill, Padding, Pixels, Right, Task, Widget};
 use iced_widget::button::Status;
 use icedcn::Theme;
 use icedcn::core::{Background, Border};
-use icedcn::theme;
 use icedcn::theme::container::Style;
 use icedcn::widget::Size;
 use icedcn::widget::chart::Data;
