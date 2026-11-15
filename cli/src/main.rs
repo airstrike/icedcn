@@ -1,5 +1,7 @@
 //! Create standalone icedcn applications from bundled templates.
 
+mod toolchain;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -20,6 +22,15 @@ enum Command {
         /// Destination directory; its final component becomes the package name.
         path: PathBuf,
     },
+    /// Add or check the project's pinned rust-toolchain.toml.
+    Toolchain {
+        /// Existing project directory.
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// Replace a conflicting channel while preserving other settings.
+        #[arg(long)]
+        update: bool,
+    },
 }
 
 fn main() -> Result<()> {
@@ -30,6 +41,7 @@ fn main() -> Result<()> {
             println!("\nNext: change into that directory and run `cargo run`.");
             println!("Customize your app in src/main.rs and src/theme.rs.");
         }
+        Command::Toolchain { path, update } => toolchain::configure(&path, update)?,
     }
     Ok(())
 }
@@ -67,10 +79,7 @@ fn scaffold(path: &Path) -> Result<()> {
             "Cargo.toml",
             include_str!("../templates/Cargo.toml.template"),
         ),
-        (
-            "rust-toolchain.toml",
-            include_str!("../templates/rust-toolchain.toml"),
-        ),
+        ("rust-toolchain.toml", toolchain::TEMPLATE),
         ("src/main.rs", include_str!("../templates/main.rs")),
         ("src/theme.rs", include_str!("../templates/theme.rs")),
         (".gitignore", "/target\n"),
