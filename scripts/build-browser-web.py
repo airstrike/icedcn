@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the component browser into target/browser-web for static hosting."""
+"""Build the component browser, public docs, and share cards for static hosting."""
 import hashlib
 import json
 import os
@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 import shutil
 import subprocess
+import runpy
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -51,6 +52,15 @@ def patched_source(build, package, crate, file, original=None, replacement="", p
 
 def main():
     os.chdir(ROOT)
+    # Fail before the expensive native/WASM builds if the image tools are absent.
+    runpy.run_path(str(ROOT / "examples/browser/web/render-og.py"))
+    if not shutil.which("rsvg-convert"):
+        raise SystemExit("Install librsvg (rsvg-convert) to generate web share images.")
+    # Use the application's own registry; no mirrored route list or Rust source scraping.
+    routes = json.loads(subprocess.check_output([
+        "cargo", "run", "--quiet", "--locked", "-p", "browser", "--bin", "browser",
+        "--", "--export-web-routes",
+    ]))
     metadata = json.loads(subprocess.check_output([
         "cargo", "metadata", "--format-version", "1", "--locked",
         "--filter-platform", TARGET,
@@ -143,8 +153,8 @@ def main():
                 .replace("BROWSER_WASM", wasm_name)
                 .replace("BROWSER_BYTES", str(optimized.stat().st_size))
                 .replace("BROWSER_LOGO", (ROOT / "assets/logo.svg").read_text().strip()))
-        (output / "index.html").write_text(html)
-        shutil.copyfile(ROOT / "examples/browser/web/og.png", output / "og.png")
+        webmetadata = runpy.run_path(str(ROOT / "examples/browser/web/webmetadata.py"))
+        webmetadata["build"](routes, output, html)
         (output / "font-licenses.txt").write_text("\n\n".join(
             (ROOT / "examples/browser/fonts" / name).read_text()
             for name in ("Geist-OFL.txt", "GeistMono-OFL.txt", "TwemojiMozilla-LICENSE.txt")

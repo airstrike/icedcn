@@ -4,26 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0a0a0a">
-  <link rel="icon" href="data:,">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="license" href="/font-licenses.txt">
-  <title>icedcn — Components for iced</title>
-  <meta name="description" content="Explore icedcn components, interactive examples, and copyable Rust code for iced applications.">
-  <link rel="canonical" href="https://icedcn.airstrike.fyi/">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="icedcn">
-  <meta property="og:title" content="icedcn — Components for iced">
-  <meta property="og:description" content="Explore icedcn components, interactive examples, and copyable Rust code for iced applications.">
-  <meta property="og:url" content="https://icedcn.airstrike.fyi/">
-  <meta property="og:image" content="https://icedcn.airstrike.fyi/og.png">
-  <meta property="og:image:type" content="image/png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="icedcn cube logo with the words Components for iced on a dark background.">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="icedcn — Components for iced">
-  <meta name="twitter:description" content="Explore icedcn components, interactive examples, and copyable Rust code for iced applications.">
-  <meta name="twitter:image" content="https://icedcn.airstrike.fyi/og.png">
-  <meta name="twitter:image:alt" content="icedcn cube logo with the words Components for iced on a dark background.">
+  BROWSER_METADATA
   <style>
     html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #0a0a0a; }
     #splash {
@@ -40,6 +25,8 @@
     #splash p { margin: 0; padding: 0 24px; text-align: center; }
     /* The transparent canvas covers the splash as soon as iced paints its background. */
     canvas { position: relative; outline: none; }
+    .documentation { padding: 24px; background: #fafafa; color: #18181b; }
+    .documentation pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 16px/1.6 system-ui, sans-serif; }
     #splash:has([role="alert"]) { z-index: 1; background: #0a0a0a; }
   </style>
 </head>
@@ -47,8 +34,9 @@
   <main id="splash">
     <h1><span aria-hidden="true">BROWSER_LOGO</span>icedcn</h1>
     <div id="progress" role="progressbar" aria-label="Loading components"><span></span></div>
-    <noscript><style>#progress { display: none; }</style><p>This component browser requires JavaScript and WebAssembly.</p></noscript>
+    <noscript><style>html, body { height: auto; overflow: auto; } #splash { position: static; padding: 32px; } #progress { display: none; }</style><p>This component browser requires JavaScript and WebAssembly.</p></noscript>
   </main>
+  BROWSER_DOCUMENTATION
   <script type="module">
     // Keep native browser reload (including Shift-reload) away from winit's
     // canvas key handler, which prevents the default for every keydown.

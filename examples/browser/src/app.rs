@@ -5,6 +5,8 @@ mod not_found;
 mod route;
 #[cfg(test)]
 mod tests;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod web;
 
 use browser_routing::{Route as _, Router};
 use iced::Element;
