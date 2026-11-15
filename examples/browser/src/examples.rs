@@ -1,8 +1,10 @@
 //! Runnable applications assembled from icedcn components.
 pub mod receipts;
 
+use iced::keyboard::Modifiers;
+use iced::widget::operation;
 use iced::{Element, Fill, Task, Widget};
-use icedcn::widget::{badge, button, column, container, row, scrollable, text};
+use icedcn::widget::{button, column, container, row, scrollable, text};
 use icedcn::{Theme, card};
 
 use crate::Message;
@@ -37,49 +39,62 @@ impl State {
 
     pub fn escape(&mut self) -> Task<Message> {
         if self.open {
-            self.update(Event::Receipts(receipts::Message::Back))
+            self.update(Event::Receipts(receipts::Message::Hotkey(
+                receipts::Hotkey::Escape,
+            )))
         } else {
             Task::none()
         }
     }
 
+    pub fn focus(&mut self, previous: bool) -> Task<Message> {
+        if self.open {
+            let modifiers = if previous {
+                Modifiers::SHIFT
+            } else {
+                Modifiers::empty()
+            };
+            self.update(Event::Receipts(receipts::Message::Hotkey(
+                receipts::Hotkey::Tab(modifiers),
+            )))
+        } else if previous {
+            operation::focus_previous()
+        } else {
+            operation::focus_next()
+        }
+    }
+
     pub fn view(&self, width: f32) -> Element<'_, Message, Theme> {
-        let content = if self.open {
-            column![
-                button("← All examples")
-                    .style(button::Ghost)
-                    .on_press(Message::Example(Event::Gallery)),
+        if self.open {
+            return column![
+                container(
+                    button("← All examples")
+                        .style(button::Ghost)
+                        .on_press(Message::Example(Event::Gallery))
+                )
+                .padding([8, 20]),
                 self.receipts
-                    .view(width)
-                    .map(|m| Message::Example(Event::Receipts(m)))
+                    .view()
+                    .map(|message| Message::Example(Event::Receipts(message)))
                     .boxed(),
             ]
-            .spacing(24)
             .width(Fill)
-        } else {
-            column![
-                text::h1("Examples"),
-                text::lead("Real applications built with icedcn."),
-                text::muted("Open an example and try the complete workflow. Each runs here on desktop and in your browser."),
-                card(column![
-                    card::header("Receipts")
-                        .description("A sales notebook with a list, receipt details, and an editable line-item form."),
-                    card::content(column![
-                        row![badge("Forms"), badge("Tables").style(badge::Secondary), badge("Navigation").style(badge::Outline)].spacing(8),
-                        text::p("Create a sale, add items, choose tax groups, and calculate service charges and gratuity. Edit a saved receipt or cancel your draft."),
-                        text::muted("Sample receipts are included. Changes stay in this session."),
-                    ].spacing(16).width(Fill)),
-                    card::footer(row![
-                        button("Open Receipts").on_press(Message::Example(Event::OpenReceipts)),
-                        button("View source").style(button::Outline).on_press(Message::OpenUrl("https://github.com/airstrike/icedcn/tree/HEAD/examples/browser/src/examples")),
-                    ].spacing(8).width(Fill)),
-                ].width(Fill)).width(Fill),
-            ]
-            .spacing(24)
-            .width(Fill)
-        };
+            .height(Fill)
+            .into();
+        }
+        let content = column![
+            text::h1("Examples"),
+            card(column![
+                card::header("Receipts").description("A sales notebook."),
+                card::footer(row![
+                    button("Open Receipts").on_press(Message::Example(Event::OpenReceipts)),
+                    button("View source").style(button::Outline)
+                        .on_press(Message::OpenUrl("https://github.com/airstrike/icedcn/tree/HEAD/examples/browser/src/examples")),
+                ].spacing(8).width(Fill)),
+            ].width(Fill)).width(Fill),
+        ].spacing(24).width(Fill).max_width(1100.);
         scrollable::scrollable(
-            container(content.max_width(1100.))
+            container(content)
                 .padding(if width < 600. { 16 } else { 32 })
                 .center_x(Fill),
         )

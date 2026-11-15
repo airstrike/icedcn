@@ -11,7 +11,7 @@ serde.workspace = true
 serde_json.workspace = true
 rfd = "0.17"
 icedcn = { workspace = true, features = ["chart", "markdown", "spinner", "svg", "sweeten"] }
-iced = { workspace = true, features = ["advanced-shaping", "markdown", "highlighter", "selector", "svg", "image"] }
+iced = { workspace = true, features = ["advanced", "advanced-shaping", "markdown", "highlighter", "selector", "svg", "image"] }
 iced_widget.workspace = true
 sweeten.workspace = true
 

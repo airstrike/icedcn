@@ -381,6 +381,12 @@ impl App {
                     select_all(self.pages[self.current_page].scrollable_id())
                 }
             }
+            Message::FocusNext if self.showing_examples && !self.search && !self.fonts_open => {
+                self.examples.focus(false)
+            }
+            Message::FocusPrevious if self.showing_examples && !self.search && !self.fonts_open => {
+                self.examples.focus(true)
+            }
             Message::FocusNext => operation::focus_next(),
             Message::FocusPrevious => operation::focus_previous(),
             Message::SearchShortcut => self.update(Message::Search(!self.search)),

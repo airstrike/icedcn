@@ -396,7 +396,7 @@ mod tests {
             iced::Size::new(1200., 900.),
             app.view(),
         );
-        ui.click("Friday lunch").unwrap();
+        ui.click("Create your first sale →").unwrap();
         let show = ui
             .into_messages()
             .find(|m| matches!(m, Message::Example(_)))
@@ -407,7 +407,8 @@ mod tests {
             iced::Size::new(1200., 900.),
             app.view(),
         );
-        ui.find("Edit receipt").unwrap();
+        ui.find("Cancel").unwrap();
+        ui.find("Save").unwrap();
         drop(ui);
         let _ = app.update(Message::OpenComponent("introduction".into()));
         assert!(!app.showing_examples);
