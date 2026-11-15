@@ -50,21 +50,26 @@ impl Default for Config {
 pub const DEFAULT_CATALOG_MAX_AGE: Duration = Duration::from_secs(7 * 24 * 60 * 60);
 
 /// Fetch the native catalog with a disk cache, or use the bundled web snapshot.
-/// Network/cache failures fall back to the complete bundled catalog.
+/// Network/cache failures fall back to the complete bundled catalog. Bundled
+/// families missing from a valid older cache are added without replacing its entries.
 pub async fn catalog(max_age: Duration) -> Result<Catalog, Error> {
+    let bundled = snapshot()?;
     #[cfg(not(target_arch = "wasm32"))]
     {
         match cache::load_or_fetch_metadata(max_age)
             .await
             .and_then(|raw| catalog::parse(&raw))
         {
-            Ok(catalog) => return Ok(catalog),
+            Ok(mut catalog) => {
+                catalog.supplement(&bundled);
+                return Ok(catalog);
+            }
             Err(error) => tracing::warn!("using bundled Google Fonts catalog: {error}"),
         }
     }
     #[cfg(target_arch = "wasm32")]
     let _ = max_age;
-    snapshot()
+    Ok(bundled)
 }
 
 /// The complete Google Fonts snapshot bundled with this version of fount.

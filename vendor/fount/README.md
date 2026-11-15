@@ -12,7 +12,9 @@ family is selected; applications keep control of their chosen font.
 Local changes:
 
 - Native catalog requests retain fount's disk cache and fall back to the bundled
-  catalog when networking or cache access fails.
+  catalog when networking or cache access fails. A valid older cache is
+  supplemented with missing bundled families while retaining its existing
+  family metadata and any newer live-only entries.
 - Web builds use the same catalog model, search API, and error types. They read
   the complete bundled catalog snapshot and download TrueType/OpenType files
   from Google's font repository or `fonts.gstatic.com`, both of which permit
