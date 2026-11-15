@@ -70,7 +70,7 @@ pub fn write_routes(writer: impl Write) -> serde_json::Result<()> {
                     "Composable components, thoughtful defaults, and copyable Rust for native iced applications."
                 }
                 route::Route::Create => {
-                    "Create your icedcn theme. Tune colors, typography, and corners with a live preview."
+                    "Customize colors and fonts, preview components, and export a Rust theme."
                 }
                 route::Route::Examples => {
                     "Explore complete interfaces built with icedcn components and Rust."
