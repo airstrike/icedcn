@@ -1,15 +1,15 @@
-use icedcn::Size;
-use icedcn::Slot;
 use icedcn::widget::{alert, button, text};
+use icedcn::{Size, Slot};
 
-use crate::Message;
-
-pub fn view<'a>(wrapping: text::Wrapping) -> Slot<'a, Message> {
+pub(super) fn view<M: Clone + 'static>(
+    wrapping: text::Wrapping,
+    enable: Option<M>,
+) -> Slot<'static, M> {
     alert()
-        .description_wrapping(wrapping)
         .title("Dark mode is now available")
         .description("Enable it under your profile settings to get started.")
-        .action(button("Enable").size(Size::Xs))
+        .description_wrapping(wrapping)
+        .action(button("Enable").size(Size::Xs).on_press_maybe(enable))
         .max_width(448)
         .into()
 }

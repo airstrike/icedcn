@@ -4,8 +4,8 @@ mod action;
 mod default;
 mod destructive;
 
-use iced::widget::svg;
-use iced::{Fill, Task, Widget};
+use crate::icon;
+use iced::{Fill, Task};
 
 use icedcn::widget::{alert, column, text};
 use icedcn::{Slot, Theme};
@@ -74,46 +74,22 @@ impl AlertPage {
     }
 }
 
-fn demo<'a>(wrapping: text::Wrapping) -> Slot<'a, crate::Message> {
-    const CHECK: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>"#;
-    const INFO: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>"#;
+fn demo<M: Clone + 'static>(wrapping: text::Wrapping) -> Slot<'static, M> {
+    let notice = |icon, title, description| {
+        alert()
+            .icon(icon)
+            .title(title)
+            .description(description)
+            .description_wrapping(wrapping)
+    };
     column![
-        alert()
-            .description_wrapping(wrapping)
-            .icon(
-                svg(svg::Handle::from_memory(CHECK.as_bytes()))
-                    .width(16)
-                    .height(16)
-                    .style(|theme: &Theme, _| svg::Style {
-                        color: Some(theme.card.foreground.into()),
-                    })
-                    .boxed(),
-            )
-            .title("Payment successful")
-            .description(
-                "Your payment of $29.99 has been processed. A receipt has been sent to your email address.",
-            )
-            .max_width(448),
-        alert()
-            .description_wrapping(wrapping)
-            .icon(
-                svg(svg::Handle::from_memory(INFO.as_bytes()))
-                    .width(16)
-                    .height(16)
-                    .style(|theme: &Theme, _| svg::Style {
-                        color: Some(theme.card.foreground.into()),
-                    })
-                    .boxed(),
-            )
-            .title("New feature available")
-            .description(
-                "We've added dark mode support. You can enable it in your account settings.",
-            )
-            .max_width(448),
-    ]
-    .spacing(16)
-    .width(Fill.max(448))
-    .into()
+        notice(icon::circle_check().size(16).line_height(1.0),
+            "Payment successful",
+            "Your payment of $29.99 has been processed. A receipt has been sent to your email address."),
+        notice(icon::info().size(16).line_height(1.0),
+            "New feature available",
+            "We've added dark mode support. You can enable it in your account settings."),
+    ].width(Fill.max(448)).spacing(16).into()
 }
 
 impl page::Page for AlertPage {
@@ -157,6 +133,11 @@ impl page::Page for AlertPage {
     fn backdrop(&self) -> page::Backdrop {
         page::Backdrop {
             min_height: if self.wide { 288.0 } else { 0.0 },
+            padding: if self.wide {
+                24.into()
+            } else {
+                [24, 16].into()
+            },
             ..page::Backdrop::default()
         }
     }
@@ -166,7 +147,7 @@ impl page::Page for AlertPage {
             "demo" => demo(self.description_wrapping),
             "basic" => default::view(self.description_wrapping),
             "destructive" => destructive::view(self.description_wrapping),
-            "action" => action::view(self.description_wrapping),
+            "action" => action::view(self.description_wrapping, None),
             _ => unreachable!("unknown alert preview id: {id}"),
         };
         view.into()

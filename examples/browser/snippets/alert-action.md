@@ -1,59 +1,16 @@
 ```rust
-use iced::{Element, Subscription, Task, window};
-use icedcn::Size;
-use icedcn::Theme;
-use icedcn::widget::text::Wrapping;
-use icedcn::widget::{alert, button};
+use icedcn::widget::{alert, button, text};
+use icedcn::{Size, Slot};
 
-struct Example {
-    window_width: f32,
-}
-
-#[derive(Debug, Clone)]
-enum Message {
-    Width(f32),
-}
-
-impl Example {
-    fn new() -> (Self, Task<Message>) {
-        (
-            Self {
-                window_width: 1024.0,
-            },
-            window::oldest()
-                .and_then(window::size)
-                .map(|size| Message::Width(size.width)),
-        )
-    }
-
-    fn update(&mut self, Message::Width(width): Message) {
-        self.window_width = width;
-    }
-
-    fn subscription(&self) -> Subscription<Message> {
-        window::resize_events().map(|(_, size)| Message::Width(size.width))
-    }
-
-    fn view(&self) -> Element<'static, Message, Theme> {
-        let wrapping = if self.window_width < 768.0 {
-            Wrapping::Balanced
-        } else {
-            Wrapping::Word
-        };
-        alert()
-            .description_wrapping(wrapping)
-            .title("Dark mode is now available")
-            .description("Enable it under your profile settings to get started.")
-            .action(button("Enable").size(Size::Xs))
-            .max_width(448)
-            .into()
-    }
-}
-
-fn main() -> iced::Result {
-    iced::application(Example::new, Example::update, Example::view)
-        .subscription(Example::subscription)
-        .theme(|_: &Example| Theme::light())
-        .run()
+fn dark_mode<M: Clone + 'static>(wrapping: text::Wrapping, enable: Option<M>) -> Slot<'static, M> {
+    alert()
+        .title("Dark mode is now available")
+        .description("Enable it under your profile settings to get started.")
+        .description_wrapping(wrapping)
+        .action(button("Enable").size(Size::Xs).on_press_maybe(enable))
+        .max_width(448)
+        .into()
 }
 ```
+
+Pass `Some(Message::Enable)` to handle the action in your application. The preview passes `None`, so pressing Enable leaves the callout visible.
