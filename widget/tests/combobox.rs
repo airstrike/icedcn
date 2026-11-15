@@ -2,7 +2,7 @@
 use iced_core::Length::{Fill, Shrink};
 use iced_core::keyboard::key::Named;
 use iced_core::time::Instant;
-use iced_core::widget::operation::{Outcome, TextInput, focusable};
+use iced_core::widget::operation::{Focusable, Outcome, TextInput, focusable};
 use iced_core::widget::{Id, Operation};
 use iced_core::{Element, Event, Point, Rectangle, Size, window};
 use iced_test::simulator::{self, simulator};
@@ -93,8 +93,10 @@ fn combobox_multiple_backspace_publishes_complete_selection_and_preserves_contro
     };
     for controlled in [false, true] {
         let mut ui = simulator(view(controlled));
-        // With the null renderer each chip label has no width; the final input follows two remove buttons.
-        click(&mut ui, 100., 16.);
+        let mut inputs = Inputs::default();
+        ui.operate(&mut inputs);
+        let input = inputs.0[0].center();
+        click(&mut ui, input.x, input.y);
         ui.tap_key(Named::Backspace);
         frame(&mut ui);
         let mut ui = ui.rebuild(view(controlled));
@@ -234,7 +236,11 @@ fn combobox_chip_label_is_passive_and_x_removes_only_that_chip() {
         .into();
     let mut ui = simulator(field);
     click(&mut ui, 6., 14.);
-    click(&mut ui, 20., 14.);
+    assert!(ui.drain().next().is_none(), "a chip label is passive");
+    let mut buttons = Buttons::default();
+    ui.operate(&mut buttons);
+    let remove = buttons.0[0].center();
+    click(&mut ui, remove.x, remove.y);
     assert_eq!(
         ui.into_messages().collect::<Vec<_>>(),
         [Message::Values(vec!["Two".into()])]
@@ -249,7 +255,10 @@ fn combobox_chip_arrow_focus_and_delete_remove_the_focused_chip() {
         .on_values_change(Message::Values)
         .into();
     let mut ui = simulator(field);
-    click(&mut ui, 130., 16.);
+    let mut inputs = Inputs::default();
+    ui.operate(&mut inputs);
+    let input = inputs.0[0].center();
+    click(&mut ui, input.x, input.y);
     ui.tap_key(Named::ArrowLeft);
     ui.tap_key(Named::ArrowLeft);
     ui.tap_key(Named::Delete);
@@ -373,4 +382,17 @@ fn filter_matches_unaccented_queries_and_publishes_the_original_value() {
         ui.into_messages().collect::<Vec<_>>(),
         [Message::Value("São Paulo".into())]
     );
+}
+
+#[derive(Default)]
+struct Buttons(Vec<Rectangle>);
+
+impl Operation for Buttons {
+    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+        visit(self);
+    }
+
+    fn focusable(&mut self, _: Option<&Id>, bounds: Rectangle, _: &mut dyn Focusable) {
+        self.0.push(bounds);
+    }
 }
