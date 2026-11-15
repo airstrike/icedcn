@@ -81,6 +81,37 @@ fn swipe_coasts_with_touch_notifications_and_stops_at_the_content_edge() {
 }
 
 #[test]
+fn flick_keeps_coasting_after_half_a_second_and_settles_without_overshoot() {
+    let mut state = State::new();
+    let now = Instant::now();
+    let content = Size::new(160., 10_000.);
+    state.fling(
+        Swipe {
+            finger: FINGER,
+            position: Point::ORIGIN,
+            moved_at: now,
+            velocity: Vector::new(0., 2000.),
+        },
+        Direction::default(),
+        VIEW,
+        content,
+        now,
+    );
+    let destination = state.target.unwrap().destination.y;
+    assert!(destination > 1000. && destination < 1200.);
+    state.step(now + Duration::from_millis(500), VIEW, content);
+    let offset = state.axis_offset(super::Axis::Y, VIEW, content);
+    assert!(offset > 700. && offset < destination);
+    assert!(state.target.is_some());
+    state.step(now + Duration::from_secs(2), VIEW, content);
+    assert_eq!(
+        state.axis_offset(super::Axis::Y, VIEW, content),
+        destination
+    );
+    assert!(state.target.is_none());
+}
+
+#[test]
 fn holds_taps_and_cancellations_stop_without_inertia() {
     for (moving, cancel) in [(false, false), (true, true), (true, false)] {
         let mut state = start();

@@ -2136,10 +2136,11 @@ impl State {
             return;
         }
 
-        // Logical pixels per second. Bound batched input spikes and shorten
-        // slow coasts. The segment's average speed is half its initial speed.
+        // Bound batched input spikes, then decelerate at 1800 logical px/s².
+        // Allow a fast flick to coast beyond one viewport instead of ending
+        // after a short gesture. Average speed is half the initial speed.
         let speed_limit = speed.min(4000.);
-        let duration = (speed_limit / 4500.).clamp(0.12, 0.65);
+        let duration = (speed_limit / 1800.).clamp(0.12, 1.8);
         let travel = velocity * (speed_limit / speed * duration * 0.5);
         self.cancel();
         self.scroll_smoothly(travel, bounds, content, now);
