@@ -131,6 +131,18 @@ pub fn card_muted(theme: &Theme) -> Style {
     }
 }
 
+/// Muted, borderless surface for inline code.
+pub fn inline_code(theme: &Theme) -> Style {
+    Style {
+        background: Some(theme.muted.base.into()),
+        border: Border {
+            radius: 4.0.into(),
+            ..Border::default()
+        },
+        ..Style::default()
+    }
+}
+
 /// Standalone fenced code block — bg-code, all four corners rounded
 /// (`rounded-md`). Used by the markdown viewer for ``` blocks in
 /// page-level prose (Usage, API Reference, Cursor, etc.).

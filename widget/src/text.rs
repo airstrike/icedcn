@@ -428,6 +428,43 @@ pub fn inline_code<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
         .style(theme::text::Foreground)
 }
 
+/// A ruled article table. Columns share their intrinsic widths, header cells wrap,
+/// and alternate body rows use the muted background.
+pub fn table<'a, M: 'a, const N: usize>(
+    headers: [impl IntoFragment<'a>; N],
+    rows: impl IntoIterator<Item = [impl IntoFragment<'a>; N]>,
+) -> crate::container::Container<'a, M> {
+    use crate::table::{self, Track};
+    use icedcn_core::Border;
+    use icedcn_core::theme::container::Style;
+
+    let header = table::header([table::row(headers.map(|value| {
+        table::head(p(value).bold().line_height(LineHeight::Relative(1.5)))
+            .height(Length::Shrink)
+            .padding([8, 16])
+    }))]);
+    let body = table::body(rows.into_iter().map(|values| {
+        table::row(values.map(|value| {
+            table::cell(p(value).line_height(LineHeight::Relative(1.5))).padding([8, 16])
+        }))
+    }));
+    let grid = table::grid([Track::Auto; N])
+        .header(header)
+        .body(body)
+        .ruled();
+    crate::container(grid)
+        .width(Fill)
+        .padding(1)
+        .style(|theme| Style {
+            border: Border {
+                width: 1.,
+                color: theme.neutral.border,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+}
+
 /// A bulleted list with a 24-pixel indent and eight pixels between items. Set surrounding
 /// spacing on the enclosing column.
 pub struct List<'a, Message> {

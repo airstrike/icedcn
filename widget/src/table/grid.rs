@@ -26,6 +26,7 @@ pub enum Track {
 pub struct Grid<'a, Message> {
     tracks: Vec<Track>,
     groups: Vec<(Kind, Vec<Row<'a, Message>>)>,
+    ruled: bool,
 }
 #[derive(Clone, Copy, PartialEq)]
 enum Kind {
@@ -37,9 +38,16 @@ pub fn grid<'a, Message>(tracks: impl IntoIterator<Item = Track>) -> Grid<'a, Me
     Grid {
         tracks: tracks.into_iter().collect(),
         groups: Vec::new(),
+        ruled: false,
     }
 }
 impl<'a, Message> Grid<'a, Message> {
+    /// Static article tables have column rules and alternating body rows.
+    pub(crate) fn ruled(mut self) -> Self {
+        self.ruled = true;
+        self
+    }
+
     pub fn header(mut self, group: Header<'a, Message>) -> Self {
         self.groups.push((Kind::Header, group.rows));
         self
@@ -94,7 +102,7 @@ impl<'a, Message: 'a> Compose<Message> for Grid<'a, Message> {
                 rows.push(Line {
                     first: start,
                     end: cells.len(),
-                    selected: row.selected,
+                    selected: row.selected || self.ruled && kind == Kind::Body && index % 2 == 1,
                     kind,
                     border: row.border && (kind == Kind::Header || index + 1 < count),
                     top: kind == Kind::Footer && index == 0,
@@ -107,6 +115,7 @@ impl<'a, Message: 'a> Compose<Message> for Grid<'a, Message> {
             rows,
             preferred,
             tracks,
+            ruled: self.ruled,
         }
         ._boxed()
     }
@@ -136,6 +145,7 @@ struct LayoutGrid<'a, Message> {
     rows: Vec<Line>,
     preferred: Vec<f32>,
     tracks: Vec<Track>,
+    ruled: bool,
 }
 struct Surface {
     tint: Animation<f32>,
@@ -363,7 +373,7 @@ impl<Message> Widget<Message, Theme, Renderer> for LayoutGrid<'_, Message> {
                 width: layout.bounds().width,
                 height,
             };
-            surface.hovered = cursor.is_over(bounds) && cursor.is_over(*viewport);
+            surface.hovered = !self.ruled && cursor.is_over(bounds) && cursor.is_over(*viewport);
             surface.update(row.alpha(surface.hovered), now);
             if surface.tint.is_animating(now) {
                 shell.request_redraw();
@@ -438,6 +448,23 @@ impl<Message> Widget<Message, Theme, Renderer> for LayoutGrid<'_, Message> {
             let alpha = surface.tint.interpolate(surface.now);
             if alpha > 0.0 {
                 renderer.fill_quad(background, theme.muted.base.alpha(alpha));
+            }
+            if self.ruled {
+                // Cell origins follow the actual shared tracks, including wrapped headers.
+                for cell in tree.children[row.first..row.end].iter().skip(1) {
+                    renderer.fill_quad(
+                        renderer::Quad {
+                            bounds: Rectangle {
+                                x: layout.bounds().x + cell.translation.x,
+                                y,
+                                width: 1.,
+                                height,
+                            },
+                            ..Default::default()
+                        },
+                        theme.neutral.border,
+                    );
+                }
             }
             y += height;
             if row.border {

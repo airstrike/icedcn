@@ -1,9 +1,8 @@
 mod article;
 
 use iced::{Fill, Pixels, Task, Widget};
-use icedcn::core::Border;
-use icedcn::theme::container::Style;
-use icedcn::widget::{column, container, row, rule, text};
+use icedcn::theme::container::inline_code;
+use icedcn::widget::{column, container, rule, text};
 use icedcn::{Slot, Theme, Weight};
 
 use crate::Message;
@@ -245,45 +244,18 @@ fn h2_with_border<'a, M: 'a>(content: &'a str) -> Slot<'a, M> {
 fn inline_code_card<'a, M: 'a>(code: &'a str) -> Slot<'a, M> {
     container(text::inline_code(code).font(iced::Font::new(crate::font::GEIST_MONO_NAME)))
         .padding([2, 5])
-        .style(|t| Style {
-            background: Some(t.muted.base.into()),
-            border: Border {
-                radius: 4.0.into(),
-                ..Default::default()
-            },
-            ..Default::default()
-        })
+        .style(inline_code)
         .into()
 }
 
 fn table_card<'a, M: 'a>() -> Slot<'a, M> {
-    let data = [
+    text::table(
         ["King's Treasury", "People's happiness"],
-        ["Empty", "Overflowing"],
-        ["Modest", "Satisfied"],
-        ["Full", "Ecstatic"],
-    ];
-    let rows = data.into_iter().enumerate().map(|(i, [left, right])| {
-        let cell = |value, share| {
-            let label = text::p(value).line_height(Pixels(24.));
-            container(if i == 0 { label.bold() } else { label })
-                .width(iced::Length::FillPortion(share))
-                .padding([8, 16])
-        };
-        container(row![cell(left, 5), rule::vertical(1).boxed(), cell(right, 6)].width(Fill))
-            .width(Fill)
-            .style(move |t| Style {
-                background: Some((if i == 2 { t.muted.base } else { t.neutral.base }).into()),
-                ..Default::default()
-            })
-            .into()
-    });
-    container(column(rows).spacing(1).width(Fill))
-        .padding(1)
-        .width(Fill)
-        .style(|t| Style {
-            background: Some(t.neutral.border.into()),
-            ..Default::default()
-        })
-        .into()
+        [
+            ["Empty", "Overflowing"],
+            ["Modest", "Satisfied"],
+            ["Full", "Ecstatic"],
+        ],
+    )
+    .into()
 }
