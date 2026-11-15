@@ -269,6 +269,7 @@ fn nested_scrolls(content_width: u32) -> Simulator<'static, bool, Theme, Rendere
 struct NestedOffsets {
     article: f32,
     snippet: f32,
+    snippet_y: f32,
 }
 impl Operation for NestedOffsets {
     fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
@@ -284,6 +285,7 @@ impl Operation for NestedOffsets {
     ) {
         if id == Some(&Id::new("snippet")) {
             self.snippet = translation.x;
+            self.snippet_y = translation.y;
         } else if id == Some(&Id::new("article")) {
             self.article = translation.y;
         }
@@ -443,4 +445,181 @@ fn a_new_vertical_gesture_chains_when_the_inner_viewport_is_at_its_edge() {
     press(&mut ui, 50., 60.);
     drag(&mut ui, 50., 38.);
     assert_eq!(offsets(&mut ui).1, 22., "the next gesture starts cleanly");
+}
+
+/// The first flick starts in the article's blank area; the next lands on the
+/// nested pane's button. This exercises real child-first widget dispatch.
+fn continuation_tree(horizontal: bool) -> Nested {
+    use icedcn_widget::{button, column, scrollable};
+    let pane = scrollable(column![
+        button("Tap").width(140).height(100).on_press(true),
+        Space::new()
+            .width(if horizontal { 500 } else { 160 })
+            .height(1000),
+    ])
+    .id("snippet")
+    .height(200)
+    .width(160);
+    let pane = if horizontal { pane.horizontal() } else { pane };
+    let article = scrollable(column![
+        Space::new().height(200).width(160),
+        pane,
+        Space::new().height(1000).width(160),
+    ])
+    .id("article")
+    .height(400)
+    .width(160);
+    simulator(Element::from(article))
+}
+
+fn nested_snapshot(ui: &mut Nested) -> NestedOffsets {
+    let _ = ui.simulate([Event::Window(
+        window::Event::RedrawRequested(Instant::now()),
+    )]);
+    let mut snapshot = NestedOffsets::default();
+    ui.operate(&mut snapshot);
+    snapshot
+}
+
+fn fling_article(ui: &mut Nested) -> Point {
+    for (ms, y) in [(0, 100.), (10, 90.), (20, 80.), (30, 70.), (40, 70.)] {
+        let position = Point::new(100., y);
+        let timestamp = Some(Duration::from_millis(ms));
+        let event = match ms {
+            0 => touch::Event::FingerPressed {
+                id: FINGER,
+                position,
+                timestamp,
+            },
+            40 => touch::Event::FingerLifted {
+                id: FINGER,
+                position,
+                timestamp,
+            },
+            _ => touch::Event::FingerMoved {
+                id: FINGER,
+                position,
+                timestamp,
+            },
+        };
+        contact(ui, event, position);
+    }
+    let _ = offsets(ui);
+    let snapshot = nested_snapshot(ui);
+    assert!(snapshot.article >= 30. && snapshot.article < 100.);
+    Point::new(100., 240. - snapshot.article)
+}
+
+#[test]
+fn a_second_flick_over_a_child_continues_the_active_parent_and_cancels_its_button() {
+    let mut ui = continuation_tree(false);
+    let point = fling_article(&mut ui);
+    press(&mut ui, point.x, point.y);
+    let before = nested_snapshot(&mut ui);
+    drag(&mut ui, point.x, point.y - 1.);
+    assert_eq!(nested_snapshot(&mut ui).article, before.article);
+    drag(&mut ui, point.x, point.y - 40.);
+    let after = nested_snapshot(&mut ui);
+    assert!((after.article - before.article - 40.).abs() < 0.01);
+    assert_eq!(after.snippet_y, 0.);
+    lift(&mut ui, point.x, point.y - 40.);
+    assert_eq!(
+        ui.drain().count(),
+        0,
+        "the parent claim cancels the child's button"
+    );
+}
+
+#[test]
+fn a_tap_stops_the_parent_and_the_next_gesture_can_scroll_the_child() {
+    let mut ui = continuation_tree(false);
+    let point = fling_article(&mut ui);
+    press(&mut ui, point.x, point.y);
+    lift(&mut ui, point.x, point.y);
+    assert_eq!(
+        ui.drain().collect::<Vec<_>>(),
+        [true],
+        "an unclaimed tap still reaches its button"
+    );
+    let before = nested_snapshot(&mut ui);
+    press(&mut ui, point.x, point.y);
+    drag(&mut ui, point.x, point.y - 40.);
+    let after = nested_snapshot(&mut ui);
+    assert_eq!(after.article, before.article);
+    assert_eq!(after.snippet_y, 40.);
+}
+
+#[test]
+fn a_cancelled_contact_does_not_leave_parent_fling_priority_behind() {
+    let mut ui = continuation_tree(false);
+    let point = fling_article(&mut ui);
+    press(&mut ui, point.x, point.y);
+    contact(
+        &mut ui,
+        touch::Event::FingerLost {
+            id: FINGER,
+            position: point,
+            timestamp: None,
+        },
+        point,
+    );
+    let before = nested_snapshot(&mut ui);
+    press(&mut ui, point.x, point.y);
+    drag(&mut ui, point.x, point.y - 40.);
+    let after = nested_snapshot(&mut ui);
+    assert_eq!(after.article, before.article);
+    assert_eq!(after.snippet_y, 40.);
+}
+
+#[test]
+fn reversing_the_interrupted_fling_allows_the_child_to_scroll() {
+    let mut ui = continuation_tree(false);
+    press(&mut ui, 100., 260.);
+    drag(&mut ui, 100., 220.);
+    contact(
+        &mut ui,
+        touch::Event::FingerLost {
+            id: FINGER,
+            position: Point::new(100., 220.),
+            timestamp: None,
+        },
+        Point::new(100., 220.),
+    );
+    let point = fling_article(&mut ui);
+    press(&mut ui, point.x, point.y);
+    let before = nested_snapshot(&mut ui);
+    assert_eq!(before.snippet_y, 40.);
+    drag(&mut ui, point.x, point.y + 20.);
+    let after = nested_snapshot(&mut ui);
+    assert_eq!(after.article, before.article);
+    assert_eq!(after.snippet_y, 20.);
+}
+
+#[test]
+fn an_orthogonal_drag_over_a_child_does_not_continue_the_parent_fling() {
+    let mut ui = continuation_tree(true);
+    let point = fling_article(&mut ui);
+    press(&mut ui, point.x, point.y);
+    let before = nested_snapshot(&mut ui);
+    drag(&mut ui, point.x - 40., point.y);
+    let after = nested_snapshot(&mut ui);
+    assert_eq!(after.article, before.article);
+    assert_eq!(after.snippet, 40.);
+}
+
+#[test]
+fn a_finished_parent_fling_does_not_reserve_the_next_contact() {
+    let mut ui = continuation_tree(false);
+    fling_article(&mut ui);
+    let _ = ui.simulate([Event::Window(window::Event::RedrawRequested(
+        Instant::now() + Duration::from_secs(10),
+    ))]);
+    let before = nested_snapshot(&mut ui);
+    let point = Point::new(100., 240. - before.article);
+    assert!(point.y > 0. && point.y < 400.);
+    press(&mut ui, point.x, point.y);
+    drag(&mut ui, point.x, point.y - 10.);
+    let after = nested_snapshot(&mut ui);
+    assert_eq!(after.article, before.article);
+    assert_eq!(after.snippet_y, 10.);
 }

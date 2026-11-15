@@ -368,3 +368,80 @@ fn boundary_non_scrolling_axes_and_subthreshold_releases_schedule_no_frames() {
         assert!(state.last_frame.is_none());
     }
 }
+
+#[test]
+fn an_interrupted_parent_at_its_edge_does_not_preempt_the_child() {
+    let mut state = launch(Vector::new(0., 2000.), CONTENT, Instant::now());
+    event(
+        &mut state,
+        touch::Event::FingerPressed {
+            id: FINGER,
+            position: Point::new(30., 80.),
+            timestamp: timestamp(100),
+        },
+        true,
+    );
+    // The available range may change between the press and the first move.
+    state.offset_y = Offset::Absolute(500.);
+    let move_event = Event::Touch(touch::Event::FingerMoved {
+        id: FINGER,
+        position: Point::new(30., 40.),
+        timestamp: timestamp(110),
+    });
+    let direction = Direction::default();
+    let rails = Scrollbars::new(Vector::ZERO, direction, VIEW, CONTENT);
+    let cursor = mouse::Cursor::Available(Point::new(30., 40.));
+    let interaction = state.interact(
+        &move_event,
+        VIEW,
+        CONTENT,
+        cursor,
+        Some(Point::new(30., 40.)),
+        &rails,
+        None,
+        direction,
+        true,
+        false,
+    );
+    assert!(
+        interaction.content.is_some(),
+        "a saturated owner must defer to children"
+    );
+    let update = state.update(
+        &move_event,
+        VIEW,
+        CONTENT,
+        cursor,
+        Some(Point::new(30., 40.)),
+        None,
+        direction,
+        true,
+        false,
+        false,
+    );
+    assert!(!update.capture);
+    assert!(update.cancel_child.is_none());
+    assert!(matches!(state.interaction, Interaction::None));
+}
+
+#[test]
+fn an_elapsed_fling_does_not_reserve_a_contact_before_its_final_redraw() {
+    let mut state = launch(
+        Vector::new(0., 1000.),
+        CONTENT,
+        Instant::now() - Duration::from_secs(10),
+    );
+    event(
+        &mut state,
+        touch::Event::FingerPressed {
+            id: FINGER,
+            position: Point::new(30., 80.),
+            timestamp: timestamp(100),
+        },
+        true,
+    );
+    let Interaction::TouchPending(swipe) = state.interaction else {
+        panic!("the new contact should remain pending");
+    };
+    assert!(swipe.continuation.is_none());
+}

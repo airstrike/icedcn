@@ -1491,9 +1491,13 @@ struct Swipe {
     origin: Instant,
     timestamp: Option<Duration>,
     tracker: velocity::Tracker,
+    /// The interrupted fling's direction, only until this contact chooses an owner.
+    continuation: Option<Vector>,
 }
 
 impl Swipe {
+    const SLOP: f32 = 5.;
+
     fn new(
         finger: touch::Finger,
         position: Point,
@@ -1508,7 +1512,21 @@ impl Swipe {
             origin: now,
             timestamp,
             tracker,
+            continuation: None,
         }
+    }
+
+    fn continues_fling(&self, delta: Vector) -> bool {
+        let Some(previous) = self.continuation else {
+            return false;
+        };
+        let horizontal = delta.x.abs() > delta.y.abs();
+        horizontal == (previous.x.abs() > previous.y.abs())
+            && if horizontal {
+                delta.x * previous.x > 0.
+            } else {
+                delta.y * previous.y > 0.
+            }
     }
 
     /// Bind the platform clock once per contact; batched samples retain their
@@ -3015,9 +3033,42 @@ impl State {
         // A tap arrests a coast immediately, even when a child handles the press.
         if self.source == Some(Source::Touch)
             && cursor_over_scrollable.is_some()
-            && matches!(event, Event::Touch(touch::Event::FingerPressed { .. }))
+            && let Event::Touch(touch::Event::FingerPressed {
+                id,
+                position,
+                timestamp,
+            }) = *event
         {
+            let continuation = self
+                .fling
+                .filter(|fling| {
+                    let elapsed = Instant::now().saturating_duration_since(self.segment.started);
+                    !fling.sample(elapsed.as_secs_f64()).finished
+                })
+                .map(|fling| {
+                    let mut movement = fling.displacement();
+                    if let Some(target) = self.target {
+                        if self.axis_offset(Axis::X, bounds, content) == target.destination.x {
+                            movement.x = 0.;
+                        }
+                        if self.axis_offset(Axis::Y, bounds, content) == target.destination.y {
+                            movement.y = 0.;
+                        }
+                    }
+                    movement
+                });
             self.cancel();
+            // Keep the old owner eligible for this contact, without consuming
+            // its press. Descendants still get taps and gestures in a new
+            // direction; only a continuing drag claims the contact below.
+            if let Some(continuation) = continuation
+                && mouse_over_scrollbar.is_none()
+                && matches!(self.interaction, Interaction::None)
+            {
+                let mut swipe = Swipe::new(id, position, timestamp, Instant::now());
+                swipe.continuation = Some(continuation);
+                self.interaction = Interaction::TouchPending(swipe);
+            }
         }
 
         let mut translation = self.last_translation;
@@ -3292,7 +3343,23 @@ impl State {
             (Interaction::TouchScrolling(swipe), Event::Touch(
                 touch::Event::FingerMoved { id, .. } | touch::Event::FingerLifted { id, .. } | touch::Event::FingerLost { id, .. }
             )) if swipe.finger == *id);
-        if !owns_contact {
+        // A same-direction second flick belongs to the scroller whose coast
+        // this contact stopped, even when it begins over a nested scroller.
+        // Decide before child dispatch, then let update send FingerLost only
+        // once the pending swipe actually claims the drag.
+        let continues_fling = match (self.interaction, event) {
+            (
+                Interaction::TouchPending(swipe),
+                Event::Touch(touch::Event::FingerMoved { id, position, .. }),
+            ) if swipe.finger == *id => {
+                let delta = swipe.position - *position;
+                delta.x.abs().max(delta.y.abs()) >= Swipe::SLOP
+                    && swipe.continues_fling(direction.align(delta))
+                    && self.can_scroll(direction, delta, bounds, content, None)
+            }
+            _ => false,
+        };
+        if !owns_contact && !continues_fling {
             let cursor = match cursor_over_scrollable {
                 Some(cursor_position)
                     if mouse_over_scrollbar.is_none() && !self.interaction.scrollers_grabbed() =>
@@ -3362,7 +3429,7 @@ impl State {
                                 return update;
                             }
                             // Let a small amount of contact jitter remain a tap.
-                            if delta.x.abs().max(delta.y.abs()) < 5. {
+                            if delta.x.abs().max(delta.y.abs()) < Swipe::SLOP {
                                 swipe
                                     .tracker
                                     .sample(position, swipe.time(timestamp, Instant::now()));
