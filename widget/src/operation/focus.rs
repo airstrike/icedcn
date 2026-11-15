@@ -61,10 +61,10 @@ pub(crate) fn reveal(index: usize, scroll: &Id, mut visit: impl FnMut(&mut dyn O
     }
 }
 
-/// Enter a modal and select its initially focused text input for replacement or copying.
-pub(crate) fn enter(visible: bool, mut visit: impl FnMut(&mut dyn Operation)) {
+/// Focus a descendant and select its text for replacement or copying.
+pub(crate) fn enter(index: usize, visible: bool, mut visit: impl FnMut(&mut dyn Operation)) {
     let mut focus = Select {
-        target: Some(0),
+        target: Some(index),
         current: 0,
         visible,
         bounds: None,

@@ -16,7 +16,7 @@ use icedcn_core::Theme;
 /// The keyboard focus scope of a horizontal menubar or a vertical menu panel.
 pub(crate) struct List<'a, Message> {
     pub content: Element<'a, Message, Theme, Renderer>,
-    /// None manages initial focus only; the input owns its editing keys.
+    /// None traverses panel controls with Tab and leaves editing keys to them.
     pub horizontal: Option<bool>,
     pub autofocus: Initial,
     pub on_move: Option<Box<dyn Fn(usize) -> Message + 'a>>,
@@ -50,7 +50,7 @@ impl Initial {
             Self::Dropdown { scroll, .. } | Self::Choice { scroll, .. } => {
                 focus::reveal(index, scroll, visit)
             }
-            Self::Content { keyboard } => visit(&mut focus::restore(Some(index), *keyboard)),
+            Self::Content { keyboard } => focus::enter(index, *keyboard, visit),
             Self::Menu(_) => visit(&mut focus::select(Some(index))),
         }
     }
@@ -141,7 +141,19 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
             }
         }
         if let Event::Keyboard(keyboard::Event::KeyPressed { key, modifiers, .. }) = event {
+            // The surrounding anchored overlay dismisses on an uncaptured Escape.
+            if self.horizontal.is_none() && key.as_ref() == Key::Named(Named::Escape) {
+                return;
+            }
             let count = focus::count(&mut visit);
+            if self.horizontal.is_none() && key.as_ref() == Key::Named(Named::Tab) {
+                if let Some(index) = focus::adjacent(count, modifiers.shift()) {
+                    focus::enter(index, true, &mut visit);
+                    shell.request_redraw();
+                }
+                shell.capture_event();
+                return;
+            }
             if count.total > 0 && (vertical || count.focused.is_some()) {
                 let last = count.total - 1;
                 let next = match (key.as_ref(), self.horizontal) {
@@ -199,6 +211,18 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
             shell,
             viewport,
         );
+        // The open content owns keyboard activation even when it contains only text.
+        if self.horizontal.is_none()
+            && matches!(
+                event,
+                Event::Keyboard(keyboard::Event::KeyPressed {
+                    key: Key::Named(Named::Enter | Named::Space),
+                    ..
+                })
+            )
+        {
+            shell.capture_event();
+        }
     }
 
     fn draw(

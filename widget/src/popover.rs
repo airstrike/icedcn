@@ -118,7 +118,7 @@ pub fn popover<'a, Message>(
         padding: Padding::new(10.0),
         modal: false,
         initial_choice: None,
-        focus_content: None,
+        focus_content: Some(false),
         open_on_arrow_down: false,
         hover: None,
         inherited: Inherited::default(),
@@ -217,6 +217,7 @@ impl<'a, Message> Popover<'a, Message> {
 
     pub(crate) fn hover(mut self, open_delay: Duration, close_delay: Duration) -> Self {
         self.hover = Some((open_delay, close_delay));
+        self.focus_content = None;
         self
     }
 
@@ -381,7 +382,10 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
 
         let panel: Element<'a, Event<Message>, Theme, Renderer> = if handle.is_open {
             let mut body = (self.content)(&handle);
-            body.inherit(&self.inherited.without_join());
+            let inherited = self.inherited.without_join().or(Inherited::default()
+                .with_size(crate::Size::Default)
+                .with_line_height(20.));
+            body.inherit(&inherited);
 
             let scroll = Id::unique();
             if self.modal {

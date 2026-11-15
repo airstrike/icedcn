@@ -2,7 +2,7 @@
 
 ### `popover(trigger, content)`
 
-An iced `Component` that owns its open state, over iced's `anchored` overlay. Both closures receive a `popover::Handle` and build in your own message type: `trigger` what sits in place, `content` the panel shown next to it while open. The panel is built only while open, so its widgets mount fresh each time.
+The trigger closure supplies the anchor. The content closure builds its panel each time it opens. Both receive a `popover::Handle` and can publish your application’s messages.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -23,4 +23,6 @@ An iced `Component` that owns its open state, over iced's `anchored` overlay. Bo
 | `p.close(child)` | Pressing `child` closes it. The child also publishes its own `.on_press` message if configured. |
 | `p.is_open()` | Whether the popover is open. |
 
-A press outside the panel (which still reaches the page beneath) and `Escape` dismiss it. `popover::header(title, description)` lays out `PopoverHeader`, `PopoverTitle` and `PopoverDescription`. There is no `PopoverAnchor`: the panel anchors to the widget the trigger closure returns.
+Opening the panel focuses its first control and selects the text in a focused input. Tab and Shift+Tab move between controls. Escape or a press outside dismisses the panel. An outside press can also activate the underlying page.
+
+Use `popover::header(title, description)` for a title and supporting text.

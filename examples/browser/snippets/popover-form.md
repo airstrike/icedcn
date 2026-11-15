@@ -1,25 +1,37 @@
 ```rust
+use iced::{Fill, FillPortion};
+use icedcn::Slot;
 use icedcn::widget::{button, column, field, input, popover};
+use icedcn::widget::field::Orientation;
 
-popover(
-    |p| p.trigger(button("Open Popover").style(button::Outline)),
-    |_| {
-        column![
-            popover::header("Dimensions", "Set the dimensions for the layer."),
+pub fn view<'a>(window_width: f32) -> Slot<'a, ()> {
+    let size = if window_width < 768. { 16. } else { 14. };
+    popover(
+        |p| p.trigger(button("Open Popover").style(button::Outline).has_popup(true)),
+        move |_| {
+            let dimension = |label: &'static str, value| {
+                field(input("").default_value(value).text_size(size).width(FillPortion(2)))
+                    .label(label)
+                    .orientation(Orientation::Horizontal)
+                    .control_last()
+                    .width(Fill)
+                    .into()
+            };
             column![
-                field(input("").default_value("100%").width(Fill))
-                    .label("Width")
-                    .orientation(Orientation::Horizontal),
-                field(input("").default_value("25px").width(Fill))
-                    .label("Height")
-                    .orientation(Orientation::Horizontal),
+                popover::header("Dimensions", "Set the dimensions for the layer."),
+                field::group([
+                    dimension("Width", "100%"),
+                    dimension("Height", "25px"),
+                ])
+                .spacing(16),
             ]
-            .spacing(16),
-        ]
-        .spacing(10)
-        .into()
-    },
-)
-.align(popover::Align::Start)
-.width(256)
+            .width(Fill)
+            .spacing(10)
+            .into()
+        },
+    )
+    .align(popover::Align::Start)
+    .width(256)
+    .into()
+}
 ```

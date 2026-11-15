@@ -1,20 +1,24 @@
 ```rust
+use icedcn::{Size, Slot};
 use icedcn::widget::{button, popover, row, text};
+use icedcn::widget::popover::Align;
 
-row![
-    aligned("Start", popover::Align::Start, "Aligned to start"),
-    aligned("Center", popover::Align::Center, "Aligned to center"),
-    aligned("End", popover::Align::End, "Aligned to end"),
-]
-.spacing(24)
+pub fn view<'a>() -> Slot<'a, ()> {
+    let panel = |label: &'static str, alignment, content: &'static str| {
+        popover(
+            move |p| p.trigger(button(label).size(Size::Sm).style(button::Outline).has_popup(true)),
+            move |_| text(content).into(),
+        )
+        .align(alignment)
+        .width(160)
+    };
 
-fn aligned<'a>(label: &'a str, align: popover::Align, content: &'a str) -> Slot<'a, Message> {
-    popover(
-        move |p| p.trigger(button(label).size(Size::Sm).style(button::Outline)),
-        move |_| text(content).into(),
-    )
-    .align(align)
-    .width(160)
+    row![
+        panel("Start", Align::Start, "Aligned to start"),
+        panel("Center", Align::Center, "Aligned to center"),
+        panel("End", Align::End, "Aligned to end"),
+    ]
+    .spacing(24)
     .into()
 }
 ```

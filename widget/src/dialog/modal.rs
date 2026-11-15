@@ -397,7 +397,7 @@ where
 
             let layout = Layout::new(size).move_to(position);
             if std::mem::take(&mut focus.enter) {
-                focus::enter(!focus.pointer_opened, |operation| {
+                focus::enter(0, !focus.pointer_opened, |operation| {
                     panel.operate(
                         panel_tree,
                         layout,
