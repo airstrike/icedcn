@@ -1,6 +1,6 @@
 ## Build an interface
 
-icedcn is a library of composable components for native and web applications built with Rust and iced. Explore live previews, then copy the Rust examples into your application.
+icedcn is a library of composable native components built with Rust and iced. Explore live previews, then copy the Rust examples into your application.
 
 - Start with [Installation](icedcn://guide/installation) for the tested toolchain and Cargo dependencies.
 - Read [Components](icedcn://guide/components) for composition, styling, and controlled or uncontrolled state.
