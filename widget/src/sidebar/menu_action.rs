@@ -22,13 +22,13 @@ use icedcn_core::theme::button;
 
 /// A ghost-style action button for sidebar menu items.
 ///
-/// Small (24x24), ghost styling, centered content.
+/// Small (20x20), ghost styling, centered content.
 pub struct SidebarMenuAction<'a, Message> {
     content: Slot<'a, Message>,
     on_press: Option<Message>,
 }
 
-/// Create a sidebar menu action button (ghost-style, 24x24).
+/// Create a sidebar menu action button (ghost-style, 20x20).
 pub fn menu_action<'a, Message: Clone + 'a>(
     content: impl Into<Slot<'a, Message>>,
 ) -> SidebarMenuAction<'a, Message> {
@@ -55,15 +55,15 @@ impl<'a, Message: Clone + 'a> From<SidebarMenuAction<'a, Message>>
             .inherit(&Inherited::default().with_size(Size::Xs));
         let content_iced = action.content.compose();
 
-        // 24x24, our raw button with translate(false) and ghost style
+        // 20x20, our raw button with translate(false) and ghost style
         let style: widget::StyleFn<'a, Theme> = Box::new(|t, s: widget::Status| {
             let status: iced_widget::button::Status = s.into();
             let iced: iced_widget::button::Style = button::ghost(t, status).into();
             iced.into()
         });
         let mut raw_btn = widget::Button::new(iced_widget::center(content_iced))
-            .width(24.0)
-            .height(24.0)
+            .width(20.0)
+            .height(20.0)
             .padding(0)
             .translate(false)
             .style(style);

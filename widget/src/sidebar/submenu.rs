@@ -19,7 +19,7 @@ pub fn submenu<'a, Message: 'a>(
             .width(1.0)
             .height(Fill)
             .style(|theme: &Theme| iced_widget::container::Style {
-                background: Some(theme.neutral.border.into()),
+                background: Some(theme.sidebar.border.into()),
                 ..Default::default()
             })
             .boxed();
@@ -31,11 +31,13 @@ pub fn submenu<'a, Message: 'a>(
             top: 2.0,
             bottom: 2.0,
             left: 10.0,
-            right: 0.0,
+            right: 10.0,
         })
         .width(Fill);
 
-    Row::with_children([Slot::from(border_line), items.into()]).spacing(0)
+    Row::with_children([Slot::from(border_line), items.into()])
+        .padding([0, 14])
+        .width(Fill)
 }
 
 /// Create a sidebar submenu item.
@@ -44,14 +46,11 @@ pub fn submenu<'a, Message: 'a>(
 pub fn submenu_item<'a, Message: 'a>(
     children: impl IntoIterator<Item = Slot<'a, Message>>,
 ) -> Row<'a, Message> {
-    Row::with_children(children)
+    Row::with_children(children).width(Fill)
 }
 
-/// Create a sidebar submenu button (placeholder).
-///
-/// A smaller menu button (h-7 / 28px) for nested navigation items.
-/// This is a placeholder that wraps content in a 28px-high container
-/// until the full menu_button component is implemented.
+/// A 28px-high submenu slot. Pass an interactive menu button as its content
+/// when a destination should publish a navigation message.
 pub fn submenu_button<'a, Message: 'a>(
     content: impl Into<Slot<'a, Message>>,
 ) -> Container<'a, Message> {

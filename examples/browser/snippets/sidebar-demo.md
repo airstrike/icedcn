@@ -1,38 +1,30 @@
+This layout takes the workspace switcher, navigation and account controls from the application. Each closure receives the provider handle, so it can show icons when collapsed and place dropdowns below their triggers on mobile.
+
 ```rust
+use iced::{Fill, Shrink};
+use iced::widget::Space;
+use icedcn::Slot;
 use icedcn::widget::{column, container, row, scrollable, sidebar};
 
-sidebar::provider(move |s| {
-    let compact = !s.is_open() && !s.is_mobile();
-    let nav = sidebar::content([
-        platform(compact, state.selected),
-        if compact {
-            Space::new().into()
-        } else {
-            projects(state.selected)
-        },
-    ])
-    .height(iced::Shrink);
-    let side = sidebar::fixed(
-        column![
-            sidebar::header([teams(state.team, compact)]),
-            scrollable(nav).width(Fill).height(Fill),
-            sidebar::footer([account(compact)])
-        ]
-        .width(Fill)
-        .height(Fill),
-    );
-    row![
-        s.sidebar(side),
-        if s.is_mobile() {
-            Space::new().into()
-        } else {
-            sidebar::rail_trigger()
-        },
-        sidebar::main(container(sidebar::trigger()).padding([8, 16]))
-    ]
-    .width(Fill)
-    .height(Fill)
+pub fn workspace<'a, M: Clone + 'static>(
+    teams: impl Fn(&sidebar::Handle<'_, 'a, M>) -> Slot<'a, M> + 'a,
+    links: impl Fn(&sidebar::Handle<'_, 'a, M>) -> Slot<'a, M> + 'a,
+    account: impl Fn(&sidebar::Handle<'_, 'a, M>) -> Slot<'a, M> + 'a,
+) -> Slot<'a, M> {
+    sidebar::provider(move |s| {
+        let panel = sidebar::fixed(column![
+            sidebar::header([teams(s)]),
+            scrollable(sidebar::content([links(s)]).height(Shrink)).height(Fill).width(Fill),
+            sidebar::footer([account(s)]),
+        ].height(Fill).width(Fill));
+        let rail = if s.is_mobile() { Space::new().into() } else { sidebar::rail_trigger() };
+        row![
+            s.sidebar(panel),
+            rail,
+            sidebar::main(container(sidebar::trigger()).center_y(64)),
+        ].width(Fill).height(Fill).into()
+    })
+    .collapsible(sidebar::Collapsible::Icon)
     .into()
-})
-.collapsible(sidebar::Collapsible::Icon)
+}
 ```

@@ -2,6 +2,7 @@
 
 use crate::column::Column;
 use crate::compose::Slot;
+use iced_core::Length::Fill;
 
 /// Create a sidebar footer.
 ///
@@ -10,5 +11,8 @@ use crate::compose::Slot;
 pub fn footer<'a, Message: 'a>(
     children: impl IntoIterator<Item = Slot<'a, Message>>,
 ) -> Column<'a, Message> {
-    Column::with_children(children).spacing(8).padding(8)
+    Column::with_children(children)
+        .width(Fill)
+        .spacing(8)
+        .padding(8)
 }

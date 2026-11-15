@@ -20,6 +20,7 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/sidebar-demo.md",
     },
+    page::Block::Md("examples/browser/snippets/sidebar-installation.md"),
     page::Block::Md("examples/browser/snippets/sidebar-usage.md"),
     page::Block::Md("examples/browser/snippets/sidebar-composition.md"),
     page::Block::Md("examples/browser/snippets/sidebar-guide-structure.md"),
@@ -62,20 +63,22 @@ pub static BLOCKS: &[page::Block] = &[
 
 pub struct SidebarPage {
     state: page::State,
+    preview_height: f32,
 }
 
 impl SidebarPage {
     pub fn new(page_index: usize) -> Box<dyn page::Page> {
         Box::new(Self {
             state: page::State::new(page_index, BLOCKS),
+            preview_height: 398.,
         })
     }
 }
 
 use crate::component::avatar::alex_handle;
 use crate::icon;
-use iced::widget::{Space, Text};
-use iced::{Alignment, Fill};
+use iced::widget::{Space, Text, hover, stack};
+use iced::{Alignment, Fill, Right};
 use icedcn::theme::container::Style;
 use icedcn::widget::{avatar, collapsible, container, dropdown_menu, menu, scrollable};
 
@@ -138,33 +141,38 @@ impl<'a> Component<'a, crate::Message, Theme> for Projects {
         let state = *state;
         Element::from(
             sidebar::provider(move |s| {
-                let compact = !s.is_open() && !s.is_mobile();
+                let mobile = s.is_mobile();
+                let compact = !s.is_open() && !mobile;
                 let nav = sidebar::content([
                     platform(compact, state.selected),
                     if compact {
                         Space::new().into()
                     } else {
-                        projects(state.selected)
+                        projects(state.selected, mobile)
                     },
                 ])
                 .height(iced::Shrink);
                 let side = sidebar::fixed(
                     column![
-                        sidebar::header([teams(state.team, compact)]),
+                        sidebar::header([teams(state.team, compact, mobile)]),
                         scrollable(nav).width(Fill).height(Fill),
-                        sidebar::footer([account(compact)])
+                        sidebar::footer([account(compact, mobile)])
                     ]
                     .width(Fill)
                     .height(Fill),
                 );
                 row![
                     s.sidebar(side),
-                    if s.is_mobile() {
+                    if mobile {
                         Space::new().into()
                     } else {
                         sidebar::rail_trigger()
                     },
-                    sidebar::main(container(sidebar::trigger()).padding([8, 16]))
+                    sidebar::main(
+                        container(sidebar::trigger())
+                            .center_y(if compact { 48. } else { 64. })
+                            .padding([0, if mobile { 12 } else { 0 }]),
+                    )
                 ]
                 .width(Fill)
                 .height(Fill)
@@ -180,7 +188,31 @@ fn line(label: &'static str, glyph: Glyph) -> Slot<'static, Choice> {
         .align_y(Alignment::Center)
         .into()
 }
-fn teams(i: usize, compact: bool) -> Slot<'static, Choice> {
+fn menu_width(compact: bool, mobile: bool) -> f32 {
+    if mobile {
+        sidebar::WIDTH_MOBILE - 16.
+    } else if compact {
+        224.
+    } else {
+        sidebar::WIDTH - 16.
+    }
+}
+
+fn team_option(label: Slot<'static, Choice>, glyph: Glyph) -> Slot<'static, Choice> {
+    let tile = container(glyph().size(14)).center(24).style(|t: &Theme| {
+        let mut style = Style::default();
+        style.border.width = 1.;
+        style.border.radius = 6.into();
+        style.border.color = t.neutral.border;
+        style
+    });
+    container(row![tile, label].spacing(8).align_y(Alignment::Center))
+        .center_y(32)
+        .padding([0, 2])
+        .into()
+}
+
+fn teams(i: usize, compact: bool, mobile: bool) -> Slot<'static, Choice> {
     let (name, plan, glyph) = TEAMS[i];
     dropdown_menu(
         move |m| {
@@ -200,33 +232,43 @@ fn teams(i: usize, compact: bool) -> Slot<'static, Choice> {
                     icon::chevrons_up_down().size(16)
                 ]
                 .spacing(8)
+                .width(Fill)
                 .align_y(Alignment::Center)
                 .into()
             };
             m.trigger(
                 sidebar::menu_button(body)
                     .size(sidebar::MenuButtonSize::Lg)
+                    .active(m.is_open())
                     .collapsed(compact),
             )
         },
         |_| {
             let mut entries = vec![menu::label("Teams")];
             entries.extend(TEAMS.iter().enumerate().map(|(i, &(name, _, glyph))| {
-                menu::item(line(name, glyph))
+                menu::item(team_option(text(name).into(), glyph))
                     .shortcut(["⌘1", "⌘2", "⌘3"][i])
                     .on_select(Choice::Team(i))
                     .into()
             }));
             entries.extend([
                 menu::separator(),
-                menu::item(line("Add team", icon::plus)).into(),
+                menu::item(team_option(
+                    text::muted("Add team").medium().into(),
+                    icon::plus,
+                ))
+                .into(),
             ]);
             menu::group(entries)
         },
     )
-    .side(dropdown_menu::Side::Right)
+    .side(if mobile {
+        dropdown_menu::Side::Bottom
+    } else {
+        dropdown_menu::Side::Right
+    })
     .align(dropdown_menu::Align::Start)
-    .width(224)
+    .width(menu_width(compact, mobile))
     .into()
 }
 fn platform(compact: bool, selected: Option<&'static str>) -> Slot<'static, Choice> {
@@ -244,6 +286,7 @@ fn platform(compact: bool, selected: Option<&'static str>) -> Slot<'static, Choi
                         icon::chevron_right().size(14)
                     }
                 ]
+                .width(Fill)
                 .align_y(Alignment::Center)
                 .spacing(8)
                 .into()
@@ -253,26 +296,36 @@ fn platform(compact: bool, selected: Option<&'static str>) -> Slot<'static, Choi
                 return trigger;
             }
             let children = links.iter().map(move |&link| {
-                sidebar::submenu_item([sidebar::menu_button(link)
+                sidebar::submenu_item([sidebar::menu_button(text(link).size(14))
                     .size(sidebar::MenuButtonSize::Sm)
                     .active(selected == Some(link))
                     .on_press(Choice::Nav(link))
                     .into()])
                 .into()
             });
-            column![trigger, c.content(sidebar::submenu(children))].into()
+            column![trigger, c.content(sidebar::submenu(children))]
+                .width(Fill)
+                .into()
         })
+        .width(Fill)
         .default_open(name == "Playground")
         .into()
     });
-    let group = sidebar::menu(items);
-    if compact {
-        group.into()
+    let label = if compact {
+        Space::new().into()
     } else {
-        sidebar::group([sidebar::group_label("Platform").into(), group.into()]).into()
-    }
+        heading("Platform")
+    };
+    sidebar::group([label, sidebar::menu(items).into()]).into()
 }
-fn projects(selected: Option<&'static str>) -> Slot<'static, Choice> {
+fn heading<'a, M: 'a>(label: &'a str) -> Slot<'a, M> {
+    container(sidebar::group_label(label))
+        .center_y(32)
+        .padding([0, 8])
+        .into()
+}
+
+fn projects(selected: Option<&'static str>, mobile: bool) -> Slot<'static, Choice> {
     let mut items: Vec<_> = PROJECTS
         .iter()
         .map(|&(name, glyph)| {
@@ -289,29 +342,39 @@ fn projects(selected: Option<&'static str>) -> Slot<'static, Choice> {
                     ])
                 },
             )
-            .side(dropdown_menu::Side::Right)
-            .align(dropdown_menu::Align::Start)
+            .side(if mobile {
+                dropdown_menu::Side::Bottom
+            } else {
+                dropdown_menu::Side::Right
+            })
+            .align(if mobile {
+                dropdown_menu::Align::End
+            } else {
+                dropdown_menu::Align::Start
+            })
             .width(192);
-            sidebar::menu_item([
-                container(
-                    sidebar::menu_button(line(name, glyph))
-                        .active(selected == Some(name))
-                        .on_press(Choice::Nav(name)),
-                )
-                .width(Fill)
-                .into(),
-                more.into(),
-            ])
-            .align_y(Alignment::Center)
-            .into()
+            let primary = Element::from(
+                sidebar::menu_button(line(name, glyph))
+                    .active(selected == Some(name))
+                    .on_press(Choice::Nav(name)),
+            );
+            let action = Element::from(
+                container(more)
+                    .align_x(Right)
+                    .width(Fill)
+                    .center_y(32)
+                    .padding([0, 4]),
+            );
+            let row = if mobile {
+                stack([primary, action]).boxed()
+            } else {
+                hover(primary, action).boxed()
+            };
+            row.into()
         })
         .collect();
     items.push(sidebar::menu_button(line("More", icon::ellipsis)).into());
-    sidebar::group([
-        sidebar::group_label("Projects").into(),
-        sidebar::menu(items).into(),
-    ])
-    .into()
+    sidebar::group([heading("Projects"), sidebar::menu(items).into()]).into()
 }
 fn identity(compact: bool) -> Slot<'static, Choice> {
     let face = avatar(Some(alex_handle())).fallback("AC");
@@ -328,15 +391,17 @@ fn identity(compact: bool) -> Slot<'static, Choice> {
         icon::chevrons_up_down().size(16)
     ]
     .spacing(8)
+    .width(Fill)
     .align_y(Alignment::Center)
     .into()
 }
-fn account(compact: bool) -> Slot<'static, Choice> {
+fn account(compact: bool, mobile: bool) -> Slot<'static, Choice> {
     dropdown_menu(
         move |d| {
             d.trigger(
                 sidebar::menu_button(identity(compact))
                     .size(sidebar::MenuButtonSize::Lg)
+                    .active(d.is_open())
                     .collapsed(compact),
             )
         },
@@ -354,43 +419,65 @@ fn account(compact: bool) -> Slot<'static, Choice> {
             ])
         },
     )
-    .width(224)
-    .side(dropdown_menu::Side::Right)
+    .width(menu_width(compact, mobile))
+    .side(if mobile {
+        dropdown_menu::Side::Bottom
+    } else {
+        dropdown_menu::Side::Right
+    })
     .align(dropdown_menu::Align::End)
     .into()
 }
 
-fn group_example<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
-    sidebar::floating(sidebar::content([sidebar::group([
-        sidebar::group_label("Help").into(),
-        sidebar::group_content([sidebar::menu([
-            sidebar::menu_item([sidebar::menu_button("Support").into()]).into(),
-            sidebar::menu_item([sidebar::menu_button("Feedback").into()]).into(),
-        ])
-        .into()])
-        .into(),
-    ])
-    .into()]))
+fn group_example<'a, M: Clone + 'static>() -> Slot<'a, M> {
+    sidebar::floating(
+        collapsible(|c| {
+            let links = ["Support", "Feedback"].map(|name| sidebar::menu_button(name).into());
+            sidebar::group([
+                c.trigger(sidebar::menu_button(
+                    row![
+                        text("Help").width(Fill),
+                        if c.is_open() {
+                            icon::chevron_down().size(16)
+                        } else {
+                            icon::chevron_right().size(16)
+                        }
+                    ]
+                    .width(Fill)
+                    .align_y(Alignment::Center),
+                )),
+                c.content(sidebar::menu(links)),
+            ])
+            .into()
+        })
+        .width(Fill)
+        .default_open(true),
+    )
     .width(sidebar::WIDTH)
-    .height(iced::Fill)
+    .height(Fill)
     .into()
 }
 
-fn header_example<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
-    sidebar::floating(
-        column![
-            sidebar::header([sidebar::menu([sidebar::menu_item([sidebar::menu_button(
-                "Select Workspace",
-            )
-            .into()])
-            .into()])
-            .into()]),
-            sidebar::content([text::p("Workspace content goes here.").into()]),
-        ]
-        .width(sidebar::WIDTH),
+fn header_example<'a, M: Clone + 'static>() -> Slot<'a, M> {
+    let switcher = dropdown_menu(
+        |m| {
+            m.trigger(sidebar::menu_button(
+                row![
+                    text("Select Workspace").width(Fill),
+                    icon::chevron_down().size(16)
+                ]
+                .width(Fill)
+                .align_y(Alignment::Center),
+            ))
+        },
+        |_| menu::group([menu::item("Acme Inc").into()]),
     )
-    .height(iced::Fill)
-    .into()
+    .align(dropdown_menu::Align::Start)
+    .width(240);
+    sidebar::floating(sidebar::header([switcher.into()]))
+        .width(sidebar::WIDTH)
+        .height(Fill)
+        .into()
 }
 
 impl page::Page for SidebarPage {
@@ -422,6 +509,25 @@ impl page::Page for SidebarPage {
         self.state.reset_volatile();
     }
 
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            padding: 0.into(),
+            ..Default::default()
+        }
+    }
+    fn window_width(&mut self, width: f32) {
+        self.preview_height = if width < 768. { 214. } else { 398. };
+    }
+    fn docs_preview(&self, id: &str, theme: &Theme) -> Element<'_, crate::Message, Theme> {
+        container(self.themed_preview(id, theme))
+            .width(Fill)
+            .height(if id == "demo" {
+                self.preview_height
+            } else {
+                288.
+            })
+            .into()
+    }
     fn preview(&self, id: &str) -> iced::Element<'_, crate::Message, Theme> {
         match id {
             "demo" => component(Projects).boxed(),

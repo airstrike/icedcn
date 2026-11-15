@@ -13,7 +13,8 @@ use iced_core::Length::Fill;
 use iced_core::mouse::Interaction;
 use iced_widget::Renderer;
 use iced_widget::button::Status;
-use iced_widget::space;
+use iced_widget::container::Style;
+use iced_widget::{container, space};
 
 use super::trigger::Toggle;
 use crate::button::widget;
@@ -68,14 +69,20 @@ impl<'a, Message: Clone + 'a> From<SidebarRail<Message>>
             iced.into()
         });
 
-        let raw_btn = widget::Button::new(space::horizontal())
-            .width(RAIL_WIDTH)
-            .height(Fill)
-            .padding(0)
-            .translate(false)
-            .interaction(Interaction::ResizingHorizontally)
-            .style(style)
-            .on_press_maybe(rail.on_press);
+        let raw_btn = widget::Button::new(
+            container(space::horizontal())
+                .width(1)
+                .height(Fill)
+                .style(|t: &Theme| Style::default().background(t.sidebar.border)),
+        )
+        .width(RAIL_WIDTH)
+        .height(Fill)
+        .padding(0)
+        .inset(iced_core::Padding::ZERO.right(RAIL_WIDTH - 2.))
+        .translate(false)
+        .interaction(Interaction::ResizingHorizontally)
+        .style(style)
+        .on_press_maybe(rail.on_press);
 
         raw_btn.into()
     }

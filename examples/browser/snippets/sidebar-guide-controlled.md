@@ -1,9 +1,17 @@
 ## Controlled Sidebar
 
-Use controlled mode to share the open state with other parts of the application. Update the stored value when the message arrives.
+Store the desktop preference in your application and use the requested value when updating it. The phone sheet keeps a separate temporary open state.
 
 ```rust
-sidebar::provider(|s| layout(s))
-    .open(state.sidebar_open)
-    .on_open_change(Message::SidebarOpenChanged)
+use icedcn::Slot;
+use icedcn::widget::{row, sidebar};
+
+pub fn view<'a>(open: bool) -> Slot<'a, bool> {
+    sidebar::provider(|s| {
+        row![
+            s.sidebar(sidebar::fixed("Workspace")),
+            sidebar::main(sidebar::trigger()),
+        ].width(iced::Fill).height(iced::Fill).into()
+    }).open(open).on_open_change(|next| next).into()
+}
 ```

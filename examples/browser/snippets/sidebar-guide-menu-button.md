@@ -1,7 +1,3 @@
 ## SidebarMenuButton
 
-Use `.active(true)` for the current destination, `.on_press(message)` to navigate, and `.collapsed(true)` when showing the icon rail. Each row uses the sidebar accent palette.
-
-```rust
-sidebar::menu_button("Dashboard").active(true).on_press(Message::Dashboard)
-```
+A menu button fills its row. Use `.on_press(message)` to select a destination, `.active(true)` for the current destination, and `.collapsed(true)` for a 32px square icon button. A collapsed button can show its full label with `.tooltip(label)`.

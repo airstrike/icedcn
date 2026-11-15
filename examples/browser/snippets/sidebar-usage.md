@@ -1,46 +1,20 @@
 ## Usage
 
-```rust
-use icedcn::widget::sidebar;
-```
+A provider connects the trigger to the panel and stores its open state. This example sends the selected destination to the application.
 
 ```rust
-// Fixed sidebar (flush against window edge)
-sidebar::fixed(content)
+use icedcn::Slot;
+use icedcn::widget::{row, sidebar};
 
-// Floating sidebar (margin, rounded corners, border, shadow)
-sidebar::floating(content)
-
-// Inset sidebar (content area carries the chrome via main_styled)
-sidebar::inset(content)
-```
-
-Build the sidebar body using the suite helpers:
-
-```rust
-sidebar::fixed(
-    column![
-        sidebar::header([sidebar::menu_button("Acme Inc.").into()]),
-        sidebar::content([
-            sidebar::group([
-                sidebar::group_label("Projects").into(),
-                sidebar::group_content([
-                    sidebar::menu([
-                        sidebar::menu_item([
-                            sidebar::menu_button("Dashboard")
-                                .active(true)
-                                .on_press(Message::Navigate)
-                                .into(),
-                        ])
-                        .into(),
-                    ])
-                    .into(),
-                ])
-                .into(),
-            ])
-            .into(),
-        ]),
-    ]
-    .width(sidebar::WIDTH),
-)
+pub fn view<'a>() -> Slot<'a, &'static str> {
+    sidebar::provider(|s| {
+        let links = ["Dashboard", "Settings"].map(|name| {
+            sidebar::menu_button(name).on_press(name).into()
+        });
+        row![
+            s.sidebar(sidebar::fixed(sidebar::menu(links))),
+            sidebar::main(sidebar::trigger()),
+        ].width(iced::Fill).height(iced::Fill).into()
+    }).into()
+}
 ```

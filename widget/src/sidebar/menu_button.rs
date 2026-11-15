@@ -150,21 +150,27 @@ impl<'a, Message: Clone + 'a> From<SidebarMenuButton<'a, Message>>
 {
     fn from(mut btn: SidebarMenuButton<'a, Message>) -> Self {
         let text_size = btn.size.text_size();
-        let line_height = if btn.size == MenuButtonSize::Docs {
-            text_size * 20.0 / 14.0
-        } else {
-            16.0
-        };
+        let docs = btn.size == MenuButtonSize::Docs;
+        let line_height = if docs { text_size * 20.0 / 14.0 } else { 20.0 };
         btn.content.inherit(
             &Inherited::default()
                 .with_size(Size::Custom(text_size))
-                .with_weight(crate::Weight::Medium)
+                .with_weight(if docs || btn.active {
+                    crate::Weight::Medium
+                } else {
+                    crate::Weight::Normal
+                })
                 .with_line_height(line_height)
                 .with_selectable(false),
         );
 
         let content_iced = btn.content.compose();
-        let height = btn.size.height();
+        let height = if btn.collapsed {
+            32.
+        } else {
+            btn.size.height()
+        };
+        let width = if docs { Shrink } else { Fill };
 
         // Use our raw button widget with translate(false) — no press-down
         let mut raw_btn = if btn.collapsed {
@@ -173,7 +179,7 @@ impl<'a, Message: Clone + 'a> From<SidebarMenuButton<'a, Message>>
                 .height(height)
                 .padding(0)
         } else {
-            // Shrink the hit area and selection background to the label and its padding.
+            // The docs navigator has label-sized targets. Workspace menus fill their row.
             //
             // `center_y(Fill)` centers the line-box within the post-padding
             // content area for sizes whose content slack > line-box (Default,
@@ -181,10 +187,10 @@ impl<'a, Message: Clone + 'a> From<SidebarMenuButton<'a, Message>>
             // but tolerates it — combination handles all sizes.
             widget::Button::new(
                 iced_widget::container(content_iced)
-                    .width(Shrink)
+                    .width(width)
                     .center_y(Fill),
             )
-            .width(Shrink)
+            .width(width)
             .height(height)
             .padding(btn.size.padding())
         };
@@ -201,7 +207,13 @@ impl<'a, Message: Clone + 'a> From<SidebarMenuButton<'a, Message>>
         let style: widget::StyleFn<'a, Theme> = if btn.active {
             Box::new(move |t, s: widget::Status| {
                 let status: Status = s.into();
-                let iced: iced_widget::button::Style = button::sidebar_active(t, status).into();
+                let mut style = button::sidebar_active(t, status);
+                if !docs {
+                    style.background = Some(t.sidebar.accent.base.into());
+                    style.text_color = t.sidebar.accent.foreground;
+                    style.border.width = 0.;
+                }
+                let iced: iced_widget::button::Style = style.into();
                 iced.into()
             })
         } else {

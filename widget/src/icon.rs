@@ -14,6 +14,9 @@ static CHEVRON: LazyLock<Handle> = LazyLock::new(|| {
 static REMOVE: LazyLock<Handle> = LazyLock::new(|| {
     Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 6-12 12M6 6l12 12"/></svg>"#)
 });
+static PANEL_LEFT: LazyLock<Handle> = LazyLock::new(|| {
+    Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>"#)
+});
 static CALENDAR: LazyLock<Handle> = LazyLock::new(|| {
     Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4m8-4v4M3 10h18"/><rect width="18" height="18" x="3" y="4" rx="2"/></svg>"#)
 });
@@ -35,6 +38,7 @@ pub(crate) enum Icon {
     Chevron,
     ChevronRight,
     Calendar,
+    PanelLeft,
     Remove,
     Check,
     Globe,
@@ -76,6 +80,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Icon {
             Self::Remove => REMOVE.clone(),
             Self::Check => CHECK.clone(),
             Self::Calendar => CALENDAR.clone(),
+            Self::PanelLeft => PANEL_LEFT.clone(),
             Self::Globe => GLOBE.clone(),
             Self::Sort => SORT.clone(),
             Self::More => MORE.clone(),

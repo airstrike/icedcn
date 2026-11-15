@@ -1,21 +1,14 @@
 ```rust
-use icedcn::widget::sidebar;
+use icedcn::Slot;
+use icedcn::widget::{dropdown_menu, menu, sidebar};
 
-sidebar::floating(
-    column![
-        sidebar::header([
-            sidebar::menu([
-                sidebar::menu_item([
-                    sidebar::menu_button("Select Workspace")
-                        .on_press(Message::OpenWorkspaces)
-                        .into(),
-                ])
-                .into(),
-            ])
-            .into(),
-        ]),
-    ]
-    .width(sidebar::WIDTH),
-)
-.height(288)
+pub fn workspace_header<'a>() -> Slot<'a, ()> {
+    let switcher = dropdown_menu(
+        |m| m.trigger(sidebar::menu_button("Select Workspace")),
+        |_| menu::group([menu::item("Acme Inc").into()]),
+    ).align(dropdown_menu::Align::Start).width(240);
+
+    sidebar::floating(sidebar::header([switcher.into()]))
+        .width(sidebar::WIDTH).height(iced::Fill).into()
+}
 ```

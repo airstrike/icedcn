@@ -15,10 +15,11 @@
 use crate::Size;
 use crate::button::{self, button};
 use crate::compose::{Compose, Inherited, Slot};
+use crate::icon::Icon;
 use crate::marker::{self, Press};
-use crate::text::Text;
 use iced_core::Element;
 use iced_widget::Renderer;
+use iced_widget::Widget;
 use icedcn_core::Theme;
 
 /// The signal a trigger records when pressed.
@@ -29,7 +30,7 @@ pub(crate) struct Toggle;
 /// [`provider`](super::provider).
 pub fn trigger<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
     Slot::new(Trigger {
-        button: button(Text::new("\u{2630}").size(16.0))
+        button: button(Icon::PanelLeft.boxed())
             .size(Size::Sm)
             .square()
             .style(button::Ghost),

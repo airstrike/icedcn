@@ -2,6 +2,10 @@
 
 Wrap the sidebar and its trigger in `sidebar::provider`. An uncontrolled provider keeps its open state across view rebuilds. A controlled provider receives `.open(value)` and sends changes to your application through `.on_open_change(...)`.
 
+### Props
+
+Use `.default_open(false)` for an initially closed desktop sidebar. Pass `.collapsible(sidebar::Collapsible::Icon)` for an icon rail. `Offcanvas` hides the sidebar and `None` keeps it visible.
+
 ### Width
 
 The default panel is 256 points wide. The mobile panel uses 288 points and the collapsed icon rail uses 48 points. The public constants are `WIDTH`, `WIDTH_MOBILE` and `WIDTH_ICON`.
