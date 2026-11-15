@@ -1,12 +1,13 @@
 //! Message bubble styles, corners and composition.
 
+use crate::icon;
 use crate::page::rhea;
 use crate::{Message, page};
 use iced::border;
 use iced::font::Weight;
 use iced::widget::Id;
 use iced::widget::text::LineHeight;
-use iced::widget::{rich_text, svg, text::Span, themer};
+use iced::widget::{rich_text, text::Span, themer};
 use iced::{Element, Task};
 use iced::{
     Fill,
@@ -17,6 +18,7 @@ use iced::{
 };
 use iced::{Font, Widget};
 use icedcn::Size;
+use icedcn::theme::text::muted;
 use icedcn::theme::tweak::{Fg, Token};
 use icedcn::widget::bubble::{Destructive, Ghost, Muted, Outline, Secondary, Tinted};
 use icedcn::widget::{
@@ -149,29 +151,6 @@ fn suggestion(label: &'static str, notice: &'static str) -> Slot<'static, Messag
     )
 }
 
-fn glyph(path: &'static str, muted: bool, destructive: bool) -> Slot<'static, Message> {
-    let source = format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{path}</svg>"#
-    );
-    svg(svg::Handle::from_memory(source.into_bytes()))
-        .width(16)
-        .height(16)
-        .style(move |theme: &Theme, _| svg::Style {
-            color: Some(
-                if destructive {
-                    theme.destructive.base
-                } else if muted {
-                    theme.muted.foreground
-                } else {
-                    theme.neutral.foreground
-                }
-                .into(),
-            ),
-        })
-        .boxed()
-        .into()
-}
-
 fn review() -> Slot<'static, Message> {
     const REVIEW: &str = "The accessibility review found two focus states that were visually too subtle in dark mode.\n\nI checked the dialog, menu, and drawer paths because each one renders focusable controls inside a layered surface.\n\nThe dialog and drawer are fine. The menu needs the hover and focus tokens split so keyboard focus stays visible when the pointer is not involved.\n\nI also recommend keeping the change in the style file instead of the primitive so the other themes can choose their own focus treatment later.";
     collapsible(|c| {
@@ -182,9 +161,9 @@ fn review() -> Slot<'static, Message> {
         };
         let open = c.is_open();
         let chevron = if open {
-            r#"<path d="m18 15-6-6-6 6"/>"#
+            icon::chevron_up()
         } else {
-            r#"<path d="m6 9 6 6 6-6"/>"#
+            icon::chevron_down()
         };
         column![
             text(description),
@@ -192,7 +171,10 @@ fn review() -> Slot<'static, Message> {
                 button(
                     row![
                         text(if open { "Show less" } else { "Show more" }),
-                        glyph(chevron, true, false)
+                        chevron
+                            .size(16)
+                            .line_height(1.0)
+                            .style(|theme| muted(theme).into())
                     ]
                     .spacing(4)
                 )
@@ -211,7 +193,7 @@ fn ghost_text(theme: &Theme) -> Slot<'static, Message> {
         .font("Geist Mono")
         .size(12.25)
         .color(theme.neutral.foreground)
-        .background(iced::Color::from(theme.muted.base))
+        .background(iced::Background::Color(theme.muted.base.into()))
         .border(border::rounded(4))
         .padding([1, 4]);
     column![
@@ -377,7 +359,7 @@ fn tooltip_example() -> Slot<'static, Message> {
                 .align(Right)
                 .reactions(
                     tooltip(
-                        button(glyph(r#"<path d="m20 6-11 11-5-5"/>"#, false, false))
+                        button(icon::check().size(16).line_height(1.0))
                             .size(Size::Xs)
                             .square()
                             .style(button::Ghost),
@@ -402,14 +384,17 @@ fn popover_example() -> Slot<'static, Message> {
                 .reactions(
                     popover(
                         |p| p.trigger(
-                            button(glyph(
-                                r#"<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>"#,
-                                false,
-                                p.is_open()
-                            ))
-                            .size(Size::Xs)
-                            .square()
-                            .style(button::Ghost)
+                            button(icon::info().size(16).line_height(1.0))
+                                .style(
+                                    button::Ghost
+                                        + Fg(if p.is_open() {
+                                            Token::Destructive
+                                        } else {
+                                            Token::Foreground
+                                        })
+                                )
+                                .size(Size::Xs)
+                                .square()
                         ),
                         |_| popover::header(
                             "Command failed with exit code 1",

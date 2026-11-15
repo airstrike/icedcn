@@ -1,13 +1,13 @@
 //! Collapsible sections, controls and a file explorer.
 
+use crate::icon;
+use icedcn::theme;
 // RTL is omitted because the native application uses left-to-right layout.
 
 use iced::alignment::{Horizontal, Vertical};
-use iced::widget::{svg, text::LineHeight};
+use iced::widget::text::LineHeight;
 use iced::{Fill, Padding, Task};
-use icedcn::core::Border;
-use icedcn::theme::container::Style;
-use icedcn::theme::tweak::{Fg, Token};
+use icedcn::theme::tweak::{Bg, Fg, Token, border};
 use icedcn::widget::{button, collapsible, column, container, input, row, space, tabs, text};
 use icedcn::{Size, Slot, Theme, card, radius};
 
@@ -70,28 +70,18 @@ impl CollapsiblePage {
     }
 }
 
-fn icon(path: &'static str, size: f32) -> svg::Svg<'static, Theme> {
-    svg(svg::Handle::from_memory(format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{path}</svg>"#
-    ).into_bytes()))
-    .width(size).height(size)
-    .style(|theme: &Theme, _| svg::Style { color: Some(theme.neutral.foreground.into()) })
-}
-
 fn bordered<Message: 'static>(
     content: impl Into<Slot<'static, Message>>,
 ) -> Slot<'static, Message> {
     container(content)
         .width(Fill)
         .padding([9, 17])
-        .style(|theme: &Theme| Style {
-            border: Border {
-                width: 1.0,
-                color: theme.neutral.border,
-                radius: radius::MD.into(),
-            },
-            ..Style::default()
-        })
+        .class(
+            theme::container::Transparent
+                + border::Width(1.0)
+                + border::Color(Token::Border)
+                + radius(radius::MD),
+        )
         .into()
 }
 
@@ -115,7 +105,7 @@ fn demo<Message: Clone + 'static>() -> Slot<'static, Message> {
                             .line_height(LineHeight::Absolute(20.into())),
                         space::horizontal(),
                         c.trigger(
-                            button(icon(r#"<path d="m7 15 5 5 5-5M7 9l5-5 5 5"/>"#, 16.))
+                            button(icon::chevrons_up_down().size(16).line_height(1.0))
                                 .square()
                                 .style(button::Ghost)
                         ),
@@ -160,15 +150,13 @@ fn basic<Message: Clone + 'static>() -> Slot<'static, Message> {
         card::content(
             collapsible(|c| {
                 let open = c.is_open();
-                let path = if open {
-                    r#"<path d="m18 15-6-6-6 6"/>"#
-                } else {
-                    r#"<path d="m6 9 6 6 6-6"/>"#
-                };
+                let indicator = if open { icon::chevron_up() } else { icon::chevron_down() };
+                let surface = theme::container::Transparent + radius(radius::MD);
+                let surface = if open { surface + Bg(Token::Muted) } else { surface };
                 container(
                     column![
                         c.trigger(
-                            button!["Product details", space::horizontal(), icon(path, 16.)]
+                            button!["Product details", space::horizontal(), indicator.size(16).line_height(1.0)]
                                 .width(Fill)
                                 .style(button::Ghost)
                         ),
@@ -187,14 +175,7 @@ fn basic<Message: Clone + 'static>() -> Slot<'static, Message> {
                     .width(Fill),
                 )
                 .width(Fill)
-                .style(move |theme: &Theme| Style {
-                    background: open.then(|| theme.muted.base.into()),
-                    border: Border {
-                        radius: radius::MD.into(),
-                        ..Border::default()
-                    },
-                    ..Style::default()
-                })
+                .class(surface)
                 .into()
             })
             .width(Fill),
@@ -206,43 +187,60 @@ fn basic<Message: Clone + 'static>() -> Slot<'static, Message> {
 }
 
 fn settings<Message: Clone + 'static>() -> Slot<'static, Message> {
-    card(column![
-        card::header(text::small("Radius").medium().line_height(1.375))
-            .inset(12.)
-            .description(
-                text::muted("Set the corner radius of the element.")
-                    .line_height(LineHeight::Absolute(20.into()))
-            ),
-        card::content(collapsible(|c| {
-            let inputs = || row![
-                input("0").default_value("0").width(Fill),
-                input("0").default_value("0").width(Fill),
-            ]
-            .spacing(8)
-            .width(Fill);
-            let path = if c.is_open() {
-                r#"<path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>"#
-            } else {
-                r#"<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>"#
-            };
-            row![
-                column![
-                    inputs(),
-                    c.content(container(inputs()).width(Fill).padding(Padding::ZERO.top(8))),
-                ]
-                .width(Fill),
-                c.trigger(button(icon(path, 16.)).square().style(button::Outline)),
-            ]
-            .spacing(8)
-            .align_y(Vertical::Top)
-            .width(Fill)
-            .into()
-        }).width(Fill))
-        .padding([0, 12]),
-    ]
-    .spacing(12)
-    .padding([12, 0])
-    .width(Fill)).gap(0).padding(0)
+    card(
+        column![
+            card::header(text::small("Radius").medium().line_height(1.375))
+                .inset(12.)
+                .description(
+                    text::muted("Set the corner radius of the element.")
+                        .line_height(LineHeight::Absolute(20.into()))
+                ),
+            card::content(
+                collapsible(|c| {
+                    let inputs = || {
+                        row![
+                            input("0").default_value("0").width(Fill),
+                            input("0").default_value("0").width(Fill),
+                        ]
+                        .spacing(8)
+                        .width(Fill)
+                    };
+                    let indicator = if c.is_open() {
+                        icon::minimize()
+                    } else {
+                        icon::maximize()
+                    };
+                    row![
+                        column![
+                            inputs(),
+                            c.content(
+                                container(inputs())
+                                    .width(Fill)
+                                    .padding(Padding::ZERO.top(8))
+                            ),
+                        ]
+                        .width(Fill),
+                        c.trigger(
+                            button(indicator.size(16).line_height(1.0))
+                                .square()
+                                .style(button::Outline)
+                        ),
+                    ]
+                    .spacing(8)
+                    .align_y(Vertical::Top)
+                    .width(Fill)
+                    .into()
+                })
+                .width(Fill)
+            )
+            .padding([0, 12]),
+        ]
+        .spacing(12)
+        .padding([12, 0])
+        .width(Fill),
+    )
+    .gap(0)
+    .padding(0)
     .width(Fill.max(320))
     .into()
 }
@@ -310,31 +308,34 @@ const FILE_TREE: &[Entry] = &[
 
 fn entry<Message: Clone + 'static>(node: &'static Entry) -> Slot<'static, Message> {
     match node {
-        Entry::File(name) => button(row![
-            icon(r#"<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>"#, 14.),
-            *name,
-        ]
-        .spacing(8)
-        .align_y(Vertical::Center)
-        .width(Fill))
+        Entry::File(name) => button(
+            row![icon::file().size(14).line_height(1.0), *name,]
+                .spacing(8)
+                .align_y(Vertical::Center)
+                .width(Fill),
+        )
         .size(Size::Sm)
         .style(button::Link + Fg(Token::Foreground))
         .width(Fill)
         .into(),
         Entry::Folder(name, children) => collapsible(move |folder| {
             column![
-                folder.trigger(button(row![
-                    folder.indicator().size(14),
-                    icon(r#"<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>"#, 14.),
-                    *name,
-                ]
-                .spacing(4)
-                .align_y(Vertical::Center)
-                .width(Fill))
-                .size(Size::Sm)
-                .style(button::Ghost)
-                .animate_hover(false)
-                .width(Fill)),
+                folder.trigger(
+                    button(
+                        row![
+                            folder.indicator().size(14),
+                            icon::folder().size(14).line_height(1.0),
+                            *name,
+                        ]
+                        .spacing(4)
+                        .align_y(Vertical::Center)
+                        .width(Fill)
+                    )
+                    .size(Size::Sm)
+                    .style(button::Ghost)
+                    .animate_hover(false)
+                    .width(Fill)
+                ),
                 folder.content(
                     column(children.iter().map(entry))
                         .width(Fill)

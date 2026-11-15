@@ -1,19 +1,10 @@
 ```rust
+use crate::icon;
 use iced::alignment::Vertical;
-use iced::widget::svg;
 use iced::{Fill, Padding};
 use icedcn::theme::tweak::{Fg, Token};
 use icedcn::widget::{button, collapsible, column, row, tabs};
-use icedcn::{Size, Slot, Theme, card};
-
-fn icon(path: &'static str, size: f32) -> svg::Svg<'static, Theme> {
-    svg(svg::Handle::from_memory(format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{path}</svg>"#
-    ).into_bytes()))
-    .width(size).height(size)
-    .style(|theme: &Theme, _| svg::Style { color: Some(theme.neutral.foreground.into()) })
-}
-
+use icedcn::{Size, Slot, card};
 
 enum Entry {
     File(&'static str),
@@ -78,31 +69,34 @@ const FILE_TREE: &[Entry] = &[
 
 fn entry<Message: Clone + 'static>(node: &'static Entry) -> Slot<'static, Message> {
     match node {
-        Entry::File(name) => button(row![
-            icon(r#"<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>"#, 14.),
-            *name,
-        ]
-        .spacing(8)
-        .align_y(Vertical::Center)
-        .width(Fill))
+        Entry::File(name) => button(
+            row![icon::file().size(14).line_height(1.0), *name,]
+                .spacing(8)
+                .align_y(Vertical::Center)
+                .width(Fill),
+        )
         .size(Size::Sm)
         .style(button::Link + Fg(Token::Foreground))
         .width(Fill)
         .into(),
         Entry::Folder(name, children) => collapsible(move |folder| {
             column![
-                folder.trigger(button(row![
-                    folder.indicator().size(14),
-                    icon(r#"<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>"#, 14.),
-                    *name,
-                ]
-                .spacing(4)
-                .align_y(Vertical::Center)
-                .width(Fill))
-                .size(Size::Sm)
-                .style(button::Ghost)
-                .animate_hover(false)
-                .width(Fill)),
+                folder.trigger(
+                    button(
+                        row![
+                            folder.indicator().size(14),
+                            icon::folder().size(14).line_height(1.0),
+                            *name,
+                        ]
+                        .spacing(4)
+                        .align_y(Vertical::Center)
+                        .width(Fill)
+                    )
+                    .size(Size::Sm)
+                    .style(button::Ghost)
+                    .animate_hover(false)
+                    .width(Fill)
+                ),
                 folder.content(
                     column(children.iter().map(entry))
                         .width(Fill)
@@ -144,8 +138,7 @@ fn file_tree<Message: Clone + 'static>() -> Slot<'static, Message> {
     .into()
 }
 
-
-fn view() -> Slot<'static, ()> {
+fn view<'a>() -> Slot<'a, ()> {
     file_tree()
 }
 ```

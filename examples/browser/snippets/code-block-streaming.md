@@ -1,8 +1,8 @@
 ```rust
-use iced::widget::svg;
-use iced::{Fill, Subscription, Widget, time};
+use crate::icon;
+use iced::{Fill, Subscription, time};
 use icedcn::widget::{button, code_block, column};
-use icedcn::{Size, Slot, Theme};
+use icedcn::{Size, Slot};
 use std::time::{Duration, Instant};
 #[derive(Clone, Debug)]
 pub enum Message {
@@ -78,7 +78,7 @@ impl Demo {
         }
         output
             .push(
-                button![replay_icon(), "Replay"]
+                button![icon::rotate_ccw().size(14).line_height(1.0), "Replay"]
                     .style(button::Outline)
                     .size(Size::Sm)
                     .disabled(self.started.is_some())
@@ -87,10 +87,6 @@ impl Demo {
             )
             .into()
     }
-}
-fn replay_icon() -> Slot<'static, Message> {
-    svg(svg::Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>"#))
-        .width(14).height(14).style(|theme: &Theme, _| svg::Style { color: Some(theme.neutral.foreground.into()) }).boxed().into()
 }
 const STREAMS: &[(&str, &str, &str)] = &[
     ("src/matcher.rs", "rust", STREAMING_0),

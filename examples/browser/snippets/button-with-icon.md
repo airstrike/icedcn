@@ -1,12 +1,12 @@
 ```rust
-use iced::widget::svg;
-use icedcn::{Size, Theme};
+use crate::icon;
+use icedcn::Size;
 use icedcn::widget::button;
 
-let branch = svg(svg::Handle::from_memory(include_bytes!("git-branch.svg").as_slice()))
-    .width(14)
-    .height(14)
-    .style(|theme: &Theme, _| svg::Style { color: Some(theme.neutral.foreground.into()) });
+let branch = icon::git_branch().size(14).line_height(1.0);
 
-button(branch).push("New Branch").size(Size::Sm).style(button::Outline)
+button(branch)
+    .push("New Branch")
+    .size(Size::Sm)
+    .style(button::Outline)
 ```

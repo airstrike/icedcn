@@ -1,34 +1,24 @@
 ```rust
-use iced::widget::{svg, text::LineHeight};
+use crate::icon;
 use iced::Fill;
-use icedcn::core::Border;
-use icedcn::theme::container::Style;
+use iced::widget::text::LineHeight;
+use icedcn::theme;
+use icedcn::theme::tweak::{Bg, Token};
 use icedcn::widget::{button, collapsible, column, container, space, text};
-use icedcn::{Size, Slot, Theme, card, radius};
-
-fn icon(path: &'static str, size: f32) -> svg::Svg<'static, Theme> {
-    svg(svg::Handle::from_memory(format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{path}</svg>"#
-    ).into_bytes()))
-    .width(size).height(size)
-    .style(|theme: &Theme, _| svg::Style { color: Some(theme.neutral.foreground.into()) })
-}
-
+use icedcn::{Size, Slot, card, radius};
 
 fn basic<Message: Clone + 'static>() -> Slot<'static, Message> {
     card(
         card::content(
             collapsible(|c| {
                 let open = c.is_open();
-                let path = if open {
-                    r#"<path d="m18 15-6-6-6 6"/>"#
-                } else {
-                    r#"<path d="m6 9 6 6 6-6"/>"#
-                };
+                let indicator = if open { icon::chevron_up() } else { icon::chevron_down() };
+                let surface = theme::container::Transparent + radius(radius::MD);
+                let surface = if open { surface + Bg(Token::Muted) } else { surface };
                 container(
                     column![
                         c.trigger(
-                            button!["Product details", space::horizontal(), icon(path, 16.)]
+                            button!["Product details", space::horizontal(), indicator.size(16).line_height(1.0)]
                                 .width(Fill)
                                 .style(button::Ghost)
                         ),
@@ -47,14 +37,7 @@ fn basic<Message: Clone + 'static>() -> Slot<'static, Message> {
                     .width(Fill),
                 )
                 .width(Fill)
-                .style(move |theme: &Theme| Style {
-                    background: open.then(|| theme.muted.base.into()),
-                    border: Border {
-                        radius: radius::MD.into(),
-                        ..Border::default()
-                    },
-                    ..Style::default()
-                })
+                .class(surface)
                 .into()
             })
             .width(Fill),
@@ -65,8 +48,7 @@ fn basic<Message: Clone + 'static>() -> Slot<'static, Message> {
     .into()
 }
 
-
-fn view() -> Slot<'static, ()> {
+fn view<'a>() -> Slot<'a, ()> {
     basic()
 }
 ```

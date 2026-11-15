@@ -1,6 +1,6 @@
 // Generated automatically by iced_lucide at build time.
 // Do not edit manually.
-// 1398ca100cc4635a17ba32f84e55348aab98857d8a39050ab48058fa7f3b1a82
+// 3ae8e2cb9b9325dd5dbc6616f13aca4fe94d63ca2b1a04fdbaa0bf6b125c487c
 use iced::widget::text::{self, Text};
 use iced::{Font, font};
 
@@ -56,6 +56,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("copy", "\u{E09E}"),
     ("corner_down_left", "\u{E0A1}"),
     ("credit_card", "\u{E0AA}"),
+    ("dot", "\u{E44F}"),
     ("download", "\u{E0B2}"),
     ("ellipsis", "\u{E0B6}"),
     ("ellipsis_vertical", "\u{E0B7}"),
@@ -463,6 +464,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E0AA}")
+}
+
+pub fn dot<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E44F}")
 }
 
 pub fn download<'a, Theme>() -> Text<'a, Theme>

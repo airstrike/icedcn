@@ -1,6 +1,6 @@
 ```rust
+use crate::icon;
 use iced::Widget;
-use iced::widget::svg;
 use icedcn::{
     Slot, Theme,
     widget::{code_block, column, markdown, row, text},
@@ -32,16 +32,19 @@ impl Article {
                 .language("rust")
                 .font("Geist Mono")
                 .start_line(1)
-                .title(row![file_code(), code_block::title("src/index.rs")].spacing(6))
+                .title(
+                    row![
+                        icon::file_code().size(14).line_height(1.0),
+                        code_block::title("src/index.rs")
+                    ]
+                    .spacing(6)
+                )
                 .copyable(true),
             markdown::view(&self.after, settings).map(|_| ()).boxed()
         ]
         .spacing(12)
         .into()
     }
-}
-fn file_code() -> Slot<'static, ()> {
-    svg(svg::Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6m-10 5-2 2 2 2m4-4 2 2-2 2"/></svg>"#)).width(14).height(14).style(|theme: &Theme,_|svg::Style{color:Some(theme.neutral.foreground.into())}).boxed().into()
 }
 
 const TYPESET: &str = r##"use std::path::Path;

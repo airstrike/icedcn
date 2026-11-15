@@ -1,7 +1,9 @@
+use crate::icon;
+use icedcn::theme::text::destructive;
 // The RTL example is outside the project’s scope.
 
 use iced::widget::text::LineHeight;
-use iced::widget::{rich_text, span, svg};
+use iced::widget::{rich_text, span};
 use iced::{Fill, Task, Widget};
 use icedcn::theme::text::muted;
 
@@ -172,11 +174,7 @@ impl page::Page for AlertDialogPage {
                             "Share this project?",
                             "Anyone with the link will be able to view and edit this project.",
                         )
-                        .media(svg(svg::Handle::from_memory(r#"<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12 2a10 10 0 0 1 7.38 16.75" /> <path d="M12 8v8" /> <path d="M16 12H8" /> <path d="M2.5 8.875a10 10 0 0 0-.5 3" /> <path d="M2.83 16a10 10 0 0 0 2.43 3.4" /> <path d="M4.636 5.235a10 10 0 0 1 .891-.857" /> <path d="M8.644 21.42a10 10 0 0 0 7.631-.38" /> </svg>"#.as_bytes()))
-                .width(24)
-                .height(24)
-                .style(|theme: &Theme, _| svg::Style { color: Some(theme.neutral.foreground.into()) })
-                .boxed()),
+                        .media(icon::circle_fading_plus().size(24).line_height(1.0)),
                         a.footer([
                             a.cancel(button("Cancel").style(button::Outline)),
                             a.action(button("Share")),
@@ -194,11 +192,7 @@ impl page::Page for AlertDialogPage {
                         "Allow accessory to connect?",
                         "Do you want to allow the USB accessory to connect to this device?",
                     )
-                    .media(svg(svg::Handle::from_memory(r#"<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m7 7 10 10-5 5V2l5 5L7 17" /> </svg>"#.as_bytes()))
-                .width(24)
-                .height(24)
-                .style(|theme: &Theme, _| svg::Style { color: Some(theme.neutral.foreground.into()) })
-                .boxed()),
+                    .media(icon::bluetooth().size(24).line_height(1.0)),
                     a.footer([
                         a.cancel(button("Don't allow").style(button::Outline)),
                         a.action(button("Allow")),
@@ -227,11 +221,12 @@ impl page::Page for AlertDialogPage {
                     .boxed();
                     column![
                         a.header_content("Delete chat?", description,)
-                            .media(svg(svg::Handle::from_memory(r#"<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M3 6h18" /> <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /> <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /> <line x1="10" x2="10" y1="11" y2="17" /> <line x1="14" x2="14" y1="11" y2="17" /> </svg>"#.as_bytes()))
-                .width(24)
-                .height(24)
-                .style(|theme: &Theme, _| svg::Style { color: Some(theme.destructive.base.into()) })
-                .boxed())
+                            .media(
+                                icon::trash_2()
+                                    .size(24)
+                                    .line_height(1.0)
+                                    .style(|theme| destructive(theme).into())
+                            )
                             .media_style(alert_dialog::Destructive),
                         a.footer([
                             a.cancel(button("Cancel").style(button::Outline)),

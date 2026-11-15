@@ -1,5 +1,7 @@
+use crate::icon;
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Pixels, Widget};
+use icedcn::theme::text::muted;
 use icedcn::widget::calendar::{Date, Datelike, Duration, Mode, Selection, System, today};
 use icedcn::widget::{
     Column, Row, button, calendar, column, container, field, input, input_group, rule, text,
@@ -224,7 +226,12 @@ impl<'a, Message: 'static> Component<'a, Message, Theme> for Times {
                         .text_size(if self.wide { 14. } else { 16. })
                         .on_input(edit),
                 )
-                .addon(input_group::addon(clock().boxed())),
+                .addon(input_group::addon(
+                    icon::clock()
+                        .size(16)
+                        .line_height(1.0)
+                        .style(|theme| muted(theme).into()),
+                )),
             )
             .label(text::label(label).line_height(Pixels(19.25)))
         };
@@ -250,10 +257,4 @@ impl<'a, Message: 'static> Component<'a, Message, Theme> for Times {
             .padding(0),
         )
     }
-}
-
-fn clock<'a>() -> iced::widget::Svg<'a, Theme> {
-    use iced::widget::svg;
-    svg(svg::Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4-2"/></svg>"#))
-        .width(16).height(16).style(|theme: &Theme, _| svg::Style { color: Some(theme.muted.foreground.into()) })
 }

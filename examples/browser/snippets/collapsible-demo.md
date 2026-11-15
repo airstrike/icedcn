@@ -1,20 +1,12 @@
 ```rust
+use crate::icon;
 use iced::alignment::Vertical;
-use iced::widget::{svg, text::LineHeight};
+use iced::widget::text::LineHeight;
 use iced::{Fill, Padding};
-use icedcn::core::Border;
-use icedcn::theme::container::Style;
+use icedcn::theme;
+use icedcn::theme::tweak::{Token, border};
 use icedcn::widget::{button, collapsible, column, container, row, space, text};
-use icedcn::{Slot, Theme, radius};
-
-fn icon(path: &'static str, size: f32) -> svg::Svg<'static, Theme> {
-    svg(svg::Handle::from_memory(format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{path}</svg>"#
-    ).into_bytes()))
-    .width(size).height(size)
-    .style(|theme: &Theme, _| svg::Style { color: Some(theme.neutral.foreground.into()) })
-}
-
+use icedcn::{Slot, radius};
 
 fn bordered<Message: 'static>(
     content: impl Into<Slot<'static, Message>>,
@@ -22,14 +14,12 @@ fn bordered<Message: 'static>(
     container(content)
         .width(Fill)
         .padding([9, 17])
-        .style(|theme: &Theme| Style {
-            border: Border {
-                width: 1.0,
-                color: theme.neutral.border,
-                radius: radius::MD.into(),
-            },
-            ..Style::default()
-        })
+        .class(
+            theme::container::Transparent
+                + border::Width(1.0)
+                + border::Color(Token::Border)
+                + radius(radius::MD),
+        )
         .into()
 }
 
@@ -42,7 +32,6 @@ fn detail<Message: 'static>(title: &'static str, body: &'static str) -> Slot<'st
     ])
 }
 
-
 fn demo<Message: Clone + 'static>() -> Slot<'static, Message> {
     collapsible(|c| {
         column![
@@ -54,7 +43,7 @@ fn demo<Message: Clone + 'static>() -> Slot<'static, Message> {
                             .line_height(LineHeight::Absolute(20.into())),
                         space::horizontal(),
                         c.trigger(
-                            button(icon(r#"<path d="m7 15 5 5 5-5M7 9l5-5 5 5"/>"#, 16.))
+                            button(icon::chevrons_up_down().size(16).line_height(1.0))
                                 .square()
                                 .style(button::Ghost)
                         ),
@@ -94,8 +83,7 @@ fn demo<Message: Clone + 'static>() -> Slot<'static, Message> {
     .into()
 }
 
-
-fn view() -> Slot<'static, ()> {
+fn view<'a>() -> Slot<'a, ()> {
     demo()
 }
 ```
