@@ -3,7 +3,7 @@
 use std::sync::LazyLock;
 
 use iced::widget::component::{Component, component};
-use iced::{Center, Element, Fill, Pixels, Widget};
+use iced::{Center, Element, Fill, Pixels, Top, Widget};
 use icedcn::widget::calendar::{Selection, today};
 use icedcn::widget::chart::{Data, bar, bars};
 use icedcn::widget::{
@@ -30,7 +30,7 @@ pub(super) fn view<'a>(width: f32) -> Element<'a, Message, Theme> {
     let desktop = width >= 1280.;
     let mobile = width < 720.;
     let hero = column![
-        button(row![text::xs("Native components. Ready for the web."), icon::arrow_right().size(12)]
+        button(row![text::xs("Native components. Built with iced."), icon::arrow_right().size(12)]
             .spacing(6).align_y(Center))
             .style(button::Secondary).height(24).padding([0, 10])
             .on_press(Message::GoTo("/docs/introduction")),
@@ -61,6 +61,7 @@ pub(super) fn view<'a>(width: f32) -> Element<'a, Message, Theme> {
     let gallery: Slot<'_, Message> = if desktop {
         row![first, second, third, fourth]
             .spacing(24)
+            .align_y(Top)
             .width(Fill)
             .into()
     } else if !mobile {
@@ -69,6 +70,7 @@ pub(super) fn view<'a>(width: f32) -> Element<'a, Message, Theme> {
             column![second, fourth].spacing(24).width(Fill)
         ]
         .spacing(24)
+        .align_y(Top)
         .width(Fill)
         .into()
     } else {
