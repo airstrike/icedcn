@@ -197,7 +197,8 @@ fn repeated_escape_and_close_restore_the_attachment_trigger() {
         ui = ui.rebuild(page.preview("trigger"));
         ui.find("The attachment trigger fills the card and opens the dialog, while the actions stay independently clickable above it.").unwrap();
         if close {
-            ui.click("×").unwrap();
+            // The preview dialog gives its sole action initial focus.
+            ui.click(selector::is_focused()).unwrap();
         } else {
             ui.tap_key(Named::Escape);
         }

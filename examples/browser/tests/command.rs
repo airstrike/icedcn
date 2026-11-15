@@ -1,4 +1,6 @@
 //! Interaction, layout and focus rendering in the installed documentation search.
+use std::time::Duration;
+
 use browser::app::{App, Message};
 use iced::time::Instant;
 use iced::{Color, Event, Point, Rectangle, Renderer, Size, Vector, mouse, window};
@@ -112,6 +114,14 @@ fn focused_search_has_one_field_border_and_one_outer_dialog_ring() {
         let mut ui = UserInterface::build(app.view(), size, Default::default(), &mut renderer);
         // An update mounts the overlay for drawing; operate alone can visit
         // its controls before the renderer has seen the first modal frame.
+        dispatch(
+            &mut ui,
+            &mut renderer,
+            mouse::Cursor::Unavailable,
+            &[redraw()],
+        );
+        // The centered dialog scales and fades for 100ms on entry. Sample its settled ring.
+        std::thread::sleep(Duration::from_millis(120));
         dispatch(
             &mut ui,
             &mut renderer,
