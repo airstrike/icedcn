@@ -19,8 +19,9 @@ def patched_source(build, package, crate, file, original=None, replacement="", p
     source = manifest.parent
     revision = package["source"].partition("#")[2] or package["version"]
     inputs = Path(__file__).read_bytes() + replacement.encode()
-    if patch:
-        inputs += patch.read_bytes()
+    patches = [patch] if isinstance(patch, Path) else (patch or [])
+    for item in patches:
+        inputs += item.read_bytes()
     patch_hash = hashlib.sha256(inputs).hexdigest()[:8]
     patched = build / "web-dependencies" / f'{package["name"]}-{revision}-{patch_hash}'
     if not patched.exists():
@@ -28,8 +29,8 @@ def patched_source(build, package, crate, file, original=None, replacement="", p
         with tempfile.TemporaryDirectory(dir=build) as tmp:
             staging = Path(tmp) / "checkout"
             shutil.copytree(source, staging, ignore=shutil.ignore_patterns(".git", "target"))
-            if patch:
-                subprocess.run(["patch", "-s", "-p1", "-i", str(patch)], cwd=staging, check=True)
+            for item in patches:
+                subprocess.run(["patch", "-s", "-p1", "-i", str(item)], cwd=staging, check=True)
             if crate != ".":
                 # Lift just this member into its own workspace so Cargo resolves
                 # the other iced crates from the application's existing patches.
@@ -91,7 +92,7 @@ def main():
         build, packages["iced_winit"], "winit", "src/window.rs",
         configure,
         f"if surface_size.width > 0 && surface_size.height > 0 {{\n            {configure}\n        }}",
-        patch=ROOT / "examples/browser/web/clipboard.patch",
+        patch=[ROOT / "examples/browser/web/clipboard.patch", ROOT / "examples/browser/web/ime.patch"],
     )
     # Probe adapter/device compatibility on a disposable canvas. A failed WebGPU
     # attempt must leave the application's canvas free to acquire a 2D context.
@@ -127,11 +128,12 @@ def main():
     ], env=env, stdout=subprocess.PIPE, text=True, check=True)
     # Cargo can ignore an unused paths override. Check the resolved artifact
     # on fresh and incremental builds before creating any deployable files.
-    artifacts = (json.loads(line) for line in result.stdout.splitlines())
-    if not any(item.get("reason") == "compiler-artifact"
-               and Path(item["manifest_path"]).resolve() == (uploads / "Cargo.toml").resolve()
-               for item in artifacts):
-        raise SystemExit("The browser build did not use the patched wgpu crate.")
+    artifacts = [json.loads(line) for line in result.stdout.splitlines()]
+    for name, patched in [("wgpu", uploads), ("iced_winit", winit)]:
+        if not any(item.get("reason") == "compiler-artifact"
+                   and Path(item["manifest_path"]).resolve() == (patched / "Cargo.toml").resolve()
+                   for item in artifacts):
+            raise SystemExit(f"The browser build did not use the patched {name} crate.")
     output = build / "browser-web"
     output.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(dir=build) as tmp:

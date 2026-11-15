@@ -1,0 +1,14 @@
+<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1">
+<canvas id="canvas" tabindex="0" width="400" height="300"></canvas><button id="open">Open editor</button><button id="close">Close editor</button>
+<script type="module">
+import init, * as bridge from './ime_harness.js';
+await init(); window.bridge=bridge;
+const canvas=document.querySelector('#canvas'); bridge.setup(canvas);
+window.keys=[]; window.focusEvents=[];
+for(const name of ['keydown','keyup']) canvas.addEventListener(name,e=>{ keys.push({type:name,key:e.key,shift:e.shiftKey,ctrl:e.ctrlKey,meta:e.metaKey});e.preventDefault(); });
+for(const name of ['blur','focus']) canvas.addEventListener(name,()=>focusEvents.push(name));
+canvas.focus();
+document.querySelector('#open').onclick=()=>bridge.enable(true,false);
+document.querySelector('#close').onclick=()=>bridge.disable();
+window.ready=true;
+</script>

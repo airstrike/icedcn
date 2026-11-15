@@ -90,3 +90,37 @@ registry supplies the static build's paths, titles, and page documentation.
 Static routing behavior follows Cloudflare's [HTML handling](https://developers.cloudflare.com/workers/static-assets/routing/advanced/html-handling/)
 and [custom 404 pages](https://developers.cloudflare.com/workers/static-assets/routing/static-site-generation/).
 The Markdown index follows the [llms.txt proposal](https://llmstxt.org/).
+
+## Mobile keyboard and web input
+
+The locked winit web backend leaves its IME methods unimplemented. `ime.patch`
+adds a window-owned DOM input to iced_winit, driven by iced's existing
+`InputMethod` request. It forwards text/composition through IME events and
+navigation/selection shortcuts through the canvas keyboard handler. Secure fields
+use a password input; the DOM input is an ephemeral buffer, while iced retains
+the actual field text and selection.
+
+On web input gestures, the runtime settles queued application messages and an
+IME-collecting redraw before returning to the original DOM handler. This lets a
+newly opened command dialog request the keyboard within its opening tap. Ordinary
+animation frames cannot activate the DOM input. The bridge does not inspect
+application routes, labels, or pointer coordinates to decide whether to open.
+Native builds do not include this patch.
+
+This addresses the missing backend described in [winit's virtual keyboard issue](https://github.com/rust-windowing/winit/issues/3938)
+and the gesture requirement described by [WebKit](https://bugs.webkit.org/show_bug.cgi?id=195884).
+
+To exercise the actual Rust DOM bridge without building the browser or GPU
+backend, install Playwright with Chromium and WebKit and run:
+
+```sh
+python3 examples/browser/web/check-web-ime.py
+```
+
+Set `WASM_BINDGEN` to the CLI matching Cargo.lock and `PLAYWRIGHT_MODULE` if
+Playwright is installed outside Node's normal lookup paths. Optional
+`CHROMIUM_EXECUTABLE` and `WEBKIT_EXECUTABLE` select existing browser binaries.
+The harness checks gesture gating, text insertion, deletion, composition,
+shortcut modifiers, secure input, window focus transfer, and cleanup. Desktop
+WebKit can exercise these DOM behaviors but cannot display a physical iOS
+software keyboard.
