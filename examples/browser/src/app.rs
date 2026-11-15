@@ -413,6 +413,9 @@ impl App {
                 }
                 Task::none()
             }
+            Message::Create(palette::Message::ChooseFont) => {
+                self.update_inner(Message::Fonts(true))
+            }
             Message::Create(message) => self.create.update(message).map(Message::Create),
             Message::ToggleTheme if self.destination == Route::Create => {
                 let mode = if self.is_dark() {

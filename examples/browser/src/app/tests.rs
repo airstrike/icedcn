@@ -127,6 +127,10 @@ fn home_is_the_start_page_and_create_history_keeps_its_state() {
     let _ = app.update(Message::GoTo("/create"));
     assert_eq!(app.route(), Route::Create);
     assert_eq!(app.title(), "Create — icedcn");
+    let _ = app.update(Message::Create(palette::Message::ChooseFont));
+    assert!(app.fonts_open);
+    assert_eq!(app.route(), Route::Create);
+    let _ = app.update(Message::Fonts(false));
     let _ = app.update(Message::ToggleTheme);
     let _ = app.update(Message::Create(palette::Message::SetPreviewPage(
         palette::PreviewPage::Two,
