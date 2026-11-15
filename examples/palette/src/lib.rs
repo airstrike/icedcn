@@ -4,7 +4,7 @@
 //! The root scrollable opts into both axes; tiles that genuinely need
 //! horizontal overflow (transactions, etc.) wrap their own.
 
-use iced::{Element, clipboard, font};
+use iced::{Element, Subscription, clipboard, font, system};
 
 use std::collections::HashSet;
 use std::f32::consts::PI;
@@ -39,6 +39,26 @@ pub mod tiles;
 pub enum Mode {
     Light,
     Dark,
+}
+
+impl From<iced::theme::Mode> for Mode {
+    fn from(mode: iced::theme::Mode) -> Self {
+        use iced::theme;
+
+        match mode {
+            theme::Mode::Dark => Self::Dark,
+            theme::Mode::Light | theme::Mode::None => Self::Light,
+        }
+    }
+}
+
+impl From<Mode> for iced::theme::Mode {
+    fn from(mode: Mode) -> Self {
+        match mode {
+            Mode::Light => Self::Light,
+            Mode::Dark => Self::Dark,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -78,6 +98,8 @@ pub enum KitchenScene {
 #[derive(Debug, Clone)]
 pub enum Message {
     SetMode(Mode),
+    SystemMode(iced::theme::Mode),
+    SetAppearance(String),
     SetPreviewPage(PreviewPage),
     ToggleConnection(bool),
     SetReceivingMethod(ReceivingMethod),
@@ -111,7 +133,9 @@ pub enum Message {
 }
 
 pub struct State {
+    /// The host appearance; the selected policy resolves the preview appearance.
     pub mode: Mode,
+    manual_mode: bool,
     pub traffic: Data,
     pub contributions: Data,
     pub power: Data,
@@ -144,13 +168,10 @@ pub struct State {
 
 impl State {
     pub fn new() -> (Self, Task<Message>) {
-        let mode = if theme::is_dark_mode() {
-            Mode::Dark
-        } else {
-            Mode::Light
-        };
-
-        (Self::with_mode(mode), Task::none())
+        (
+            Self::with_mode(Mode::Light),
+            system::theme().map(Message::SystemMode),
+        )
     }
 
     /// Initialize an embedded designer without network requests or global font changes.
@@ -167,6 +188,7 @@ impl State {
     fn with_mode(mode: Mode) -> Self {
         Self {
             mode,
+            manual_mode: false,
             traffic: chart::data(),
             contributions: contribution_history::data(),
             power: power_usage::data(),
@@ -195,15 +217,21 @@ impl State {
             code_open: false,
             copied: false,
             copy_error: None,
-            code: customize::Settings::default().source(mode),
+            code: customize::Settings::default().source(),
             preset: 0,
         }
+    }
+
+    pub fn subscription(&self) -> Subscription<Message> {
+        system::theme_changes().map(Message::SystemMode)
     }
 
     pub fn update(&mut self, msg: Message) -> Task<Message> {
         let design_changed = matches!(
             &msg,
             Message::SetMode(_)
+                | Message::SystemMode(_)
+                | Message::SetAppearance(_)
                 | Message::SetBase(_)
                 | Message::SetAccent(_)
                 | Message::SetChart(_)
@@ -212,7 +240,24 @@ impl State {
                 | Message::NextPreset
         );
         match msg {
-            Message::SetMode(m) => self.mode = m,
+            Message::SetMode(mode) => {
+                self.mode = mode;
+                self.manual_mode = true;
+            }
+            Message::SystemMode(mode) => {
+                if !self.manual_mode {
+                    self.mode = mode.into();
+                }
+            }
+            Message::SetAppearance(value) => {
+                use customize::Appearance;
+                if let Some(appearance) = [Appearance::System, Appearance::Light, Appearance::Dark]
+                    .into_iter()
+                    .find(|appearance| appearance.label() == value)
+                {
+                    self.settings.appearance = appearance;
+                }
+            }
             Message::SetBase(value) => {
                 if let Some(value) = customize::BASES.iter().find(|name| **name == value) {
                     self.settings.base = value;
@@ -305,7 +350,7 @@ impl State {
     }
 
     fn refresh(&mut self) {
-        self.code = self.settings.source(self.mode);
+        self.code = self.settings.source();
         self.copied = false;
         self.copy_error = None;
     }
@@ -552,6 +597,27 @@ mod chart_tests {
     use super::{Message, Mode, State};
 
     #[test]
+    fn appearance_policy_and_host_mode_remain_independent() {
+        use super::customize::Appearance;
+        use iced::theme;
+
+        let mut state = State::with_mode(Mode::Light);
+        assert_eq!(state.settings.appearance, Appearance::System);
+        let _ = state.update(Message::SystemMode(theme::Mode::Dark));
+        assert!(state.theme().neutral.is_dark);
+        let _ = state.update(Message::SetAppearance("Always light".into()));
+        assert!(!state.theme().neutral.is_dark);
+        assert_eq!(state.mode, Mode::Dark);
+        let _ = state.update(Message::SetMode(Mode::Light));
+        let _ = state.update(Message::SystemMode(theme::Mode::Dark));
+        assert_eq!(state.mode, Mode::Light);
+        let _ = state.update(Message::SetAppearance("Always dark".into()));
+        assert!(state.theme().neutral.is_dark);
+        let _ = state.update(Message::SetAppearance("System preference".into()));
+        assert!(!state.theme().neutral.is_dark);
+    }
+
+    #[test]
     fn appearance_changes_keep_prepared_chart_data() {
         let mut state = State::with_mode(Mode::Light);
         let marks = |state: &State| {
@@ -568,6 +634,7 @@ mod chart_tests {
         for message in [
             Message::SetChart("Violet".into()),
             Message::SetMode(Mode::Dark),
+            Message::SetAppearance("Always light".into()),
             Message::SetBase("Slate".into()),
             Message::SetAccent("Orange".into()),
             Message::NextPreset,

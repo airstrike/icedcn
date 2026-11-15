@@ -1,10 +1,11 @@
+use iced::theme::Mode;
 use iced::{Task, font};
 use icedcn::core::design::{Accent, Base};
 use icedcn::{Design, Theme};
 
-pub fn theme() -> Theme {
-    Design::dark()
-        .with_name("Slate Violet Dark")
+pub fn theme(mode: Mode) -> Theme {
+    Design::from(mode)
+        .with_name("Slate Violet")
         .with_base(Base::Slate)
         .with_accent(Accent::Violet)
         .with_chart(Accent::Green)
@@ -13,7 +14,8 @@ pub fn theme() -> Theme {
         .into()
 }
 
+// Pass the system preference or your app's chosen mode to theme(mode).
 // Load the selected font, then return or batch font_setup() from boot/update.
 pub fn font_setup<Message>() -> Task<Message> {
-    font::set_defaults(theme().font_sans.regular, 14.0)
+    font::set_defaults("A \"Quoted\" Font".into(), 14.0)
 }

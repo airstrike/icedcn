@@ -21,12 +21,21 @@ pub fn view(state: &State, viewport_width: f32) -> iced::Element<'_, Message, Th
         _ => "Sans Serif".to_owned(),
     };
     let fields = column![
-        group([fixed(
-            "Style",
-            "Nova",
-            Mark::Style,
-            "Nova is the native icedcn style."
-        )]),
+        group([
+            fixed(
+                "Style",
+                "Nova",
+                Mark::Style,
+                "Nova is the native icedcn style."
+            ),
+            picker(
+                "Appearance",
+                state.settings.appearance.label(),
+                customize::APPEARANCES,
+                Mark::Appearance,
+                Message::SetAppearance,
+            ),
+        ]),
         field_separator(),
         group([
             picker(
@@ -157,6 +166,7 @@ pub fn view(state: &State, viewport_width: f32) -> iced::Element<'_, Message, Th
 #[derive(Clone, Copy)]
 enum Mark {
     Style,
+    Appearance,
     Swatch(&'static str),
     Font,
     Icon,
@@ -180,6 +190,7 @@ impl Mark {
                 .into(),
             Self::Font => text("Aa").size(16).line_height(Pixels(20.0)).into(),
             Self::Style => icon::rectangle_horizontal().size(16).into(),
+            Self::Appearance => icon::sun().size(16).into(),
             Self::Icon => icon::fingerprint().size(16).into(),
             Self::Radius => icon::radius().size(16).into(),
             Self::Menu => icon::list_filter().size(16).into(),

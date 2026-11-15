@@ -11,6 +11,7 @@ pub use base::Base;
 
 use iced_core::Font;
 use iced_core::font::Weight;
+use iced_core::theme::Mode;
 use iced_core::theme::palette::Seed;
 
 use crate::color::{Color, oklch, oklch_alpha};
@@ -317,6 +318,16 @@ impl Design {
     }
 }
 
+/// Resolve iced's current preference; an unspecified preference uses light mode.
+impl From<Mode> for Design {
+    fn from(mode: Mode) -> Self {
+        match mode {
+            Mode::Dark => Self::dark(),
+            Mode::Light | Mode::None => Self::light(),
+        }
+    }
+}
+
 impl Default for Design {
     fn default() -> Self {
         Self::light()
@@ -413,6 +424,15 @@ mod tests {
     use super::{Accent, Base, Design, FontFamily};
     use crate::{Theme, oklch};
     use iced_core::{Font, color, font};
+
+    #[test]
+    fn iced_mode_selects_the_design_with_a_light_fallback() {
+        use iced_core::theme::Mode;
+
+        assert_eq!(Design::from(Mode::Light), Design::light());
+        assert_eq!(Design::from(Mode::Dark), Design::dark());
+        assert_eq!(Design::from(Mode::None), Design::light());
+    }
 
     #[test]
     fn presets_keep_surface_accent_chart_and_font_choices_independent() {

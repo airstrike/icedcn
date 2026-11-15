@@ -5,6 +5,7 @@ fn main() -> iced::Result {
         .title("icedcn • palette demo")
         .window_size([1600.0, 1000.0])
         .theme(State::theme)
+        .subscription(State::subscription)
         .fonts([icon::FONT])
         .run()
 }

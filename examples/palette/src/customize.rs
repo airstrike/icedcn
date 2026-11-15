@@ -1,7 +1,7 @@
 //! Theme choices shared by the preview and the exported Rust configuration.
 
-use iced::Font;
 use iced::font::{Family, Stretch, Style, Weight};
+use iced::{Font, theme};
 use icedcn::Theme;
 use icedcn::core::design::{Accent, Base};
 use icedcn::core::{Color, Design};
@@ -15,9 +15,40 @@ pub const ACCENTS: &[&str] = &["Neutral", "Blue", "Violet", "Green", "Rose", "Or
 /// Sidebar selection treatments.
 pub const MENUS: &[&str] = &["Subtle", "Bold"];
 
+/// Appearance policies offered by the Create builder.
+pub const APPEARANCES: &[&str] = &["System preference", "Always light", "Always dark"];
+
+/// How a design responds to the host's current appearance.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum Appearance {
+    #[default]
+    System,
+    Light,
+    Dark,
+}
+
+impl Appearance {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::System => APPEARANCES[0],
+            Self::Light => APPEARANCES[1],
+            Self::Dark => APPEARANCES[2],
+        }
+    }
+
+    pub fn resolve(self, mode: Mode) -> Mode {
+        match self {
+            Self::System => mode,
+            Self::Light => Mode::Light,
+            Self::Dark => Mode::Dark,
+        }
+    }
+}
+
 /// Customizations that can be represented by icedcn's public design API.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Settings {
+    pub appearance: Appearance,
     pub base: &'static str,
     pub accent: &'static str,
     pub chart: &'static str,
@@ -28,6 +59,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            appearance: Appearance::System,
             base: "Neutral",
             accent: "Neutral",
             chart: "Neutral",
@@ -40,13 +72,9 @@ impl Default for Settings {
 impl Settings {
     /// Build the live design without mutating the host application's font defaults.
     pub fn theme(&self, mode: Mode) -> Theme {
-        let design = if mode == Mode::Dark {
-            Design::dark()
-        } else {
-            Design::light()
-        };
+        let design = Design::from(theme::Mode::from(self.appearance.resolve(mode)));
         let mut design = design
-            .with_name(self.name(mode))
+            .with_name(self.name())
             .with_base(base(self.base))
             .with_accent(preset(self.accent))
             .with_chart(preset(self.chart))
@@ -58,7 +86,7 @@ impl Settings {
     }
 
     /// Export the same builder recipe used by the live preview.
-    pub fn source(&self, mode: Mode) -> String {
+    pub fn source(&self) -> String {
         let family = match self.font.family {
             Family::Name(name) => format!("Font::from({name:?})"),
             family => format!("Font::with_family(font::Family::{family:?})"),
@@ -85,10 +113,14 @@ impl Settings {
             }
             _ => (font, "Font, Task, font"),
         };
+        let (parameter, mode) = match self.appearance {
+            Appearance::System => ("mode", "mode"),
+            Appearance::Light => ("_mode", "Mode::Light"),
+            Appearance::Dark => ("_mode", "Mode::Dark"),
+        };
         let mut code = format!(
-            "use iced::{{{imports}}};\nuse icedcn::core::design::{{Accent, Base}};\nuse icedcn::{{Design, Theme}};\n\npub fn theme() -> Theme {{\n    Design::{}()\n        .with_name({:?})\n        .with_base(Base::{:?})\n        .with_accent(Accent::{:?})\n        .with_chart(Accent::{:?})\n        .with_font_sans({font})\n",
-            if mode == Mode::Dark { "dark" } else { "light" },
-            self.name(mode),
+            "use iced::theme::Mode;\nuse iced::{{{imports}}};\nuse icedcn::core::design::{{Accent, Base}};\nuse icedcn::{{Design, Theme}};\n\npub fn theme({parameter}: Mode) -> Theme {{\n    Design::from({mode})\n        .with_name({:?})\n        .with_base(Base::{:?})\n        .with_accent(Accent::{:?})\n        .with_chart(Accent::{:?})\n        .with_font_sans({font})\n",
+            self.name(),
             base(self.base),
             preset(self.accent),
             preset(self.chart),
@@ -96,17 +128,16 @@ impl Settings {
         if self.menu == "Bold" {
             code.push_str("        .with_menu_accent()\n");
         }
-        code.push_str("        .into()\n}\n\n// Load the selected font, then return or batch font_setup() from boot/update.\npub fn font_setup<Message>() -> Task<Message> {\n    font::set_defaults(theme().font_sans.regular, 14.0)\n}\n");
+        code.push_str(&format!("        .into()\n}}\n\n// Pass the system preference or your app's chosen mode to theme(mode).\n// Load the selected font, then return or batch font_setup() from boot/update.\npub fn font_setup<Message>() -> Task<Message> {{\n    font::set_defaults({font}.into(), 14.0)\n}}\n"));
         code
     }
 
-    fn name(&self, mode: Mode) -> String {
-        format!(
-            "{} {} {}",
-            self.base,
-            self.accent,
-            if mode == Mode::Dark { "Dark" } else { "Light" }
-        )
+    fn name(&self) -> String {
+        if self.base == self.accent {
+            self.base.to_owned()
+        } else {
+            format!("{} {}", self.base, self.accent)
+        }
     }
 }
 
@@ -136,7 +167,11 @@ fn preset(name: &str) -> Accent {
 }
 
 #[cfg(test)]
+mod dark;
+#[cfg(test)]
 mod export;
+#[cfg(test)]
+mod light;
 
 #[cfg(test)]
 mod tests {
@@ -144,19 +179,42 @@ mod tests {
 
     #[test]
     fn exported_recipe_compiles_and_reproduces_the_preview() {
-        let settings = Settings {
+        let mut settings = Settings {
+            appearance: Appearance::System,
             base: "Slate",
             accent: "Violet",
             chart: "Green",
             menu: "Bold",
             font: Font::from("A \"Quoted\" Font"),
         };
-        assert_eq!(
-            settings.source(Mode::Dark),
-            include_str!("customize/export.rs")
-        );
-        assert_eq!(settings.theme(Mode::Dark), export::theme());
+        let recipes: [(Appearance, &str, fn(theme::Mode) -> Theme); 3] = [
+            (
+                Appearance::System,
+                include_str!("customize/export.rs"),
+                export::theme,
+            ),
+            (
+                Appearance::Light,
+                include_str!("customize/light.rs"),
+                light::theme,
+            ),
+            (
+                Appearance::Dark,
+                include_str!("customize/dark.rs"),
+                dark::theme,
+            ),
+        ];
+        for (appearance, source, factory) in recipes {
+            settings.appearance = appearance;
+            assert_eq!(settings.source(), source);
+            for mode in [Mode::Light, Mode::Dark] {
+                assert_eq!(settings.theme(mode), factory(mode.into()));
+            }
+            assert_eq!(settings.theme(Mode::Light), factory(theme::Mode::None));
+        }
         let _: iced::Task<()> = export::font_setup();
+        let _: iced::Task<()> = light::font_setup();
+        let _: iced::Task<()> = dark::font_setup();
     }
 
     #[test]
@@ -191,7 +249,7 @@ mod tests {
                 };
                 let theme = settings.theme(mode);
                 assert_eq!(theme.chart, preset(name).chart());
-                let source = settings.source(mode);
+                let source = settings.source();
                 assert!(source.contains(&format!(".with_chart(Accent::{:?})", preset(name))));
                 assert!(!source.contains("with_color"));
                 assert_eq!(theme.primary, Settings::default().theme(mode).primary);
@@ -206,7 +264,7 @@ mod tests {
             chart: "Blue",
             ..Default::default()
         };
-        let source = settings.source(Mode::Dark);
+        let source = settings.source();
         assert!(source.contains(".with_font_sans(\"Custom \\\"Font\\\"\")"));
         assert!(!source.contains("use iced::{Font"));
         assert!(!source.contains("design.neutral.base ="));

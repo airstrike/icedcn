@@ -13,8 +13,9 @@ use iced::Element;
 use iced::Widget;
 use iced::font::set_defaults;
 use iced::mouse::Interaction;
+use iced::theme::Mode;
 use iced::widget::{column, operation, row, space, stack};
-use iced::{clipboard, window};
+use iced::{clipboard, system, window};
 use icedcn::widget::scrollable;
 use route::Route;
 use std::time::Duration;
@@ -42,6 +43,7 @@ const PINNED_FONTS: &[&str] = &["Geist", "Inter"];
 
 pub struct App {
     dark_mode: bool,
+    manual_mode: bool,
     destination: Route,
     create: palette::State,
     routes: Router<route::Definition>,
@@ -64,6 +66,7 @@ pub struct App {
 #[derive(Debug, Clone)]
 pub enum Message {
     ToggleTheme,
+    SystemMode(Mode),
     Example(examples::Event),
     Create(palette::Message),
     Escape,
@@ -241,7 +244,8 @@ impl App {
 
         let default_font = font::BODY.to_owned();
 
-        let dark_mode = theme::is_dark_mode();
+        let dark_mode = false;
+        tasks.push(system::theme().map(Message::SystemMode));
         let active_theme = docs::theme(dark_mode);
         let snippet_viewer = SnippetViewer::new(
             if dark_mode {
@@ -262,6 +266,7 @@ impl App {
 
         let mut app = Self {
             dark_mode,
+            manual_mode: false,
             destination: Route::Home,
             create,
             routes,
@@ -288,11 +293,7 @@ impl App {
     }
 
     pub fn is_dark(&self) -> bool {
-        if self.destination == Route::Create {
-            self.create.mode == palette::Mode::Dark
-        } else {
-            self.dark_mode
-        }
+        self.dark_mode
     }
 
     pub(crate) fn theme(&self) -> Theme {
@@ -319,6 +320,7 @@ impl App {
         Subscription::batch([
             page,
             header::shortcuts(),
+            system::theme_changes().map(Message::SystemMode),
             browser_routing::subscription().map(Message::History),
             window::resize_events().map(|(_, size)| Message::Width(size.width)),
         ])
@@ -387,6 +389,20 @@ impl App {
         format!("{title} — icedcn")
     }
 
+    fn set_mode(&mut self, mode: Mode) -> Task<Message> {
+        self.dark_mode = mode == Mode::Dark;
+        let map = if self.dark_mode {
+            self.gh_dark.clone()
+        } else {
+            self.gh_light.clone()
+        };
+        self.snippet_viewer
+            .set_theme(map, docs::theme(self.dark_mode));
+        self.create
+            .update(palette::Message::SetMode(mode.into()))
+            .map(Message::Create)
+    }
+
     fn update_inner(&mut self, message: Message) -> Task<Message> {
         match message {
             Message::History(_) | Message::GoTo(_) => Task::none(),
@@ -418,27 +434,25 @@ impl App {
             Message::Create(palette::Message::ChooseFont) => {
                 self.update_inner(Message::Fonts(true))
             }
-            Message::Create(message) => self.create.update(message).map(Message::Create),
-            Message::ToggleTheme if self.destination == Route::Create => {
-                let mode = if self.is_dark() {
-                    palette::Mode::Light
-                } else {
-                    palette::Mode::Dark
-                };
-                self.create
-                    .update(palette::Message::SetMode(mode))
-                    .map(Message::Create)
+            Message::Create(palette::Message::SetMode(mode)) => {
+                self.manual_mode = true;
+                self.set_mode(mode.into())
             }
+            Message::Create(message) => self.create.update(message).map(Message::Create),
             Message::ToggleTheme => {
-                self.dark_mode = !self.dark_mode;
-                let map = if self.dark_mode {
-                    self.gh_dark.clone()
+                self.manual_mode = true;
+                self.set_mode(if self.dark_mode {
+                    Mode::Light
                 } else {
-                    self.gh_light.clone()
-                };
-                let active_theme = docs::theme(self.dark_mode);
-                self.snippet_viewer.set_theme(map, active_theme);
-                Task::none()
+                    Mode::Dark
+                })
+            }
+            Message::SystemMode(mode) => {
+                if self.manual_mode {
+                    Task::none()
+                } else {
+                    self.set_mode(mode)
+                }
             }
             Message::OpenUrl(url) => {
                 self.search = false;

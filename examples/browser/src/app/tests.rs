@@ -126,7 +126,7 @@ fn home_is_the_start_page_and_create_history_keeps_its_state() {
         Route::parse("/components/accordion", &app.routes),
         Route::Page(0)
     );
-    let docs_theme = app.theme();
+    let initial_theme = app.theme();
     let docs_font = app.current_font.clone();
     let _ = app.update(Message::GoTo("/create"));
     assert_eq!(app.route(), Route::Create);
@@ -136,6 +136,8 @@ fn home_is_the_start_page_and_create_history_keeps_its_state() {
     assert_eq!(app.route(), Route::Create);
     let _ = app.update(Message::Fonts(false));
     let _ = app.update(Message::ToggleTheme);
+    let docs_theme = app.snippet_viewer.theme().clone();
+    assert_ne!(docs_theme, initial_theme);
     let _ = app.update(Message::Create(palette::Message::SetPreviewPage(
         palette::PreviewPage::Two,
     )));
@@ -190,4 +192,42 @@ fn home_actions_route_at_desktop_and_mobile_widths() {
             );
         }
     }
+}
+
+#[test]
+fn system_appearance_tracks_os_until_host_override_and_fixed_create_stays_fixed() {
+    use iced::theme::Mode;
+
+    let (browser, _) = Browser::new();
+    let mut app = browser.app;
+    let _ = app.update(Message::GoTo("/create"));
+    for mode in [Mode::Dark, Mode::Light, Mode::None] {
+        let _ = app.update(Message::SystemMode(mode));
+        assert_eq!(app.is_dark(), mode == Mode::Dark);
+        assert_eq!(app.theme().neutral.is_dark, mode == Mode::Dark);
+    }
+    let _ = app.update(Message::Create(palette::Message::SetAppearance(
+        "Always light".into(),
+    )));
+    let _ = app.update(Message::SystemMode(Mode::Dark));
+    assert!(app.is_dark());
+    assert!(!app.theme().neutral.is_dark);
+    let _ = app.update(Message::ToggleTheme);
+    let _ = app.update(Message::SystemMode(Mode::Dark));
+    assert!(
+        !app.is_dark(),
+        "an OS update must not undo the explicit header choice"
+    );
+    assert!(!app.theme().neutral.is_dark);
+    let _ = app.update(Message::Create(palette::Message::SetAppearance(
+        "Always dark".into(),
+    )));
+    assert!(app.theme().neutral.is_dark);
+    let _ = app.update(Message::Create(palette::Message::SetAppearance(
+        "System preference".into(),
+    )));
+    assert!(
+        !app.theme().neutral.is_dark,
+        "system policy uses the current host mode"
+    );
 }
