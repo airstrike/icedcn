@@ -1,30 +1,23 @@
 //! The library landing page: real, interactive compositions of the public widgets.
 
-use std::sync::LazyLock;
-
 use iced::widget::component::{Component, component};
-use iced::{Center, Element, Fill, Pixels, Top, Widget};
+use iced::{Bottom, Center, Element, Fill, Pixels, Top, Widget};
+use icedcn::core::Border;
+use icedcn::core::design::Accent;
+use icedcn::theme::container::Style;
 use icedcn::widget::calendar::{Selection, today};
-use icedcn::widget::chart::{Data, bar, bars};
 use icedcn::widget::{
-    alert_dialog, avatar, badge, button, calendar, chart, checkbox, column, container, field,
-    input, progress, row, scrollable, separator, slider, space, switch, text, textarea,
+    alert_dialog, avatar, badge, button, button_group, calendar, checkbox, column, container,
+    dropdown_menu, field, input, menu, progress, row, scrollable, separator, slider, space, switch,
+    text, textarea,
 };
-use icedcn::{Size, Slot, Theme, card, theme};
+use icedcn::{Size, Slot, Theme, card, radius, theme};
 
 use super::Message;
 use crate::icon;
 
-static CONTRIBUTIONS: LazyLock<Data> = LazyLock::new(|| {
-    chart::data(
-        bars([bar([1200, 1650, 1350, 1950, 1100, 2100]).with_name("Contributions")])
-            .data_labels(None),
-    )
-    .x_axis_labels(["Dec", "Jan", "Feb", "Mar", "Apr", "May"])
-    .x_axis(|axis| axis.show_line(false).show_grid(false))
-    .y_axis(|axis| axis.none().show_grid(false))
-    .value_format(|value| format!("${value:.0}"))
-});
+#[cfg(test)]
+mod tests;
 
 pub(super) fn view<'a>(width: f32) -> Element<'a, Message, Theme> {
     let desktop = width >= 1280.;
@@ -135,11 +128,9 @@ fn controls<'a>() -> Slot<'a, Message> {
     panel(column![
         row![
             button(row!["Button", icon::arrow_right().size(14)].spacing(6))
-                .size(Size::Sm).on_press(Message::GoTo("/components/button")),
-            button("Secondary").style(button::Secondary).size(Size::Sm)
-                .on_press(Message::GoTo("/components/button")),
-            button("Outline").style(button::Outline).size(Size::Sm)
-                .on_press(Message::GoTo("/components/button")),
+                .size(Size::Sm),
+            button("Secondary").style(button::Secondary).size(Size::Sm),
+            button("Outline").style(button::Outline).size(Size::Sm),
         ].spacing(8),
         input("Name").width(Fill),
         textarea("Message").resizable(false),
@@ -150,17 +141,31 @@ fn controls<'a>() -> Slot<'a, Message> {
             alert_dialog(
                 |a| a.trigger(button("Alert Dialog").style(button::Outline).size(Size::Sm)),
                 |a| column![
-                    a.header("Make it your own", "Every preview on this page uses the same components you can use in your application."),
+                    a.header("Allow accessory to connect?", "Do you want to allow the USB accessory to connect to this device and your data?"),
                     a.footer([
-                        a.cancel(button("Close").style(button::Outline)),
-                        a.action(button("View components").on_press(Message::GoTo("/docs/components"))),
+                        a.cancel(button("Don't allow").style(button::Outline)),
+                        a.action(button("Allow")),
                     ]),
                 ].width(Fill).into(),
             ).size(Size::Sm),
             space::horizontal(),
-            button(row!["Button Group", icon::chevron_up().size(14)].spacing(8))
-                .style(button::Outline).size(Size::Sm)
-                .on_press(Message::GoTo("/components/button-group")),
+            button_group![
+                button("Button Group").style(button::Outline).size(Size::Sm),
+                dropdown_menu(
+                    |m| m.trigger(button(icon::chevron_up()).style(button::Outline).size(Size::Sm).square()),
+                    |_| column![
+                        menu::label("Quick Actions"),
+                        menu::item("Mute Conversation"),
+                        menu::item("Mark as Read"),
+                        menu::item("Block User"),
+                        menu::separator(),
+                        menu::item("Delete Conversation").style(menu::Destructive),
+                    ].into(),
+                )
+                .side(dropdown_menu::Side::Top)
+                .align(dropdown_menu::Align::End)
+                .width(160),
+            ],
         ].align_y(Center).width(Fill),
     ].spacing(24).width(Fill))
 }
@@ -231,26 +236,67 @@ fn savings<'a>() -> Slot<'a, Message> {
 }
 
 fn contributions<'a>() -> Slot<'a, Message> {
+    // The reference uses five CSS columns, not a chart renderer with axis insets.
+    let colors = Accent::Neutral.chart();
+    let bars = row::Row::with_children(
+        [
+            ("Dec", 800.0_f32),
+            ("Jan", 1100.0),
+            ("Feb", 900.0),
+            ("Mar", 1300.0),
+            ("Apr", 750.0),
+        ]
+        .into_iter()
+        .enumerate()
+        .map(|(index, (month, amount))| {
+            container(
+                column![
+                    container(space())
+                        .width(Fill)
+                        // CSS flex-shrink reserves the 16px label and 8px gap for the tallest bar.
+                        .height((200.0 * amount / 1300.0).min(176.0))
+                        .style(move |_| Style {
+                            background: Some(colors[index].into()),
+                            border: Border::default().rounded(radius::LG),
+                            ..Style::default()
+                        }),
+                    text::xs(month)
+                        .style(theme::text::Muted)
+                        .line_height(Pixels(16.0))
+                        .align_x(Center)
+                        .width(Fill),
+                ]
+                .spacing(8)
+                .width(Fill),
+            )
+            .width(Fill)
+            .height(200)
+            .align_y(Bottom)
+            .into()
+        }),
+    )
+    .spacing(12)
+    .height(200)
+    .width(Fill);
     panel(
         column![
-            text::p("Contribution history").medium(),
-            text::muted("Last 6 months of activity"),
-            chart(&CONTRIBUTIONS)
-                .height(208)
-                .padding(0)
-                .style(chart::transparent),
+            column![
+                text::p("Contribution History")
+                    .medium()
+                    .line_height(Pixels(24.0)),
+                text::muted("Last 6 months of activity").line_height(Pixels(20.0)),
+            ]
+            .spacing(6),
+            bars,
             row![
-                detail("Upcoming", "May 2027", "Scheduled"),
-                detail("Savings plan", "Accelerated", "Recurring"),
+                detail("UPCOMING", "May 2024", "Scheduled"),
+                detail("SAVINGS PLAN", "Accelerated", "Recurring"),
             ]
             .spacing(12)
             .width(Fill),
-            button("Explore charts")
-                .anchor()
-                .width(Fill)
-                .on_press(Message::GoTo("/components/chart")),
+            button("View Full Report").width(Fill),
         ]
-        .spacing(16)
+        .spacing(20)
         .width(Fill),
     )
 }
@@ -258,14 +304,19 @@ fn contributions<'a>() -> Slot<'a, Message> {
 fn detail<'a>(label: &'static str, value: &'static str, note: &'static str) -> Slot<'a, Message> {
     container(
         column![
-            text::xs(label).style(theme::text::Muted),
-            text::p(value).semibold(),
-            text::muted(note)
+            text::xs(label)
+                .medium()
+                .letter_spacing(0.6)
+                .style(theme::text::Muted)
+                .line_height(Pixels(16.0)),
+            text::p(value).semibold().line_height(Pixels(24.0)),
+            text::muted(note).line_height(Pixels(20.0))
         ]
-        .spacing(6)
+        .spacing(4)
         .width(Fill),
     )
-    .padding(14)
+    // Include the source item's 1px border in its CSS padding-box dimensions.
+    .padding([15, 17])
     .width(Fill)
     .class(theme::container::CardMuted)
     .into()
@@ -341,11 +392,6 @@ fn dates<'a>() -> Slot<'a, Message> {
                     .padding(0.)
             )
             .center_x(Fill),
-            button("Explore calendars")
-                .anchor()
-                .style(button::Outline)
-                .width(Fill)
-                .on_press(Message::GoTo("/components/calendar")),
         ]
         .spacing(16)
         .width(Fill),
