@@ -18,3 +18,5 @@ To deploy the generated assets to icedcn.airstrike.fyi from an authenticated Clo
 ```sh
 npx --yes wrangler@4.69.0 deploy --config examples/browser/wrangler.jsonc
 ```
+
+The build also copies `web/og.png` to the deployment root. The loader's Open Graph and Twitter metadata reference this 1200 × 630 image at the canonical production URL. To regenerate it after a brand change, install Pillow and `rsvg-convert`, then run `python3 examples/browser/web/render-og.py` from the workspace root. It uses the existing logo and bundled Geist fonts. Regeneration is optional during normal builds.

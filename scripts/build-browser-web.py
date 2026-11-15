@@ -144,6 +144,7 @@ def main():
                 .replace("BROWSER_BYTES", str(optimized.stat().st_size))
                 .replace("BROWSER_LOGO", (ROOT / "assets/logo.svg").read_text().strip()))
         (output / "index.html").write_text(html)
+        shutil.copyfile(ROOT / "examples/browser/web/og.png", output / "og.png")
         # Only generated modules in this dedicated output tree are stale.
         for pattern in ("browser-*.wasm", "browser-*.js"):
             for old in output.glob(pattern):
