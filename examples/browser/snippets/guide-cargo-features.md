@@ -11,10 +11,10 @@ The root crate has no default features. Enable the capabilities needed by your a
 | `spinner` | Canvas-based spinner rendering. |
 | `sweeten` | Additional table integration. |
 
-For example, a local application that renders Markdown and SVG content can use:
+For example, an application that renders Markdown and SVG content can use:
 
 ```toml
-icedcn = { path = "../icedcn", features = ["markdown", "svg"] }
+icedcn = { git = "https://github.com/airstrike/icedcn", branch = "master", features = ["markdown", "svg"] }
 ```
 
 Keep feature selection in the application's manifest. A widget's documentation may require an iced feature as well as the corresponding icedcn feature.

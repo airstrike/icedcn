@@ -11,5 +11,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-icedcn = { path = "../icedcn" }"##;
+icedcn = { git = "https://github.com/airstrike/icedcn", branch = "master" }"##;
 ```

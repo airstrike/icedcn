@@ -1,23 +1,21 @@
 ## Add it to an application
 
-Install Rust with [rustup](https://rustup.rs/), then create an application beside an icedcn checkout:
+Install Rust with [rustup](https://rustup.rs/), then create an application:
 
 ```sh
-git clone https://github.com/airstrike/icedcn.git
 cargo new my-app --edition 2024
-cp icedcn/rust-toolchain.toml my-app/rust-toolchain.toml
-cp icedcn/Cargo.lock my-app/Cargo.lock
 cd my-app
+rustup override set nightly-2026-07-11
 ```
 
-The toolchain file selects the nightly used by icedcn. The copied lockfile starts your application with the checkout's tested dependency revisions, including the iced, cosmic-text, and winit forks.
+This selects the nightly currently used by icedcn. Cargo downloads the library from GitHub; no local icedcn checkout is needed. Commit the generated `Cargo.lock` to keep dependency revisions reproducible.
 
 Replace the generated `[dependencies]` section in your application's `Cargo.toml` with:
 
 ```toml
 [dependencies]
 iced = "0.15.0-dev"
-icedcn = { path = "../icedcn" }
+icedcn = { git = "https://github.com/airstrike/icedcn", branch = "master" }
 
 [patch.crates-io]
 iced = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
@@ -41,8 +39,8 @@ cosmic-text = { git = "https://github.com/airstrike/cosmic-text", branch = "dev"
 cosmic-text = { git = "https://github.com/airstrike/cosmic-text", branch = "dev" }
 ```
 
-Cargo only applies patches from the root manifest. If your app belongs to a Cargo workspace, put these patch tables in that workspace's root manifest and use its lockfile. The tables above match the current checkout's `Cargo.toml`; when updating icedcn, keep them in sync.
+Cargo only applies patches from the root manifest. If your app belongs to a Cargo workspace, put these patch tables in that workspace's root manifest and use its lockfile. These patches select the forks currently required by icedcn.
 
 Keep the branch references in the patch tables: the lockfile pins the commits, and the matching references let iced and its dependencies share the same types.
 
-The path dependency follows your local checkout. For CI or sharing, replace it with a git dependency pinned to the same icedcn commit. Start with the default features; see the [Cargo guide](icedcn://guide/cargo#feature-flags) for `chart`, `svg`, `markdown`, `highlighter`, `spinner`, and `sweeten`.
+Start with the default features; see the [Cargo guide](icedcn://guide/cargo#feature-flags) for `chart`, `svg`, `markdown`, `highlighter`, `spinner`, and `sweeten`.

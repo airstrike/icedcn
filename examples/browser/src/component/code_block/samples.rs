@@ -80,7 +80,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-icedcn = { path = "../icedcn" }"##;
+icedcn = { git = "https://github.com/airstrike/icedcn", branch = "master" }"##;
 
 pub const HIGHLIGHTING: &str = r##"#[derive(Debug, Default)]
 struct Notebook {
@@ -95,7 +95,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-icedcn = { path = "../icedcn" }"##;
+icedcn = { git = "https://github.com/airstrike/icedcn", branch = "master" }"##;
 
 pub const MARKDOWN: &str = r##"Normalize the query and title with `to_lowercase` before comparing them.
 
