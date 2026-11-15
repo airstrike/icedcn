@@ -79,8 +79,14 @@ impl Settings {
                 self.font.optical_size
             );
         }
+        let (font, imports) = match self.font.family {
+            Family::Name(name) if self.font == Font::from(name) => {
+                (format!("{name:?}"), "Task, font")
+            }
+            _ => (font, "Font, Task, font"),
+        };
         let mut code = format!(
-            "use iced::{{Font, Task, font}};\nuse icedcn::core::design::{{Accent, Base}};\nuse icedcn::{{Design, Theme}};\n\npub fn theme() -> Theme {{\n    Design::{}()\n        .with_name({:?})\n        .with_base(Base::{:?})\n        .with_accent(Accent::{:?})\n        .with_chart(Accent::{:?})\n        .with_font_sans({font})\n",
+            "use iced::{{{imports}}};\nuse icedcn::core::design::{{Accent, Base}};\nuse icedcn::{{Design, Theme}};\n\npub fn theme() -> Theme {{\n    Design::{}()\n        .with_name({:?})\n        .with_base(Base::{:?})\n        .with_accent(Accent::{:?})\n        .with_chart(Accent::{:?})\n        .with_font_sans({font})\n",
             if mode == Mode::Dark { "dark" } else { "light" },
             self.name(mode),
             base(self.base),
@@ -201,7 +207,8 @@ mod tests {
             ..Default::default()
         };
         let source = settings.source(Mode::Dark);
-        assert!(source.contains("Font::from(\"Custom \\\"Font\\\"\")"));
+        assert!(source.contains(".with_font_sans(\"Custom \\\"Font\\\"\")"));
+        assert!(!source.contains("use iced::{Font"));
         assert!(!source.contains("design.neutral.base ="));
         assert!(!source.contains("chart_color"));
         assert!(!source.contains("design.chart["));

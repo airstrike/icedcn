@@ -1,4 +1,4 @@
-use iced::{Font, Task, font};
+use iced::{Task, font};
 use icedcn::core::design::{Accent, Base};
 use icedcn::{Design, Theme};
 
@@ -8,7 +8,7 @@ pub fn theme() -> Theme {
         .with_base(Base::Slate)
         .with_accent(Accent::Violet)
         .with_chart(Accent::Green)
-        .with_font_sans(Font::from("A \"Quoted\" Font"))
+        .with_font_sans("A \"Quoted\" Font")
         .with_menu_accent()
         .into()
 }
