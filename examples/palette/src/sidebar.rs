@@ -106,6 +106,7 @@ fn picker(
                 .map(|value| native_select::item(*value, *value))
         )
         .value(selected)
+        .width(Fill)
         .on_value_change(on_change),
     ]
     .spacing(4)

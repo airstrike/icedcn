@@ -409,6 +409,7 @@ impl State {
                 .into()
             },
         )
+        .max_width(760.0)
         .open(self.code_open)
         .on_open_change(Message::CodeOpen)
         .into()
