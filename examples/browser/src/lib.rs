@@ -167,6 +167,6 @@ pub fn run() -> iced::Result {
     #[cfg(target_arch = "wasm32")]
     let application = application
         .fonts([include_bytes!("../fonts/Geist.ttf").as_slice()])
-        .font(font::BODY);
+        .font(font::BODY.into());
     application.run()
 }
