@@ -2,6 +2,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use iced_core::image::Handle;
 use iced_core::widget::{Id, Operation};
 use iced_core::{Element, Point, Rectangle};
 use iced_test::simulator::{self, simulator};
@@ -20,6 +21,17 @@ impl Operation for Bounds {
     fn container(&mut self, _: Option<&Id>, bounds: Rectangle, _: &Rectangle) {
         self.0.push(bounds);
     }
+}
+
+#[test]
+fn group_converts_image_handles_and_accepts_mixed_macro_children() {
+    let image = Handle::from_rgba(1, 1, vec![255, 0, 0, 255]);
+    let from_images = avatar::group::<()>([image.clone()]);
+    assert_eq!(from_images.count_geometry().diameter, 32.0);
+    let mixed = avatar::group![image.clone(), avatar::<()>(image).size(avatar::Lg)];
+    assert_eq!(mixed.count_geometry().diameter, 40.0);
+    let empty: avatar::group::Group<'_, ()> = avatar::group![];
+    assert_eq!(empty.count_geometry().diameter, 32.0);
 }
 
 #[test]

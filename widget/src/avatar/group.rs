@@ -9,6 +9,23 @@ use crate::compose::{Compose, Inherited, Slot};
 
 use super::{Avatar, Geometry, Size, avatar};
 
+/// Construct a group from avatars or image handles.
+///
+/// ```ignore
+/// avatar::group![avatar(portrait).fallback("AT"), another_portrait].count("+3")
+/// ```
+#[macro_export]
+macro_rules! group {
+    () => {
+        $crate::avatar::group::group(std::iter::empty::<$crate::avatar::Avatar<'_, _>>())
+    };
+    ($($avatar:expr),+ $(,)?) => {
+        $crate::avatar::group::group([
+            $(Into::<$crate::avatar::Avatar<'_, _>>::into($avatar)),*
+        ])
+    };
+}
+
 /// A group of avatars, including avatars with badges.
 pub struct Group<'a, Message> {
     avatars: Vec<Avatar<'a, Message>>,
@@ -18,10 +35,10 @@ pub struct Group<'a, Message> {
 
 /// Arrange avatars with 8px overlap and a 2px outer background ring.
 pub fn group<'a, Message: 'a>(
-    avatars: impl IntoIterator<Item = Avatar<'a, Message>>,
+    avatars: impl IntoIterator<Item = impl Into<Avatar<'a, Message>>>,
 ) -> Group<'a, Message> {
     Group {
-        avatars: avatars.into_iter().collect(),
+        avatars: avatars.into_iter().map(Into::into).collect(),
         count: None,
         inherited: Inherited::default(),
     }

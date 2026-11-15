@@ -4,14 +4,14 @@
 use std::sync::OnceLock;
 
 use iced::Task;
-use iced::widget::{Svg, image, svg};
+use iced::widget::image;
 
-use icedcn::theme::avatar::badge_style;
+use icedcn::Theme;
+use icedcn::widget::avatar::badge;
 use icedcn::widget::{avatar, button, column, dropdown_menu, menu, row};
-use icedcn::{Color, Theme, theme};
 
 use crate::Message;
-use crate::page;
+use crate::{icon, page};
 
 pub(crate) fn alex_handle() -> image::Handle {
     static IMAGE: OnceLock<image::Handle> = OnceLock::new();
@@ -208,14 +208,14 @@ impl page::Page for AvatarPage {
         match id {
             // The viewport sets the gap. The available content width controls wrapping.
             "demo" => row![
-                avatar(Some(airstrike_handle())).fallback("AT"),
-                avatar::badge(avatar(Some(hecrj_handle())).fallback("HR"), avatar::dot(),)
-                    .badge_style(presence),
-                avatar::group([
-                    avatar(Some(airstrike_handle())).fallback("AT"),
-                    avatar(Some(hecrj_handle())).fallback("HR"),
-                    avatar(Some(iced_handle())).fallback("IC"),
-                ])
+                avatar(airstrike_handle()).fallback("AT"),
+                avatar::badge(avatar(hecrj_handle()).fallback("HR"), avatar::dot(),)
+                    .badge_style(badge::presence),
+                avatar::group![
+                    avatar(airstrike_handle()).fallback("AT"),
+                    avatar(hecrj_handle()).fallback("HR"),
+                    avatar(iced_handle()).fallback("IC"),
+                ]
                 .count("+3"),
             ]
             .spacing(if self.wide { 48 } else { 24 })
@@ -223,53 +223,45 @@ impl page::Page for AvatarPage {
             .align_y(iced::Center)
             .into(),
 
-            "basic" => avatar(Some(airstrike_handle())).fallback("AT").into(),
+            "basic" => avatar(airstrike_handle()).fallback("AT").into(),
 
-            "badge" => avatar::badge(avatar(Some(hecrj_handle())).fallback("HR"), avatar::dot())
-                .badge_style(presence)
+            "badge" => avatar::badge(avatar(hecrj_handle()).fallback("HR"), avatar::dot())
+                .badge_style(badge::presence)
                 .into(),
 
             "badge-icon" => avatar::badge(
-                avatar(Some(iced_handle())).fallback("IC"),
-                plus(8.0).style(|theme: &Theme, _| svg::Style {
-                    color: Some(theme.primary.foreground.into()),
-                }),
+                avatar(iced_handle()).fallback("IC"),
+                icon::plus().size(8).line_height(1.0),
             )
             .into(),
 
-            "group" => avatar::group([
-                avatar(Some(airstrike_handle())).fallback("AT"),
-                avatar(Some(hecrj_handle())).fallback("HR"),
-                avatar(Some(iced_handle())).fallback("IC"),
-            ])
+            "group" => avatar::group![
+                avatar(airstrike_handle()).fallback("AT"),
+                avatar(hecrj_handle()).fallback("HR"),
+                avatar(iced_handle()).fallback("IC"),
+            ]
             .into(),
 
-            "group-count" => avatar::group([
-                avatar(Some(airstrike_handle())).fallback("AT"),
-                avatar(Some(hecrj_handle())).fallback("HR"),
-                avatar(Some(iced_handle())).fallback("IC"),
-            ])
+            "group-count" => avatar::group![
+                avatar(airstrike_handle()).fallback("AT"),
+                avatar(hecrj_handle()).fallback("HR"),
+                avatar(iced_handle()).fallback("IC"),
+            ]
             .count("+3")
             .into(),
 
-            "group-count-icon" => avatar::group([
-                avatar(Some(airstrike_handle())).fallback("AT"),
-                avatar(Some(hecrj_handle())).fallback("HR"),
-                avatar(Some(iced_handle())).fallback("IC"),
-            ])
-            .count(plus(16.0).style(|theme: &Theme, _| svg::Style {
-                color: Some(theme.muted.foreground.into()),
-            }))
+            "group-count-icon" => avatar::group![
+                avatar(airstrike_handle()).fallback("AT"),
+                avatar(hecrj_handle()).fallback("HR"),
+                avatar(iced_handle()).fallback("IC"),
+            ]
+            .count(icon::plus().size(16).line_height(1.0))
             .into(),
 
             "size" => row![
-                avatar(Some(airstrike_handle()))
-                    .fallback("AT")
-                    .size(avatar::Sm),
-                avatar(Some(airstrike_handle())).fallback("AT"),
-                avatar(Some(airstrike_handle()))
-                    .fallback("AT")
-                    .size(avatar::Lg),
+                avatar(airstrike_handle()).fallback("AT").size(avatar::Sm),
+                avatar(airstrike_handle()).fallback("AT"),
+                avatar(airstrike_handle()).fallback("AT").size(avatar::Lg),
             ]
             .spacing(8)
             .wrap()
@@ -279,7 +271,7 @@ impl page::Page for AvatarPage {
             "dropdown" => dropdown_menu(
                 |m| {
                     m.trigger(
-                        button(avatar(Some(airstrike_handle())).fallback("AT"))
+                        button(avatar(airstrike_handle()).fallback("AT"))
                             .style(button::Ghost)
                             .square()
                             .rounded(),
@@ -303,22 +295,4 @@ impl page::Page for AvatarPage {
             _ => unreachable!("unknown avatar preview id: {id}"),
         }
     }
-}
-
-fn presence(theme: &Theme) -> theme::container::Style {
-    let mut style = badge_style(theme);
-    let color = if theme.neutral.base.l < 0.5 {
-        iced::Color::from_rgb8(1, 102, 48)
-    } else {
-        iced::Color::from_rgb8(0, 166, 62)
-    };
-    style.background = Some(Color::from_srgb(color).into());
-    style.border.width = 0.0;
-    style
-}
-
-fn plus(size: f32) -> Svg<'static, Theme> {
-    svg(svg::Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>"#))
-        .width(size)
-        .height(size)
 }

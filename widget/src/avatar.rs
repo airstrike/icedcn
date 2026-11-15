@@ -10,7 +10,7 @@
 //! use icedcn::widget::avatar;
 //!
 //! // Stand-alone, with an image and an initials fallback.
-//! avatar(Some(my_image_handle)).fallback("CN")
+//! avatar(my_image_handle).fallback("CN")
 //!
 //! // No image — the fallback initials always render.
 //! avatar(None).fallback("CN")
@@ -46,6 +46,8 @@ use icedcn_core::theme::container::{Style, StyleFn};
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
 
+#[doc(inline)]
+pub use crate::group;
 #[doc(inline)]
 pub use badge::{badge, dot};
 #[doc(inline)]
@@ -108,7 +110,7 @@ impl std::default::Default for Size {
 
 /// Builder for an avatar widget.
 ///
-/// Born from an `Option<image::Handle>`: `Some(handle)` renders the image
+/// An image handle renders the image
 /// (clipped to a circle); `None` renders [`fallback`](Self::fallback) text
 /// centered on the muted surface.
 pub struct Avatar<'a, Message> {
@@ -126,13 +128,13 @@ pub struct Avatar<'a, Message> {
     inherited: Inherited,
 }
 
-/// Create an [`Avatar`] from an optional image handle.
+/// Create an [`Avatar`] from an image handle or an optional image handle.
 ///
-/// Pass `None` to always render the fallback content; pass `Some(handle)`
+/// Pass `None` to always render the fallback content; pass a handle
 /// to render the image (clipped to a circle).
-pub fn avatar<'a, Message: 'a>(image: Option<Handle>) -> Avatar<'a, Message> {
+pub fn avatar<'a, Message: 'a>(image: impl Into<Option<Handle>>) -> Avatar<'a, Message> {
     Avatar {
-        image,
+        image: image.into(),
         fallback: None,
         size: Size::default(),
         ring: false,
@@ -144,6 +146,12 @@ pub fn avatar<'a, Message: 'a>(image: Option<Handle>) -> Avatar<'a, Message> {
             style
         }),
         inherited: Inherited::default(),
+    }
+}
+
+impl<'a, Message: 'a> From<Handle> for Avatar<'a, Message> {
+    fn from(image: Handle) -> Self {
+        avatar(image)
     }
 }
 

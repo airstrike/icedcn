@@ -356,10 +356,12 @@ pub fn aspect_ratio<'a, Message: 'a>(
 
 /// Create an [`Avatar`] from an optional image handle.
 ///
-/// Pass `None` to always render the fallback content; pass `Some(handle)`
+/// Pass `None` to always render the fallback content; pass an image handle
 /// to render the image clipped to a circle. See the `avatar` module for
 /// the runtime image-load deviation note.
-pub fn avatar<'a, Message: 'a>(image: Option<iced_widget::image::Handle>) -> Avatar<'a, Message> {
+pub fn avatar<'a, Message: 'a>(
+    image: impl Into<Option<iced_widget::image::Handle>>,
+) -> Avatar<'a, Message> {
     avatar::avatar(image)
 }
 

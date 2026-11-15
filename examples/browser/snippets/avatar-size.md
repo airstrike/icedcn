@@ -3,11 +3,11 @@ use iced::widget::image;
 use icedcn::widget::avatar;
 use icedcn::widget::row;
 
-fn preview(portrait: image::Handle) -> row::Row<'static, ()> {
+fn view<'a>(portrait: image::Handle) -> row::Row<'a, ()> {
     row![
-        avatar(Some(portrait.clone())).fallback("AT").size(avatar::Sm),
-        avatar(Some(portrait.clone())).fallback("AT"),
-        avatar(Some(portrait)).fallback("AT").size(avatar::Lg),
+        avatar(portrait.clone()).fallback("AT").size(avatar::Sm),
+        avatar(portrait.clone()).fallback("AT"),
+        avatar(portrait).fallback("AT").size(avatar::Lg),
     ]
     .spacing(8)
     .wrap()

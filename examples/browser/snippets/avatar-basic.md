@@ -2,7 +2,7 @@
 use iced::widget::image;
 use icedcn::widget::avatar;
 
-fn preview(portrait: image::Handle) -> avatar::Avatar<'static, ()> {
-    avatar(Some(portrait)).fallback("AT")
+fn view<'a>(portrait: image::Handle) -> avatar::Avatar<'a, ()> {
+    avatar(portrait).fallback("AT")
 }
 ```

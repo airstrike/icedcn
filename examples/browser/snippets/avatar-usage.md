@@ -4,7 +4,7 @@
 use iced::widget::image;
 use icedcn::widget::avatar;
 
-fn preview(image: image::Handle) -> avatar::Avatar<'static, ()> {
-    avatar(Some(image)).fallback("AT")
+fn view<'a>(image: image::Handle) -> avatar::Avatar<'a, ()> {
+    avatar(image).fallback("AT")
 }
 ```
