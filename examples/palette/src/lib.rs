@@ -4,7 +4,7 @@
 //! The root scrollable opts into both axes; tiles that genuinely need
 //! horizontal overflow (transactions, etc.) wrap their own.
 
-use iced::{Element, clipboard};
+use iced::{Element, clipboard, font};
 
 use std::collections::HashSet;
 use std::f32::consts::PI;
@@ -12,7 +12,7 @@ use std::f32::consts::PI;
 use iced::gradient::Linear;
 use iced::widget::Id;
 use iced::widget::{responsive, stack};
-use iced::{Bottom, Fill, Padding, Right, Task, Widget};
+use iced::{Bottom, Fill, Padding, Pixels, Right, Task, Widget};
 use iced_widget::button::Status;
 use icedcn::Theme;
 use icedcn::core::{Background, Border};
@@ -292,7 +292,10 @@ impl State {
             }
             Message::Deploy => self.deploying = !self.deploying,
             Message::NotificationCleared => {}
-            Message::SetFont(font) => self.set_font(font),
+            Message::SetFont(font) => {
+                self.set_font(font);
+                return font::set_defaults(font, Pixels(14.0));
+            }
             Message::ChooseFont | Message::Noop => {}
         }
         if design_changed {
