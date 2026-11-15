@@ -68,24 +68,60 @@ impl State {
                         row![badge("Forms"), badge("Tables").style(badge::Secondary), badge("Navigation").style(badge::Outline)].spacing(8),
                         text::p("Create a sale, add items, choose tax groups, and calculate service charges and gratuity. Edit a saved receipt or cancel your draft."),
                         text::muted("Sample receipts are included. Changes stay in this session."),
-                    ].spacing(16)),
+                    ].spacing(16).width(Fill)),
                     card::footer(row![
                         button("Open Receipts").on_press(Message::Example(Event::OpenReceipts)),
                         button("View source").style(button::Outline).on_press(Message::OpenUrl("https://github.com/airstrike/icedcn/tree/HEAD/examples/browser/src/examples")),
-                    ].spacing(8)),
-                ]).width(Fill),
+                    ].spacing(8).width(Fill)),
+                ].width(Fill)).width(Fill),
             ]
             .spacing(24)
             .width(Fill)
         };
         scrollable::scrollable(
-            container(content)
-                .max_width(1100)
+            container(content.max_width(1100.))
                 .padding(if width < 600. { 16 } else { 32 })
                 .center_x(Fill),
         )
         .height(Fill)
         .width(Fill)
         .into()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use iced_test::core::Settings;
+    use iced_test::selector::Candidate;
+    use iced_test::simulator::Simulator;
+
+    #[test]
+    fn gallery_centers_its_capped_content_and_fills_the_card_footer() {
+        let state = State::default();
+        for width in [375., 1440.] {
+            let mut ui = Simulator::with_size(
+                Settings::default(),
+                iced::Size::new(width, 1200.),
+                state.view(width),
+            );
+            let expected = (width - if width < 600. { 32. } else { 64. }).min(1100.);
+            let heading = ui.find("Examples").unwrap().bounds();
+            assert!(
+                (heading.x - (width - expected) / 2.).abs() < 1.,
+                "heading at {heading:?}"
+            );
+            let open = ui.find("Open Receipts").unwrap().bounds();
+            let mut footer = false;
+            let _ = ui.find(|candidate: Candidate<'_>| {
+                if let Candidate::Container { bounds, .. } = candidate {
+                    footer |= bounds.contains(open.center())
+                        && bounds.height < 100.
+                        && (bounds.width - expected).abs() < 1.;
+                }
+                None::<()>
+            });
+            assert!(footer, "the footer surface must span the {expected}px card");
+        }
     }
 }

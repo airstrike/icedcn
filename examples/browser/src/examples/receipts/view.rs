@@ -33,6 +33,7 @@ pub fn list<'a>(sales: &'a [Receipt], query: &'a str) -> Element<'a, Message, Th
                     text::muted("→"),
                 ]
                 .spacing(16)
+                .width(Fill)
                 .align_y(Center),
             )
             .style(button::Outline)
@@ -57,8 +58,8 @@ pub fn list<'a>(sales: &'a [Receipt], query: &'a str) -> Element<'a, Message, Th
         row![
             column![text::h1("Receipts"), text::muted("Your sales, down to the last cent.")].spacing(8).width(Fill),
             button("New sale").on_press(Message::New),
-        ].spacing(16).align_y(Center),
-        field(input("Search by sale name…").value(query).on_input(Message::Search).width(Fill)).label("Find a receipt"),
+        ].spacing(16).width(Fill).align_y(Center),
+        field(input("Search by sale name…").value(query).on_input(Message::Search).width(Fill)).label("Find a receipt").width(Fill),
         rows,
         text::muted("A remake of iced_receipts. Sample tax rates are part of the demo; receipts are kept for this session."),
     ].spacing(24).width(Fill).into()
@@ -100,9 +101,11 @@ pub fn show(sale: &Receipt, width: f32) -> Element<'_, Message, Theme> {
                 text::label(currency(item.amount().unwrap_or(0))),
             ]
             .spacing(12)
+            .width(Fill)
             .into()
         }))
         .spacing(20)
+        .width(Fill)
         .into()
     };
     column![
@@ -115,14 +118,18 @@ pub fn show(sale: &Receipt, width: f32) -> Element<'_, Message, Theme> {
                 .style(button::Outline)
                 .on_press(Message::Edit)
         ]
-        .spacing(8),
-        card(column![
-            card::header(sale.name.as_str())
-                .description(format!("Receipt #{:04}", sale.id))
-                .action(badge("Saved").style(badge::Secondary)),
-            card::content(items),
-            card::footer(totals(sale.totals)),
-        ])
+        .spacing(8)
+        .width(Fill),
+        card(
+            column![
+                card::header(sale.name.as_str())
+                    .description(format!("Receipt #{:04}", sale.id))
+                    .action(badge("Saved").style(badge::Secondary)),
+                card::content(items),
+                card::footer(totals(sale.totals)),
+            ]
+            .width(Fill)
+        )
         .width(Fill),
     ]
     .spacing(24)
@@ -147,7 +154,8 @@ pub fn edit<'a>(
                 .on_submit(Message::NextField)
                 .width(Fill),
         )
-        .label("Item");
+        .label("Item")
+        .width(Fill);
         let quantity = field(
             input("1")
                 .value(&item.quantity)
@@ -155,7 +163,8 @@ pub fn edit<'a>(
                 .on_submit(Message::NextField)
                 .width(Fill),
         )
-        .label("Quantity");
+        .label("Quantity")
+        .width(Fill);
         let price = field(
             input("0.00")
                 .value(&item.price)
@@ -163,16 +172,18 @@ pub fn edit<'a>(
                 .on_submit(Message::NextField)
                 .width(Fill),
         )
-        .label("Unit price ($)");
+        .label("Unit price ($)")
+        .width(Fill);
         let tax = field(
             select(Tax::ALL.map(|tax| select::item(tax.key(), tax.label())))
                 .value(item.tax.key())
                 .on_value_change(move |value| Message::Tax(id, value))
                 .width(Fill),
         )
-        .label("Tax group");
+        .label("Tax group")
+        .width(Fill);
         let fields: Slot<'_, Message> = if narrow {
-            column![name, row![quantity, price].spacing(12), tax]
+            column![name, row![quantity, price].spacing(12).width(Fill), tax]
                 .spacing(12)
                 .width(Fill)
                 .into()
@@ -183,23 +194,27 @@ pub fn edit<'a>(
                 .into()
         };
         items = items.push(
-            card(column![
-                card::content(fields),
-                card::footer(
-                    row![
-                        text::muted(format!(
-                            "Line total: {}",
-                            currency(item.amount().unwrap_or(0))
-                        )),
-                        space::horizontal(),
-                        button("Remove item")
-                            .style(button::Ghost)
-                            .on_press(Message::RemoveItem(id)),
-                    ]
-                    .align_y(Center)
-                    .spacing(8)
-                ),
-            ])
+            card(
+                column![
+                    card::content(fields),
+                    card::footer(
+                        row![
+                            text::muted(format!(
+                                "Line total: {}",
+                                currency(item.amount().unwrap_or(0))
+                            )),
+                            space::horizontal(),
+                            button("Remove item")
+                                .style(button::Ghost)
+                                .on_press(Message::RemoveItem(id)),
+                        ]
+                        .align_y(Center)
+                        .spacing(8)
+                        .width(Fill)
+                    ),
+                ]
+                .width(Fill),
+            )
             .width(Fill)
             .into(),
         );
@@ -211,7 +226,8 @@ pub fn edit<'a>(
             .on_submit(Message::NextField)
             .width(Fill),
     )
-    .label("Service charge (%)");
+    .label("Service charge (%)")
+    .width(Fill);
     let gratuity = field(
         input("0.00")
             .value(&sale.gratuity)
@@ -219,7 +235,8 @@ pub fn edit<'a>(
             .on_submit(Message::Save)
             .width(Fill),
     )
-    .label("Gratuity ($)");
+    .label("Gratuity ($)")
+    .width(Fill);
     let mut content = column![
         text::h2(if editing { "Edit receipt" } else { "New sale" }),
         field(
@@ -229,17 +246,22 @@ pub fn edit<'a>(
                 .on_submit(Message::NextField)
                 .width(Fill)
         )
-        .label("Sale name"),
+        .label("Sale name")
+        .width(Fill),
         items,
         button("+ Add item")
             .style(button::Outline)
             .on_press(Message::AddItem),
-        card(column![
-            card::header("Summary")
-                .description("Tax applies to each item. Service charge applies to the subtotal."),
-            card::content(row![service, gratuity].spacing(16).width(Fill)),
-            card::footer(totals(sale.totals)),
-        ])
+        card(
+            column![
+                card::header("Summary").description(
+                    "Tax applies to each item. Service charge applies to the subtotal."
+                ),
+                card::content(row![service, gratuity].spacing(16).width(Fill)),
+                card::footer(totals(sale.totals)),
+            ]
+            .width(Fill)
+        )
         .width(Fill),
     ]
     .spacing(24)
@@ -257,6 +279,7 @@ pub fn edit<'a>(
                 button("Save receipt").on_press(Message::Save),
             ]
             .spacing(8)
+            .width(Fill)
             .into(),
         )
         .into()
@@ -277,6 +300,7 @@ fn totals(totals: Totals) -> Slot<'static, Message> {
                 text::small(currency(amount))
             ]
             .spacing(16)
+            .width(Fill)
             .into(),
         );
     }
@@ -288,7 +312,64 @@ fn totals(totals: Totals) -> Slot<'static, Message> {
                 text::large(currency(totals.total))
             ]
             .spacing(16)
+            .width(Fill)
             .into(),
         )
         .into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use iced_test::core::Settings;
+    use iced_test::selector::Candidate;
+    use iced_test::simulator::Simulator;
+
+    #[test]
+    fn receipt_fields_actions_and_footer_use_the_available_width() {
+        let sale = Receipt::samples().remove(0);
+        for width in [343., 1100.] {
+            let mut ui = Simulator::with_size(
+                Settings::default(),
+                iced::Size::new(width, 2400.),
+                edit(&sale, true, None, width),
+            );
+            let price = ui.find("18.00").unwrap().bounds();
+            let service = ui.find("0").unwrap().bounds();
+            assert!(
+                price.width >= if width < 700. { 140. } else { 250. },
+                "price field {price:?}"
+            );
+            assert!(service.width > width * 0.4, "service field {service:?}");
+            let remove = ui.find("Remove item").unwrap().bounds();
+            assert!(remove.x > width * 0.6, "remove action {remove:?}");
+            let mut footer = false;
+            let _ = ui.find(|candidate: Candidate<'_>| {
+                if let Candidate::Container { bounds, .. } = candidate {
+                    footer |= bounds.contains(remove.center())
+                        && bounds.height < 100.
+                        && (bounds.width - width).abs() < 1.;
+                }
+                None::<()>
+            });
+            assert!(footer, "item footer spans the card at {width}px");
+            let total = ui.find("$53.60").unwrap().bounds();
+            assert!(
+                (total.x + total.width - (width - 16.)).abs() < 1.,
+                "total aligned right: {total:?}"
+            );
+
+            let mut list = Simulator::with_size(
+                Settings::default(),
+                iced::Size::new(width, 1200.),
+                list(std::slice::from_ref(&sale), ""),
+            );
+            let name = list.find("Friday lunch").unwrap().bounds();
+            let amount = list.find("$53.60").unwrap().bounds();
+            let create = list.find("New sale").unwrap().bounds();
+            assert!(name.x < 30., "sale name at left: {name:?}");
+            assert!(amount.x > width * 0.6, "sale amount at right: {amount:?}");
+            assert!(create.x > width * 0.6, "new sale at right: {create:?}");
+        }
+    }
 }
