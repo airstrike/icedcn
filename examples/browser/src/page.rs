@@ -22,9 +22,9 @@ use iced::mouse::Interaction;
 use iced::widget::{Id, column, lazy, scrollable, stack, themer};
 use iced::{Background, Fill, Font, Pixels, Subscription, Task};
 
+use icedcn::FontFamily;
 use icedcn::Size::{Lg, Sm};
 use icedcn::core::{Border, Radius};
-use icedcn::FontFamily;
 use icedcn::theme::container::{
     Style, code_block, code_block_panel, code_fade_overlay, transparent,
 };
