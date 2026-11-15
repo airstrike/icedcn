@@ -2,6 +2,8 @@
 //! and customize their appearance with the shared theme and design tokens.
 
 pub mod card;
+#[cfg(feature = "fount")]
+pub mod fount;
 pub mod separator;
 
 // Re-export `card::card` as `icedcn::card` so `use icedcn::card;` brings

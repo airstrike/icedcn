@@ -493,7 +493,6 @@ name = "browser"
 version = "0.1.0"
 dependencies = [
  "browser-routing",
- "fount",
  "iced",
  "iced_lucide",
  "iced_test",
@@ -1209,14 +1208,14 @@ dependencies = [
 
 [[package]]
 name = "fount"
-version = "0.1.0"
-source = "git+https://github.com/airstrike/fount#53efb999f55cbcbb7f4909a3cfdc854ce0c2dda9"
+version = "0.2.0"
 dependencies = [
  "dirs",
  "iced_core",
  "reqwest",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror 2.0.18",
  "tokio",
  "toml 0.8.23",
@@ -1922,6 +1921,7 @@ dependencies = [
 name = "icedcn"
 version = "0.1.0"
 dependencies = [
+ "fount",
  "iced",
  "iced_core",
  "iced_widget",

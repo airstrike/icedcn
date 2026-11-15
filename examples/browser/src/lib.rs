@@ -94,11 +94,9 @@ impl Browser {
         if let Message::Font(font_msg) = &msg {
             let bump = match font_msg {
                 fonts::Message::SystemFontsLoaded(_) => 25.0,
-                #[cfg(not(target_arch = "wasm32"))]
                 fonts::Message::CatalogLoaded(Ok(_)) => 50.0,
                 // CatalogLoaded(Err): offline; no `Loaded` will follow, so
                 // jump to 100 to drive the splash through to dismissal.
-                #[cfg(not(target_arch = "wasm32"))]
                 fonts::Message::CatalogLoaded(Err(_)) => 100.0,
                 // Any `Loaded` (success or per-font failure) means the font
                 // pipeline is done — drive to 100.

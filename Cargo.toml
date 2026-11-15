@@ -12,6 +12,7 @@ keywords.workspace = true
 
 [features]
 default = []
+fount = ["dep:fount", "iced/tokio"]
 chart = ["icedcn_core/chart", "icedcn_widget/chart"]
 highlighter = ["icedcn_widget/highlighter"]
 markdown = ["icedcn_core/markdown", "icedcn_widget/markdown"]
@@ -20,6 +21,7 @@ svg = ["icedcn_core/svg", "icedcn_widget/svg"]
 sweeten = ["icedcn_widget/sweeten"]
 
 [dependencies]
+fount = { path = "vendor/fount", optional = true }
 icedcn_core.workspace = true
 icedcn_widget.workspace = true
 iced.workspace = true
@@ -30,6 +32,7 @@ iced_widget.workspace = true
 members = [
   "core",
   "widget",
+  "vendor/fount",
   "examples/browser",
   "examples/browser/routing",
   "examples/highlight",

@@ -1,9 +1,2 @@
-#[cfg(not(target_arch = "wasm32"))]
-mod native;
-#[cfg(target_arch = "wasm32")]
-mod web;
-
-#[cfg(not(target_arch = "wasm32"))]
-pub use native::*;
-#[cfg(target_arch = "wasm32")]
-pub use web::*;
+//! Shared icedcn font discovery, Google Fonts downloads, and registration.
+pub use icedcn::fount::{Fount, Message, init, load};

@@ -530,10 +530,7 @@ impl App {
                 if self.fount.system_families().contains(&name) {
                     self.apply_font(name)
                 } else {
-                    #[cfg(not(target_arch = "wasm32"))]
                     let task = fonts::load(name, self.fount.google_catalog());
-                    #[cfg(target_arch = "wasm32")]
-                    let task = fonts::load(name);
                     task.map(Message::Font)
                 }
             }
@@ -601,14 +598,12 @@ impl App {
                     self.rebuild_font_list();
                     Task::none()
                 }
-                #[cfg(not(target_arch = "wasm32"))]
                 fonts::Message::CatalogLoaded(Ok(catalog)) => {
                     self.fount.set_google_catalog(catalog);
                     self.rebuild_font_list();
                     fonts::load(self.current_font.clone(), self.fount.google_catalog())
                         .map(Message::Font)
                 }
-                #[cfg(not(target_arch = "wasm32"))]
                 fonts::Message::CatalogLoaded(Err(_)) => Task::none(),
                 fonts::Message::Loaded(name, Err(e)) => {
                     eprintln!("Font loading failed ({name}): {e}");

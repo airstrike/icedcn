@@ -93,6 +93,39 @@ Choose a variant with `.style(button::Outline)` or
 Controls such as inputs and checkboxes can keep their own state; supply a value
 and a change handler when your application needs to own it.
 
+## Google Fonts
+
+Enable the optional `fount` feature to discover and load Google Fonts from any
+icedcn application:
+
+```toml
+icedcn = { git = "https://github.com/airstrike/icedcn", branch = "master", features = ["fount"] }
+```
+
+`icedcn::fount::init()` returns an iced `Task` with catalog and system-font
+messages. Store the returned catalog with `Fount::set_google_catalog` and the
+system names with `Fount::set_system_families`. `Fount::families()` returns the
+complete combined list; `Fount::search("sans")` searches it without a result cap.
+
+```rust
+use iced::Task;
+use icedcn::fount;
+
+fn choose_font(fonts: &fount::Fount, name: impl Into<String>) -> Task<fount::Message> {
+    fount::load(name, fonts.google_catalog())
+}
+```
+
+`Message::Loaded(name, Ok(()))` arrives after every face has been registered.
+Apply the selected family through iced's font defaults or icedcn's design font
+family. On failure, the existing font remains available.
+
+Native apps use Google's catalog with a disk cache and an offline fallback.
+Web apps use the complete bundled snapshot and CORS-safe TrueType downloads;
+they do not require an API key or proxy. The snapshot currently contains 1,961
+families, refreshed on 2026-11-15. Its provenance and refresh command are in
+[vendor/fount/README.md](vendor/fount/README.md).
+
 ## Examples and development
 
 The [component pages](examples/browser/src/component) pair previews with
