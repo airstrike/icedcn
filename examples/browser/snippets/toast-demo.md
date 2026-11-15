@@ -1,14 +1,15 @@
 ```rust
-use icedcn::widget::{button, toast, toaster};
+use icedcn::{Slot, widget::{button, toast}};
 
-// Once, around the app's view:
-toaster(view)
+#[derive(Clone)]
+enum Message { Undo }
 
-// Anywhere inside it:
-toast::trigger(
-    button("Show Toast").style(button::Outline),
-    toast::toast("Event has been created")
-        .description("Sunday, December 03, 2023 at 9:00 AM")
-        .action("Undo", Message::Undo),
-)
+fn show_toast() -> Slot<'static, Message> {
+    toast::trigger(
+        button("Show Toast").style(button::Outline),
+        toast::toast("Event has been created")
+            .description("Sunday, December 03, 2023 at 9:00 AM")
+            .action("Undo", Message::Undo),
+    )
+}
 ```

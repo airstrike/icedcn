@@ -39,7 +39,9 @@ use icedcn_core::Theme;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::core::Rectangle;
 use crate::core::widget::{Id, Operation};
+use crate::icon::Icon;
 use crate::marker::{self, Press};
+#[cfg(not(feature = "spinner"))]
 use crate::text::Text;
 
 /// Kind of notification, which determines the icon.
@@ -238,26 +240,19 @@ impl<T, Message: Send + 'static> Operation<T> for Show<Message> {
     }
 }
 
-/// The default icon glyph for a toast `kind`: the widget crate carries no
-/// icon font, so [`Toaster::icon`] swaps in lucide's.
-fn glyph(kind: Kind) -> Option<&'static str> {
-    match kind {
-        Kind::Default => None,
-        Kind::Loading => Some("…"),
-        Kind::Success => Some("\u{2713}"),
-        Kind::Info => Some("\u{2139}"),
-        Kind::Warning => Some("\u{26A0}"),
-        Kind::Error => Some("\u{2715}"),
-    }
-}
-
-/// The default icon for a toast `kind`, if it has one.
 fn default_icon<'a, Message: 'a>(kind: Kind) -> Option<Slot<'a, Message>> {
-    #[cfg(feature = "spinner")]
-    if kind == Kind::Loading {
-        return Some(crate::spinner().size(16.).into());
-    }
-    glyph(kind).map(|glyph| Slot::from(Text::new(glyph).size(14)))
+    let icon = match kind {
+        Kind::Default => return None,
+        Kind::Success => Icon::CircleCheck,
+        Kind::Info => Icon::Info,
+        Kind::Warning => Icon::TriangleAlert,
+        Kind::Error => Icon::OctagonX,
+        #[cfg(feature = "spinner")]
+        Kind::Loading => return Some(crate::spinner().size(16.).into()),
+        #[cfg(not(feature = "spinner"))]
+        Kind::Loading => return Some(Text::new("…").size(16).into()),
+    };
+    Some(icon.boxed().into())
 }
 
 /// Builds the icon for a toast of the given [`Kind`].

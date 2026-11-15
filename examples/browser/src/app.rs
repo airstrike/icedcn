@@ -7,7 +7,6 @@ use iced::mouse::Interaction;
 use iced::widget::{column, combo_box, operation, row, space, stack};
 use iced::{clipboard, window};
 use icedcn::widget::scrollable;
-use icedcn::widget::spinner;
 use std::time::Duration;
 
 use iced::{Center, Fill, Font, Pixels, Subscription, Task};
@@ -596,18 +595,7 @@ impl App {
         let layout = column![header, body].width(Fill).height(Fill);
 
         toaster(layout.boxed())
-            .icons(|kind| {
-                let icon = match kind {
-                    toast::Kind::Default => return None,
-                    toast::Kind::Loading => return Some(spinner().size(16.).into()),
-                    toast::Kind::Success => icon::circle_check(),
-                    toast::Kind::Info => icon::info(),
-                    toast::Kind::Warning => icon::triangle_alert(),
-                    toast::Kind::Error => icon::octagon_x(),
-                };
-
-                Some(icon.size(16).into())
-            })
+            .position(toast::Position::TopCenter)
             .into()
     }
 }

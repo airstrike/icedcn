@@ -8,14 +8,14 @@
 | --- | --- | --- | --- |
 | `.position(position)` | `toast::Position` | `BottomRight` | Where toasts stack. |
 | `.duration(duration)` | `Duration` | 4s | How long each toast shows. |
-| `.icons(f)` | `Fn(toast::Kind) -> Option<Slot>` | Unicode glyphs | The icons of the toast kinds, typically lucide's `circle-check`, `info`, `triangle-alert` and `octagon-x`. |
+| `.icons(f)` | `Fn(toast::Kind) -> Option<Slot>` | 16px status icons | Override the status icons. Return `None` for a kind to leave it unadorned. |
 
 ### `toast::toast(title)`
 
 | Builder | Type | Description |
 | --- | --- | --- |
-| `.description(text)` | `impl Into<String>` | A muted line below the title. |
-| `.kind(kind)` | `toast::Kind` | `Default`, `Loading`, `Success`, `Info`, `Warning` or `Error`. The kind determines the icon. |
+| `.description(text)` | `impl Into<String>` | Supporting text below the title. |
+| `.kind(kind)` | `toast::Kind` | `Default`, `Loading`, `Success`, `Info`, `Warning` or `Error`. Enable the `spinner` feature to animate the loading indicator. |
 | `.action(label, message)` | `impl Into<String>`, `Message` | An action button: publishes `message` and dismisses the toast. |
 | `.position(position)` | `toast::Position` | Stack this toast elsewhere than the toaster's position. |
 | `.duration(duration)` | `Duration` | Show this toast for longer or shorter. |

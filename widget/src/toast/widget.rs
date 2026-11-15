@@ -21,23 +21,35 @@ use crate::core::overlay;
 use crate::core::renderer;
 use crate::core::widget::tree::{self, Tree};
 use crate::core::widget::{Meta, Operation};
-use crate::core::window;
 use crate::core::{
     Alignment, Element, Event, Layout, Length, Point, Rectangle, Shell, Size, Vector, Widget,
 };
+use crate::core::{keyboard, touch, window};
 use crate::marker::{self, Press};
 use crate::row::Row;
 use crate::size;
-use crate::text::{self, Text};
+use crate::text::Text;
+use iced_widget::text;
 
 /// Toast width in logical pixels.
 const WIDTH: f32 = 356.0;
 /// Distance between the stack and the window edges.
 const OFFSET: f32 = 24.0;
+const MOBILE_OFFSET: f32 = 16.;
 /// Vertical gap between expanded toasts.
 const GAP: f32 = 14.0;
 /// Maximum number of visible toasts.
 const VISIBLE: usize = 3;
+
+// These are the only events that can activate a toast trigger or its action.
+fn can_activate(event: &Event) -> bool {
+    matches!(
+        event,
+        Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
+            | Event::Touch(touch::Event::FingerLifted { .. })
+            | Event::Keyboard(keyboard::Event::KeyPressed { .. })
+    )
+}
 
 /// The signal a toast's action records: the toast to dismiss.
 #[derive(Debug, Clone, Copy)]
@@ -55,6 +67,7 @@ pub struct Toaster<'a, Message> {
 
 /// A live toast's card.
 struct Card<'a, Message> {
+    id: u64,
     position: Position,
     element: Element<'a, Message, Theme, Renderer>,
 }
@@ -81,10 +94,20 @@ impl<'a, Message: Clone + 'a> Toaster<'a, Message> {
     /// `flex items-center gap-1.5 p-4` around the icon, the title over the
     /// description, and the action.
     fn card(&self, id: u64, toast: &Toast<Message>) -> Element<'a, Message, Theme, Renderer> {
-        let mut copy = vec![Slot::from(Text::new(toast.title.clone()).size(13).medium())];
+        let mut copy = vec![Slot::from(
+            Text::new(toast.title.clone())
+                .size(13)
+                .line_height(1.5)
+                .medium(),
+        )];
 
         if let Some(description) = &toast.description {
-            copy.push(Slot::from(text::muted(description.clone()).size(13)));
+            copy.push(Slot::from(
+                Text::new(description.clone())
+                    .size(13)
+                    .line_height(1.4)
+                    .style(Box::new(toast::description) as text::StyleFn<'a, Theme>),
+            ));
         }
 
         let mut row: Vec<Slot<'a, Message>> = Vec::new();
@@ -118,8 +141,8 @@ impl<'a, Message: Clone + 'a> Toaster<'a, Message> {
                 .align_y(Alignment::Center)
                 .width(Fill),
         )
-        .width(WIDTH)
-        .padding(16)
+        .width(Fill)
+        .padding(17)
         .style(toast::card)
         .into()
     }
@@ -139,6 +162,8 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
             live: Vec::new(),
             inbox: Inbox(Vec::new()),
             next_id: 0,
+            hover: None,
+            swipe: None,
         })
     }
 
@@ -149,6 +174,7 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
             .live
             .iter()
             .map(|live| Card {
+                id: live.id,
                 position: live.toast.position.unwrap_or(self.position),
                 element: self.card(live.id, &live.toast),
             })
@@ -204,16 +230,13 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
             viewport,
         );
 
-        let mut raised = marker::drain::<Raise<Message>>();
-        self.content
-            .operate(child_tree, child_layout, viewport, renderer, &mut raised);
-
-        let mut toasts: Vec<Toast<Message>> = raised
-            .into_signals()
-            .into_iter()
-            .map(|Raise(toast)| toast)
-            .collect();
-        toasts.append(&mut state.inbox.0);
+        let mut toasts = std::mem::take(&mut state.inbox.0);
+        if can_activate(event) {
+            let mut raised = marker::drain::<Raise<Message>>();
+            self.content
+                .operate(child_tree, child_layout, viewport, renderer, &mut raised);
+            toasts.extend(raised.into_signals().into_iter().map(|Raise(toast)| toast));
+        }
 
         if !toasts.is_empty() {
             for toast in toasts {
@@ -227,14 +250,16 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
         if let Event::Window(window::Event::RedrawRequested(now)) = event {
             let before = state.live.len();
             let duration = self.duration;
+            let hover = state.hover.map(|(pos, _)| pos);
 
             for live in &mut state.live {
                 live.shown_at.get_or_insert(*now);
             }
 
-            state
-                .live
-                .retain(|live| live.expires_at(duration).is_none_or(|end| *now < end));
+            state.live.retain(|live| {
+                Some(live.toast.position.unwrap_or(self.position)) == hover
+                    || live.expires_at(duration).is_none_or(|end| *now < end)
+            });
 
             if state.live.len() != before {
                 shell.invalidate_widgets();
@@ -243,6 +268,7 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
             if let Some(next) = state
                 .live
                 .iter()
+                .filter(|live| Some(live.toast.position.unwrap_or(self.position)) != hover)
                 .filter_map(|live| live.expires_at(duration))
                 .min()
             {
@@ -350,23 +376,27 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
         }
 
         let state = state.downcast_mut::<State<Message>>();
-        let width = WIDTH.min(window.width - OFFSET * 2.0).max(0.0);
-        let limits = layout::Limits::new(Size::ZERO, Size::new(width, window.height));
+        let (edge, width) = if window.width <= 600. {
+            (MOBILE_OFFSET, (window.width - 2. * MOBILE_OFFSET).max(0.))
+        } else {
+            (OFFSET, WIDTH)
+        };
+        let limits = layout::Limits::new(Size::new(width, 0.), Size::new(width, window.height));
 
         // Per position, the newest toasts sit nearest their edge; older
         // ones past the visible count wait off screen.
-        let mut stacks: Vec<(Position, f32, usize)> = Vec::new();
+        let mut stacks: Vec<(Position, f32, usize, f32)> = Vec::new();
         let mut entries = Vec::new();
 
         for (card, tree) in self.cards.iter_mut().zip(card_trees.iter_mut()).rev() {
             let index = match stacks.iter().position(|(at, ..)| *at == card.position) {
                 Some(index) => index,
                 None => {
-                    stacks.push((card.position, 0.0, 0));
+                    stacks.push((card.position, 0.0, 0, 0.));
                     stacks.len() - 1
                 }
             };
-            let (_, offset, count) = &mut stacks[index];
+            let (_, offset, count, front_height) = &mut stacks[index];
 
             if *count == VISIBLE {
                 continue;
@@ -375,25 +405,50 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
             card.element.layout(tree, renderer, &limits);
             let size = tree.size;
 
+            if *count == 0 {
+                *front_height = size.height;
+            }
+            let behind = *count > 0 && !state.hover.is_some_and(|(pos, _)| pos == card.position);
+            let scale = if behind {
+                1. - 0.05 * *count as f32
+            } else {
+                1.
+            };
+            let display = if behind {
+                Size::new(width * scale, *front_height * scale)
+            } else {
+                size
+            };
             let x = match card.position {
-                Position::TopLeft | Position::BottomLeft => OFFSET,
-                Position::TopCenter | Position::BottomCenter => (window.width - size.width) / 2.0,
-                Position::TopRight | Position::BottomRight => window.width - OFFSET - size.width,
+                Position::TopLeft | Position::BottomLeft => edge,
+                Position::TopCenter | Position::BottomCenter => (window.width - width) / 2.,
+                Position::TopRight | Position::BottomRight => window.width - edge - width,
+            } + (width - display.width) / 2.;
+            let inset = if behind {
+                GAP * *count as f32 + (*front_height - display.height) / 2.
+            } else {
+                *offset
             };
             let y = match card.position {
-                Position::TopLeft | Position::TopCenter | Position::TopRight => OFFSET + *offset,
+                Position::TopLeft | Position::TopCenter | Position::TopRight => edge + inset,
                 Position::BottomLeft | Position::BottomCenter | Position::BottomRight => {
-                    window.height - OFFSET - *offset - size.height
+                    window.height - edge - inset - display.height
                 }
             };
-
             *offset += size.height + GAP;
             *count += 1;
-
+            let shift = state
+                .swipe
+                .as_ref()
+                .filter(|s| s.id == card.id)
+                .map_or(Vector::ZERO, |s| s.offset);
             entries.push(Entry {
+                id: card.id,
+                position: card.position,
+                behind,
                 element: &mut card.element,
                 tree,
-                layout: Layout::new(size).move_to(Point::new(x, y)),
+                layout: Layout::new(display).move_to(Point::new(x, y) + shift),
             });
         }
 
@@ -401,6 +456,7 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
             entries,
             state,
             window,
+            default_position: self.position,
         })));
 
         overlays
@@ -412,6 +468,78 @@ struct State<Message> {
     live: Vec<Live<Message>>,
     inbox: Inbox<Message>,
     next_id: u64,
+    hover: Option<(Position, Instant)>,
+    swipe: Option<Swipe>,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Contact {
+    Press,
+    Move,
+    Release,
+    Lost,
+}
+
+impl Contact {
+    fn from_event(
+        event: &Event,
+        cursor: mouse::Cursor,
+    ) -> Option<(Option<touch::Finger>, Point, Self)> {
+        match event {
+            Event::Touch(touch::Event::FingerPressed { id, position }) => {
+                Some((Some(*id), *position, Contact::Press))
+            }
+            Event::Touch(touch::Event::FingerMoved { id, position }) => {
+                Some((Some(*id), *position, Contact::Move))
+            }
+            Event::Touch(touch::Event::FingerLifted { id, position }) => {
+                Some((Some(*id), *position, Contact::Release))
+            }
+            Event::Touch(touch::Event::FingerLost { id, position }) => {
+                Some((Some(*id), *position, Contact::Lost))
+            }
+            Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
+                cursor.position().map(|p| (None, p, Contact::Press))
+            }
+            Event::Mouse(mouse::Event::CursorMoved { position }) => {
+                Some((None, *position, Contact::Move))
+            }
+            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
+                cursor.position().map(|p| (None, p, Contact::Release))
+            }
+            _ => None,
+        }
+    }
+}
+
+/// The pointer which pressed a notification owns that drag until release.
+struct Swipe {
+    id: u64,
+    finger: Option<touch::Finger>,
+    position: Position,
+    start: Point,
+    offset: Vector,
+}
+
+impl Swipe {
+    fn offset(&self, point: Point) -> Vector {
+        use Position::*;
+        let delta = point - self.start;
+        let y = match self.position {
+            TopLeft | TopCenter | TopRight => delta.y.min(0.),
+            _ => delta.y.max(0.),
+        };
+        let x = match self.position {
+            TopLeft | BottomLeft => delta.x.min(0.),
+            TopRight | BottomRight => delta.x.max(0.),
+            _ => 0.,
+        };
+        if x.abs() > y.abs() {
+            Vector::new(x, 0.)
+        } else {
+            Vector::new(0., y)
+        }
+    }
 }
 
 /// A toast on screen, timed from its first frame.
@@ -422,6 +550,22 @@ struct Live<Message> {
 }
 
 impl<Message> State<Message> {
+    fn hover(&mut self, position: Option<Position>, now: Instant, default: Position) -> bool {
+        if self.hover.map(|(p, _)| p) == position {
+            return false;
+        }
+        if let Some((previous, paused)) = self.hover.take() {
+            for live in &mut self.live {
+                if live.toast.position.unwrap_or(default) == previous
+                    && let Some(started) = &mut live.shown_at
+                {
+                    *started += now.saturating_duration_since(paused.max(*started));
+                }
+            }
+        }
+        self.hover = position.map(|p| (p, now));
+        true
+    }
     fn raise(&mut self, toast: Toast<Message>) {
         if let Some(key) = &toast.key
             && let Some(live) = self
@@ -454,6 +598,9 @@ impl<Message> Live<Message> {
 
 /// A laid-out card in the overlay.
 struct Entry<'a, 'b, Message> {
+    id: u64,
+    position: Position,
+    behind: bool,
     element: &'b mut Element<'a, Message, Theme, Renderer>,
     tree: &'b mut Tree,
     layout: Layout,
@@ -464,6 +611,7 @@ struct Stack<'a, 'b, Message> {
     entries: Vec<Entry<'a, 'b, Message>>,
     state: &'b mut State<Message>,
     window: Size,
+    default_position: Position,
 }
 
 impl<Message: Clone + Send + 'static> overlay::Overlay<Message, Theme, Renderer>
@@ -478,7 +626,20 @@ impl<Message: Clone + Send + 'static> overlay::Overlay<Message, Theme, Renderer>
     ) {
         let viewport = Rectangle::with_size(self.window);
 
-        for entry in &self.entries {
+        for entry in self.entries.iter().rev() {
+            if entry.behind {
+                let frame = toast::card(theme);
+                renderer.fill_quad(
+                    renderer::Quad {
+                        bounds: entry.layout.bounds(),
+                        border: frame.border.into(),
+                        shadow: frame.shadow.into(),
+                        ..Default::default()
+                    },
+                    iced_core::Color::from(theme.popover.base),
+                );
+                continue;
+            }
             renderer.with_layer(viewport, |renderer| {
                 entry.element.draw(
                     entry.tree,
@@ -496,7 +657,7 @@ impl<Message: Clone + Send + 'static> overlay::Overlay<Message, Theme, Renderer>
     fn operate(&mut self, renderer: &Renderer, operation: &mut dyn Operation) {
         let viewport = Rectangle::with_size(self.window);
 
-        for entry in &mut self.entries {
+        for entry in self.entries.iter_mut().filter(|entry| !entry.behind) {
             entry
                 .element
                 .operate(entry.tree, entry.layout, &viewport, renderer, operation);
@@ -512,8 +673,32 @@ impl<Message: Clone + Send + 'static> overlay::Overlay<Message, Theme, Renderer>
     ) {
         let viewport = Rectangle::with_size(self.window);
         let mut dismissed = Vec::new();
+        let pointed = self
+            .entries
+            .iter()
+            .find(|entry| cursor.is_over(entry.layout.bounds()))
+            .map(|entry| entry.position);
+        // Keep a stack expanded over the gaps between its cards.
+        let hovered = pointed.or_else(|| {
+            let (pos, _) = self.state.hover?;
+            let bounds = self
+                .entries
+                .iter()
+                .filter(|e| e.position == pos)
+                .map(|e| e.layout.bounds())
+                .reduce(|a, b| a.union(&b))?;
+            cursor.is_over(bounds).then_some(pos)
+        });
+        let now = match event {
+            Event::Window(window::Event::RedrawRequested(at)) => *at,
+            _ => Instant::now(),
+        };
+        if self.state.hover(hovered, now, self.default_position) {
+            shell.invalidate_overlay();
+            shell.request_redraw();
+        }
 
-        for entry in &mut self.entries {
+        for entry in self.entries.iter_mut().filter(|entry| !entry.behind) {
             entry.element.update(
                 entry.tree,
                 event,
@@ -524,15 +709,55 @@ impl<Message: Clone + Send + 'static> overlay::Overlay<Message, Theme, Renderer>
                 &viewport,
             );
 
-            let mut drain = marker::drain::<Dismiss>();
-            entry
-                .element
-                .operate(entry.tree, entry.layout, &viewport, renderer, &mut drain);
-            dismissed.extend(drain.into_signals().into_iter().map(|Dismiss(id)| id));
+            if can_activate(event) {
+                let mut drain = marker::drain::<Dismiss>();
+                entry
+                    .element
+                    .operate(entry.tree, entry.layout, &viewport, renderer, &mut drain);
+                dismissed.extend(drain.into_signals().into_iter().map(|Dismiss(id)| id));
+            }
+        }
+
+        if let Some((finger, point, contact)) = Contact::from_event(event, cursor) {
+            if contact == Contact::Press && self.state.swipe.is_none() && !shell.is_event_captured()
+            {
+                if let Some(card) = self
+                    .entries
+                    .iter()
+                    .find(|e| !e.behind && e.layout.bounds().contains(point))
+                {
+                    self.state.swipe = Some(Swipe {
+                        id: card.id,
+                        finger,
+                        position: card.position,
+                        start: point,
+                        offset: Vector::ZERO,
+                    });
+                    shell.capture_event();
+                }
+            } else if let Some(swipe) = &mut self.state.swipe
+                && swipe.finger == finger
+            {
+                swipe.offset = swipe.offset(point);
+                if matches!(contact, Contact::Lost | Contact::Release) {
+                    if contact == Contact::Release
+                        && swipe.offset.x.abs().max(swipe.offset.y.abs()) > 45.
+                    {
+                        dismissed.push(swipe.id);
+                    }
+                    self.state.swipe = None;
+                }
+                shell.capture_event();
+                shell.invalidate_overlay();
+                shell.request_redraw();
+            }
         }
 
         if !dismissed.is_empty() {
             self.state.live.retain(|live| !dismissed.contains(&live.id));
+            if self.state.live.is_empty() {
+                self.state.hover = None;
+            }
             shell.invalidate_widgets();
         }
     }
@@ -542,6 +767,7 @@ impl<Message: Clone + Send + 'static> overlay::Overlay<Message, Theme, Renderer>
 
         self.entries
             .iter()
+            .filter(|entry| !entry.behind)
             .map(|entry| {
                 entry.element.mouse_interaction(
                     entry.tree,
@@ -558,10 +784,46 @@ impl<Message: Clone + Send + 'static> overlay::Overlay<Message, Theme, Renderer>
 
 #[cfg(test)]
 mod tests {
-    use super::{Inbox, Instant, Kind, State};
+    use super::{Inbox, Instant, Kind, Position, State};
     use crate::core::widget::Id;
     use crate::toast::toast;
     use std::time::Duration;
+
+    #[test]
+    fn only_the_hovered_stack_resumes_with_its_remaining_time() {
+        let mut state: State<()> = State {
+            live: Vec::new(),
+            inbox: Inbox(Vec::new()),
+            next_id: 0,
+            hover: None,
+            swipe: None,
+        };
+        let now = Instant::now();
+        let second = Duration::from_secs(1);
+        let default = Position::TopCenter;
+        state.raise(toast("Hovered"));
+        state.raise(toast("Elsewhere").position(Position::BottomLeft));
+        for live in &mut state.live {
+            live.shown_at = Some(now);
+        }
+        state.hover(Some(default), now + second, default);
+        state.raise(toast("New while hovering"));
+        state.live[2].shown_at = Some(now + second * 3);
+        state.hover(None, now + second * 8, default);
+        let deadlines: Vec<_> = state
+            .live
+            .iter()
+            .map(|live| live.expires_at(second * 4))
+            .collect();
+        assert_eq!(
+            deadlines,
+            [
+                Some(now + second * 11),
+                Some(now + second * 4),
+                Some(now + second * 12)
+            ]
+        );
+    }
 
     #[test]
     fn resolving_a_promise_replaces_only_its_own_loading_card() {
@@ -569,6 +831,8 @@ mod tests {
             live: Vec::new(),
             inbox: Inbox(Vec::new()),
             next_id: 0,
+            hover: None,
+            swipe: None,
         };
         let first = Id::unique();
         let second = Id::unique();

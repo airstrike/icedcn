@@ -1,6 +1,6 @@
 use iced::Task;
 
-use icedcn::widget::{button, column, row, toast};
+use icedcn::widget::{button, row, toast};
 use icedcn::{Slot, Theme};
 
 use crate::Message;
@@ -19,28 +19,25 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/toast-demo.md",
     },
     page::Block::Md("examples/browser/snippets/toast-guide-about.md"),
-    page::Block::Group {
-        title: "Examples",
-        children: &[
-            page::Block::Example {
-                id: "types",
-                title: "Types",
-                description: Some("Use `.kind(..)` to pick the toast's icon."),
-                snippet: "examples/browser/snippets/toast-types.md",
-            },
-            page::Block::Example {
-                id: "description",
-                title: "Description",
-                description: Some("Use `.description(..)` to add a description to the toast."),
-                snippet: "examples/browser/snippets/toast-description.md",
-            },
-            page::Block::Example {
-                id: "position",
-                title: "Position",
-                description: Some("Use `.position(..)` to change where the toast appears."),
-                snippet: "examples/browser/snippets/toast-position.md",
-            },
-        ],
+    page::Block::Md("examples/browser/snippets/toast-installation.md"),
+    page::Block::Md("examples/browser/snippets/toast-usage.md"),
+    page::Block::Example {
+        id: "types",
+        title: "Types",
+        description: Some("Use `.kind(..)` to pick the toast's icon."),
+        snippet: "examples/browser/snippets/toast-types.md",
+    },
+    page::Block::Example {
+        id: "description",
+        title: "Description",
+        description: Some("Use `.description(..)` to add a description to the toast."),
+        snippet: "examples/browser/snippets/toast-description.md",
+    },
+    page::Block::Example {
+        id: "position",
+        title: "Position",
+        description: Some("Use `.position(..)` to change where the toast appears."),
+        snippet: "examples/browser/snippets/toast-position.md",
     },
     page::Block::Md("examples/browser/snippets/toast-api-reference.md"),
 ];
@@ -140,31 +137,24 @@ impl page::Page for Page {
             )
             .into(),
 
-            "position" => column![
-                row![
-                    raise("Top Left", created().position(toast::Position::TopLeft)),
-                    raise("Top Center", created().position(toast::Position::TopCenter)),
-                    raise("Top Right", created().position(toast::Position::TopRight)),
-                ]
-                .spacing(8),
-                row![
-                    raise(
-                        "Bottom Left",
-                        created().position(toast::Position::BottomLeft)
-                    ),
-                    raise(
-                        "Bottom Center",
-                        created().position(toast::Position::BottomCenter)
-                    ),
-                    raise(
-                        "Bottom Right",
-                        created().position(toast::Position::BottomRight)
-                    ),
-                ]
-                .spacing(8),
-            ]
-            .spacing(8)
-            .into(),
+            "position" => {
+                use toast::Position::*;
+                let controls = [
+                    ("Top Left", TopLeft),
+                    ("Top Center", TopCenter),
+                    ("Top Right", TopRight),
+                    ("Bottom Left", BottomLeft),
+                    ("Bottom Center", BottomCenter),
+                    ("Bottom Right", BottomRight),
+                ];
+                row::Row::with_children(
+                    controls.map(|(label, place)| raise(label, created().position(place))),
+                )
+                .spacing(8)
+                .wrap()
+                .align_x(iced::Center)
+                .into()
+            }
 
             _ => unreachable!("unknown toast preview id: {id}"),
         }

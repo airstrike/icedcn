@@ -1,27 +1,33 @@
 ```rust
-use icedcn::widget::{button, row, toast};
+use iced::Task;
+use icedcn::{Slot, widget::{button, row::Row, toast}};
+use toast::Kind::*;
 
-fn raise<'a>(label: &'a str, toast: toast::Toast<Message>) -> Slot<'a, Message> {
-    toast::trigger(button(label).style(button::Outline), toast)
+#[derive(Clone)]
+enum Message { CreateEvent }
+
+fn types() -> Slot<'static, Message> {
+    let kinds = [
+        ("Default", Default, "Event has been created"),
+        ("Success", Success, "Event has been created"),
+        ("Info", Info, "Be at the area 10 minutes before the event time"),
+        ("Warning", Warning, "Event start time cannot be earlier than 8am"),
+        ("Error", Error, "Event has not been created"),
+    ];
+    let buttons = kinds.map(|(label, kind, title)| {
+        toast::trigger(button(label).style(button::Outline), toast::toast(title).kind(kind))
+    });
+    Row::with_children(buttons)
+        .push(button("Promise").style(button::Outline).on_press(Message::CreateEvent).into())
+        .spacing(8).wrap().into()
 }
 
-row![
-    raise("Default", toast::toast("Event has been created")),
-    raise("Success", toast::toast("Event has been created").kind(toast::Kind::Success)),
-    raise("Info", toast::toast("Be at the area 10 minutes before the event time").kind(toast::Kind::Info)),
-    raise("Warning", toast::toast("Event start time cannot be earlier than 8am").kind(toast::Kind::Warning)),
-    raise("Error", toast::toast("Event has not been created").kind(toast::Kind::Error)),
-    button("Promise").style(button::Outline).on_press(Message::CreateEvent),
-]
-.spacing(8).wrap()
-```
-
-When `update` handles `Message::CreateEvent`, return the task that tracks creation.
-
-```rust
-toast::promise::<_, Message, _, _>(
-    "Loading...", create_event(),
-    |name| format!("{name} has been created"),
-    |error| format!("Error: {error}"),
-)
+// Return this task from update when handling CreateEvent.
+fn creating(request: impl Future<Output = Result<String, String>> + Send + 'static) -> Task<Message> {
+    toast::promise::<_, Message, _, _>(
+        "Loading...", request,
+        |name| format!("{name} has been created"),
+        |error| error,
+    )
+}
 ```

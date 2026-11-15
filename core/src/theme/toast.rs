@@ -14,7 +14,7 @@ pub fn card(theme: &Theme) -> Style {
         background: Some(theme.popover.base.into()),
         text_color: Some(theme.popover.foreground),
         border: Border {
-            radius: radius::XL2.into(),
+            radius: radius::LG.into(),
             width: 1.0,
             color: theme.neutral.border,
         },
@@ -42,5 +42,14 @@ pub fn action(theme: &Theme, status: button::Status) -> button::Style {
             ..Border::default()
         },
         ..button::Style::default()
+    }
+}
+
+/// The supporting line in a notification.
+pub fn description(theme: &Theme) -> iced_widget::text::Style {
+    let shade = if theme.neutral.base.l < 0.5 { 232 } else { 63 };
+    iced_widget::text::Style {
+        color: Some(iced_core::Color::from_rgb8(shade, shade, shade)),
+        ..Default::default()
     }
 }

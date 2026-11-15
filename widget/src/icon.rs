@@ -34,7 +34,25 @@ static MORE: LazyLock<Handle> = LazyLock::new(|| {
     Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>"#)
 });
 
+static CIRCLE_CHECK: LazyLock<Handle> = LazyLock::new(|| {
+    Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>"#)
+});
+static INFO: LazyLock<Handle> = LazyLock::new(|| {
+    Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>"#)
+});
+static TRIANGLE_ALERT: LazyLock<Handle> = LazyLock::new(|| {
+    Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.3 3.9-8.2 14.2A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-2.9L13.7 3.9a2 2 0 0 0-3.4 0ZM12 9v4m0 4h.01"/></svg>"#)
+});
+static OCTAGON_X: LazyLock<Handle> = LazyLock::new(|| {
+    Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.7 2h6.6L22 8.7v6.6L15.3 22H8.7L2 15.3V8.7L8.7 2Zm.3 7 6 6m0-6-6 6"/></svg>"#)
+});
+
 pub(crate) enum Icon {
+    CircleCheck,
+    Info,
+    TriangleAlert,
+    OctagonX,
+
     Chevron,
     ChevronRight,
     Calendar,
@@ -77,6 +95,10 @@ impl<Message> Widget<Message, Theme, Renderer> for Icon {
     ) {
         let handle = match self {
             Self::Chevron | Self::ChevronRight => CHEVRON.clone(),
+            Self::CircleCheck => CIRCLE_CHECK.clone(),
+            Self::Info => INFO.clone(),
+            Self::TriangleAlert => TRIANGLE_ALERT.clone(),
+            Self::OctagonX => OCTAGON_X.clone(),
             Self::Remove => REMOVE.clone(),
             Self::Check => CHECK.clone(),
             Self::Calendar => CALENDAR.clone(),

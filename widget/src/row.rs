@@ -1,5 +1,6 @@
 use crate::compose::{Compose, Inherited, Slot};
 use iced_core::Length;
+use iced_core::alignment::Horizontal;
 use iced_widget::Renderer;
 use iced_widget::Widget;
 use icedcn_core::Theme;
@@ -30,6 +31,7 @@ pub struct Row<'a, Message> {
     height: Length,
     align_y: iced_core::Alignment,
     wrap: bool,
+    align_x: Horizontal,
 }
 
 impl<'a, Message: 'a> Row<'a, Message> {
@@ -42,6 +44,7 @@ impl<'a, Message: 'a> Row<'a, Message> {
             height: Length::Shrink,
             align_y: iced_core::Alignment::Center,
             wrap: false,
+            align_x: Horizontal::Left,
         }
     }
 
@@ -54,6 +57,7 @@ impl<'a, Message: 'a> Row<'a, Message> {
             height: Length::Shrink,
             align_y: iced_core::Alignment::Center,
             wrap: false,
+            align_x: Horizontal::Left,
         }
     }
 
@@ -86,6 +90,12 @@ impl<'a, Message: 'a> Row<'a, Message> {
     /// Wrap children to another line when they exceed the available width.
     pub fn wrap(mut self) -> Self {
         self.wrap = true;
+        self
+    }
+
+    /// Align each line horizontally when the row wraps.
+    pub fn align_x(mut self, align: impl Into<Horizontal>) -> Self {
+        self.align_x = align.into();
         self
     }
 
@@ -142,7 +152,7 @@ impl<'a, Message: 'a> Compose<Message> for Row<'a, Message> {
         }
 
         if self.wrap {
-            row.wrap().boxed()
+            row.wrap().align_x(self.align_x).boxed()
         } else {
             row.boxed()
         }
