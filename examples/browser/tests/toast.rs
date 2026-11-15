@@ -147,30 +147,96 @@ fn finger_taps_and_lost_contacts_keep_the_card_but_an_outward_swipe_dismisses_it
 }
 
 #[test]
-fn keyboard_traversal_reaches_undo_and_activates_it_once() {
+fn the_full_article_keeps_dom_order_until_the_notification_shortcut_is_pressed() {
+    use browser::app::App;
+    use iced::event::Status;
     use iced::keyboard::key::Named;
-    use iced_test::core::widget::operation::{Outcome, focusable};
-    fn next(ui: &mut Simulator<'_, browser::Message, Theme>) {
+    use iced_test::core::widget::operation::{Focusable, Outcome, focusable};
+    use iced_test::simulator;
+    use icedcn::widget::markdown::highlighter::Map;
+
+    let theme = Theme::light();
+    let mut app = App::new(Map::from(&theme), Map::from(&theme)).0;
+    let _ = app.update(browser::Message::OpenComponent("toast".into()));
+    let mut ui = Simulator::with_size(Default::default(), Size::new(1440., 900.), app.view());
+    ui.draw(&theme);
+    ui.click("Show Toast").unwrap();
+    let mut ui = ui.rebuild(app.view());
+    ui.draw(&theme);
+    ui.find("Undo").unwrap();
+
+    // The browser's shortcut subscription runs the global focus operation
+    // only when the widget tree leaves Tab unhandled.
+    let statuses = ui.simulate([simulator::press_key(Named::Tab, None)]);
+    if statuses == [Status::Ignored] {
         let mut focus = focusable::focus_next::<()>();
         ui.operate(&mut focus);
         if let Outcome::Chain(mut select) = focus.finish() {
             ui.operate(select.as_mut());
         }
-        ui.draw(&Theme::light());
     }
-    let page = Page::new(3);
-    let mut ui = Simulator::new(preview(&*page, "demo"));
-    next(&mut ui);
     ui.tap_key(Named::Enter);
-    let mut ui = ui.rebuild(preview(&*page, "demo"));
-    ui.draw(&Theme::light());
+    let mut ui = ui.rebuild(app.view());
+    assert!(ui.find("Undo").is_ok(), "ordinary Tab stays in the article");
+    assert!(
+        !ui.drain()
+            .any(|m| matches!(m, browser::Message::Page(_, page::Message::Noop)))
+    );
+
+    // The full page has many controls around the trigger. Record which one
+    // owns focus immediately before entering the notification list.
+    #[derive(Default)]
+    struct Focus(Option<Rectangle>);
+    impl Operation for Focus {
+        fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+            visit(self);
+        }
+        fn focusable(&mut self, _: Option<&Id>, rect: Rectangle, control: &mut dyn Focusable) {
+            if control.is_focused() {
+                self.0 = Some(rect);
+            }
+        }
+    }
+    let mut before = Focus::default();
+    ui.operate(&mut before);
+    assert!(before.0.is_some());
+
+    use iced::keyboard::{Event::KeyPressed, Key, Modifiers};
+    let mut shortcut = simulator::press_key(Key::Character("t".into()), None);
+    if let Event::Keyboard(KeyPressed { modifiers, .. }) = &mut shortcut {
+        *modifiers = Modifiers::ALT;
+    }
+    assert_eq!(ui.simulate([shortcut]), [Status::Captured]);
+    for _ in 0..2 {
+        assert_eq!(
+            ui.simulate([simulator::press_key(Named::Tab, None)]),
+            [Status::Captured]
+        );
+    }
+    let action = ui.find("Undo").unwrap().bounds();
+    let mut focused = Focus::default();
+    ui.operate(&mut focused);
+    assert!(
+        focused.0.is_some_and(|r| r.contains(action.center())),
+        "Undo owns focus"
+    );
+    ui.tap_key(Named::Escape);
     ui.find("Undo").unwrap();
-    next(&mut ui);
     ui.tap_key(Named::Enter);
-    let mut ui = ui.rebuild(preview(&*page, "demo"));
-    assert!(ui.find("Undo").is_err());
-    assert!(matches!(
-        ui.drain().collect::<Vec<_>>().as_slice(),
-        [browser::Message::Page(3, page::Message::Noop)]
-    ));
+    let mut ui = ui.rebuild(app.view());
+    ui.draw(&theme);
+    let mut restored = Focus::default();
+    ui.operate(&mut restored);
+    assert_eq!(
+        restored.0, before.0,
+        "activation returns focus to the previous article control"
+    );
+    assert!(
+        ui.find("Undo").is_err(),
+        "the action must dismiss the notification"
+    );
+    assert!(
+        ui.drain()
+            .any(|m| matches!(m, browser::Message::Page(_, page::Message::Noop)))
+    );
 }

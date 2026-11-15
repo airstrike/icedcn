@@ -1,6 +1,8 @@
 //! The widget behind [`Toaster`](super::Toaster): its content in place,
 //! its toasts in an overlay, and the clock that dismisses them.
 
+mod navigation;
+
 use std::time::Duration;
 
 use iced_core::Length::Fill;
@@ -30,6 +32,7 @@ use crate::row::Row;
 use crate::size;
 use crate::text::Text;
 use iced_widget::text;
+use navigation::{Region, Stop};
 
 /// Toast width in logical pixels.
 const WIDTH: f32 = 356.0;
@@ -124,6 +127,7 @@ impl<'a, Message: Clone + 'a> Toaster<'a, Message> {
             // `h-6 px-2 text-xs font-medium`.
             let action = button(Text::new(label.clone()))
                 .size(size::Size::Xs)
+                .focus_ring(2., |theme| theme.neutral.ring)
                 .style(
                     Box::new(|theme: &Theme, status| toast::action(theme, status).into())
                         as iced_widget::button::StyleFn<'a, Theme>,
@@ -164,6 +168,7 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
             next_id: 0,
             hover: None,
             swipe: None,
+            region: None,
         })
     }
 
@@ -211,6 +216,9 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
         shell: &mut Shell<'_, Message>,
         viewport: &Rectangle,
     ) {
+        if self.navigate(tree, event, layout, viewport, renderer, shell) {
+            return;
+        }
         let Tree {
             state, children, ..
         } = tree;
@@ -408,7 +416,9 @@ impl<'a, Message: Clone + Send + 'static> Widget<Message, Theme, Renderer>
             if *count == 0 {
                 *front_height = size.height;
             }
-            let behind = *count > 0 && !state.hover.is_some_and(|(pos, _)| pos == card.position);
+            let expanded = state.region.is_some_and(|r| r.position == card.position)
+                || state.hover.is_some_and(|(pos, _)| pos == card.position);
+            let behind = *count > 0 && !expanded;
             let scale = if behind {
                 1. - 0.05 * *count as f32
             } else {
@@ -470,6 +480,7 @@ struct State<Message> {
     next_id: u64,
     hover: Option<(Position, Instant)>,
     swipe: Option<Swipe>,
+    region: Option<Region>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -651,6 +662,27 @@ impl<Message: Clone + Send + 'static> overlay::Overlay<Message, Theme, Renderer>
                     &viewport,
                 );
             });
+            if self.state.region.is_some_and(|r| {
+                r.stop == Stop::Card(entry.id)
+                    || (r.stop == Stop::List
+                        && self
+                            .entries
+                            .iter()
+                            .find(|e| e.position == r.position)
+                            .is_some_and(|first| first.id == entry.id))
+            }) {
+                let mut border: iced_core::Border = toast::card(theme).border.into();
+                border.width = 2.;
+                border.color = theme.neutral.ring.into();
+                renderer.fill_quad(
+                    renderer::Quad {
+                        bounds: entry.layout.bounds().expand(2.),
+                        border,
+                        ..Default::default()
+                    },
+                    iced_core::Color::TRANSPARENT,
+                );
+            }
         }
     }
 
@@ -693,7 +725,8 @@ impl<Message: Clone + Send + 'static> overlay::Overlay<Message, Theme, Renderer>
             Event::Window(window::Event::RedrawRequested(at)) => *at,
             _ => Instant::now(),
         };
-        if self.state.hover(hovered, now, self.default_position) {
+        let paused = self.state.region.map(|r| r.position).or(hovered);
+        if self.state.hover(paused, now, self.default_position) {
             shell.invalidate_overlay();
             shell.request_redraw();
         }
@@ -797,6 +830,7 @@ mod tests {
             next_id: 0,
             hover: None,
             swipe: None,
+            region: None,
         };
         let now = Instant::now();
         let second = Duration::from_secs(1);
@@ -833,6 +867,7 @@ mod tests {
             next_id: 0,
             hover: None,
             swipe: None,
+            region: None,
         };
         let first = Id::unique();
         let second = Id::unique();
