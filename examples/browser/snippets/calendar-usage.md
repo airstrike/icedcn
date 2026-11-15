@@ -7,10 +7,15 @@ use icedcn::widget::calendar;
 use icedcn::widget::calendar::Selection;
 
 #[derive(Clone, Debug)]
-pub enum Message { Selected(Option<Selection>) }
+pub enum Message {
+    Selected(Option<Selection>),
+}
 
-pub fn view(value: Option<Selection>) -> Element<'static, Message, Theme> {
-    calendar().selected(value).on_select(Message::Selected).into()
+pub fn view<'a>(value: Option<Selection>) -> Element<'a, Message, Theme> {
+    calendar()
+        .selected(value)
+        .on_select(Message::Selected)
+        .into()
 }
 ```
 

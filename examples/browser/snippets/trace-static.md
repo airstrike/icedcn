@@ -1,5 +1,5 @@
 ```rust
-use icedcn::widget::{trace, text};
+use icedcn::widget::{text, trace};
 
 line("Created branch fix/cargo-lockfile", icon::git_branch).into()
 ```

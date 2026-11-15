@@ -9,11 +9,16 @@ fn credentials<M: Clone + 'static>(text_size: f32) -> Slot<'static, M> {
             .label("Username")
             .description("Choose a unique username for your account.")
             .into(),
-        field(input("••••••••").width(Fill).text_size(text_size).secure(true))
-            .label("Password")
-            .description("Must be at least 8 characters long.")
-            .description_above()
-            .into(),
+        field(
+            input("••••••••")
+                .width(Fill)
+                .text_size(text_size)
+                .secure(true),
+        )
+        .label("Password")
+        .description("Must be at least 8 characters long.")
+        .description_above()
+        .into(),
     ])
     .width(320)
     .into()

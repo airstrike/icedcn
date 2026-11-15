@@ -51,7 +51,7 @@ fn buttons<M: Clone + 'static>(size: f32, favorite: bool, toggle: M) -> Slot<'st
     .width(264.);
     let mut star = icon::star().size(14);
     if favorite {
-        star = star.color(iced::Color::from_rgb8(21, 93, 252));
+        star = star.color(iced::color!(21, 93, 252));
     }
     column![
         input_group(input(url).value("").text_size(size))

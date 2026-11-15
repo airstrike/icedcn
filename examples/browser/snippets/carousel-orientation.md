@@ -1,10 +1,10 @@
 ```rust
+use iced::Alignment;
 use iced::widget::responsive;
 use iced::{Element, Fill, Shrink, Widget};
+use icedcn::Orientation;
 use icedcn::widget::{carousel, container, text};
 use icedcn::{Slot, Theme, card};
-use iced::Alignment;
-use icedcn::Orientation;
 
 fn slide<Message: 'static>(
     index: usize,
@@ -53,7 +53,7 @@ fn slide<Message: 'static>(
     .into()
 }
 
-pub fn view<Message: Clone + 'static>() -> Slot<'static, Message> {
+pub fn view<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     carousel(5, |index| slide(index, 30.0, 36.0, true, 4.0))
         .orientation(Orientation::Vertical)
         .align(Alignment::Start)

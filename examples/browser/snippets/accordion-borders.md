@@ -1,29 +1,29 @@
 ```rust
 use iced::Fill;
-use icedcn::core::Border;
-use icedcn::theme::container::Style;
+use icedcn::radius;
+use icedcn::theme::container::Transparent;
+use icedcn::theme::tweak::{Token, border};
 use icedcn::widget::{accordion, container};
-use icedcn::{Theme, radius};
 
 let items = [
     (
         "How does billing work?",
         "We offer monthly and annual subscription plans. Billing is charged \
-     at the beginning of each cycle, and you can cancel anytime. All \
-     plans include automatic backups, 24/7 support, and unlimited team \
-     members.",
+ at the beginning of each cycle, and you can cancel anytime. All \
+ plans include automatic backups, 24/7 support, and unlimited team \
+ members.",
     ),
     (
         "Is my data secure?",
         "Yes. We use end-to-end encryption, SOC 2 Type II compliance, and \
-     regular third-party security audits. All data is encrypted at rest \
-     and in transit using industry-standard protocols.",
+ regular third-party security audits. All data is encrypted at rest \
+ and in transit using industry-standard protocols.",
     ),
     (
         "What integrations do you support?",
         "We integrate with 500+ popular tools including Slack, Zapier, \
-     Salesforce, HubSpot, and more. You can also build custom \
-     integrations using our REST API and webhooks.",
+ Salesforce, HubSpot, and more. You can also build custom \
+ integrations using our REST API and webhooks.",
     ),
 ];
 
@@ -37,12 +37,5 @@ let inner = accordion(
 container(inner)
     .width(Fill.max(512))
     .padding(1)
-    .style(|theme: &Theme| Style {
-        border: Border {
-            width: 1.0,
-            color: theme.neutral.border,
-            radius: radius::LG.into(),
-        },
-        ..Style::default()
-    })
+    .class(Transparent + border::Width(1.) + border::Color(Token::Border) + radius(radius::LG))
 ```

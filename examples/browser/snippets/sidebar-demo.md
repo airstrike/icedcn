@@ -1,6 +1,6 @@
 ```rust
-use iced::{Fill, Shrink};
 use iced::widget::Space;
+use iced::{Fill, Shrink};
 use icedcn::Slot;
 use icedcn::widget::{column, container, row, scrollable, sidebar};
 
@@ -10,17 +10,30 @@ pub fn workspace<'a, M: Clone + 'static>(
     account: impl Fn(&sidebar::Handle<'_, 'a, M>) -> Slot<'a, M> + 'a,
 ) -> Slot<'a, M> {
     sidebar::provider(move |s| {
-        let panel = sidebar::fixed(column![
-            sidebar::header([teams(s)]),
-            scrollable(sidebar::content([links(s)]).height(Shrink)).height(Fill).width(Fill),
-            sidebar::footer([account(s)]),
-        ].height(Fill).width(Fill));
-        let rail = if s.is_mobile() { Space::new().into() } else { sidebar::rail_trigger() };
+        let panel = sidebar::fixed(
+            column![
+                sidebar::header([teams(s)]),
+                scrollable(sidebar::content([links(s)]).height(Shrink))
+                    .height(Fill)
+                    .width(Fill),
+                sidebar::footer([account(s)]),
+            ]
+            .height(Fill)
+            .width(Fill),
+        );
+        let rail = if s.is_mobile() {
+            Space::new().into()
+        } else {
+            sidebar::rail_trigger()
+        };
         row![
             s.sidebar(panel),
             rail,
             sidebar::main(container(sidebar::trigger()).center_y(64)),
-        ].width(Fill).height(Fill).into()
+        ]
+        .width(Fill)
+        .height(Fill)
+        .into()
     })
     .collapsible(sidebar::Collapsible::Icon)
     .into()

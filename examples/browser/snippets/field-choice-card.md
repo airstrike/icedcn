@@ -5,8 +5,16 @@ use icedcn::widget::{field, radio_group};
 
 fn environment<M: Clone + 'static>() -> Slot<'static, M> {
     let environments = [
-        ("kubernetes", "Kubernetes", "Run GPU workloads on a K8s cluster."),
-        ("vm", "Virtual Machine", "Access a cluster to run GPU workloads."),
+        (
+            "kubernetes",
+            "Kubernetes",
+            "Run GPU workloads on a K8s cluster.",
+        ),
+        (
+            "vm",
+            "Virtual Machine",
+            "Access a cluster to run GPU workloads.",
+        ),
     ];
     field::set(
         field::label("Compute Environment"),

@@ -68,7 +68,7 @@ fn colored_pixels(
         mouse::Cursor::Unavailable,
     );
     let size = Size::new(440, 680);
-    let image = renderer.screenshot(size, 1., iced::Color::WHITE);
+    let image = renderer.screenshot(size, 1., iced::color!(0xffffff));
     let mut pixels = Vec::new();
     for y in bounds.y.ceil() as usize..(bounds.y + bounds.height).floor() as usize {
         let row = y * size.width as usize;

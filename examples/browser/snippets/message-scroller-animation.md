@@ -1,8 +1,8 @@
 ```rust
 use iced::alignment::Horizontal::Right;
 use icedcn::Slot;
-use icedcn::widget::{bubble, message, motion, scroller};
 use icedcn::widget::motion::Preset;
+use icedcn::widget::{bubble, message, motion, scroller};
 
 pub fn conversation<'a, Message: Clone + 'a>(
     history: &'a str,
@@ -12,7 +12,9 @@ pub fn conversation<'a, Message: Clone + 'a>(
     let previous = scroller::item(1, message(bubble(history).style(bubble::Ghost)));
     let incoming = sent.map(|text| {
         let user = message(bubble(text).style(bubble::Muted)).align(Right);
-        let entrance = motion(user).preset(preset).theme(bubble::fade_muted_on_card);
+        let entrance = motion(user)
+            .preset(preset)
+            .theme(bubble::fade_muted_on_card);
         scroller::item(2, entrance).anchor(true)
     });
 

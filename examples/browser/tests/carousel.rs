@@ -5,7 +5,7 @@ use std::time::Duration;
 use browser::component::carousel::{self, CarouselPage};
 use browser::{Message, font};
 use iced::time::Instant;
-use iced::{Event, Font, Rectangle, Size, window};
+use iced::{Event, Rectangle, Size, window};
 use iced_test::core::Settings;
 use iced_test::core::widget::operation::Focusable;
 use iced_test::core::widget::{Id, Operation};
@@ -49,7 +49,7 @@ fn settings() -> Settings {
     Settings {
         // Use the bundled font so line-box geometry does not depend on host fonts.
         // The monitor checks the application's Geist appearance separately.
-        font: Font::new(font::GEIST_MONO_NAME),
+        font: font::GEIST_MONO_NAME.into(),
         fonts: vec![Cow::Borrowed(font::GEIST_MONO)],
         ..Settings::default()
     }

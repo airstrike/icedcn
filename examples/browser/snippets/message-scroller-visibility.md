@@ -2,7 +2,9 @@
 use icedcn::widget::scroller::{Item, Reader, Scroller, scroller};
 
 #[derive(Clone, Debug)]
-pub enum Event { Reading(Reader) }
+pub enum Event {
+    Reading(Reader),
+}
 
 pub fn transcript(rows: Vec<Item<'_, Event>>) -> Scroller<'_, Event> {
     scroller(rows).on_reader_change(Event::Reading)

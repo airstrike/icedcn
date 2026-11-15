@@ -7,9 +7,11 @@ use icedcn::widget::{button, dialog};
 
 dialog(
     |d| d.trigger(button("Open")),
-    |_| dialog::header(
-        "Are you absolutely sure?",
-        "This action cannot be undone. This will permanently delete your account and remove your data from our servers.",
-    ),
+    |_| {
+        dialog::header(
+            "Are you absolutely sure?",
+            "This action cannot be undone. This will permanently delete your account and remove your data from our servers.",
+        )
+    },
 )
 ```

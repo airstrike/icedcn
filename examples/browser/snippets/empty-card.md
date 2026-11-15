@@ -4,7 +4,9 @@ use icedcn::widget::{button, column, empty, row};
 empty::empty()
     .media(empty::media(icon::folder()).style(empty::Icon))
     .title("No projects yet")
-    .description("You haven't created any projects yet. Get started by creating your first project.")
+    .description(
+        "You haven't created any projects yet. Get started by creating your first project.",
+    )
     .content(
         column![
             row![

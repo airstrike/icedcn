@@ -6,8 +6,13 @@ dialog(
     |d| d.trigger(button("Share").style(button::Outline)),
     |_| {
         column![
-            dialog::header("Share link", "Anyone who has this link will be able to view this."),
-            input("").value("https://github.com/airstrike/icedcn").width(Fill),
+            dialog::header(
+                "Share link",
+                "Anyone who has this link will be able to view this."
+            ),
+            input("")
+                .value("https://github.com/airstrike/icedcn")
+                .width(Fill),
         ]
         .spacing(16)
         .width(Fill)

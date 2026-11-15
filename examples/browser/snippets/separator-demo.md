@@ -9,8 +9,10 @@ column![
     ]
     .spacing(6),
     separator(),
-    text::small("A set of beautifully designed components that you can customize, extend, and build on.")
-        .line_height(Pixels(20.0)),
+    text::small(
+        "A set of beautifully designed components that you can customize, extend, and build on."
+    )
+    .line_height(Pixels(20.0)),
 ]
 .spacing(16)
 .width(Fill)

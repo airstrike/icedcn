@@ -5,7 +5,7 @@ use std::time::Duration;
 use browser::Message;
 use browser::component::checkbox::CheckboxPage;
 use browser::page::{self, Page};
-use iced::{Event, Font, Length, Point, Rectangle, Size, Vector, mouse, time::Instant, window};
+use iced::{Event, Length, Point, Rectangle, Size, Vector, mouse, time::Instant, window};
 use iced_test::core::widget::operation::{Scrollable, Text};
 use iced_test::core::widget::{Id, Operation};
 use iced_test::core::{Settings, Widget};
@@ -52,7 +52,7 @@ fn controls(ui: &mut Preview<'_>) -> Controls {
 
 fn preview<'a>(page: &'a dyn Page, id: &str, width: f32) -> Preview<'a> {
     let settings = Settings {
-        font: Font::new("Geist"),
+        font: "Geist".into(),
         ..Settings::default()
     };
     let element = page.docs_preview(id, &Theme::light());
@@ -242,7 +242,7 @@ fn api_descriptions_fit_without_horizontal_scrolling_at_both_widths() {
     for width in [634.0, 324.0] {
         let mut ui = Simulator::with_size(
             Settings {
-                font: Font::new("Geist"),
+                font: "Geist".into(),
                 ..Settings::default()
             },
             Size::new(width, 6000.0),

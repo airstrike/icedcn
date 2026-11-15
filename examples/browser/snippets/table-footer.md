@@ -16,14 +16,18 @@ pub fn view<'a, M: 'a>() -> Slot<'a, M> {
         table::head("Method"),
         table::head("Amount").align_x(Right),
     ])]);
-    let body = table::body(records.into_iter().map(|[invoice, status, method, amount]| {
-        table::row([
-            table::cell(text(invoice).medium()),
-            table::cell(status),
-            table::cell(method),
-            table::cell(amount).align_x(Right),
-        ])
-    }));
+    let body = table::body(
+        records
+            .into_iter()
+            .map(|[invoice, status, method, amount]| {
+                table::row([
+                    table::cell(text(invoice).medium()),
+                    table::cell(status),
+                    table::cell(method),
+                    table::cell(amount).align_x(Right),
+                ])
+            }),
+    );
     let footer = table::footer([table::row([
         table::cell("Total").span(3),
         table::cell("$2,500.00").align_x(Right),

@@ -9,7 +9,8 @@ drawer(
                 drawer::header("Edit profile", description),
                 form(d),
                 drawer::footer([d.close(button("Cancel").style(button::Outline))]),
-            ].into()
+            ]
+            .into()
         } else {
             column![dialog::header("Edit profile", description), form(d)]
                 .spacing(16)

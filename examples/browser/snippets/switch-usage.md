@@ -6,7 +6,10 @@ A switch keeps its checked state across view rebuilds. Set an initial value with
 use icedcn::Slot;
 use icedcn::widget::switch;
 
-fn notifications<M: 'static>(enabled: bool, changed: impl Fn(bool) -> M + 'static) -> Slot<'static, M> {
+fn notifications<M: 'static>(
+    enabled: bool,
+    changed: impl Fn(bool) -> M + 'static,
+) -> Slot<'static, M> {
     switch().checked(enabled).on_checked_change(changed).into()
 }
 ```

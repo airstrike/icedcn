@@ -1,6 +1,6 @@
 ```rust
-use iced::{alignment, Element, Widget};
 use iced::widget;
+use iced::{Element, Widget, alignment};
 use icedcn::Theme;
 use icedcn::widget::badge;
 

@@ -8,13 +8,16 @@ use icedcn::widget::{row, sidebar};
 
 pub fn view<'a>() -> Slot<'a, &'static str> {
     sidebar::provider(|s| {
-        let links = ["Dashboard", "Settings"].map(|name| {
-            sidebar::menu_button(name).on_press(name).into()
-        });
+        let links =
+            ["Dashboard", "Settings"].map(|name| sidebar::menu_button(name).on_press(name).into());
         row![
             s.sidebar(sidebar::fixed(sidebar::menu(links))),
             sidebar::main(sidebar::trigger()),
-        ].width(iced::Fill).height(iced::Fill).into()
-    }).into()
+        ]
+        .width(iced::Fill)
+        .height(iced::Fill)
+        .into()
+    })
+    .into()
 }
 ```

@@ -1,8 +1,8 @@
 ```rust
 use iced::Fill;
 use icedcn::Slot;
-use icedcn::widget::{column, field, select, switch};
 use icedcn::widget::field::Orientation::Horizontal;
+use icedcn::widget::{column, field, select, switch};
 
 #[derive(Clone)]
 enum Message {

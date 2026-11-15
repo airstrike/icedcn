@@ -8,9 +8,15 @@ pub fn help<'a>() -> Slot<'a, ()> {
         sidebar::group([
             c.trigger(sidebar::menu_button("Help")),
             c.content(sidebar::menu(links)),
-        ]).into()
-    }).width(iced::Fill).default_open(true);
+        ])
+        .into()
+    })
+    .width(iced::Fill)
+    .default_open(true);
 
-    sidebar::floating(group).width(sidebar::WIDTH).height(iced::Fill).into()
+    sidebar::floating(group)
+        .width(sidebar::WIDTH)
+        .height(iced::Fill)
+        .into()
 }
 ```

@@ -1,7 +1,7 @@
 ```rust
 use iced::Fill;
-use icedcn::{card, Size};
 use icedcn::widget::{button, column, text};
+use icedcn::{Size, card};
 
 fn small<Message: Clone + 'static>() -> card::Card<'static, Message> {
     card(column![

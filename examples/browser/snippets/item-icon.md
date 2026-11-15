@@ -8,7 +8,10 @@ item::item([
         item::description("New login detected from unknown device.").into(),
     ])
     .into(),
-    item::actions([button("Review").size(Size::Sm).style(button::Outline).into()]),
+    item::actions([button("Review")
+        .size(Size::Sm)
+        .style(button::Outline)
+        .into()]),
 ])
 .style(item::Outline)
 ```

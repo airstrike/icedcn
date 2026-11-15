@@ -6,11 +6,12 @@ Define the ordered questions once and handle the submitted answers in your appli
 use icedcn::widget::questionnaire;
 use icedcn::widget::questionnaire::{choice, item};
 
-questionnaire([
-    item("direction", "What should we prototype next?")
-        .required(true)
-        .choices([choice("delegation", "Delegation"), choice("questions", "Question prompts")])
-        .input("Another answer", "Type another answer…"),
-])
+questionnaire([item("direction", "What should we prototype next?")
+    .required(true)
+    .choices([
+        choice("delegation", "Delegation"),
+        choice("questions", "Question prompts"),
+    ])
+    .input("Another answer", "Type another answer…")])
 .on_submit(Event::Submit)
 ```

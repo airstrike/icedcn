@@ -13,7 +13,7 @@ use iced::font;
 use iced::gradient::Linear;
 use iced::widget::Id;
 use iced::widget::stack;
-use iced::{Bottom, Fill, Font, Padding, Pixels, Right, Task};
+use iced::{Bottom, Fill, Padding, Pixels, Right, Task};
 use iced_widget::button::Status;
 use icedcn::Theme;
 use icedcn::core::{Background, Border};
@@ -217,7 +217,7 @@ impl State {
 
                 if !self.geist_loaded && self.fount.system_families().iter().any(|n| n == "Geist") {
                     self.geist_loaded = true;
-                    font::set_defaults(Font::new("Geist"), Pixels(14.0))
+                    font::set_defaults("Geist".into(), Pixels(14.0))
                 } else {
                     Task::none()
                 }
@@ -242,7 +242,7 @@ impl State {
             fonts::Message::Loaded(name, Ok(())) => {
                 if name == "Geist" && !self.geist_loaded {
                     self.geist_loaded = true;
-                    font::set_defaults(Font::new("Geist"), Pixels(14.0))
+                    font::set_defaults("Geist".into(), Pixels(14.0))
                 } else {
                     Task::none()
                 }
@@ -387,14 +387,11 @@ fn preview_frame(theme: &Theme) -> Style {
 }
 
 fn section_soft(theme: &Theme) -> Style {
-    let top: iced::Color = theme.neutral.base.into();
-    let bottom: iced::Color = theme.code.base.alpha(0.40).into();
-
     Style {
         background: Some(Background::Gradient(
             Linear::new(PI)
-                .add_stop(0.0, top)
-                .add_stop(1.0, bottom)
+                .add_stop(0.0, theme.neutral.base.into())
+                .add_stop(1.0, theme.code.base.alpha(0.40).into())
                 .into(),
         )),
         ..Style::default()

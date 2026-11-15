@@ -4,10 +4,18 @@ use icedcn::Slot;
 use icedcn::widget::{checkbox, field, separator, text};
 
 fn devices<M: Clone + 'static>() -> Slot<'static, M> {
-    let devices = ["Hard disks", "External disks", "CDs, DVDs, and iPods", "Connected servers"];
-    let items = field::group(
-        devices.map(|name| field(checkbox()).orientation(Horizontal).label(text::small(name)).into()),
-    )
+    let devices = [
+        "Hard disks",
+        "External disks",
+        "CDs, DVDs, and iPods",
+        "Connected servers",
+    ];
+    let items = field::group(devices.map(|name| {
+        field(checkbox())
+            .orientation(Horizontal)
+            .label(text::small(name))
+            .into()
+    }))
     .spacing(12);
     field::group([
     field::set(field::label("Show these items on the desktop"),

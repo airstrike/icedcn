@@ -1,10 +1,10 @@
 ```rust
+use iced::widget::component::{Component, component};
 use iced::widget::responsive;
 use iced::{Element, Fill, Shrink, Widget};
+use icedcn::widget::column;
 use icedcn::widget::{carousel, container, text};
 use icedcn::{Slot, Theme, card};
-use iced::widget::component::{Component, component};
-use icedcn::widget::column;
 
 fn slide<Message: 'static>(
     index: usize,
@@ -89,7 +89,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme> for Example {
     }
 }
 
-pub fn view<Message: Clone + 'static>(window_width: f32) -> Slot<'static, Message> {
+pub fn view<'a, Message: Clone + 'static>(window_width: f32) -> Slot<'a, Message> {
     component(Example {
         width: if window_width < 640.0 { 160.0 } else { 320.0 },
     })

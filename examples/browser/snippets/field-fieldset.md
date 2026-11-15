@@ -4,8 +4,11 @@ use icedcn::Slot;
 use icedcn::widget::{field, input, row};
 
 fn address<M: Clone + 'static>(text_size: f32) -> Slot<'static, M> {
-    let address =
-        |label, hint| field(input(hint).width(Fill).text_size(text_size)).label(label).width(Fill);
+    let address = |label, hint| {
+        field(input(hint).width(Fill).text_size(text_size))
+            .label(label)
+            .width(Fill)
+    };
     field::set(
         field::legend("Address Information"),
         Some("We need your address to deliver your order."),

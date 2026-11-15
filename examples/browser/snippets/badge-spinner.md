@@ -1,7 +1,7 @@
 ```rust
 use icedcn::widget::{badge, row, spinner};
 
-fn example() -> row::Row<'static, ()> {
+fn example<'a>() -> row::Row<'a, ()> {
     row![
         badge![spinner().circle().size(12.0), "Deleting"]
             .icon_start()

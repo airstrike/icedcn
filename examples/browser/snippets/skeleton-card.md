@@ -15,10 +15,15 @@ fn line<'a>(part: u16, whole: u16) -> Slot<'a, Message> {
 card(
     column![
         card::header(line(2, 3)).description(line(1, 2)),
-        card::content(aspect_ratio(skeleton().width(Fill).height(Fill), 16.0 / 9.0)),
+        card::content(aspect_ratio(
+            skeleton().width(Fill).height(Fill),
+            16.0 / 9.0
+        )),
     ]
     .spacing(Gap::G4)
     .padding(Padding::ZERO.top(Gap::G4).bottom(Gap::G4)),
-).gap(0).padding(0)
+)
+.gap(0)
+.padding(0)
 .width(320.0)
 ```

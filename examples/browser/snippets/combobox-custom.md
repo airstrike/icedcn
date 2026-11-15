@@ -1,7 +1,9 @@
 ```rust
 use icedcn::widget::combobox;
 
-fn countries<Message: 'static>(entries: &[(&str, &str, &str)]) -> combobox::Combobox<'static, Message> {
+fn countries<Message: 'static>(
+    entries: &[(&str, &str, &str)],
+) -> combobox::Combobox<'static, Message> {
     let items = entries.iter().map(|&(code, name, continent)| {
         combobox::item(code, name).description(format!("{continent} ({code})"))
     });

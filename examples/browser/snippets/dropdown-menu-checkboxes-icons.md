@@ -4,7 +4,7 @@ use iced::widget::Text;
 use icedcn::widget::{button, dropdown_menu, menu, menu_group};
 use icedcn::{Slot, Theme};
 
-pub fn view(checked: [bool; 3]) -> Slot<'static, [bool; 3]> {
+pub fn view<'a>(checked: [bool; 3]) -> Slot<'a, [bool; 3]> {
     let caption = |glyph: Text<'static, Theme>, label: &'static str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };
@@ -15,13 +15,29 @@ pub fn view(checked: [bool; 3]) -> Slot<'static, [bool; 3]> {
     };
     dropdown_menu(
         |m| m.trigger(button("Notifications").style(button::Outline)),
-        move |_| menu_group![
-            menu::label("Notification Preferences"),
-            menu::checkbox_item(caption(icon::mail(), "Email notifications"), checked[0], |v| toggle(0, v)),
-            menu::checkbox_item(caption(icon::message_square(), "SMS notifications"), checked[1], |v| toggle(1, v)),
-            menu::checkbox_item(caption(icon::bell(), "Push notifications"), checked[2], |v| toggle(2, v)),
-        ],
-    ).width(192).into()
+        move |_| {
+            menu_group![
+                menu::label("Notification Preferences"),
+                menu::checkbox_item(
+                    caption(icon::mail(), "Email notifications"),
+                    checked[0],
+                    |v| toggle(0, v)
+                ),
+                menu::checkbox_item(
+                    caption(icon::message_square(), "SMS notifications"),
+                    checked[1],
+                    |v| toggle(1, v)
+                ),
+                menu::checkbox_item(
+                    caption(icon::bell(), "Push notifications"),
+                    checked[2],
+                    |v| toggle(2, v)
+                ),
+            ]
+        },
+    )
+    .width(192)
+    .into()
 }
 ```
 

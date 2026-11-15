@@ -3,6 +3,7 @@ use crate::icon;
 use icedcn::widget::button;
 
 button(icon::arrow_up().size(16))
-    .square().rounded()
+    .square()
+    .rounded()
     .style(button::Outline)
 ```

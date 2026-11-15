@@ -1,12 +1,19 @@
 ```rust
-use icedcn::{Size, Slot};
-use icedcn::widget::{button, popover, row, text};
 use icedcn::widget::popover::Align;
+use icedcn::widget::{button, popover, row, text};
+use icedcn::{Size, Slot};
 
 pub fn view<'a>() -> Slot<'a, ()> {
     let panel = |label: &'static str, alignment, content: &'static str| {
         popover(
-            move |p| p.trigger(button(label).size(Size::Sm).style(button::Outline).has_popup(true)),
+            move |p| {
+                p.trigger(
+                    button(label)
+                        .size(Size::Sm)
+                        .style(button::Outline)
+                        .has_popup(true),
+                )
+            },
             move |_| text(content).into(),
         )
         .align(alignment)

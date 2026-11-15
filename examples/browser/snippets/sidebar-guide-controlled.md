@@ -11,7 +11,13 @@ pub fn view<'a>(open: bool) -> Slot<'a, bool> {
         row![
             s.sidebar(sidebar::fixed("Workspace")),
             sidebar::main(sidebar::trigger()),
-        ].width(iced::Fill).height(iced::Fill).into()
-    }).open(open).on_open_change(|next| next).into()
+        ]
+        .width(iced::Fill)
+        .height(iced::Fill)
+        .into()
+    })
+    .open(open)
+    .on_open_change(|next| next)
+    .into()
 }
 ```

@@ -8,9 +8,11 @@ use icedcn::Slot;
 use icedcn::widget::bubble;
 
 #[derive(Clone)]
-enum Message { Reply }
+enum Message {
+    Reply,
+}
 
-fn example() -> Slot<'static, Message> {
+fn example<'a>() -> Slot<'a, Message> {
     bubble("I forgot my password")
         .style(bubble::Muted)
         .align(Horizontal::Right)

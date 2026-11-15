@@ -1,7 +1,7 @@
 ```rust
 use icedcn::widget::{badge, row};
 
-fn example() -> row::Row<'static, ()> {
+fn example<'a>() -> row::Row<'a, ()> {
     row![
         badge("Default"),
         badge("Secondary").style(badge::Secondary),

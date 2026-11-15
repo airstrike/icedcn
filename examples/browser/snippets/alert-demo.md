@@ -5,9 +5,8 @@ use icedcn::Slot;
 use icedcn::widget::{alert, column};
 
 fn demo<'a, M: 'a>() -> Slot<'a, M> {
-    let notice = |icon, title, description| {
-        alert().icon(icon).title(title).description(description)
-    };
+    let notice =
+        |icon, title, description| alert().icon(icon).title(title).description(description);
     column![
         notice(icon::circle_check().size(16).line_height(1.0),
             "Payment successful",

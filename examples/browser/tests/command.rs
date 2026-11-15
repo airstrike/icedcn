@@ -464,7 +464,7 @@ fn installed_command_rows_are_32_pixels_and_disabled_labels_dim_with_their_icons
         fonts.load_font(include_bytes!("../fonts/Geist.ttf").as_slice().into());
     }
     let settings = renderer::Settings {
-        font: iced::Font::new("Geist"),
+        font: "Geist".into(),
         text_size: 14.into(),
         ..renderer::Settings::default()
     };

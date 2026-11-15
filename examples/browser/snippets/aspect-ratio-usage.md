@@ -3,8 +3,8 @@
 ```rust
 use iced::widget::image;
 use iced::{ContentFit, Fill, Widget};
-use icedcn::widget::aspect_ratio;
 use icedcn::radius;
+use icedcn::widget::aspect_ratio;
 
 fn photo(handle: image::Handle) -> aspect_ratio::AspectRatio<'static, ()> {
     let photo = image(handle)

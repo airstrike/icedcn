@@ -5,7 +5,7 @@ use icedcn::{
     Slot,
     widget::{code_block, column},
 };
-pub fn view<Message: Clone + 'static>() -> Slot<'static, Message> {
+pub fn view<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     column![
         message(bubble("How do I filter notebook titles?").style(bubble::Variant::Muted))
             .align(Horizontal::Right),

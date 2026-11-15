@@ -1,7 +1,6 @@
 ```rust
 column![
-    status_marker("Compacting conversation")
-        .icon(spinner().size(16.)),
+    status_marker("Compacting conversation").icon(spinner().size(16.)),
     status_marker("Running tests")
         .icon(spinner().size(16.))
         .style(Separator),

@@ -73,13 +73,13 @@ impl Font {
 
     /// Set the font family name (call once at startup)
     fn set(&self, name: &str) {
-        let name = Box::leak(name.to_string().into_boxed_str());
+        let name: &'static str = Box::leak(name.to_string().into_boxed_str());
 
         let _ = self.inner.set(iced_core::Font {
             weight: self.weight,
             stretch: self.stretch,
             style: self.style,
-            ..iced_core::Font::new(name)
+            ..name.into()
         });
     }
 

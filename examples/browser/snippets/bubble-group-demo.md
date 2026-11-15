@@ -6,7 +6,7 @@ use icedcn::Slot;
 use icedcn::widget::bubble::Muted;
 use icedcn::widget::{bubble, column, container};
 
-fn example() -> Slot<'static, ()> {
+fn example<'a>() -> Slot<'a, ()> {
     frame(
         column![
             bubble("Can you tell me what's the issue?").style(Muted),

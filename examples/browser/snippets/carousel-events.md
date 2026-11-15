@@ -7,20 +7,28 @@ use icedcn::Slot;
 use icedcn::widget::{carousel, container, text};
 
 #[derive(Debug, Clone)]
-pub enum Message { Selected(usize) }
+pub enum Message {
+    Selected(usize),
+}
 
 #[derive(Default)]
-pub struct Model { current: usize }
+pub struct Model {
+    current: usize,
+}
 
 impl Model {
-    pub fn update(&mut self, Message::Selected(index): Message) { self.current = index; }
+    pub fn update(&mut self, Message::Selected(index): Message) {
+        self.current = index;
+    }
 
-    pub fn view(&self) -> Slot<'static, Message> {
-        carousel(5, |index| container(text::p((index + 1).to_string())).height(160))
-            .width(320)
-            .value(self.current)
-            .on_value_change(Message::Selected)
-            .into()
+    pub fn view<'a>(&self) -> Slot<'a, Message> {
+        carousel(5, |index| {
+            container(text::p((index + 1).to_string())).height(160)
+        })
+        .width(320)
+        .value(self.current)
+        .on_value_change(Message::Selected)
+        .into()
     }
 }
 ```

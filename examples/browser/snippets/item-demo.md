@@ -8,7 +8,10 @@ column![
             item::description("A simple item with title and description.").into(),
         ])
         .into(),
-        item::actions([button("Action").style(button::Outline).size(Size::Sm).into()]),
+        item::actions([button("Action")
+            .style(button::Outline)
+            .size(Size::Sm)
+            .into()]),
     ])
     .style(item::Outline),
     item::item([
@@ -18,7 +21,10 @@ column![
     ])
     .style(item::Outline)
     .size(item::Size::Sm)
-    .on_press(Message::Page(page_index, page::Message::LinkClicked("#".into()))),
+    .on_press(Message::Page(
+        page_index,
+        page::Message::LinkClicked("#".into())
+    )),
 ]
 .spacing(24)
 .width(Fill)

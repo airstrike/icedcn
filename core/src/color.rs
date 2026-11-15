@@ -26,7 +26,7 @@ impl Color {
     /// Fully opaque white (`oklch(1 0 0)`).
     pub const WHITE: Self = Self::new(1.0, 0.0, 0.0);
 
-    /// Fully transparent. Matches `iced::Color::default()` — useful as a
+    /// Fully transparent. Matches the native sRGB color default — useful as a
     /// neutral filler for `Border`/`Shadow` defaults (a 0-alpha shadow
     /// renders as nothing, regardless of color).
     pub const TRANSPARENT: Self = Self::with_alpha(0.0, 0.0, 0.0, 0.0);
@@ -141,7 +141,7 @@ impl Color {
     ///   of our palette tokens (e.g. `info`, `success`) sit at chroma high
     ///   enough to clip — this is intentional (they're authored in OKLCH
     ///   for perceptual consistency across themes), but it means an
-    ///   `iced::Color::into() -> Color::into() -> iced::Color` round trip
+    ///   native sRGB → OKLCH → native sRGB round trip
     ///   isn't bit-stable for those tokens. Don't rely on it.
     // OKLab matrix constants are kept at the precision the spec publishes.
     #[allow(clippy::excessive_precision)]
@@ -254,7 +254,7 @@ impl From<Color> for iced_core::Background {
 
 impl Default for Color {
     fn default() -> Self {
-        // Match `iced::Color`'s auto-derived default — fully transparent.
+        // Match the native sRGB auto-derived default — fully transparent.
         // This is what makes `Border::default()` / `Shadow::default()`
         // invisible (alpha=0), so unused defaults don't paint stray
         // outlines or boxes around widgets.

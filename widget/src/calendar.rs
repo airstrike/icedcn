@@ -16,7 +16,7 @@ use iced_core::alignment::Horizontal;
 use iced_core::font;
 use iced_core::keyboard::key::Named;
 use iced_core::text::LineHeight;
-use iced_core::{Alignment, Element, Font, Padding};
+use iced_core::{Alignment, Element, Padding};
 use iced_widget::button::Style;
 use iced_widget::component::{self, Component};
 use iced_widget::text::StyleFn;
@@ -404,7 +404,7 @@ impl<Message> Calendar<'_, Message> {
             .weight(font::Weight::Medium)
             .line_height(LineHeight::Relative(1.4285714));
             if system == System::Persian {
-                label = label.font(Font::new(persian::FAMILY));
+                label = label.font(persian::FAMILY);
             }
             label.into()
         };
@@ -462,7 +462,7 @@ impl<Message> Calendar<'_, Message> {
                     .into()
                 });
             if self.system == System::Persian {
-                label = label.font(Font::new(persian::FAMILY));
+                label = label.font(persian::FAMILY);
             }
             container(label)
                 .width(self.cell_size)
@@ -527,7 +527,7 @@ impl<Message> Calendar<'_, Message> {
                 .size(14)
                 .line_height(LineHeight::Relative(1.));
                 if self.system == System::Persian {
-                    label = label.font(Font::new(persian::FAMILY));
+                    label = label.font(persian::FAMILY);
                 }
                 let label: Slot<'static, Event> = label.into();
                 let label: Slot<'static, Event> =

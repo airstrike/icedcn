@@ -3,7 +3,7 @@ use browser::Message;
 use browser::component::table::TablePage;
 use iced::keyboard::key::Named;
 use iced::mouse::ScrollDelta;
-use iced::{Font, Point, Size};
+use iced::{Point, Size};
 use iced_test::core::Settings;
 use iced_test::core::widget::operation::{Operation, Outcome, focusable};
 use iced_test::{Simulator, simulator};
@@ -20,7 +20,7 @@ fn settings() -> Settings {
             .load_font(Cow::Borrowed(include_bytes!("../fonts/Geist.ttf")));
     });
     Settings {
-        font: Font::new("Geist"),
+        font: "Geist".into(),
         text_size: 14.into(),
         ..Default::default()
     }

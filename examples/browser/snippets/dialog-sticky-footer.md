@@ -5,7 +5,12 @@ const PARAGRAPH: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit
 
 dialog(
     |d| d.trigger(button("Sticky Footer").style(button::Outline)),
-    |_| dialog::header("Sticky Footer", "This dialog has a sticky footer that stays visible while the content scrolls."),
+    |_| {
+        dialog::header(
+            "Sticky Footer",
+            "This dialog has a sticky footer that stays visible while the content scrolls.",
+        )
+    },
 )
 .scrollable_body(|_| {
     column((0..10).map(|_| text::small(PARAGRAPH).line_height(1.5).into()))

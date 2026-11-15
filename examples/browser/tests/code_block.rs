@@ -214,7 +214,12 @@ fn ansi_matches_explicit_terminal_spans_at_both_scales_and_themes() {
             };
             let color = |light, dark, alpha| {
                 let rgb = if theme.neutral.is_dark { dark } else { light };
-                icedcn::Color::from(iced::Color::from_packed_rgba8(rgb, alpha))
+                icedcn::Color::from(iced::color!(
+                    (rgb >> 16) as u8,
+                    (rgb >> 8) as u8,
+                    rgb as u8,
+                    alpha
+                ))
             };
             let row = |spans| {
                 let text = rich_text(spans)

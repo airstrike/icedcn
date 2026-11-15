@@ -7,7 +7,9 @@ fn profile<M: Clone + 'static>(name: field::Field<'static, M>, submit: M) -> Slo
         field::legend("Profile"),
         Some("Fill in your profile information."),
         field::group([
-            name.responsive().description("Provide your full name for identification").into(),
+            name.responsive()
+                .description("Provide your full name for identification")
+                .into(),
             field::actions([
                 button("Submit").on_press(submit).into(),
                 button("Cancel").style(button::Outline).into(),

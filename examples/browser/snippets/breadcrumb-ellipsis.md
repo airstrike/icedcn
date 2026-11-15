@@ -8,7 +8,7 @@ enum Message {
     GoComponents,
 }
 
-fn view() -> Slot<'static, Message> {
+fn view<'a>() -> Slot<'a, Message> {
     breadcrumb([
         breadcrumb::link("Home", Message::GoHome),
         breadcrumb::ellipsis(None),

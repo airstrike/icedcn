@@ -4,7 +4,11 @@ use icedcn::widget::{column, item};
 fn inbox<'a>(title: &'a str, description: &'a str) -> item::Item<'a, Message> {
     item::item([
         item::media(icon::inbox()).style(item::Icon).into(),
-        item::content([item::title(title).into(), item::description(description).into()]).into(),
+        item::content([
+            item::title(title).into(),
+            item::description(description).into(),
+        ])
+        .into(),
     ])
 }
 

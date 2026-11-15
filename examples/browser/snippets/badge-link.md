@@ -10,7 +10,7 @@ enum Message {
     OpenLink,
 }
 
-fn example() -> badge::Badge<'static, Message> {
+fn example<'a>() -> badge::Badge<'a, Message> {
     badge![
         "Open Link",
         icon::arrow_up_right().size(12).line_height(1.0)

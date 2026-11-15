@@ -7,18 +7,20 @@ use icedcn::Slot;
 use icedcn::widget::{button, collapsible, column};
 
 #[derive(Debug, Clone)]
-enum Message { OpenChanged(bool) }
-
-fn update(open: &mut bool, message: Message) {
-    match message { Message::OpenChanged(next) => *open = next }
+enum Message {
+    OpenChanged(bool),
 }
 
-fn view(open: bool) -> Slot<'static, Message> {
-    collapsible(|c| {
-        column![c.trigger(button("Toggle")), c.content("Content")].into()
-    })
-    .open(open)
-    .on_open_change(Message::OpenChanged)
-    .into()
+fn update(open: &mut bool, message: Message) {
+    match message {
+        Message::OpenChanged(next) => *open = next,
+    }
+}
+
+fn view<'a>(open: bool) -> Slot<'a, Message> {
+    collapsible(|c| column![c.trigger(button("Toggle")), c.content("Content")].into())
+        .open(open)
+        .on_open_change(Message::OpenChanged)
+        .into()
 }
 ```

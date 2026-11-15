@@ -6,8 +6,13 @@ fn sides<'a>() -> [toggle_group::Item<'a, Message>; 4] {
 }
 
 column![
-    toggle_group(sides).default_value(["top"]).size(Size::Sm).style(toggle_group::Outline),
-    toggle_group(sides).default_value(["top"]).style(toggle_group::Outline),
+    toggle_group(sides)
+        .default_value(["top"])
+        .size(Size::Sm)
+        .style(toggle_group::Outline),
+    toggle_group(sides)
+        .default_value(["top"])
+        .style(toggle_group::Outline),
 ]
 .spacing(16)
 ```

@@ -7,7 +7,7 @@ use icedcn::Slot;
 use icedcn::widget::bubble::{Destructive, Muted};
 use icedcn::widget::{bubble, button, column, container, row, toast, toaster};
 
-fn example() -> Slot<'static, ()> {
+fn example<'a>() -> Slot<'a, ()> {
     toaster(frame(
         column![
             bubble("I don't need tests, I know my code works.")

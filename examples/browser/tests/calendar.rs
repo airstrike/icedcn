@@ -3,7 +3,7 @@ use browser::component::calendar::CalendarPage;
 use browser::component::calendar::recipes;
 use iced::keyboard::key::Named;
 use iced::widget::Id;
-use iced::{Element, Font, Point, Rectangle, Size};
+use iced::{Element, Point, Rectangle, Size};
 use iced_test::core::Settings;
 use iced_test::core::widget::operation::{self, Focusable, Operation, Outcome, Text, focusable};
 use iced_test::simulator::{self, Simulator};
@@ -374,7 +374,7 @@ fn installed_time_constraints_presets_and_persian_grid() {
     ui.find("23:59:6").expect("sixty seconds is rejected");
     ui.find("12:30:00").expect("End Time stays unchanged");
     let settings = Settings {
-        font: Font::new("Geist"),
+        font: "Geist".into(),
         fonts: vec![Cow::Borrowed(persian::FONT)],
         ..Default::default()
     };

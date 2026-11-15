@@ -6,7 +6,7 @@ use icedcn::Slot;
 use icedcn::widget::bubble::Muted;
 use icedcn::widget::{bubble, column, container, row};
 
-fn example() -> Slot<'static, ()> {
+fn example<'a>() -> Slot<'a, ()> {
     frame(
         column![
             bubble("Hey there! what's up?").align(Right),

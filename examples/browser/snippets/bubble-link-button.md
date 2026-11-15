@@ -5,7 +5,7 @@ use icedcn::Slot;
 use icedcn::widget::bubble::{Muted, Tinted};
 use icedcn::widget::{bubble, column, container, toast, toaster};
 
-fn example() -> Slot<'static, ()> {
+fn example<'a>() -> Slot<'a, ()> {
     toaster(frame(
         column![
             bubble("How can I help you today?").style(Muted),

@@ -1,6 +1,6 @@
 ```rust
-use icedcn::widget::select;
 use icedcn::Slot;
+use icedcn::widget::select;
 
 fn zone(label: &str, items: &[(&str, &str)]) -> select::Entry {
     select::group(

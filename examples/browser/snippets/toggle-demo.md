@@ -10,7 +10,8 @@ impl<'a> Component<'a, Message, Theme> for Bookmark {
     fn view(&self, pressed: &bool) -> impl Widget<bool, Theme> + 'a {
         static FILLED: OnceLock<svg::Handle> = OnceLock::new();
         let glyph: icedcn::Slot<'a, bool> = if *pressed {
-            let handle=FILLED.get_or_init(||svg::Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21 12 17 5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" fill="black" stroke="black" stroke-linejoin="round" stroke-width="2"/></svg>"#));
+            let handle =
+                FILLED.get_or_init(|| svg::Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21 12 17 5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" fill="black" stroke="black" stroke-linejoin="round" stroke-width="2"/></svg>"#));
             svg(handle.clone())
                 .width(14)
                 .height(14)

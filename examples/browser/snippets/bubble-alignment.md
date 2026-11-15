@@ -5,7 +5,7 @@ use icedcn::Slot;
 use icedcn::widget::bubble::Muted;
 use icedcn::widget::{bubble, column, container};
 
-fn example() -> Slot<'static, ()> {
+fn example<'a>() -> Slot<'a, ()> {
     frame(
         column![
             bubble("This bubble is aligned to the start. This is the default alignment.")

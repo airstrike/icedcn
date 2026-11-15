@@ -1,6 +1,6 @@
 ```rust
-use icedcn::widget::avatar::badge;
 use iced::widget::image;
+use icedcn::widget::avatar::badge;
 use icedcn::widget::{avatar, row};
 
 fn view<'a>(
@@ -11,11 +11,8 @@ fn view<'a>(
 ) -> row::Row<'a, ()> {
     row![
         avatar(portrait.clone()).fallback("AT"),
-        avatar::badge(
-            avatar(hecrj.clone()).fallback("HR"),
-            avatar::dot(),
-        )
-        .badge_style(badge::presence),
+        avatar::badge(avatar(hecrj.clone()).fallback("HR"), avatar::dot(),)
+            .badge_style(badge::presence),
         avatar::group![
             avatar(portrait).fallback("AT"),
             avatar(hecrj).fallback("HR"),

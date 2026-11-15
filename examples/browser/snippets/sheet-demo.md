@@ -5,13 +5,14 @@ use icedcn::{
     widget::{button, field, input, sheet, text},
 };
 const DESCRIPTION: &str = "Make changes to your profile here. Click save when you're done.";
-pub fn view() -> Slot<'static, ()> {
+pub fn view<'a>() -> Slot<'a, ()> {
     sheet(
         |s| s.trigger(button("Open").style(button::Outline)),
         |s| {
             let entry = |label, value| {
                 let control = input("").default_value(value).width(Fill);
-                field(control).spacing(12)
+                field(control)
+                    .spacing(12)
                     .label(text::label(label).height(14))
                     .width(Fill)
                     .into()

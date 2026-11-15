@@ -3,7 +3,7 @@ use iced::Fill;
 use icedcn::Slot;
 use icedcn::widget::{button, column, textarea};
 
-pub fn view() -> Slot<'static, ()> {
+pub fn view<'a>() -> Slot<'a, ()> {
     column![
         textarea("Type your message here."),
         button("Send message").width(Fill),

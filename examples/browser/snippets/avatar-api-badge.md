@@ -10,10 +10,9 @@
 The badge disk is 8/10/12px for small/default/large. Small avatars hide the inner content. Compose-aware content inherits 8px; use `.size(8).line_height(1.0)` for a Lucide glyph.
 
 ```rust
-use icedcn::widget::avatar::badge;
 use crate::icon;
 use icedcn::widget::avatar;
-
+use icedcn::widget::avatar::badge;
 
 fn view<'a>() -> avatar::group::Group<'a, ()> {
     avatar::group![

@@ -23,6 +23,6 @@ pub const GEIST_MONO: &[u8] = include_bytes!("../fonts/GeistMono-Regular.ttf");
 
 /// Family name embedded in the bundled TTF (verified via the font's
 /// `name` table — entry "Geist Mono Regular" splits into family "Geist
-/// Mono" + style "Regular"). Use with [`iced::Font::new`] when assigning
+/// Mono" + style "Regular"). Pass this string to `.font(...)` when assigning
 /// the font to a widget or markdown style field.
 pub const GEIST_MONO_NAME: &str = "Geist Mono";

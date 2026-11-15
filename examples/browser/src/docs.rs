@@ -52,8 +52,8 @@ mod tests {
             assert_eq!(palette.tint_text, Color::BLACK);
         }
         assert_eq!(docs.sidebar.foreground, Color::BLACK);
-        assert_eq!(docs.seed.primary, iced::Color::BLACK);
-        assert_eq!(docs.seed.text, iced::Color::BLACK);
+        assert_eq!(docs.seed.primary, iced::color!(0x000000));
+        assert_eq!(docs.seed.text, iced::color!(0x000000));
         assert_eq!(docs.iced_theme().seed(), docs.seed);
     }
 

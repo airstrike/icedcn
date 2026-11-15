@@ -20,7 +20,10 @@ impl<'a> Component<'a, Message, Theme> for Controlled {
 
         Element::from(column![
             progress(value).width(320),
-            slider(0.0..=100.0).value(value).on_value_change(|v| v).step(1.0),
+            slider(0.0..=100.0)
+                .value(value)
+                .on_value_change(|v| v)
+                .step(1.0),
         ])
     }
 }

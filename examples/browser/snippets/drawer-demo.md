@@ -1,4 +1,7 @@
 ```rust
+use icedcn::theme::container::Transparent;
+use icedcn::theme::tweak::{Bg, Token};
+
 let goal = state.0.unwrap_or(350);
 let chart = [
     400, 300, 200, 300, 200, 278, 189, 239, 300, 200, 278, 189, 349,
@@ -10,13 +13,7 @@ drawer(
             container(Space::new())
                 .width(Fill)
                 .height(v as f32 * 0.3)
-                .style(|t: &Theme| {
-                    Style {
-                        background: Some(t.primary.base.into()),
-                        ..Style::default()
-                    }
-                    .into()
-                })
+                .class(Transparent + Bg(Token::Primary))
                 .into()
         }))
         .spacing(5)

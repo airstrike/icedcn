@@ -1,7 +1,7 @@
 ```rust
 use icedcn::widget::{CodeBlock, code_block};
 
-pub fn view<Message: 'static>() -> CodeBlock<'static, Message> {
+pub fn view<'a, Message: 'static>() -> CodeBlock<'a, Message> {
     code_block(START_LINE)
         .font("Geist Mono")
         .language("rust")

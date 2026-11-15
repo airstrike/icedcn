@@ -17,10 +17,12 @@ fn notifications<M: Clone + 'static>(manage: M) -> Slot<'static, M> {
     .style(|theme| muted(theme).into())
     .on_link_click(move |()| manage.clone())
     .boxed();
-    let notifications = field::group(
-        ["Push notifications", "Email notifications"]
-            .map(|name| field(checkbox()).orientation(Horizontal).label(text::small(name)).into()),
-    )
+    let notifications = field::group(["Push notifications", "Email notifications"].map(|name| {
+        field(checkbox())
+            .orientation(Horizontal)
+            .label(text::small(name))
+            .into()
+    }))
     .spacing(12);
     field::group([
     column![field::label("Responses"),

@@ -51,18 +51,13 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
 }
 
 fn preview_art(_theme: &Theme) -> theme::container::Style {
-    let left: iced::Color = oklch(0.16, 0.0, 0.0).into();
-    let middle: iced::Color = oklch(0.28, 0.0, 0.0).into();
-    let right: iced::Color = oklch(0.58, 0.0, 0.0).into();
-    let shadow: iced::Color = oklch(0.10, 0.0, 0.0).into();
-
     theme::container::Style {
         background: Some(
             Linear::new(0.6)
-                .add_stop(0.0, left)
-                .add_stop(0.33, shadow)
-                .add_stop(0.68, middle)
-                .add_stop(1.0, right)
+                .add_stop(0.0, oklch(0.16, 0.0, 0.0).into())
+                .add_stop(0.33, oklch(0.10, 0.0, 0.0).into())
+                .add_stop(0.68, oklch(0.28, 0.0, 0.0).into())
+                .add_stop(1.0, oklch(0.58, 0.0, 0.0).into())
                 .into(),
         ),
         border: Border {

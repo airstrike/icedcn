@@ -1,7 +1,7 @@
 //! Card recipe regressions: spacing rebuilds, constrained frames, and lazy headers.
 use browser::component::card::CardPage;
 use browser::{Message, docs, page};
-use iced::{Element, Font, Size};
+use iced::{Element, Size};
 use iced_test::Simulator;
 use iced_test::core::Settings;
 use icedcn::widget::{button, text};
@@ -9,7 +9,7 @@ use icedcn::{Compose, Inherited, Slot, Theme, card};
 
 fn settings() -> Settings {
     Settings {
-        font: Font::new("Geist"),
+        font: "Geist".into(),
         text_size: 14.into(),
         ..Settings::default()
     }

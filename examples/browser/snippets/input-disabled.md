@@ -1,8 +1,8 @@
 ```rust
 use iced::Fill;
-use icedcn::widget::{field, input};
 use icedcn::theme;
 use icedcn::theme::tweak::Alpha;
+use icedcn::widget::{field, input};
 
 field(input("Email").width(Fill))
     .label(field::label("Email").style(theme::text::Foreground + Alpha(0.5)))

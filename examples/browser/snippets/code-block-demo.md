@@ -56,7 +56,12 @@ impl Demo {
             .title(row![icon::file_code().size(14), code_block::title("src/view.rs")].spacing(6))
             .actions(
                 row![
-                    action(icon::wrap_text().size(14), "Wrap lines", Message::Wrap, self.wrap),
+                    action(
+                        icon::wrap_text().size(14),
+                        "Wrap lines",
+                        Message::Wrap,
+                        self.wrap
+                    ),
                     action(icon::download().size(14), "Download", Message::Save, false)
                 ]
                 .spacing(4),
@@ -74,7 +79,11 @@ fn action(
     event: Message,
     active: bool,
 ) -> Slot<'static, Message> {
-    let ink = if active { Token::Foreground } else { Token::MutedForeground };
+    let ink = if active {
+        Token::Foreground
+    } else {
+        Token::MutedForeground
+    };
     tooltip(
         button(glyph)
             .square()

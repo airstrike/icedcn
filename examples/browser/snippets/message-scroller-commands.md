@@ -4,7 +4,9 @@ use icedcn::widget::scroller;
 use scroller::{Animation, Item, Scroller, Target};
 
 #[derive(Clone, Debug)]
-pub enum Event { Jump(u64) }
+pub enum Event {
+    Jump(u64),
+}
 
 pub fn view(rows: Vec<Item<'_, Event>>) -> Scroller<'_, Event> {
     scroller(rows).id("conversation")

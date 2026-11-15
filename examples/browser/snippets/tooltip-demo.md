@@ -4,7 +4,7 @@ use icedcn::{
     widget::{button, tooltip},
 };
 
-pub fn view() -> Slot<'static, ()> {
+pub fn view<'a>() -> Slot<'a, ()> {
     tooltip(button("Hover").style(button::Outline), "Add to library").into()
 }
 ```

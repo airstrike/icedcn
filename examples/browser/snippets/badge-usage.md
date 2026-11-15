@@ -3,7 +3,7 @@
 ```rust
 use icedcn::widget::badge;
 
-fn example() -> badge::Badge<'static, ()> {
+fn example<'a>() -> badge::Badge<'a, ()> {
     badge("Badge").style(badge::Default)
 }
 ```

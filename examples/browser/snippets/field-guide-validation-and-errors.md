@@ -11,7 +11,10 @@ use icedcn::widget::{field, input};
 fn username(value: String, unavailable: bool) -> Slot<'static, ()> {
     let control = input("Username").width(Fill).default_value(value);
     if unavailable {
-        field(control.style(Invalid)).label("Username").error("Choose another username.").into()
+        field(control.style(Invalid))
+            .label("Username")
+            .error("Choose another username.")
+            .into()
     } else {
         field(control).label("Username").into()
     }

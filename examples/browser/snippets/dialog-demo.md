@@ -26,10 +26,12 @@ dialog(
         .into()
     },
 )
-.footer(|d| [
-    d.close(button("Cancel").style(button::Outline)),
-    button("Save changes").into(),
-])
+.footer(|d| {
+    [
+        d.close(button("Cancel").style(button::Outline)),
+        button("Save changes").into(),
+    ]
+})
 ```
 
 For windows narrower than 768 pixels, the preview sets `.text_size(16)` on its inputs.

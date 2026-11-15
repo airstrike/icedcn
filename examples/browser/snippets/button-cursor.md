@@ -6,7 +6,8 @@ Buttons use the default arrow cursor. Set `.interaction(Interaction::Pointer)` t
 use iced::mouse::Interaction;
 use icedcn::widget::button;
 
-button("Docs").style(button::Ghost)
+button("Docs")
+    .style(button::Ghost)
     .interaction(Interaction::Pointer)
     .on_press(Message::OpenDocs)
 ```

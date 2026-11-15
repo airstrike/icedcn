@@ -3,7 +3,7 @@ use icedcn::{
     Slot,
     widget::{button, sheet},
 };
-pub fn view() -> Slot<'static, ()> {
+pub fn view<'a>() -> Slot<'a, ()> {
     sheet(
                 |s| s.trigger(button("Open Sheet").style(button::Outline)),
                 |_| sheet::header(

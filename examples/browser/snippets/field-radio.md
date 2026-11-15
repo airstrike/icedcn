@@ -14,7 +14,10 @@ fn plans<M: Clone + 'static>() -> Slot<'static, M> {
         Some("Yearly and lifetime plans offer significant savings."),
         radio_group(move |g| {
             field::group(plans.map(|(id, name)| {
-                field(g.item(id)).orientation(Horizontal).label(text::small(name)).into()
+                field(g.item(id))
+                    .orientation(Horizontal)
+                    .label(text::small(name))
+                    .into()
             }))
             .spacing(8)
             .into()

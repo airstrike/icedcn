@@ -39,7 +39,7 @@ impl Demo {
             Subscription::none()
         }
     }
-    pub fn view(&self) -> Slot<'static, Message> {
+    pub fn view<'a>(&self) -> Slot<'a, Message> {
         let mut remaining = if self.started.is_some() {
             self.visible
         } else {

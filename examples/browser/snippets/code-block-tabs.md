@@ -4,7 +4,7 @@ use icedcn::{
     Slot,
     widget::{code_block, column},
 };
-pub fn view<Message: Clone + 'static>() -> Slot<'static, Message> {
+pub fn view<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     let files = [
         ("view", "view.rs", "src/view.rs", "rust", TABS_0),
         ("search", "search.rs", "src/search.rs", "rust", TABS_1),

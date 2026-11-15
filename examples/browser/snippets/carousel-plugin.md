@@ -52,7 +52,7 @@ fn slide<Message: 'static>(
     .into()
 }
 
-pub fn view<Message: Clone + 'static>(window_width: f32) -> Slot<'static, Message> {
+pub fn view<'a, Message: Clone + 'static>(window_width: f32) -> Slot<'a, Message> {
     carousel(5, |index| slide(index, 36.0, 40.0, false, 4.0))
         .width(if window_width < 640.0 { 160.0 } else { 320.0 })
         .autoplay(Duration::from_secs(2))

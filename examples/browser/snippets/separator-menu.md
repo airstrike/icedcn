@@ -1,8 +1,8 @@
 ```rust
 use iced::widget::responsive;
 use iced::{Center, Element, Fill, Length, Pixels, Shrink, Subscription, Task, Widget, window};
-use icedcn::{Theme, Vertical, theme};
 use icedcn::widget::{Column, column, container, row, separator, text};
+use icedcn::{Theme, Vertical, theme};
 
 struct Menu {
     window_width: f32,
@@ -16,7 +16,9 @@ enum Message {
 impl Menu {
     fn new() -> (Self, Task<Message>) {
         (
-            Self { window_width: 1024.0 },
+            Self {
+                window_width: 1024.0,
+            },
             window::oldest()
                 .and_then(window::size)
                 .map(|size| Message::Width(size.width)),
@@ -31,12 +33,16 @@ impl Menu {
         window::resize_events().map(|(_, size)| Message::Width(size.width))
     }
 
-    fn view(&self) -> Element<'static, Message, Theme> {
+    fn view<'a>(&self) -> Element<'a, Message, Theme> {
         let wide = self.window_width >= 768.0;
         responsive(move |bounds| {
             let cramped = wide && bounds.width < 355.0;
             let width = |portion| {
-                if cramped { Length::FillPortion(portion) } else { Shrink }
+                if cramped {
+                    Length::FillPortion(portion)
+                } else {
+                    Shrink
+                }
             };
             let mut items = row![
                 menu_item("Settings", "Manage preferences").width(width(6)),

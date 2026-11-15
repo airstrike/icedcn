@@ -44,7 +44,11 @@ fn payment<M: Clone + 'static>(
                 .label(text::small("Same as shipping address"))
         ),
         field(textarea("Add any additional comments")).label("Comments"),
-        row![button("Submit").on_press(submit), button("Cancel").style(button::Outline)].spacing(8),
+        row![
+            button("Submit").on_press(submit),
+            button("Cancel").style(button::Outline)
+        ]
+        .spacing(8),
     ]
     .spacing(20)
     .width(Fill)

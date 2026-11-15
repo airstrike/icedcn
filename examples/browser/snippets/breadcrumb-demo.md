@@ -1,8 +1,8 @@
 ```rust
 use icedcn::Size;
+use icedcn::Slot;
 use icedcn::theme::tweak::{Fg, Token, hover};
 use icedcn::widget::{breadcrumb, button, dropdown_menu, menu};
-use icedcn::Slot;
 
 #[derive(Debug, Clone)]
 enum Message {
@@ -18,7 +18,7 @@ fn destinations(_: &dropdown_menu::Handle) -> Slot<'static, Message> {
     ])
 }
 
-fn view() -> Slot<'static, Message> {
+fn view<'a>() -> Slot<'a, Message> {
     breadcrumb([
         breadcrumb::link("Home", Message::GoHome),
         breadcrumb::item(
@@ -28,7 +28,11 @@ fn view() -> Slot<'static, Message> {
                         button(breadcrumb::ellipsis(None))
                             .size(Size::Sm)
                             .square()
-                            .style(button::Ghost + Fg(Token::MutedForeground) + hover(Fg(Token::Foreground)))
+                            .style(
+                                button::Ghost
+                                    + Fg(Token::MutedForeground)
+                                    + hover(Fg(Token::Foreground)),
+                            )
                             .translate(false),
                     )
                 },

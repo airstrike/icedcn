@@ -6,7 +6,8 @@ pub fn live_reply<'a, M: Clone + 'a>(question: &'a str, reply: &'a str) -> Scrol
     scroller([
         scroller::item(1, message(bubble(question))).anchor(true),
         scroller::item(2, message(bubble(reply).style(bubble::Ghost))),
-    ]).auto_scroll(true)
+    ])
+    .auto_scroll(true)
 }
 ```
 

@@ -1,5 +1,5 @@
 ```rust
-use icedcn::widget::{trace, text};
+use icedcn::widget::{text, trace};
 
 trace([
     line("Searched for rust-version", icon::search).into(),

@@ -4,7 +4,6 @@ use iced::{Element, Fill, Shrink, Widget};
 use icedcn::widget::{carousel, container, text};
 use icedcn::{Slot, Theme, card};
 
-
 fn slide<Message: 'static>(
     index: usize,
     font_size: f32,
@@ -52,7 +51,7 @@ fn slide<Message: 'static>(
     .into()
 }
 
-pub fn view<Message: Clone + 'static>(window_width: f32) -> Slot<'static, Message> {
+pub fn view<'a, Message: Clone + 'static>(window_width: f32) -> Slot<'a, Message> {
     carousel(5, |index| slide(index, 36.0, 40.0, false, 4.0))
         .width(if window_width < 640.0 { 192.0 } else { 320.0 })
         .into()

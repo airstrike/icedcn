@@ -1,8 +1,13 @@
 ```rust
-use icedcn::{Slot, widget::{button, toast}};
+use icedcn::{
+    Slot,
+    widget::{button, toast},
+};
 
 #[derive(Clone)]
-enum Message { Undo }
+enum Message {
+    Undo,
+}
 
 fn show_toast() -> Slot<'static, Message> {
     toast::trigger(

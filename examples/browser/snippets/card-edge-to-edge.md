@@ -1,8 +1,9 @@
 ```rust
 use iced::Fill;
-use icedcn::{card, Slot};
-use icedcn::theme::container::Style;
+use icedcn::theme::container::Transparent;
+use icedcn::theme::tweak::{Alpha, Bg, Token};
 use icedcn::widget::{button, column, container, row, scroll_area, separator, space, text};
+use icedcn::{Slot, card};
 
 fn terms<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
     const TERMS: [&str; 4] = [
@@ -17,10 +18,7 @@ fn terms<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
         .width(Fill);
     let terms = container(scroll_area(body).height(192))
         .width(Fill)
-        .style(|t| Style {
-            background: Some(t.muted.base.alpha(0.5).into()),
-            ..Style::default()
-        });
+        .class(Transparent + Bg(Token::Muted) + Alpha(0.5));
     card(
         column![
             container(

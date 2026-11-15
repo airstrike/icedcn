@@ -3,7 +3,7 @@ use icedcn::{
     Slot,
     widget::{code_block, column},
 };
-pub fn view<Message: 'static>() -> Slot<'static, Message> {
+pub fn view<'a, Message: 'static>() -> Slot<'a, Message> {
     let files = [
         ("Cargo.toml", "toml", LANGUAGES_0),
         ("src/main.rs", "rust", LANGUAGES_1),

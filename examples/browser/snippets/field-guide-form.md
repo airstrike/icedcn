@@ -27,7 +27,9 @@ fn required(
         .on_input(move |value| Event::Edit(name, value))
         .on_submit(Event::Submit);
     if attempted && value.trim().is_empty() {
-        field(control.style(Invalid)).label(name).error(format!("{name} is required."))
+        field(control.style(Invalid))
+            .label(name)
+            .error(format!("{name} is required."))
     } else {
         field(control).label(name)
     }

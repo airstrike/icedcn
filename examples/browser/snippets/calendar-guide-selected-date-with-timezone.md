@@ -3,14 +3,16 @@
 Calendar selections are civil dates without a time of day. `today()` uses the user's local timezone. Convert a stored instant to the intended timezone before supplying its civil date to `.selected(...)` or `.default_selected(...)`.
 
 ```rust
-use icedcn::widget::calendar::{Date, Selection, today};
 use icedcn::widget::calendar;
+use icedcn::widget::calendar::{Date, Selection, today};
 
-pub fn calendar_for_local_date<Message: 'static>(local_date: Date) -> calendar::Calendar<'static, Message> {
+pub fn calendar_for_local_date<Message: 'static>(
+    local_date: Date,
+) -> calendar::Calendar<'static, Message> {
     calendar().default_selected(Selection::single(local_date))
 }
 
-pub fn example<Message: 'static>() -> calendar::Calendar<'static, Message> {
+pub fn example<'a, Message: 'static>() -> calendar::Calendar<'a, Message> {
     calendar_for_local_date(today())
 }
 ```

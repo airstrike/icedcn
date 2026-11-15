@@ -7,12 +7,14 @@ use iced::Alignment;
 use icedcn::Slot;
 use icedcn::widget::{carousel, container, text};
 
-pub fn view<Message: Clone + 'static>() -> Slot<'static, Message> {
-    carousel(5, |index| container(text::p((index + 1).to_string())).height(160))
-        .width(320)
-        .align(Alignment::Start)
-        .looping(true)
-        .into()
+pub fn view<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
+    carousel(5, |index| {
+        container(text::p((index + 1).to_string())).height(160)
+    })
+    .width(320)
+    .align(Alignment::Start)
+    .looping(true)
+    .into()
 }
 ```
 

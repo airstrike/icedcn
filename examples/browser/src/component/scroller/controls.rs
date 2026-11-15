@@ -241,7 +241,7 @@ fn peek(theme: &Theme, status: slider::Status) -> slider::Style {
         1.0
     };
     style.rail.backgrounds.1 = theme.input.scale_alpha(0.9 * opacity).into();
-    style.handle.border_color = iced::Color::BLACK.scale_alpha(0.1 * opacity);
+    style.handle.border_color = iced::color!(0x000000).scale_alpha(0.1 * opacity);
     if let Some(ring) = &mut style.ring {
         ring.width = 4.;
         ring.color = theme.neutral.ring.scale_alpha(0.3).into();

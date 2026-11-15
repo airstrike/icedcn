@@ -11,7 +11,7 @@ use icedcn::Theme;
 use icedcn::widget::bubble::{Destructive, Ghost, Muted, Outline, Secondary, Tinted};
 use icedcn::widget::{bubble, column, container, text};
 
-fn example(theme: &Theme) -> Slot<'static, ()> {
+fn example<'a>(theme: &Theme) -> Slot<'a, ()> {
     frame(
         column![
             bubble("This is the default primary bubble."),
@@ -52,7 +52,7 @@ fn ghost_text(theme: &Theme) -> Slot<'static, ()> {
         .font("Geist Mono")
         .size(12.25)
         .color(theme.neutral.foreground)
-        .background(iced::Color::from(theme.muted.base))
+        .background(iced::Background::Color(theme.muted.base.into()))
         .border(border::rounded(4))
         .padding([1, 4]);
     column![

@@ -5,7 +5,12 @@ const PARAGRAPH: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit
 
 dialog(
     |d| d.trigger(button("Scrollable Content").style(button::Outline)),
-    |_| dialog::header("Scrollable Content", "This is a dialog with scrollable content."),
+    |_| {
+        dialog::header(
+            "Scrollable Content",
+            "This is a dialog with scrollable content.",
+        )
+    },
 )
 .scrollable_body(|_| {
     column((0..10).map(|_| text::small(PARAGRAPH).line_height(1.5).into()))

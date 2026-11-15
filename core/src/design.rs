@@ -22,10 +22,10 @@ pub struct FontFamily {
 impl FontFamily {
     pub fn from_name(name: &'static str) -> Self {
         Self {
-            regular: Font::new(name).weight(Weight::Normal),
-            medium: Font::new(name).weight(Weight::Medium),
-            semibold: Font::new(name).weight(Weight::Semibold),
-            bold: Font::new(name).weight(Weight::Bold),
+            regular: Font::from(name).weight(Weight::Normal),
+            medium: Font::from(name).weight(Weight::Medium),
+            semibold: Font::from(name).weight(Weight::Semibold),
+            bold: Font::from(name).weight(Weight::Bold),
         }
     }
 }

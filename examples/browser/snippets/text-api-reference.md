@@ -113,8 +113,8 @@ same widget renders correctly in light and dark modes.
 
 ```rust
 use icedcn::rich_text;
-use icedcn::widget::{rich_text::span, text};
 use icedcn::theme::tweak::Token;
+use icedcn::widget::{rich_text::span, text};
 
 rich_text![
     span("Required Field ").size(text::size::SM).medium(),

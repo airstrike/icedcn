@@ -19,6 +19,8 @@ pub fn hijri<Message: 'static>() -> Element<'static, Message, Theme> {
 fn main() -> iced::Result {
     use icedcn::widget::calendar::persian;
     iced::application(|| (), |_: &mut (), _: ()| {}, |_: &()| hijri::<()>())
-        .fonts([persian::FONT]).theme(|_: &()| Theme::light()).run()
+        .fonts([persian::FONT])
+        .theme(|_: &()| Theme::light())
+        .run()
 }
 ```
