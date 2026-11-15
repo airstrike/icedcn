@@ -2,13 +2,12 @@ use iced::time::{Duration, Instant};
 use std::collections::BTreeMap;
 
 use iced::alignment::Horizontal;
-use iced::widget::{Id, svg};
+use iced::widget::Id;
 use iced::{Element, Fill, Widget};
-use icedcn::theme::tweak::{Fg, Token, hover};
 use icedcn::widget::code_block::LineStyle;
 use icedcn::widget::{
     CodeBlock, bubble, button, code_block, column, container, markdown, message, row, tabs, text,
-    tooltip, trace,
+    trace,
 };
 use icedcn::{Size, Slot, Theme};
 
@@ -153,18 +152,11 @@ impl State {
         block: CodeBlock<'static, Message>,
     ) -> Slot<'static, Message> {
         let wrapped = *self.wraps.get(id).unwrap_or(&(id == "actions"));
-        let wrap = action(
-            icon::wrap_text().size(14),
-            "Wrap lines",
-            Message::Wrap(id),
-            wrapped,
-        );
-        let save = action(
-            icon::download().size(14),
-            "Download",
-            Message::Save(filename, source),
-            false,
-        );
+        let wrap = code_block::action(icon::wrap_text().size(14), "Wrap lines")
+            .active(wrapped)
+            .on_press(Message::Wrap(id));
+        let save = code_block::action(icon::download().size(14), "Download")
+            .on_press(Message::Save(filename, source));
         let title = if id == "actions" {
             code_block::terminal_title(title)
         } else {
@@ -182,7 +174,7 @@ impl State {
         block.into()
     }
     fn replay(&self, id: &'static str) -> Slot<'static, Message> {
-        button![replay_icon(), "Replay"]
+        button![icon::rotate_ccw().size(14).line_height(1.0), "Replay"]
             .style(button::Outline)
             .size(Size::Sm)
             .disabled(self.streaming.contains_key(id))
@@ -489,27 +481,6 @@ fn trace_output(title: &'static str, source: &'static str, error: bool) -> Slot<
     .into()
 }
 
-fn action(
-    glyph: impl Into<Slot<'static, Message>>,
-    label: &'static str,
-    event: Message,
-    active: bool,
-) -> Slot<'static, Message> {
-    let ink = if active {
-        Token::Foreground
-    } else {
-        Token::MutedForeground
-    };
-    tooltip(
-        button(glyph)
-            .square()
-            .style(button::Ghost + Fg(ink) + hover(Fg(Token::Foreground)))
-            .size(Size::Xs)
-            .on_press(event),
-        label,
-    )
-    .into()
-}
 fn total_length(id: &str) -> usize {
     if id == "markdown" {
         MARKDOWN.len()
@@ -544,11 +515,6 @@ fn prose(items: &[markdown::Item], dark: bool) -> Slot<'static, Message> {
 fn prose_settings(dark: bool) -> markdown::Settings {
     let theme = if dark { Theme::dark() } else { Theme::light() };
     markdown::Settings::with_text_size(14, markdown::Style::from(theme.iced_theme()))
-}
-
-fn replay_icon() -> Slot<'static, Message> {
-    svg(svg::Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>"#))
-        .width(14).height(14).style(|theme: &Theme, _| svg::Style { color: Some(theme.neutral.foreground.into()) }).boxed().into()
 }
 
 fn markdown_prefix(deltas: usize) -> usize {

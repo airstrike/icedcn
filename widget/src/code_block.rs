@@ -1,4 +1,5 @@
 //! A Nova code panel with selectable output, a keyboard viewport and optional slots.
+mod action;
 pub mod ansi;
 mod copy;
 mod floating;
@@ -7,6 +8,7 @@ mod listing;
 #[cfg(feature = "highlighter")]
 mod syntax;
 
+pub use action::{Action, action};
 pub use copy::{CopyButton, copy_button};
 mod frame;
 mod lines;

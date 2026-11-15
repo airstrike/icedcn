@@ -1,1 +1,1 @@
-Replay reveals three bytes every 16 milliseconds and respects UTF-8 boundaries. A file’s copy button becomes available when its last byte arrives.
+Append incoming chunks to your application’s string in `update`, then pass the current text to this view. Set `complete` when the stream ends to enable copying. The preview replays sample chunks with a timer; that timer is demo machinery, not a requirement of the widget. Use `.diff()` or `.line_style(...)` with the same streaming pattern.

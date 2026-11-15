@@ -1,6 +1,6 @@
 // Generated automatically by iced_lucide at build time.
 // Do not edit manually.
-// 3ae8e2cb9b9325dd5dbc6616f13aca4fe94d63ca2b1a04fdbaa0bf6b125c487c
+// c10a40e97be4c64e40c42a709fd9ce6e56e22dfeac99a2600f6a8f09979f1ce8
 use iced::widget::text::{self, Text};
 use iced::{Font, font};
 
@@ -110,6 +110,7 @@ pub const ALL_ICONS: &[(&str, &str)] = &[
     ("plus", "\u{E13D}"),
     ("refresh_ccw", "\u{E144}"),
     ("refresh_cw", "\u{E145}"),
+    ("rotate_ccw", "\u{E148}"),
     ("rotate_cw", "\u{E149}"),
     ("save", "\u{E14D}"),
     ("scissors", "\u{E14E}"),
@@ -842,6 +843,13 @@ where
     Theme: text::Catalog + 'a,
 {
     icon("\u{E145}")
+}
+
+pub fn rotate_ccw<'a, Theme>() -> Text<'a, Theme>
+where
+    Theme: text::Catalog + 'a,
+{
+    icon("\u{E148}")
 }
 
 pub fn rotate_cw<'a, Theme>() -> Text<'a, Theme>

@@ -4,16 +4,26 @@ use icedcn::{
     Slot,
     widget::{code_block, column},
 };
-pub fn view<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
+pub fn view<'a, Message: Clone + 'static>(
+    view_source: &'a str,
+    search_source: &'a str,
+    config_source: &'a str,
+) -> Slot<'a, Message> {
     let files = [
-        ("view", "view.rs", "src/view.rs", "rust", TABS_0),
-        ("search", "search.rs", "src/search.rs", "rust", TABS_1),
+        ("view", "view.rs", "src/view.rs", "rust", view_source),
+        (
+            "search",
+            "search.rs",
+            "src/search.rs",
+            "rust",
+            search_source,
+        ),
         (
             "config",
             "config.toml",
             ".cargo/config.toml",
             "toml",
-            TABS_2,
+            config_source,
         ),
     ];
     tabs(move |t| {
@@ -37,30 +47,4 @@ pub fn view<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     .default_value("view")
     .into()
 }
-
-const TABS_0: &str = r##"use icedcn::widget::{column, text};
-use icedcn::Slot;
-
-pub fn view(titles: &[String]) -> Slot<'_, ()> {
-    let mut items = column![].spacing(8);
-    for title in titles {
-        items = items.push(text::p(title.as_str()).into());
-    }
-    items.into()
-}"##;
-
-const TABS_1: &str = r##"fn matches(query: &str, title: &str) -> bool {
-    title.to_lowercase().contains(&query.to_lowercase())
-}
-
-fn search<'a>(query: &str, titles: &[&'a str]) -> Vec<&'a str> {
-    titles
-        .iter()
-        .copied()
-        .filter(|title| matches(query, title))
-        .collect()
-}"##;
-
-const TABS_2: &str = r##"[env]
-RUST_LOG = "notebook=debug""##;
 ```

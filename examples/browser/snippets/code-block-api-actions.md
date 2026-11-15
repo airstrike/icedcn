@@ -8,3 +8,8 @@ Floating controls fade over 150ms. The current renderer fades inherited text and
 | --- | --- | --- | --- |
 | `.copyable(bool)` | `bool` | `false` | Append a Copy button for text, diff or ANSI source. |
 | `.actions(actions)` | `impl Into<Slot>` | absent | Usually a row of ghost icon buttons with a 4px gap. |
+
+`code_block::action(content, label)` creates a compact toolbar button with a tooltip.
+Use `.on_press(message)` to publish an application message, `.active(bool)` for a toggled
+option, and `.disabled(bool)` when the action is unavailable. It inherits the block's
+disabled state and floating-action presentation.

@@ -1,1 +1,1 @@
-The Wrap button toggles `.wrap(self.wrap)`. Download opens a save dialog and displays the result in the footer. The copy button handles clipboard feedback itself.
+Handle `Wrap` in `update` by toggling the value passed to `.wrap(...)`. Handle `Save` with your application’s file-writing task. The action control supplies the compact styling and tooltip; `.copyable(true)` manages clipboard feedback.
