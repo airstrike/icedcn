@@ -542,6 +542,7 @@ fn page_button(
     active: bool,
 ) -> iced::Element<'static, Message, Theme> {
     let button = button(label)
+        .anchor()
         .style(button::Ghost)
         .size(Size::Sm)
         .width(36.0)
