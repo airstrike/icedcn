@@ -1,5 +1,8 @@
 //! Typography components
 //!
+//! Typography presets inherit the surrounding foreground. Semantic colors such as
+//! [`muted`] and [`error`], and an explicit `.style(...)`, override that color.
+//!
 //! # Example
 //!
 //! ```ignore
@@ -278,7 +281,6 @@ pub fn h1<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
         .size(size::XL3)
         .semibold()
         .letter_spacing(-0.025)
-        .style(theme::text::Foreground)
 }
 
 pub fn h2<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
@@ -286,7 +288,6 @@ pub fn h2<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
         .size(size::XL)
         .medium()
         .letter_spacing(-0.025)
-        .style(theme::text::Foreground)
 }
 
 pub fn h3<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
@@ -294,7 +295,6 @@ pub fn h3<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
         .size(size::LG)
         .medium()
         .letter_spacing(-0.025)
-        .style(theme::text::Foreground)
 }
 
 pub fn h4<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
@@ -302,13 +302,10 @@ pub fn h4<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
         .size(size::BASE)
         .medium()
         .letter_spacing(-0.025)
-        .style(theme::text::Foreground)
 }
 
 pub fn p<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
-    Text::new(content)
-        .size(size::BASE)
-        .style(theme::text::Foreground)
+    Text::new(content).size(size::BASE)
 }
 
 pub fn lead<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
@@ -316,52 +313,41 @@ pub fn lead<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
 }
 
 pub fn large<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
-    Text::new(content)
-        .size(size::LG)
-        .semibold()
-        .style(theme::text::Foreground)
+    Text::new(content).size(size::LG).semibold()
 }
 
 pub fn small<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
-    Text::new(content)
-        .size(size::SM)
-        .style(theme::text::Foreground)
+    Text::new(content).size(size::SM)
 }
 
-/// Alias for [`small`]: 14-pixel foreground text.
+/// Alias for [`small`]: 14-pixel text that inherits its parent color.
 pub fn sm<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     small(content)
 }
 
-/// Alias for [`p`]: 16-pixel foreground text.
+/// Alias for [`p`]: 16-pixel text that inherits its parent color.
 pub fn md<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     p(content)
 }
 
-/// Alias for [`large`]: 18-pixel semibold foreground text.
+/// Alias for [`large`]: 18-pixel semibold text that inherits its parent color.
 pub fn lg<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     large(content)
 }
 
-/// 20-pixel foreground text.
+/// 20-pixel text that inherits its parent color.
 pub fn xl<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
-    Text::new(content)
-        .size(size::XL)
-        .style(theme::text::Foreground)
+    Text::new(content).size(size::XL)
 }
 
-/// 24-pixel foreground text.
+/// 24-pixel text that inherits its parent color.
 pub fn xl2<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
-    Text::new(content)
-        .size(size::XL2)
-        .style(theme::text::Foreground)
+    Text::new(content).size(size::XL2)
 }
 
-/// 30-pixel foreground text.
+/// 30-pixel text that inherits its parent color.
 pub fn xl3<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
-    Text::new(content)
-        .size(size::XL3)
-        .style(theme::text::Foreground)
+    Text::new(content).size(size::XL3)
 }
 
 /// Medium-weight field label with a tight line height for alignment beside controls.
@@ -369,7 +355,6 @@ pub fn label<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     Text::new(content)
         .size(size::SM)
         .medium()
-        .style(theme::text::Foreground)
         .line_height(LineHeight::Relative(1.0))
 }
 
@@ -386,9 +371,7 @@ pub fn error<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
 }
 
 pub fn xs<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
-    Text::new(content)
-        .size(size::XS)
-        .style(theme::text::Foreground)
+    Text::new(content).size(size::XS)
 }
 
 /// An italic blockquote with a two-pixel left rule and a 24-pixel inset. Set vertical spacing
@@ -614,6 +597,54 @@ mod tests {
             },
         };
         let _ = Box::new(button(Slot::new(label)).width(40)).compose();
+    }
+
+    #[test]
+    fn typography_presets_inherit_selected_sidebar_foreground() {
+        for text in [
+            h1("Dashboard"),
+            h2("Dashboard"),
+            h3("Dashboard"),
+            h4("Dashboard"),
+            p("Dashboard"),
+            large("Dashboard"),
+            small("Dashboard"),
+            xl("Dashboard"),
+            xl2("Dashboard"),
+            xl3("Dashboard"),
+            label("Dashboard"),
+            xs("Dashboard"),
+        ] {
+            let label = Label {
+                text,
+                check: |text| {
+                    assert!(
+                        text.style.is_none(),
+                        "typography must inherit the selected color"
+                    );
+                },
+            };
+            let _: iced_core::Element<'_, (), Theme, Renderer> =
+                crate::sidebar::menu_button(Slot::new(label))
+                    .active(true)
+                    .into();
+        }
+    }
+
+    #[test]
+    fn semantic_and_explicit_typography_colors_remain_overrides() {
+        for theme in [Theme::light(), Theme::dark()] {
+            for text in [
+                small("Label").style(theme::text::Foreground),
+                muted("Label"),
+                error("Label"),
+            ] {
+                let style = text
+                    .style
+                    .expect("semantic and explicit styles are preserved");
+                assert!(style(&theme).color.is_some());
+            }
+        }
     }
 
     #[test]
