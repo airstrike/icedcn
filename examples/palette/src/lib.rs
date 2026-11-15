@@ -12,7 +12,7 @@ use std::f32::consts::PI;
 use iced::gradient::Linear;
 use iced::widget::Id;
 use iced::widget::{responsive, stack};
-use iced::{Bottom, Fill, Padding, Right, Task};
+use iced::{Bottom, Fill, Padding, Right, Task, Widget};
 use iced_widget::button::Status;
 use icedcn::Theme;
 use icedcn::core::{Background, Border};
@@ -327,7 +327,7 @@ impl State {
     pub fn view(&self) -> iced::Element<'_, Message, Theme> {
         column![
             chrome::view(self),
-            responsive(|size| self.view_embedded(size.width)),
+            responsive(|size| self.view_embedded(size.width)).boxed(),
         ]
         .height(Fill)
         .into()

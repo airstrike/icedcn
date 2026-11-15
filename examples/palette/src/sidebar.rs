@@ -2,7 +2,7 @@
 
 use iced::font::Family;
 use iced::widget::{space, themer};
-use iced::{Center, Fill, Font, Length, Pixels};
+use iced::{Center, Fill, Font, Length, Pixels, Widget};
 use iced_widget::button::Status;
 use icedcn::Theme;
 use icedcn::core::{Border, Color, oklch};
