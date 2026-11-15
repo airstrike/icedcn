@@ -37,7 +37,6 @@ pub static BLOCKS: &[Block] = &[
         snippet: "examples/browser/snippets/bubble-demo.md",
     },
     Block::Md("examples/browser/snippets/bubble-intro.md"),
-    Block::Md("examples/browser/snippets/bubble-installation.md"),
     Block::Md("examples/browser/snippets/bubble-usage.md"),
     Block::Md("examples/browser/snippets/bubble-composition.md"),
     Block::Md("examples/browser/snippets/bubble-features.md"),

@@ -19,7 +19,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/popover-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/popover-installation.md"),
     page::Block::Md("examples/browser/snippets/popover-usage.md"),
     page::Block::Md("examples/browser/snippets/popover-composition.md"),
     page::Block::Example {

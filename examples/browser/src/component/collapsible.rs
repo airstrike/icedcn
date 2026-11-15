@@ -25,7 +25,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/collapsible-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/collapsible-installation.md"),
     page::Block::Md("examples/browser/snippets/collapsible-usage.md"),
     page::Block::Md("examples/browser/snippets/collapsible-composition.md"),
     page::Block::Md("examples/browser/snippets/collapsible-guide-controlled-state.md"),

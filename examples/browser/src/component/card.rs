@@ -30,7 +30,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/card-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/card-installation.md"),
     page::Block::Md("examples/browser/snippets/card-usage.md"),
     page::Block::Md("examples/browser/snippets/card-composition.md"),
     page::Block::Md("examples/browser/snippets/card-size-guide.md"),

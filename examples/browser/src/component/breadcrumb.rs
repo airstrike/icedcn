@@ -23,7 +23,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/breadcrumb-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/breadcrumb-installation.md"),
     page::Block::Md("examples/browser/snippets/breadcrumb-usage.md"),
     page::Block::Md("examples/browser/snippets/breadcrumb-composition.md"),
     page::Block::Example {

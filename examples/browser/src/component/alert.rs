@@ -24,7 +24,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/alert-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/alert-installation.md"),
     page::Block::Md("examples/browser/snippets/alert-usage.md"),
     page::Block::Md("examples/browser/snippets/alert-composition.md"),
     page::Block::Example {

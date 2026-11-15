@@ -8,7 +8,6 @@ pub static BLOCKS: &[Block] = &[
         snippet: "examples/browser/snippets/code-block-demo.md",
     },
     Block::Md("examples/browser/snippets/code-block-intro.md"),
-    Block::Md("examples/browser/snippets/code-block-installation.md"),
     Block::Md("examples/browser/snippets/code-block-usage.md"),
     Block::Md("examples/browser/snippets/code-block-composition.md"),
     Block::Md("examples/browser/snippets/code-block-features.md"),

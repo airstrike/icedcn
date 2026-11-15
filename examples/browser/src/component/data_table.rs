@@ -19,7 +19,6 @@ pub static BLOCKS: &[page::Block] = &[
     },
     page::Block::Md("examples/browser/snippets/data-table-composition.md"),
     page::Block::Md("examples/browser/snippets/data-table-contents.md"),
-    page::Block::Md("examples/browser/snippets/data-table-installation.md"),
     page::Block::Md("examples/browser/snippets/data-table-prerequisites.md"),
     page::Block::Md("examples/browser/snippets/data-table-project.md"),
     page::Block::Md("examples/browser/snippets/data-table-setup.md"),

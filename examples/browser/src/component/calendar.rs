@@ -18,7 +18,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/calendar-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/calendar-installation.md"),
     page::Block::Md("examples/browser/snippets/calendar-usage.md"),
     page::Block::Md("examples/browser/snippets/calendar-guide-about.md"),
     page::Block::Md("examples/browser/snippets/calendar-guide-date-picker.md"),

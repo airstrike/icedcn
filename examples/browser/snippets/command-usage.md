@@ -15,3 +15,5 @@ command([
 ```
 
 Attach `.on_select(Message::OpenCalendar)` to an item and handle `OpenCalendar` in your application's `update` to run that action. The query and highlighted item stay in the command's widget tree. Shortcut labels are visual hints; register application shortcuts with your iced subscription.
+
+Icon examples import `crate::icon`; follow the shared [icon setup](icedcn://guide/installation#icons) to generate that module and register its font.

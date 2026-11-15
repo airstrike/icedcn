@@ -16,6 +16,7 @@ pub mod component;
 pub mod docs;
 pub mod font;
 pub mod fonts;
+pub mod guide;
 pub mod icon;
 pub mod page;
 #[cfg(target_arch = "wasm32")]
@@ -166,6 +167,6 @@ pub fn run() -> iced::Result {
     #[cfg(target_arch = "wasm32")]
     let application = application
         .fonts([include_bytes!("../fonts/Geist.ttf").as_slice()])
-        .font(iced::Font::new(font::BODY));
+        .font(font::BODY);
     application.run()
 }

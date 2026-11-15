@@ -26,7 +26,6 @@ pub static BLOCKS: &[Block] = &[
         snippet: "examples/browser/snippets/attachment-demo.md",
     },
     Block::Md("examples/browser/snippets/attachment-introduction.md"),
-    Block::Md("examples/browser/snippets/attachment-installation.md"),
     Block::Md("examples/browser/snippets/attachment-usage.md"),
     Block::Md("examples/browser/snippets/attachment-composition.md"),
     Block::Md("examples/browser/snippets/attachment-features.md"),

@@ -23,7 +23,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/tabs-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/tabs-installation.md"),
     page::Block::Md("examples/browser/snippets/tabs-usage.md"),
     page::Block::Md("examples/browser/snippets/tabs-composition.md"),
     page::Block::Example {

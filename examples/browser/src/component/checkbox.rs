@@ -23,7 +23,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/checkbox-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/checkbox-installation.md"),
     page::Block::Md("examples/browser/snippets/checkbox-usage.md"),
     page::Block::Example {
         id: "checked-state",

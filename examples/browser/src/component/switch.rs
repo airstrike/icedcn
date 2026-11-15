@@ -21,7 +21,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/switch-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/switch-installation.md"),
     page::Block::Md("examples/browser/snippets/switch-usage.md"),
     page::Block::Example {
         id: "description",

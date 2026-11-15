@@ -25,7 +25,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/input-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/input-installation.md"),
     page::Block::Md("examples/browser/snippets/input-usage.md"),
     page::Block::Example {
         id: "basic",

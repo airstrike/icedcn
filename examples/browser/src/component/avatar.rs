@@ -85,7 +85,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/avatar-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/avatar-installation.md"),
     page::Block::Md("examples/browser/snippets/avatar-usage.md"),
     page::Block::Md("examples/browser/snippets/avatar-composition.md"),
     page::Block::Example {

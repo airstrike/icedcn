@@ -23,7 +23,6 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/carousel-demo.md",
     },
     page::Block::Md("examples/browser/snippets/carousel-about.md"),
-    page::Block::Md("examples/browser/snippets/carousel-installation.md"),
     page::Block::Md("examples/browser/snippets/carousel-usage.md"),
     page::Block::Md("examples/browser/snippets/carousel-composition.md"),
     page::Block::Example {

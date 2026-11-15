@@ -16,7 +16,6 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/command-demo.md",
     },
     page::Block::Md("examples/browser/snippets/command-about.md"),
-    page::Block::Md("examples/browser/snippets/command-installation.md"),
     page::Block::Md("examples/browser/snippets/command-usage.md"),
     page::Block::Md("examples/browser/snippets/command-composition.md"),
     page::Block::Example {

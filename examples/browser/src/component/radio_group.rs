@@ -20,7 +20,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/radio-group-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/radio-group-installation.md"),
     page::Block::Md("examples/browser/snippets/radio-group-usage.md"),
     page::Block::Md("examples/browser/snippets/radio-group-composition.md"),
     page::Block::Group {

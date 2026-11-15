@@ -21,7 +21,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/textarea-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/textarea-installation.md"),
     page::Block::Md("examples/browser/snippets/textarea-usage.md"),
     page::Block::Example {
         id: "field",

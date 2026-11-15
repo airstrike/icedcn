@@ -784,12 +784,12 @@ fn inline_style_from_theme(theme: &Theme, body: Font) -> markdown::Style {
             border: border::rounded(4),
         },
         inline_code_padding: iced::Padding::default().left(2).right(2),
-        inline_code_font: Font::new(font::GEIST_MONO_NAME),
+        inline_code_font: font::GEIST_MONO_NAME.into(),
         // Baseline matching body=16; `markdown::Settings::with_text_size`
         // overwrites this to `text_size * 0.875` when the snippet renders,
         // so this only matters if a caller wires up `Settings` manually.
         inline_code_size: Pixels(14.0),
-        code_block_font: Font::new(font::GEIST_MONO_NAME),
+        code_block_font: font::GEIST_MONO_NAME.into(),
         // Snippet bodies rarely contain links, but when they do the
         // primary base reads as a "clickable" accent in either theme
         // (dark text on light, light text on dark).
@@ -832,7 +832,7 @@ impl SnippetViewer {
             map,
             code_theme_id: Id::unique(),
             theme: theme.clone(),
-            style: inline_style_from_theme(theme, Font::new(font::BODY)),
+            style: inline_style_from_theme(theme, font::BODY.into()),
         }
     }
 
@@ -1159,9 +1159,12 @@ pub(crate) fn slug(title: &str) -> String {
     title.to_lowercase().replace(' ', "-")
 }
 
-/// Route component links to the installed browser page and external URLs to the system handler.
+/// Route documentation links to installed pages and external URLs to the system handler.
 pub fn open_link(url: &str) -> Task<super::Message> {
-    if let Some(target) = url.strip_prefix("icedcn://component/") {
+    if let Some(target) = url
+        .strip_prefix("icedcn://component/")
+        .or_else(|| url.strip_prefix("icedcn://guide/"))
+    {
         return Task::done(super::Message::OpenComponent(target.to_owned()));
     }
     if url.starts_with("https://") || url.starts_with("http://") || url.starts_with("mailto:") {

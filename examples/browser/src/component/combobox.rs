@@ -24,7 +24,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/combobox-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/combobox-installation.md"),
     page::Block::Md("examples/browser/snippets/combobox-usage.md"),
     page::Block::Group {
         title: "Composition",

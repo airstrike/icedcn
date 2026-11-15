@@ -21,7 +21,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/separator-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/separator-installation.md"),
     page::Block::Md("examples/browser/snippets/separator-usage.md"),
     page::Block::Example {
         id: "vertical",

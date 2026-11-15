@@ -19,7 +19,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/aspect-ratio-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/aspect-ratio-installation.md"),
     page::Block::Md("examples/browser/snippets/aspect-ratio-usage.md"),
     page::Block::Example {
         id: "square",

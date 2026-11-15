@@ -21,6 +21,7 @@ use icedcn::{Size, Theme, Weight, theme};
 
 use crate::component;
 use crate::docs;
+use crate::guide;
 use crate::icon;
 use crate::page::{self, SnippetViewer};
 use crate::sleep;
@@ -36,6 +37,7 @@ pub struct App {
     stars: Option<u64>,
     current_page: usize,
     pages: Vec<Box<dyn page::Page>>,
+    component_count: usize,
     gh_light: Map,
     gh_dark: Map,
     snippet_viewer: SnippetViewer,
@@ -162,6 +164,8 @@ impl App {
             pages.push(page);
         }
 
+        let component_count = pages.len();
+        pages.extend(guide::pages(component_count));
         tasks.push(pages[0].init());
         tasks.push(
             window::oldest()
@@ -192,6 +196,7 @@ impl App {
                 stars: None,
                 current_page: 0,
                 pages,
+                component_count,
                 gh_light,
                 gh_dark,
                 snippet_viewer,
@@ -407,7 +412,8 @@ impl App {
     }
 
     fn apply_font(&mut self, name: String) -> Task<Message> {
-        let body = Font::new(Box::leak(name.into_boxed_str()));
+        let name: &'static str = Box::leak(name.into_boxed_str());
+        let body = Font::from(name);
         self.snippet_viewer.set_font(body);
         set_defaults(body, Pixels(14.0))
     }
@@ -437,20 +443,28 @@ impl App {
         .padding([0, 8])
         .align_y(Center);
 
-        let sidebar_items = column(self.pages.iter().enumerate().map(|(i, page)| {
-            Element::from(
-                sidebar::menu_button(page.meta().title)
-                    .size(MenuButtonSize::Docs)
-                    .inset(1)
-                    .active(i == self.current_page)
-                    .on_press(Message::SelectPage(i)),
-            )
-        }))
+        let sidebar_items = column(
+            self.pages
+                .iter()
+                .take(self.component_count)
+                .enumerate()
+                .map(|(i, page)| {
+                    Element::from(
+                        sidebar::menu_button(page.meta().title)
+                            .size(MenuButtonSize::Docs)
+                            .inset(1)
+                            .active(i == self.current_page)
+                            .on_press(Message::SelectPage(i)),
+                    )
+                }),
+        )
         .width(Fill);
 
+        let current_slug = page::slug(self.pages[self.current_page].meta().title);
         let sections = column(header::GUIDES.iter().map(|&(label, url)| {
             Element::from(
                 sidebar::menu_button(label)
+                    .active(url.rsplit('/').next() == Some(current_slug.as_str()))
                     .size(MenuButtonSize::Docs)
                     .inset(1)
                     .on_press(Message::OpenUrl(url)),
@@ -490,13 +504,12 @@ impl App {
                 use iced::gradient::Linear;
                 use std::f32::consts::PI;
                 use theme::container::Style;
-                let bg: iced::Color = t.neutral.base.into();
                 Style {
                     background: Some(
                         Linear::new(PI)
-                            .add_stop(0.0, bg)
-                            .add_stop(0.5, iced::Color { a: 0.8, ..bg })
-                            .add_stop(1.0, iced::Color { a: 0.5, ..bg })
+                            .add_stop(0.0, t.neutral.base.into())
+                            .add_stop(0.5, t.neutral.base.alpha(0.8).into())
+                            .add_stop(1.0, t.neutral.base.alpha(0.5).into())
                             .into(),
                     ),
                     ..Style::default()
@@ -573,9 +586,9 @@ impl App {
             let border = theme.neutral.border;
             rule::Style {
                 background: Linear::new(PI)
-                    .add_stop(0.0, iced::Color::TRANSPARENT)
+                    .add_stop(0.0, iced::color!(0x000000, 0.0))
                     .add_stop(0.5, border.into())
-                    .add_stop(1.0, iced::Color::TRANSPARENT)
+                    .add_stop(1.0, iced::color!(0x000000, 0.0))
                     .into(),
                 ..rule::Style::default()
             }

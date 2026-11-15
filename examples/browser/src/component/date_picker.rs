@@ -18,7 +18,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/date-picker-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/date-picker-installation.md"),
     page::Block::Md("examples/browser/snippets/date-picker-usage.md"),
     page::Block::Md("examples/browser/snippets/date-picker-composition.md"),
     page::Block::Example {

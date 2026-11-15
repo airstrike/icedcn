@@ -21,7 +21,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/badge-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/badge-installation.md"),
     page::Block::Md("examples/browser/snippets/badge-usage.md"),
     page::Block::Example {
         id: "variants",

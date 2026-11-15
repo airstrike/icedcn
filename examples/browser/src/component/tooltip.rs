@@ -19,7 +19,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/tooltip-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/tooltip-installation.md"),
     page::Block::Md("examples/browser/snippets/tooltip-usage.md"),
     page::Block::Md("examples/browser/snippets/tooltip-composition.md"),
     page::Block::Example {

@@ -19,7 +19,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/table-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/table-installation.md"),
     page::Block::Md("examples/browser/snippets/table-usage.md"),
     page::Block::Md("examples/browser/snippets/table-composition.md"),
     page::Block::Example {

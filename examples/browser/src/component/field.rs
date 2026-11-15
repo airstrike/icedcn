@@ -19,7 +19,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/field-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/field-installation.md"),
     page::Block::Md("examples/browser/snippets/field-usage.md"),
     page::Block::Group {
         title: "Composition",

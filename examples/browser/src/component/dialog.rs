@@ -21,7 +21,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/dialog-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/dialog-installation.md"),
     page::Block::Md("examples/browser/snippets/dialog-usage.md"),
     page::Block::Md("examples/browser/snippets/dialog-composition.md"),
     page::Block::Example {

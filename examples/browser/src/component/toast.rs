@@ -19,7 +19,6 @@ pub static BLOCKS: &[page::Block] = &[
         snippet: "examples/browser/snippets/toast-demo.md",
     },
     page::Block::Md("examples/browser/snippets/toast-guide-about.md"),
-    page::Block::Md("examples/browser/snippets/toast-installation.md"),
     page::Block::Md("examples/browser/snippets/toast-usage.md"),
     page::Block::Example {
         id: "types",

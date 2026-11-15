@@ -21,8 +21,8 @@ const GITHUB: &str = "https://github.com/airstrike/icedcn";
 
 const NAVIGATION: &[(&str, &str)] = &[
     ("Home", GITHUB),
-    ("Docs", "icedcn://component/button#installation"),
-    ("Components", "icedcn://component/accordion"),
+    ("Docs", "icedcn://guide/introduction"),
+    ("Components", "icedcn://guide/components"),
     (
         "Examples",
         "https://github.com/airstrike/icedcn/tree/HEAD/examples",
@@ -32,20 +32,14 @@ const NAVIGATION: &[(&str, &str)] = &[
 ];
 
 pub(super) const GUIDES: &[(&str, &str)] = &[
-    ("Introduction", GITHUB),
-    ("Components", "icedcn://component/accordion"),
-    ("Conversations", "icedcn://component/message-scroller"),
-    ("Installation", "icedcn://component/button#installation"),
-    (
-        "Theming",
-        "https://github.com/airstrike/icedcn/tree/HEAD/core/src/theme",
-    ),
-    ("Cargo", "https://doc.rust-lang.org/cargo/"),
+    ("Introduction", "icedcn://guide/introduction"),
+    ("Components", "icedcn://guide/components"),
+    ("Conversations", "icedcn://guide/conversations"),
+    ("Installation", "icedcn://guide/installation"),
+    ("Theming", "icedcn://guide/theming"),
+    ("Cargo", "icedcn://guide/cargo"),
     ("Typography", "icedcn://component/typography"),
-    (
-        "Changelog",
-        "https://github.com/airstrike/icedcn/commits/HEAD",
-    ),
+    ("Changelog", "icedcn://guide/changelog"),
 ];
 
 pub(super) async fn stars() -> Option<u64> {
@@ -282,7 +276,11 @@ impl App {
             .on_select(Message::Fonts(true));
         let pages = self.pages.iter().enumerate().map(|(i, page)| {
             command::item(page.meta().title)
-                .group("Components")
+                .group(if i < self.component_count {
+                    "Components"
+                } else {
+                    "Guides"
+                })
                 .icon(icon::book_open)
                 .on_select(Message::Navigate(i, None))
         });
@@ -371,10 +369,16 @@ mod tests {
     }
 
     #[test]
-    fn component_links_work_before_the_markdown_finishes_loading() {
+    fn documentation_links_work_before_the_markdown_finishes_loading() {
         let mut app = app();
+        for page in app.pages.iter().take(app.component_count) {
+            assert!(page.state().section("installation").is_none());
+        }
         for &(_, url) in NAVIGATION.iter().chain(GUIDES) {
-            if let Some(target) = url.strip_prefix("icedcn://component/") {
+            if let Some(target) = url
+                .strip_prefix("icedcn://component/")
+                .or_else(|| url.strip_prefix("icedcn://guide/"))
+            {
                 let _ = app.update(Message::OpenComponent(target.to_owned()));
                 let current = &app.pages[app.current_page];
                 let (name, fragment) = target.split_once('#').unwrap_or((target, ""));
@@ -382,6 +386,17 @@ mod tests {
                 assert!(current.state().section(fragment).is_some());
             }
         }
+        let _ = app.update(Message::OpenComponent("installation#icons".into()));
+        let current = &app.pages[app.current_page];
+        assert_eq!(current.meta().title, "Installation");
+        assert!(current.state().section("icons").is_some());
+        assert_eq!(
+            app.pages
+                .iter()
+                .filter(|page| page.meta().title == "Typography")
+                .count(),
+            1,
+        );
         let _ = app.update(Message::OpenComponent("attachment#trigger".into()));
         let current = &app.pages[app.current_page];
         assert_eq!(current.meta().title, "Attachment");

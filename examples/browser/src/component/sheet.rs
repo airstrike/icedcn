@@ -20,7 +20,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/sheet-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/sheet-installation.md"),
     page::Block::Md("examples/browser/snippets/sheet-usage.md"),
     page::Block::Md("examples/browser/snippets/sheet-composition.md"),
     page::Block::Example {

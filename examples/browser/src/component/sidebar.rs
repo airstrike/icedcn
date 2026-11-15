@@ -20,7 +20,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/sidebar-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/sidebar-installation.md"),
     page::Block::Md("examples/browser/snippets/sidebar-usage.md"),
     page::Block::Md("examples/browser/snippets/sidebar-composition.md"),
     page::Block::Md("examples/browser/snippets/sidebar-guide-structure.md"),

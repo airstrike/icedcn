@@ -25,7 +25,6 @@ pub static BLOCKS: &[page::Block] = &[
     },
     page::Block::Md("examples/browser/snippets/message-scroller-experience.md"),
     page::Block::Md("examples/browser/snippets/message-scroller-overview.md"),
-    page::Block::Md("examples/browser/snippets/message-scroller-installation.md"),
     page::Block::Md("examples/browser/snippets/message-scroller-usage.md"),
     page::Block::Md("examples/browser/snippets/message-scroller-composition.md"),
     page::Block::Group {

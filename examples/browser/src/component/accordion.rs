@@ -24,7 +24,6 @@ pub static BLOCKS: &[page::Block] = &[
         description: None,
         snippet: "examples/browser/snippets/accordion-demo.md",
     },
-    page::Block::Md("examples/browser/snippets/accordion-installation.md"),
     page::Block::Md("examples/browser/snippets/accordion-usage.md"),
     page::Block::Md("examples/browser/snippets/accordion-composition.md"),
     page::Block::Example {
