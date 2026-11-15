@@ -6,7 +6,7 @@ use iced::Widget;
 use iced::keyboard::key::Named;
 use iced::keyboard::{self, Key};
 use iced::widget::button::{Status, StyleFn};
-use iced::widget::{Space, combo_box, stack, svg};
+use iced::widget::{Space, stack, svg};
 use iced::{Center, Element, Event, Fill, Subscription, event};
 use icedcn::theme::button::ghost;
 use icedcn::widget::Row;
@@ -238,22 +238,21 @@ impl App {
             .on_press(Message::ToggleTheme),
             "Toggle theme",
         );
-        let fonts = dialog(
+        let fonts = command::dialog(
             |_| Space::new().into(),
-            |_| {
-                column![
-                    text::label("Font"),
-                    combo_box(
-                        &self.font_list,
-                        "Search fonts...",
-                        Some(&self.current_font),
-                        Message::FontSelected
-                    )
-                    .width(Fill)
-                ]
-                .width(Fill)
-                .spacing(8)
-                .into()
+            || {
+                command(self.font_list.iter().map(|name| {
+                    let item =
+                        command::item(name.clone()).on_select(Message::FontSelected(name.clone()));
+                    if name == &self.current_font {
+                        item.shortcut("Current")
+                    } else {
+                        item
+                    }
+                }))
+                .placeholder("Search fonts…")
+                .empty("No fonts found.")
+                .limit(50)
             },
         )
         .open(self.fonts_open)

@@ -13,7 +13,7 @@ use iced::Element;
 use iced::Widget;
 use iced::font::set_defaults;
 use iced::mouse::Interaction;
-use iced::widget::{column, combo_box, operation, row, space, stack};
+use iced::widget::{column, operation, row, space, stack};
 use iced::{clipboard, window};
 use icedcn::widget::scrollable;
 use route::Route;
@@ -57,7 +57,7 @@ pub struct App {
     gh_dark: Map,
     snippet_viewer: SnippetViewer,
     fount: fonts::Fount,
-    font_list: combo_box::State<String>,
+    font_list: Vec<String>,
     current_font: String,
 }
 
@@ -277,7 +277,7 @@ impl App {
             gh_dark,
             snippet_viewer,
             fount: fonts::Fount::new(),
-            font_list: combo_box::State::new(vec![default_font.clone()]),
+            font_list: vec![default_font.clone()],
             current_font: default_font,
         };
         let initial = browser_routing::location()
@@ -639,7 +639,7 @@ impl App {
             }
         }
 
-        self.font_list = combo_box::State::new(names);
+        self.font_list = names;
     }
 
     fn sidebar(&self) -> iced::Element<'_, Message, Theme> {
