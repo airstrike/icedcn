@@ -1,7 +1,8 @@
 //! Browser actions available from any unclaimed right click.
 
+use iced::Fill;
 use icedcn::Slot;
-use icedcn::widget::{column, menu, row};
+use icedcn::widget::{column, menu, row, text};
 
 use crate::{icon, page};
 
@@ -22,27 +23,63 @@ pub(super) fn view(app: &App) -> Slot<'_, Message> {
 
     column![
         menu::label(title),
-        menu::item(row![icon::search().size(16), "Search documentation"].spacing(8))
-            .shortcut("/")
-            .on_select(Message::Search(true)),
+        menu::item(
+            row![
+                icon::search().size(16),
+                text("Search documentation").width(Fill)
+            ]
+            .spacing(8)
+            .width(Fill)
+        )
+        .shortcut("/")
+        .on_select(Message::Search(true)),
         menu::separator(),
-        menu::item(row![icon::book_open().size(16), "Open documentation"].spacing(8))
-            .on_select(Message::OpenUrl("icedcn://guide/introduction")),
-        menu::item(row![icon::panels_top_left().size(16), "Browse examples"].spacing(8))
-            .on_select(Message::OpenUrl("icedcn://examples")),
+        menu::item(
+            row![
+                icon::book_open().size(16),
+                text("Open documentation").width(Fill)
+            ]
+            .spacing(8)
+            .width(Fill)
+        )
+        .on_select(Message::OpenUrl("icedcn://guide/introduction")),
+        menu::item(
+            row![
+                icon::panels_top_left().size(16),
+                text("Browse examples").width(Fill)
+            ]
+            .spacing(8)
+            .width(Fill)
+        )
+        .on_select(Message::OpenUrl("icedcn://examples")),
         menu::separator(),
-        menu::item(row![theme_icon.size(16), theme_label].spacing(8))
-            .on_select(Message::ToggleTheme),
+        menu::item(
+            row![theme_icon.size(16), text(theme_label).width(Fill)]
+                .spacing(8)
+                .width(Fill)
+        )
+        .on_select(Message::ToggleTheme),
         menu::separator(),
-        menu::item(row![icon::file_code().size(16), "View source on GitHub"].spacing(8)).on_select(
-            Message::Page(
-                app.current_page,
-                page::Message::LinkClicked(source.clone().into()),
-            )
-        ),
-        menu::item(row![icon::copy().size(16), "Copy source link"].spacing(8))
-            .on_select(Message::CopyText(source)),
+        menu::item(
+            row![
+                icon::file_code().size(16),
+                text("View source on GitHub").width(Fill)
+            ]
+            .spacing(8)
+            .width(Fill)
+        )
+        .on_select(Message::Page(
+            app.current_page,
+            page::Message::LinkClicked(source.clone().into()),
+        )),
+        menu::item(
+            row![icon::copy().size(16), text("Copy source link").width(Fill)]
+                .spacing(8)
+                .width(Fill)
+        )
+        .on_select(Message::CopyText(source)),
     ]
+    .width(Fill)
     .into()
 }
 
@@ -128,6 +165,29 @@ mod tests {
         right_click(&mut ui, bounds.bounds().center());
         assert!(ui.find("Show Bookmarks").is_ok());
         assert!(ui.find("Copy source link").is_err());
+    }
+
+    #[test]
+    fn menu_labels_receive_full_width_without_wrapping() {
+        let app = app();
+        let mut ui = ui(&app);
+        right_click(&mut ui, Point::new(1400.0, 700.0));
+        for label in [
+            "Search documentation",
+            "Open documentation",
+            "Browse examples",
+            if app.dark_mode {
+                "Use light theme"
+            } else {
+                "Use dark theme"
+            },
+            "View source on GitHub",
+            "Copy source link",
+        ] {
+            let bounds = ui.find(label).unwrap().bounds();
+            assert!(bounds.height <= 21.0, "{label}: {bounds:?}");
+            assert!(bounds.width >= 160.0, "{label}: {bounds:?}");
+        }
     }
 
     #[test]

@@ -38,7 +38,7 @@ use crate::container::Container;
 use crate::icon::Icon;
 use crate::marker::{self, Press};
 use crate::popover::Signal;
-use crate::{column, row, text};
+use crate::{column, container, row, text};
 
 pub use icedcn_core::theme::menu::item::{Destructive, Variant};
 
@@ -188,14 +188,10 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
                 .with_line_height(20.)
                 .with_selectable(false),
         );
-        let mut line = row![content]
+        let mut line = row![container(content).width(Fill)]
             .width(Fill)
             .spacing(6)
             .align_y(Alignment::Center);
-
-        if shortcut.is_some() || indicator != Indicator::None {
-            line = line.push(Slot::from(Space::new().width(Fill)));
-        }
 
         if let Some(shortcut) = shortcut {
             // `ml-auto text-xs tracking-widest text-muted-foreground`.
