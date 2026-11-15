@@ -450,3 +450,76 @@ fn installed_command_modals_focus_search_and_reveal_the_last_item() {
         }
     }
 }
+
+#[test]
+fn installed_command_rows_are_32_pixels_and_disabled_labels_dim_with_their_icons() {
+    use browser::component::command::CommandPage;
+
+    let page = CommandPage::new(0);
+    use iced_test::core::renderer;
+    use iced_widget::graphics::text::font_system;
+    {
+        let mut fonts = font_system().write().expect("font system");
+        fonts.load_font(browser::icon::FONT.into());
+        fonts.load_font(include_bytes!("../fonts/Geist.ttf").as_slice().into());
+    }
+    let settings = renderer::Settings {
+        font: iced::Font::new("Geist"),
+        text_size: 14.into(),
+        ..renderer::Settings::default()
+    };
+    let mut renderer = block_on(Renderer::new(settings, None)).expect("headless renderer");
+    let size = Size::new(500., 500.);
+    let mut ui = UserInterface::build(
+        page.preview("demo"),
+        size,
+        Default::default(),
+        &mut renderer,
+    );
+    let bounds = Bounds::read(&mut ui, &renderer);
+    for title in ["Calendar", "Search Emoji", "Profile", "Billing", "Settings"] {
+        let label = bounds
+            .labels
+            .iter()
+            .rev()
+            .find(|(label, _)| label == title)
+            .expect("command label")
+            .1;
+        {
+            let row = bounds
+                .buttons
+                .iter()
+                .find(|row| row.contains(label.center()))
+                .expect("command row");
+            assert_eq!(
+                row.height, 32.,
+                "{title}: {row:?}; texts={:?}",
+                bounds.labels
+            );
+        }
+    }
+    let label = bounds
+        .labels
+        .iter()
+        .find(|(label, _)| label == "Calculator")
+        .expect("disabled label")
+        .1;
+    let theme = Theme::dark();
+    ui.draw(
+        &mut renderer,
+        &theme,
+        &Style::default(),
+        mouse::Cursor::Unavailable,
+    );
+    let rgba = renderer.screenshot(Size::new(500, 500), 1., Color::from(theme.neutral.base));
+    let mut brightest = 0;
+    for y in label.y.ceil() as usize..(label.y + label.height).floor() as usize {
+        for x in label.x.ceil() as usize..(label.x + label.width).floor() as usize {
+            brightest = brightest.max(rgba[(y * 500 + x) * 4]);
+        }
+    }
+    assert!(
+        (80..180).contains(&brightest),
+        "disabled text must use half-opacity foreground, brightest={brightest}"
+    );
+}

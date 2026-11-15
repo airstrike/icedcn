@@ -7,6 +7,7 @@ use crate::button::widget;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::dialog::{Dialog, Handle};
 use crate::icon::Icon;
+use crate::text::Text;
 use crate::{Input, column, container, input, input_group, menu, row, scrollable, separator, text};
 use behavior::Behavior;
 use iced_core::keyboard::{Key, key::Named};
@@ -274,14 +275,16 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             }
             let label: Slot<'a, Event> = if let Some(icon) = &item.icon {
                 row![
-                    icon().size(16),
-                    text(item.label.clone()).size(14).line_height(Pixels(20.))
+                    icon().size(16).line_height(Pixels(16.)),
+                    Text::new(item.label.clone())
+                        .size(14)
+                        .line_height(Pixels(20.))
                 ]
                 .align_y(Alignment::Center)
                 .spacing(8)
                 .into()
             } else {
-                text(item.label.clone())
+                Text::new(item.label.clone())
                     .size(14)
                     .line_height(Pixels(20.))
                     .into()
