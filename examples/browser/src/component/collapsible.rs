@@ -45,7 +45,7 @@ pub static BLOCKS: &[page::Block] = &[
         id: "file-tree",
         title: "File Tree",
         description: Some(
-            "Use nested collapsibles to build a file tree. Open each folder independently to reveal its contents.",
+            "Use nested collapsibles to build a file tree. In a conversation, this is the File Tree pattern.",
         ),
         snippet: "examples/browser/snippets/collapsible-file-tree.md",
     },
