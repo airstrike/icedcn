@@ -101,6 +101,12 @@ pub(crate) fn is_inside(before: Cursor, position: text::Position) -> bool {
     (key(start)..=key(end)).contains(&key(position))
 }
 
+/// `x` on the nearest whole physical pixel at `scale` physical pixels per
+/// logical one.
+pub(crate) fn snap(x: f32, scale: f32) -> f32 {
+    (x * scale).round() / scale
+}
+
 /// Which entries of the menu are enabled. Without `undo`, the menu has no
 /// Undo and Redo entries.
 #[derive(Debug, Clone, Copy)]
@@ -510,5 +516,21 @@ impl Autoscroll {
         self.last = Some(*now);
         self.replaying = true;
         Some(pointer)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::snap;
+
+    #[test]
+    fn snapping_lands_on_whole_physical_pixels() {
+        for scale in [1.0, 1.25, 1.5, 2.0, 3.0] {
+            for x in [0.0, 0.3, 10.5, 17.49, 101.77, -4.6] {
+                let physical = snap(x, scale) * scale;
+                assert!((physical - physical.round()).abs() < 1e-3, "{x} at {scale}");
+                assert!((snap(x, scale) - x).abs() <= 0.5 / scale + 1e-4);
+            }
+        }
     }
 }

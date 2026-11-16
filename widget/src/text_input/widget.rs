@@ -722,7 +722,10 @@ where
                     renderer.fill_quad(
                         renderer::Quad {
                             bounds: Rectangle {
-                                x: cell.center_x(),
+                                x: edit::snap(
+                                    cell.center_x(),
+                                    renderer.scale().map_or(1.0, renderer::Scale::total),
+                                ),
                                 y: cell.center_y() - 8.,
                                 width: 1.,
                                 height: 16.,
@@ -856,7 +859,7 @@ where
                                 Some((
                                     renderer::Quad {
                                         bounds: Rectangle {
-                                            x: (text_bounds.x + text_value_width).floor(),
+                                            x: text_bounds.x + text_value_width,
                                             y: caret_y,
                                             width: if renderer::CRISP {
                                                 (1.0 / renderer.hint_factor().unwrap_or(1.0))
@@ -922,13 +925,24 @@ where
                     let alignment_offset =
                         alignment_offset(text_bounds.width, paragraph.min_width(), self.alignment);
 
+                    // Whole physical pixels: a caret or a selection edge
+                    // between two is drawn as a blur across both.
+                    let scale = renderer.scale().map_or(1.0, renderer::Scale::total);
+                    let cursor = cursor.map(|(quad, color)| {
+                        let bounds = quad.bounds + Vector::new(alignment_offset - offset, 0.0);
+                        let left = edit::snap(bounds.x, scale);
+                        let right =
+                            edit::snap(bounds.x + bounds.width, scale).max(left + 1.0 / scale);
+                        let bounds = Rectangle {
+                            x: left,
+                            width: right - left,
+                            ..bounds
+                        };
+                        (renderer::Quad { bounds, ..quad }, color)
+                    });
+
                     if let Some((cursor, color)) = cursor {
-                        renderer.with_translation(
-                            Vector::new(alignment_offset - offset, 0.0),
-                            |renderer| {
-                                renderer.fill_quad(cursor, color);
-                            },
-                        );
+                        renderer.fill_quad(cursor, color);
                     } else {
                         renderer.fill_quad(renderer::Quad::default(), Color::TRANSPARENT);
                     }
@@ -951,10 +965,10 @@ where
                     if is_selecting
                         && selected_text != style.value
                         && let Some((selection, _)) = cursor
-                        && let Some(clip) = (selection.bounds
-                            + Vector::new(alignment_offset - offset, 0.))
-                        .intersection(&text_bounds)
-                        .and_then(|bounds| bounds.intersection(&viewport))
+                        && let Some(clip) = selection
+                            .bounds
+                            .intersection(&text_bounds)
+                            .and_then(|bounds| bounds.intersection(&viewport))
                     {
                         renderer.with_layer(clip, |renderer| {
                             renderer.fill_paragraph(paragraph, origin, selected_text, clip);

@@ -8,7 +8,7 @@ use iced::keyboard::{self, Key, Modifiers};
 use iced::mouse::{self, Button};
 use iced::{Element, Event, Point, Rectangle, Size};
 use iced_test::core::clipboard;
-use iced_test::core::renderer::Headless;
+use iced_test::core::renderer::{self, Headless};
 use iced_test::core::shell::{Bus, Waker};
 use iced_test::core::time::{Duration, Instant};
 use iced_test::core::widget::operation::TextInput;
@@ -33,8 +33,13 @@ struct Desk {
 
 impl Desk {
     fn new(view: impl Into<Element<'static, String, Theme>>) -> Self {
+        Self::with(view, None)
+    }
+
+    /// A desk drawn by the given `backend`.
+    fn with(view: impl Into<Element<'static, String, Theme>>, backend: Option<&str>) -> Self {
         let mut renderer =
-            block_on(Renderer::new(Default::default(), None)).expect("headless renderer");
+            block_on(Renderer::new(Default::default(), backend)).expect("headless renderer");
         let ui = UserInterface::build(
             view.into(),
             Size::new(800., 600.),
@@ -80,6 +85,24 @@ impl Desk {
                 }
             }
         }
+    }
+
+    /// The frame as gray levels, one row per pixel row, at 1×.
+    fn pixels(&mut self) -> Vec<Vec<u8>> {
+        let theme = Theme::light();
+        self.redraw();
+        self.ui.draw(
+            &mut self.renderer,
+            &theme,
+            &renderer::Style::default(),
+            mouse::Cursor::Available(self.cursor),
+        );
+        let rgba = self
+            .renderer
+            .screenshot(Size::new(800, 600), 1., theme.neutral.base.into());
+        rgba.chunks(800 * 4)
+            .map(|row| row.chunks(4).map(|px| px[1]).collect())
+            .collect()
     }
 
     fn redraw(&mut self) {
@@ -563,4 +586,43 @@ fn a_press_on_a_scrolled_textarea_lands_on_the_line_under_the_pointer() {
     ));
     desk.send(simulator::typewrite("@"));
     assert!(desk.field().1.ends_with("line 29@"), "{:?}", desk.field().1);
+}
+
+#[test]
+fn the_input_caret_sits_on_whole_pixels() {
+    for (alignment, value) in [
+        (iced::Alignment::Center, "ab"),
+        (iced::Alignment::Center, "abc"),
+        (iced::Alignment::End, "wxyz"),
+        (iced::Alignment::Start, LONG),
+    ] {
+        let view = input("")
+            .default_value(value)
+            .width(201)
+            .align_x(alignment)
+            .on_input(|s| s);
+        let mut desk = Desk::with(view, Some("tiny-skia"));
+        let (bounds, _) = desk.field();
+        // The caret goes to the end, past the text.
+        desk.click(Point::new(bounds.x + bounds.width - 3., bounds.center_y()));
+        desk.move_to(Point::new(700., 500.));
+        let pixels = desk.pixels();
+        let row = &pixels[bounds.center_y() as usize];
+        let inside = bounds.x as usize + 4..(bounds.x + bounds.width) as usize - 4;
+        let background = row[inside.end - 1];
+        let caret = inside
+            .clone()
+            .rev()
+            .find(|&x| row[x] != background)
+            .expect("a caret");
+        let ink = row[caret];
+        // The caret is the darkest ink: one column fully covered, not two
+        // half-covered ones.
+        let darkest = *row[inside].iter().min().unwrap();
+        assert!(
+            ink <= darkest + 8,
+            "{alignment:?} {value:?}: caret column {caret} is {ink}, ink is {darkest}: {:?}",
+            &row[caret - 3..caret + 3]
+        );
+    }
 }
