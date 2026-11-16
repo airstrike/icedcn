@@ -474,6 +474,7 @@ pub(super) struct State {
     /// Below the caret, relative to the editor: where Shift+F10 opens the menu.
     caret: Point,
     menu: edit::Menu,
+    autoscroll: edit::Autoscroll,
 }
 
 /// The caret to scroll into view, once, handed to the code block's viewport
@@ -511,6 +512,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
             gutter: Gutter::default(),
             caret: Point::ORIGIN,
             menu: edit::Menu::default(),
+            autoscroll: edit::Autoscroll::default(),
         })
     }
 
@@ -712,6 +714,11 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
                 state, children, ..
             } = &mut *tree;
             let state = state.downcast_mut::<State>();
+            let cursor = if self.disabled {
+                cursor
+            } else {
+                state.autoscroll.track(event, cursor, bounds, viewport)
+            };
             // A press on a line number starts at that line's code.
             let cursor = match cursor.position() {
                 Some(position) if state.gutter.is_pressed(event, cursor, layout.bounds()) => {
@@ -771,6 +778,13 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
 
         let state = tree.state.downcast_mut::<State>();
         self.perform(state, bus.drain().map(|(action, _)| action), shell);
+
+        let visible = viewport.intersection(&bounds).unwrap_or(bounds);
+        if let Some(pointer) = state.autoscroll.tick(event, visible, viewport, shell) {
+            let drag = Event::Mouse(mouse::Event::CursorMoved { position: pointer });
+            let cursor = mouse::Cursor::Available(pointer);
+            self.update(tree, &drag, layout, cursor, renderer, shell, viewport);
+        }
     }
 
     fn draw(

@@ -15,6 +15,7 @@ use iced_core::keyboard::{self, Key, Modifiers};
 use iced_core::shell::Bus;
 use iced_core::text;
 use iced_core::text::editor::Cursor;
+use iced_core::time::{Duration, Instant};
 use iced_core::widget::Tree;
 use iced_core::{
     Element, Event, Layout, Point, Rectangle, Shell, Size, Vector, layout, mouse, overlay,
@@ -414,5 +415,100 @@ impl<Message> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_> {
         } else {
             interaction
         }
+    }
+}
+
+/// A drag selection in an editor that keeps going while the pointer is held
+/// past the visible text: each frame drags again at the pointer, which moves
+/// the caret past the edge and scrolls it into view.
+#[derive(Debug, Clone, Copy, Default)]
+pub(crate) struct Autoscroll {
+    /// The pointer of a drag that started in the editor, if one is on,
+    /// relative to the viewport: where it stays while a scroller moves the
+    /// content under it.
+    pointer: Option<Vector>,
+    /// The frame that last dragged.
+    last: Option<Instant>,
+    /// The next move is the drag a frame made, not the pointer's.
+    replaying: bool,
+}
+
+impl Autoscroll {
+    /// Follow `event`. A drag sees the pointer wherever it goes, even where
+    /// a scroller hides it from its content; returns the cursor to update
+    /// the editor with.
+    pub(crate) fn track(
+        &mut self,
+        event: &Event,
+        cursor: mouse::Cursor,
+        bounds: Rectangle,
+        viewport: &Rectangle,
+    ) -> mouse::Cursor {
+        let origin = viewport.position();
+        match event {
+            Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
+                self.pointer = cursor.position_over(bounds).map(|p| p - origin);
+                self.last = None;
+            }
+            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
+            | Event::Window(window::Event::Unfocused) => {
+                *self = Self::default();
+            }
+            Event::Mouse(mouse::Event::CursorMoved { .. }) if self.replaying => {
+                self.replaying = false;
+            }
+            Event::Mouse(mouse::Event::CursorMoved { .. }) if self.pointer.is_some() => {
+                let pointer = cursor.observe().position().map(|p| p - origin);
+                if pointer.is_some() && pointer != self.pointer {
+                    self.pointer = pointer;
+                    self.last = None;
+                }
+            }
+            _ => {}
+        }
+
+        if self.pointer.is_some() {
+            cursor.observe()
+        } else {
+            cursor
+        }
+    }
+
+    /// On a frame of a drag held past the edges of `visible`, the pointer to
+    /// drag to again, when enough time has passed: the farther past, the
+    /// sooner. Asks for the next frame meanwhile.
+    pub(crate) fn tick<Message>(
+        &mut self,
+        event: &Event,
+        visible: Rectangle,
+        viewport: &Rectangle,
+        shell: &mut Shell<'_, Message>,
+    ) -> Option<Point> {
+        let Event::Window(window::Event::RedrawRequested(now)) = event else {
+            return None;
+        };
+        let pointer = viewport.position() + self.pointer?;
+        let past = Vector::new(
+            (visible.x - pointer.x).max(pointer.x - visible.x - visible.width),
+            (visible.y - pointer.y).max(pointer.y - visible.y - visible.height),
+        );
+        let past = past.x.max(past.y);
+        if past <= 0.0 {
+            self.last = None;
+            return None;
+        }
+        shell.request_redraw();
+
+        let Some(last) = self.last else {
+            self.last = Some(*now);
+            return None;
+        };
+        let interval = Duration::from_secs_f32((2.0 / past).clamp(0.016, 0.2));
+        if *now < last + interval {
+            return None;
+        }
+        self.last = Some(*now);
+        self.replaying = true;
+        Some(pointer)
     }
 }

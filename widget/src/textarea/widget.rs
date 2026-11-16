@@ -12,7 +12,7 @@ use crate::core::{Border, Color, InputMethod, Point, Vector, clipboard, overlay,
 use crate::edit::{self, Command};
 use crate::operation::focus;
 use iced_widget::Renderer;
-use iced_widget::text_editor::{Action, Content, Edit, Status, TextEditor};
+use iced_widget::text_editor::{Action, Content, Edit, Motion, Status, TextEditor};
 use icedcn_core::Theme;
 
 use crate::core::keyboard;
@@ -41,12 +41,7 @@ impl<Message> Textarea<'_, Message> {
             } else {
                 20. / 14.
             })
-            .padding(Padding {
-                top: 9.0,
-                right: 11.0,
-                bottom: 9.0,
-                left: 11.0,
-            })
+            .padding(PADDING)
             .height(
                 state
                     .height
@@ -166,6 +161,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
             resize: None,
             caret: Point::ORIGIN,
             menu: edit::Menu::default(),
+            autoscroll: edit::Autoscroll::default(),
         })
     }
 
@@ -334,6 +330,11 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
                 .expect("a textarea has one child");
 
             let mut local = shell.local(&mut bus);
+            let cursor = if self.disabled {
+                cursor
+            } else {
+                state.autoscroll.track(event, cursor, bounds, viewport)
+            };
 
             self.editor(state).update(
                 child_tree,
@@ -371,6 +372,31 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
 
         let state = tree.state.downcast_mut::<State>();
         self.perform(state, bus.drain().map(|(action, _)| action), shell);
+
+        // The editor only hits the lines it shows: past its top or bottom, a
+        // frame moves the selection a line further, which scrolls it, and
+        // drags to the pointer's column on the line that comes into view.
+        let text = bounds.shrink(PADDING);
+        let visible = viewport.intersection(&text).unwrap_or(text);
+        if let Some(pointer) = state.autoscroll.tick(event, visible, viewport, shell) {
+            let motion = if pointer.y < visible.y {
+                Some(Motion::Up)
+            } else if pointer.y > visible.y + visible.height {
+                Some(Motion::Down)
+            } else {
+                None
+            };
+            self.perform(state, motion.map(Action::Select), shell);
+            let held = Point::new(
+                pointer.x.clamp(visible.x, visible.x + visible.width),
+                pointer
+                    .y
+                    .clamp(visible.y + 1.0, visible.y + visible.height - 1.0),
+            );
+            let drag = Event::Mouse(mouse::Event::CursorMoved { position: held });
+            let cursor = mouse::Cursor::Available(held);
+            self.update(tree, &drag, layout, cursor, renderer, shell, viewport);
+        }
     }
 
     fn draw(
@@ -567,6 +593,14 @@ pub(crate) fn sync(
     true
 }
 
+/// The space between the textarea's border and its text.
+const PADDING: Padding = Padding {
+    top: 9.0,
+    right: 11.0,
+    bottom: 9.0,
+    left: 11.0,
+};
+
 struct State {
     content: Content<Renderer>,
     /// The controlled value the content last synced to; see [`sync`].
@@ -578,6 +612,7 @@ struct State {
     /// Below the caret, relative to the textarea: where Shift+F10 opens the menu.
     caret: Point,
     menu: edit::Menu,
+    autoscroll: edit::Autoscroll,
 }
 
 fn grip(bounds: Rectangle) -> Rectangle {

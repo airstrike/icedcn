@@ -495,6 +495,62 @@ where
         }
     }
 
+    /// Extend the dragged selection to the character under `x`, held inside
+    /// the visible text. Returns whether the selection changed.
+    fn drag_to(
+        &self,
+        state: &mut State<Renderer::Paragraph>,
+        text_bounds: Rectangle,
+        x: f32,
+    ) -> bool {
+        let Some(drag) = state.is_dragging.clone() else {
+            return false;
+        };
+        let alignment_offset = alignment_offset(
+            text_bounds.width,
+            state.value.raw().min_width(),
+            self.alignment,
+        );
+        let target = (x - text_bounds.x - alignment_offset).clamp(0.0, text_bounds.width);
+
+        let value = if self.is_secure {
+            self.value.secure()
+        } else {
+            self.value.clone()
+        };
+        let position = find_cursor_position(text_bounds, &value, state, target).unwrap_or(0);
+        let before = state.cursor;
+
+        match drag {
+            Drag::Select => {
+                state
+                    .cursor
+                    .select_range(state.cursor.start(&value), position);
+            }
+            Drag::SelectWords { anchor } => {
+                if position < anchor {
+                    state.cursor.select_range(
+                        self.value.next_end_of_word(anchor),
+                        self.value.previous_start_of_word(position),
+                    );
+                } else {
+                    state.cursor.select_range(
+                        self.value.previous_start_of_word(anchor),
+                        self.value.next_end_of_word(position),
+                    );
+                }
+            }
+        }
+
+        state.keep_in_view(text_bounds.width, &value);
+
+        if let Some(focus) = &mut state.is_focused {
+            focus.updated_at = Instant::now();
+        }
+
+        before != state.cursor
+    }
+
     fn input_method<'b>(
         &self,
         state: &'b State<Renderer::Paragraph>,
@@ -1213,6 +1269,12 @@ where
 
                 let click_position = cursor.position_over(layout.bounds());
 
+                // An unfocused input is drawn from its start, so the press
+                // hits the text where it is drawn.
+                if !was_focused {
+                    state.scroll_offset = 0.0;
+                }
+
                 state.is_focused = if click_position.is_some() {
                     let now = Instant::now();
 
@@ -1259,7 +1321,9 @@ where
                                         .hit(cursor_position.x - layout.bounds().x)
                                         .min(self.value.len()),
                                 )
-                            } else if target > 0.0 {
+                            } else {
+                                // A press in the padding hits the nearest visible character.
+                                let target = target.clamp(0.0, text_layout.bounds().width);
                                 let value = if self.is_secure {
                                     self.value.secure()
                                 } else {
@@ -1267,8 +1331,6 @@ where
                                 };
 
                                 find_cursor_position(text_layout.bounds(), &value, state, target)
-                            } else {
-                                None
                             }
                             .unwrap_or(0);
 
@@ -1292,7 +1354,7 @@ where
                                     text_layout.bounds(),
                                     &self.value,
                                     state,
-                                    target,
+                                    target.clamp(0.0, text_layout.bounds().width),
                                 )
                                 .unwrap_or(0);
 
@@ -1310,7 +1372,7 @@ where
                         }
                     }
 
-                    state.reveal_cursor(text_layout.bounds().width, &self.value);
+                    state.keep_in_view(text_layout.bounds().width, &self.value);
 
                     state.last_click = Some(click);
 
@@ -1324,65 +1386,31 @@ where
             Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
             | Event::Touch(touch::Event::FingerLifted { .. })
             | Event::Touch(touch::Event::FingerLost { .. }) => {
-                state::<Renderer>(tree).is_dragging = None;
+                let state = state::<Renderer>(tree);
+                state.is_dragging = None;
+                state.drag_x = None;
+                state.drag_frame = None;
             }
             Event::Mouse(mouse::Event::CursorMoved { position })
             | Event::Touch(touch::Event::FingerMoved { position, .. }) => {
                 let state = state::<Renderer>(tree);
 
-                if let Some(is_dragging) = &state.is_dragging {
-                    let target = {
-                        let text_bounds = text_layout.bounds();
-
-                        let alignment_offset = alignment_offset(
-                            text_bounds.width,
-                            state.value.raw().min_width(),
-                            self.alignment,
-                        );
-
-                        position.x - text_bounds.x - alignment_offset
+                if state.is_dragging.is_some() {
+                    // A scroller translates the cursor into the input's
+                    // coordinates; the event's position stays in the window's.
+                    let x = match event {
+                        Event::Mouse(_) => cursor.observe().position().map_or(position.x, |p| p.x),
+                        _ => position.x,
                     };
+                    let text_bounds = text_layout.bounds();
+                    state.drag_x = Some(x);
 
-                    let value = if self.is_secure {
-                        self.value.secure()
-                    } else {
-                        self.value.clone()
-                    };
-
-                    let position =
-                        find_cursor_position(text_layout.bounds(), &value, state, target)
-                            .unwrap_or(0);
-
-                    let selection_before = state.cursor.selection(&value);
-
-                    match is_dragging {
-                        Drag::Select => {
-                            state
-                                .cursor
-                                .select_range(state.cursor.start(&value), position);
-                        }
-                        Drag::SelectWords { anchor } => {
-                            if position < *anchor {
-                                state.cursor.select_range(
-                                    self.value.previous_start_of_word(position),
-                                    self.value.next_end_of_word(*anchor),
-                                );
-                            } else {
-                                state.cursor.select_range(
-                                    self.value.previous_start_of_word(*anchor),
-                                    self.value.next_end_of_word(position),
-                                );
-                            }
-                        }
+                    if self.drag_to(state, text_bounds, x) {
+                        shell.request_redraw();
                     }
 
-                    state.reveal_cursor(text_layout.bounds().width, &self.value);
-
-                    if let Some(focus) = &mut state.is_focused {
-                        focus.updated_at = Instant::now();
-                    }
-
-                    if selection_before != state.cursor.selection(&value) {
+                    // Past either edge, the next frames scroll the text.
+                    if !(text_bounds.x..=text_bounds.x + text_bounds.width).contains(&x) {
                         shell.request_redraw();
                     }
 
@@ -1749,6 +1777,40 @@ where
                     shell.request_redraw();
                 }
 
+                if state.is_dragging.is_some()
+                    && let Some(x) = state.drag_x
+                {
+                    let text_bounds = text_layout.bounds();
+                    let past = if x < text_bounds.x {
+                        x - text_bounds.x
+                    } else {
+                        (x - text_bounds.x - text_bounds.width).max(0.0)
+                    };
+                    let elapsed = state
+                        .drag_frame
+                        .map_or(0.0, |last| (*now - last).as_secs_f32().min(0.1));
+
+                    if past != 0.0 {
+                        let max_offset = (state.value.raw().min_width() + CURSOR_RIGHT_PADDING
+                            - text_bounds.width)
+                            .max(0.0);
+                        let offset = (state.scroll_offset
+                            + past.signum() * autoscroll_speed(past.abs()) * elapsed)
+                            .clamp(0.0, max_offset);
+
+                        state.drag_frame = Some(*now);
+                        if offset != state.scroll_offset {
+                            state.scroll_offset = offset;
+                            let _ = self.drag_to(state, text_bounds, x);
+                        }
+                        if (past < 0.0 && offset > 0.0) || (past > 0.0 && offset < max_offset) {
+                            shell.request_redraw();
+                        }
+                    } else {
+                        state.drag_frame = None;
+                    }
+                }
+
                 if let Some(focus) = &mut state.is_focused
                     && focus.is_window_focused
                 {
@@ -1859,6 +1921,10 @@ pub struct State<P: text::Paragraph> {
     is_focused: Option<Focus>,
     was_focused: bool,
     is_dragging: Option<Drag>,
+    /// Where a drag's pointer is, horizontally, in layout coordinates.
+    drag_x: Option<f32>,
+    /// The last frame that scrolled a drag past an edge.
+    drag_frame: Option<Instant>,
     is_pasting: Option<Paste>,
     preedit: Option<input_method::Preedit>,
     last_click: Option<mouse::Click>,
@@ -1880,6 +1946,8 @@ impl<P: text::Paragraph> Default for State<P> {
             is_focused: None,
             was_focused: false,
             is_dragging: None,
+            drag_x: None,
+            drag_frame: None,
             is_pasting: None,
             preedit: None,
             last_click: None,
@@ -1976,6 +2044,22 @@ impl<P: text::Paragraph> State<P> {
     /// Selects the given range of the content of the [`TextInput`].
     pub fn select_range(&mut self, start: usize, end: usize) {
         self.cursor.select_range(start, end);
+    }
+
+    /// Scroll just enough to show the caret, without the margin typing
+    /// leaves after it: a press or a drag near the edge must not move the
+    /// text under the pointer.
+    fn keep_in_view(&mut self, text_bounds_width: f32, value: &Value) {
+        if !self.is_focused() {
+            return;
+        }
+        let caret = cursor_x(&self.value, self.cursor.end(value));
+        let max_offset =
+            (self.value.raw().min_width() + CURSOR_RIGHT_PADDING - text_bounds_width).max(0.0);
+        self.scroll_offset = self
+            .scroll_offset
+            .clamp(caret - text_bounds_width, caret)
+            .clamp(0.0, max_offset);
     }
 
     fn reveal_cursor(&mut self, text_bounds_width: f32, value: &Value) {
@@ -2122,6 +2206,12 @@ fn cursor_x<P: text::Paragraph>(paragraph: &paragraph::Plain<P>, cursor_index: u
 }
 
 const CURSOR_RIGHT_PADDING: f32 = 5.0;
+
+/// How fast a drag held `past` pixels beyond an edge scrolls the text, in
+/// pixels per second: faster the farther the pointer goes.
+fn autoscroll_speed(past: f32) -> f32 {
+    (past * 12.0).clamp(120.0, 2400.0)
+}
 
 /// Computes the position of the text cursor at the given X coordinate of
 /// a [`TextInput`].
