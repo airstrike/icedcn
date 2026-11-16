@@ -5,7 +5,7 @@ use crate::{Column, Slot, container, row};
 use iced_core::Length::{Fill, Shrink};
 use iced_core::alignment::Horizontal;
 use iced_core::text::{LineHeight, Wrapping};
-use iced_core::{Element, Font};
+use iced_core::{Element, Font, Padding};
 use iced_widget::{Renderer, Widget, text};
 use icedcn_core::Theme;
 use std::borrow::Cow;
@@ -125,19 +125,45 @@ impl Layout {
             .unwrap_or(1)
             .saturating_add(lines.len().saturating_sub(1));
         let gutter = (last.to_string().len() as f32 * size * 0.61).max(24.);
-        let styles = lines.iter().map(|(style, _)| *style).collect();
-        let column = Column::with_children(lines.into_iter().enumerate().map(
-            |(index, (variant, mut line))| {
-                line.inherit(
-                    &Inherited::default()
-                        .with_size(size)
-                        .with_line_height(line_height)
-                        .with_font(font)
-                        .with_selectable(true),
-                );
-                let mut entry = row![].spacing(12);
-                if let Some(first) = start_line {
-                    entry = entry.push(
+        // The line numbers stay put while the code scrolls sideways, so they
+        // and the diff marks are drawn by `Lines`, apart from the rows.
+        let pin = start_line.map(|_| padding + gutter + 12.);
+        let styles: Vec<LineStyle> = lines.iter().map(|(style, _)| *style).collect();
+        let mark = move |variant: LineStyle| -> Option<Element<'a, Message, Theme, Renderer>> {
+            let glyph = match variant {
+                LineStyle::Added => "+",
+                LineStyle::Removed => "−",
+                _ => return None,
+            };
+            Some(
+                container(
+                    text(glyph)
+                        .size(size)
+                        .font(font)
+                        .line_height(LineHeight::Absolute(line_height.into()))
+                        .selectable(false)
+                        .style(move |t: &Theme| iced_widget::text::Style {
+                            color: Some(
+                                if variant == LineStyle::Removed {
+                                    t.destructive.base
+                                } else {
+                                    t.muted.foreground
+                                }
+                                .into(),
+                            ),
+                            ..Default::default()
+                        }),
+                )
+                .padding([0, 0, 0, 4])
+                .into(),
+            )
+        };
+        let numbers = start_line.map(|first| {
+            styles
+                .iter()
+                .enumerate()
+                .map(|(index, variant)| {
+                    let number: Element<'a, Message, Theme, Renderer> = container(
                         text(first.saturating_add(index).to_string())
                             .size(size)
                             .font(font)
@@ -148,47 +174,48 @@ impl Layout {
                             .style(|theme: &Theme| iced_widget::text::Style {
                                 color: Some(theme.muted.foreground.into()),
                                 ..Default::default()
-                            })
-                            .into(),
-                    );
-                }
-                let row = container(entry.push(line).width(content_width))
-                    .width(content_width)
-                    .min_height(line_height)
-                    .padding([0., padding]);
-                let glyph = match variant {
-                    LineStyle::Added => Some("+"),
-                    LineStyle::Removed => Some("−"),
-                    _ => None,
-                };
-                if let Some(glyph) = glyph {
-                    let mark: Element<'_, Message, Theme, Renderer> = container(
-                        text(glyph)
-                            .size(size)
-                            .font(font)
-                            .line_height(LineHeight::Absolute(line_height.into()))
-                            .selectable(false)
-                            .style(move |t: &Theme| iced_widget::text::Style {
-                                color: Some(
-                                    if variant == LineStyle::Removed {
-                                        t.destructive.base
-                                    } else {
-                                        t.muted.foreground
-                                    }
-                                    .into(),
-                                ),
-                                ..Default::default()
                             }),
                     )
-                    .padding([0, 0, 0, 4])
+                    .padding(Padding {
+                        left: padding,
+                        ..Padding::ZERO
+                    })
                     .into();
-                    Slot::from(iced_widget::stack![Element::from(row), mark].boxed())
-                } else {
-                    row.into()
-                }
-            },
-        ))
+                    match mark(*variant) {
+                        Some(mark) => iced_widget::stack![number, mark].boxed(),
+                        None => number,
+                    }
+                })
+                .collect::<Vec<_>>()
+        });
+        let column = Column::with_children(lines.into_iter().map(|(variant, mut line)| {
+            line.inherit(
+                &Inherited::default()
+                    .with_size(size)
+                    .with_line_height(line_height)
+                    .with_font(font)
+                    .with_selectable(true),
+            );
+            let row = container(row![line].width(content_width))
+                .width(content_width)
+                .min_height(line_height)
+                .padding(Padding {
+                    left: pin.unwrap_or(padding),
+                    right: padding,
+                    ..Padding::ZERO
+                });
+            match mark(variant).filter(|_| pin.is_none()) {
+                Some(mark) => Slot::from(iced_widget::stack![Element::from(row), mark].boxed()),
+                None => row.into(),
+            }
+        }))
         .width(content_width);
-        lines::Lines::new(column.into(), styles).boxed()
+        lines::Lines::new(
+            column.into(),
+            styles,
+            numbers.unwrap_or_default(),
+            pin.unwrap_or(0.),
+        )
+        .boxed()
     }
 }

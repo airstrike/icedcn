@@ -15,6 +15,7 @@ use iced_widget::Renderer;
 use icedcn_core::Theme;
 
 use super::editor::Reveal;
+use super::lines::Gutter;
 
 pub(super) struct Viewport<'a, Message> {
     content: Element<'a, Message, Theme, Renderer>,
@@ -45,6 +46,8 @@ struct State {
     focused: bool,
     keyboard: bool,
     metrics: Metrics,
+    /// Where the code starts past the pinned line numbers.
+    gutter: f32,
 }
 impl Focusable for State {
     fn is_focused(&self) -> bool {
@@ -156,6 +159,7 @@ impl Operation for Scroll {
 struct Caret {
     viewport: Option<(Rectangle, Vector)>,
     caret: Option<Rectangle>,
+    gutter: f32,
 }
 impl Operation for Caret {
     fn traverse(&mut self, f: &mut dyn FnMut(&mut dyn Operation)) {
@@ -176,6 +180,8 @@ impl Operation for Caret {
             && reveal.take()
         {
             self.caret = Some(bounds);
+        } else if let Some(gutter) = state.downcast_ref::<Gutter>() {
+            self.gutter = self.gutter.max(gutter.width);
         }
     }
 }
@@ -197,9 +203,28 @@ impl Caret {
                 Some(end - size)
             }
         };
-        let x = reveal(caret.x - bounds.x, caret.width, offset.x, bounds.width);
+        // The pinned line numbers cover the code's first `gutter` pixels.
+        let x = reveal(
+            caret.x - bounds.x - self.gutter,
+            caret.width,
+            offset.x,
+            bounds.width - self.gutter,
+        );
         let y = reveal(caret.y - bounds.y, caret.height, offset.y, bounds.height);
         (x.is_some() || y.is_some()).then_some(AbsoluteOffset { x, y })
+    }
+}
+
+/// Hands the horizontal scroll offset to the pinned line numbers.
+struct Pin(f32);
+impl Operation for Pin {
+    fn traverse(&mut self, f: &mut dyn FnMut(&mut dyn Operation)) {
+        f(self);
+    }
+    fn custom(&mut self, _: Option<&Id>, _: Rectangle, state: &mut dyn Any) {
+        if let Some(gutter) = state.downcast_mut::<Gutter>() {
+            gutter.offset = self.0;
+        }
     }
 }
 
@@ -248,11 +273,20 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
         self.content.operate(
             &mut tree.children[0],
             Layout::new(tree.size),
-            &Rectangle::with_size(tree.size),
+            &bounds,
             renderer,
             &mut scroll,
         );
-        tree.state.downcast_mut::<State>().metrics = scroll.metrics;
+        let state = tree.state.downcast_mut::<State>();
+        state.metrics = scroll.metrics;
+        state.gutter = caret.gutter;
+        self.content.operate(
+            &mut tree.children[0],
+            Layout::new(tree.size),
+            &bounds,
+            renderer,
+            &mut Pin(scroll.metrics.offset.x),
+        );
     }
     fn operate(
         &mut self,
@@ -346,6 +380,13 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
             &mut scroll,
         );
         tree.state.downcast_mut::<State>().metrics = scroll.metrics;
+        self.content.operate(
+            &mut tree.children[0],
+            layout,
+            viewport,
+            renderer,
+            &mut Pin(scroll.metrics.offset.x),
+        );
     }
     fn draw(
         &self,
@@ -369,7 +410,9 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
         let Some(clip) = layout.bounds().intersection(viewport) else {
             return;
         };
-        let metrics = tree.state.downcast_ref::<State>().metrics;
+        let State {
+            metrics, gutter, ..
+        } = *tree.state.downcast_ref::<State>();
         let bounds = layout.bounds();
         let base: Color = theme.neutral.base.into();
         // Paint only at the remaining scroll edges, preserving pointer input and text selection.
@@ -378,6 +421,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
                 (
                     metrics.offset.x > 0.5,
                     Rectangle {
+                        x: bounds.x + gutter,
                         width: 20.,
                         ..bounds
                     },

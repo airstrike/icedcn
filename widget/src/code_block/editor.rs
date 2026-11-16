@@ -15,6 +15,7 @@ use iced_widget::text_editor::{
 };
 use icedcn_core::Theme;
 
+use super::lines::{self, Gutter};
 use super::listing;
 use super::{LineStyle, line_style};
 use crate::core::alignment::Vertical;
@@ -381,6 +382,7 @@ pub(super) struct State {
     /// The caret moved, so the next layout reveals it.
     moved: bool,
     reveal: Reveal,
+    gutter: Gutter,
 }
 
 /// The caret to scroll into view, once, handed to the code block's viewport
@@ -415,6 +417,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
             focused: false,
             moved: false,
             reveal: Reveal::default(),
+            gutter: Gutter::default(),
         })
     }
 
@@ -510,6 +513,11 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
             left + state.width + padding
         };
         children[0].translation = Vector::new(left, 0.);
+        state.gutter.width = if self.listing.start_line.is_some() {
+            left
+        } else {
+            0.
+        };
         let rows: f32 = state.heights.iter().sum();
         *size = Size::new(width, children[0].size.height.max(rows));
         if std::mem::take(&mut state.moved) {
@@ -537,6 +545,17 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
                 state, children, ..
             } = &mut *tree;
             let state = state.downcast_mut::<State>();
+            // A press on a line number starts at that line's code.
+            let cursor = match cursor.position() {
+                Some(position) if state.gutter.is_pressed(event, cursor, layout.bounds()) => {
+                    mouse::Cursor::Available(lines::line_start(
+                        layout.bounds(),
+                        state.gutter,
+                        position.y,
+                    ))
+                }
+                _ => cursor,
+            };
             let (child_layout, child_tree) = layout
                 .iter_mut(children)
                 .next()
@@ -613,6 +632,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
         let size = self.listing.size();
         let line_height = self.listing.line_height();
         let gutter = self.gutter(state.heights.len());
+        let pinned = bounds.x + state.gutter.offset;
         let muted: Color = theme.muted.foreground.into();
         let hint_factor = renderer::Renderer::hint_factor(renderer);
         let mut y = bounds.y;
@@ -663,7 +683,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
             if let (Some(first), Some(gutter)) = (self.listing.start_line, gutter) {
                 let (number, position, color) = label(
                     first.saturating_add(index).to_string(),
-                    bounds.x + padding + gutter,
+                    pinned + padding + gutter,
                     text::Alignment::Right,
                     muted,
                 );
@@ -677,7 +697,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
             if let Some((glyph, color)) = glyph {
                 let (mark, position, color) = label(
                     glyph.to_owned(),
-                    bounds.x + 4.,
+                    pinned + 4.,
                     text::Alignment::Default,
                     color,
                 );
@@ -699,7 +719,12 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
             selection,
         };
         // A long unwrapped line scrolls inside the editor, never over the gutter.
-        let Some(clip) = child_layout.bounds().expand(1.).intersection(viewport) else {
+        let clip = if state.gutter.width > 0. {
+            Some(state.gutter.code(bounds, *viewport))
+        } else {
+            child_layout.bounds().expand(1.).intersection(viewport)
+        };
+        let Some(clip) = clip.filter(|clip| clip.width > 0.) else {
             return;
         };
         renderer.with_layer(clip, |renderer| {
@@ -724,6 +749,9 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
         renderer: &Renderer,
     ) -> mouse::Interaction {
         let state = tree.state.downcast_ref::<State>();
+        if state.gutter.width > 0. && cursor.is_over(state.gutter.strip(layout.bounds())) {
+            return mouse::Interaction::default();
+        }
         let (child_layout, child_tree) = layout
             .iter(&tree.children)
             .next()
@@ -740,13 +768,14 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
         renderer: &Renderer,
         operation: &mut dyn Operation,
     ) {
-        if self.disabled {
-            return;
-        }
         let Tree {
             state, children, ..
         } = tree;
         let state = state.downcast_mut::<State>();
+        operation.custom(None, layout.bounds(), &mut state.gutter);
+        if self.disabled {
+            return;
+        }
         let (child_layout, child_tree) = layout
             .iter_mut(children)
             .next()

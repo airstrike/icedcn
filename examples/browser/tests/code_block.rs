@@ -1,11 +1,13 @@
 //! Focused regressions for the repaired width, clipping and selection paths.
 use browser::component::code_block::CodeBlockPage;
 use iced::keyboard::{self, key::Named};
-use iced::mouse::ScrollDelta;
+use iced::mouse::{self, ScrollDelta};
 use iced::widget::Id;
 use iced::{Element, Event, Point, Rectangle, Size, Vector};
 use iced_test::core::text::Target;
+use iced_test::core::time::Instant;
 use iced_test::core::widget::operation::{self, Operation, Outcome, Scrollable, TextInput, text};
+use iced_test::runtime::UserInterface;
 use iced_test::{Simulator, simulator};
 use icedcn::Theme;
 use icedcn::widget::code_block::{Added, CodeBlock, Removed, line};
@@ -543,4 +545,215 @@ fn a_vertical_wheel_over_a_capped_editor_scrolls_the_editor_and_then_the_page() 
         Vector::new(0., 50.),
         "the end bubbles"
     );
+}
+
+/// Renders an element after each batch of events, at 1×.
+struct Frames {
+    ui: Option<UserInterface<'static, (), Theme, iced::Renderer>>,
+    renderer: iced::Renderer,
+    size: Size,
+    cursor: mouse::Cursor,
+}
+impl Frames {
+    fn new(element: Element<'static, (), Theme>, size: Size) -> Self {
+        use iced_test::core::renderer::Headless;
+        use iced_test::futures::futures::executor::block_on;
+        let mut renderer = block_on(iced::Renderer::new(Default::default(), Some("wgpu")))
+            .expect("headless renderer");
+        let ui = UserInterface::build(element, size, Default::default(), &mut renderer);
+        Self {
+            ui: Some(ui),
+            renderer,
+            size,
+            cursor: mouse::Cursor::Unavailable,
+        }
+    }
+
+    fn send(&mut self, events: &[Event]) {
+        use iced_test::core::{shell, window};
+        let ui = self.ui.as_mut().unwrap();
+        let mut messages = shell::Bus::new();
+        for event in events {
+            if let Event::Mouse(mouse::Event::CursorMoved { position }) = event {
+                self.cursor = mouse::Cursor::Available(*position);
+            }
+        }
+        let _ = ui.update(
+            &window::Headless,
+            &shell::Waker::noop(),
+            events,
+            self.cursor,
+            &mut self.renderer,
+            &mut messages,
+        );
+    }
+
+    fn wheel(&mut self, at: Point, x: f32, y: f32) {
+        self.send(&[
+            Event::Mouse(mouse::Event::CursorMoved { position: at }),
+            Event::Mouse(mouse::Event::WheelScrolled { delta: wheel(x, y) }),
+        ]);
+    }
+
+    /// One RGBA row per pixel row.
+    fn pixels(&mut self) -> Vec<Vec<u8>> {
+        use iced_test::core::renderer::{Headless, Style};
+        use iced_test::core::window;
+        let theme = Theme::light();
+        self.send(&[Event::Window(
+            window::Event::RedrawRequested(Instant::now()),
+        )]);
+        let ui = self.ui.as_mut().unwrap();
+        ui.draw(&mut self.renderer, &theme, &Style::default(), self.cursor);
+        let width = self.size.width as u32;
+        let rgba = self.renderer.screenshot(
+            iced::Size::new(width, self.size.height as u32),
+            1.,
+            theme.neutral.base.into(),
+        );
+        rgba.chunks(width as usize * 4)
+            .map(<[u8]>::to_vec)
+            .collect()
+    }
+}
+
+/// The columns in `from..to` where two frames differ, above the horizontal
+/// scrollbar at the block's bottom edge.
+fn changed(first: &[Vec<u8>], second: &[Vec<u8>], from: usize, to: usize) -> Vec<usize> {
+    let rows = first.len().min(FRAME_ROWS);
+    (from..to)
+        .filter(|x| {
+            first[..rows]
+                .iter()
+                .zip(&second[..rows])
+                .any(|(a, b)| a[x * 4..x * 4 + 4] != b[x * 4..x * 4 + 4])
+        })
+        .collect()
+}
+
+/// The rows above the scrollbar of the blocks below.
+const FRAME_ROWS: usize = 90;
+
+/// Line numbers end 12 + 24 + 12 = 48px into the block, past its 1px border.
+const GUTTER: usize = 48;
+
+fn numbered_block(source: &str, editable: bool) -> code_block::Content<'static, ()> {
+    let content = code_block::content(if editable { "" } else { source }.to_owned())
+        .language("rust")
+        .line_numbers(true);
+    if editable {
+        content.default_value(source)
+    } else {
+        content
+    }
+}
+
+#[test]
+fn line_numbers_stay_put_while_the_code_scrolls_sideways() {
+    let source = format!("let a = 1;\n{LONG}let b = 2;\n");
+    for editable in [false, true] {
+        let block: Element<'static, (), Theme> =
+            container(code_block![numbered_block(&source, editable)])
+                .width(320)
+                .into();
+        let mut frames = Frames::new(block, Size::new(320., 160.));
+        let before = frames.pixels();
+        frames.wheel(Point::new(160., 40.), -90., 0.);
+        let after = frames.pixels();
+        assert_eq!(
+            changed(&before, &after, 0, GUTTER),
+            Vec::<usize>::new(),
+            "the numbers stay put, editable: {editable}"
+        );
+        assert!(
+            !changed(&before, &after, GUTTER + 20, 300).is_empty(),
+            "the code moves, editable: {editable}"
+        );
+    }
+
+    let block: Element<'static, (), Theme> = container(code_block![
+        code_block::content(source.clone())
+            .language("rust")
+            .line_numbers(true)
+            .start_line(995)
+    ])
+    .width(320)
+    .into();
+    let mut ui = Simulator::with_size(Default::default(), Size::new(320., 160.), block);
+    let number = ui.find("996").expect("line number").bounds();
+    ui.point_at(Point::new(160., 40.));
+    ui.scroll(wheel(-90., 0.));
+    assert_eq!(offsets(&mut ui)[0].2.x, 90.);
+    // Text bounds are in the scrolled content's coordinates.
+    let pinned = ui.find("996").expect("line number").bounds();
+    assert_eq!(pinned - Vector::new(90., 0.), number);
+}
+
+#[test]
+fn pinned_line_numbers_scroll_vertically_with_their_rows() {
+    let source: String = (1..=20)
+        .map(|n| format!("let x{n} = {n}; // {}\n", "long ".repeat(12)))
+        .collect();
+    let mut gutters = Vec::new();
+    for editable in [false, true] {
+        let block: Element<'static, (), Theme> = container(code_block![
+            numbered_block(&source, editable).max_height(120)
+        ])
+        .width(320)
+        .into();
+        let mut frames = Frames::new(block, Size::new(320., 160.));
+        frames.wheel(Point::new(160., 60.), 0., -50.);
+        frames.wheel(Point::new(160., 60.), -60., 0.);
+        gutters.push(frames.pixels());
+    }
+    assert_eq!(
+        changed(&gutters[0], &gutters[1], 0, GUTTER),
+        Vec::<usize>::new(),
+        "the editor's numbers match the listing's"
+    );
+
+    let block: Element<'static, (), Theme> = container(code_block![
+        code_block::content(source.clone())
+            .line_numbers(true)
+            .start_line(995)
+            .max_height(120)
+    ])
+    .width(320)
+    .into();
+    let mut ui = Simulator::with_size(Default::default(), Size::new(320., 160.), block);
+    ui.point_at(Point::new(160., 60.));
+    ui.scroll(wheel(0., -50.));
+    ui.scroll(wheel(-60., 0.));
+    let scrolled = offsets(&mut ui)[0].2;
+    assert_eq!(scrolled, Vector::new(60., 50.));
+    let number = ui.find("998").expect("line number").bounds();
+    let row = format!("let x4 = 4; // {}", "long ".repeat(12));
+    let code = ui.find(row.as_str()).expect("code row").bounds();
+    assert_eq!(number.y, code.y, "the number stays on its row");
+}
+
+#[test]
+fn a_click_on_a_line_number_puts_the_caret_at_the_line_start() {
+    let source = format!("{LONG}let b = 2;\n");
+    let block = |value: &str| -> Element<'static, String, Theme> {
+        container(code_block![
+            code_block::content(value.to_owned())
+                .language("rust")
+                .line_numbers(true)
+                .on_input(|source| source)
+        ])
+        .width(320)
+        .into()
+    };
+    let mut ui = Simulator::with_size(Default::default(), Size::new(320., 200.), block(&source));
+    let (line, _) = editor(&mut ui);
+    ui.point_at(Point::new(160., line.y + 4.));
+    ui.scroll(wheel(-90., 0.));
+    assert_eq!(offsets(&mut ui)[0].2.x, 90.);
+    ui.point_at(Point::new(20., line.y + 30.));
+    ui.simulate(simulator::click());
+    ui.typewrite("X");
+    let value = ui.drain().last().expect("an edit");
+    assert_eq!(value, format!("{LONG}Xlet b = 2;\n"));
+    assert_eq!(offsets(&mut ui)[0].2.x, 0., "the line start shows");
 }
