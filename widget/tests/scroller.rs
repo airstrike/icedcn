@@ -213,24 +213,26 @@ fn scrollable_keeps_child_taps_and_coasts_after_an_unhandled_swipe() {
     ]);
     assert_eq!(ui.drain().collect::<Vec<_>>(), [true]);
 
+    // Without platform timestamps the velocity tracker samples the wall
+    // clock, and a batch dispatched within ~1µs reads as no motion at all.
     let start = Point::new(24., 90.);
     let end = Point::new(24., 48.);
     ui.point_at(start);
     let _ = ui.simulate([
         Event::Touch(touch::Event::FingerPressed {
-            timestamp: None,
+            timestamp: Some(Duration::ZERO),
             id,
             position: start,
         }),
         Event::Touch(touch::Event::FingerMoved {
             id,
             position: end,
-            timestamp: None,
+            timestamp: Some(Duration::from_millis(16)),
         }),
         Event::Touch(touch::Event::FingerLifted {
             id,
             position: end,
-            timestamp: None,
+            timestamp: Some(Duration::from_millis(32)),
         }),
     ]);
     let now = Instant::now();
@@ -363,9 +365,35 @@ fn diagonal_swipes_choose_one_nested_viewport_and_cancel_its_button() {
     assert_eq!(ui.drain().collect::<Vec<_>>(), [true]);
     assert_eq!(offsets(&mut ui), (0., 0.));
 
-    press(&mut ui, 80., 30.);
-    drag(&mut ui, 52., 28.);
-    lift(&mut ui, 52., 28.);
+    let (start, end) = (Point::new(80., 30.), Point::new(52., 28.));
+    for (event, position) in [
+        (
+            touch::Event::FingerPressed {
+                id: FINGER,
+                position: start,
+                timestamp: Some(Duration::ZERO),
+            },
+            start,
+        ),
+        (
+            touch::Event::FingerMoved {
+                id: FINGER,
+                position: end,
+                timestamp: Some(Duration::from_millis(16)),
+            },
+            end,
+        ),
+        (
+            touch::Event::FingerLifted {
+                id: FINGER,
+                position: end,
+                timestamp: Some(Duration::from_millis(32)),
+            },
+            end,
+        ),
+    ] {
+        contact(&mut ui, event, position);
+    }
     let _ = ui.simulate([Event::Window(window::Event::RedrawRequested(
         Instant::now() + Duration::from_millis(80),
     ))]);
