@@ -57,7 +57,8 @@ pub(super) fn focused(tree: &Tree) -> bool {
     (tree.tag == tree::Tag::of::<State>() && {
         let s = tree.state.downcast_ref::<State>();
         s.focused && s.keyboard
-    }) || tree.children.iter().any(focused)
+    }) || super::editor::focused(tree)
+        || tree.children.iter().any(focused)
 }
 #[derive(Default, Clone, Copy)]
 struct Metrics {

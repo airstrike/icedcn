@@ -94,28 +94,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
         } = tree;
         let state = state.downcast_mut::<State>();
 
-        if let Some(value) = &self.value
-            && state.synced.as_ref() != Some(value)
-            && state.content.text() != *value
-        {
-            let mut cursor = state.content.cursor();
-            state.content = Content::with_text(value);
-            for position in std::iter::once(&mut cursor.position).chain(cursor.selection.iter_mut())
-            {
-                position.line = position
-                    .line
-                    .min(state.content.line_count().saturating_sub(1));
-                if let Some(line) = state.content.line(position.line) {
-                    position.index = line
-                        .text
-                        .floor_char_boundary(position.index.min(line.text.len()));
-                }
-            }
-            state.content.move_to(cursor);
-        }
-        if self.value.is_some() && state.synced != self.value {
-            state.synced.clone_from(&self.value);
-        }
+        let _ = sync(&mut state.content, &mut state.synced, self.value.as_ref());
 
         if self.disabled && state.focused {
             children.clear();
@@ -407,11 +386,43 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
     }
 }
 
+/// Replace `content` with a controlled `value` that changed since `synced`, keeping
+/// the caret where it was. Returns whether the content was replaced.
+///
+/// iced can rebuild the view before the app handles an edit, so a value seen
+/// before is stale and must not replace the edited content.
+pub(crate) fn sync(
+    content: &mut Content<Renderer>,
+    synced: &mut Option<String>,
+    value: Option<&String>,
+) -> bool {
+    let Some(value) = value else {
+        return false;
+    };
+    if synced.as_ref() == Some(value) {
+        return false;
+    }
+    synced.replace(value.clone());
+    if content.text() == *value {
+        return false;
+    }
+    let mut cursor = content.cursor();
+    *content = Content::with_text(value);
+    for position in std::iter::once(&mut cursor.position).chain(cursor.selection.iter_mut()) {
+        position.line = position.line.min(content.line_count().saturating_sub(1));
+        if let Some(line) = content.line(position.line) {
+            position.index = line
+                .text
+                .floor_char_boundary(position.index.min(line.text.len()));
+        }
+    }
+    content.move_to(cursor);
+    true
+}
+
 struct State {
     content: Content<Renderer>,
-    /// The controlled value the content last synced to. iced can rebuild the
-    /// view before the app handles an edit, so a value seen here before is
-    /// stale and must not replace the edited content.
+    /// The controlled value the content last synced to; see [`sync`].
     synced: Option<String>,
     focused: bool,
     hovered: bool,

@@ -21,6 +21,8 @@
 
 mod widget;
 
+pub(crate) use widget::sync;
+
 use iced_core::{Element, Font};
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;

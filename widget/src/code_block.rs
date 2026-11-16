@@ -18,6 +18,7 @@ mod actions;
 pub mod ansi;
 mod content;
 mod copy;
+mod editor;
 mod floating;
 mod footer;
 mod frame;
@@ -233,6 +234,7 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
         let disabled = Inherited::default().with_disabled(disabled);
         let mut content = content;
         content.inherit(&disabled);
+        let content_wrap = content.wrap;
         let mut panel = column![].width(Fill);
         let has_header = header.is_some();
         if let Some(mut header) = header {
@@ -254,8 +256,9 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
         if let Some(actions) = &mut actions {
             actions.inherit(&disabled.with_code_actions(Placement::Floating));
         }
-        let wrap = content.wrap;
         let (body, viewport) = content.view(compact, disabled.is_disabled());
+        // An editor wraps or scrolls its long lines itself.
+        let wrap = content_wrap || viewport.editable;
         let content_width = if wrap { Fill } else { Shrink };
         let body = container(body)
             .padding(Padding {
@@ -335,6 +338,7 @@ struct Viewport {
     collapsed: bool,
     id: Option<Id>,
     focusable: bool,
+    editable: bool,
 }
 
 fn plain<'a>(source: Cow<'a, str>, layout: listing::Layout) -> iced_widget::Text<'a, Theme> {

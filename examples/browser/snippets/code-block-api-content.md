@@ -15,3 +15,5 @@ The content that scrolls or wraps.
 | `.focusable(bool)` | `bool` | `true` | Makes the content focusable so it can be scrolled by keyboard. |
 | `.id(id)` | `impl Into<Id>` | - | Identifies the content for focus operations. |
 | `.font(font)` | `impl Into<Font>` | `Font::MONOSPACE` | The code and line number font. |
+| `.on_input(f)` | `impl Fn(String) -> Message` | - | Edit the source in place; each edit publishes the new source. |
+| `.default_value(source)` | `impl Into<String>` | - | Edit in place from `source`, with the text kept in the block. |

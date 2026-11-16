@@ -377,6 +377,14 @@ impl State {
             ]
             .spacing(12)
             .into(),
+            "editable" => code_block![
+                code_block::header![code_block::title![file_code, "src/greet.rs"]],
+                code_block::content("")
+                    .default_value(EDITABLE)
+                    .language("rust")
+                    .line_numbers(true),
+            ]
+            .into(),
             "highlighting" => code_block![
                 code_block::header!["src/notebook.rs"],
                 code_block::content(HIGHLIGHTING).language("rust"),

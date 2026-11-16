@@ -5,7 +5,9 @@ use std::ops::{Range, RangeInclusive};
 use iced_core::Length::{Fill, Shrink};
 use iced_core::widget::Id;
 use iced_core::{Font, Pixels};
+use iced_widget::Widget;
 
+use super::editor::Editor;
 use super::listing::{self, Options, View};
 use super::{LineStyle, Viewport, plain};
 use crate::compose::{Inherited, Slot};
@@ -120,6 +122,9 @@ pub struct Content<'a, Message> {
     id: Option<Id>,
     focusable: bool,
     font: Font,
+    on_input: Option<Box<dyn Fn(String) -> Message + 'a>>,
+    default_value: Option<String>,
+    disabled: bool,
 }
 
 /// Content from a string, or from a list of [`line`]s.
@@ -137,6 +142,9 @@ pub fn content<'a, Message>(body: impl Into<Body<'a, Message>>) -> Content<'a, M
         id: None,
         focusable: true,
         font: Font::MONOSPACE,
+        on_input: None,
+        default_value: None,
+        disabled: false,
     }
 }
 
@@ -219,7 +227,23 @@ impl<'a, Message: 'a> Content<'a, Message> {
         self
     }
 
+    /// Edit the source in place. The source is the controlled value: the editor
+    /// always shows it, and an edit publishes the complete new source.
+    pub fn on_input(mut self, on_input: impl Fn(String) -> Message + 'a) -> Self {
+        self.on_input = Some(Box::new(on_input));
+        self
+    }
+
+    /// Edit in place, starting from `source`. The editor keeps its own text and
+    /// [`on_input`](Self::on_input) only reports edits; the content's own source
+    /// is unused.
+    pub fn default_value(mut self, source: impl Into<String>) -> Self {
+        self.default_value = Some(source.into());
+        self
+    }
+
     pub(super) fn inherit(&mut self, from: &Inherited) {
+        self.disabled |= from.is_disabled();
         if let Body::Lines(lines) = &mut self.body {
             for line in lines {
                 line.content.inherit(from);
@@ -241,6 +265,9 @@ impl<'a, Message: 'a> Content<'a, Message> {
             id,
             focusable,
             font,
+            on_input,
+            default_value,
+            disabled: _,
         } = self;
         let layout = listing::Layout {
             font,
@@ -250,7 +277,24 @@ impl<'a, Message: 'a> Content<'a, Message> {
         };
         let padding = if compact { 10. } else { 12. };
         let width = if wrap { Fill } else { Shrink };
+        let editable =
+            matches!(body, Body::Text(_)) && (on_input.is_some() || default_value.is_some());
         let body: Slot<'a, Message> = match (body, listing) {
+            (Body::Text(source), _) if editable => {
+                let value = default_value.is_none().then(|| source.into_owned());
+                Editor::new(
+                    value,
+                    default_value.unwrap_or_default(),
+                    on_input,
+                    options.language.map(Cow::into_owned),
+                    options.styles,
+                    layout,
+                    id.clone(),
+                    disabled,
+                )
+                .boxed()
+                .into()
+            }
             (Body::Text(source), Some(view)) => view(options, source, layout),
             (Body::Text(source), None) if !line_numbers => container(plain(source, layout))
                 .width(width)
@@ -293,8 +337,10 @@ impl<'a, Message: 'a> Content<'a, Message> {
             height,
             max_height,
             collapsed,
-            id,
-            focusable: focusable && !disabled,
+            // The editor takes the focus and the id itself.
+            id: if editable { None } else { id },
+            focusable: focusable && !disabled && !editable,
+            editable,
         };
         (body, viewport)
     }

@@ -145,6 +145,13 @@ pub static BLOCKS: &[Block] = &[
         description: None,
         snippet: "examples/browser/snippets/code-block-typeset.md",
     },
+    Block::Md("examples/browser/snippets/code-block-editable-intro.md"),
+    Block::Example {
+        id: "editable",
+        title: "",
+        description: None,
+        snippet: "examples/browser/snippets/code-block-editable.md",
+    },
     Block::Group {
         title: "Syntax Highlighting",
         children: &[

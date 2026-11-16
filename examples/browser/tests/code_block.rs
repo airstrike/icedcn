@@ -1,13 +1,14 @@
 //! Focused regressions for the repaired width, clipping and selection paths.
 use browser::component::code_block::CodeBlockPage;
+use iced::keyboard::{self, key::Named};
 use iced::widget::Id;
-use iced::{Element, Point, Rectangle, Size, Vector};
-use iced_test::Simulator;
+use iced::{Element, Event, Point, Rectangle, Size, Vector};
 use iced_test::core::text::Target;
-use iced_test::core::widget::operation::{self, Operation, Outcome, Scrollable, text};
+use iced_test::core::widget::operation::{self, Operation, Outcome, Scrollable, TextInput, text};
+use iced_test::{Simulator, simulator};
 use icedcn::Theme;
 use icedcn::widget::code_block::{Added, CodeBlock, Removed, line};
-use icedcn::widget::{code_block, container, rich_text, span};
+use icedcn::widget::{code_block, column, container, rich_text, span};
 
 #[derive(Default)]
 struct Viewports(Vec<(Rectangle, Size)>);
@@ -272,4 +273,133 @@ fn ansi_matches_explicit_terminal_spans_at_both_scales_and_themes() {
             );
         }
     }
+}
+
+#[derive(Default)]
+struct Editors(Vec<(Rectangle, String)>);
+impl Operation for Editors {
+    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+        visit(self);
+    }
+    fn text_input(&mut self, _: Option<&Id>, bounds: Rectangle, input: &mut dyn TextInput) {
+        self.0.push((bounds, input.text().into_owned()));
+    }
+}
+
+fn editor<'a, M: 'a>(ui: &mut Simulator<'a, M, Theme>) -> (Rectangle, String) {
+    let mut editors = Editors::default();
+    ui.operate(&mut editors);
+    assert_eq!(editors.0.len(), 1);
+    editors.0.pop().unwrap()
+}
+
+fn editable(value: &str) -> Element<'static, String, Theme> {
+    code_block![
+        code_block::content(value.to_owned())
+            .language("rust")
+            .line_numbers(true)
+            .on_input(|source| source)
+    ]
+    .into()
+}
+
+#[test]
+fn editable_typing_survives_a_rebuild_with_the_previous_value() {
+    for initial in ["", "fn main() {}\n"] {
+        let mut value = initial.to_owned();
+        let mut ui = Simulator::new(editable(&value));
+        let (bounds, _) = editor(&mut ui);
+        ui.point_at(Point::new(bounds.x + 2., bounds.y + 4.));
+        ui.simulate(simulator::click());
+        for character in ["p", "u", "b"] {
+            ui.typewrite(character);
+            // iced can rebuild the view before the app handles the edit, so
+            // the editor sees the old value once more.
+            ui = ui.rebuild(editable(&value));
+            if let Some(text) = ui.drain().last() {
+                value = text;
+            }
+            ui = ui.rebuild(editable(&value));
+        }
+        assert_eq!(value, format!("pub{initial}"), "starting from {initial:?}");
+    }
+}
+
+#[test]
+fn editable_tab_indents_shift_tab_outdents_and_enter_keeps_the_indent() {
+    let mut value = String::new();
+    let mut ui = Simulator::new(editable(&value));
+    let (bounds, _) = editor(&mut ui);
+    ui.point_at(Point::new(bounds.x + 2., bounds.y + 4.));
+    ui.simulate(simulator::click());
+    let step = |ui: Simulator<'static, String, Theme>, value: &mut String| {
+        let mut ui = ui;
+        if let Some(text) = ui.drain().last() {
+            *value = text;
+        }
+        ui.rebuild(editable(value))
+    };
+    ui.tap_key(Named::Tab);
+    ui = step(ui, &mut value);
+    assert_eq!(value, "    ", "Tab inserts four spaces");
+    ui.typewrite("x");
+    ui = step(ui, &mut value);
+    ui.tap_key(Named::Enter);
+    ui = step(ui, &mut value);
+    ui.typewrite("y");
+    ui = step(ui, &mut value);
+    assert_eq!(value, "    x\n    y");
+    ui.simulate(
+        [simulator::press_key(Named::Tab, None)].map(|event| match event {
+            Event::Keyboard(keyboard::Event::KeyPressed {
+                key,
+                modified_key,
+                physical_key,
+                location,
+                text,
+                repeat,
+                ..
+            }) => Event::Keyboard(keyboard::Event::KeyPressed {
+                key,
+                modified_key,
+                physical_key,
+                location,
+                modifiers: keyboard::Modifiers::SHIFT,
+                text,
+                repeat,
+            }),
+            event => event,
+        }),
+    );
+    let _ = step(ui, &mut value);
+    assert_eq!(value, "    x\ny", "Shift+Tab outdents the line");
+}
+
+#[test]
+fn editable_and_read_only_blocks_lay_out_to_the_same_size() {
+    use icedcn::widget::text;
+
+    let source = "fn main() {\n    println!(\"hi\");\n}\n";
+    let read_only: Element<'static, String, Theme> = code_block![
+        code_block::header![code_block::title("main.rs")],
+        code_block::content(source)
+            .language("rust")
+            .line_numbers(true)
+    ]
+    .into();
+    let editable: Element<'static, String, Theme> = code_block![
+        code_block::header![code_block::title("main.rs")],
+        code_block::content(source)
+            .language("rust")
+            .line_numbers(true)
+            .on_input(|source| source)
+    ]
+    .into();
+    let mut sizes = Vec::new();
+    for block in [read_only, editable] {
+        let view: Element<'static, String, Theme> = column![block, text("END")].into();
+        let mut ui = Simulator::with_size(Default::default(), Size::new(480., 800.), view);
+        sizes.push(ui.find("END").unwrap().bounds().y);
+    }
+    assert_eq!(sizes[0], sizes[1]);
 }

@@ -19,7 +19,7 @@ pub(super) fn rows(source: &str, language: &str) -> Vec<Vec<Span<'static>>> {
         .collect()
 }
 
-fn tokenize(source: &str, language: &str) -> Vec<Vec<(String, Code)>> {
+pub(super) fn tokenize(source: &str, language: &str) -> Vec<Vec<(String, Code)>> {
     // Registered tree-sitter grammars take precedence over iced's language set.
     if highlighter::config_for(language).is_some() {
         let mut rows: Vec<_> = Highlighter::new()
@@ -79,6 +79,12 @@ fn colors(code: Code) -> (u32, u32) {
         Code::Constant | Code::Type | Code::Support => (0x005cc5, 0x79b8ff),
         Code::Other | Code::Variable | Code::Punctuation | Code::Path => (0x24292e, 0xe1e4e8),
     }
+}
+
+/// The color a token paints in a light or dark theme.
+pub(super) fn color(code: Code, dark: bool) -> Color {
+    let (light, dark_color) = colors(code);
+    rgb(if dark { dark_color } else { light })
 }
 
 fn rgb(hex: u32) -> Color {

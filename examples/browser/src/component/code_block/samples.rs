@@ -177,6 +177,10 @@ fn load_titles(path: &Path) -> std::io::Result<Vec<String>> {
     Ok(source.lines().map(str::to_owned).collect())
 }"##;
 
+pub const EDITABLE: &str = r##"fn greet(name: &str) -> String {
+    format!("Hello, {name}!")
+}"##;
+
 pub const WRAP: &str = r##"error: failed to read notebook index from /home/reader/.local/share/notebook/collections/research/field-notes/archive/index.toml: No such file or directory (os error 2)"##;
 
 pub struct File {
