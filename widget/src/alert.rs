@@ -26,7 +26,7 @@
 
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::text::{IntoFragment, LineHeight, Wrapping};
-use iced_core::{Length::*, Padding, Pixels};
+use iced_core::{Font, Length::*, Padding, Pixels};
 use iced_widget::Renderer;
 use iced_widget::Widget;
 use iced_widget::text::{Style, StyleFn};
@@ -44,6 +44,7 @@ pub struct Alert<'a, Message> {
     title: Option<text::Text<'a>>,
     description: Option<text::Text<'a>>,
     description_wrapping: Wrapping,
+    description_font: Option<Font>,
     action: Option<Slot<'a, Message>>,
     style: Spec,
     max_width: f32,
@@ -56,6 +57,7 @@ pub fn alert<'a, Message: 'a>() -> Alert<'a, Message> {
         title: None,
         description: None,
         description_wrapping: Wrapping::Word,
+        description_font: None,
         action: None,
         style: Default.into(),
         max_width: f32::INFINITY,
@@ -95,6 +97,12 @@ impl<'a, Message: 'a> Alert<'a, Message> {
     /// available width.
     pub fn description_wrapping(mut self, wrapping: Wrapping) -> Self {
         self.description_wrapping = wrapping;
+        self
+    }
+
+    /// Set the description font, e.g. `Font::MONOSPACE` for compiler output.
+    pub fn description_font(mut self, font: impl Into<Font>) -> Self {
+        self.description_font = Some(font.into());
         self
     }
 
@@ -157,6 +165,7 @@ impl<'a, Message: 'a> Compose<Message> for Alert<'a, Message> {
             title,
             description,
             description_wrapping,
+            description_font,
             action,
             style,
             max_width,
@@ -168,7 +177,11 @@ impl<'a, Message: 'a> Compose<Message> for Alert<'a, Message> {
                 color: Some(style.description(theme).into()),
                 ..Style::default()
             });
-            t.wrapping(description_wrapping).style(style)
+            let t = t.wrapping(description_wrapping).style(style);
+            match description_font {
+                Some(font) => t.font(font),
+                None => t,
+            }
         });
 
         let mut text_col: iced_widget::Column<iced_core::Element<'a, Message, Theme, Renderer>> =
