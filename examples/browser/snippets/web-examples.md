@@ -1,6 +1,6 @@
 ## Complete interfaces
 
-The Examples gallery shows how icedcn components work together in application screens. Open **Receipts** for a complete application, or **Playground** to run Rust as you type.
+The Examples gallery shows how icedcn components work together in application screens. Open **Receipts** for a complete application, or **Playground** for a Rust scratchpad.
 
 ### Receipts
 
@@ -8,7 +8,7 @@ The Examples gallery shows how icedcn components work together in application sc
 
 ### Playground
 
-[Playground](https://icedcn.airstrike.fyi/examples/playground) runs a whole Rust program as you type, in an embedded [rawr](https://github.com/airstrike/rawr) engine, and shows what its `main` prints or the error rustc would give.
+[Playground](https://icedcn.airstrike.fyi/examples/playground) is a Rust scratchpad. Its program runs on every edit in an embedded [rawr](https://github.com/airstrike/rawr) engine, and Output shows what `main` printed or the error rustc gives.
 
 To run the browser from a checkout:
 

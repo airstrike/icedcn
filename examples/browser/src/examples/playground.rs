@@ -1,14 +1,12 @@
-//! A Rust playground inside the app: the user's file is a whole program,
-//! and the example runs its `main` as they type and shows what it prints.
-//! It runs in an embedded rawr engine, so a mistake shows the error rustc
-//! would give, natively and on the web alike.
+//! A Rust scratchpad: the file is a whole program, and its `main` runs in an
+//! embedded rawr engine on every edit, natively and on the web.
 
 use std::sync::{Arc, Mutex};
 
-use iced::{Element, Fill, Font, Task};
+use iced::{Element, Fill, Font, Task, Top};
 use icedcn::widget::scrollable::scrollable;
-use icedcn::widget::{alert, column, text, textarea};
-use icedcn::{Slot, Theme, card};
+use icedcn::widget::{alert, button, code_block, column, row, text};
+use icedcn::{Destructive, Slot, Theme, card};
 
 use crate::icon;
 
@@ -45,6 +43,7 @@ pub struct State {
 #[derive(Debug, Clone)]
 pub enum Message {
     Edited(String),
+    Reset,
 }
 
 impl Default for State {
@@ -73,24 +72,32 @@ impl State {
                 self.outcome = run(&source);
                 self.source = source;
             }
+            Message::Reset => {
+                self.outcome = run(STARTER);
+                STARTER.clone_into(&mut self.source);
+            }
         }
         Task::none()
     }
 
-    pub fn view(&self) -> Element<'_, Message, Theme> {
-        let mut editor = textarea("fn main() { .. }")
-            .value(self.source.clone())
-            .on_input(Message::Edited)
-            .font(Font::MONOSPACE)
-            .min_height(320.);
-        if self.outcome.is_err() {
-            editor = editor.style(textarea::Invalid);
-        }
-        let program = card(column![
-            card::header("Playground").description("Rust that runs as you type, inside the app."),
-            card::content(editor),
-        ])
-        .width(Fill);
+    /// Side by side from `width` 768 up, stacked below it.
+    pub fn view(&self, width: f32) -> Element<'_, Message, Theme> {
+        let editor = code_block![
+            code_block::header![
+                code_block::title![file_code, "main.rs"],
+                code_block::actions![
+                    button(icon::rotate_ccw())
+                        .style(button::Ghost)
+                        .square()
+                        .on_press(Message::Reset),
+                    code_block::copy_button(self.source.as_str()),
+                ],
+            ],
+            code_block::content(self.source.as_str())
+                .language("rust")
+                .line_numbers(true)
+                .on_input(Message::Edited),
+        ];
 
         let output: Slot<'_, Message> = match &self.outcome {
             Ok(printed) if printed.is_empty() => text::muted("main printed nothing.").into(),
@@ -99,19 +106,22 @@ impl State {
                 .icon(icon::circle_alert())
                 .title("The program doesn't run")
                 .description(error.clone())
-                .style(alert::Destructive)
+                .description_font(Font::MONOSPACE)
+                .style(Destructive)
                 .into(),
         };
-        let printed = card(column![
-            card::header("Output").description("What main prints."),
-            card::content(scrollable(output).width(Fill).height(Fill)).height(Fill),
-        ])
-        .width(Fill)
-        .height(Fill);
+        let output = card(column![card::header("Output"), card::content(output)]).width(Fill);
 
-        column![program, printed]
-            .spacing(16)
-            .padding(16)
+        let content: Slot<'_, Message> = if width >= 768. {
+            row![column![editor].width(Fill), column![output].width(Fill)]
+                .spacing(16)
+                .align_y(Top)
+                .width(Fill)
+                .into()
+        } else {
+            column![editor, output].spacing(16).width(Fill).into()
+        };
+        scrollable(column![content].padding(16).width(Fill))
             .width(Fill)
             .height(Fill)
             .into()

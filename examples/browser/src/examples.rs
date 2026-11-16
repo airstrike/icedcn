@@ -106,7 +106,7 @@ impl State {
                 Open::Playground => (
                     self.playground.title(),
                     self.playground
-                        .view()
+                        .view(width)
                         .map(|message| Message::Example(Event::Playground(message)))
                         .boxed(),
                 ),
@@ -136,7 +136,7 @@ impl State {
                 ].spacing(8).width(Fill)),
             ].width(Fill)).width(Fill),
             card(column![
-                card::header("Playground").description("Rust that runs as you type, inside the app."),
+                card::header("Playground").description("A Rust scratchpad."),
                 card::footer(row![
                     button("Open Playground").anchor().on_press(Message::Example(Event::OpenPlayground)),
                     button("View source").anchor().style(button::Outline)
@@ -159,6 +159,8 @@ impl State {
 mod tests {
     use super::*;
     use iced_test::core::Settings;
+    use iced_test::core::widget::Operation;
+    use iced_test::core::widget::operation::TextInput;
     use iced_test::selector::Candidate;
     use iced_test::simulator::Simulator;
 
@@ -206,19 +208,57 @@ mod tests {
         assert!(matches!(event, Event::OpenPlayground));
         let _ = state.update(event);
         assert!(state.is_playground());
-        let mut ui = Simulator::with_size(
-            Settings::default(),
-            iced::Size::new(1440., 1200.),
-            state.view(1440.),
-        );
         let printed = state
             .playground
             .printed()
-            .expect("the starter program must run");
+            .expect("the starter program must run")
+            .to_owned();
         let first = printed.lines().next().unwrap();
         assert_eq!(first, "$  12.50  tip $  2.25  (18.0%)");
-        ui.find("Output").unwrap();
-        ui.find(printed).unwrap();
+        for (width, side_by_side) in [(1440., true), (390., false)] {
+            let mut ui = Simulator::with_size(
+                Settings::default(),
+                iced::Size::new(width, 1200.),
+                state.view(width),
+            );
+            let mut editors = Editors::default();
+            ui.operate(&mut editors);
+            let [(editor, source)] = editors.0.as_slice() else {
+                panic!("the playground has one editor");
+            };
+            assert!(source.starts_with("// Each bill"));
+            ui.find("main.rs").unwrap();
+            let output = ui.find("Output").unwrap().bounds();
+            ui.find(printed.as_str()).unwrap();
+            if side_by_side {
+                assert!(
+                    output.x > editor.x + editor.width,
+                    "{output:?} beside {editor:?}"
+                );
+                assert!(output.y < editor.y + editor.height);
+            } else {
+                assert!(
+                    output.y > editor.y + editor.height,
+                    "{output:?} below {editor:?}"
+                );
+            }
+        }
+    }
+
+    #[derive(Default)]
+    struct Editors(Vec<(iced::Rectangle, String)>);
+    impl Operation for Editors {
+        fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+            visit(self);
+        }
+        fn text_input(
+            &mut self,
+            _: Option<&iced::widget::Id>,
+            bounds: iced::Rectangle,
+            input: &mut dyn TextInput,
+        ) {
+            self.0.push((bounds, input.text().into_owned()));
+        }
     }
 
     #[test]

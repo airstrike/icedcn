@@ -1,6 +1,6 @@
-## Rust as you type
+## A Rust scratchpad
 
-Playground runs a whole Rust program inside the component browser. Edit the program in the textarea and its `main` runs again on every change, in an embedded [rawr](https://github.com/airstrike/rawr) engine, both natively and on the web. The Output card shows what `main` printed, or the error rustc would give in a destructive alert.
+Playground holds one Rust program in an editable code block. Its `main` runs again on every edit, in an embedded [rawr](https://github.com/airstrike/rawr) engine, natively and on the web. Output shows what `main` printed, or the error rustc gives.
 
 Open [the interactive example](https://icedcn.airstrike.fyi/examples/playground) to try it. It starts from a program that prints a table of tips for a few bills. Use the surrounding Examples navigation to return to the gallery.
 
