@@ -233,6 +233,12 @@ impl App {
                         name: "Receipts",
                         title: Some("Receipts"),
                     },
+                    route::Definition {
+                        destination: Route::Playground,
+                        path: "/examples/playground".into(),
+                        name: "Playground",
+                        title: Some("Playground"),
+                    },
                 ]),
         );
         tasks.push(
@@ -357,7 +363,10 @@ impl App {
     }
 
     fn showing_examples(&self) -> bool {
-        matches!(self.destination, Route::Examples | Route::Receipts)
+        matches!(
+            self.destination,
+            Route::Examples | Route::Receipts | Route::Playground
+        )
     }
 
     fn restore(&mut self, destination: Route) -> Task<Message> {
@@ -372,6 +381,7 @@ impl App {
             Route::Page(index) => Message::SelectPage(index),
             Route::Examples => Message::Example(examples::Event::Gallery),
             Route::Receipts => Message::Example(examples::Event::OpenReceipts),
+            Route::Playground => Message::Example(examples::Event::OpenPlayground),
         };
         let task = self.update_inner(message);
         browser_routing::set_title(&self.title());
@@ -409,7 +419,9 @@ impl App {
             Message::Example(event) => {
                 self.search = false;
                 let task = self.examples.update(event);
-                self.destination = if self.examples.is_open() {
+                self.destination = if self.examples.is_playground() {
+                    Route::Playground
+                } else if self.examples.is_open() {
                     Route::Receipts
                 } else {
                     Route::Examples
@@ -462,6 +474,9 @@ impl App {
                     }
                     "icedcn://examples/receipts" => {
                         self.update_inner(Message::Example(examples::Event::OpenReceipts))
+                    }
+                    "icedcn://examples/playground" => {
+                        self.update_inner(Message::Example(examples::Event::OpenPlayground))
                     }
                     _ => page::open_link(url),
                 }

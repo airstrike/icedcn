@@ -78,6 +78,9 @@ pub fn write_routes() -> serde_json::Result<()> {
                 route::Route::Receipts => {
                     "A sales notebook built with icedcn, bringing a complete Rust application into the component browser."
                 }
+                route::Route::Playground => {
+                    "A Rust playground inside the app: write a program and see what it prints as you type."
+                }
                 route::Route::NotFound(_) => "This page could not be found.",
             };
             Route {

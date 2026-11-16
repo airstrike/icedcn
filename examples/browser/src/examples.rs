@@ -1,4 +1,5 @@
 //! Runnable applications assembled from icedcn components.
+pub mod playground;
 pub mod receipts;
 mod window;
 
@@ -13,8 +14,16 @@ use crate::Message;
 #[derive(Default)]
 pub struct State {
     receipts: receipts::State,
-    open: bool,
+    playground: playground::State,
+    open: Option<Open>,
     platform: window::Platform,
+}
+
+/// The example on screen.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Open {
+    Receipts,
+    Playground,
 }
 
 #[derive(Debug, Clone)]
@@ -22,29 +31,43 @@ pub enum Event {
     Gallery,
     OpenReceipts,
     Receipts(receipts::Message),
+    OpenPlayground,
+    Playground(playground::Message),
 }
 
 impl State {
     pub(crate) fn is_open(&self) -> bool {
-        self.open
+        self.open.is_some()
+    }
+
+    /// Whether the example on screen is the playground.
+    pub(crate) fn is_playground(&self) -> bool {
+        self.open == Some(Open::Playground)
     }
 
     pub fn update(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::Gallery => self.open = false,
-            Event::OpenReceipts => self.open = true,
+            Event::Gallery => self.open = None,
+            Event::OpenReceipts => self.open = Some(Open::Receipts),
             Event::Receipts(message) => {
                 return self
                     .receipts
                     .update(message)
                     .map(|m| Message::Example(Event::Receipts(m)));
             }
+            Event::OpenPlayground => self.open = Some(Open::Playground),
+            Event::Playground(message) => {
+                return self
+                    .playground
+                    .update(message)
+                    .map(|m| Message::Example(Event::Playground(m)));
+            }
         }
         Task::none()
     }
 
     pub fn escape(&mut self) -> Task<Message> {
-        if self.open {
+        if self.open == Some(Open::Receipts) {
             self.update(Event::Receipts(receipts::Message::Hotkey(
                 receipts::Hotkey::Escape,
             )))
@@ -54,7 +77,7 @@ impl State {
     }
 
     pub fn focus(&mut self, previous: bool) -> Task<Message> {
-        if self.open {
+        if self.open == Some(Open::Receipts) {
             let modifiers = if previous {
                 Modifiers::SHIFT
             } else {
@@ -71,7 +94,23 @@ impl State {
     }
 
     pub fn view(&self, width: f32) -> Element<'_, Message, Theme> {
-        if self.open {
+        if let Some(open) = self.open {
+            let (title, example) = match open {
+                Open::Receipts => (
+                    self.receipts.title(),
+                    self.receipts
+                        .view()
+                        .map(|message| Message::Example(Event::Receipts(message)))
+                        .boxed(),
+                ),
+                Open::Playground => (
+                    self.playground.title(),
+                    self.playground
+                        .view()
+                        .map(|message| Message::Example(Event::Playground(message)))
+                        .boxed(),
+                ),
+            };
             return column![
                 container(
                     button("← All examples")
@@ -80,14 +119,7 @@ impl State {
                         .on_press(Message::Example(Event::Gallery))
                 )
                 .padding([8, 20]),
-                self.platform.view(
-                    width,
-                    self.receipts.title(),
-                    self.receipts
-                        .view()
-                        .map(|message| Message::Example(Event::Receipts(message)))
-                        .boxed(),
-                ),
+                self.platform.view(width, title, example),
             ]
             .width(Fill)
             .height(Fill)
@@ -99,6 +131,14 @@ impl State {
                 card::header("Receipts").description("A sales notebook."),
                 card::footer(row![
                     button("Open Receipts").anchor().on_press(Message::Example(Event::OpenReceipts)),
+                    button("View source").anchor().style(button::Outline)
+                        .on_press(Message::OpenUrl("https://github.com/airstrike/icedcn/tree/HEAD/examples/browser/src/examples")),
+                ].spacing(8).width(Fill)),
+            ].width(Fill)).width(Fill),
+            card(column![
+                card::header("Playground").description("Rust that runs as you type, inside the app."),
+                card::footer(row![
+                    button("Open Playground").anchor().on_press(Message::Example(Event::OpenPlayground)),
                     button("View source").anchor().style(button::Outline)
                         .on_press(Message::OpenUrl("https://github.com/airstrike/icedcn/tree/HEAD/examples/browser/src/examples")),
                 ].spacing(8).width(Fill)),
@@ -152,11 +192,41 @@ mod tests {
     }
 
     #[test]
+    fn playground_card_opens_and_prints_the_starter_program() {
+        let mut state = State::default();
+        let mut ui = Simulator::with_size(
+            Settings::default(),
+            iced::Size::new(1440., 1200.),
+            state.view(1440.),
+        );
+        ui.click("Open Playground").unwrap();
+        let Some(Message::Example(event)) = ui.into_messages().next() else {
+            panic!("the playground card must publish its open event");
+        };
+        assert!(matches!(event, Event::OpenPlayground));
+        let _ = state.update(event);
+        assert!(state.is_playground());
+        let mut ui = Simulator::with_size(
+            Settings::default(),
+            iced::Size::new(1440., 1200.),
+            state.view(1440.),
+        );
+        let printed = state
+            .playground
+            .printed()
+            .expect("the starter program must run");
+        let first = printed.lines().next().unwrap();
+        assert_eq!(first, "$  12.50  tip $  2.25  (18.0%)");
+        ui.find("Output").unwrap();
+        ui.find(printed).unwrap();
+    }
+
+    #[test]
     fn framed_receipts_updates_title_and_keeps_gallery_navigation_outside() {
         use iced::widget::Id;
 
         let mut state = State {
-            open: true,
+            open: Some(Open::Receipts),
             platform: window::Platform::Mac,
             ..State::default()
         };

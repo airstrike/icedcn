@@ -3,4 +3,4 @@
 plan/
 .nova/
 .cargo*
-/examples/browser/.wrangler/
+.wrangler/

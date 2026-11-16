@@ -15,7 +15,7 @@ pub(super) fn view(app: &App) -> Slot<'_, Message> {
         Route::Home => "Home",
         Route::Create => "Create",
         Route::NotFound(_) => "Page not found",
-        Route::Examples | Route::Receipts => "Examples",
+        Route::Examples | Route::Receipts | Route::Playground => "Examples",
         Route::Page(index) => app.pages[index].meta().title,
     };
     let (theme_icon, theme_label) = if app.is_dark() {

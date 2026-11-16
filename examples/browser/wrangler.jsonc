@@ -4,5 +4,13 @@
   "workers_dev": false,
   "preview_urls": false,
   "routes": [{ "pattern": "icedcn.airstrike.fyi", "custom_domain": true }],
-  "assets": { "directory": "../../target/browser-web", "html_handling": "drop-trailing-slash", "not_found_handling": "404-page" }
+  "main": "web/worker.js",
+  "r2_buckets": [{ "binding": "WASM", "bucket_name": "icedcn-wasm" }],
+  "assets": {
+    "directory": "../../target/browser-web",
+    "binding": "ASSETS",
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/browser-*.wasm"]
+  }
 }

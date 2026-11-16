@@ -16,7 +16,13 @@ Set WASM_BINDGEN to select a specific CLI executable. CC_wasm32_unknown_unknown 
 To deploy the generated assets to icedcn.airstrike.fyi from an authenticated Cloudflare account, run
 
 ```sh
-npx --yes wrangler@4.69.0 deploy --config examples/browser/wrangler.jsonc
+python3 scripts/deploy-browser-web.py
+```
+
+Workers Static Assets serves files of up to 25 MiB, and the browser's wasm is larger since the Playground example embeds the rawr engine. The build writes an `.assetsignore` that leaves the wasm out of the assets; the deploy script uploads it to the `icedcn-wasm` R2 bucket, then deploys. `web/worker.js` runs only for `/browser-*.wasm` and serves it from R2 with an immutable cache; every other path stays a static asset. To test locally, put the wasm in the local bucket before `wrangler dev`:
+
+```sh
+npx --yes wrangler@4.69.0 r2 object put icedcn-wasm/<browser-hash>.wasm --file target/browser-web/<browser-hash>.wasm --content-type application/wasm --local --config examples/browser/wrangler.jsonc
 ```
 
 The build exports route titles, descriptions, and documentation blocks from the
@@ -24,7 +30,7 @@ native application's registry using `--export-web-routes`; it does not open a
 window or run startup tasks. It then creates one HTML page and one 1200 × 630
 PNG share card per route, plus SVG/PNG/ICO favicons and an Apple touch icon. Cards
 use the existing logo, bundled Geist fonts, and deterministic interface motifs.
-There is no request-time image generation or Worker script. `uv` is optional if
+There is no request-time image generation; the only Worker code serves the wasm. `uv` is optional if
 Pillow is already installed in the Python environment used to run the build.
 
 The same registry produces full Markdown documentation (`/components/button.md`,
@@ -61,7 +67,7 @@ canvas use the application's context menu; surrounding HTML retains its native
 browser menu.
 
 Browser navigation uses `/` for Home, `/create` for the theme customizer,
-`/components/<slug>`, `/docs/<slug>`, `/examples`, and `/examples/receipts`.
+`/components/<slug>`, `/docs/<slug>`, `/examples`, `/examples/receipts`, and `/examples/playground`.
 Reload and browser Back/Forward restore the selected page; editing state inside
 examples and Create remains in memory. Create uses the palette example library
 and keeps its theme separate from the documentation theme. Unknown paths show a not-found page and retain the requested URL; trailing

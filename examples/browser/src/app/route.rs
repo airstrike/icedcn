@@ -9,6 +9,7 @@ pub(super) enum Route {
     Page(usize),
     Examples,
     Receipts,
+    Playground,
     NotFound(String),
 }
 
