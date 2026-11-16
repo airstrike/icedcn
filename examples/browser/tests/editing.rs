@@ -7,6 +7,7 @@ use iced::keyboard::key::Named;
 use iced::keyboard::{self, Key, Modifiers};
 use iced::mouse::{self, Button};
 use iced::{Element, Event, Point, Rectangle, Size};
+use iced_test::core::InputMethod;
 use iced_test::core::clipboard;
 use iced_test::core::renderer::{self, Headless};
 use iced_test::core::shell::{Bus, Waker};
@@ -29,6 +30,8 @@ struct Desk {
     modifiers: Modifiers,
     clipboard: Option<String>,
     messages: Vec<String>,
+    /// Where the caret was, as the input method last heard.
+    caret_at: Option<Rectangle>,
 }
 
 impl Desk {
@@ -53,6 +56,7 @@ impl Desk {
             modifiers: Modifiers::empty(),
             clipboard: None,
             messages: Vec::new(),
+            caret_at: None,
         }
     }
 
@@ -91,7 +95,15 @@ impl Desk {
             self.messages
                 .extend(bus.drain().map(|(message, _)| message));
             events.clear();
-            if let user_interface::State::Updated { clipboard, .. } = state {
+            if let user_interface::State::Updated {
+                clipboard,
+                input_method,
+                ..
+            } = state
+            {
+                if let InputMethod::Enabled { cursor, .. } = input_method {
+                    self.caret_at = Some(cursor);
+                }
                 if let Some(clipboard::Content::Text(text)) = clipboard.write {
                     self.clipboard = Some(text);
                 }
@@ -840,6 +852,101 @@ fn a_double_click_drag_in_any_field_selects_whole_words() {
             desk.selection().as_deref(),
             Some("aa bbbbbbbbbbbbbbbbbbbbbbbb"),
             "{name}: backward, to the end of the word"
+        );
+    }
+}
+
+impl Desk {
+    /// Where the caret is drawn, as the editor tells the input method on the
+    /// next frame. Reading it moves nothing.
+    fn caret_rect(&mut self) -> Rectangle {
+        self.caret_at = None;
+        self.redraw();
+        self.caret_at
+            .expect("a focused field tells where its caret is")
+    }
+}
+
+#[test]
+#[ignore = "needs the editor-column branch of the iced fork"]
+fn up_and_down_keep_the_column_across_short_lines() {
+    let text = "a line that is long\nab\n\nanother long line here\nxy";
+    for name in ["textarea", "code block"] {
+        let mut desk = Desk::new(field(name, text));
+        desk.focus();
+        desk.key(Named::Home, Modifiers::empty());
+        let start = desk.caret_rect();
+        for _ in 0..12 {
+            desk.key(Named::ArrowRight, Modifiers::empty());
+        }
+        let column = desk.caret_rect();
+        desk.key(Named::End, Modifiers::empty());
+        desk.key(Named::ArrowDown, Modifiers::empty());
+        desk.key(Named::End, Modifiers::empty());
+        let short = desk.caret_rect();
+        desk.key(Named::ArrowUp, Modifiers::empty());
+        desk.key(Named::Home, Modifiers::empty());
+        for _ in 0..12 {
+            desk.key(Named::ArrowRight, Modifiers::empty());
+        }
+
+        let mut seen = Vec::new();
+        for _ in 0..4 {
+            desk.key(Named::ArrowDown, Modifiers::empty());
+            seen.push(desk.caret_rect().x);
+        }
+        // Within half a character: the nearest boundary to the column.
+        let near = |a: f32, b: f32| (a - b).abs() < 4.0;
+        assert!(near(seen[0], short.x), "{name}: the end of ab, {seen:?}");
+        assert!(near(seen[1], start.x), "{name}: the empty line, {seen:?}");
+        assert!(
+            near(seen[2], column.x),
+            "{name}: the column again, {seen:?}"
+        );
+        assert!(seen[3] < column.x, "{name}: the end of xy, {seen:?}");
+        for _ in 0..4 {
+            desk.key(Named::ArrowUp, Modifiers::empty());
+        }
+        let back = desk.caret_rect();
+        assert!(near(back.x, column.x), "{name}: back up, {back:?}");
+        assert!(near(back.y, column.y), "{name}: on the first line");
+    }
+}
+
+#[test]
+#[ignore = "needs the editor-column branch of the iced fork"]
+fn a_click_or_an_edit_sets_the_column_up_and_down_keep() {
+    let text = "a line that is long\nab\nanother long line here";
+    for name in ["textarea", "code block"] {
+        let mut desk = Desk::new(field(name, text));
+        desk.focus();
+        desk.key(Named::Home, Modifiers::empty());
+        for _ in 0..12 {
+            desk.key(Named::ArrowRight, Modifiers::empty());
+        }
+        desk.key(Named::ArrowDown, Modifiers::empty());
+        desk.key(Named::ArrowDown, Modifiers::empty());
+        // A press near the start of the first line: Down keeps its column.
+        let (bounds, _) = desk.field();
+        desk.click(Point::new(bounds.x + 40., bounds.y + 10.));
+        let pressed = desk.caret_rect();
+        desk.key(Named::ArrowDown, Modifiers::empty());
+        desk.key(Named::ArrowDown, Modifiers::empty());
+        let below = desk.caret_rect();
+        assert!(below.y > pressed.y, "{name}");
+        assert!(
+            (below.x - pressed.x).abs() < 4.0,
+            "{name}: after a press, {below:?} under {pressed:?}"
+        );
+        // Typing moves the column with the caret.
+        desk.send(simulator::typewrite("zz"));
+        let typed = desk.caret_rect();
+        desk.key(Named::ArrowUp, Modifiers::empty());
+        desk.key(Named::ArrowUp, Modifiers::empty());
+        let above = desk.caret_rect();
+        assert!(
+            (above.x - typed.x).abs() < 4.0,
+            "{name}: after typing, {above:?} over {typed:?}"
         );
     }
 }
