@@ -6,6 +6,7 @@ use iced::{Element, Event, Point, Rectangle, Size};
 use iced_test::Simulator;
 use iced_test::core::widget::operation::{Outcome, TextInput, focusable};
 use iced_test::core::widget::{Id, Operation};
+use iced_test::simulator;
 use icedcn::Theme;
 use icedcn::widget::{column, field, textarea};
 
@@ -220,5 +221,33 @@ fn resizing_a_scrolled_editor_uses_pointer_deltas_in_one_coordinate_space() {
             before.height + 50.,
             "touch={touch}"
         );
+    }
+}
+
+#[test]
+fn controlled_typing_survives_a_rebuild_with_the_previous_value() {
+    let build = |value: &str| -> Element<'static, String, Theme> {
+        textarea("")
+            .value(value.to_owned())
+            .on_input(|text| text)
+            .into()
+    };
+    for initial in ["", "fn main() {}\n"] {
+        let mut value = initial.to_owned();
+        let mut ui = Simulator::new(build(&value));
+        let (bounds, _) = editor(&mut ui);
+        ui.point_at(Point::new(bounds.x + 12., bounds.y + 12.));
+        ui.simulate(simulator::click());
+        for character in ["p", "u", "b"] {
+            ui.typewrite(character);
+            // iced can rebuild the view before the app handles the edit, so
+            // the textarea sees the old value once more.
+            ui = ui.rebuild(build(&value));
+            if let Some(text) = ui.drain().last() {
+                value = text;
+            }
+            ui = ui.rebuild(build(&value));
+        }
+        assert_eq!(value, format!("pub{initial}"), "starting from {initial:?}");
     }
 }

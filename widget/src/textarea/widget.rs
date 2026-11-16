@@ -80,6 +80,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
 
         tree::State::new(State {
             content: Content::with_text(text),
+            synced: self.value.clone(),
             focused: false,
             hovered: false,
             height: None,
@@ -94,6 +95,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
         let state = state.downcast_mut::<State>();
 
         if let Some(value) = &self.value
+            && state.synced.as_ref() != Some(value)
             && state.content.text() != *value
         {
             let mut cursor = state.content.cursor();
@@ -110,6 +112,9 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
                 }
             }
             state.content.move_to(cursor);
+        }
+        if self.value.is_some() && state.synced != self.value {
+            state.synced.clone_from(&self.value);
         }
 
         if self.disabled && state.focused {
@@ -404,6 +409,10 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
 
 struct State {
     content: Content<Renderer>,
+    /// The controlled value the content last synced to. iced can rebuild the
+    /// view before the app handles an edit, so a value seen here before is
+    /// stale and must not replace the edited content.
+    synced: Option<String>,
     focused: bool,
     hovered: bool,
     height: Option<f32>,
