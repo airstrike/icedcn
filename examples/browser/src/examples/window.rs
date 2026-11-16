@@ -8,6 +8,9 @@ use icedcn::{Color, Slot, Theme};
 
 use crate::icon;
 
+/// How wide a framed window grows unless its example asks for more.
+pub(super) const WIDTH: f32 = 1080.;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Platform {
     Mac,
@@ -65,9 +68,11 @@ impl Platform {
         }
     }
 
+    /// Frame `content` in a window at most `max_width` wide, from `width` 900 up.
     pub(super) fn view<'a, Message: 'a>(
         self,
         width: f32,
+        max_width: f32,
         title: String,
         content: impl Into<Slot<'a, Message>>,
     ) -> Element<'a, Message, Theme> {
@@ -81,7 +86,7 @@ impl Platform {
         let frame = container(column![titlebar, content.into()].width(Fill).height(Fill))
             .id("example-window")
             .width(Fill)
-            .max_width(if framed { 1080. } else { f32::INFINITY })
+            .max_width(if framed { max_width } else { f32::INFINITY })
             .height(Fill)
             .max_height(if framed { 780. } else { f32::INFINITY })
             .min_height(if framed { 480. } else { 0. })
@@ -252,7 +257,12 @@ mod tests {
             (375., 600., Platform::Windows, false),
             (1200., 800., Platform::Mobile, false),
         ] {
-            let view = platform.view(width, "Receipts".into(), button("Action").on_press(()));
+            let view = platform.view(
+                width,
+                WIDTH,
+                "Receipts".into(),
+                button("Action").on_press(()),
+            );
             let mut ui =
                 Simulator::with_size(Settings::default(), iced::Size::new(width, height), view);
             let bounds = ui.find(Id::from("example-window")).unwrap().bounds();
@@ -286,7 +296,8 @@ mod tests {
 
     #[test]
     fn resizing_preserves_input_focus_and_chrome_adds_no_tab_stops() {
-        let view = |width| Platform::Mac.view(width, "Receipts".into(), input("Name").id("name"));
+        let view =
+            |width| Platform::Mac.view(width, WIDTH, "Receipts".into(), input("Name").id("name"));
         let mut ui: Simulator<'_, (), Theme, iced::Renderer> = Simulator::with_size(
             Settings::default(),
             iced::Size::new(1200., 800.),

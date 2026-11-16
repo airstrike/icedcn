@@ -95,9 +95,10 @@ impl State {
 
     pub fn view(&self, width: f32) -> Element<'_, Message, Theme> {
         if let Some(open) = self.open {
-            let (title, example) = match open {
+            let (title, max_width, example) = match open {
                 Open::Receipts => (
                     self.receipts.title(),
+                    window::WIDTH,
                     self.receipts
                         .view()
                         .map(|message| Message::Example(Event::Receipts(message)))
@@ -105,6 +106,7 @@ impl State {
                 ),
                 Open::Playground => (
                     self.playground.title(),
+                    playground::WIDTH,
                     self.playground
                         .view(width)
                         .map(|message| Message::Example(Event::Playground(message)))
@@ -119,7 +121,7 @@ impl State {
                         .on_press(Message::Example(Event::Gallery))
                 )
                 .padding([8, 20]),
-                self.platform.view(width, title, example),
+                self.platform.view(width, max_width, title, example),
             ]
             .width(Fill)
             .height(Fill)
@@ -215,8 +217,12 @@ mod tests {
             .expect("the starter program must run")
             .to_owned();
         let first = printed.lines().next().unwrap();
-        assert_eq!(first, "$  12.50  tip $  2.25  (18.0%)");
-        for (width, side_by_side) in [(1440., true), (390., false)] {
+        assert_eq!(first, "planet   moons  day (h)  per wk");
+        assert_eq!(
+            printed.lines().nth(2),
+            Some("Earth        1     24.0    7.00")
+        );
+        for (width, side_by_side) in [(2400., true), (1440., true), (390., false)] {
             let mut ui = Simulator::with_size(
                 Settings::default(),
                 iced::Size::new(width, 1200.),
@@ -228,23 +234,25 @@ mod tests {
             let [(editor, source)] = editors.0.as_slice() else {
                 panic!("the playground has one editor");
             };
-            assert!(source.starts_with("// Each bill"));
+            assert!(source.starts_with("use std::fmt;"));
             ui.find("main.rs").unwrap();
             let output = ui.find("Output").unwrap().bounds();
             ui.find(printed.as_str()).unwrap();
             if side_by_side {
-                // The editor's code area and the output both scroll inside
-                // panes that reach the bottom of the window together.
+                // The editor and the output are equal code blocks that reach
+                // the bottom of the window together.
                 let [.., code, printed] = panes.as_slice() else {
                     panic!("the panes scroll: {panes:?}");
                 };
                 assert!(output.x > code.x + code.width, "{output:?} beside {code:?}");
                 assert!(output.y < code.y + code.height);
-                assert!(code.height > editor.height + 100., "{code:?} fills");
-                let frame = ui
-                    .find(Id::from("example-window"))
-                    .unwrap()
-                    .bounds();
+                assert_eq!(code.size(), printed.size(), "equal halves");
+                assert_eq!(code.y, printed.y);
+                if width >= playground::WIDTH + 64. {
+                    // 120 columns of 14px mono, plus line numbers and padding.
+                    assert!(code.width >= 120. * 8.4 + 60., "{code:?} fits 120 columns");
+                }
+                let frame = ui.find(Id::from("example-window")).unwrap().bounds();
                 for pane in [code, printed] {
                     let gap = frame.y + frame.height - (pane.y + pane.height);
                     assert!((0. ..48.).contains(&gap), "{pane:?} reaches {frame:?}");

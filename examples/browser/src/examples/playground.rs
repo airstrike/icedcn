@@ -3,33 +3,55 @@
 
 use std::sync::{Arc, Mutex};
 
-use iced::{Element, Fill, Font, Task};
+use iced::{Element, Fill, Task};
 use icedcn::widget::scrollable::scrollable;
-use icedcn::widget::{alert, button, code_block, column, row, text};
-use icedcn::{Destructive, Slot, Theme, card};
+use icedcn::widget::{button, code_block, column, row};
+use icedcn::{Destructive, Theme};
 
 use crate::icon;
 
 /// The program a new user starts from.
-const STARTER: &str = "\
-// Each bill gets a tip by the rule in `tip`. Change the rule, the bills
-// or what `main` prints: it runs again as you type.
+const STARTER: &str = r#"use std::fmt;
 
-const BILLS: [f64; 4] = [12.50, 48.00, 75.25, 210.00];
+struct Planet {
+    name: &'static str,
+    moons: u32,
+    day: f64,
+}
 
-/// The tip on a bill, in dollars.
-fn tip(bill: f64) -> f64 {
-    let rate = if bill < 50.0 { 0.18 } else { 0.20 };
-    (bill * rate * 100.0).round() / 100.0
+impl Planet {
+    /// How many of its days pass in one Earth week.
+    fn days_per_week(&self) -> f64 {
+        7.0 * 24.0 / self.day
+    }
+}
+
+impl fmt::Display for Planet {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let Planet { name, moons, day } = self;
+        let week = self.days_per_week();
+        write!(f, "{name:<8} {moons:>5} {day:>8.1} {week:>7.2}")
+    }
 }
 
 fn main() {
-    for bill in BILLS {
-        let tip = tip(bill);
-        println!(\"${bill:>7.2}  tip ${tip:>6.2}  ({:.1}%)\", tip / bill * 100.0);
+    let planets = [
+        Planet { name: "Mercury", moons: 0, day: 4222.6 },
+        Planet { name: "Earth", moons: 1, day: 24.0 },
+        Planet { name: "Mars", moons: 2, day: 24.7 },
+        Planet { name: "Jupiter", moons: 95, day: 9.9 },
+    ];
+    println!("{:<8} {:>5} {:>8} {:>7}", "planet", "moons", "day (h)", "per wk");
+    for planet in &planets {
+        println!("{planet}");
     }
 }
-";
+"#;
+
+/// The window width that fits 120 columns of 14px mono (8.4px each) in
+/// each half: 1008 + 60 of line numbers and padding + 2 of border = 1070 per
+/// half, then 16 between the halves, 32 around them and 2 of window border.
+pub const WIDTH: f32 = 2. * 1070. + 16. + 32. + 2.;
 
 /// How many steps a run may take, so a loop that never ends stops instead
 /// of freezing the app.
@@ -102,31 +124,31 @@ impl State {
             if wide { content.height(Fill) } else { content },
         ];
 
-        let output: Slot<'_, Message> = match &self.outcome {
-            Ok(printed) if printed.is_empty() => text::muted("main printed nothing.").into(),
-            Ok(printed) => text(printed.clone()).font(Font::MONOSPACE).into(),
-            Err(error) => alert()
-                .icon(icon::circle_alert())
-                .title("The program doesn't run")
-                .description(error.clone())
-                .description_font(Font::MONOSPACE)
-                .style(Destructive)
-                .into(),
+        let (printed, failed) = match &self.outcome {
+            Ok(printed) if printed.is_empty() => ("main printed nothing.", false),
+            Ok(printed) => (printed.as_str(), false),
+            Err(error) => (error.as_str(), true),
+        };
+        let title = if failed {
+            code_block::title![circle_alert, "Output"]
+        } else {
+            code_block::title![terminal, "Output"]
+        };
+        let content = code_block::content(printed).wrap(failed);
+        let output = code_block![
+            code_block::header![
+                title,
+                code_block::actions![code_block::copy_button(printed)],
+            ],
+            if wide { content.height(Fill) } else { content },
+        ];
+        let output = if failed {
+            output.style(Destructive)
+        } else {
+            output
         };
 
         if wide {
-            let output = card(
-                column![
-                    card::header("Output"),
-                    card::content(scrollable(output).width(Fill).height(Fill))
-                        .width(Fill)
-                        .height(Fill),
-                ]
-                .width(Fill)
-                .height(Fill),
-            )
-            .width(Fill)
-            .height(Fill);
             return row![
                 column![editor].width(Fill).height(Fill),
                 column![output].width(Fill).height(Fill),
@@ -137,7 +159,6 @@ impl State {
             .height(Fill)
             .into();
         }
-        let output = card(column![card::header("Output"), card::content(output)]).width(Fill);
         scrollable(column![editor, output].spacing(16).padding(16).width(Fill))
             .width(Fill)
             .height(Fill)
