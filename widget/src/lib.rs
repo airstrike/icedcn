@@ -29,6 +29,7 @@ pub mod date_picker;
 pub mod dialog;
 pub mod drawer;
 pub mod dropdown_menu;
+mod edit;
 pub mod empty;
 pub mod field;
 #[cfg(feature = "highlighter")]

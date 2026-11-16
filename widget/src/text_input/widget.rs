@@ -35,6 +35,7 @@ use super::cursor::{self, Cursor};
 use super::editor::Editor;
 use super::value::Value;
 use crate::button::group::{Join, join};
+use crate::edit::{self, Command};
 use crate::input_otp::Slots;
 
 use crate::core::Animation;
@@ -60,7 +61,7 @@ use crate::core::widget::tree::{self, Tree};
 use crate::core::window;
 use crate::core::{
     Alignment, Background, Border, Color, Event, Font, InputMethod, Layout, Length, Padding,
-    Pixels, Point, Rectangle, Shell, Size, Theme, Vector, Widget,
+    Pixels, Point, Rectangle, Shell, Size, Theme, Vector, Widget, overlay,
 };
 
 /// A field that can be filled with text.
@@ -926,7 +927,7 @@ impl<Message, Theme, Renderer> Widget<Message, Theme, Renderer>
     for TextInput<'_, Message, Theme, Renderer>
 where
     Message: Clone,
-    Theme: Catalog,
+    Theme: Catalog + edit::Themed<Message, Renderer>,
     Renderer: text::Renderer,
 {
     fn tag(&self) -> tree::Tag {
@@ -948,6 +949,7 @@ where
         if self.is_disabled {
             state.is_focused = None;
             state.preedit = None;
+            state.menu = edit::Menu::default();
         }
 
         // Stop pasting if input becomes read-only
@@ -990,6 +992,37 @@ where
         }
     }
 
+    fn overlay<'b>(
+        &'b mut self,
+        tree: &'b mut Tree,
+        layout: Layout,
+        renderer: &Renderer,
+        _viewport: &Rectangle,
+        translation: Vector,
+        window: Size,
+    ) -> Vec<overlay::Element<'b, Message, Theme, Renderer>> {
+        let state = state::<Renderer>(tree);
+        let selected = !self.is_secure && state.cursor.selection(&self.value).is_some();
+        let available = edit::Available {
+            undo: None,
+            cut: selected && self.is_editable(),
+            copy: selected,
+            paste: self.is_editable(),
+            select_all: !self.value.is_empty(),
+        };
+
+        Theme::menu(
+            &mut state.menu,
+            available,
+            layout.bounds(),
+            translation,
+            renderer,
+            window,
+        )
+        .into_iter()
+        .collect()
+    }
+
     fn update(
         &mut self,
         tree: &mut Tree,
@@ -998,8 +1031,51 @@ where
         cursor: mouse::Cursor,
         renderer: &Renderer,
         shell: &mut Shell<'_, Message>,
-        _viewport: &Rectangle,
+        viewport: &Rectangle,
     ) {
+        if let Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Right)) = event
+            && !self.is_disabled
+        {
+            let press = Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left));
+            let bounds = layout.bounds();
+            let Some(position) = cursor
+                .position_over(bounds)
+                .filter(|position| viewport.contains(*position))
+            else {
+                // A press elsewhere takes the focus away, as a left press does.
+                if state::<Renderer>(tree).is_focused.is_some() {
+                    let cursor = mouse::Cursor::Unavailable;
+                    self.update(tree, &press, layout, cursor, renderer, shell, viewport);
+                }
+                return;
+            };
+            // Focus and put the caret under the pointer, unless the press
+            // lands inside the selection.
+            let input = state::<Renderer>(tree);
+            let (before, last_click) = (input.cursor, input.last_click);
+            let release = Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left));
+            for event in [press, release] {
+                self.update(tree, &event, layout, cursor, renderer, shell, viewport);
+            }
+            let input = state::<Renderer>(tree);
+            input.last_click = last_click;
+            let caret = match input.cursor.state(&self.value) {
+                cursor::State::Index(index) => index,
+                cursor::State::Selection { end, .. } => end,
+            };
+            if before
+                .selection(&self.value)
+                .is_some_and(|(start, end)| (start..=end).contains(&caret))
+            {
+                input.cursor = before;
+            }
+            input
+                .menu
+                .open(position - Vector::new(bounds.x, bounds.y), false, shell);
+            shell.capture_event();
+            return;
+        }
+
         let (text_layout, _) = layout.iter(&tree.children).next().unwrap();
 
         let update_cache = |state: &mut State<Renderer::Paragraph>, value: &Value| {
@@ -1039,6 +1115,92 @@ where
         // react to clicks at all — no focus mutation, no cursor placement,
         // no `on_focus`/`on_blur` publish.
         let is_disabled = self.is_disabled;
+
+        let input = state::<Renderer>(tree);
+        let command = input.menu.take().or_else(|| match event {
+            Event::Keyboard(keyboard::Event::KeyPressed {
+                key,
+                physical_key,
+                modifiers,
+                ..
+            }) if input.is_focused.is_some() && !is_disabled => {
+                Command::from_key(key, *physical_key, *modifiers)
+                    .filter(|command| !matches!(command, Command::Undo | Command::Redo))
+            }
+            _ => None,
+        });
+
+        if let Event::Keyboard(keyboard::Event::KeyPressed { key, modifiers, .. }) = event
+            && input.is_focused.is_some()
+            && !is_disabled
+            && edit::opens_menu(key, *modifiers)
+        {
+            let bounds = layout.bounds();
+            let at = match self.input_method(input, text_layout, &self.value) {
+                InputMethod::Enabled { cursor, .. } => {
+                    Point::new(cursor.x - bounds.x, cursor.y + cursor.height - bounds.y)
+                }
+                InputMethod::Disabled => Point::new(0.0, bounds.height),
+            };
+            input.menu.open(at, true, shell);
+            shell.capture_event();
+            return;
+        }
+
+        if let Some(command) = command {
+            shell.capture_event();
+
+            let is_editable = self.is_editable();
+            let selection = input
+                .cursor
+                .selection(&self.value)
+                .filter(|_| !self.is_secure);
+
+            match command {
+                Command::Copy | Command::Cut => {
+                    let Some((start, end)) = selection else {
+                        return;
+                    };
+                    let is_cut = command == Command::Cut;
+                    if is_cut && !is_editable {
+                        return;
+                    }
+
+                    shell.write_clipboard(clipboard::Content::Text(
+                        self.value.select(start, end).to_string(),
+                    ));
+
+                    if is_cut {
+                        let mut editor = Editor::new(&mut self.value, &mut input.cursor);
+                        editor.delete();
+
+                        self.changed(&mut input.uncontrolled, false, shell);
+                    }
+                }
+                Command::Paste => {
+                    if !is_editable {
+                        return;
+                    }
+
+                    // The read pastes when it arrives, even after the key is released.
+                    if input.is_pasting.is_none() {
+                        shell.read_clipboard(clipboard::Kind::Text);
+                        input.is_pasting = Some(Paste::Reading);
+                    }
+                    return;
+                }
+                Command::SelectAll => input.cursor.select_all(&self.value),
+                Command::Undo | Command::Redo => return,
+            }
+
+            if let Some(focus) = &mut input.is_focused {
+                focus.updated_at = Instant::now();
+            }
+
+            update_cache(input, &self.value);
+            shell.request_redraw();
+            return;
+        }
 
         match &event {
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left))
@@ -1227,98 +1389,18 @@ where
                     shell.capture_event();
                 }
             }
+            // Only macOS shortcuts read the unmodified key here.
+            #[cfg_attr(not(target_os = "macos"), allow(unused_variables))]
             Event::Keyboard(keyboard::Event::KeyPressed {
                 key,
                 text,
                 modified_key,
-                physical_key,
                 ..
             }) => {
                 let state = state::<Renderer>(tree);
 
                 if let Some(focus) = &mut state.is_focused {
                     let modifiers = state.keyboard_modifiers;
-
-                    match key.to_latin(*physical_key) {
-                        Some('c') if state.keyboard_modifiers.command() && !self.is_secure => {
-                            if let Some((start, end)) = state.cursor.selection(&self.value) {
-                                shell.write_clipboard(clipboard::Content::Text(
-                                    self.value.select(start, end).to_string(),
-                                ));
-                            }
-
-                            shell.capture_event();
-                            return;
-                        }
-                        Some('x') if state.keyboard_modifiers.command() && !self.is_secure => {
-                            if !self.is_editable() {
-                                return;
-                            }
-
-                            if let Some((start, end)) = state.cursor.selection(&self.value) {
-                                shell.write_clipboard(clipboard::Content::Text(
-                                    self.value.select(start, end).to_string(),
-                                ));
-                            }
-
-                            let mut editor = Editor::new(&mut self.value, &mut state.cursor);
-                            editor.delete();
-
-                            self.changed(&mut state.uncontrolled, false, shell);
-                            shell.capture_event();
-
-                            focus.updated_at = Instant::now();
-                            update_cache(state, &self.value);
-                            return;
-                        }
-                        Some('v')
-                            if state.keyboard_modifiers.command()
-                                && !state.keyboard_modifiers.alt() =>
-                        {
-                            if !self.is_editable() {
-                                return;
-                            }
-
-                            let content = match &state.is_pasting {
-                                Some(Paste::Pasting(content)) => content,
-                                Some(Paste::Reading) => return,
-                                None => {
-                                    shell.read_clipboard(clipboard::Kind::Text);
-                                    state.is_pasting = Some(Paste::Reading);
-                                    return;
-                                }
-                            };
-
-                            let content = self.insertion(&state.cursor, content.clone());
-                            let mut editor = Editor::new(&mut self.value, &mut state.cursor);
-                            editor.paste(content);
-
-                            self.changed(&mut state.uncontrolled, true, shell);
-                            shell.capture_event();
-
-                            focus.updated_at = Instant::now();
-                            update_cache(state, &self.value);
-                            return;
-                        }
-                        Some('a') if state.keyboard_modifiers.command() => {
-                            let cursor_before = state.cursor;
-
-                            state.cursor.select_all(&self.value);
-
-                            if cursor_before != state.cursor {
-                                focus.updated_at = Instant::now();
-
-                                let text_bounds = text_layout.bounds();
-                                state.reveal_cursor(text_bounds.width, &self.value);
-
-                                shell.request_redraw();
-                            }
-
-                            shell.capture_event();
-                            return;
-                        }
-                        _ => {}
-                    }
 
                     if let Some(text) = text {
                         if !self.is_editable() {
@@ -1551,10 +1633,11 @@ where
                 if state.is_focused.is_some()
                     && let keyboard::Key::Character("v") = key.as_ref()
                 {
-                    state.is_pasting = None;
-
                     shell.capture_event();
                 }
+            }
+            Event::Clipboard(clipboard::Event::Read(Err(_))) => {
+                let state = state::<Renderer>(tree);
 
                 state.is_pasting = None;
             }
@@ -1564,21 +1647,20 @@ where
                 state.keyboard_modifiers = *modifiers;
             }
             Event::Clipboard(clipboard::Event::Read(Ok(content))) => {
+                let state = state::<Renderer>(tree);
+                let is_reading = state.is_pasting.take().is_some();
+
                 if !self.is_editable() {
                     return;
                 }
-
-                let state = state::<Renderer>(tree);
 
                 let Some(focus) = &mut state.is_focused else {
                     return;
                 };
 
                 if let clipboard::Content::Text(text) = content.as_ref()
-                    && let Some(Paste::Reading) = state.is_pasting
+                    && is_reading
                 {
-                    state.is_pasting = Some(Paste::Pasting(Value::new(text)));
-
                     let content = self.insertion(&state.cursor, Value::new(text));
                     let mut editor = Editor::new(&mut self.value, &mut state.cursor);
                     editor.paste(content);
@@ -1786,6 +1868,7 @@ pub struct State<P: text::Paragraph> {
     focus_anim: crate::core::Animation<bool>,
     /// The value of an uncontrolled input, kept across rebuilds.
     uncontrolled: Option<Value>,
+    menu: edit::Menu,
 }
 
 impl<P: text::Paragraph> Default for State<P> {
@@ -1804,6 +1887,7 @@ impl<P: text::Paragraph> Default for State<P> {
             keyboard_modifiers: keyboard::Modifiers::default(),
             scroll_offset: 0.0,
             uncontrolled: None,
+            menu: edit::Menu::default(),
             focus_anim: Animation::new(false)
                 .easing(Easing::Custom(|t| {
                     crate::animation::cubic_bezier(0.4, 0.0, 0.2, 1.0, t)
@@ -1833,7 +1917,6 @@ enum Drag {
 #[derive(Debug, Clone)]
 enum Paste {
     Reading,
-    Pasting(Value),
 }
 
 impl<P: text::Paragraph> State<P> {

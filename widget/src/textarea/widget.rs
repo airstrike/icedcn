@@ -8,12 +8,14 @@
 
 use super::Textarea;
 use crate::core::Renderer as _;
-use crate::core::{Border, Color, Point, touch, window};
+use crate::core::{Border, Color, InputMethod, Point, Vector, clipboard, overlay, touch, window};
+use crate::edit::{self, Command};
 use crate::operation::focus;
 use iced_widget::Renderer;
-use iced_widget::text_editor::{Action, Content, Status, TextEditor};
+use iced_widget::text_editor::{Action, Content, Edit, Status, TextEditor};
 use icedcn_core::Theme;
 
+use crate::core::keyboard;
 use crate::core::layout;
 use crate::core::mouse;
 use crate::core::renderer;
@@ -68,6 +70,83 @@ impl<Message> Textarea<'_, Message> {
     }
 }
 
+impl<Message> Textarea<'_, Message> {
+    /// Whether edits change the text: enabled, and uncontrolled or listening.
+    fn is_editable(&self) -> bool {
+        !self.disabled && (self.value.is_none() || self.on_input.is_some())
+    }
+
+    fn available(&self, state: &State) -> edit::Available {
+        let selected = state.content.selection().is_some();
+
+        edit::Available {
+            undo: Some(self.is_editable()),
+            cut: selected && self.is_editable(),
+            copy: selected,
+            paste: self.is_editable(),
+            select_all: !state.content.is_empty(),
+        }
+    }
+
+    /// Run `command`: the clipboard through the shell, and the edit it makes
+    /// as the editor's own action.
+    fn command(
+        &self,
+        state: &State,
+        command: Command,
+        shell: &mut Shell<'_, Message>,
+    ) -> Option<Action> {
+        let editable = self.is_editable();
+
+        match command {
+            Command::Copy | Command::Cut => {
+                let text = state.content.selection()?;
+                if command == Command::Cut && !editable {
+                    return None;
+                }
+                shell.write_clipboard(clipboard::Content::Text(text));
+                (command == Command::Cut).then_some(Action::Edit(Edit::Backspace))
+            }
+            // The focused editor pastes the text it reads.
+            Command::Paste => {
+                if editable {
+                    shell.read_clipboard(clipboard::Kind::Text);
+                }
+                None
+            }
+            Command::SelectAll => Some(Action::SelectAll),
+            Command::Undo => editable.then_some(Action::Edit(Edit::Undo)),
+            Command::Redo => editable.then_some(Action::Edit(Edit::Redo)),
+        }
+    }
+
+    /// Perform the editor's actions on the content and publish an edit.
+    fn perform(
+        &self,
+        state: &mut State,
+        actions: impl IntoIterator<Item = Action>,
+        shell: &mut Shell<'_, Message>,
+    ) {
+        let mut edited = false;
+
+        for action in actions {
+            if action.is_edit() && self.value.is_some() && self.on_input.is_none() {
+                continue;
+            }
+            edited |= action.is_edit();
+            state.content.perform(action);
+        }
+
+        if edited {
+            if let Some(on_input) = &self.on_input {
+                shell.publish(on_input(state.content.text()));
+            }
+            shell.invalidate_layout();
+            shell.request_redraw();
+        }
+    }
+}
+
 impl<Message> Meta for Textarea<'_, Message> {}
 
 impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
@@ -85,6 +164,8 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
             hovered: false,
             height: None,
             resize: None,
+            caret: Point::ORIGIN,
+            menu: edit::Menu::default(),
         })
     }
 
@@ -99,6 +180,9 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
         if self.disabled && state.focused {
             children.clear();
             state.focused = false;
+        }
+        if self.disabled {
+            state.menu = edit::Menu::default();
         }
         let mut editor = self.editor(state);
 
@@ -143,6 +227,63 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
         if state.hovered != hovered {
             state.hovered = hovered;
             shell.request_redraw();
+        }
+        if let Some(command) = state.menu.take() {
+            let action = self.command(state, command, shell);
+            self.perform(state, action, shell);
+            shell.capture_event();
+            return;
+        }
+        match event {
+            Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Right)) if !self.disabled => {
+                let press = Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left));
+                let Some(position) = cursor
+                    .position_over(bounds)
+                    .filter(|position| viewport.contains(*position))
+                else {
+                    // A press elsewhere takes the focus away, as a left press does.
+                    if state.focused {
+                        let cursor = mouse::Cursor::Unavailable;
+                        self.update(tree, &press, layout, cursor, renderer, shell, viewport);
+                    }
+                    return;
+                };
+                // Focus and put the caret under the pointer, unless the press
+                // lands inside the selection.
+                let before = state.content.cursor();
+                let release = Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left));
+                for event in [press, release] {
+                    self.update(tree, &event, layout, cursor, renderer, shell, viewport);
+                }
+                let state = tree.state.downcast_mut::<State>();
+                if edit::is_inside(before, state.content.cursor().position) {
+                    state.content.move_to(before);
+                }
+                state
+                    .menu
+                    .open(position - Vector::new(bounds.x, bounds.y), false, shell);
+                shell.capture_event();
+                return;
+            }
+            Event::Keyboard(keyboard::Event::KeyPressed {
+                key,
+                physical_key,
+                modifiers,
+                ..
+            }) if state.focused && !self.disabled => {
+                if edit::opens_menu(key, *modifiers) {
+                    state.menu.open(state.caret, true, shell);
+                    shell.capture_event();
+                    return;
+                }
+                if let Some(command) = Command::from_key(key, *physical_key, *modifiers) {
+                    let action = self.command(state, command, shell);
+                    self.perform(state, action, shell);
+                    shell.capture_event();
+                    return;
+                }
+            }
+            _ => {}
         }
         if self.disabled
             || !self.resizable
@@ -219,6 +360,9 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
                 shell.capture_event();
             }
 
+            if let InputMethod::Enabled { cursor: caret, .. } = local.input_method() {
+                state.caret = Point::new(caret.x - bounds.x, caret.y + caret.height - bounds.y);
+            }
             shell.request_redraw_at(local.redraw_request());
             shell.invalidate(local.invalidation());
             shell.request_input_method(local.input_method());
@@ -226,23 +370,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
         }
 
         let state = tree.state.downcast_mut::<State>();
-        let mut edited = false;
-
-        for (action, _receipt) in bus.drain() {
-            if action.is_edit() && self.value.is_some() && self.on_input.is_none() {
-                continue;
-            }
-            edited |= action.is_edit();
-            state.content.perform(action);
-        }
-
-        if edited {
-            if let Some(on_input) = &self.on_input {
-                shell.publish(on_input(state.content.text()));
-            }
-            shell.invalidate_layout();
-            shell.request_redraw();
-        }
+        self.perform(state, bus.drain().map(|(action, _)| action), shell);
     }
 
     fn draw(
@@ -384,6 +512,25 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
         .focused
         .is_some();
     }
+
+    fn overlay<'b>(
+        &'b mut self,
+        tree: &'b mut Tree,
+        layout: Layout,
+        renderer: &Renderer,
+        _viewport: &Rectangle,
+        translation: Vector,
+        window: Size,
+    ) -> Vec<overlay::Element<'b, Message, Theme, Renderer>> {
+        let state = tree.state.downcast_mut::<State>();
+        let available = self.available(state);
+
+        state
+            .menu
+            .overlay(available, layout.bounds(), translation, renderer, window)
+            .into_iter()
+            .collect()
+    }
 }
 
 /// Replace `content` with a controlled `value` that changed since `synced`, keeping
@@ -428,6 +575,9 @@ struct State {
     hovered: bool,
     height: Option<f32>,
     resize: Option<(Option<touch::Finger>, f32)>,
+    /// Below the caret, relative to the textarea: where Shift+F10 opens the menu.
+    caret: Point,
+    menu: edit::Menu,
 }
 
 fn grip(bounds: Rectangle) -> Rectangle {
