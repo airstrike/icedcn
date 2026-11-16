@@ -1,7 +1,7 @@
 //! A Rust scratchpad: the file is a whole program, and its `main` runs in an
 //! embedded rawr engine on every edit, natively and on the web.
 
-use std::sync::{Arc, Mutex};
+use std::sync::mpsc;
 
 use iced::{Element, Fill, Task};
 use icedcn::widget::scrollable::scrollable;
@@ -169,23 +169,16 @@ impl State {
 /// Compile `source` and run its `main`: what it printed, or the error rustc
 /// would give, as rawr prints it.
 fn run(source: &str) -> Result<String, String> {
-    let printed = Arc::new(Mutex::new(String::new()));
+    let (sender, printed) = mpsc::channel();
     let mut engine = rawr_engine::Engine::new();
     engine.set_max_operations(MAX_OPERATIONS);
-    let sink = Arc::clone(&printed);
     engine.on_output(move |_, text| {
-        if let Ok(mut printed) = sink.lock() {
-            printed.push_str(text);
-        }
+        let _ = sender.send(text.to_owned());
     });
     let script = engine.script(source).map_err(|error| error.to_string())?;
     let main = script
         .func::<(), ()>("main")
         .map_err(|error| error.to_string())?;
     main.call().map_err(|error| error.to_string())?;
-    let printed = printed
-        .lock()
-        .map(|printed| printed.clone())
-        .unwrap_or_default();
-    Ok(printed)
+    Ok(printed.try_iter().collect())
 }
