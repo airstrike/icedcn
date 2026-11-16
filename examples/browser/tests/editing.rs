@@ -1005,3 +1005,130 @@ fn a_word_motion_to_the_right_follows_the_platform() {
         }
     }
 }
+
+/// The pixels outside `bounds`, grown by `margin`, that differ from the
+/// window's background.
+fn ink_outside(pixels: &[Vec<u8>], bounds: Rectangle, margin: f32) -> Vec<(usize, usize)> {
+    let keep = bounds.expand(margin);
+    let background = pixels[pixels.len() - 1][pixels[0].len() - 1];
+    let mut ink = Vec::new();
+    for (y, row) in pixels.iter().enumerate() {
+        for (x, &level) in row.iter().enumerate() {
+            if level != background && !keep.contains(Point::new(x as f32 + 0.5, y as f32 + 0.5)) {
+                ink.push((x, y));
+            }
+        }
+    }
+    ink
+}
+
+#[test]
+fn text_stays_inside_the_fields_border() {
+    let long = LONG.repeat(3);
+    let cases: Vec<(&str, Element<'static, String, Theme>)> = vec![
+        (
+            "input, padded",
+            input("")
+                .default_value(long.clone())
+                .width(200)
+                .padding(24)
+                .on_input(|s| s)
+                .into(),
+        ),
+        (
+            "input, short",
+            input("")
+                .default_value(long.clone())
+                .width(200)
+                .padding([0, 8])
+                .on_input(|s| s)
+                .into(),
+        ),
+        (
+            "textarea",
+            textarea("")
+                .default_value(numbered())
+                .on_input(|s| s)
+                .into(),
+        ),
+        ("code block", block(&long)),
+        (
+            "input, squeezed",
+            container(
+                input("")
+                    .default_value(long.clone())
+                    .width(200)
+                    .text_size(30.)
+                    .on_input(|s| s),
+            )
+            .height(20)
+            .into(),
+        ),
+        (
+            "textarea, squeezed",
+            container(
+                textarea("")
+                    .default_value(numbered())
+                    .text_size(30.)
+                    .min_height(10.)
+                    .on_input(|s| s),
+            )
+            .width(200)
+            .height(30)
+            .into(),
+        ),
+    ];
+    for (name, view) in cases {
+        let view = container(view).padding(40);
+        let mut desk = Desk::with(view, Some("tiny-skia"));
+        let (bounds, _) = desk.field();
+        for state in ["blurred", "focused at the end", "selecting"] {
+            match state {
+                "focused at the end" => {
+                    desk.focus();
+                    desk.key(Named::End, Modifiers::COMMAND);
+                    desk.key(Named::End, Modifiers::empty());
+                }
+                "selecting" => desk.key(character("a"), Modifiers::COMMAND),
+                _ => {}
+            }
+            desk.move_to(Point::new(790., 590.));
+            let pixels = desk.pixels();
+            let (field, _) = desk.field();
+            // A code block's frame is its 320 pixels, past its editor.
+            let field = if name == "code block" {
+                Rectangle::new(Point::new(40., 40.), Size::new(320., 520.))
+            } else {
+                field
+            };
+            // The focus ring is three pixels wide.
+            let ink = ink_outside(&pixels, field, 4.);
+            assert!(
+                ink.is_empty(),
+                "{name}, {state}: {} pixels outside {field:?} (first {:?}); laid out at {bounds:?}",
+                ink.len(),
+                &ink[..ink.len().min(5)]
+            );
+        }
+    }
+}
+
+#[test]
+fn a_scrolled_textarea_clips_its_lines_to_its_border() {
+    let (mut desk, _) = short_textarea();
+    desk.focus();
+    for _ in 0..14 {
+        desk.key(Named::ArrowDown, Modifiers::empty());
+    }
+    desk.key(character("a"), Modifiers::COMMAND);
+    desk.move_to(Point::new(790., 590.));
+    let pixels = desk.pixels();
+    let (field, _) = desk.field();
+    let ink = ink_outside(&pixels, field, 4.);
+    assert!(
+        ink.is_empty(),
+        "{} pixels outside {field:?}: {:?}",
+        ink.len(),
+        &ink[..ink.len().min(5)]
+    );
+}
