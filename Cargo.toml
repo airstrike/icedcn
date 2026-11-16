@@ -58,6 +58,7 @@ hyozu = { git = "https://github.com/airstrike/hyozu", rev = "2892f6c6a99639ad5d4
 
 iced = "0.15.0-dev"
 iced_core = "0.15.0-dev"
+iced_graphics = "0.15.0-dev"
 iced_runtime = "0.15.0-dev"
 iced_highlighter = "0.15.0-dev"
 iced_selector = "0.15.0-dev"

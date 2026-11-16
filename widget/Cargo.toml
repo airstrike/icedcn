@@ -29,6 +29,7 @@ sweeten = ["dep:sweeten", "icedcn_core/sweeten"]
 hyozu = { workspace = true, optional = true }
 icedcn_core.workspace = true
 iced_core.workspace = true
+iced_graphics.workspace = true
 iced_highlighter = { workspace = true, optional = true }
 iced_runtime = { workspace = true, features = ["selector"] }
 iced_widget = { workspace = true, features = ["image", "svg"] }

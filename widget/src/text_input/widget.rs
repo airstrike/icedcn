@@ -31,6 +31,7 @@
 //!         .boxed()
 //! }
 //! ```
+use super::caret::Caret;
 use super::cursor::{self, Cursor};
 use super::editor::Editor;
 use super::history::{self, History};
@@ -102,6 +103,7 @@ pub struct TextInput<'a, Message, Theme = iced_widget::Theme, Renderer = iced_wi
 where
     Theme: Catalog,
     Renderer: text::Renderer,
+    Renderer::Paragraph: Caret,
 {
     id: Option<widget::Id>,
     placeholder: String,
@@ -139,6 +141,7 @@ where
     Message: Clone,
     Theme: Catalog,
     Renderer: text::Renderer,
+    Renderer::Paragraph: Caret,
 {
     /// Creates a new [`TextInput`] with the given placeholder and
     /// its current value.
@@ -241,26 +244,29 @@ where
         &self,
         uncontrolled: &mut Option<Value>,
         history: &mut History,
+        change: Option<history::Change>,
         cursor: Cursor,
         is_paste: bool,
         shell: &mut Shell<'_, Message>,
     ) {
-        history.edited(&self.value, cursor);
+        history.edited(change, &self.value, cursor);
         // An input nobody listens to publishes nothing, so no rebuild would
         // draw the edit until the caret's next blink.
         shell.request_redraw();
         if !self.is_controlled {
-            *uncontrolled = Some(self.value.clone());
+            match uncontrolled {
+                Some(value) => value.clone_from(&self.value),
+                None => *uncontrolled = Some(self.value.clone()),
+            }
         }
 
-        let contents = self.value.to_string();
         let on_change = match &self.on_paste {
             Some(on_paste) if is_paste => Some(on_paste),
             _ => self.on_input.as_ref(),
         };
 
         if let Some(on_change) = on_change {
-            shell.publish(on_change(contents));
+            shell.publish(on_change(self.value.to_string()));
         }
     }
 
@@ -440,10 +446,13 @@ where
         let value = secure_value.as_ref().unwrap_or(value);
 
         if state.value.update(Text {
-            content: &value.to_string(),
+            content: value.as_str(),
             ..placeholder_text
-        }) {
+        }) || state.offsets != value.offsets()
+        {
             state.revision = state.revision.wrapping_add(1);
+            state.offsets.clear();
+            state.offsets.extend_from_slice(value.offsets());
         }
 
         state.reveal_cursor(text_bounds.width, value);
@@ -588,7 +597,7 @@ where
         let text = state.value.raw();
         let caret_x = state
             .measured_x(caret_index)
-            .unwrap_or_else(|| cursor_x(&state.value, caret_index));
+            .unwrap_or_else(|| cursor_x(&state.value, &state.offsets, caret_index));
         let scroll_offset = state.scroll_offset;
 
         let alignment_offset =
@@ -866,9 +875,10 @@ where
                 {
                     match state.cursor.state(value) {
                         cursor::State::Index(position) => {
-                            let text_value_width = state
-                                .measured_x(position)
-                                .unwrap_or_else(|| cursor_x(&state.value, position));
+                            let text_value_width =
+                                state.measured_x(position).unwrap_or_else(|| {
+                                    cursor_x(&state.value, &state.offsets, position)
+                                });
 
                             let is_cursor_visible = !is_disabled
                                 && ((focus.now - focus.updated_at).as_millis()
@@ -905,10 +915,10 @@ where
 
                             let left_position = state
                                 .measured_x(left)
-                                .unwrap_or_else(|| cursor_x(&state.value, left));
+                                .unwrap_or_else(|| cursor_x(&state.value, &state.offsets, left));
                             let right_position = state
                                 .measured_x(right)
-                                .unwrap_or_else(|| cursor_x(&state.value, right));
+                                .unwrap_or_else(|| cursor_x(&state.value, &state.offsets, right));
 
                             let width = right_position - left_position;
 
@@ -1014,6 +1024,7 @@ impl<Message, Theme, Renderer> widget::Meta for TextInput<'_, Message, Theme, Re
 where
     Theme: Catalog,
     Renderer: text::Renderer,
+    Renderer::Paragraph: Caret,
 {
 }
 
@@ -1023,6 +1034,7 @@ where
     Message: Clone,
     Theme: Catalog + edit::Themed<Message, Renderer>,
     Renderer: text::Renderer,
+    Renderer::Paragraph: Caret,
 {
     fn tag(&self) -> tree::Tag {
         tree::Tag::of::<State<Renderer::Paragraph>>()
@@ -1056,7 +1068,7 @@ where
             state.history.sync(&self.value);
         } else {
             let value = state.uncontrolled.get_or_insert_with(|| self.value.clone());
-            self.value = value.clone();
+            self.value.clone_from(value);
         }
     }
 
@@ -1269,15 +1281,14 @@ where
                     ));
 
                     if is_cut {
-                        input
-                            .history
-                            .record(history::Kind::Other, &self.value, input.cursor);
+                        input.history.record(history::Kind::Other, input.cursor);
                         let mut editor = Editor::new(&mut self.value, &mut input.cursor);
-                        editor.delete();
+                        let change = editor.delete();
 
                         self.changed(
                             &mut input.uncontrolled,
                             &mut input.history,
+                            change,
                             input.cursor,
                             false,
                             shell,
@@ -1302,14 +1313,13 @@ where
                         return;
                     }
                     let step = if command == Command::Undo {
-                        input.history.undo(&self.value, input.cursor)
+                        input.history.undo(&mut self.value)
                     } else {
-                        input.history.redo(&self.value, input.cursor)
+                        input.history.redo(&mut self.value)
                     };
-                    let Some((value, cursor)) = step else {
+                    let Some(cursor) = step else {
                         return;
                     };
-                    self.value = value;
                     input.cursor = cursor;
                     if !self.is_controlled {
                         input.uncontrolled = Some(self.value.clone());
@@ -1518,16 +1528,15 @@ where
                                 return;
                             }
 
-                            state
-                                .history
-                                .record(history::Kind::Typing, &self.value, state.cursor);
+                            state.history.record(history::Kind::Typing, state.cursor);
                             let mut editor = Editor::new(&mut self.value, &mut state.cursor);
 
-                            editor.insert(c);
+                            let change = editor.insert(c);
 
                             self.changed(
                                 &mut state.uncontrolled,
                                 &mut state.history,
+                                change,
                                 state.cursor,
                                 false,
                                 shell,
@@ -1566,7 +1575,7 @@ where
                             } else {
                                 history::Kind::Other
                             };
-                            state.history.record(kind, &self.value, state.cursor);
+                            state.history.record(kind, state.cursor);
 
                             if state.cursor.selection(&self.value).is_none() {
                                 if (self.is_secure && modifiers.jump()) || modifiers.macos_command()
@@ -1580,11 +1589,12 @@ where
                             }
 
                             let mut editor = Editor::new(&mut self.value, &mut state.cursor);
-                            editor.backspace();
+                            let change = editor.backspace();
 
                             self.changed(
                                 &mut state.uncontrolled,
                                 &mut state.history,
+                                change,
                                 state.cursor,
                                 false,
                                 shell,
@@ -1607,7 +1617,7 @@ where
                             } else {
                                 history::Kind::Other
                             };
-                            state.history.record(kind, &self.value, state.cursor);
+                            state.history.record(kind, state.cursor);
 
                             if state.cursor.selection(&self.value).is_none() {
                                 if (self.is_secure && modifiers.jump()) || modifiers.macos_command()
@@ -1622,11 +1632,12 @@ where
                             }
 
                             let mut editor = Editor::new(&mut self.value, &mut state.cursor);
-                            editor.delete();
+                            let change = editor.delete();
 
                             self.changed(
                                 &mut state.uncontrolled,
                                 &mut state.history,
+                                change,
                                 state.cursor,
                                 false,
                                 shell,
@@ -1821,15 +1832,14 @@ where
                     && is_reading
                 {
                     let content = self.insertion(&state.cursor, Value::new(text));
-                    state
-                        .history
-                        .record(history::Kind::Other, &self.value, state.cursor);
+                    state.history.record(history::Kind::Other, state.cursor);
                     let mut editor = Editor::new(&mut self.value, &mut state.cursor);
-                    editor.paste(content);
+                    let change = editor.paste(content);
 
                     self.changed(
                         &mut state.uncontrolled,
                         &mut state.history,
+                        change,
                         state.cursor,
                         true,
                         shell,
@@ -1872,11 +1882,9 @@ where
                         }
 
                         let content = self.insertion(&state.cursor, Value::new(text));
-                        state
-                            .history
-                            .record(history::Kind::Other, &self.value, state.cursor);
+                        state.history.record(history::Kind::Other, state.cursor);
                         let mut editor = Editor::new(&mut self.value, &mut state.cursor);
-                        editor.paste(content);
+                        let change = editor.paste(content);
 
                         focus.updated_at = Instant::now();
                         state.is_pasting = None;
@@ -1884,6 +1892,7 @@ where
                         self.changed(
                             &mut state.uncontrolled,
                             &mut state.history,
+                            change,
                             state.cursor,
                             false,
                             shell,
@@ -2091,6 +2100,9 @@ pub struct State<P: text::Paragraph> {
     menu: edit::Menu,
     /// Bumped whenever the value's paragraph is reshaped.
     revision: u64,
+    /// The byte offset of every grapheme of the paragraph's text, then its
+    /// length.
+    offsets: Vec<usize>,
     /// The last measured grapheme offsets of the value's paragraph, newest
     /// first, with the revision they were measured at: measuring reshapes
     /// the whole paragraph, so it happens once per edit or caret move, never
@@ -2119,6 +2131,7 @@ impl<P: text::Paragraph> Default for State<P> {
             history: History::default(),
             menu: edit::Menu::default(),
             revision: 0,
+            offsets: vec![0],
             measured: [None; 2],
             focus_anim: Animation::new(false)
                 .easing(Easing::Custom(|t| {
@@ -2209,17 +2222,16 @@ impl<P: text::Paragraph> State<P> {
     pub fn select_range(&mut self, start: usize, end: usize) {
         self.cursor.select_range(start, end);
     }
+}
 
-    /// Scroll just enough to show the caret, without the margin typing
-    /// leaves after it: a press or a drag near the edge must not move the
-    /// text under the pointer.
+impl<P: text::Paragraph + Caret> State<P> {
     /// The offset of grapheme `index` in the value's paragraph, measured
     /// at most once per paragraph and index.
     fn caret_x(&mut self, index: usize) -> f32 {
         if let Some(x) = self.measured_x(index) {
             return x;
         }
-        let x = cursor_x(&self.value, index);
+        let x = cursor_x(&self.value, &self.offsets, index);
         self.measured = [Some((self.revision, index, x)), self.measured[0]];
         x
     }
@@ -2248,6 +2260,9 @@ impl<P: text::Paragraph> State<P> {
         }
     }
 
+    /// Scroll just enough to show the caret, without the margin typing
+    /// leaves after it: a press or a drag near the edge must not move the
+    /// text under the pointer.
     fn keep_in_view(&mut self, text_bounds_width: f32, value: &Value) {
         if !self.is_focused() {
             return;
@@ -2359,49 +2374,23 @@ fn offset<P: text::Paragraph>(_text_bounds: Rectangle, _value: &Value, state: &S
 }
 
 /// The horizontal distance from the start of the `paragraph` to the
-/// grapheme at `cursor_index`.
-///
-/// The paragraph is reshaped with its content split in two spans at the
-/// cursor, and the distance is the end of the first span.
-fn cursor_x<P: text::Paragraph>(paragraph: &paragraph::Plain<P>, cursor_index: usize) -> f32 {
-    let content = paragraph.content();
-
-    if cursor_index == 0 || content.is_empty() {
+/// grapheme at `cursor_index`, from the paragraph's own layout. `offsets`
+/// are where the graphemes of its text start.
+fn cursor_x<P: text::Paragraph + Caret>(
+    paragraph: &paragraph::Plain<P>,
+    offsets: &[usize],
+    cursor_index: usize,
+) -> f32 {
+    if cursor_index == 0 || paragraph.content().is_empty() {
         return 0.0;
     }
 
-    let split = unicode_segmentation::UnicodeSegmentation::grapheme_indices(content, true)
-        .nth(cursor_index)
-        .map_or(content.len(), |(start, _)| start);
+    let offset = offsets
+        .get(cursor_index)
+        .copied()
+        .unwrap_or(paragraph.content().len());
 
-    let raw = paragraph.raw();
-    let spans = [
-        text::Span::<'_, ()>::new(&content[..split]),
-        text::Span::new(&content[split..]),
-    ];
-
-    let split = P::with_spans(Text {
-        content: spans.as_slice(),
-        bounds: raw.bounds(),
-        size: raw.size(),
-        line_height: raw.line_height(),
-        font: raw.font(),
-        align_x: raw.align_x(),
-        align_y: raw.align_y(),
-        shaping: raw.shaping(),
-        wrapping: raw.wrapping(),
-        ellipsis: raw.ellipsis(),
-        letter_spacing: raw.letter_spacing(),
-        font_features: raw.font_features().to_vec(),
-        font_variations: raw.font_variations().to_vec(),
-        weight: None,
-        hint_factor: raw.hint_factor(),
-    });
-
-    split
-        .span_bounds(0)
-        .first()
-        .map_or(0.0, |bounds| bounds.x + bounds.width)
+    paragraph.raw().caret_x(offset)
 }
 
 const CURSOR_RIGHT_PADDING: f32 = 5.0;
@@ -2421,7 +2410,7 @@ fn find_cursor_position<P: text::Paragraph>(
     x: f32,
 ) -> Option<usize> {
     let offset = offset(text_bounds, value, state);
-    let value = value.to_string();
+    let value = value.as_str();
 
     let char_offset = state
         .value
@@ -2448,6 +2437,7 @@ fn replace_paragraph<Renderer>(
     line_height: Option<text::LineHeight>,
 ) where
     Renderer: text::Renderer,
+    Renderer::Paragraph: Caret,
 {
     let font = font.unwrap_or_else(|| renderer.font());
     let text_size = text_size.unwrap_or_else(|| renderer.text_size());
@@ -2456,6 +2446,8 @@ fn replace_paragraph<Renderer>(
     let text_bounds = text_layout.bounds();
 
     state.revision = state.revision.wrapping_add(1);
+    state.offsets.clear();
+    state.offsets.extend_from_slice(value.offsets());
     state.value = paragraph::Plain::new(Text {
         font,
         line_height,
