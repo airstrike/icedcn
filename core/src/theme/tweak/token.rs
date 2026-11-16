@@ -98,8 +98,8 @@ impl Token {
             Token::WarningForeground => theme.warning.foreground,
             Token::Code => theme.code.base,
             Token::CodeForeground => theme.code.foreground,
-            // `input` merged into `border` per Phase 1.
-            Token::Border | Token::Input => theme.neutral.border,
+            Token::Border => theme.neutral.border,
+            Token::Input => theme.input,
             Token::Ring => theme.neutral.ring,
             Token::Sidebar => theme.sidebar.background,
             Token::SidebarForeground => theme.sidebar.foreground,

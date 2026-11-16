@@ -1,21 +1,22 @@
 //! The library landing page: real, interactive compositions of the public widgets.
 
 use iced::widget::component::{Component, component};
-use iced::{Bottom, Center, Element, Fill, Pixels, Top, Widget};
+use iced::{Bottom, Center, Element, Fill, Padding, Pixels, Top, Widget};
 use icedcn::core::Border;
 use icedcn::core::design::Accent;
 use icedcn::theme::container::Style;
 use icedcn::widget::calendar::{Selection, today};
 use icedcn::widget::{
     alert_dialog, avatar, badge, button, button_group, calendar, checkbox, column, container,
-    dropdown_menu, field, input, menu, progress, row, scrollable, separator, slider, space, switch,
-    text, textarea,
+    dropdown_menu, field, input, input_group, menu, progress, radio_group, row, scrollable,
+    separator, slider, space, switch, text, textarea,
 };
 use icedcn::{Size, Slot, Theme, card, radius, theme};
 
 use super::Message;
 use crate::icon;
 
+mod rhea;
 #[cfg(test)]
 mod tests;
 
@@ -121,25 +122,50 @@ fn panel<'a, M: 'a>(content: impl Into<Slot<'a, M>>) -> Slot<'a, M> {
     card(container(content).padding(20).width(Fill))
         .padding(0)
         .width(Fill)
+        .style(|theme| rhea::card(theme).into())
         .into()
 }
 
 fn controls<'a>() -> Slot<'a, Message> {
+    let (track_width, track_height) = rhea::TRACK;
     panel(column![
         row![
-            button(row!["Button", icon::arrow_right().size(14)].spacing(6))
-                .size(Size::Sm),
-            button("Secondary").style(button::Secondary).size(Size::Sm),
-            button("Outline").style(button::Outline).size(Size::Sm),
-        ].spacing(8),
-        input("Name").width(Fill),
-        textarea("Message").resizable(false),
-        row![badge("Badge"), badge("Secondary").style(badge::Secondary),
-            space::horizontal(), checkbox().default_checked(true), switch().default_checked(true)]
-            .spacing(8).align_y(Center).width(Fill),
+            button!["Button", icon::arrow_right()]
+                .style(rhea::button(button::Default))
+                .padding(Padding::from([0, 12]).right(10)),
+            button("Secondary")
+                .style(rhea::button(button::Secondary))
+                .padding([0, 12]),
+            button("Outline").style(rhea::outline()).padding([0, 12]),
+        ]
+        .spacing(8),
+        input_group(input("Name"))
+            .addon(input_group::addon(icon::search()).align(input_group::Align::InlineEnd))
+            .style(rhea::field()),
+        textarea("Message").resizable(false).style(rhea::field()),
+        row![
+            badge("Badge"),
+            badge("Secondary").style(badge::Secondary),
+            space::horizontal(),
+            radio_group(|g| row![
+                g.item("apple").style(rhea::radio),
+                g.item("banana").style(rhea::radio),
+            ]
+            .spacing(12)
+            .into())
+            .default_value("apple"),
+            checkbox().default_checked(true).style(rhea::checkbox()),
+            switch()
+                .default_checked(true)
+                .track(track_width, track_height)
+                .style(rhea::switch()),
+        ]
+        .spacing(8)
+        .align_y(Center)
+        .width(Fill),
         row![
             alert_dialog(
-                |a| a.trigger(button("Alert Dialog").style(button::Outline).size(Size::Sm)),
+                |a| a.trigger(button("Alert Dialog").style(rhea::outline()).padding([0, 12])),
                 |a| column![
                     a.header("Allow accessory to connect?", "Do you want to allow the USB accessory to connect to this device and your data?"),
                     a.footer([
@@ -150,9 +176,9 @@ fn controls<'a>() -> Slot<'a, Message> {
             ).size(Size::Sm),
             space::horizontal(),
             button_group![
-                button("Button Group").style(button::Outline).size(Size::Sm),
+                button("Button Group").style(rhea::outline()).padding([0, 12]),
                 dropdown_menu(
-                    |m| m.trigger(button(icon::chevron_up()).style(button::Outline).size(Size::Sm).square()),
+                    |m| m.trigger(button(icon::chevron_up()).style(rhea::outline()).square()),
                     |_| column![
                         menu::label("Quick Actions"),
                         menu::item("Mute Conversation"),
@@ -166,7 +192,7 @@ fn controls<'a>() -> Slot<'a, Message> {
                 .align(dropdown_menu::Align::End)
                 .width(160),
             ],
-        ].align_y(Center).width(Fill),
+        ].spacing(16).align_y(Center).width(Fill),
     ].spacing(24).width(Fill))
 }
 

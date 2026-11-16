@@ -24,11 +24,12 @@
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::{Border, Element, Length};
 use iced_widget::component::{self, Component};
-use iced_widget::radio::Status;
+use iced_widget::radio::{Status, Style};
 use iced_widget::{Renderer, Space, Widget, container};
 use icedcn_core::Theme;
 use icedcn_core::theme::radio;
 use std::convert::Infallible;
+use std::rc::Rc;
 
 use crate::button::widget;
 use crate::compose::{Compose, Inherited, Slot};
@@ -138,18 +139,23 @@ impl Handle {
             invalid: false,
             value,
             disabled: self.disabled,
+            style: None,
         }
     }
 }
 
 /// One radio of a [`Group`]: a 16px circle, filled while checked.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Item {
     value: String,
     is_checked: bool,
     invalid: bool,
     disabled: bool,
+    style: Option<Paint>,
 }
+
+/// A custom look for an [`Item`].
+type Paint = Rc<dyn Fn(&Theme, Status) -> Style>;
 
 impl Item {
     /// Indicate an invalid field with Nova's destructive border and validation ring.
@@ -161,6 +167,13 @@ impl Item {
     /// Disable this item.
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled |= disabled;
+        self
+    }
+
+    /// Paint the circle and its indicator with `style` instead of Nova's;
+    /// a disabled item still dims it to half opacity.
+    pub fn style(mut self, style: impl Fn(&Theme, Status) -> Style + 'static) -> Self {
+        self.style = Some(Rc::new(style));
         self
     }
 }
@@ -179,21 +192,27 @@ impl<Message: 'static> Compose<Message> for Item {
             is_checked,
             invalid,
             disabled,
+            style,
         } = *self;
 
         let status = Status::Active {
             is_selected: is_checked,
         };
-        let paint = move |theme: &Theme| {
+        let paint = Rc::new(move |theme: &Theme| {
+            let style = match &style {
+                Some(style) => style(theme, status),
+                None => radio::default(theme, status),
+            };
             if disabled {
-                radio::disabled(theme, status)
+                radio::dimmed(theme, style)
             } else {
-                radio::default(theme, status)
+                style
             }
-        };
+        });
 
         // `size-2 rounded-full bg-primary-foreground`.
         let dot: Slot<'b, Infallible> = if is_checked {
+            let paint = paint.clone();
             Container::new(Space::new())
                 .width(8)
                 .height(8)

@@ -21,8 +21,8 @@ pub use icedcn_core::theme::switch::{Default, Disabled, Invalid};
 pub use widget::{Catalog, Ring, Status, Style, StyleFn};
 
 use crate::compose::{Compose, Inherited, Slot};
-use iced_core::Length;
 use iced_core::text::IntoFragment;
+use iced_core::{Length, Pixels};
 use iced_widget::Renderer;
 use icedcn_core::Theme;
 use icedcn_core::theme;
@@ -49,6 +49,7 @@ pub struct Switch<'a, Message> {
     label: Option<iced_core::text::Fragment<'a>>,
     width: Length,
     size: Size,
+    track: Option<(f32, f32)>,
     on_checked_change: Option<Box<dyn Fn(bool) -> Message + 'a>>,
     style: Option<theme::switch::StyleFn<'a, Theme>>,
 }
@@ -62,6 +63,7 @@ pub fn switch<'a, Message: 'a>() -> Switch<'a, Message> {
         label: None,
         width: Length::Shrink,
         size: Size::Default,
+        track: None,
         on_checked_change: None,
         style: None,
     }
@@ -100,6 +102,13 @@ impl<'a, Message: 'a> Switch<'a, Message> {
         self
     }
 
+    /// Override the track's width and height, for a style whose track is not
+    /// one of Nova's sizes. The thumb follows the style's `padding_ratio`.
+    pub fn track(mut self, width: impl Into<Pixels>, height: impl Into<Pixels>) -> Self {
+        self.track = Some((width.into().0, height.into().0));
+        self
+    }
+
     /// Set the optional inline label.
     pub fn label(mut self, label: impl IntoFragment<'a>) -> Self {
         self.label = Some(label.into_fragment());
@@ -133,6 +142,9 @@ impl<'a, Message: 'a> From<Switch<'a, Message>>
         let mut tg = tg.width(s.width).disabled(s.disabled);
         if let Size::Sm = s.size {
             tg = tg.track_size(24., 14.);
+        }
+        if let Some((width, height)) = s.track {
+            tg = tg.track_size(width, height);
         }
 
         if let Some(label) = s.label {

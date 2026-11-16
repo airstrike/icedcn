@@ -69,6 +69,8 @@ impl<'a> From<Invalid> for StyleFn<'a, Theme> {
 pub enum Appearance<'a> {
     Default,
     Invalid,
+    /// An Input style, ring included, painted on the editor surface.
+    Field(text_input::StyleFn<'a, Theme>),
     Custom(StyleFn<'a, Theme>),
 }
 
@@ -78,6 +80,7 @@ impl<'a> Appearance<'a> {
         let field = match self {
             Self::Default => text_input::default(theme, input_status(status)),
             Self::Invalid => text_input::invalid(theme, input_status(status)),
+            Self::Field(style) => style(theme, input_status(status)),
             Self::Custom(style) => return (style(theme, status), None),
         };
         (project(field), field.ring)
@@ -93,6 +96,12 @@ impl From<Default> for Appearance<'_> {
 impl From<Invalid> for Appearance<'_> {
     fn from(_: Invalid) -> Self {
         Self::Invalid
+    }
+}
+
+impl<'a> From<text_input::StyleFn<'a, Theme>> for Appearance<'a> {
+    fn from(style: text_input::StyleFn<'a, Theme>) -> Self {
+        Self::Field(style)
     }
 }
 
