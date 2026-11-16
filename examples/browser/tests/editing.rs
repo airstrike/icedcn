@@ -830,6 +830,55 @@ fn field(name: &str, value: &str) -> Element<'static, String, Theme> {
 }
 
 #[test]
+fn an_editor_undoes_a_run_of_typing_as_one_step() {
+    for name in ["textarea", "code block"] {
+        let mut desk = Desk::new(field(name, ""));
+        desk.focus();
+        type_text(&mut desk, "hello");
+        desk.key(Named::ArrowLeft, Modifiers::empty());
+        desk.key(Named::ArrowRight, Modifiers::empty());
+        type_text(&mut desk, " world");
+        undo(&mut desk);
+        assert_eq!(
+            desk.field().1,
+            "hello",
+            "{name}: the second run is one step"
+        );
+        // The caret is back where the run started.
+        type_text(&mut desk, "!");
+        assert_eq!(desk.field().1, "hello!", "{name}");
+        undo(&mut desk);
+        undo(&mut desk);
+        assert_eq!(desk.field().1, "", "{name}: the first run is one step");
+    }
+}
+
+#[test]
+fn an_editor_undoes_a_paste_and_a_newline_as_steps_of_their_own() {
+    for name in ["textarea", "code block"] {
+        let mut desk = Desk::new(field(name, ""));
+        desk.focus();
+        type_text(&mut desk, "one");
+        desk.clipboard = Some(" pasted".into());
+        desk.key(character("v"), Modifiers::COMMAND);
+        type_text(&mut desk, " two");
+        desk.key(Named::Enter, Modifiers::empty());
+        type_text(&mut desk, "three");
+        assert_eq!(desk.field().1, "one pasted two\nthree", "{name}");
+        undo(&mut desk);
+        assert_eq!(desk.field().1, "one pasted two\n", "{name}: the typing");
+        undo(&mut desk);
+        assert_eq!(desk.field().1, "one pasted two", "{name}: the newline");
+        undo(&mut desk);
+        assert_eq!(desk.field().1, "one pasted", "{name}: the typing");
+        undo(&mut desk);
+        assert_eq!(desk.field().1, "one", "{name}: the paste");
+        undo(&mut desk);
+        assert_eq!(desk.field().1, "", "{name}");
+    }
+}
+
+#[test]
 fn a_double_click_drag_in_any_field_selects_whole_words() {
     let words = "aa bbbbbbbbbbbbbbbbbbbbbbbb cc";
     for name in ["input", "textarea", "code block"] {
