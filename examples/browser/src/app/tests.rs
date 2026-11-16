@@ -161,7 +161,7 @@ fn home_actions_route_at_desktop_and_mobile_widths() {
         for (label, destination) in [
             ("Get Started", "/docs/installation"),
             ("View Components", "/docs/components"),
-            ("Button", "/components/button"),
+            ("Charts", "/components/chart"),
             ("Create your theme", "/create"),
         ] {
             let mut ui = Simulator::with_size(
