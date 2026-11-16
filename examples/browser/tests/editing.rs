@@ -950,3 +950,33 @@ fn a_click_or_an_edit_sets_the_column_up_and_down_keep() {
         );
     }
 }
+
+#[test]
+#[ignore = "needs the editor-column branch of the iced fork"]
+fn the_editor_caret_sits_on_whole_pixels() {
+    for name in ["textarea", "code block"] {
+        for value in ["ab", "abc", "a line"] {
+            let mut desk = Desk::with(field(name, value), Some("tiny-skia"));
+            desk.focus();
+            desk.key(Named::End, Modifiers::empty());
+            desk.move_to(Point::new(700., 500.));
+            let caret = desk.caret_rect();
+            let pixels = desk.pixels();
+            let row = &pixels[caret.center_y() as usize];
+            let inside = caret.x as usize - 20..caret.x as usize + 20;
+            let background = row[inside.end - 1];
+            let column = inside
+                .clone()
+                .rev()
+                .find(|&x| row[x] != background)
+                .expect("a caret");
+            let darkest = *row[inside].iter().min().unwrap();
+            assert!(
+                row[column] <= darkest + 8,
+                "{name} {value:?}: caret column {column} is {}, ink is {darkest}: {:?}",
+                row[column],
+                &row[column - 3..column + 3]
+            );
+        }
+    }
+}
