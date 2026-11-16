@@ -7,19 +7,18 @@ use iced_core::{
     mouse, overlay, renderer,
 };
 use iced_widget::Renderer;
-use icedcn_core::theme::container::{Style, StyleFn};
+use icedcn_core::theme::container::Style;
 use icedcn_core::{Theme, radius};
+
+use super::Spec;
 
 pub(super) struct Frame<'a, Message> {
     content: Element<'a, Message, Theme, Renderer>,
     actions: bool,
-    style: Option<StyleFn<'static, Theme>>,
+    style: Spec,
 }
 impl<'a, Message> Frame<'a, Message> {
-    pub(super) fn new(
-        content: Element<'a, Message, Theme, Renderer>,
-        style: Option<StyleFn<'static, Theme>>,
-    ) -> Self {
+    pub(super) fn new(content: Element<'a, Message, Theme, Renderer>, style: Spec) -> Self {
         Self {
             content,
             actions: false,
@@ -30,22 +29,18 @@ impl<'a, Message> Frame<'a, Message> {
         Self {
             content,
             actions: true,
-            style: None,
+            style: Spec::default(),
         }
     }
     fn appearance(&self, tree: &Tree, theme: &Theme) -> Option<Style> {
         if self.actions {
             return None;
         }
-        Some(if let Some(style) = &self.style {
-            style(theme)
-        } else {
-            let mut style = super::surface(theme);
-            if super::viewport::focused(tree) {
-                style.border.color = theme.neutral.ring;
-            }
-            style
-        })
+        let mut style = self.style.resolve(theme);
+        if self.style.focus_border() && super::viewport::focused(tree) {
+            style.border.color = theme.neutral.ring;
+        }
+        Some(style)
     }
 }
 impl<Message> Meta for Frame<'_, Message> {}
@@ -187,7 +182,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Frame<'_, Message> {
 #[cfg(test)]
 mod tests {
     use super::Frame;
-    use crate::code_block::{Destructive, viewport};
+    use crate::code_block::{Destructive, Spec, viewport};
     use iced_core::renderer::Headless;
     use iced_core::shell::{Bus, Waker};
     use iced_core::widget::operation::focusable;
@@ -197,9 +192,10 @@ mod tests {
     use iced_widget::Widget as _;
     use iced_widget::{Renderer, Space};
     use icedcn_core::Theme;
-    use icedcn_core::theme::container::StyleFn;
+    use icedcn_core::theme::code_block::default;
+    use icedcn_core::theme::container::Style;
 
-    fn mounted(style: Option<StyleFn<'static, Theme>>) -> (Frame<'static, ()>, Tree, Renderer) {
+    fn mounted(style: Spec) -> (Frame<'static, ()>, Tree, Renderer) {
         let content = viewport::Viewport::new(
             Space::new().width(100).height(40).boxed(),
             Some(Id::from("code")),
@@ -223,7 +219,7 @@ mod tests {
     #[test]
     fn keyboard_focus_changes_the_default_border_and_blur_restores_it() {
         for theme in [Theme::light(), Theme::dark()] {
-            let (mut panel, mut tree, renderer) = mounted(None);
+            let (mut panel, mut tree, renderer) = mounted(Spec::default());
             let layout = Layout::new(tree.size);
             let viewport = Rectangle::with_size(Size::new(260., 100.));
             let rest = panel.appearance(&tree, &theme).expect("panel paint");
@@ -266,17 +262,16 @@ mod tests {
     #[test]
     fn focused_destructive_and_custom_panels_preserve_their_complete_paint() {
         for theme in [Theme::light(), Theme::dark()] {
-            let destructive: StyleFn<'static, Theme> = Destructive.into();
-            let custom: StyleFn<'static, Theme> = Box::new(|theme| {
-                let mut style = super::super::surface(theme);
+            fn custom(theme: &Theme) -> Style {
+                let mut style = default(theme);
                 style.border.color = theme.success.base;
                 style.border.width = 2.;
                 style.text_color = Some(theme.warning.foreground);
                 style
-            });
-            for style in [destructive, custom] {
-                let expected = style(&theme);
-                let (mut panel, mut tree, renderer) = mounted(Some(style));
+            }
+            for style in [Spec::from(Destructive), Spec::new(custom)] {
+                let expected = style.resolve(&theme);
+                let (mut panel, mut tree, renderer) = mounted(style);
                 let layout = Layout::new(tree.size);
                 panel.operate(
                     &mut tree,

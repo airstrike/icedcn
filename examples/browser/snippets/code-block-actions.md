@@ -1,27 +1,37 @@
 ```rust
 use crate::icon;
-use icedcn::widget::{CodeBlock, code_block, row};
+use icedcn::widget::{button, code_block};
 
-#[derive(Clone, Debug)]
-pub enum Message {
+#[derive(Debug, Clone)]
+enum Message {
     Wrap,
-    Save,
+    Download,
 }
 
-pub fn view<'a>(output: &'a str, wrap: bool) -> CodeBlock<'a, Message> {
-    code_block(output)
-        .font("Geist Mono")
-        .wrap(wrap)
-        .title(code_block::terminal_title("Terminal"))
-        .actions(
-            row![
-                code_block::action(icon::wrap_text().size(14), "Wrap lines")
-                    .active(wrap)
-                    .on_press(Message::Wrap),
-                code_block::action(icon::download().size(14), "Download").on_press(Message::Save),
-            ]
-            .spacing(4),
-        )
-        .copyable(true)
-}
+code_block![
+    code_block::header![
+        code_block::title![terminal, "Terminal"],
+        code_block::actions![
+            button(icon::wrap_text())
+                .style(button::Ghost)
+                .square()
+                .pressed(wrap)
+                .on_press(Message::Wrap),
+            button(icon::download())
+                .style(button::Ghost)
+                .square()
+                .on_press(Message::Download),
+            code_block::copy_button(OUTPUT),
+        ],
+    ],
+    code_block::content(OUTPUT).wrap(wrap),
+]
+
+const OUTPUT: &str = r##"$ cargo clippy -- -D warnings
+    Checking notebook v0.1.0
+error: writing `&String` instead of `&str` involves a new object where a slice will do
+ --> src/search.rs:4:18
+  |
+4 | fn matches(query: &String, title: &str) -> bool {
+  |                   ^^^^^^^ help: change this to: `&str`"##;
 ```

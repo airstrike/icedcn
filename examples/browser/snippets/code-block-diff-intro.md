@@ -1,3 +1,3 @@
 ## Diff
 
-Use `.diff()` to display the added, removed and unchanged lines of a patch body. Add `.copyable(true)` to copy the code with the leading markers removed.
+Set `code_block::Added` or `code_block::Removed` on a `code_block::line`. Each one adds a `+` or `−` marker.

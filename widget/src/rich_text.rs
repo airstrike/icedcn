@@ -670,6 +670,7 @@ impl<'a, Message: 'a> From<RichText<'a>> for Slot<'a, Message> {
 impl<'a, Message: 'a> Compose<Message> for RichText<'a> {
     fn inherit(&mut self, from: &Inherited) {
         self.selectable = self.selectable.or(from.selectable());
+        self.font = self.font.or(from.font());
         // Spans that set no size or weight of their own take the inherited
         // one, so `.size(Sm)` on an enclosing button cascades into them.
         if let Some(size) = from.size() {

@@ -6,7 +6,7 @@ use iced_test::Simulator;
 use iced_test::core::text::Target;
 use iced_test::core::widget::operation::{self, Operation, Outcome, Scrollable, text};
 use icedcn::Theme;
-use icedcn::widget::code_block::{CodeBlock, LineStyle};
+use icedcn::widget::code_block::{Added, CodeBlock, Removed, line};
 use icedcn::widget::{code_block, container, rich_text, span};
 
 #[derive(Default)]
@@ -90,6 +90,12 @@ fn demo_and_wrap_keep_their_bounds_at_two_widths_without_truncating_source() {
     }
 }
 
+fn numbered(source: &str) -> code_block::Content<'_, ()> {
+    code_block::content(source)
+        .line_numbers(true)
+        .start_line(995)
+}
+
 fn selected(element: Element<'static, (), Theme>) -> String {
     let mut ui = Simulator::with_size(Default::default(), Size::new(448., 500.), element);
     ui.draw(&Theme::light());
@@ -106,24 +112,26 @@ fn selected(element: Element<'static, (), Theme>) -> String {
 fn selection_preserves_blank_lines_and_excludes_numbers_and_diff_markers() {
     assert_eq!(
         selected(
-            container(code_block("first\n\nlast").start_line(995))
+            container(code_block(numbered("first\n\nlast")))
                 .width(448)
                 .into()
         ),
         "first\n\nlast"
     );
-    let block = CodeBlock::lines([
-        (LineStyle::Removed, rich_text([span("old")]).into()),
-        (LineStyle::Default, rich_text([span("")]).into()),
-        (LineStyle::Added, rich_text([span("new")]).into()),
-    ])
-    .start_line(1);
+    let block = code_block(
+        code_block::content(vec![
+            line(rich_text([span("old")])).style(Removed),
+            line(rich_text([span("")])),
+            line(rich_text([span("new")])).style(Added),
+        ])
+        .line_numbers(true),
+    );
     assert_eq!(selected(container(block).width(448).into()), "old\n\nnew");
 }
 
 #[test]
 fn selecting_one_line_does_not_copy_adjacent_blank_rows() {
-    let element: Element<'_, (), Theme> = container(code_block("first\n\nlast").start_line(995))
+    let element: Element<'_, (), Theme> = container(code_block(numbered("first\n\nlast")))
         .width(448)
         .into();
     let mut ui = Simulator::with_size(Default::default(), Size::new(448., 500.), element);
@@ -228,22 +236,28 @@ fn ansi_matches_explicit_terminal_spans_at_both_scales_and_themes() {
                     .line_height(LineHeight::Absolute(22.75.into()))
                     .wrapping(Wrapping::WordOrGlyph)
                     .width(Fill);
-                (LineStyle::Default, text.into())
+                line(text)
             };
             let normal = color(0x24292e, 0xe1e4e8, 1.);
             let red = color(0xd73a49, 0xea4a5a, 1.);
             let green = color(0x28a745, 0x34d058, 1.);
             let dim = color(0x24292e, 0xe1e4e8, 128. / 255.);
-            let reference = CodeBlock::lines([
-                row(vec![
-                    span("Cargo ").color(normal),
-                    span("FAILED").color(red),
-                ]),
-                row(vec![span("")]),
-                row(vec![span("tests ").color(dim), span("ok").color(green)]),
-            ])
-            .wrap(true);
-            let output = code_block::ansi("Cargo \x1b[31mFAILED\n\n\x1b[2mtests \x1b[22;32mok");
+            let reference = code_block(
+                code_block::content(vec![
+                    row(vec![
+                        span("Cargo ").color(normal),
+                        span("FAILED").color(red),
+                    ]),
+                    row(vec![span("")]),
+                    row(vec![span("tests ").color(dim), span("ok").color(green)]),
+                ])
+                .wrap(true),
+            );
+            let output = code_block(
+                code_block::content("Cargo \x1b[31mFAILED\n\n\x1b[2mtests \x1b[22;32mok")
+                    .language("ansi")
+                    .wrap(true),
+            );
             let expected = screenshot(&mut renderer, reference);
             let actual = screenshot(&mut renderer, output);
             let different = expected

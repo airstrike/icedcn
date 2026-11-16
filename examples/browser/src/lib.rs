@@ -161,6 +161,7 @@ pub fn run() -> iced::Result {
         }));
         parser_heap::install();
     }
+    font::use_geist_mono();
     let application = iced::application(Browser::new, Browser::update, Browser::view)
         .title(Browser::title)
         .window_size([1600.0, 1000.0])

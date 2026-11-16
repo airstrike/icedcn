@@ -9,7 +9,6 @@ use iced_widget::{Renderer, Widget as _};
 use icedcn_core::Theme;
 
 pub(super) enum Glyph {
-    Terminal,
     Copy,
     Check,
     Chevron(f32),
@@ -46,8 +45,6 @@ impl<M> Widget<M, Theme, Renderer> for Glyph {
         _: mouse::Cursor,
         viewport: &Rectangle,
     ) {
-        static TERMINAL: LazyLock<Handle> =
-            LazyLock::new(|| icon(r#"<path d="m4 17 6-6-6-6m8 14h8"/>"#));
         static COPY: LazyLock<Handle> = LazyLock::new(|| {
             icon(
                 r#"<rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>"#,
@@ -56,7 +53,6 @@ impl<M> Widget<M, Theme, Renderer> for Glyph {
         static CHECK: LazyLock<Handle> = LazyLock::new(|| icon(r#"<path d="m20 6-11 11-5-5"/>"#));
         static CHEVRON: LazyLock<Handle> = LazyLock::new(|| icon(r#"<path d="m6 9 6 6 6-6"/>"#));
         let handle: &Handle = match self {
-            Self::Terminal => &TERMINAL,
             Self::Copy => &COPY,
             Self::Check => &CHECK,
             Self::Chevron(_) => &CHEVRON,

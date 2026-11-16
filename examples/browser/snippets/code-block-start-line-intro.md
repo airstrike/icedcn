@@ -1,3 +1,3 @@
 ## Start Line
 
-Call `.start_line(995)` when showing an excerpt from the middle of a Rust file. The gutter grows to fit the widest number.
+Set `.start_line(..)` to number lines from a given line, for a snippet from the middle of a file. The gutter grows to fit the widest number.

@@ -43,6 +43,7 @@ pub struct Inherited {
     size: Option<Size>,
     weight: Option<Weight>,
     line_height: Option<f32>,
+    font: Option<iced_core::Font>,
     disabled: bool,
     selectable: Option<bool>,
     conversation_alignment: Option<Horizontal>,
@@ -125,6 +126,17 @@ impl Inherited {
         self
     }
 
+    /// Cascade a font family, like a `font-mono` ancestor.
+    pub fn with_font(mut self, font: impl Into<iced_core::Font>) -> Self {
+        self.font = Some(font.into());
+        self
+    }
+
+    /// The cascaded font, if any.
+    pub fn font(&self) -> Option<iced_core::Font> {
+        self.font
+    }
+
     /// Set the default text selectability for descendants.
     pub fn with_selectable(mut self, selectable: bool) -> Self {
         self.selectable = Some(selectable);
@@ -184,6 +196,7 @@ impl Inherited {
             size: self.size.or(fallback.size),
             weight: self.weight.or(fallback.weight),
             line_height: self.line_height.or(fallback.line_height),
+            font: self.font.or(fallback.font),
             disabled: self.disabled || fallback.disabled,
             selectable: self.selectable.or(fallback.selectable),
             conversation_alignment: self

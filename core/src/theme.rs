@@ -14,6 +14,7 @@ pub mod button;
 #[cfg(feature = "chart")]
 pub mod chart;
 pub mod checkbox;
+pub mod code_block;
 pub mod combo_box;
 pub mod container;
 pub mod dialog;

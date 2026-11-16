@@ -6,8 +6,8 @@ use iced_core::{Element, Event, Point, Rectangle, Size, Vector, mouse};
 use iced_test::{Simulator, simulator};
 use iced_widget::{Renderer, Space};
 use icedcn_core::Theme;
-use icedcn_widget::code_block::LineStyle;
-use icedcn_widget::{CodeBlock, Slot, button, container};
+use icedcn_widget::code_block::{self, CodeBlock, Highlighted, Removed, line};
+use icedcn_widget::{Slot, button, container};
 
 type Ui = Simulator<'static, (), Theme, Renderer>;
 
@@ -16,19 +16,17 @@ fn block(
     exact: Option<f32>,
     collapsed: bool,
 ) -> Element<'static, (), Theme, Renderer> {
-    let mut block = CodeBlock::lines([(
-        LineStyle::Default,
-        Slot::from(container(Space::new().width(1000).height(500))),
-    )])
-    .id("code")
-    .collapsed(collapsed);
+    let mut content =
+        code_block::content(vec![line(container(Space::new().width(1000).height(500)))])
+            .id("code")
+            .collapsed(collapsed);
     if let Some(cap) = cap {
-        block = block.max_height(cap);
+        content = content.max_height(cap);
     }
     if let Some(height) = exact {
-        block = block.height(height);
+        content = content.height(height);
     }
-    container(block).width(448).into()
+    container(code_block::code_block(content)).width(448).into()
 }
 
 #[derive(Default)]
@@ -90,15 +88,11 @@ fn cap_preserves_full_source_and_shrinks_with_available_width() {
 
 #[test]
 fn maximum_height_never_stretches_short_output_but_exact_height_does() {
-    let block = || {
-        CodeBlock::lines([(
-            LineStyle::Default,
-            Slot::from(container(Space::new().width(20).height(30))),
-        )])
-    };
-    let mut capped = ui(container(block().max_height(192.)).width(448).into(), 600.);
+    let content = || code_block::content(vec![line(container(Space::new().width(20).height(30)))]);
+    let block = |content| container(code_block::code_block(content)).width(448).into();
+    let mut capped = ui(block(content().max_height(192)), 600.);
     assert_eq!(metrics(&mut capped).bounds.height, 54.);
-    let mut fixed = ui(container(block().height(192.)).width(448).into(), 600.);
+    let mut fixed = ui(block(content().height(192)), 600.);
     assert_eq!(metrics(&mut fixed).bounds.height, 192.);
 }
 
@@ -142,7 +136,8 @@ fn collapsed_content_keeps_complete_source_and_does_not_scroll_vertically() {
 
 #[test]
 fn floating_actions_precede_content_and_survive_rebuild() {
-    let block = || icedcn_widget::code_block("output").actions(button("Copy").on_press(()));
+    let block =
+        || icedcn_widget::code_block![code_block::actions(button("Copy").on_press(())), "output"];
     let mut view = ui(container(block()).width(448).into(), 600.);
     view.point_at(Point::new(550., 900.));
     view.draw(&Theme::light());
@@ -179,13 +174,20 @@ fn header_actions_stay_at_the_end_at_both_widths() {
     for compact in [false, true] {
         for width in [512., 260.] {
             for title_width in [40., 800.] {
-                let block = icedcn_widget::code_block("output")
-                    .compact(compact)
-                    .title(container(Space::new().width(title_width).height(20)).id("title"))
-                    .actions(
-                        container(button(Space::new().width(68).height(18)).on_press(()))
-                            .id("actions"),
-                    );
+                let title = container(Space::new().width(title_width).height(20)).id("title");
+                let action = container(button(Space::new().width(68).height(18)).on_press(()));
+                let block = icedcn_widget::code_block![
+                    code_block::header![
+                        code_block::title(Slot::from(title)),
+                        code_block::actions![action.id("actions")],
+                    ],
+                    "output",
+                ]
+                .size(if compact {
+                    icedcn_widget::Size::Sm
+                } else {
+                    icedcn_widget::Size::Default
+                });
                 let mut view = ui(container(block).width(width).into(), width);
                 view.draw(&Theme::light());
                 let mut parts = Parts::default();
@@ -206,7 +208,7 @@ fn header_actions_stay_at_the_end_at_both_widths() {
 #[test]
 fn highlighted_patch_rebuilds_with_incoming_source_and_preserves_rows() {
     use iced_core::widget::operation::Text;
-    use icedcn_widget::code_block;
+    use icedcn_widget::code_block::code_block;
 
     #[derive(Default)]
     struct Rows(Vec<String>);
@@ -225,18 +227,20 @@ fn highlighted_patch_rebuilds_with_incoming_source_and_preserves_rows() {
         text.0
     }
     let listing = |source: &str| {
-        code_block(source.to_owned())
-            .language("rust")
-            .diff()
-            .line_style(2, LineStyle::Highlighted)
-            .into()
+        code_block(
+            code_block::content(source.to_owned())
+                .language("rust")
+                .line_style(2, Highlighted)
+                .line_style(3, Removed),
+        )
+        .into()
     };
-    let mut view = ui(listing(" let name = \"café\";\n+na"), 400.);
+    let mut view = ui(listing("let name = \"café\";\nna"), 400.);
     assert!(rendered(&mut view, &Theme::light()).contains(&"na".to_owned()));
-    let source = " let name = \"café\";\n+name.len()\n-0";
+    let source = "let name = \"café\";\nname.len()\n0";
     view = view.rebuild(listing(source));
     let rows = rendered(&mut view, &Theme::dark());
-    for line in code_block::diff_text(source).lines() {
+    for line in source.lines() {
         assert!(
             rows.iter().any(|text| text == line),
             "missing {line:?} in {rows:?}"
@@ -246,13 +250,14 @@ fn highlighted_patch_rebuilds_with_incoming_source_and_preserves_rows() {
 
 #[test]
 fn header_accepts_borrowed_source_and_messages() {
-    use icedcn_widget::code_block;
-
     fn view<'a, Message>(source: &'a str) -> CodeBlock<'a, Message> {
-        code_block(source)
-            .font("Geist Mono")
-            .title("Terminal")
-            .actions(code_block::copy_button(source))
+        icedcn_widget::code_block![
+            code_block::header![
+                "Terminal",
+                code_block::actions![code_block::copy_button(source)]
+            ],
+            source,
+        ]
     }
 
     fn mount<'a>(source: &'a mut str) -> Element<'a, &'a mut str, Theme, Renderer> {

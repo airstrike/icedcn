@@ -1,5 +1,5 @@
 //! Selectable source rows and their outside-the-selection decorations.
-use super::{LineStyle, lines};
+use super::{LineStyle, ansi, lines};
 use crate::compose::Inherited;
 use crate::{Column, Slot, container, row};
 use iced_core::Length::{Fill, Shrink};
@@ -18,7 +18,6 @@ pub(super) type View<'a, Message> = fn(Options<'a>, Cow<'a, str>, Layout) -> Slo
 #[derive(Debug, Default, Hash)]
 pub(super) struct Options<'a> {
     pub styles: BTreeMap<usize, LineStyle>,
-    pub diff: bool,
     pub language: Option<Cow<'a, str>>,
 }
 
@@ -26,31 +25,14 @@ impl<'a> Options<'a> {
     pub fn view<Message: 'static>(self, source: Cow<'a, str>, layout: Layout) -> Slot<'a, Message> {
         let body = iced_widget::lazy((source, self, layout), |(source, options, layout)| {
             // Parse the visible source once per change, including an unfinished final line.
-            let mut styles = Vec::new();
-            let source = if options.diff {
-                Cow::Owned(
-                    source
-                        .split('\n')
-                        .map(|row| {
-                            let (style, text) = diff_line(row);
-                            styles.push(style);
-                            text
-                        })
-                        .collect::<Vec<_>>()
-                        .join("\n"),
-                )
-            } else {
-                Cow::Borrowed(source.as_ref())
-            };
-            let lines = options.rows(&source, *layout);
-            let lines = lines
+            let lines = options
+                .rows(source, *layout)
                 .into_iter()
                 .enumerate()
                 .map(|(index, line)| {
                     let style = options
                         .styles
                         .get(&(index + 1))
-                        .or_else(|| styles.get(index))
                         .copied()
                         .unwrap_or_default();
                     (style, line)
@@ -62,6 +44,18 @@ impl<'a> Options<'a> {
     }
 
     fn rows<Message: 'static>(&self, source: &str, layout: Layout) -> Vec<Slot<'static, Message>> {
+        if self
+            .language
+            .as_deref()
+            .is_some_and(|language| language.eq_ignore_ascii_case("ansi"))
+        {
+            let width = if layout.wrap { Fill } else { Shrink };
+            return ansi::parse(source)
+                .lines(layout.font, layout.wrapping(), width, layout.size())
+                .into_iter()
+                .map(|(_, line)| line)
+                .collect();
+        }
         #[cfg(feature = "highlighter")]
         if let Some(language) = &self.language {
             return super::syntax::rows(source, language)
@@ -92,15 +86,6 @@ impl<'a> Options<'a> {
     }
 }
 
-pub(super) fn diff_line(line: &str) -> (LineStyle, &str) {
-    match line.as_bytes().first() {
-        Some(b'+') => (LineStyle::Added, &line[1..]),
-        Some(b'-') => (LineStyle::Removed, &line[1..]),
-        Some(b' ') => (LineStyle::Default, &line[1..]),
-        _ => (LineStyle::Default, line),
-    }
-}
-
 #[derive(Debug, Clone, Copy, Hash)]
 pub(super) struct Layout {
     pub font: Font,
@@ -109,13 +94,13 @@ pub(super) struct Layout {
     pub start_line: Option<usize>,
 }
 impl Layout {
-    fn size(self) -> f32 {
+    pub(super) fn size(self) -> f32 {
         if self.compact { 12.0 } else { 14.0 }
     }
-    fn line_height(self) -> f32 {
+    pub(super) fn line_height(self) -> f32 {
         self.size() * 1.625
     }
-    fn wrapping(self) -> Wrapping {
+    pub(super) fn wrapping(self) -> Wrapping {
         if self.wrap {
             Wrapping::WordOrGlyph
         } else {
@@ -146,7 +131,9 @@ impl Layout {
                 line.inherit(
                     &Inherited::default()
                         .with_size(size)
-                        .with_line_height(line_height),
+                        .with_line_height(line_height)
+                        .with_font(font)
+                        .with_selectable(true),
                 );
                 let mut entry = row![].spacing(12);
                 if let Some(first) = start_line {

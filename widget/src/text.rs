@@ -261,6 +261,7 @@ impl<'a, Message: 'a> Compose<Message> for Text<'a> {
             from.size().map(Size::text_size)
         });
         self.weight = self.weight.or(from.weight().map(Into::into));
+        self.font = self.font.or(from.font());
         // The inherited value is absolute logical pixels (nova `leading-4` is
         // 16px); `From<f32> for LineHeight` would read it as a relative factor.
         self.line_height = self.line_height.or(from

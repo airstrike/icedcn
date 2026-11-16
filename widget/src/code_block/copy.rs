@@ -12,48 +12,27 @@ use iced_core::{
     renderer, window,
 };
 use iced_widget::{Renderer, Widget as _};
-use icedcn_core::theme::container::Style;
-use icedcn_core::theme::tweak::{Fg, Token, hover};
-use icedcn_core::{Border, Theme, radius};
+use icedcn_core::Theme;
 
-use super::{Placement, ansi, diff_text};
+use super::Placement;
 
 use super::glyph::Glyph;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::marker::{self, Press};
-use crate::{button, container, tooltip};
+use crate::{button, tooltip};
 
-/// A ghost icon button that copies text and acknowledges successful clipboard writes for two seconds.
+/// A ghost icon button that copies its value and shows a check for two
+/// seconds after the clipboard confirms the write.
 pub struct CopyButton<'a> {
-    text: Source<'a>,
+    text: Cow<'a, str>,
     disabled: bool,
     placement: Option<Placement>,
 }
 
-pub(super) enum Source<'a> {
-    Text(Cow<'a, str>),
-    Diff(Cow<'a, str>),
-    Ansi(ansi::Output),
-}
-
-impl Source<'_> {
-    fn plain(&self) -> String {
-        match self {
-            Self::Text(value) => value.to_string(),
-            Self::Diff(value) => diff_text(value),
-            Self::Ansi(output) => output.as_str().to_owned(),
-        }
-    }
-}
-
-/// Create a copy action for a complete source string, including any hidden lines.
-pub fn copy_button<'a>(text: impl Into<Cow<'a, str>>) -> CopyButton<'a> {
-    from_source(Source::Text(text.into()))
-}
-
-pub(super) fn from_source(text: Source<'_>) -> CopyButton<'_> {
+/// A copy button for `value`: the complete text, including any hidden lines.
+pub fn copy_button<'a>(value: impl Into<Cow<'a, str>>) -> CopyButton<'a> {
     CopyButton {
-        text,
+        text: value.into(),
         disabled: false,
         placement: None,
     }
@@ -101,28 +80,15 @@ struct Pressed;
 impl CopyButton<'_> {
     fn control<'a>(&self, copied: bool) -> Element<'a, Infallible, Theme, Renderer> {
         let glyph = if copied { Glyph::Check } else { Glyph::Copy };
-        let button = button(glyph.view())
+        let mut button = button(glyph.view())
             .size(crate::Size::Xs)
             .square()
             .style(button::Ghost)
             .disabled(self.disabled);
-        let button: Element<'a, Infallible, Theme, Renderer> = match self.placement {
-            Some(Placement::Header) => button
-                .style(button::Ghost + Fg(Token::MutedForeground) + hover(Fg(Token::Foreground)))
-                .into(),
-            Some(Placement::Floating) => container(button)
-                .style(|theme: &Theme| Style {
-                    background: Some(theme.neutral.base.into()),
-                    border: Border {
-                        width: 1.,
-                        color: theme.neutral.foreground.scale_alpha(0.1),
-                        radius: radius::SM.into(),
-                    },
-                    ..Default::default()
-                })
-                .into(),
-            None => button.into(),
-        };
+        if let Some(placement) = self.placement {
+            button.inherit(&Inherited::default().with_code_actions(placement));
+        }
+        let button: Element<'a, Infallible, Theme, Renderer> = button.into();
         let marker = marker::marker(button, Pressed, Press::Captured);
         tooltip(marker.boxed(), if copied { "Copied" } else { "Copy" }).into()
     }
@@ -194,7 +160,7 @@ impl<'a, M: 'a> Widget<M, Theme, Renderer> for Control<'a> {
         let was_copied = state.until.is_some();
         if !drain.into_signals().is_empty() && !state.pending {
             state.pending = true;
-            shell.write_clipboard(self.button.text.plain());
+            shell.write_clipboard(self.button.text.to_string());
         }
         match event {
             Event::Clipboard(clipboard::Event::Written(result)) => {
@@ -295,50 +261,37 @@ mod tests {
     use iced_test::simulator::{click, press_key};
 
     #[test]
-    fn built_in_copy_uses_the_full_displayed_source() {
-        use crate::code_block;
+    fn header_copy_writes_the_complete_value_of_a_collapsed_block() {
+        use crate::code_block::{self, copy_button};
 
         let renderer =
             block_on(Renderer::new(Default::default(), None)).expect("headless renderer");
-        let cases = [
-            (code_block("first\n\nlast"), "first\n\nlast"),
-            (
-                code_block(" unchanged\n-old\n+new").diff(),
-                "unchanged\nold\nnew",
-            ),
-            (
-                code_block::ansi("λ\x1b[31mred\x1b[0m\n\nlast"),
-                "λred\n\nlast",
-            ),
-        ];
-        for (block, expected) in cases {
-            let mut element: Element<'_, (), Theme, Renderer> = block
-                .title("Output")
-                .copyable(true)
-                .max_height(16.)
-                .collapsed(true)
-                .into();
-            let mut tree = Tree::new(&element);
-            tree.diff(&mut element);
-            let size = Size::new(200., 200.);
-            element.layout(&mut tree, &renderer, &layout::Limits::new(Size::ZERO, size));
-            let mut bus = Bus::new();
-            let mut write = None;
-            for event in click() {
-                let mut shell = Shell::new(&window::Headless, Waker::noop(), &mut bus);
-                element.update(
-                    &mut tree,
-                    &event,
-                    Layout::new(size),
-                    mouse::Cursor::Available(iced_core::Point::new(182., 18.)),
-                    &renderer,
-                    &mut shell,
-                    &Rectangle::with_size(size),
-                );
-                write = shell.clipboard_mut().write.take().or(write);
-            }
-            assert_eq!(write, Some(Content::Text(expected.into())));
+        let source = "first\n\nlast";
+        let mut element: Element<'_, (), Theme, Renderer> = crate::code_block![
+            code_block::header!["Output", code_block::actions![copy_button(source)]],
+            code_block::content(source).max_height(16).collapsed(true),
+        ]
+        .into();
+        let mut tree = Tree::new(&element);
+        tree.diff(&mut element);
+        let size = Size::new(200., 200.);
+        element.layout(&mut tree, &renderer, &layout::Limits::new(Size::ZERO, size));
+        let mut bus = Bus::new();
+        let mut write = None;
+        for event in click() {
+            let mut shell = Shell::new(&window::Headless, Waker::noop(), &mut bus);
+            element.update(
+                &mut tree,
+                &event,
+                Layout::new(size),
+                mouse::Cursor::Available(iced_core::Point::new(182., 18.)),
+                &renderer,
+                &mut shell,
+                &Rectangle::with_size(size),
+            );
+            write = shell.clipboard_mut().write.take().or(write);
         }
+        assert_eq!(write, Some(Content::Text(source.into())));
     }
 
     #[test]

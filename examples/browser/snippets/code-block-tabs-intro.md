@@ -1,3 +1,3 @@
 ## Tabs
 
-Give each file a `t.trigger(...)` and a matching `t.content(...)` inside `tabs(...)`. Each tab contains a code block with its own title and copy button.
+Show several files with `tabs`, one `code_block` in each `t.content(..)`.

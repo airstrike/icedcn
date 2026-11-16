@@ -1,15 +1,15 @@
 ```rust
-use icedcn::widget::{CodeBlock, code_block};
+use icedcn::widget::code_block;
 
-pub fn view<'a, Message: 'static>() -> CodeBlock<'a, Message> {
-    code_block(START_LINE)
-        .font("Geist Mono")
+code_block![
+    code_block::header!["src/notebooks.rs"],
+    code_block::content(CODE)
         .language("rust")
-        .title("src/notebooks.rs")
-        .start_line(995)
-}
+        .line_numbers(true)
+        .start_line(995),
+]
 
-const START_LINE: &str = r##"    let query = self.query.trim().to_lowercase();
+const CODE: &str = r##"    let query = self.query.trim().to_lowercase();
 
     self.notebooks
         .iter()

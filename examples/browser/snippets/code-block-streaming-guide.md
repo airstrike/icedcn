@@ -1,1 +1,1 @@
-Append incoming chunks to your application’s string in `update`, then pass the current text to this view. Set `complete` when the stream ends to enable copying. The preview replays sample chunks with a timer; that timer is demo machinery, not a requirement of the widget. Use `.diff()` or `.line_style(...)` with the same streaming pattern.
+Append incoming chunks to your string in `update`, and disable the copy button while the stream is incomplete. The preview replays sample chunks with a timer.

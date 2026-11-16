@@ -7,23 +7,23 @@ fn wrap_is_independent_across_examples_and_repeatable() {
     let mut page = State::new();
     for _ in 0..2 {
         let _ = page.update(Message::Wrap("demo"));
-        assert_eq!(page.wraps["demo"], true);
+        assert!(page.wrap("demo"));
         let _ = page.update(Message::Wrap("actions"));
-        assert_eq!(page.wraps["actions"], false);
+        assert!(!page.wrap("actions"));
         let _ = page.update(Message::Wrap("demo"));
         let _ = page.update(Message::Wrap("actions"));
-        assert_eq!(page.wraps["demo"], false);
-        assert_eq!(page.wraps["actions"], true);
+        assert!(!page.wrap("demo"));
+        assert!(page.wrap("actions"));
     }
 }
 
 #[test]
-fn cancelled_save_keeps_the_status_empty() {
+fn save_asks_the_page_to_write_the_file() {
     let mut page = State::new();
-    let _ = page.update(Message::Saved("view.rs", Ok(false)));
-    assert!(page.save_status.is_empty());
-    let _ = page.update(Message::Saved("view.rs", Ok(true)));
-    assert_eq!(page.save_status["view.rs"], "Saved view.rs");
+    let Some(Event::Save { name, value }) = page.update(Message::Save("view.rs", DEMO)) else {
+        panic!("save effect expected");
+    };
+    assert_eq!((name, value), ("view.rs", DEMO));
 }
 
 #[test]
@@ -33,7 +33,10 @@ fn replay_tracks_all_five_blocks_and_markdown_fence_independently() {
     assert_eq!(STREAMS.len(), 5);
     assert_eq!(
         total_length("streaming"),
-        STREAMS.iter().map(|(_, _, s)| s.len()).sum::<usize>()
+        STREAMS
+            .iter()
+            .map(|stream| stream.code.len())
+            .sum::<usize>()
     );
     let _ = page.update(Message::Replay("streaming"));
     let _ = page.update(Message::Replay("markdown"));
@@ -59,18 +62,23 @@ fn replay_tracks_all_five_blocks_and_markdown_fence_independently() {
 }
 
 #[test]
-fn full_sources_and_diff_decoration_survive_recipe_transforms() {
+fn full_sources_and_line_states_survive_recipe_transforms() {
     let page = State::new();
     assert_eq!(page.logs.lines().count(), 40);
     assert!(page.logs.ends_with("[40] Indexed notebook in 45ms"));
+    let styles: Vec<_> = DIFF.lines().map(diff_style).collect();
     assert_eq!(
-        code_block::diff_text("+added\n-removed\n unchanged"),
-        "added\nremoved\nunchanged"
+        styles,
+        [
+            LineStyle::Default,
+            LineStyle::Removed,
+            LineStyle::Added,
+            LineStyle::Added,
+            LineStyle::Default,
+        ]
     );
     assert!(SHOW_MORE.lines().count() > 20);
-    use code_block::ansi;
-    let output = ansi::parse(ANSI);
-    let copy = output.as_str();
+    let copy = ansi::strip(ANSI);
     assert_eq!(copy.lines().count(), 8);
     assert!(!copy.contains('\x1b'));
     assert!(copy.ends_with("test result: FAILED. 2 passed; 1 failed; 0 ignored"));
@@ -84,42 +92,6 @@ fn markdown_uses_word_plus_whitespace_deltas() {
     assert_eq!(markdown_prefix(usize::MAX), MARKDOWN.len());
 }
 
-#[test]
-fn completion_receipts_are_targeted_replay_safe_and_not_lost_in_a_batch() {
-    let mut first = State::new();
-    let mut second = State::new();
-    let a = Completion {
-        target: first.target.clone(),
-        serial: Id::unique(),
-        message: Message::Saved("view.rs", Ok(true)),
-    };
-    let b = Completion {
-        target: first.target.clone(),
-        serial: Id::unique(),
-        message: Message::Saved("search.rs", Ok(true)),
-    };
-    for completion in [&a, &b] {
-        first.receive(completion);
-        second.receive(completion);
-    }
-    assert_eq!(first.save_status.len(), 2);
-    assert!(second.save_status.is_empty());
-    first.save_status.clear();
-    assert!(first.save_status.is_empty());
-    first.receive(&a);
-    assert!(
-        first.save_status.is_empty(),
-        "a rebuild cannot replay an old receipt"
-    );
-    let Some(Event::Acknowledged(ids)) = first.update(Message::Acknowledge) else {
-        panic!("acknowledgement expected");
-    };
-    assert_eq!(ids.len(), 2);
-    assert!(first.acknowledgements.is_empty());
-    let _ = first.update(Message::Wrap("demo"));
-    assert!(first.wraps["demo"]);
-    assert!(second.wraps.is_empty());
-}
 #[test]
 fn markdown_and_typeset_prose_remain_paragraphs() {
     for items in [
@@ -148,7 +120,6 @@ fn local_timer_requests_the_next_frame_after_a_published_tick() {
         id: "streaming".into(),
         dark: false,
         page: 0,
-        completions: Vec::new(),
     };
     let action = component.listen(
         &state,
@@ -163,6 +134,9 @@ fn local_timer_requests_the_next_frame_after_a_published_tick() {
 
 #[test]
 fn streaming_lists_keep_their_source_language() {
-    assert_eq!(STREAMS[1], ("Terminal", "sh", STREAMING_1));
-    assert_eq!(STREAMS[4], (".cargo/config.toml", "toml", STREAMING_4));
+    assert_eq!((STREAMS[1].title, STREAMS[1].language), (None, "sh"));
+    assert_eq!(
+        (STREAMS[4].title, STREAMS[4].language),
+        (Some(".cargo/config.toml"), "toml")
+    );
 }

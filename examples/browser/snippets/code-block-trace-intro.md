@@ -1,3 +1,3 @@
 ## Trace
 
-Use `trace::disclosure` to open and close a command transcript. The output uses `.compact(true)`, `.wrap(true)` and `.max_height(256.)` so longer terminal messages scroll inside the trace.
+Put a `code_block` with `.size(Size::Sm)` in a `trace::disclosure` for tool and terminal output. Add `.wrap(true)` and `.max_height(256)` to the content so long output wraps and scrolls inside the trace. The block sets its own text color, so the trace does not mute it.

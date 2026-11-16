@@ -1,11 +1,9 @@
 ```rust
-use icedcn::widget::{CodeBlock, code_block};
+use icedcn::widget::code_block;
 
-pub fn view<'a, Message>() -> CodeBlock<'a, Message> {
-    code_block(LINE_NUMBERS).font("Geist Mono").start_line(1)
-}
+code_block(code_block::content(CODE).line_numbers(true))
 
-const LINE_NUMBERS: &str = r##"[package]
+const CODE: &str = r##"[package]
 name = "notebook"
 version = "0.1.0"
 edition = "2024"

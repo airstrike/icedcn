@@ -1,3 +1,3 @@
 ## Height
 
-Use `.max_height(192.)` to cap the notebook log. The viewport scrolls when the output exceeds that height.
+Cap the height with `.max_height(..)` on the content. The content scrolls inside the block.

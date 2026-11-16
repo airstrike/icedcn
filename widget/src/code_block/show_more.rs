@@ -1,17 +1,20 @@
 use std::f32::consts::PI;
 
+use iced_core::Length::Fill;
+use iced_core::alignment::Horizontal;
 use iced_core::animation::Easing;
 use iced_core::time::Duration;
-use iced_core::{Animation, Length::Fill, Never, Pixels, never};
+use iced_core::{Animation, Never, Pixels, never};
 use iced_widget::{Widget, transition};
 
-use super::{CodeBlock, glyph::Glyph};
+use super::glyph::Glyph;
+use super::{CodeBlock, footer};
 use crate::animation::cubic_bezier;
 use crate::collapsible::Collapsible;
-use crate::{Size, Slot, button, collapsible, column, container, row};
+use crate::{Size, Slot, button, collapsible, row};
 
-/// Show a clipped preview with a footer that expands the complete code block.
-/// The block's own height or maximum height applies when expanded. Use the
+/// Clip the content to `height` with a centered Show more button in the footer.
+/// Expanded, the content's own height or maximum height applies. Use the
 /// returned [`Collapsible`] to control the open state or listen for changes.
 pub fn show_more<'a, Message: 'static>(
     height: impl Into<Pixels>,
@@ -22,8 +25,9 @@ pub fn show_more<'a, Message: 'static>(
         let open = handle.is_open();
         let mut block = block();
         if !open {
-            block.height = None;
-            block = block.max_height(height).collapsed(true);
+            block.content.height = None;
+            block.content.max_height = Some(Pixels(height));
+            block.content.collapsed = true;
         }
         let chevron = transition(
             open,
@@ -43,12 +47,11 @@ pub fn show_more<'a, Message: 'static>(
             .style(button::Ghost)
             .size(Size::Xs);
         let toggle = handle.trigger(Slot::from(toggle).map(never));
-        let toggle = container(toggle).center_x(Fill);
-        if let Some(footer) = block.footer.take() {
-            block.footer(column![footer, toggle].spacing(8)).into()
-        } else {
-            block.footer(toggle).into()
-        }
+        let footer = match block.footer.take() {
+            Some(footer) => footer.push(toggle),
+            None => footer(toggle).align_x(Horizontal::Center),
+        };
+        block.push(footer).into()
     })
     .width(Fill)
 }

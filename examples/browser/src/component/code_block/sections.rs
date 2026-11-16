@@ -149,13 +149,13 @@ pub static BLOCKS: &[Block] = &[
         title: "Syntax Highlighting",
         children: &[
             Block::Md("examples/browser/snippets/code-block-highlighting-intro.md"),
-            Block::Md("examples/browser/snippets/code-block-syntax-guide.md"),
             Block::Example {
                 id: "highlighting",
                 title: "",
                 description: None,
                 snippet: "examples/browser/snippets/code-block-highlighting.md",
             },
+            Block::Md("examples/browser/snippets/code-block-syntax-guide.md"),
             Block::Md("examples/browser/snippets/code-block-languages-intro.md"),
             Block::Example {
                 id: "languages",
@@ -172,7 +172,6 @@ pub static BLOCKS: &[Block] = &[
                 snippet: "examples/browser/snippets/code-block-ansi.md",
             },
             Block::Md("examples/browser/snippets/code-block-ansi-guide.md"),
-            Block::Md("examples/browser/snippets/code-block-preparing-tokens.md"),
             Block::Md("examples/browser/snippets/code-block-streaming-intro.md"),
             Block::Example {
                 id: "streaming",

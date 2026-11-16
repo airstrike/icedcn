@@ -6,12 +6,10 @@ use iced::widget::{
     component::{Component, component},
 };
 use iced::{Fill, Task, Widget};
-use icedcn::theme::container::CodeBlock;
-use icedcn::theme::tweak::{Alpha, Bg, Fg, Token};
 use icedcn::widget::{
     badge, button, code_block, column, container, dialog, row, sheet, spinner, text, trace,
 };
-use icedcn::{Slot, Theme};
+use icedcn::{Destructive, Size, Slot, Theme};
 use trace::{Line, Status};
 
 type Glyph = fn() -> Text<'static, Theme>;
@@ -20,14 +18,15 @@ fn line<M: 'static>(title: &'static str, glyph: Glyph) -> Line<'static, M> {
     trace::line(title).icon(glyph().size(16))
 }
 fn output<M: 'static>(value: &'static str) -> Slot<'static, M> {
-    code_block(value).compact(true).wrap(true).into()
+    code_block(code_block::content(value).wrap(true).max_height(256))
+        .size(Size::Sm)
+        .into()
 }
 fn command_output<M: 'static>(value: &'static str, error: bool) -> Slot<'static, M> {
     if error {
-        code_block(value)
-            .compact(true)
-            .wrap(true)
-            .style(CodeBlock + Bg(Token::Destructive) + Alpha(0.10) + Fg(Token::Destructive))
+        code_block(code_block::content(value).wrap(true).max_height(256))
+            .size(Size::Sm)
+            .style(Destructive)
             .into()
     } else {
         output(value)
@@ -298,7 +297,7 @@ fn file_diff(
     src: &'static str,
     glyph: Glyph,
 ) -> Slot<'static, Message> {
-    use code_block::{CodeBlock, LineStyle};
+    use code_block::{Added, Removed};
     sheet(
         move |s| {
             s.trigger(trace::action(
@@ -309,16 +308,19 @@ fn file_diff(
             ))
         },
         move |_| {
-            let diff = CodeBlock::lines(src.lines().map(|line| {
-                let (kind, value) = if let Some(add) = line.strip_prefix('+') {
-                    (LineStyle::Added, add)
-                } else if let Some(del) = line.strip_prefix('-') {
-                    (LineStyle::Removed, del)
-                } else {
-                    (LineStyle::Default, line)
-                };
-                (kind, text(value).size(12).into())
-            }));
+            let diff = code_block(
+                src.lines()
+                    .map(|line| {
+                        if let Some(add) = line.strip_prefix('+') {
+                            code_block::line(text(add).size(12)).style(Added)
+                        } else if let Some(del) = line.strip_prefix('-') {
+                            code_block::line(text(del).size(12)).style(Removed)
+                        } else {
+                            code_block::line(text(line).size(12))
+                        }
+                    })
+                    .collect::<Vec<_>>(),
+            );
             column![sheet::header(path, desc), container(diff).padding([0, 24])].into()
         },
     )

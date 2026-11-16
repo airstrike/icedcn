@@ -1,32 +1,28 @@
 ```rust
 use iced::alignment::Horizontal;
-use icedcn::widget::{bubble, message, text};
-use icedcn::{
-    Slot,
-    widget::{code_block, column},
-};
-pub fn view<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
-    column![
-        message(bubble("How do I filter notebook titles?").style(bubble::Variant::Muted))
-            .align(Horizontal::Right),
-        message(
-            column![
-                text::p("Compare the query and each title in lowercase."),
-                code_block(CHAT)
-                    .language("rust")
-                    .font("Geist Mono")
-                    .title("src/search.rs")
-                    .copyable(true),
-                text::p("The result borrows the matching titles from the original list.")
-            ]
-            .spacing(12)
-        )
-    ]
-    .spacing(16)
-    .into()
-}
+use icedcn::widget::{bubble, code_block, column, message, text};
 
-const CHAT: &str = r##"fn matches(query: &str, title: &str) -> bool {
+column![
+    message(bubble("How do I filter notebook titles?").style(bubble::Variant::Muted))
+        .align(Horizontal::Right),
+    message(
+        column![
+            text::p("Compare the query and each title in lowercase."),
+            code_block![
+                code_block::header![
+                    "src/search.rs",
+                    code_block::actions![code_block::copy_button(CODE)],
+                ],
+                code_block::content(CODE).language("rust"),
+            ],
+            text::p("The result borrows the matching titles from the original list."),
+        ]
+        .spacing(12)
+    ),
+]
+.spacing(16)
+
+const CODE: &str = r##"fn matches(query: &str, title: &str) -> bool {
     title.to_lowercase().contains(&query.to_lowercase())
 }
 

@@ -1,7 +1,9 @@
 ### Footer
 
-`.footer(...)` mounts content beneath the viewport. The Show More recipes use a centered ghost extra-small button.
+A row below the content, such as for a Show More button.
 
-| API | Type | Default | Behavior |
+| Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `.footer(footer)` | `impl Into<Slot>` | absent | Footer composition, outside the scrolling content. |
+| `code_block::footer(child)` | `impl Into<Slot>` | - | The first child. |
+| `.push(child)` | `impl Into<Slot>` | - | Another child, 8px apart. |
+| `.align_x(align)` | `impl Into<Horizontal>` | `Left` | Place the children, such as `Center`. |

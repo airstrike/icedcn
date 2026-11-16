@@ -1,14 +1,12 @@
 ```rust
-use icedcn::widget::{CodeBlock, code_block};
+use icedcn::widget::code_block;
 
-pub fn view<'a, Message: 'static>() -> CodeBlock<'a, Message> {
-    code_block(HIGHLIGHTING)
-        .font("Geist Mono")
-        .language("rust")
-        .title("src/notebook.rs")
-}
+code_block![
+    code_block::header!["src/notebook.rs"],
+    code_block::content(CODE).language("rust"),
+]
 
-const HIGHLIGHTING: &str = r##"#[derive(Debug, Default)]
+const CODE: &str = r##"#[derive(Debug, Default)]
 struct Notebook {
     title: String,
     pages: Vec<String>,

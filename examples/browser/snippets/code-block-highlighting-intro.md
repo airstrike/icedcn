@@ -1,1 +1,1 @@
-Pass Rust source to `code_block(source).language("rust")`. Token colors follow the active theme.
+`.language(..)` highlights the content and returns no extra state to manage. Token colors follow the active light or dark theme.

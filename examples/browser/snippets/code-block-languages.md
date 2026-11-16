@@ -1,35 +1,20 @@
 ```rust
-use icedcn::{
-    Slot,
-    widget::{code_block, column},
-};
-pub fn view<'a, Message: 'static>() -> Slot<'a, Message> {
-    let files = [
-        ("Cargo.toml", "toml", LANGUAGES_0),
-        ("src/main.rs", "rust", LANGUAGES_1),
-        ("notes.txt", "text", LANGUAGES_2),
-    ];
-    column(files.map(|(title, language, source)| {
-        code_block(source)
-            .font("Geist Mono")
-            .language(language)
-            .title(title)
-            .into()
-    }))
-    .spacing(16)
+use iced::Fill;
+use icedcn::widget::{code_block, column};
+
+let samples = [
+    ("toml", "Cargo.toml", "[package]\nname = \"notebook\"\nversion = \"0.1.0\"\nedition = \"2024\""),
+    ("rust", "src/main.rs", "fn main() {\n    println!(\"Notebook is ready.\");\n}"),
+    ("text", "notes.txt", "A language that is not in the list renders as plain text."),
+];
+
+column(samples.map(|(language, title, code)| {
+    code_block![
+        code_block::header![title],
+        code_block::content(code).language(language),
+    ]
     .into()
-}
-
-const LANGUAGES_0: &str = r##"[package]
-name = "notebook"
-version = "0.1.0"
-edition = "2024""##;
-
-const LANGUAGES_1: &str = r##"fn main() {
-    println!("Notebook is ready.");
-}"##;
-
-const LANGUAGES_2: &str = r##"Notebook shortcuts
-Enter    Save the current note
-Escape   Close the search field"##;
+}))
+.width(Fill)
+.spacing(16)
 ```

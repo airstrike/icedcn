@@ -1,12 +1,14 @@
 ```rust
-use icedcn::widget::{CodeBlock, code_block};
+use icedcn::widget::code_block;
 
-pub fn view<'a, Message: 'static>(received: &'a str, complete: bool) -> CodeBlock<'a, Message> {
-    code_block(received)
+// `received` grows as the stream arrives; `complete` is set when it ends.
+code_block![
+    code_block::header![
+        "src/matcher.rs",
+        code_block::actions![code_block::copy_button(&received).disabled(!complete)],
+    ],
+    code_block::content(&received)
         .language("rust")
-        .font("Geist Mono")
-        .start_line(1)
-        .title("src/matcher.rs")
-        .actions(code_block::copy_button(received).disabled(!complete))
-}
+        .line_numbers(true),
+]
 ```

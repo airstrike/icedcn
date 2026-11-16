@@ -1,13 +1,17 @@
-### Content viewport
+### Content
 
-The constructor owns the content. It scrolls horizontally by default and can wrap or cap its vertical viewport.
+The content that scrolls or wraps.
 
-| API | Type | Default | Behavior |
+| Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `.wrap(bool)` | `bool` | `false` | Wrap long lines instead of horizontal scrolling. |
-| `.start_line(usize)` | `usize` | absent | Enable numbering from this value; gutter grows with the last number. |
-| `.height(f32)` | pixels | absent | Exact viewport height. |
-| `.max_height(f32)` | pixels | absent | Maximum viewport height, preserving short content height. |
-| `.collapsed(bool)` | `bool` | `false` | Clip capped content and let vertical wheel input reach the document. |
-| `.focusable(bool)` | `bool` | `true` | Include content in keyboard traversal. |
-| `.id(id)` | `impl Into<Id>` | absent | ID of the focusable viewport. |
+| `code_block::content(body)` | `impl Into<Body>` | - | A string, or a list of `code_block::line`s. |
+| `.language(name)` | `impl Into<Cow<str>>` | - | A language or alias such as `"rust"`, or `"ansi"` for terminal colors. |
+| `.line_style(lines, style)` | `impl Into<LineRange>`, `LineStyle` | - | The state of one-based lines, such as `6..=10`. |
+| `.wrap(bool)` | `bool` | `false` | Wrap long lines instead of scrolling. |
+| `.line_numbers(bool)` | `bool` | `false` | Number each line. |
+| `.start_line(n)` | `usize` | `1` | The number of the first line, when line numbers are on. |
+| `.max_height(px)` | `impl Into<Pixels>` | - | Cap the height, such as `192`. |
+| `.height(px)` | `impl Into<Pixels>` | - | An exact height. |
+| `.focusable(bool)` | `bool` | `true` | Makes the content focusable so it can be scrolled by keyboard. |
+| `.id(id)` | `impl Into<Id>` | - | Identifies the content for focus operations. |
+| `.font(font)` | `impl Into<Font>` | `Font::MONOSPACE` | The code and line number font. |

@@ -1,3 +1,3 @@
 ## Basic
 
-Pass the Cargo output to `code_block(source)`. The plain listing uses one selectable paragraph.
+Pass a string to `code_block`. It renders as one text node, so it stays cheap while output streams.

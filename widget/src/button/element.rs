@@ -9,6 +9,7 @@ use iced_core::mouse;
 use iced_widget::Widget;
 
 use crate::Size;
+use crate::code_block::Placement;
 use crate::compose::{Compose, Inherited, Slot};
 use icedcn_core::Theme;
 use icedcn_core::theme;
@@ -66,6 +67,8 @@ where
     icon_start: bool,
     icon_end: bool,
     focus_ring: Option<Ring>,
+    code_action: Option<Placement>,
+    pressed: bool,
     on_press: Option<Message>,
     disabled: bool,
 }
@@ -96,6 +99,8 @@ pub fn button<'a, Message: Clone + 'a>(
         icon_start: false,
         icon_end: false,
         focus_ring: None,
+        code_action: None,
+        pressed: false,
         on_press: None,
         disabled: false,
     }
@@ -143,6 +148,13 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     pub fn anchor(mut self) -> Self {
         self.anchor = true;
         self.interaction = Some(mouse::Interaction::Pointer);
+        self
+    }
+
+    /// Mark a toggle button as pressed (`aria-pressed`). In a code block
+    /// header, a pressed ghost button keeps the foreground color.
+    pub fn pressed(mut self, pressed: bool) -> Self {
+        self.pressed = pressed;
         self
     }
 
@@ -395,9 +407,16 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
         };
         let resolve: Resolver<'a> = Rc::from(btn.style);
         let decorate = resolve.clone();
+        // Header actions inherit the header's muted ink at rest, like a ghost
+        // button without its own color inside `text-muted-foreground`.
+        let muted = btn.code_action == Some(Placement::Header) && !btn.pressed;
         let bridge: widget::StyleFn<'a, Theme> = Box::new(move |t, s| {
             let resolved = resolve(t, status(s));
             let mut style: widget::Style = resolved.paint.into();
+            if muted && style.background.is_none() && !status(s).hovered {
+                let ink: iced_core::Color = t.muted.foreground.into();
+                style.text_color = ink.scale_alpha(style.text_color.a);
+            }
             style.ring = resolved.ring;
             if rounded {
                 style.border.radius = (u32::MAX as f32).into();
@@ -443,6 +462,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Button<'a, Message> {
         self.join = self.join.or(from.join());
         self.weight = self.weight.or(from.weight());
         self.size = self.size.or(from.size());
+        self.code_action = self.code_action.or(from.code_actions());
         self.disabled |= from.is_disabled();
     }
 

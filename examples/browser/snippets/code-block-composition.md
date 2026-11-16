@@ -1,14 +1,15 @@
 ## Composition
 
 ```text
-CodeBlock
-├── .title(...) — header title, optionally an icon and code_block::title(...)
-│   ├── .actions(...) — custom header controls
-│   └── .copyable(true) — append Copy for the displayed source
-├── .actions(...) without a title — floating controls
-├── code_block(source) or CodeBlock::lines(...) — selectable content
-│   └── (LineStyle, Slot) — styled lines; gutter and diff markers are separate
-└── .footer(...) — controls below the content
+code_block![..]
+├── code_block::header![..]
+│   ├── code_block::title(..)
+│   └── code_block::actions![..]
+│       └── code_block::copy_button(..)
+├── code_block::actions![..] (floating, when there is no header)
+├── code_block::content(..)
+│   └── code_block::line(..)
+└── code_block::footer(..)
 ```
 
-Pass a string to `code_block`. Use `.language(...)` for syntax colors and `.line_style(...)` to decorate source lines. `CodeBlock::lines(...)` accepts custom widgets in each row. The slots accept the same `Compose` children used elsewhere in icedcn.
+`code_block::content` takes a string or a list of `code_block::line`s. A string passed straight to `code_block!` is the content. Use lines when a row holds your own widgets.

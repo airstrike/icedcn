@@ -1,20 +1,30 @@
 ```rust
-use icedcn::{
-    Slot,
-    widget::{code_block, column},
-};
-pub fn view<'a, Message: 'a>() -> Slot<'a, Message> {
-    let block = || {
-        code_block(SIZE)
-            .font("Geist Mono")
-            .wrap(true)
-            .title(code_block::terminal_title("Terminal"))
-            .copyable(true)
-    };
-    column![block(), block().compact(true)].spacing(16).into()
-}
+use crate::icon;
+use iced::Fill;
+use icedcn::Size;
+use icedcn::widget::{code_block, column};
 
-const SIZE: &str = r##"$ cargo check -p notebook
+column![
+    code_block![
+        code_block::header![
+            code_block::title![terminal, "Terminal"],
+            code_block::actions![code_block::copy_button(OUTPUT)],
+        ],
+        code_block::content(OUTPUT).wrap(true),
+    ],
+    code_block![
+        code_block::header![
+            code_block::title![terminal, "Terminal"],
+            code_block::actions![code_block::copy_button(OUTPUT)],
+        ],
+        code_block::content(OUTPUT).wrap(true),
+    ]
+    .size(Size::Sm),
+]
+.width(Fill)
+.spacing(16)
+
+const OUTPUT: &str = r##"$ cargo check -p notebook
     Checking notebook v0.1.0
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.32s"##;
 ```

@@ -69,6 +69,8 @@ pub const FLOATING_ACTIONS: &str = r##"$ cargo add serde --features derive
              + derive
              + std"##;
 
+pub const COMMAND: &str = "cargo check -p icedcn_widget";
+
 pub const HEADER: &str = r##"$ cargo check -p icedcn_widget
     Checking icedcn_core v0.1.0
     Checking icedcn_widget v0.1.0
@@ -177,7 +179,19 @@ fn load_titles(path: &Path) -> std::io::Result<Vec<String>> {
 
 pub const WRAP: &str = r##"error: failed to read notebook index from /home/reader/.local/share/notebook/collections/research/field-notes/archive/index.toml: No such file or directory (os error 2)"##;
 
-pub const TABS_0: &str = r##"use icedcn::widget::{column, text};
+pub struct File {
+    pub id: &'static str,
+    pub title: &'static str,
+    pub language: &'static str,
+    pub code: &'static str,
+}
+
+pub const FILES: &[File] = &[
+    File {
+        id: "view",
+        title: "src/view.rs",
+        language: "rust",
+        code: r##"use icedcn::widget::{column, text};
 use icedcn::Slot;
 
 pub fn view(titles: &[String]) -> Slot<'_, ()> {
@@ -186,9 +200,13 @@ pub fn view(titles: &[String]) -> Slot<'_, ()> {
         items = items.push(text::p(title.as_str()).into());
     }
     items.into()
-}"##;
-
-pub const TABS_1: &str = r##"fn matches(query: &str, title: &str) -> bool {
+}"##,
+    },
+    File {
+        id: "search",
+        title: "src/search.rs",
+        language: "rust",
+        code: r##"fn matches(query: &str, title: &str) -> bool {
     title.to_lowercase().contains(&query.to_lowercase())
 }
 
@@ -198,39 +216,95 @@ fn search<'a>(query: &str, titles: &[&'a str]) -> Vec<&'a str> {
         .copied()
         .filter(|title| matches(query, title))
         .collect()
-}"##;
+}"##,
+    },
+    File {
+        id: "config",
+        title: ".cargo/config.toml",
+        language: "toml",
+        code: r##"[env]
+RUST_LOG = "notebook=debug""##,
+    },
+];
 
-pub const TABS_2: &str = r##"[env]
-RUST_LOG = "notebook=debug""##;
+pub struct Sample {
+    pub language: &'static str,
+    pub title: &'static str,
+    pub code: &'static str,
+}
 
-pub const LANGUAGES_0: &str = r##"[package]
+pub const SAMPLES: &[Sample] = &[
+    Sample {
+        language: "toml",
+        title: "Cargo.toml",
+        code: r##"[package]
 name = "notebook"
 version = "0.1.0"
-edition = "2024""##;
-
-pub const LANGUAGES_1: &str = r##"fn main() {
+edition = "2024""##,
+    },
+    Sample {
+        language: "rust",
+        title: "src/main.rs",
+        code: r##"fn main() {
     println!("Notebook is ready.");
-}"##;
+}"##,
+    },
+    Sample {
+        language: "text",
+        title: "notes.txt",
+        code: "A language that is not in the list renders as plain text.",
+    },
+];
 
-pub const LANGUAGES_2: &str = r##"Notebook shortcuts
-Enter    Save the current note
-Escape   Close the search field"##;
+pub struct Stream {
+    pub title: Option<&'static str>,
+    pub language: &'static str,
+    pub code: &'static str,
+    pub line_numbers: bool,
+    pub highlight: &'static [usize],
+    pub diff: bool,
+}
 
-pub const STREAMING_0: &str = r##"fn matches(query: &str, title: &str) -> bool {
+pub const STREAMS: &[Stream] = &[
+    Stream {
+        title: Some("src/matcher.rs"),
+        language: "rust",
+        line_numbers: true,
+        highlight: &[],
+        diff: false,
+        code: r##"fn matches(query: &str, title: &str) -> bool {
     let query = query.trim().to_lowercase();
     title.to_lowercase().contains(&query)
-}"##;
-
-pub const STREAMING_1: &str = r##"cargo test --lib search"##;
-
-pub const STREAMING_2: &str = r##" fn search<'a>(query: &str, titles: &[&'a str]) -> Vec<&'a str> {
+}"##,
+    },
+    Stream {
+        title: None,
+        language: "sh",
+        line_numbers: false,
+        highlight: &[],
+        diff: false,
+        code: "cargo test --lib search",
+    },
+    Stream {
+        title: Some("src/search.rs"),
+        language: "rust",
+        line_numbers: true,
+        highlight: &[],
+        diff: true,
+        code: r##" fn search<'a>(query: &str, titles: &[&'a str]) -> Vec<&'a str> {
      titles.iter().copied()
 -        .filter(|title| title.contains(query))
 +        .filter(|title| matches(query, title))
          .collect()
- }"##;
-
-pub const STREAMING_3: &str = r##"fn matches(query: &str, title: &str) -> bool {
+ }"##,
+    },
+    Stream {
+        title: Some("src/search.rs"),
+        language: "rust",
+        line_numbers: true,
+        highlight: &[5, 6, 7, 8],
+        diff: false,
+        code: r##"fn matches(query: &str, title: &str) -> bool {
     title.to_lowercase().contains(&query.to_lowercase())
 }
 
@@ -240,15 +314,15 @@ fn search<'a>(query: &str, titles: &[&'a str]) -> Vec<&'a str> {
         .copied()
         .filter(|title| matches(query, title))
         .collect()
-}"##;
-
-pub const STREAMING_4: &str = r##"[env]
-RUST_LOG = "notebook=debug""##;
-
-pub const STREAMS: &[(&str, &str, &str)] = &[
-    ("src/matcher.rs", "rust", STREAMING_0),
-    ("Terminal", "sh", STREAMING_1),
-    ("src/search.rs", "rust", STREAMING_2),
-    ("src/search.rs", "rust", STREAMING_3),
-    (".cargo/config.toml", "toml", STREAMING_4),
+}"##,
+    },
+    Stream {
+        title: Some(".cargo/config.toml"),
+        language: "toml",
+        line_numbers: false,
+        highlight: &[],
+        diff: false,
+        code: r##"[env]
+RUST_LOG = "notebook=debug""##,
+    },
 ];

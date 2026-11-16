@@ -1,17 +1,15 @@
 ## Usage
 
 ```rust
-use icedcn::widget::{CodeBlock, code_block};
+use icedcn::widget::code_block;
+```
 
-pub fn view<'a, Message>() -> CodeBlock<'a, Message> {
-    code_block(HEADER)
-        .font("Geist Mono")
-        .title("Terminal")
-        .actions(code_block::copy_button("cargo check -p icedcn_widget"))
-}
-
-const HEADER: &str = r##"$ cargo check -p icedcn_widget
-    Checking icedcn_core v0.1.0
-    Checking icedcn_widget v0.1.0
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.80s"##;
+```rust
+code_block![
+    code_block::header![
+        code_block::title("Terminal"),
+        code_block::actions![code_block::copy_button(output)],
+    ],
+    output,
+]
 ```

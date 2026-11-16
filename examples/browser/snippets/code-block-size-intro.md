@@ -1,3 +1,3 @@
 ## Size
 
-Call `.compact(true)` for a smaller terminal block. Both listings show the same Cargo output so you can compare the type size and padding.
+Use `.size(Size::Sm)` for tool and [Trace](#trace) output. It has tighter padding and 12px text.

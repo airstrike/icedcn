@@ -1,1 +1,1 @@
-Parse received Markdown with `markdown::parse` in `update`. The viewer replaces fenced blocks with `code_block` while retaining normal paragraphs, inline code, lists, and links. Set `Reply::complete` when the response finishes to enable copying. Map the returned URI to your application’s link-opening message. The preview’s Replay button simulates a streamed reply.
+Keep the copy button disabled while the closing fence has not arrived.

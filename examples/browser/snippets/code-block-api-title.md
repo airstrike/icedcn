@@ -1,7 +1,8 @@
 ### Title
 
-`code_block::title(text)` supplies a medium-weight title that truncates within the available width. Use a plain string for a short header. For a terminal glyph and a truncating label together, pass `code_block::terminal_title("Terminal")` to `.title(...)`.
+A filename or a label, with an optional icon. It truncates.
 
-| API | Type | Default | Behavior |
+| Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `code_block::title(text)` | `impl IntoFragment` | required | Truncating title text; inherits normal or compact size. |
+| `code_block::title(item)` | `impl Into<TitleItem>` | - | A label, or an icon followed by `.push(label)`. |
+| `code_block::title![icon, label]` | - | - | A bare identifier first is `icon::name()` at 14px. |

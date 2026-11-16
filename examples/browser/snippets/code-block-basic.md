@@ -1,11 +1,9 @@
 ```rust
-use icedcn::widget::{CodeBlock, code_block};
+use icedcn::widget::code_block;
 
-pub fn view<'a, Message>() -> CodeBlock<'a, Message> {
-    code_block(BASIC).font("Geist Mono")
-}
+code_block(OUTPUT)
 
-const BASIC: &str = r##"$ cargo build --release
+const OUTPUT: &str = r##"$ cargo build --release
    Compiling icedcn_core v0.1.0
    Compiling icedcn_widget v0.1.0
    Compiling icedcn v0.1.0

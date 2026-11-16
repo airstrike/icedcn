@@ -1,11 +1,11 @@
-//! Selectable terminal output with SGR foreground colors and intensity.
+//! Terminal output with SGR foreground colors and intensity, for `.language("ansi")`.
 use std::sync::Arc;
 
 use iced_core::text::{LineHeight, Wrapping};
 use iced_core::{Font, Length};
 use icedcn_core::Color;
 
-use super::{CodeBlock, Content, LineStyle, code_block};
+use super::LineStyle;
 use crate::{Slot, rich_text, span};
 
 /// A parsed transcript retains plain text for copying and colored runs for each line.
@@ -26,6 +26,11 @@ struct Run {
 struct Ink {
     index: Option<usize>,
     dim: bool,
+}
+
+/// The text of a transcript without its SGR escape sequences, for a copy button.
+pub fn strip(source: &str) -> String {
+    parse(source).0.plain.clone()
 }
 
 /// Parse SGR foreground colors, dim intensity and resets. Each new line starts in the default color.
@@ -133,14 +138,6 @@ impl Output {
     /// The complete transcript without SGR escape sequences, including blank lines.
     pub fn as_str(&self) -> &str {
         &self.0.plain
-    }
-
-    /// A wrapped code block displaying this transcript in the active theme.
-    pub fn view<'a, Message: 'a>(&self) -> CodeBlock<'a, Message> {
-        CodeBlock {
-            content: Content::Ansi(self.clone()),
-            ..code_block("").wrap(true)
-        }
     }
 
     pub(super) fn lines<'a, M: 'a>(

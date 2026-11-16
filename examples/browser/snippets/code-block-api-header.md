@@ -1,7 +1,8 @@
 ### Header
 
-`.title(...)` mounts the header row above the content. `.actions(...)` supplies controls at its end.
+A row above the content for a title and actions.
 
-| API | Type | Default | Behavior |
+| Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `.title(title)` | `impl Into<Slot>` | absent | A filename or a composition of icon and title. |
+| `code_block::header(item)` | `impl Into<HeaderItem>` | - | A title, actions or any slot. A string is the title. |
+| `.push(item)` | `impl Into<HeaderItem>` | - | Another child. |

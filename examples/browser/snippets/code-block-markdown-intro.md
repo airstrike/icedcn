@@ -1,3 +1,3 @@
-## Markdown
+### Markdown
 
-An iced message can contain both Markdown prose and a selectable code block. Replay the reply to see the Rust fence appear as the words arrive.
+Render the message with `markdown::view_with` and route fenced code to a `code_block` in your `markdown::Viewer`. Only fenced code reaches `code_block`, so inline code stays inline.

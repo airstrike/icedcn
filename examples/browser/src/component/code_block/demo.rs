@@ -2,14 +2,11 @@ use iced::time::{Duration, Instant};
 use std::collections::BTreeMap;
 
 use iced::alignment::Horizontal;
-use iced::widget::Id;
 use iced::{Element, Fill, Widget};
-use icedcn::widget::code_block::LineStyle;
-use icedcn::widget::{
-    CodeBlock, bubble, button, code_block, column, container, markdown, message, row, tabs, text,
-    trace,
-};
-use icedcn::{Size, Slot, Theme};
+use icedcn::widget::code_block;
+use icedcn::widget::code_block::{LineStyle, ansi};
+use icedcn::widget::{bubble, button, column, container, markdown, message, tabs, text, trace};
+use icedcn::{Destructive, Size, Slot, Theme};
 
 use super::samples::*;
 use crate::{icon, page};
@@ -19,23 +16,17 @@ use iced::{mouse, window};
 #[derive(Clone, Debug)]
 pub enum Message {
     Wrap(&'static str),
+    Save(&'static str, &'static str),
     Replay(&'static str),
     Idle,
-    Acknowledge,
     Tick(Instant),
-    Save(&'static str, &'static str),
-    Saved(&'static str, Result<bool, String>),
 }
 
 pub struct State {
-    target: Id,
-    receipts: Vec<Id>,
-    acknowledgements: Vec<Id>,
     progress: BTreeMap<&'static str, usize>,
     last_tick: Instant,
     wraps: BTreeMap<&'static str, bool>,
     streaming: BTreeMap<&'static str, Instant>,
-    save_status: BTreeMap<&'static str, String>,
     logs: String,
     markdown_before: Vec<markdown::Item>,
     markdown_after: Vec<markdown::Item>,
@@ -46,14 +37,10 @@ pub struct State {
 impl State {
     fn new() -> Self {
         Self {
-            target: Id::unique(),
-            receipts: Vec::new(),
-            acknowledgements: Vec::new(),
             progress: BTreeMap::new(),
             last_tick: Instant::now(),
             wraps: BTreeMap::new(),
             streaming: BTreeMap::new(),
-            save_status: BTreeMap::new(),
             typeset_before: markdown::parse("Read the notebook index with `read_to_string` and return one title per line.").collect(),
             typeset_after: markdown::parse("The caller receives an `io::Result` and can display a read error in the application.").collect(),
             markdown_before: markdown_parts(usize::MAX).0,
@@ -76,21 +63,7 @@ impl State {
                 let value = self.wraps.entry(id).or_insert(id == "actions");
                 *value = !*value;
             }
-            Message::Save(name, value) => {
-                return Some(super::Event::Save {
-                    target: self.target.clone(),
-                    name,
-                    value,
-                });
-            }
-            Message::Saved(name, Ok(true)) => {
-                self.save_status.insert(name, format!("Saved {name}"));
-            }
-            Message::Saved(_, Ok(false)) => {}
-            Message::Saved(name, Err(error)) => {
-                self.save_status
-                    .insert(name, format!("Could not save {name}: {error}"));
-            }
+            Message::Save(name, value) => return Some(super::Event::Save { name, value }),
             Message::Replay(id) => {
                 self.streaming.insert(id, Instant::now());
                 self.progress.insert(id, 0);
@@ -100,11 +73,6 @@ impl State {
             }
             Message::Tick(now) => self.advance(now),
             Message::Idle => {}
-            Message::Acknowledge => {
-                return Some(super::Event::Acknowledged(std::mem::take(
-                    &mut self.acknowledgements,
-                )));
-            }
         }
         None
     }
@@ -136,45 +104,30 @@ impl State {
                 })
         })
     }
-    fn receive(&mut self, completion: &Completion) {
-        if completion.target == self.target && !self.receipts.contains(&completion.serial) {
-            self.receipts.push(completion.serial.clone());
-            self.acknowledgements.push(completion.serial.clone());
-            let _ = self.update(completion.message.clone());
-        }
+    fn wrap(&self, id: &'static str) -> bool {
+        *self.wraps.get(id).unwrap_or(&(id == "actions"))
     }
-    fn header(
+    fn toolbar(
         &self,
         id: &'static str,
-        title: &'static str,
         source: &'static str,
         filename: &'static str,
-        block: CodeBlock<'static, Message>,
-    ) -> Slot<'static, Message> {
-        let wrapped = *self.wraps.get(id).unwrap_or(&(id == "actions"));
-        let wrap = code_block::action(icon::wrap_text().size(14), "Wrap lines")
-            .active(wrapped)
-            .on_press(Message::Wrap(id));
-        let save = code_block::action(icon::download().size(14), "Download")
-            .on_press(Message::Save(filename, source));
-        let title = if id == "actions" {
-            code_block::terminal_title(title)
-        } else {
-            row![icon::file_code().size(14), code_block::title(title)]
-                .spacing(6)
-                .into()
-        };
-        let mut block = block
-            .title(title)
-            .actions(row![wrap, save].spacing(4))
-            .copyable(true);
-        if let Some(status) = self.save_status.get(filename) {
-            block = block.footer(text::muted(status.clone()));
-        }
-        block.into()
+    ) -> code_block::Actions<'static, Message> {
+        code_block::actions![
+            button(icon::wrap_text())
+                .style(button::Ghost)
+                .square()
+                .pressed(self.wrap(id))
+                .on_press(Message::Wrap(id)),
+            button(icon::download())
+                .style(button::Ghost)
+                .square()
+                .on_press(Message::Save(filename, source)),
+            code_block::copy_button(source),
+        ]
     }
     fn replay(&self, id: &'static str) -> Slot<'static, Message> {
-        button![icon::rotate_ccw().size(14).line_height(1.0), "Replay"]
+        button![rotate_ccw, "Replay"]
             .style(button::Outline)
             .size(Size::Sm)
             .disabled(self.streaming.contains_key(id))
@@ -188,34 +141,13 @@ impl State {
             .and_then(|_| self.progress.get("streaming").copied())
             .unwrap_or(usize::MAX);
         let mut output = column![].width(Fill).spacing(16);
-        for &(title, language, source) in STREAMS {
+        for stream in STREAMS {
             if remaining == 0 {
                 break;
             }
-            let count = remaining.min(source.len());
-            let visible = &source[..source.floor_char_boundary(count)];
-            let mut block = terminal(visible).language(language);
-            if source == STREAMING_2 {
-                block = block.diff();
-            } else if source == STREAMING_3 {
-                for line in 6..=9 {
-                    block = block.line_style(line, LineStyle::Highlighted);
-                }
-            }
-            if title != "Terminal" {
-                let copy = if source == STREAMING_2 {
-                    code_block::copy_button(code_block::diff_text(source))
-                } else {
-                    code_block::copy_button(source)
-                };
-                block = block
-                    .title(title)
-                    .actions(copy.disabled(count < source.len()));
-            }
-            if !matches!(title, "Terminal" | ".cargo/config.toml") {
-                block = block.start_line(1);
-            }
-            output = output.push(block.into());
+            let count = remaining.min(stream.code.len());
+            let code = &stream.code[..stream.code.floor_char_boundary(count)];
+            output = output.push(streaming_block(stream, code));
             remaining = remaining.saturating_sub(count);
         }
         output.push(self.replay("streaming")).into()
@@ -234,14 +166,11 @@ impl State {
             .spacing(12);
         if !fenced.is_empty() {
             let (code, _) = fenced.split_once("```").unwrap_or((fenced, ""));
-            let complete = fenced.contains("```");
-            reply = reply.push(
-                terminal(code.trim_end_matches('\n'))
-                    .language("rust")
-                    .title("rust")
-                    .actions(code_block::copy_button(code).disabled(!complete))
-                    .into(),
-            );
+            reply = reply.push(markdown_code_block(
+                code.trim_end_matches('\n'),
+                "rust",
+                !fenced.contains("```"),
+            ));
         }
         reply = reply.push(prose(&self.markdown_after, dark));
         let mut items = column![
@@ -268,116 +197,145 @@ impl State {
     }
     fn example(&self, id: &str, dark: bool) -> Slot<'static, Message> {
         match id {
-            "demo" => {
-                let wrap = *self.wraps.get("demo").unwrap_or(&false);
-                let mut block = terminal(DEMO).language("rust").wrap(wrap).start_line(1);
-                for line in 6..=10 {
-                    block = block.line_style(line, LineStyle::Highlighted);
-                }
-                self.header("demo", "src/view.rs", DEMO, "view.rs", block)
-            }
-            "basic" => terminal(BASIC).into(),
-            "header" => terminal(HEADER)
-                .title(code_block::terminal_title("Terminal"))
-                .actions(code_block::copy_button("cargo check -p icedcn_widget"))
-                .into(),
-            "actions" => {
-                let wrap = *self.wraps.get("actions").unwrap_or(&true);
-                self.header(
-                    "actions",
-                    "Terminal",
-                    ACTIONS,
-                    "clippy.log",
-                    terminal(ACTIONS).wrap(wrap),
-                )
-            }
-            "floating-actions" => terminal(FLOATING_ACTIONS).copyable(true).into(),
-            "line-numbers" => terminal(LINE_NUMBERS).start_line(1).into(),
-            "start-line" => terminal(START_LINE)
-                .language("rust")
-                .title("src/notebooks.rs")
-                .start_line(995)
-                .into(),
-            "wrap" => column![terminal(WRAP), terminal(WRAP).wrap(true)]
-                .spacing(16)
-                .into(),
-            "highlighted-lines" => terminal(HIGHLIGHTED_LINES)
-                .line_style(3, LineStyle::Highlighted)
-                .line_style(4, LineStyle::Highlighted)
-                .start_line(1)
-                .into(),
-            "diff" => terminal(DIFF)
-                .language("rust")
-                .diff()
-                .title("src/search.rs")
-                .copyable(true)
-                .into(),
-            "height" => terminal(self.logs.clone())
-                .max_height(192.)
-                .title("Logs")
-                .copyable(true)
-                .into(),
-            "show-more" | "show-more-scroll" => {
-                let scroll = id == "show-more-scroll";
-                code_block::show_more(256, move || {
-                    let block = terminal(SHOW_MORE)
-                        .language("rust")
-                        .title("src/notebook.rs")
-                        .start_line(1)
-                        .copyable(true);
-                    if scroll {
-                        block.max_height(384.)
-                    } else {
-                        block
-                    }
-                })
-                .into()
-            }
-            "size" => column![
-                terminal(SIZE)
-                    .wrap(true)
-                    .title(code_block::terminal_title("Terminal"))
-                    .copyable(true),
-                terminal(SIZE)
-                    .wrap(true)
-                    .title(code_block::terminal_title("Terminal"))
-                    .compact(true)
-                    .copyable(true)
+            "demo" => code_block![
+                code_block::header![
+                    code_block::title![file_code, "src/view.rs"],
+                    self.toolbar("demo", DEMO, "view.rs"),
+                ],
+                code_block::content(DEMO)
+                    .language("rust")
+                    .line_numbers(true)
+                    .wrap(self.wrap("demo"))
+                    .line_style(6..=10, code_block::Highlighted),
             ]
+            .into(),
+            "basic" => code_block(BASIC).into(),
+            "header" => code_block![
+                code_block::header![
+                    code_block::title![terminal, "Terminal"],
+                    code_block::actions![code_block::copy_button(COMMAND)],
+                ],
+                HEADER,
+            ]
+            .into(),
+            "actions" => code_block![
+                code_block::header![
+                    code_block::title![terminal, "Terminal"],
+                    self.toolbar("actions", ACTIONS, "clippy.log"),
+                ],
+                code_block::content(ACTIONS).wrap(self.wrap("actions")),
+            ]
+            .into(),
+            "floating-actions" => code_block![
+                code_block::actions![code_block::copy_button(FLOATING_ACTIONS)],
+                FLOATING_ACTIONS,
+            ]
+            .into(),
+            "line-numbers" => {
+                code_block(code_block::content(LINE_NUMBERS).line_numbers(true)).into()
+            }
+            "start-line" => code_block![
+                code_block::header!["src/notebooks.rs"],
+                code_block::content(START_LINE)
+                    .language("rust")
+                    .line_numbers(true)
+                    .start_line(995),
+            ]
+            .into(),
+            "wrap" => column![
+                code_block(WRAP),
+                code_block(code_block::content(WRAP).wrap(true)),
+            ]
+            .width(Fill)
             .spacing(16)
             .into(),
-            "destructive" => error_block(DESTRUCTIVE)
-                .title("Error")
-                .copyable(true)
-                .into(),
-            "trace" => column![
-                trace_output("Ran cargo --version", TRACE, false),
-                trace_output("Failed to run cargo run --bin notes", TRACE_ERROR, true)
-            ]
-            .spacing(8)
+            "highlighted-lines" => code_block(
+                code_block::content(HIGHLIGHTED_LINES)
+                    .line_numbers(true)
+                    .line_style(3..=4, code_block::Highlighted),
+            )
             .into(),
-            "tabs" => tabs(move |t| {
+            "diff" => code_block![
+                code_block::header![
+                    "src/search.rs",
+                    code_block::actions![code_block::copy_button(DIFF)],
+                ],
+                DIFF.lines()
+                    .map(|row| code_block::line(&row[1..]).style(diff_style(row)))
+                    .collect::<Vec<_>>(),
+            ]
+            .into(),
+            "height" => code_block![
+                code_block::header![
+                    "Logs",
+                    code_block::actions![code_block::copy_button(self.logs.clone())],
+                ],
+                code_block::content(self.logs.clone()).max_height(192),
+            ]
+            .into(),
+            "show-more" => code_block::show_more(256, || {
+                code_block![
+                    code_block::header![
+                        "src/notebook.rs",
+                        code_block::actions![code_block::copy_button(SHOW_MORE)],
+                    ],
+                    code_block::content(SHOW_MORE)
+                        .language("rust")
+                        .line_numbers(true),
+                ]
+            })
+            .into(),
+            "show-more-scroll" => code_block::show_more(256, || {
+                code_block![
+                    code_block::header![
+                        "src/notebook.rs",
+                        code_block::actions![code_block::copy_button(SHOW_MORE)],
+                    ],
+                    code_block::content(SHOW_MORE)
+                        .language("rust")
+                        .line_numbers(true)
+                        .max_height(384),
+                ]
+            })
+            .into(),
+            "size" => column![terminal(SIZE), terminal(SIZE).size(Size::Sm),]
+                .width(Fill)
+                .spacing(16)
+                .into(),
+            "destructive" => code_block![
+                code_block::header![
+                    "Error",
+                    code_block::actions![code_block::copy_button(DESTRUCTIVE)],
+                ],
+                code_block::content(DESTRUCTIVE).wrap(true),
+            ]
+            .style(Destructive)
+            .into(),
+            "trace" => trace([
+                tool_output("Ran cargo --version", TRACE, false),
+                tool_output("Failed to run cargo run --bin notes", TRACE_ERROR, true),
+            ])
+            .into(),
+            "tabs" => tabs(|t| {
                 let mut body = column![t.list([
                     t.trigger("view", "view.rs"),
                     t.trigger("search", "search.rs"),
-                    t.trigger("config", "config.toml")
+                    t.trigger("config", "config.toml"),
                 ])]
                 .spacing(8);
-                for (id, title, language, source) in [
-                    ("view", "src/view.rs", "rust", TABS_0),
-                    ("search", "src/search.rs", "rust", TABS_1),
-                    ("config", ".cargo/config.toml", "toml", TABS_2),
-                ] {
-                    body = body.push(
-                        t.content(
-                            id,
-                            terminal(source)
-                                .language(language)
-                                .start_line(1)
-                                .title(title)
-                                .copyable(true),
-                        ),
-                    );
+                for file in FILES {
+                    body = body.push(t.content(
+                        file.id,
+                        code_block![
+                            code_block::header![
+                                file.title,
+                                code_block::actions![code_block::copy_button(file.code)],
+                            ],
+                            code_block::content(file.code)
+                                .language(file.language)
+                                .line_numbers(true),
+                        ],
+                    ));
                 }
                 body.into()
             })
@@ -389,61 +347,62 @@ impl State {
                 message(
                     column![
                         text::p("Compare the query and each title in lowercase."),
-                        terminal(CHAT)
-                            .language("rust")
-                            .title("src/search.rs")
-                            .copyable(true),
-                        text::p("The result borrows the matching titles from the original list.")
+                        code_block![
+                            code_block::header![
+                                "src/search.rs",
+                                code_block::actions![code_block::copy_button(CHAT)],
+                            ],
+                            code_block::content(CHAT).language("rust"),
+                        ],
+                        text::p("The result borrows the matching titles from the original list."),
                     ]
                     .spacing(12)
-                )
+                ),
             ]
             .spacing(16)
             .into(),
             "typeset" => column![
                 text::h3("Read a notebook index"),
                 prose(&self.typeset_before, dark),
-                terminal(TYPESET)
-                    .language("rust")
-                    .start_line(1)
-                    .title(
-                        row![
-                            icon::file_code().size(14),
-                            code_block::title("src/index.rs")
-                        ]
-                        .spacing(6)
-                    )
-                    .copyable(true),
-                prose(&self.typeset_after, dark)
+                code_block![
+                    code_block::header![
+                        code_block::title![file_code, "src/index.rs"],
+                        code_block::actions![code_block::copy_button(TYPESET)],
+                    ],
+                    code_block::content(TYPESET)
+                        .language("rust")
+                        .line_numbers(true),
+                ],
+                prose(&self.typeset_after, dark),
             ]
             .spacing(12)
             .into(),
-            "highlighting" => terminal(HIGHLIGHTING)
-                .language("rust")
-                .title("src/notebook.rs")
-                .into(),
+            "highlighting" => code_block![
+                code_block::header!["src/notebook.rs"],
+                code_block::content(HIGHLIGHTING).language("rust"),
+            ]
+            .into(),
             "languages" => {
-                let mut samples = column![].spacing(16);
-                for (title, language, source) in [
-                    ("Cargo.toml", "toml", LANGUAGES_0),
-                    ("src/main.rs", "rust", LANGUAGES_1),
-                    ("notes.txt", "text", LANGUAGES_2),
-                ] {
-                    samples = samples.push(terminal(source).language(language).title(title).into());
+                let mut samples = column![].width(Fill).spacing(16);
+                for sample in SAMPLES {
+                    samples = samples.push(
+                        code_block![
+                            code_block::header![sample.title],
+                            code_block::content(sample.code).language(sample.language),
+                        ]
+                        .into(),
+                    );
                 }
                 samples.into()
             }
-            "ansi" => {
-                use code_block::ansi;
-                use std::sync::LazyLock;
-                static OUTPUT: LazyLock<ansi::Output> = LazyLock::new(|| ansi::parse(ANSI));
-                OUTPUT
-                    .view()
-                    .font("Geist Mono")
-                    .title(code_block::terminal_title("Terminal"))
-                    .copyable(true)
-                    .into()
-            }
+            "ansi" => code_block![
+                code_block::header![
+                    code_block::title![terminal, "Terminal"],
+                    code_block::actions![code_block::copy_button(ansi::strip(ANSI))],
+                ],
+                code_block::content(ANSI).language("ansi").wrap(true),
+            ]
+            .into(),
             "streaming" => self.streaming(),
             "markdown" => self.markdown(dark),
             _ => unreachable!("unknown Code Block example {id}"),
@@ -451,13 +410,25 @@ impl State {
     }
 }
 
-fn terminal<'a>(source: impl Into<std::borrow::Cow<'a, str>>) -> CodeBlock<'a, Message> {
-    code_block(source).font("Geist Mono")
+fn terminal(output: &'static str) -> code_block::CodeBlock<'static, Message> {
+    code_block![
+        code_block::header![
+            code_block::title![terminal, "Terminal"],
+            code_block::actions![code_block::copy_button(output)],
+        ],
+        code_block::content(output).wrap(true),
+    ]
 }
-fn error_block(source: &str) -> CodeBlock<'_, Message> {
-    terminal(source).wrap(true).style(code_block::Destructive)
+
+fn diff_style(row: &str) -> LineStyle {
+    match row.as_bytes().first() {
+        Some(b'+') => code_block::Added,
+        Some(b'-') => code_block::Removed,
+        _ => LineStyle::Default,
+    }
 }
-fn trace_output(title: &'static str, source: &'static str, error: bool) -> Slot<'static, Message> {
+
+fn tool_output(title: &'static str, output: &'static str, error: bool) -> Slot<'static, Message> {
     trace::disclosure(
         move || {
             trace::line(title)
@@ -469,15 +440,70 @@ fn trace_output(title: &'static str, source: &'static str, error: bool) -> Slot<
                 })
         },
         move || {
-            let code = if error {
-                error_block(source)
+            let block =
+                code_block(code_block::content(output).wrap(true).max_height(256)).size(Size::Sm);
+            if error {
+                block.style(Destructive).into()
             } else {
-                terminal(source).wrap(true)
-            };
-            code.compact(true).max_height(256.).into()
+                block.into()
+            }
         },
     )
     .default_open(true)
+    .into()
+}
+
+fn streaming_block(stream: &Stream, code: &str) -> Slot<'static, Message> {
+    let rows: Vec<&str> = code.split('\n').collect();
+    // A diff row starts with +, - or a space. The marker is not part of the code.
+    let source = if stream.diff {
+        rows.iter()
+            .map(|row| row.get(1..).unwrap_or(""))
+            .collect::<Vec<_>>()
+            .join("\n")
+    } else {
+        code.to_owned()
+    };
+    let mut content = code_block::content(source.clone())
+        .language(stream.language)
+        .line_numbers(stream.line_numbers);
+    for (index, row) in rows.iter().enumerate() {
+        let style = if stream.diff {
+            diff_style(row)
+        } else if stream.highlight.contains(&index) {
+            code_block::Highlighted
+        } else {
+            LineStyle::Default
+        };
+        content = content.line_style(index + 1, style);
+    }
+    match stream.title {
+        Some(title) => code_block![
+            code_block::header![
+                title,
+                code_block::actions![
+                    code_block::copy_button(source).disabled(code.len() < stream.code.len()),
+                ],
+            ],
+            content,
+        ]
+        .into(),
+        None => code_block(content).into(),
+    }
+}
+
+fn markdown_code_block(
+    code: &str,
+    language: &'static str,
+    incomplete: bool,
+) -> Slot<'static, Message> {
+    code_block![
+        code_block::header![
+            language,
+            code_block::actions![code_block::copy_button(code.to_owned()).disabled(incomplete)],
+        ],
+        code_block::content(code.to_owned()).language(language),
+    ]
     .into()
 }
 
@@ -485,7 +511,7 @@ fn total_length(id: &str) -> usize {
     if id == "markdown" {
         MARKDOWN.len()
     } else {
-        STREAMS.iter().map(|(_, _, s)| s.len()).sum()
+        STREAMS.iter().map(|stream| stream.code.len()).sum()
     }
 }
 
@@ -543,29 +569,16 @@ impl Default for State {
         Self::new()
     }
 }
-#[derive(Clone, Debug)]
-pub struct Completion {
-    pub target: Id,
-    pub serial: Id,
-    pub message: Message,
-}
 struct Demo {
     id: String,
     dark: bool,
     page: usize,
-    completions: Vec<Completion>,
 }
-pub fn show(
-    id: &str,
-    dark: bool,
-    page: usize,
-    completions: Vec<Completion>,
-) -> Element<'static, crate::Message, Theme> {
+pub fn show(id: &str, dark: bool, page: usize) -> Element<'static, crate::Message, Theme> {
     component(Demo {
         id: id.to_owned(),
         dark,
         page,
-        completions,
     })
     .boxed()
 }
@@ -585,16 +598,6 @@ impl Component<'static, crate::Message, Theme> for Demo {
     fn view(&self, state: &State) -> impl Widget<Message, Theme> + 'static {
         state.example(&self.id, self.dark).compose()
     }
-    fn diff(&mut self, state: &mut State) {
-        state.receipts.retain(|serial| {
-            self.completions
-                .iter()
-                .any(|completion| &completion.serial == serial)
-        });
-        for completion in &self.completions {
-            state.receive(completion);
-        }
-    }
     fn listen(
         &self,
         state: &State,
@@ -602,19 +605,15 @@ impl Component<'static, crate::Message, Theme> for Demo {
         _: iced::Rectangle,
         _: mouse::Cursor,
     ) -> Action<Message> {
-        if let iced::Event::Window(window::Event::RedrawRequested(now)) = event {
-            if !state.acknowledgements.is_empty() {
-                return Action::publish(Message::Acknowledge)
-                    .and_request_redraw_at(*now + Duration::from_millis(16));
-            }
-            if let Some(deadline) = state.deadline() {
-                return if *now >= deadline {
-                    Action::publish(Message::Tick(*now))
-                        .and_request_redraw_at(*now + Duration::from_millis(16))
-                } else {
-                    Action::request_redraw_at(deadline)
-                };
-            }
+        if let iced::Event::Window(window::Event::RedrawRequested(now)) = event
+            && let Some(deadline) = state.deadline()
+        {
+            return if *now >= deadline {
+                Action::publish(Message::Tick(*now))
+                    .and_request_redraw_at(*now + Duration::from_millis(16))
+            } else {
+                Action::request_redraw_at(deadline)
+            };
         }
         Action::none()
     }

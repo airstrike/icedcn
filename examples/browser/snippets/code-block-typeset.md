@@ -1,36 +1,25 @@
 ```rust
 use crate::icon;
-use iced::Widget;
-use icedcn::{
-    Slot, Theme,
-    widget::{code_block, column, markdown, row, text},
-};
-pub fn view<'a>(
-    before: &'a [markdown::Item],
-    source: &'a str,
-    after: &'a [markdown::Item],
-    theme: &Theme,
-) -> Slot<'a, ()> {
-    let settings =
-        markdown::Settings::with_text_size(14, markdown::Style::from(theme.iced_theme()));
-    column![
-        text::h3("Read a notebook index"),
-        markdown::view(before, settings).map(|_| ()).boxed(),
-        code_block(source)
-            .language("rust")
-            .font("Geist Mono")
-            .start_line(1)
-            .title(
-                row![
-                    icon::file_code().size(14).line_height(1.0),
-                    code_block::title("src/index.rs")
-                ]
-                .spacing(6)
-            )
-            .copyable(true),
-        markdown::view(after, settings).map(|_| ()).boxed()
-    ]
-    .spacing(12)
-    .into()
-}
+use icedcn::widget::{code_block, column, markdown, text};
+
+column![
+    text::h3("Read a notebook index"),
+    markdown::view(&before, settings),
+    code_block![
+        code_block::header![
+            code_block::title![file_code, "src/index.rs"],
+            code_block::actions![code_block::copy_button(CODE)],
+        ],
+        code_block::content(CODE).language("rust").line_numbers(true),
+    ],
+    markdown::view(&after, settings),
+]
+.spacing(12)
+
+const CODE: &str = r##"use std::path::Path;
+
+fn load_titles(path: &Path) -> std::io::Result<Vec<String>> {
+    let source = std::fs::read_to_string(path)?;
+    Ok(source.lines().map(str::to_owned).collect())
+}"##;
 ```

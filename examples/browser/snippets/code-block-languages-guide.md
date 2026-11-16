@@ -1,1 +1,1 @@
-Use `.language("rust")`, `.language("toml")`, or `.language("sh")` for source files, manifests, and shell commands. Omit `.language(...)` to display plain text.
+Rust uses a tree-sitter grammar built into icedcn, and other languages such as `toml`, `json` and `sh` use iced's highlighter. `markdown::highlighter::register` adds a tree-sitter grammar of your own.

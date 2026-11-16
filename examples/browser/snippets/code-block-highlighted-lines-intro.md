@@ -1,3 +1,3 @@
 ## Highlighted Lines
 
-Apply `.line_style(3, LineStyle::Highlighted)` and `.line_style(4, LineStyle::Highlighted)` to highlight the version and edition in the Cargo manifest.
+Set `.line_style(lines, code_block::Highlighted)` on the lines to call out. Lines count from one, and a range such as `3..=4` covers several.

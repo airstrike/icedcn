@@ -1,15 +1,13 @@
 ```rust
-use icedcn::widget::{CodeBlock, code_block};
+use icedcn::widget::code_block;
 
-pub fn view<'a, Message: 'static>() -> CodeBlock<'a, Message> {
-    code_block(HIGHLIGHTED_LINES)
-        .font("Geist Mono")
-        .line_style(3, code_block::LineStyle::Highlighted)
-        .line_style(4, code_block::LineStyle::Highlighted)
-        .start_line(1)
-}
+code_block(
+    code_block::content(CODE)
+        .line_numbers(true)
+        .line_style(3..=4, code_block::Highlighted),
+)
 
-const HIGHLIGHTED_LINES: &str = r##"[package]
+const CODE: &str = r##"[package]
 name = "notebook"
 version = "0.1.0"
 edition = "2024"

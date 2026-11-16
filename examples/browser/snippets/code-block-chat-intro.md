@@ -1,3 +1,3 @@
 ## Message
 
-Place a `CodeBlock` between two paragraphs in a `message(...)` reply. Its copy button copies the Rust function.
+Put a `code_block` between paragraphs inside a `message`.

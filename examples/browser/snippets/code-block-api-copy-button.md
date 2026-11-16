@@ -1,5 +1,8 @@
-### Copy button
+### Copy Button
 
-Use `.copyable(true)` to copy the full source, including collapsed lines. Diff markers, line numbers and ANSI escapes are omitted. For custom line slots or a different payload, pass `code_block::copy_button(text)` to `.actions(...)`. It copies the complete text and shows a check and “Copied” tooltip for two seconds after a successful write. Each subsequent successful copy restarts that interval.
+A ghost icon button that copies its value to the clipboard.
 
-Use `.disabled(true)` to disable the button while a transcript is incomplete.
+| Builder | Type | Default | Description |
+| --- | --- | --- | --- |
+| `code_block::copy_button(value)` | `impl Into<Cow<str>>` | - | Required. The text to copy. |
+| `.disabled(bool)` | `bool` | `false` | Disable copying, such as while a stream is incomplete. |

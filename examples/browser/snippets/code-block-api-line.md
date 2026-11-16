@@ -1,8 +1,8 @@
-### Styled lines
+### Line
 
-Supply `(LineStyle, Slot)` values to `CodeBlock::lines`. Children contain code without diff prefixes; the widget paints separate markers.
+One line of code.
 
-| API | Type | Default | Behavior |
+| Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `CodeBlock::lines(lines)` | iterator of `(LineStyle, Slot)` | required | One item per line; preserve empty lines. |
-| `LineStyle` | `Default`, `Highlighted`, `Added`, `Removed` | `Default` | Line tint and optional + or − decoration. |
+| `code_block::line(content)` | `impl Into<Slot>` | - | The line, without a diff marker. |
+| `.style(style)` | `LineStyle` | `LineStyle::Default` | `code_block::Added`, `Removed` or `Highlighted`. |

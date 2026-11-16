@@ -12,6 +12,8 @@
 //!
 //! [Geist Mono]: https://github.com/vercel/geist-font
 
+use iced::advanced::graphics::text::font_system;
+
 /// Sans family shared by the browser controls and documentation prose.
 pub const BODY: &str = "Geist";
 
@@ -26,6 +28,15 @@ pub const GEIST_MONO: &[u8] = include_bytes!("../fonts/GeistMono-Regular.ttf");
 /// Mono" + style "Regular"). Pass this string to `.font(...)` when assigning
 /// the font to a widget or markdown style field.
 pub const GEIST_MONO_NAME: &str = "Geist Mono";
+
+/// Resolve the generic monospace family to Geist Mono, so code blocks and
+/// inline code keep their default [`iced::Font::MONOSPACE`]. Call it before
+/// the application starts, before any text is shaped.
+pub fn use_geist_mono() {
+    if let Ok(mut fonts) = font_system().write() {
+        fonts.raw().db_mut().set_monospace_family(GEIST_MONO_NAME);
+    }
+}
 
 /// Color emoji fallback for WebAssembly, where system fonts are unavailable.
 /// The unmodified COLRv0 font and its license are bundled under `fonts/`.

@@ -1,1 +1,1 @@
-The transcript preserves blank lines and resets styling at each newline. It supports standard and bright ANSI foreground colors, dim text, and resets. Copy removes the color escapes and keeps every line. A check appears for two seconds after the clipboard confirms the write.
+ANSI colors do not carry from one line to the next. `code_block::ansi::strip` removes the escape codes, for the copy button.

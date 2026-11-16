@@ -1,1 +1,5 @@
-Set `.language("rust")` to color Rust source. The widget chooses token colors from the active light or dark theme.
+```rust
+code_block(code_block::content(code).language("rust"))
+```
+
+Syntax colors need the `highlighter` feature, or `markdown`. Without it, the content shows plain text.

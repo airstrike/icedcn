@@ -1,3 +1,3 @@
-## Languages
+### Languages
 
-The manifest and the Rust entry point each use their own syntax grammar. The shortcut list uses plain text.
+Pass a language name or an alias. A language that has no grammar renders as plain text.

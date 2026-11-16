@@ -1,12 +1,10 @@
 ### CodeBlock
 
-The surface that holds the header, content and footer.
+The surface that holds the header, the content and the footer.
 
-Keyboard focus in the content shows a ring around the panel and changes the default border to the ring color. `.style(...)` replaces the default panel paint, so destructive and custom borders keep their color while the keyboard ring remains visible.
-
-| API | Type | Default | Behavior |
+| Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `code_block(source)` | `impl Into<Cow<str>>` | required | Plain selectable output. |
-| `.style(style)` | `impl Into<StyleFn>` | theme default | Use `code_block::Destructive` for failed output. |
-| `.compact(bool)` | `bool` | `false` | 12px code and 10px padding instead of 14px and 12px. |
-| `.font(font)` | `impl Into<iced::Font>` | `Font::MONOSPACE` | Pass a font family such as `"Geist Mono"` or an `iced::Font` for code and line numbers. Explicit line children may override it. |
+| `code_block(part)` | `impl Into<Part>` | - | A header, actions, content or footer. A string is the content. |
+| `.push(part)` | `impl Into<Part>` | - | Another part. |
+| `.style(style)` | `impl Into<code_block::Spec>` | `code_block::Default` | The tone of the block: `Destructive`, or either variant with tweaks such as `Destructive + Bg(Token::Muted)`. |
+| `.size(size)` | `impl Into<Size>` | `Size::Default` | `Size::Sm` has tighter padding and 12px code, for tool output. |

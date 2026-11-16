@@ -418,7 +418,7 @@ impl<T: Into<Tweak>> Add<T> for Spec {
 // Container has no status, so `Tweak::State(...)` silently drops — there's no
 // hover/pressed/disabled to react to.
 
-fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme) {
+pub(crate) fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme) {
     match tweak {
         Tweak::Bg(t) => {
             style.background = Some(t.resolve(theme).into());

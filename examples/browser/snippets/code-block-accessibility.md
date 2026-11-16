@@ -1,8 +1,10 @@
 ## Accessibility
 
-- Content participates in native keyboard focus traversal by default. `.focusable(false)` removes its stop; `.id(...)` identifies it for focus operations.
-- Arrows and Home/End scroll focused content. Page Up/Down and Space scroll vertically when content is not collapsed.
-- Floating controls are reachable by keyboard and appear when content or an action is focused.
-- Line numbers and diff markers are separate, nonselectable decoration. Added and removed lines include `+` and `−` as well as a tint.
-- Copy controls have a tooltip labelled “Copy” and display a check with “Copied” after successful clipboard completion. A repeated copy restarts the two-second feedback timer.
-- The expansion button changes its label from “Show more” to “Show less” while the full listing is visible.
+- The content always reads left to right.
+- The content is a keyboard tab stop, so keyboard users can focus it and scroll it with the arrow keys, Page Up and Page Down, Home and End, or Space. Pass `.focusable(false)` to remove the tab stop.
+- Floating actions show when focus is inside the block, not only on hover, so keyboard users can reach them.
+- Line numbers and diff markers are not part of a selection.
+- Diff lines carry a `+` or `−` marker as well as a tint, so the change does not rely on color.
+- `code_block::copy_button` has a "Copy" tooltip, which reads "Copied" after a successful copy.
+- Give a wrap toggle `.pressed(wrap)` so its state shows.
+- The Show More button reads "Show less" while the content is expanded.

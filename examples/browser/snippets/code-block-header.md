@@ -1,14 +1,18 @@
 ```rust
-use icedcn::widget::{CodeBlock, code_block};
+use crate::icon;
+use icedcn::widget::code_block;
 
-pub fn view<'a, Message>() -> CodeBlock<'a, Message> {
-    code_block(HEADER)
-        .font("Geist Mono")
-        .title(code_block::terminal_title("Terminal"))
-        .actions(code_block::copy_button("cargo check -p icedcn_widget"))
-}
+code_block![
+    code_block::header![
+        code_block::title![terminal, "Terminal"],
+        code_block::actions![code_block::copy_button(COMMAND)],
+    ],
+    OUTPUT,
+]
 
-const HEADER: &str = r##"$ cargo check -p icedcn_widget
+const COMMAND: &str = "cargo check -p icedcn_widget";
+
+const OUTPUT: &str = r##"$ cargo check -p icedcn_widget
     Checking icedcn_core v0.1.0
     Checking icedcn_widget v0.1.0
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.80s"##;

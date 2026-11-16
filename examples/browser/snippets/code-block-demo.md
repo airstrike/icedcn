@@ -1,31 +1,47 @@
 ```rust
 use crate::icon;
-use icedcn::widget::{CodeBlock, code_block, row};
+use icedcn::widget::{button, code_block};
+
+#[derive(Debug, Clone)]
+enum Message {
+    Wrap,
+    Download,
+}
+
+code_block![
+    code_block::header![
+        code_block::title![file_code, "src/view.rs"],
+        code_block::actions![
+            button(icon::wrap_text())
+                .style(button::Ghost)
+                .square()
+                .pressed(wrap)
+                .on_press(Message::Wrap),
+            button(icon::download())
+                .style(button::Ghost)
+                .square()
+                .on_press(Message::Download),
+            code_block::copy_button(CODE),
+        ],
+    ],
+    code_block::content(CODE)
+        .language("rust")
+        .line_numbers(true)
+        .wrap(wrap)
+        .line_style(6..=10, code_block::Highlighted),
+]
+
+const CODE: &str = r##"use icedcn::{Slot, widget::{column, input, text}};
 
 #[derive(Clone, Debug)]
-pub enum Message {
-    Wrap,
-    Save,
-}
+pub enum Message { SearchChanged(String) }
 
-pub fn view<'a>(source: &'a str, wrap: bool) -> CodeBlock<'a, Message> {
-    let mut block = code_block(source).language("rust").start_line(1);
-    for line in 6..=10 {
-        block = block.line_style(line, code_block::LineStyle::Highlighted);
+pub fn view<'a>(query: &'a str, titles: &[&'a str]) -> Slot<'a, Message> {
+    let search = input("Find a notebook").value(query.to_owned()).on_input(Message::SearchChanged);
+    let mut results = column![search].spacing(8);
+    for title in titles.iter().copied().filter(|title| title.contains(query)) {
+        results = results.push(text::p(title).into());
     }
-    block
-        .font("Geist Mono")
-        .wrap(wrap)
-        .title(row![icon::file_code().size(14), code_block::title("src/view.rs")].spacing(6))
-        .actions(
-            row![
-                code_block::action(icon::wrap_text().size(14), "Wrap lines")
-                    .active(wrap)
-                    .on_press(Message::Wrap),
-                code_block::action(icon::download().size(14), "Download").on_press(Message::Save),
-            ]
-            .spacing(4),
-        )
-        .copyable(true)
-}
+    results.into()
+}"##;
 ```

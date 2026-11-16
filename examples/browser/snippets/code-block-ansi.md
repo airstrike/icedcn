@@ -1,14 +1,17 @@
 ```rust
-use icedcn::widget::{CodeBlock, code_block};
+use crate::icon;
+use icedcn::widget::code_block;
+use icedcn::widget::code_block::ansi;
 
-pub fn terminal<'a, Message>() -> CodeBlock<'a, Message> {
-    code_block::ansi(TRANSCRIPT)
-        .font("Geist Mono")
-        .title(code_block::terminal_title("Terminal"))
-        .copyable(true)
-}
+code_block![
+    code_block::header![
+        code_block::title![terminal, "Terminal"],
+        code_block::actions![code_block::copy_button(ansi::strip(OUTPUT))],
+    ],
+    code_block::content(OUTPUT).language("ansi").wrap(true),
+]
 
-const TRANSCRIPT: &str = concat!(
+const OUTPUT: &str = concat!(
     "$ cargo test --color always\n",
     "    \x1b[2mRunning tests/search.rs\x1b[22m\n",
     "running 3 tests\n",

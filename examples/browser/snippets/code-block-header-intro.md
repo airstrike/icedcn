@@ -1,3 +1,3 @@
 ## Header
 
-Use `.title(...)` for a filename or a terminal label. Place the copy button in `.actions(...)`. In this example, Copy puts the Cargo command on the clipboard.
+`code_block::header!` holds a `code_block::title` and `code_block::actions!`. `code_block::copy_button` copies its value.
