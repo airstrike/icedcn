@@ -191,6 +191,7 @@ impl<'a, Message> Editor<'a, Message> {
 
         edit::Available {
             undo: Some(self.is_editable()),
+            redo: None,
             cut: selected && self.is_editable(),
             copy: selected,
             paste: self.is_editable(),
@@ -242,7 +243,10 @@ impl<'a, Message> Editor<'a, Message> {
             if action.is_edit() && self.value.is_some() && self.on_input.is_none() {
                 continue;
             }
-            edited |= action.is_edit();
+            // An undo or redo with nothing to restore changes nothing.
+            let before = matches!(action, Action::Edit(Edit::Undo | Edit::Redo))
+                .then(|| state.content.text());
+            let is_edit = action.is_edit();
             if !matches!(action, Action::Scroll { .. }) && !state.moved {
                 state.moved = true;
                 shell.invalidate_layout();
@@ -252,6 +256,7 @@ impl<'a, Message> Editor<'a, Message> {
                 Action::Edit(Edit::Unindent) => indent(&mut state.content, true),
                 action => state.content.perform(action),
             }
+            edited |= is_edit && before.is_none_or(|before| before != state.content.text());
         }
         if edited {
             self.retokenize(state);

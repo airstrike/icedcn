@@ -76,6 +76,7 @@ impl<Message> Textarea<'_, Message> {
 
         edit::Available {
             undo: Some(self.is_editable()),
+            redo: None,
             cut: selected && self.is_editable(),
             copy: selected,
             paste: self.is_editable(),
@@ -128,8 +129,12 @@ impl<Message> Textarea<'_, Message> {
             if action.is_edit() && self.value.is_some() && self.on_input.is_none() {
                 continue;
             }
-            edited |= action.is_edit();
+            // An undo or redo with nothing to restore changes nothing.
+            let before = matches!(action, Action::Edit(Edit::Undo | Edit::Redo))
+                .then(|| state.content.text());
+            let is_edit = action.is_edit();
             state.content.perform(action);
+            edited |= is_edit && before.is_none_or(|before| before != state.content.text());
         }
 
         if edited {

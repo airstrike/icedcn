@@ -3,6 +3,7 @@
 
 pub mod cursor;
 mod editor;
+mod history;
 pub(crate) mod element;
 mod value;
 pub mod widget;

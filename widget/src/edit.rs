@@ -50,7 +50,12 @@ impl Command {
             let shift = modifiers.shift() && !modifiers.control() && !modifiers.logo();
             let control = modifiers.control() && !modifiers.shift() && !modifiers.alt();
 
+            // Alt+Backspace undoes on Windows; on macOS, Option+Backspace
+            // deletes the word before the caret.
+            let alt = modifiers.alt() && !modifiers.control() && !modifiers.shift();
+
             return match named {
+                Named::Backspace if alt && cfg!(target_os = "windows") => Some(Self::Undo),
                 Named::Delete if shift && !modifiers.alt() => Some(Self::Cut),
                 Named::Insert if control => Some(Self::Copy),
                 Named::Insert if shift && !modifiers.alt() => Some(Self::Paste),
@@ -62,7 +67,7 @@ impl Command {
             return None;
         }
 
-        match key.to_latin(physical)? {
+        match key.to_latin(physical)?.to_ascii_lowercase() {
             'x' => Some(Self::Cut),
             'c' => Some(Self::Copy),
             'v' if !modifiers.alt() => Some(Self::Paste),
@@ -112,6 +117,7 @@ pub(crate) fn snap(x: f32, scale: f32) -> f32 {
 #[derive(Debug, Clone, Copy)]
 pub struct Available {
     pub undo: Option<bool>,
+    pub redo: Option<bool>,
     pub cut: bool,
     pub copy: bool,
     pub paste: bool,
@@ -260,8 +266,9 @@ fn panel<'b>(available: Available, keyboard: bool) -> Element<'b, Command, Theme
 
     let mut items = Vec::new();
     if let Some(undo) = available.undo {
+        let redo = available.redo.unwrap_or(undo);
         items.push(item("Undo", ("⌘Z", "Ctrl+Z"), Command::Undo, undo));
-        items.push(item("Redo", ("⇧⌘Z", "Ctrl+Y"), Command::Redo, undo));
+        items.push(item("Redo", ("⇧⌘Z", "Ctrl+Y"), Command::Redo, redo));
         items.push(menu::separator());
     }
     items.extend([
@@ -521,7 +528,43 @@ impl Autoscroll {
 
 #[cfg(test)]
 mod tests {
-    use super::snap;
+    use super::{Command, snap};
+    use iced_core::keyboard::key::{Code, Named, Physical};
+    use iced_core::keyboard::{Key, Modifiers};
+
+    #[test]
+    fn undo_and_redo_keys_follow_the_platform() {
+        let press = |key: Key, code: Code, modifiers: Modifiers| {
+            Command::from_key(&key, Physical::Code(code), modifiers)
+        };
+        let z = || Key::Character("z".into());
+        assert_eq!(
+            press(z(), Code::KeyZ, Modifiers::COMMAND),
+            Some(Command::Undo)
+        );
+        assert_eq!(
+            press(
+                Key::Character("Z".into()),
+                Code::KeyZ,
+                Modifiers::COMMAND | Modifiers::SHIFT
+            ),
+            Some(Command::Redo)
+        );
+        assert_eq!(
+            press(Key::Character("y".into()), Code::KeyY, Modifiers::COMMAND),
+            Some(Command::Redo)
+        );
+        // Option+Backspace deletes a word on macOS; Alt+Backspace undoes on
+        // Windows.
+        assert_eq!(
+            press(
+                Key::Named(Named::Backspace),
+                Code::Backspace,
+                Modifiers::ALT
+            ),
+            cfg!(target_os = "windows").then_some(Command::Undo)
+        );
+    }
 
     #[test]
     fn snapping_lands_on_whole_physical_pixels() {

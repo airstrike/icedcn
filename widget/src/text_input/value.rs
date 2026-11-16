@@ -4,7 +4,7 @@ use unicode_segmentation::UnicodeSegmentation;
 ///
 /// [`TextInput`]: super::TextInput
 // TODO: Reduce allocations, cache results (?)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Value {
     graphemes: Vec<String>,
 }

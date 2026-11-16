@@ -11,7 +11,7 @@ use iced_test::core::clipboard;
 use iced_test::core::renderer::{self, Headless};
 use iced_test::core::shell::{Bus, Waker};
 use iced_test::core::time::{Duration, Instant};
-use iced_test::core::widget::operation::TextInput;
+use iced_test::core::widget::operation::{self, TextInput};
 use iced_test::core::widget::{Id, Operation};
 use iced_test::core::window;
 use iced_test::futures::futures::executor::block_on;
@@ -54,6 +54,26 @@ impl Desk {
             clipboard: None,
             messages: Vec::new(),
         }
+    }
+
+    /// Build `view` anew over the same state, as the app does after it
+    /// handles a message.
+    fn rebuild(&mut self, view: impl Into<Element<'static, String, Theme>>) {
+        let ui = std::mem::replace(
+            &mut self.ui,
+            UserInterface::build(
+                Element::from(input::<String>("")),
+                Size::new(800., 600.),
+                user_interface::Cache::default(),
+                &mut self.renderer,
+            ),
+        );
+        self.ui = UserInterface::build(
+            view.into(),
+            Size::new(800., 600.),
+            ui.into_cache(),
+            &mut self.renderer,
+        );
     }
 
     fn send(&mut self, events: impl IntoIterator<Item = Event>) {
@@ -148,6 +168,33 @@ impl Desk {
 
     fn release(&mut self) {
         self.send([Event::Mouse(mouse::Event::ButtonReleased(Button::Left))]);
+    }
+
+    fn click_with(&mut self, position: Point, button: Button) {
+        self.move_to(position);
+        self.send([
+            Event::Mouse(mouse::Event::ButtonPressed(button)),
+            Event::Mouse(mouse::Event::ButtonReleased(button)),
+        ]);
+    }
+
+    /// Click the menu entry labeled `label`.
+    fn choose(&mut self, label: &'static str) {
+        let mut find = iced_test::Selector::find(label);
+        self.ui
+            .operate(&self.renderer, &mut operation::black_box(&mut find));
+        let bounds = match find.finish() {
+            operation::Outcome::Some(Some(target)) => target.visible_bounds(),
+            _ => None,
+        }
+        .unwrap_or_else(|| panic!("{label} in the menu"));
+        self.click(bounds.center());
+    }
+
+    /// Focus the field with a click near its start.
+    fn focus(&mut self) {
+        let (bounds, _) = self.field();
+        self.click(Point::new(bounds.x + 14., bounds.y + 10.));
     }
 
     fn click(&mut self, position: Point) {
@@ -624,5 +671,134 @@ fn the_input_caret_sits_on_whole_pixels() {
             "{alignment:?} {value:?}: caret column {caret} is {ink}, ink is {darkest}: {:?}",
             &row[caret - 3..caret + 3]
         );
+    }
+}
+
+fn type_text(desk: &mut Desk, text: &str) {
+    desk.send(simulator::typewrite(text));
+}
+
+fn undo(desk: &mut Desk) {
+    desk.key(character("z"), Modifiers::COMMAND);
+}
+
+fn redo(desk: &mut Desk) {
+    desk.key(character("z"), Modifiers::COMMAND | Modifiers::SHIFT);
+}
+
+#[test]
+fn an_input_undoes_a_run_of_typing_as_one_step_and_redoes_it() {
+    let mut desk = Desk::new(input("").on_input(|s| s));
+    desk.focus();
+    type_text(&mut desk, "hello");
+    desk.key(Named::ArrowLeft, Modifiers::empty());
+    desk.key(Named::ArrowRight, Modifiers::empty());
+    type_text(&mut desk, " world");
+    undo(&mut desk);
+    assert_eq!(desk.field().1, "hello", "the second run is one step");
+    assert_eq!(desk.messages.last().map(String::as_str), Some("hello"));
+    // The caret is back where the run started.
+    type_text(&mut desk, "!");
+    assert_eq!(desk.field().1, "hello!");
+    undo(&mut desk);
+    undo(&mut desk);
+    assert_eq!(desk.field().1, "");
+    redo(&mut desk);
+    assert_eq!(desk.field().1, "hello");
+    desk.key(character("y"), Modifiers::COMMAND);
+    assert_eq!(desk.field().1, "hello!", "Command+Y redoes too");
+    redo(&mut desk);
+    assert_eq!(desk.field().1, "hello!", "nothing more to redo");
+}
+
+#[test]
+fn an_input_undoes_a_paste_a_cut_and_a_word_deletion_as_steps_of_their_own() {
+    let mut desk = Desk::new(input("").on_input(|s| s));
+    desk.focus();
+    type_text(&mut desk, "one two");
+    desk.clipboard = Some(" pasted".into());
+    desk.key(character("v"), Modifiers::COMMAND);
+    type_text(&mut desk, " three");
+    // Option+Backspace on macOS, Ctrl+Backspace elsewhere.
+    let jump = if cfg!(target_os = "macos") {
+        Modifiers::ALT
+    } else {
+        Modifiers::CTRL
+    };
+    desk.key(Named::Backspace, jump);
+    assert_eq!(desk.field().1, "one two pasted ");
+    desk.key(character("a"), Modifiers::COMMAND);
+    desk.key(character("x"), Modifiers::COMMAND);
+    assert_eq!(desk.field().1, "");
+    undo(&mut desk);
+    assert_eq!(desk.field().1, "one two pasted ", "the cut");
+    assert_eq!(
+        desk.selection().as_deref(),
+        Some("one two pasted "),
+        "with its selection"
+    );
+    desk.key(Named::End, Modifiers::empty());
+    undo(&mut desk);
+    assert_eq!(desk.field().1, "one two pasted three", "the word deletion");
+    undo(&mut desk);
+    assert_eq!(desk.field().1, "one two pasted", "the typing");
+    undo(&mut desk);
+    assert_eq!(desk.field().1, "one two", "the paste");
+}
+
+#[test]
+fn the_input_menu_undoes_and_redoes() {
+    let mut desk = Desk::new(input("").on_input(|s| s));
+    let (bounds, _) = desk.field();
+    desk.focus();
+    type_text(&mut desk, "menu");
+    desk.click_with(Point::new(bounds.x + 14., bounds.center_y()), Button::Right);
+    desk.choose("Undo");
+    assert_eq!(desk.field().1, "");
+    desk.click_with(Point::new(bounds.x + 14., bounds.center_y()), Button::Right);
+    desk.choose("Redo");
+    assert_eq!(desk.field().1, "menu");
+}
+
+/// A controlled input and textarea showing the app's `value`.
+fn controlled(index: usize, value: &str) -> Element<'static, String, Theme> {
+    match index {
+        0 => input("").value(value.to_owned()).on_input(|s| s).into(),
+        1 => textarea("").value(value.to_owned()).on_input(|s| s).into(),
+        _ => code_block![code_block::content(value.to_owned()).on_input(|s| s)].into(),
+    }
+}
+
+#[test]
+fn a_controlled_field_undoes_its_edits_but_not_the_apps() {
+    for index in 0..3 {
+        let mut value = String::new();
+        let mut desk = Desk::new(controlled(index, &value));
+        desk.focus();
+        for c in ["a", "b", "c"] {
+            type_text(&mut desk, c);
+            // iced can rebuild before the app handles the edit.
+            desk.rebuild(controlled(index, &value));
+            value = desk.messages.last().cloned().unwrap_or_default();
+            desk.rebuild(controlled(index, &value));
+        }
+        assert_eq!(value, "abc", "{index}");
+        undo(&mut desk);
+        value = desk.messages.last().cloned().unwrap_or_default();
+        desk.rebuild(controlled(index, &value));
+        assert!(value.len() < 3, "{index}: undone to {value:?}");
+        redo(&mut desk);
+        value = desk.messages.last().cloned().unwrap_or_default();
+        desk.rebuild(controlled(index, &value));
+        assert_eq!(value, "abc", "{index}: redone");
+
+        // The app replaces the text: that is no step, and the steps before
+        // it no longer apply.
+        value = "reset".into();
+        desk.rebuild(controlled(index, &value));
+        let published = desk.messages.len();
+        undo(&mut desk);
+        assert_eq!(desk.field().1, "reset", "{index}");
+        assert_eq!(desk.messages.len(), published, "{index}: nothing to undo");
     }
 }

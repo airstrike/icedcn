@@ -33,6 +33,7 @@
 //! ```
 use super::cursor::{self, Cursor};
 use super::editor::Editor;
+use super::history::{self, History};
 use super::value::Value;
 use crate::button::group::{Join, join};
 use crate::edit::{self, Command};
@@ -239,9 +240,12 @@ where
     fn changed(
         &self,
         uncontrolled: &mut Option<Value>,
+        history: &mut History,
+        cursor: Cursor,
         is_paste: bool,
         shell: &mut Shell<'_, Message>,
     ) {
+        history.edited(&self.value, cursor);
         if !self.is_controlled {
             *uncontrolled = Some(self.value.clone());
         }
@@ -1029,6 +1033,7 @@ where
 
         if self.is_controlled {
             state.uncontrolled = None;
+            state.history.sync(&self.value);
         } else {
             let value = state.uncontrolled.get_or_insert_with(|| self.value.clone());
             self.value = value.clone();
@@ -1074,7 +1079,8 @@ where
         let state = state::<Renderer>(tree);
         let selected = !self.is_secure && state.cursor.selection(&self.value).is_some();
         let available = edit::Available {
-            undo: None,
+            undo: Some(self.is_editable() && state.history.can_undo()),
+            redo: Some(self.is_editable() && state.history.can_redo()),
             cut: selected && self.is_editable(),
             copy: selected,
             paste: self.is_editable(),
@@ -1195,7 +1201,6 @@ where
                 ..
             }) if input.is_focused.is_some() && !is_disabled => {
                 Command::from_key(key, *physical_key, *modifiers)
-                    .filter(|command| !matches!(command, Command::Undo | Command::Redo))
             }
             _ => None,
         });
@@ -1241,10 +1246,19 @@ where
                     ));
 
                     if is_cut {
+                        input
+                            .history
+                            .record(history::Kind::Other, &self.value, input.cursor);
                         let mut editor = Editor::new(&mut self.value, &mut input.cursor);
                         editor.delete();
 
-                        self.changed(&mut input.uncontrolled, false, shell);
+                        self.changed(
+                            &mut input.uncontrolled,
+                            &mut input.history,
+                            input.cursor,
+                            false,
+                            shell,
+                        );
                     }
                 }
                 Command::Paste => {
@@ -1260,7 +1274,27 @@ where
                     return;
                 }
                 Command::SelectAll => input.cursor.select_all(&self.value),
-                Command::Undo | Command::Redo => return,
+                Command::Undo | Command::Redo => {
+                    if !is_editable {
+                        return;
+                    }
+                    let step = if command == Command::Undo {
+                        input.history.undo(&self.value, input.cursor)
+                    } else {
+                        input.history.redo(&self.value, input.cursor)
+                    };
+                    let Some((value, cursor)) = step else {
+                        return;
+                    };
+                    self.value = value;
+                    input.cursor = cursor;
+                    if !self.is_controlled {
+                        input.uncontrolled = Some(self.value.clone());
+                    }
+                    if let Some(on_input) = &self.on_input {
+                        shell.publish(on_input(self.value.to_string()));
+                    }
+                }
             }
 
             if let Some(focus) = &mut input.is_focused {
@@ -1461,11 +1495,20 @@ where
                                 return;
                             }
 
+                            state
+                                .history
+                                .record(history::Kind::Typing, &self.value, state.cursor);
                             let mut editor = Editor::new(&mut self.value, &mut state.cursor);
 
                             editor.insert(c);
 
-                            self.changed(&mut state.uncontrolled, false, shell);
+                            self.changed(
+                                &mut state.uncontrolled,
+                                &mut state.history,
+                                state.cursor,
+                                false,
+                                shell,
+                            );
                             shell.capture_event();
 
                             focus.updated_at = Instant::now();
@@ -1492,6 +1535,16 @@ where
                                 return;
                             }
 
+                            let kind = if state.cursor.selection(&self.value).is_none()
+                                && !modifiers.jump()
+                                && !modifiers.macos_command()
+                            {
+                                history::Kind::Deleting
+                            } else {
+                                history::Kind::Other
+                            };
+                            state.history.record(kind, &self.value, state.cursor);
+
                             if state.cursor.selection(&self.value).is_none() {
                                 if (self.is_secure && modifiers.jump()) || modifiers.macos_command()
                                 {
@@ -1506,7 +1559,13 @@ where
                             let mut editor = Editor::new(&mut self.value, &mut state.cursor);
                             editor.backspace();
 
-                            self.changed(&mut state.uncontrolled, false, shell);
+                            self.changed(
+                                &mut state.uncontrolled,
+                                &mut state.history,
+                                state.cursor,
+                                false,
+                                shell,
+                            );
                             shell.capture_event();
 
                             focus.updated_at = Instant::now();
@@ -1516,6 +1575,16 @@ where
                             if !self.is_editable() {
                                 return;
                             }
+
+                            let kind = if state.cursor.selection(&self.value).is_none()
+                                && !modifiers.jump()
+                                && !modifiers.macos_command()
+                            {
+                                history::Kind::Deleting
+                            } else {
+                                history::Kind::Other
+                            };
+                            state.history.record(kind, &self.value, state.cursor);
 
                             if state.cursor.selection(&self.value).is_none() {
                                 if (self.is_secure && modifiers.jump()) || modifiers.macos_command()
@@ -1532,7 +1601,13 @@ where
                             let mut editor = Editor::new(&mut self.value, &mut state.cursor);
                             editor.delete();
 
-                            self.changed(&mut state.uncontrolled, false, shell);
+                            self.changed(
+                                &mut state.uncontrolled,
+                                &mut state.history,
+                                state.cursor,
+                                false,
+                                shell,
+                            );
                             shell.capture_event();
 
                             focus.updated_at = Instant::now();
@@ -1704,10 +1779,19 @@ where
                     && is_reading
                 {
                     let content = self.insertion(&state.cursor, Value::new(text));
+                    state
+                        .history
+                        .record(history::Kind::Other, &self.value, state.cursor);
                     let mut editor = Editor::new(&mut self.value, &mut state.cursor);
                     editor.paste(content);
 
-                    self.changed(&mut state.uncontrolled, true, shell);
+                    self.changed(
+                        &mut state.uncontrolled,
+                        &mut state.history,
+                        state.cursor,
+                        true,
+                        shell,
+                    );
                     shell.capture_event();
 
                     focus.updated_at = Instant::now();
@@ -1746,13 +1830,22 @@ where
                         }
 
                         let content = self.insertion(&state.cursor, Value::new(text));
+                        state
+                            .history
+                            .record(history::Kind::Other, &self.value, state.cursor);
                         let mut editor = Editor::new(&mut self.value, &mut state.cursor);
                         editor.paste(content);
 
                         focus.updated_at = Instant::now();
                         state.is_pasting = None;
 
-                        self.changed(&mut state.uncontrolled, false, shell);
+                        self.changed(
+                            &mut state.uncontrolled,
+                            &mut state.history,
+                            state.cursor,
+                            false,
+                            shell,
+                        );
                         shell.capture_event();
 
                         update_cache(state, &self.value);
@@ -1846,6 +1939,7 @@ where
         }
 
         let state = state::<Renderer>(tree);
+        state.history.follow(state.cursor);
 
         let status = if self.is_disabled {
             Status::Disabled
@@ -1948,6 +2042,7 @@ pub struct State<P: text::Paragraph> {
     focus_anim: crate::core::Animation<bool>,
     /// The value of an uncontrolled input, kept across rebuilds.
     uncontrolled: Option<Value>,
+    history: History,
     menu: edit::Menu,
 }
 
@@ -1969,6 +2064,7 @@ impl<P: text::Paragraph> Default for State<P> {
             keyboard_modifiers: keyboard::Modifiers::default(),
             scroll_offset: 0.0,
             uncontrolled: None,
+            history: History::default(),
             menu: edit::Menu::default(),
             focus_anim: Animation::new(false)
                 .easing(Easing::Custom(|t| {
