@@ -802,3 +802,44 @@ fn a_controlled_field_undoes_its_edits_but_not_the_apps() {
         assert_eq!(desk.messages.len(), published, "{index}: nothing to undo");
     }
 }
+
+/// The input, the textarea or the code block, uncontrolled, holding `value`.
+fn field(name: &str, value: &str) -> Element<'static, String, Theme> {
+    let value = value.to_owned();
+    match name {
+        "input" => input("")
+            .default_value(value)
+            .width(400)
+            .on_input(|s| s)
+            .into(),
+        "textarea" => textarea("").default_value(value).on_input(|s| s).into(),
+        _ => code_block![code_block::content("").default_value(value).on_input(|s| s)].into(),
+    }
+}
+
+#[test]
+fn a_double_click_drag_in_any_field_selects_whole_words() {
+    let words = "aa bbbbbbbbbbbbbbbbbbbbbbbb cc";
+    for name in ["input", "textarea", "code block"] {
+        let mut desk = Desk::new(field(name, words));
+        let (bounds, _) = desk.field();
+        let y = bounds.y + 10.;
+        // Well inside the long word.
+        let word = Point::new(bounds.x + 70., y);
+        desk.click(word);
+        desk.press(word);
+        desk.move_to(Point::new(bounds.x + 380., y));
+        assert_eq!(
+            desk.dragged(),
+            "bbbbbbbbbbbbbbbbbbbbbbbb cc",
+            "{name}: forward, from the start of the word"
+        );
+        desk.move_to(Point::new(bounds.x + 1., y));
+        desk.release();
+        assert_eq!(
+            desk.selection().as_deref(),
+            Some("aa bbbbbbbbbbbbbbbbbbbbbbbb"),
+            "{name}: backward, to the end of the word"
+        );
+    }
+}
