@@ -4,7 +4,7 @@ use std::ops::{Range, RangeInclusive};
 
 use iced_core::Length::{Fill, Shrink};
 use iced_core::widget::Id;
-use iced_core::{Font, Pixels};
+use iced_core::{Font, Length, Pixels};
 use iced_widget::Widget;
 
 use super::editor::Editor;
@@ -116,7 +116,7 @@ pub struct Content<'a, Message> {
     pub(super) wrap: bool,
     line_numbers: bool,
     start_line: usize,
-    pub(super) height: Option<Pixels>,
+    pub(super) height: Option<Length>,
     pub(super) max_height: Option<Pixels>,
     pub(super) collapsed: bool,
     id: Option<Id>,
@@ -191,9 +191,13 @@ impl<'a, Message: 'a> Content<'a, Message> {
         self
     }
 
-    /// An exact content height.
-    pub fn height(mut self, height: impl Into<Pixels>) -> Self {
-        self.height = Some(Pixels(height.into().0.max(0.)));
+    /// The content height: exact pixels, or [`Fill`] to fill the block's
+    /// parent, scrolling what does not fit.
+    pub fn height(mut self, height: impl Into<Length>) -> Self {
+        self.height = Some(match height.into() {
+            Length::Fixed(height) => Length::Fixed(height.max(0.)),
+            height => height,
+        });
         self
     }
 
@@ -291,6 +295,7 @@ impl<'a, Message: 'a> Content<'a, Message> {
                     layout,
                     id.clone(),
                     disabled,
+                    height.is_some_and(|height| height.is_fill()),
                 )
                 .boxed()
                 .into()

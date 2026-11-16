@@ -49,7 +49,7 @@ use iced_core::Length::{Fill, Shrink};
 use iced_core::alignment::Horizontal;
 use iced_core::text::{LineHeight, Wrapping};
 use iced_core::widget::Id;
-use iced_core::{Padding, Pixels};
+use iced_core::{Length, Padding, Pixels};
 use iced_widget::{Renderer, Widget, text};
 use icedcn_core::Theme;
 use icedcn_core::theme::container::Style;
@@ -257,6 +257,12 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
             actions.inherit(&disabled.with_code_actions(Placement::Floating));
         }
         let (body, viewport) = content.view(compact, disabled.is_disabled());
+        // A filling content fills the whole block, so every wrapper fills too.
+        let height = if viewport.height.is_some_and(|height| height.is_fill()) {
+            Fill
+        } else {
+            Shrink
+        };
         // An editor fills the viewport, so a click right of its text lands in it.
         let content_width = if wrap || viewport.editable {
             Fill
@@ -274,7 +280,8 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
                 left: 0.,
                 right: 0.,
             })
-            .width(content_width);
+            .width(content_width)
+            .height(height);
         let direction = if wrap {
             Direction::Vertical(scrollbar())
         } else {
@@ -327,7 +334,12 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
             );
         }
         frame::Frame::new(
-            container(panel).padding(1).width(Fill).clip(true).into(),
+            container(panel.height(height))
+                .padding(1)
+                .width(Fill)
+                .height(height)
+                .clip(true)
+                .into(),
             style,
         )
         .boxed()
@@ -336,7 +348,7 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
 
 /// What the scrolling viewport needs from the content.
 struct Viewport {
-    height: Option<Pixels>,
+    height: Option<Length>,
     max_height: Option<Pixels>,
     collapsed: bool,
     id: Option<Id>,

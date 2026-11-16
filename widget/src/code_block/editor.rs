@@ -45,6 +45,8 @@ pub(super) struct Editor<'a, Message> {
     listing: listing::Layout,
     id: Option<Id>,
     disabled: bool,
+    /// Fill the viewport below the last line.
+    fill: bool,
 }
 
 impl<'a, Message> Editor<'a, Message> {
@@ -58,6 +60,7 @@ impl<'a, Message> Editor<'a, Message> {
         listing: listing::Layout,
         id: Option<Id>,
         disabled: bool,
+        fill: bool,
     ) -> Self {
         Self {
             value,
@@ -68,6 +71,7 @@ impl<'a, Message> Editor<'a, Message> {
             listing,
             id,
             disabled,
+            fill,
         }
     }
 
@@ -443,7 +447,14 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
     }
 
     fn size(&self) -> Size<Length> {
-        Size::new(Length::Fill, Length::Shrink)
+        Size::new(
+            Length::Fill,
+            if self.fill {
+                Length::Fill
+            } else {
+                Length::Shrink
+            },
+        )
     }
 
     fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) {
@@ -518,8 +529,13 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
         } else {
             0.
         };
-        let rows: f32 = state.heights.iter().sum();
-        *size = Size::new(width, children[0].size.height.max(rows));
+        let rows = children[0].size.height.max(state.heights.iter().sum());
+        let height = if self.fill {
+            limits.resolve_height(Length::Fill, rows)
+        } else {
+            rows
+        };
+        *size = Size::new(width, height);
         if std::mem::take(&mut state.moved) {
             state.reveal = Reveal(Some(self.caret(state, renderer, left)));
         }
@@ -553,6 +569,16 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
                         state.gutter,
                         position.y,
                     ))
+                }
+                // Below the last line, a press lands at the end of the text.
+                Some(position)
+                    if self.fill
+                        && matches!(event, Event::Mouse(mouse::Event::ButtonPressed(_)))
+                        && cursor.is_over(layout.bounds())
+                        && position.y >= layout.bounds().y + text_end(children).y =>
+                {
+                    let end = text_end(children) - Vector::new(1., self.listing.line_height() / 2.);
+                    mouse::Cursor::Available(layout.position() + Vector::new(end.x, end.y))
                 }
                 _ => cursor,
             };
@@ -794,6 +820,16 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
         .focused
         .is_some();
     }
+}
+
+/// The bottom right corner of the editor's text, from the editor's corner.
+fn text_end(children: &[Tree]) -> Point {
+    children.first().map_or(Point::ORIGIN, |child| {
+        Point::new(
+            child.translation.x + child.size.width,
+            child.translation.y + child.size.height,
+        )
+    })
 }
 
 /// Whether an editor in `tree` holds the focus.

@@ -84,6 +84,7 @@ impl Platform {
             .max_width(if framed { 1080. } else { f32::INFINITY })
             .height(Fill)
             .max_height(if framed { 780. } else { f32::INFINITY })
+            .min_height(if framed { 480. } else { 0. })
             .padding(if framed { 1 } else { 0 })
             .style(move |theme| {
                 if !framed {

@@ -158,9 +158,10 @@ impl State {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use iced::widget::Id;
     use iced_test::core::Settings;
     use iced_test::core::widget::Operation;
-    use iced_test::core::widget::operation::TextInput;
+    use iced_test::core::widget::operation::{Scrollable, TextInput};
     use iced_test::selector::Candidate;
     use iced_test::simulator::Simulator;
 
@@ -223,6 +224,7 @@ mod tests {
             );
             let mut editors = Editors::default();
             ui.operate(&mut editors);
+            let panes = editors.1.clone();
             let [(editor, source)] = editors.0.as_slice() else {
                 panic!("the playground has one editor");
             };
@@ -231,11 +233,22 @@ mod tests {
             let output = ui.find("Output").unwrap().bounds();
             ui.find(printed.as_str()).unwrap();
             if side_by_side {
-                assert!(
-                    output.x > editor.x + editor.width,
-                    "{output:?} beside {editor:?}"
-                );
-                assert!(output.y < editor.y + editor.height);
+                // The editor's code area and the output both scroll inside
+                // panes that reach the bottom of the window together.
+                let [.., code, printed] = panes.as_slice() else {
+                    panic!("the panes scroll: {panes:?}");
+                };
+                assert!(output.x > code.x + code.width, "{output:?} beside {code:?}");
+                assert!(output.y < code.y + code.height);
+                assert!(code.height > editor.height + 100., "{code:?} fills");
+                let frame = ui
+                    .find(Id::from("example-window"))
+                    .unwrap()
+                    .bounds();
+                for pane in [code, printed] {
+                    let gap = frame.y + frame.height - (pane.y + pane.height);
+                    assert!((0. ..48.).contains(&gap), "{pane:?} reaches {frame:?}");
+                }
             } else {
                 assert!(
                     output.y > editor.y + editor.height,
@@ -246,7 +259,7 @@ mod tests {
     }
 
     #[derive(Default)]
-    struct Editors(Vec<(iced::Rectangle, String)>);
+    struct Editors(Vec<(iced::Rectangle, String)>, Vec<iced::Rectangle>);
     impl Operation for Editors {
         fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
             visit(self);
@@ -258,6 +271,16 @@ mod tests {
             input: &mut dyn TextInput,
         ) {
             self.0.push((bounds, input.text().into_owned()));
+        }
+        fn scrollable(
+            &mut self,
+            _: Option<&iced::widget::Id>,
+            bounds: iced::Rectangle,
+            _: iced::Size,
+            _: iced::Vector,
+            _: &mut dyn Scrollable,
+        ) {
+            self.1.push(bounds);
         }
     }
 

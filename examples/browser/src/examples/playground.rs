@@ -3,7 +3,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use iced::{Element, Fill, Font, Task, Top};
+use iced::{Element, Fill, Font, Task};
 use icedcn::widget::scrollable::scrollable;
 use icedcn::widget::{alert, button, code_block, column, row, text};
 use icedcn::{Destructive, Slot, Theme, card};
@@ -80,8 +80,14 @@ impl State {
         Task::none()
     }
 
-    /// Side by side from `width` 768 up, stacked below it.
+    /// Side by side from `width` 768 up, filling the window; stacked below
+    /// it, at natural heights under a page scroll.
     pub fn view(&self, width: f32) -> Element<'_, Message, Theme> {
+        let wide = width >= 768.;
+        let content = code_block::content(self.source.as_str())
+            .language("rust")
+            .line_numbers(true)
+            .on_input(Message::Edited);
         let editor = code_block![
             code_block::header![
                 code_block::title![file_code, "main.rs"],
@@ -93,10 +99,7 @@ impl State {
                     code_block::copy_button(self.source.as_str()),
                 ],
             ],
-            code_block::content(self.source.as_str())
-                .language("rust")
-                .line_numbers(true)
-                .on_input(Message::Edited),
+            if wide { content.height(Fill) } else { content },
         ];
 
         let output: Slot<'_, Message> = match &self.outcome {
@@ -110,18 +113,32 @@ impl State {
                 .style(Destructive)
                 .into(),
         };
-        let output = card(column![card::header("Output"), card::content(output)]).width(Fill);
 
-        let content: Slot<'_, Message> = if width >= 768. {
-            row![column![editor].width(Fill), column![output].width(Fill)]
-                .spacing(16)
-                .align_y(Top)
+        if wide {
+            let output = card(
+                column![
+                    card::header("Output"),
+                    card::content(scrollable(output).width(Fill).height(Fill))
+                        .width(Fill)
+                        .height(Fill),
+                ]
                 .width(Fill)
-                .into()
-        } else {
-            column![editor, output].spacing(16).width(Fill).into()
-        };
-        scrollable(column![content].padding(16).width(Fill))
+                .height(Fill),
+            )
+            .width(Fill)
+            .height(Fill);
+            return row![
+                column![editor].width(Fill).height(Fill),
+                column![output].width(Fill).height(Fill),
+            ]
+            .spacing(16)
+            .padding(16)
+            .width(Fill)
+            .height(Fill)
+            .into();
+        }
+        let output = card(column![card::header("Output"), card::content(output)]).width(Fill);
+        scrollable(column![editor, output].spacing(16).padding(16).width(Fill))
             .width(Fill)
             .height(Fill)
             .into()
