@@ -6,6 +6,7 @@ use std::ops::Add;
 
 use super::Theme;
 use super::tweak::{Trigger, Tweak, TweakSet};
+use super::variant::{sink, spec};
 use crate::palette::Palette;
 use crate::style;
 use crate::style::status;
@@ -255,9 +256,7 @@ pub fn disabled(theme: &Theme, status: Status) -> Style {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Default;
 
-/// Invalid checkbox variant — see [`invalid`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Invalid;
+pub use super::variant::Invalid;
 
 /// Disabled checkbox variant — see [`disabled`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -323,13 +322,6 @@ impl<T: Into<Tweak>> Add<T> for Default {
     }
 }
 
-impl<T: Into<Tweak>> Add<T> for Invalid {
-    type Output = Spec;
-    fn add(self, rhs: T) -> Spec {
-        Spec::from(self).push(rhs.into())
-    }
-}
-
 impl<T: Into<Tweak>> Add<T> for Disabled {
     type Output = Spec;
     fn add(self, rhs: T) -> Spec {
@@ -343,6 +335,8 @@ impl<T: Into<Tweak>> Add<T> for Spec {
         self.push(rhs.into())
     }
 }
+
+spec!(Spec, Default);
 
 // --- Resolver ----------------------------------------------------------------
 
@@ -435,8 +429,8 @@ impl<'a> From<Default> for StyleFn<'a, Theme> {
 }
 
 impl<'a> From<Invalid> for StyleFn<'a, Theme> {
-    fn from(t: Invalid) -> Self {
-        let sf: style::StyleFn<_> = t.into();
+    fn from(_: Invalid) -> Self {
+        let sf = universal_invalid();
         bridge_with(sf, invalid, std::convert::identity)
     }
 }
@@ -453,6 +447,8 @@ impl<'a> From<Spec> for StyleFn<'a, Theme> {
         Box::new(move |theme, status| spec.resolve(theme, status))
     }
 }
+
+sink!(StyleFn<'a, Theme>, Spec, tweaks);
 
 // Checkbox carries widget-specific slots (icon_color) the universal Style
 // can't represent — per-tag intrinsics produce the full widget Style and
@@ -471,12 +467,10 @@ impl From<Default> for style::StyleFn<fn(Palette, status::Status) -> style::Styl
     }
 }
 
-impl From<Invalid> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
-    fn from(_: Invalid) -> Self {
-        style::StyleFn {
-            inner: empty_impl,
-            tint: style::Tint::Destructive,
-        }
+fn universal_invalid() -> style::StyleFn<fn(Palette, status::Status) -> style::Style> {
+    style::StyleFn {
+        inner: empty_impl,
+        tint: style::Tint::Destructive,
     }
 }
 
@@ -558,8 +552,8 @@ impl<'a> From<Default> for iced_widget::checkbox::StyleFn<'a, Theme> {
 }
 
 impl<'a> From<Invalid> for iced_widget::checkbox::StyleFn<'a, Theme> {
-    fn from(t: Invalid) -> Self {
-        let sf: style::StyleFn<_> = t.into();
+    fn from(_: Invalid) -> Self {
+        let sf = universal_invalid();
         bridge_with(sf, invalid, Into::<iced_widget::checkbox::Style>::into)
     }
 }
@@ -598,6 +592,8 @@ impl<'a> From<Spec> for iced_widget::checkbox::StyleFn<'a, Theme> {
         Box::new(move |theme, status| spec.resolve(theme, status).into())
     }
 }
+
+sink!(iced_widget::checkbox::StyleFn<'a, Theme>, Spec, tweaks);
 
 #[cfg(test)]
 mod tests {

@@ -3,7 +3,8 @@
 use iced_widget::container;
 
 use super::{Default, Destructive, Ghost, Link, Outline, Secondary, Spec};
-use crate::theme::tweak::{Trigger, Tweak};
+use crate::theme::Tweaked;
+use crate::theme::tweak::{Trigger, Tweak, TweakSet};
 use crate::{Background, Border, Color, Shadow, Theme};
 
 /// Badge interaction context. Focus means keyboard-visible focus.
@@ -103,6 +104,21 @@ macro_rules! variants {
     )+};
 }
 variants!(Default, Secondary, Destructive, Outline, Ghost, Link);
+
+impl<'a, V> IntoStyle<'a> for Tweaked<V>
+where
+    Spec: From<V>,
+{
+    fn into_style(self) -> StyleFn<'a> {
+        self.build::<Spec>().into_style()
+    }
+}
+
+impl<'a> IntoStyle<'a> for TweakSet {
+    fn into_style(self) -> StyleFn<'a> {
+        Spec::from(self).into_style()
+    }
+}
 
 impl<'a> IntoStyle<'a> for Spec {
     fn into_style(self) -> StyleFn<'a> {
@@ -300,7 +316,7 @@ mod tests {
         assert_eq!(outline.background, Some(theme.muted.base.into()));
         assert_eq!(outline.text_color, Some(theme.muted.foreground));
         // Equal custom fills do not change either variant's identity.
-        let ghost = badge::Ghost + Bg(Token::Primary);
+        let ghost: Spec = (badge::Ghost + Bg(Token::Primary)).into();
         assert_eq!(
             ghost
                 .resolve_state(
@@ -375,14 +391,15 @@ mod tests {
     #[test]
     fn conditional_tweaks_follow_nova_defaults_in_declared_order() {
         let theme = Theme::light();
-        let spec: Spec = badge::Ghost
+        let spec: Spec = (badge::Ghost
             + hover(Bg(Token::Primary))
             + hover(Fg(Token::PrimaryForeground))
             + focus(Ring {
                 color: Token::Destructive,
                 width: 4.0,
                 offset: 2.0,
-            });
+            }))
+        .into();
         let rest = spec.resolve_state(&theme, Status::default());
         assert_eq!(rest.background, None);
         let hovered = Status {
@@ -403,8 +420,9 @@ mod tests {
         );
         assert_eq!(focused.ring.expect("tweaked ring").width, 4.0);
         assert_eq!(focused.ring_offset, 2.0);
-        let overridden = (badge::Ghost + hover(Bg(Token::Primary)) + Bg(Token::Secondary))
-            .resolve_state(&theme, hovered);
+        let overridden =
+            Spec::from(badge::Ghost + hover(Bg(Token::Primary)) + Bg(Token::Secondary))
+                .resolve_state(&theme, hovered);
         assert_eq!(overridden.background, Some(theme.secondary.base.into()));
     }
 

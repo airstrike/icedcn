@@ -52,13 +52,7 @@ pub fn image(_theme: &Theme) -> Style {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Default;
 
-/// Outline item variant.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Outline;
-
-/// Muted item variant.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Muted;
+pub use super::variant::{Muted, Outline};
 
 /// Icon media variant: the content unframed, centered.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -113,7 +107,7 @@ macro_rules! item_add {
     };
 }
 
-item_add!(Default => Spec, Outline => Spec, Muted => Spec, Icon => Frame, Image => Frame);
+item_add!(Default => Spec, Icon => Frame, Image => Frame);
 
 impl<'a> From<Default> for iced_widget::container::StyleFn<'a, Theme> {
     fn from(variant: Default) -> Self {

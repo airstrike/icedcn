@@ -28,6 +28,9 @@ pub use icedcn_core::{font_size, height, icon_size, radius, spacing};
 pub use icedcn_core::Orientation;
 pub use icedcn_core::Orientation::{Horizontal, Vertical};
 
+// The shared style variants: `.style(Destructive)` on any component.
+pub use icedcn_core::theme::{Destructive, Ghost, Invalid, Link, Muted, Outline, Secondary};
+
 #[allow(hidden_glob_reexports)]
 pub mod widget {
     pub use icedcn_widget::*;

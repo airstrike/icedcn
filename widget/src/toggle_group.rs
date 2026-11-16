@@ -38,8 +38,8 @@ use iced_core::{Alignment, Element};
 use iced_widget::button::StyleFn;
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
-use icedcn_core::theme::button::Spec;
 use icedcn_core::theme::toggle;
+use icedcn_core::theme::toggle::Spec;
 use icedcn_core::{Orientation, Theme};
 
 use crate::button::{self, group};

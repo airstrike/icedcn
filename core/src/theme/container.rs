@@ -10,6 +10,7 @@ use iced_core::Vector;
 
 use super::Theme;
 use super::tweak::{Token, Trigger, Tweak, TweakSet};
+use super::variant::{sink, spec};
 use crate::palette::Palette;
 use crate::style;
 use crate::style::status;
@@ -230,6 +231,23 @@ pub fn code_fade_overlay(theme: &Theme) -> Style {
     }
 }
 
+/// Destructive panel: destructive text inside a 1px `border-destructive/30`
+/// (`dark:border-destructive/40`) on a large radius.
+pub fn destructive(theme: &Theme) -> Style {
+    Style {
+        text_color: Some(theme.destructive.base),
+        border: Border {
+            width: 1.0,
+            radius: radius::LG.into(),
+            color: theme
+                .destructive
+                .base
+                .alpha(if theme.neutral.is_dark { 0.4 } else { 0.3 }),
+        },
+        ..Style::default()
+    }
+}
+
 // --- Variant unit structs ----------------------------------------------------
 //
 // Tag types matching the variant fn names. Each impls `Add<T: Into<Tweak>>`
@@ -268,6 +286,8 @@ pub struct CodeFadeOverlay;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Transparent;
 
+pub use super::variant::Destructive;
+
 // --- Spec --------------------------------------------------------------------
 
 /// A container style: a base variant function plus a sequence of tweaks
@@ -279,6 +299,11 @@ pub struct Spec {
 }
 
 impl Spec {
+    /// A spec painted by `variant`: the base of a variant of your own.
+    pub fn new(variant: fn(&Theme) -> Style) -> Spec {
+        Spec::variant(variant)
+    }
+
     pub(crate) fn variant(f: fn(&Theme) -> Style) -> Spec {
         Spec {
             variant: f,
@@ -342,6 +367,14 @@ impl From<SidebarInset> for Spec {
         Spec::variant(sidebar_inset)
     }
 }
+
+impl From<Destructive> for Spec {
+    fn from(_: Destructive) -> Spec {
+        Spec::variant(destructive)
+    }
+}
+
+spec!(Spec, Transparent);
 
 impl From<CodeFadeOverlay> for Spec {
     fn from(_: CodeFadeOverlay) -> Spec {
@@ -484,9 +517,24 @@ impl<'a> From<CodeFadeOverlay> for StyleFn<'a, Theme> {
     }
 }
 
+impl<'a> From<Destructive> for StyleFn<'a, Theme> {
+    fn from(_: Destructive) -> Self {
+        Box::new(destructive)
+    }
+}
+
 impl<'a> From<Spec> for StyleFn<'a, Theme> {
     fn from(spec: Spec) -> Self {
         Box::new(move |theme| spec.resolve(theme))
+    }
+}
+
+sink!(StyleFn<'a, Theme>, Spec, tweaks);
+sink!(iced_widget::container::StyleFn<'a, Theme>, Spec, tweaks);
+
+impl<'a> From<Destructive> for iced_widget::container::StyleFn<'a, Theme> {
+    fn from(variant: Destructive) -> Self {
+        Spec::from(variant).into()
     }
 }
 

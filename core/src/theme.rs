@@ -50,6 +50,9 @@ pub mod toast;
 pub mod toggle;
 pub mod tooltip;
 pub mod tweak;
+pub mod variant;
+
+pub use variant::{Destructive, Ghost, Invalid, Link, Muted, Outline, Secondary, Tweaked};
 
 use std::ops::Deref;
 

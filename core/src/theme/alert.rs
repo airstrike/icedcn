@@ -9,6 +9,7 @@ use std::ops::Add;
 use super::Theme;
 use super::container::Style;
 use super::tweak::{Tweak, TweakSet};
+use super::variant::spec;
 use crate::palette::Palette;
 use crate::style;
 use crate::style::status;
@@ -63,9 +64,7 @@ pub fn destructive_description(theme: &Theme) -> Color {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Default;
 
-/// Destructive alert variant.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Destructive;
+pub use super::variant::Destructive;
 
 // --- Spec --------------------------------------------------------------------
 
@@ -132,7 +131,8 @@ macro_rules! variant_add {
     };
 }
 
-variant_add!(Default, Destructive);
+variant_add!(Default);
+spec!(Spec, Default);
 
 impl<T: Into<Tweak>> Add<T> for Spec {
     type Output = Spec;
@@ -212,27 +212,11 @@ fn default_impl(_p: Palette, _s: status::Status) -> style::Style {
     style::Style::default()
 }
 
-fn destructive_impl(p: Palette, _s: status::Status) -> style::Style {
-    style::Style {
-        text_color: Some(p.base),
-        ..style::Style::default()
-    }
-}
-
 impl From<Default> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
     fn from(_: Default) -> Self {
         style::StyleFn {
             inner: default_impl,
             tint: style::Tint::Neutral,
-        }
-    }
-}
-
-impl From<Destructive> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
-    fn from(_: Destructive) -> Self {
-        style::StyleFn {
-            inner: destructive_impl,
-            tint: style::Tint::Destructive,
         }
     }
 }
@@ -277,13 +261,6 @@ fn border_over_background(
 
 impl<'a> From<Default> for iced_widget::container::StyleFn<'a, Theme> {
     fn from(t: Default) -> Self {
-        let sf: style::StyleFn<_> = t.into();
-        bridge(sf)
-    }
-}
-
-impl<'a> From<Destructive> for iced_widget::container::StyleFn<'a, Theme> {
-    fn from(t: Destructive) -> Self {
         let sf: style::StyleFn<_> = t.into();
         bridge(sf)
     }
@@ -344,9 +321,8 @@ mod tests {
         for theme in [Theme::light(), Theme::dark()] {
             let card: iced_core::Color = theme.card.base.into();
             let border: iced_core::Color = theme.neutral.border.into();
-            let styles: [iced_widget::container::StyleFn<'_, Theme>; 4] = [
+            let styles: [iced_widget::container::StyleFn<'_, Theme>; 3] = [
                 Default.into(),
-                Destructive.into(),
                 Spec::from(Default).into(),
                 Spec::from(Destructive).into(),
             ];

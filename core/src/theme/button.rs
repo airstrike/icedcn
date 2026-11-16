@@ -13,6 +13,7 @@ use std::ops::Add;
 
 use super::Theme;
 use super::tweak::{Trigger, Tweak, TweakSet};
+use super::variant::{sink, spec};
 use crate::palette::Palette;
 use crate::style;
 use crate::style::status;
@@ -383,25 +384,11 @@ pub fn link(theme: &Theme, status: Status) -> Style {
 //
 // Variant tags convert to a `Spec`. Adding a tweak produces a customized variant.
 
+pub use super::variant::{Destructive, Ghost, Link, Outline, Secondary};
+
 /// Default/primary button variant (`bg-primary`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Default;
-
-/// Secondary button variant (`bg-secondary`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Secondary;
-
-/// Outline button variant (`border bg-background`, dark `bg-input/30`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Outline;
-
-/// Ghost button variant (no fill at rest).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Ghost;
-
-/// Destructive button variant (`bg-destructive/10..20`, `text-destructive`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Destructive;
 
 /// Inactive sidebar item variant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -410,10 +397,6 @@ pub struct Sidebar;
 /// Active sidebar item variant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SidebarActive;
-
-/// Link-styled button variant (`text-primary`, no fill).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Link;
 
 // --- Spec --------------------------------------------------------------------
 
@@ -427,6 +410,11 @@ pub struct Spec {
 }
 
 impl Spec {
+    /// A spec painted by `variant`: the base of a variant of your own.
+    pub fn new(variant: fn(&Theme, Status) -> Style) -> Spec {
+        Spec::variant(variant)
+    }
+
     pub(crate) fn variant(f: fn(&Theme, Status) -> Style) -> Spec {
         Self::with_kind(f, state::Variant::Custom)
     }
@@ -511,34 +499,6 @@ impl<T: Into<Tweak>> Add<T> for Default {
     }
 }
 
-impl<T: Into<Tweak>> Add<T> for Secondary {
-    type Output = Spec;
-    fn add(self, rhs: T) -> Spec {
-        Spec::from(self).push(rhs.into())
-    }
-}
-
-impl<T: Into<Tweak>> Add<T> for Outline {
-    type Output = Spec;
-    fn add(self, rhs: T) -> Spec {
-        Spec::from(self).push(rhs.into())
-    }
-}
-
-impl<T: Into<Tweak>> Add<T> for Ghost {
-    type Output = Spec;
-    fn add(self, rhs: T) -> Spec {
-        Spec::from(self).push(rhs.into())
-    }
-}
-
-impl<T: Into<Tweak>> Add<T> for Destructive {
-    type Output = Spec;
-    fn add(self, rhs: T) -> Spec {
-        Spec::from(self).push(rhs.into())
-    }
-}
-
 impl<T: Into<Tweak>> Add<T> for Sidebar {
     type Output = Spec;
     fn add(self, rhs: T) -> Spec {
@@ -553,19 +513,14 @@ impl<T: Into<Tweak>> Add<T> for SidebarActive {
     }
 }
 
-impl<T: Into<Tweak>> Add<T> for Link {
-    type Output = Spec;
-    fn add(self, rhs: T) -> Spec {
-        Spec::from(self).push(rhs.into())
-    }
-}
-
 impl<T: Into<Tweak>> Add<T> for Spec {
     type Output = Spec;
     fn add(self, rhs: T) -> Spec {
         self.push(rhs.into())
     }
 }
+
+spec!(Spec, Default);
 
 // --- Resolver ----------------------------------------------------------------
 
@@ -702,6 +657,8 @@ impl<'a> From<Spec> for StyleFn<'a, Theme> {
     }
 }
 
+sink!(StyleFn<'a, Theme>, Spec, tweaks);
+
 // Mixed-palette tags (Outline, Ghost, Sidebar) read theme.input / muted /
 // sidebar — Tint alone can't address them; they route through `bridge_with`
 // with per-tag intrinsics. Tint-eligible tags use the universal bridge.
@@ -816,33 +773,6 @@ impl From<Default> for style::StyleFn<fn(Palette, status::Status) -> style::Styl
     }
 }
 
-impl From<Secondary> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
-    fn from(_: Secondary) -> Self {
-        style::StyleFn {
-            inner: secondary_impl,
-            tint: style::Tint::Secondary,
-        }
-    }
-}
-
-impl From<Destructive> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
-    fn from(_: Destructive) -> Self {
-        style::StyleFn {
-            inner: destructive_impl,
-            tint: style::Tint::Destructive,
-        }
-    }
-}
-
-impl From<Link> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
-    fn from(_: Link) -> Self {
-        style::StyleFn {
-            inner: link_impl,
-            tint: style::Tint::Primary,
-        }
-    }
-}
-
 impl From<SidebarActive> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
     fn from(_: SidebarActive) -> Self {
         style::StyleFn {
@@ -928,26 +858,15 @@ pub fn intrinsic_sidebar(theme: &Theme, status: status::Status) -> style::Style 
     }
 }
 
+fn tagged(
+    inner: fn(Palette, status::Status) -> style::Style,
+    tint: style::Tint,
+) -> style::StyleFn<fn(Palette, status::Status) -> style::Style> {
+    style::StyleFn { inner, tint }
+}
+
 fn empty_impl(_p: Palette, _s: status::Status) -> style::Style {
     style::Style::default()
-}
-
-impl From<Outline> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
-    fn from(_: Outline) -> Self {
-        style::StyleFn {
-            inner: empty_impl,
-            tint: style::Tint::Neutral,
-        }
-    }
-}
-
-impl From<Ghost> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
-    fn from(_: Ghost) -> Self {
-        style::StyleFn {
-            inner: empty_impl,
-            tint: style::Tint::Neutral,
-        }
-    }
 }
 
 impl From<Sidebar> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
@@ -1022,30 +941,26 @@ impl<'a> From<Default> for iced_widget::button::StyleFn<'a, Theme> {
 }
 
 impl<'a> From<Secondary> for iced_widget::button::StyleFn<'a, Theme> {
-    fn from(t: Secondary) -> Self {
-        let sf: style::StyleFn<_> = t.into();
-        sf.into()
+    fn from(_: Secondary) -> Self {
+        tagged(secondary_impl, style::Tint::Secondary).into()
     }
 }
 
 impl<'a> From<Outline> for iced_widget::button::StyleFn<'a, Theme> {
-    fn from(t: Outline) -> Self {
-        let sf: style::StyleFn<_> = t.into();
-        bridge_with(sf, intrinsic_outline)
+    fn from(_: Outline) -> Self {
+        bridge_with(tagged(empty_impl, style::Tint::Neutral), intrinsic_outline)
     }
 }
 
 impl<'a> From<Ghost> for iced_widget::button::StyleFn<'a, Theme> {
-    fn from(t: Ghost) -> Self {
-        let sf: style::StyleFn<_> = t.into();
-        bridge_with(sf, intrinsic_ghost)
+    fn from(_: Ghost) -> Self {
+        bridge_with(tagged(empty_impl, style::Tint::Neutral), intrinsic_ghost)
     }
 }
 
 impl<'a> From<Destructive> for iced_widget::button::StyleFn<'a, Theme> {
-    fn from(t: Destructive) -> Self {
-        let sf: style::StyleFn<_> = t.into();
-        sf.into()
+    fn from(_: Destructive) -> Self {
+        tagged(destructive_impl, style::Tint::Destructive).into()
     }
 }
 
@@ -1064,9 +979,8 @@ impl<'a> From<SidebarActive> for iced_widget::button::StyleFn<'a, Theme> {
 }
 
 impl<'a> From<Link> for iced_widget::button::StyleFn<'a, Theme> {
-    fn from(t: Link) -> Self {
-        let sf: style::StyleFn<_> = t.into();
-        sf.into()
+    fn from(_: Link) -> Self {
+        tagged(link_impl, style::Tint::Primary).into()
     }
 }
 
@@ -1075,6 +989,8 @@ impl<'a> From<Spec> for iced_widget::button::StyleFn<'a, Theme> {
         Box::new(move |t, s| spec.resolve(t, s).into())
     }
 }
+
+sink!(iced_widget::button::StyleFn<'a, Theme>, Spec, tweaks);
 
 #[cfg(test)]
 mod tests {
@@ -1148,7 +1064,7 @@ mod tests {
     #[test]
     fn outline_plus_opaque_dark_active_opaque_and_lifted() {
         let theme = Theme::dark();
-        let spec: Spec = Outline + Opaque;
+        let spec: Spec = (Outline + Opaque).into();
         let resolved = spec.resolve(&theme, Status::Active);
         let bg = bg_color(&resolved);
 
@@ -1175,7 +1091,7 @@ mod tests {
     #[test]
     fn outline_plus_opaque_light_active_remains_near_white() {
         let theme = Theme::light();
-        let spec: Spec = Outline + Opaque;
+        let spec: Spec = (Outline + Opaque).into();
         let resolved = spec.resolve(&theme, Status::Active);
         let bg = bg_color(&resolved);
 
@@ -1189,7 +1105,7 @@ mod tests {
     #[test]
     fn ghost_plus_opaque_remains_backgroundless() {
         let theme = Theme::dark();
-        let spec: Spec = Ghost + Opaque;
+        let spec: Spec = (Ghost + Opaque).into();
         let resolved = spec.resolve(&theme, Status::Active);
         assert!(
             resolved.background.is_none(),
@@ -1202,7 +1118,7 @@ mod tests {
     #[test]
     fn bg_atom_overrides_variant_background() {
         let theme = Theme::dark();
-        let spec: Spec = Outline + Bg(Token::Primary);
+        let spec: Spec = (Outline + Bg(Token::Primary)).into();
         let resolved = spec.resolve(&theme, Status::Active);
 
         let expected = theme.primary.base;
@@ -1222,7 +1138,7 @@ mod tests {
     #[test]
     fn outline_plus_opaque_preserves_state_lift() {
         let theme = Theme::dark();
-        let spec: Spec = Outline + Opaque;
+        let spec: Spec = (Outline + Opaque).into();
 
         let active = bg_color(&spec.resolve(&theme, Status::Active));
         let hovered = bg_color(&spec.resolve(&theme, Status::Hovered));

@@ -95,6 +95,29 @@ impl<T: Into<Tweak>> From<T> for TweakSet {
     }
 }
 
+impl TweakSet {
+    /// The tweaks in the order they apply.
+    pub fn iter(&self) -> std::slice::Iter<'_, Tweak> {
+        self.0.iter()
+    }
+}
+
+impl IntoIterator for TweakSet {
+    type Item = Tweak;
+    type IntoIter = std::vec::IntoIter<Tweak>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a TweakSet {
+    type Item = &'a Tweak;
+    type IntoIter = std::slice::Iter<'a, Tweak>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
+    }
+}
+
 impl<R: Into<Tweak>> Add<R> for TweakSet {
     type Output = TweakSet;
     fn add(mut self, rhs: R) -> TweakSet {

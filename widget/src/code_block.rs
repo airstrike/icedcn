@@ -43,25 +43,7 @@ pub enum LineStyle {
     Removed,
 }
 
-/// Nova's error surface.
-#[derive(Debug, Clone, Copy)]
-pub struct Destructive;
-
-impl<'a> From<Destructive> for StyleFn<'a, Theme> {
-    fn from(_: Destructive) -> Self {
-        Box::new(|theme| Style {
-            text_color: Some(theme.destructive.base),
-            border: Border {
-                color: theme
-                    .destructive
-                    .base
-                    .alpha(if theme.neutral.is_dark { 0.4 } else { 0.3 }),
-                ..surface(theme).border
-            },
-            ..Style::default()
-        })
-    }
-}
+pub use icedcn_core::theme::Destructive;
 
 fn surface(theme: &Theme) -> Style {
     Style {

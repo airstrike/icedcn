@@ -17,9 +17,7 @@ pub enum Variant {
     Invalid,
 }
 
-/// An invalid select.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub struct Invalid;
+pub use crate::theme::variant::Invalid;
 
 impl From<Invalid> for Variant {
     fn from(_: Invalid) -> Self {

@@ -21,9 +21,7 @@ pub enum Variant {
     Destructive,
 }
 
-/// A destructive menu item.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub struct Destructive;
+pub use crate::theme::variant::Destructive;
 
 impl From<Destructive> for Variant {
     fn from(_: Destructive) -> Self {

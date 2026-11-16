@@ -11,6 +11,7 @@ use std::ops::Add;
 
 use super::Theme;
 use super::tweak::{Tweak, TweakSet};
+use super::variant::{sink, spec};
 use crate::Color;
 use crate::palette::Palette;
 use crate::style;
@@ -97,6 +98,8 @@ pub fn destructive(theme: &Theme) -> Style {
 
 // --- Variant unit structs ----------------------------------------------------
 
+pub use super::variant::{Destructive, Link, Muted};
+
 /// Default text variant — inherits parent color.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Default;
@@ -104,18 +107,6 @@ pub struct Default;
 /// Foreground text variant — body text color.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Foreground;
-
-/// Muted text variant — secondary text color.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Muted;
-
-/// Link text variant — primary brand color.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Link;
-
-/// Destructive text variant — error/destructive color.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Destructive;
 
 // --- Spec --------------------------------------------------------------------
 
@@ -128,6 +119,11 @@ pub struct Spec {
 }
 
 impl Spec {
+    /// A spec painted by `variant`: the base of a variant of your own.
+    pub fn new(variant: fn(&Theme) -> Style) -> Spec {
+        Spec::variant(variant)
+    }
+
     fn variant(f: fn(&Theme) -> Style) -> Spec {
         Spec {
             variant: f,
@@ -193,7 +189,8 @@ macro_rules! variant_add {
     };
 }
 
-variant_add!(Default, Foreground, Muted, Link, Destructive);
+variant_add!(Default, Foreground);
+spec!(Spec, Default);
 
 impl<T: Into<Tweak>> Add<T> for Spec {
     type Output = Spec;
@@ -278,6 +275,8 @@ impl<'a> From<Spec> for StyleFn<'a, Theme> {
     }
 }
 
+sink!(StyleFn<'a, Theme>, Spec, tweaks);
+
 /// Universal-Style intrinsic default for text: no override (inherit parent).
 pub fn intrinsic_default(_theme: &Theme) -> style::Style {
     style::Style::default()
@@ -312,39 +311,33 @@ impl From<Foreground> for style::StyleFn<Box<dyn Fn(Palette, status::Status) -> 
     }
 }
 
-impl From<Muted> for style::StyleFn<Box<dyn Fn(Palette, status::Status) -> style::Style>> {
-    fn from(_: Muted) -> Self {
-        style::StyleFn {
-            inner: Box::new(|p, _s| style::Style {
-                text_color: Some(p.foreground),
-                ..style::Style::default()
-            }),
-            tint: style::Tint::Muted,
-        }
+fn universal_muted() -> style::StyleFn<Box<dyn Fn(Palette, status::Status) -> style::Style>> {
+    style::StyleFn {
+        inner: Box::new(|p, _s| style::Style {
+            text_color: Some(p.foreground),
+            ..style::Style::default()
+        }),
+        tint: style::Tint::Muted,
     }
 }
 
-impl From<Link> for style::StyleFn<Box<dyn Fn(Palette, status::Status) -> style::Style>> {
-    fn from(_: Link) -> Self {
-        style::StyleFn {
-            inner: Box::new(|p, _s| style::Style {
-                text_color: Some(p.base),
-                ..style::Style::default()
-            }),
-            tint: style::Tint::Primary,
-        }
+fn universal_link() -> style::StyleFn<Box<dyn Fn(Palette, status::Status) -> style::Style>> {
+    style::StyleFn {
+        inner: Box::new(|p, _s| style::Style {
+            text_color: Some(p.base),
+            ..style::Style::default()
+        }),
+        tint: style::Tint::Primary,
     }
 }
 
-impl From<Destructive> for style::StyleFn<Box<dyn Fn(Palette, status::Status) -> style::Style>> {
-    fn from(_: Destructive) -> Self {
-        style::StyleFn {
-            inner: Box::new(|p, _s| style::Style {
-                text_color: Some(p.base),
-                ..style::Style::default()
-            }),
-            tint: style::Tint::Destructive,
-        }
+fn universal_destructive() -> style::StyleFn<Box<dyn Fn(Palette, status::Status) -> style::Style>> {
+    style::StyleFn {
+        inner: Box::new(|p, _s| style::Style {
+            text_color: Some(p.base),
+            ..style::Style::default()
+        }),
+        tint: style::Tint::Destructive,
     }
 }
 
@@ -389,23 +382,20 @@ impl<'a> From<Foreground> for iced_widget::text::StyleFn<'a, Theme> {
 }
 
 impl<'a> From<Muted> for iced_widget::text::StyleFn<'a, Theme> {
-    fn from(t: Muted) -> Self {
-        let sf: style::StyleFn<_> = t.into();
-        sf.into()
+    fn from(_: Muted) -> Self {
+        universal_muted().into()
     }
 }
 
 impl<'a> From<Link> for iced_widget::text::StyleFn<'a, Theme> {
-    fn from(t: Link) -> Self {
-        let sf: style::StyleFn<_> = t.into();
-        sf.into()
+    fn from(_: Link) -> Self {
+        universal_link().into()
     }
 }
 
 impl<'a> From<Destructive> for iced_widget::text::StyleFn<'a, Theme> {
-    fn from(t: Destructive) -> Self {
-        let sf: style::StyleFn<_> = t.into();
-        sf.into()
+    fn from(_: Destructive) -> Self {
+        universal_destructive().into()
     }
 }
 
@@ -414,6 +404,8 @@ impl<'a> From<Spec> for iced_widget::text::StyleFn<'a, Theme> {
         Box::new(move |t| spec.resolve(t).into())
     }
 }
+
+sink!(iced_widget::text::StyleFn<'a, Theme>, Spec, tweaks);
 
 #[cfg(test)]
 mod tests {

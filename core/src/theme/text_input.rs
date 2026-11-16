@@ -34,6 +34,7 @@ impl From<iced_widget::text_input::Status> for Status {
 
 use super::Theme;
 use super::tweak::{Trigger, Tweak, TweakSet};
+use super::variant::{sink, spec};
 use crate::palette::Palette;
 use crate::style;
 use crate::style::status;
@@ -250,9 +251,7 @@ pub fn invalid(theme: &Theme, status: Status) -> Style {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Default;
 
-/// Invalid text input variant. See [`invalid`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Invalid;
+pub use super::variant::Invalid;
 
 // --- Spec --------------------------------------------------------------------
 
@@ -308,19 +307,14 @@ impl<T: Into<Tweak>> Add<T> for Default {
     }
 }
 
-impl<T: Into<Tweak>> Add<T> for Invalid {
-    type Output = Spec;
-    fn add(self, rhs: T) -> Spec {
-        Spec::from(self).push(rhs.into())
-    }
-}
-
 impl<T: Into<Tweak>> Add<T> for Spec {
     type Output = Spec;
     fn add(self, rhs: T) -> Spec {
         self.push(rhs.into())
     }
 }
+
+spec!(Spec, Default);
 
 // --- Resolver ----------------------------------------------------------------
 
@@ -413,12 +407,10 @@ impl From<Default> for style::StyleFn<fn(Palette, status::Status) -> style::Styl
     }
 }
 
-impl From<Invalid> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
-    fn from(_: Invalid) -> Self {
-        style::StyleFn {
-            inner: empty_impl,
-            tint: style::Tint::Destructive,
-        }
+fn universal_invalid() -> style::StyleFn<fn(Palette, status::Status) -> style::Style> {
+    style::StyleFn {
+        inner: empty_impl,
+        tint: style::Tint::Destructive,
     }
 }
 
@@ -505,8 +497,8 @@ impl<'a> From<Default> for StyleFn<'a, Theme> {
 }
 
 impl<'a> From<Invalid> for StyleFn<'a, Theme> {
-    fn from(t: Invalid) -> Self {
-        let sf: style::StyleFn<_> = t.into();
+    fn from(_: Invalid) -> Self {
+        let sf = universal_invalid();
         let inner = bridge_with(sf, invalid, std::convert::identity);
         Box::new(move |theme, our_status| inner(theme, our_status.into()))
     }
@@ -517,6 +509,8 @@ impl<'a> From<Spec> for StyleFn<'a, Theme> {
         Box::new(move |theme, status| spec.resolve(theme, status))
     }
 }
+
+sink!(StyleFn<'a, Theme>, Spec, tweaks);
 
 #[cfg(test)]
 mod tests {

@@ -5,8 +5,9 @@
 use std::ops::Add;
 
 use super::Theme;
-use super::button::{Spec, Status, Style};
+use super::button::{self, Status, Style};
 use super::tweak::Tweak;
+use super::variant::spec;
 use crate::{Border, Color, radius};
 
 /// Default toggle: no fill at rest, muted on hover.
@@ -62,19 +63,46 @@ pub fn on(theme: &Theme, style: Style) -> Style {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Default;
 
-/// Outline toggle variant.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Outline;
+pub use super::variant::Outline;
+
+/// A toggle's style: a variant plus tweaks, resolved as a button [`button::Spec`].
+#[derive(Debug, Clone)]
+pub struct Spec {
+    paint: button::Spec,
+}
+
+impl Spec {
+    /// Resolve this spec to a concrete `Style` for the given theme and status.
+    pub fn resolve(&self, theme: &Theme, status: Status) -> Style {
+        self.paint.resolve(theme, status)
+    }
+}
 
 impl From<Default> for Spec {
     fn from(_: Default) -> Spec {
-        Spec::variant(default)
+        Spec {
+            paint: button::Spec::new(default),
+        }
     }
 }
 
 impl From<Outline> for Spec {
     fn from(_: Outline) -> Spec {
-        Spec::variant(outline)
+        Spec {
+            paint: button::Spec::new(outline),
+        }
+    }
+}
+
+impl From<button::Spec> for Spec {
+    fn from(paint: button::Spec) -> Spec {
+        Spec { paint }
+    }
+}
+
+impl From<Spec> for button::Spec {
+    fn from(spec: Spec) -> button::Spec {
+        spec.paint
     }
 }
 
@@ -82,14 +110,18 @@ impl<T: Into<Tweak>> Add<T> for Default {
     type Output = Spec;
 
     fn add(self, rhs: T) -> Spec {
-        Spec::from(self).push(rhs.into())
+        Spec::from(self) + rhs
     }
 }
 
-impl<T: Into<Tweak>> Add<T> for Outline {
+impl<T: Into<Tweak>> Add<T> for Spec {
     type Output = Spec;
 
     fn add(self, rhs: T) -> Spec {
-        Spec::from(self).push(rhs.into())
+        Spec {
+            paint: self.paint + rhs,
+        }
     }
 }
+
+spec!(Spec, Default);

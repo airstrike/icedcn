@@ -177,7 +177,7 @@ impl Demo {
             .style(if next.is_some() {
                 Foreground + opacity
             } else {
-                Muted + opacity
+                (Muted + opacity).into()
             })
             .line_height(LineHeight::Absolute(20.into()))
             .width(Fill)

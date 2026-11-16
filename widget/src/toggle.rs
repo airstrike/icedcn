@@ -29,7 +29,7 @@ mod widget;
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
-use icedcn_core::theme::button::Spec;
+use icedcn_core::theme::toggle::Spec;
 
 use crate::compose::{Compose, Inherited, Slot};
 use crate::{Size, Weight};
@@ -177,7 +177,7 @@ impl<'a, Message: 'a> Compose<Message> for Toggle<'a, Message> {
 
         let surface: iced_core::Element<'a, Message, Theme, Renderer> = surface.into();
 
-        widget::Toggle::new(surface, style)
+        widget::Toggle::new(surface, style.into())
             .pressed(pressed)
             .default_pressed(default_pressed)
             .on_change(on_pressed_change)

@@ -10,6 +10,7 @@ use std::ops::Add;
 use super::Theme;
 use super::container::Style;
 use super::tweak::{Tweak, TweakSet};
+use super::variant::spec;
 use crate::palette::Palette;
 use crate::style;
 use crate::style::status;
@@ -97,29 +98,11 @@ pub fn ghost(theme: &Theme) -> Style {
 
 // --- Variant unit structs ----------------------------------------------------
 
+pub use super::variant::{Destructive, Ghost, Link, Outline, Secondary};
+
 /// Default badge variant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Default;
-
-/// Secondary badge variant.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Secondary;
-
-/// Destructive badge variant.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Destructive;
-
-/// Outline badge variant.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Outline;
-
-/// Ghost badge variant.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Ghost;
-
-/// A transparent badge using the primary foreground link color.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Link;
 
 pub fn link(theme: &Theme) -> Style {
     Style {
@@ -131,11 +114,6 @@ pub fn link(theme: &Theme) -> Style {
 impl From<Link> for Spec {
     fn from(_: Link) -> Spec {
         Spec::variant(link, state::Variant::Link)
-    }
-}
-impl<'a> From<Link> for iced_widget::container::StyleFn<'a, Theme> {
-    fn from(_: Link) -> Self {
-        Box::new(|theme| link(theme).into())
     }
 }
 
@@ -217,7 +195,8 @@ macro_rules! variant_add {
     };
 }
 
-variant_add!(Default, Secondary, Destructive, Outline, Ghost, Link);
+variant_add!(Default);
+spec!(Spec, Default);
 
 impl<T: Into<Tweak>> Add<T> for Spec {
     type Output = Spec;
@@ -292,84 +271,11 @@ fn default_impl(p: Palette, _s: status::Status) -> style::Style {
     }
 }
 
-fn secondary_impl(p: Palette, _s: status::Status) -> style::Style {
-    style::Style {
-        fill: Some(p.base.into()),
-        text_color: Some(p.foreground),
-        border_radius: Some(PILL_RADIUS.into()),
-        ..style::Style::default()
-    }
-}
-
-fn destructive_impl(p: Palette, _s: status::Status) -> style::Style {
-    let alpha = if p.is_dark { 0.20 } else { 0.10 };
-    style::Style {
-        fill: Some(p.base.scale_alpha(alpha).into()),
-        text_color: Some(p.base),
-        border_radius: Some(PILL_RADIUS.into()),
-        ..style::Style::default()
-    }
-}
-
-fn outline_impl(p: Palette, _s: status::Status) -> style::Style {
-    style::Style {
-        text_color: Some(p.tint_text),
-        border_width: Some(1.0),
-        border_color: Some(p.border),
-        border_radius: Some(PILL_RADIUS.into()),
-        ..style::Style::default()
-    }
-}
-
-fn ghost_impl(p: Palette, _s: status::Status) -> style::Style {
-    style::Style {
-        text_color: Some(p.tint_text),
-        border_radius: Some(PILL_RADIUS.into()),
-        ..style::Style::default()
-    }
-}
-
 impl From<Default> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
     fn from(_: Default) -> Self {
         style::StyleFn {
             inner: default_impl,
             tint: style::Tint::Primary,
-        }
-    }
-}
-
-impl From<Secondary> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
-    fn from(_: Secondary) -> Self {
-        style::StyleFn {
-            inner: secondary_impl,
-            tint: style::Tint::Secondary,
-        }
-    }
-}
-
-impl From<Destructive> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
-    fn from(_: Destructive) -> Self {
-        style::StyleFn {
-            inner: destructive_impl,
-            tint: style::Tint::Destructive,
-        }
-    }
-}
-
-impl From<Outline> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
-    fn from(_: Outline) -> Self {
-        style::StyleFn {
-            inner: outline_impl,
-            tint: style::Tint::Neutral,
-        }
-    }
-}
-
-impl From<Ghost> for style::StyleFn<fn(Palette, status::Status) -> style::Style> {
-    fn from(_: Ghost) -> Self {
-        style::StyleFn {
-            inner: ghost_impl,
-            tint: style::Tint::Neutral,
         }
     }
 }
@@ -389,34 +295,6 @@ where
 
 impl<'a> From<Default> for iced_widget::container::StyleFn<'a, Theme> {
     fn from(t: Default) -> Self {
-        let sf: style::StyleFn<_> = t.into();
-        bridge(sf)
-    }
-}
-
-impl<'a> From<Secondary> for iced_widget::container::StyleFn<'a, Theme> {
-    fn from(t: Secondary) -> Self {
-        let sf: style::StyleFn<_> = t.into();
-        bridge(sf)
-    }
-}
-
-impl<'a> From<Destructive> for iced_widget::container::StyleFn<'a, Theme> {
-    fn from(t: Destructive) -> Self {
-        let sf: style::StyleFn<_> = t.into();
-        bridge(sf)
-    }
-}
-
-impl<'a> From<Outline> for iced_widget::container::StyleFn<'a, Theme> {
-    fn from(t: Outline) -> Self {
-        let sf: style::StyleFn<_> = t.into();
-        bridge(sf)
-    }
-}
-
-impl<'a> From<Ghost> for iced_widget::container::StyleFn<'a, Theme> {
-    fn from(t: Ghost) -> Self {
         let sf: style::StyleFn<_> = t.into();
         bridge(sf)
     }

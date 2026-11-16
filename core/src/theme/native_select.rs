@@ -68,9 +68,7 @@ pub fn invalid(theme: &Theme, status: Status) -> Style {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Default;
 
-/// Invalid select style.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Invalid;
+pub use crate::theme::variant::Invalid;
 
 impl<'a> From<Default> for StyleFn<'a, Theme> {
     fn from(_: Default) -> Self {

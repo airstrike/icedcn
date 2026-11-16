@@ -4,7 +4,8 @@
 use iced_core::Border;
 use iced_widget::button;
 
-use super::super::tweak::{Trigger, Tweak};
+use super::super::Tweaked;
+use super::super::tweak::{Trigger, Tweak, TweakSet};
 use super::{Spec, Theme};
 use crate::palette::Palette;
 use crate::style;
@@ -318,6 +319,24 @@ where
     }
 }
 
+impl<'a, V: Clone> IntoStyle<'a> for Tweaked<V>
+where
+    Spec: From<V>,
+{
+    fn uses_border_box(&self) -> bool {
+        self.clone().build::<Spec>().uses_border_box()
+    }
+    fn into_style(self) -> StyleFn<'a> {
+        self.build::<Spec>().into_style()
+    }
+}
+
+impl<'a> IntoStyle<'a> for TweakSet {
+    fn into_style(self) -> StyleFn<'a> {
+        Spec::from(self).into_style()
+    }
+}
+
 impl<'a> IntoStyle<'a> for style::Tint {
     fn uses_border_box(&self) -> bool {
         false
@@ -466,12 +485,14 @@ mod tests {
     #[test]
     fn focus_tweaks_and_universal_ring_survive_conversion() {
         let theme = Theme::light();
-        let style = super::super::Outline
-            + tweak::focus(Ring {
-                color: theme.primary.base.into(),
-                width: 5.0,
-                offset: 0.0,
-            });
+        let style = Spec::from(
+            super::super::Outline
+                + tweak::focus(Ring {
+                    color: theme.primary.base.into(),
+                    width: 5.0,
+                    offset: 0.0,
+                }),
+        );
         let focus = Status {
             focused: true,
             ..Status::default()

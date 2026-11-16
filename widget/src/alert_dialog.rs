@@ -35,7 +35,7 @@ use iced_core::text::LineHeight;
 use iced_widget::Renderer;
 use icedcn_core::Theme;
 use icedcn_core::theme::alert_dialog;
-use icedcn_core::theme::container::Spec;
+use icedcn_core::theme::alert_dialog::Spec;
 use icedcn_core::theme::text::Foreground;
 
 use crate::Size;
