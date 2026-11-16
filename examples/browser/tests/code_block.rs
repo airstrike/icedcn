@@ -1,6 +1,7 @@
 //! Focused regressions for the repaired width, clipping and selection paths.
 use browser::component::code_block::CodeBlockPage;
 use iced::keyboard::{self, key::Named};
+use iced::mouse::ScrollDelta;
 use iced::widget::Id;
 use iced::{Element, Event, Point, Rectangle, Size, Vector};
 use iced_test::core::text::Target;
@@ -402,4 +403,144 @@ fn editable_and_read_only_blocks_lay_out_to_the_same_size() {
         sizes.push(ui.find("END").unwrap().bounds().y);
     }
     assert_eq!(sizes[0], sizes[1]);
+}
+
+#[derive(Default)]
+struct Offsets(Vec<(Rectangle, Size, Vector)>);
+impl Operation for Offsets {
+    fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+        visit(self);
+    }
+    fn scrollable(
+        &mut self,
+        _: Option<&Id>,
+        bounds: Rectangle,
+        content: Size,
+        offset: Vector,
+        _: &mut dyn Scrollable,
+    ) {
+        self.0.push((bounds, content, offset));
+    }
+}
+
+/// Each scrollable's offset as of the next frame.
+fn offsets<'a, M: 'a>(ui: &mut Simulator<'a, M, Theme>) -> Vec<(Rectangle, Size, Vector)> {
+    ui.draw(&Theme::light());
+    let mut offsets = Offsets::default();
+    ui.operate(&mut offsets);
+    offsets.0
+}
+
+fn wheel(x: f32, y: f32) -> ScrollDelta {
+    ScrollDelta::Pixels { x, y }
+}
+
+const LONG: &str = "fn main() { println!(\"a line that is much longer than the code block is wide, so it has to scroll\"); }\n";
+
+#[test]
+fn a_long_line_in_an_unwrapped_editor_scrolls_on_a_horizontal_wheel_and_while_typing() {
+    let block: Element<'static, (), Theme> = container(code_block![
+        code_block::content("")
+            .language("rust")
+            .line_numbers(true)
+            .default_value(LONG)
+    ])
+    .width(320)
+    .into();
+    let mut ui = Simulator::with_size(Default::default(), Size::new(320., 400.), block);
+    let (bounds, content, offset) = offsets(&mut ui)[0];
+    assert!(
+        content.width > bounds.width + 200.,
+        "the editor keeps its long line"
+    );
+    assert_eq!(offset, Vector::ZERO);
+    let (line, _) = editor(&mut ui);
+    ui.point_at(Point::new(
+        bounds.x + 60.,
+        line.center_y().min(bounds.y + 20.),
+    ));
+    ui.scroll(wheel(-90., 0.));
+    assert_eq!(offsets(&mut ui)[0].2, Vector::new(90., 0.));
+    ui.scroll(wheel(90., 0.));
+    assert_eq!(offsets(&mut ui)[0].2, Vector::ZERO);
+
+    ui.simulate(simulator::click());
+    ui.tap_key(Named::End);
+    let (bounds, content, offset) = offsets(&mut ui)[0];
+    assert_eq!(
+        offset.x,
+        content.width - bounds.width,
+        "End reveals the caret"
+    );
+    ui.typewrite("// more");
+    let (bounds, grown, offset) = offsets(&mut ui)[0];
+    assert!(grown.width > content.width, "the line grows as it is typed");
+    assert_eq!(
+        offset.x,
+        grown.width - bounds.width,
+        "the caret stays in view"
+    );
+    ui.tap_key(Named::Home);
+    assert_eq!(offsets(&mut ui)[0].2.x, 0., "Home shows the start again");
+}
+
+fn page(content: code_block::Content<'static, ()>) -> Element<'static, (), Theme> {
+    use iced::widget::space;
+    use icedcn::widget::scrollable::scrollable;
+    scrollable(column![code_block![content], space().height(2000)].width(iced::Fill))
+        .width(iced::Fill)
+        .height(iced::Fill)
+        .into()
+}
+
+fn lines(count: usize) -> String {
+    (1..=count).map(|n| format!("let x{n} = {n};\n")).collect()
+}
+
+#[test]
+fn a_vertical_wheel_over_an_editor_that_shows_every_line_scrolls_the_page() {
+    let mut ui = Simulator::with_size(
+        Default::default(),
+        Size::new(400., 300.),
+        page(
+            code_block::content("")
+                .language("rust")
+                .default_value(lines(5)),
+        ),
+    );
+    let (line, _) = editor(&mut ui);
+    ui.point_at(Point::new(line.x + 40., line.y + 20.));
+    ui.scroll(wheel(0., -50.));
+    let scrolled = offsets(&mut ui);
+    assert_eq!(scrolled[0].2, Vector::new(0., 50.), "the page scrolls");
+    assert_eq!(scrolled[1].2, Vector::ZERO);
+}
+
+#[test]
+fn a_vertical_wheel_over_a_capped_editor_scrolls_the_editor_and_then_the_page() {
+    let mut ui = Simulator::with_size(
+        Default::default(),
+        Size::new(400., 300.),
+        page(
+            code_block::content("")
+                .language("rust")
+                .max_height(120)
+                .default_value(lines(20)),
+        ),
+    );
+    let (line, _) = editor(&mut ui);
+    ui.point_at(Point::new(line.x + 40., line.y + 20.));
+    ui.scroll(wheel(0., -50.));
+    let scrolled = offsets(&mut ui);
+    assert_eq!(scrolled[0].2, Vector::ZERO, "the page stays");
+    assert_eq!(scrolled[1].2, Vector::new(0., 50.), "the editor scrolls");
+    ui.scroll(wheel(0., -10_000.));
+    let (bounds, content, offset) = offsets(&mut ui)[1];
+    assert_eq!(offset.y, content.height - bounds.height);
+    ui.scroll(wheel(0., -50.));
+    assert_eq!(
+        offsets(&mut ui)[0].2,
+        Vector::new(0., 50.),
+        "the end bubbles"
+    );
 }

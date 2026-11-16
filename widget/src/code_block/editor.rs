@@ -90,7 +90,6 @@ impl<'a, Message> Editor<'a, Message> {
             ))
             .wrapping(self.listing.wrapping())
             .padding(0)
-            .width(state.width)
             .height(Length::Shrink)
             .key_binding(move |press| binding(press, &state.content))
             .highlight_with::<Tokens>(
@@ -100,6 +99,11 @@ impl<'a, Message> Editor<'a, Message> {
                 },
                 highlight,
             );
+        let editor = if self.listing.wrap {
+            editor.width(state.width)
+        } else {
+            editor
+        };
         let editor = match &self.id {
             Some(id) => editor.id(id.clone()),
             None => editor,
@@ -108,6 +112,59 @@ impl<'a, Message> Editor<'a, Message> {
             editor
         } else {
             editor.on_action(|action| action)
+        }
+    }
+
+    /// The caret's line, padded on every side, in the editor's own coordinates.
+    fn caret(&self, state: &State, renderer: &Renderer, left: f32) -> Rectangle {
+        let position = state.content.cursor().position;
+        let line_height = self.listing.line_height();
+        let top: f32 = state.heights.iter().take(position.line).sum();
+        let height = state
+            .heights
+            .get(position.line)
+            .copied()
+            .unwrap_or(line_height);
+        let x = if self.listing.wrap {
+            0.
+        } else {
+            let text = state
+                .content
+                .line(position.line)
+                .map_or(String::new(), |line| {
+                    line.text[..line.text.floor_char_boundary(position.index)].to_owned()
+                });
+            // A trailing space adds no width to a measured line, so measure up
+            // to a sentinel and take the sentinel away.
+            let width = |content: &str| {
+                <Renderer as text::Renderer>::Paragraph::with_text(text::Text {
+                    content,
+                    bounds: Size::INFINITE,
+                    size: self.listing.size().into(),
+                    line_height: text::LineHeight::Absolute(line_height.into()),
+                    font: self.listing.font,
+                    align_x: text::Alignment::Default,
+                    align_y: Vertical::Top,
+                    shaping: text::Shaping::Advanced,
+                    wrapping: text::Wrapping::None,
+                    ellipsis: text::Ellipsis::None,
+                    letter_spacing: Default::default(),
+                    font_features: Vec::new(),
+                    font_variations: Vec::new(),
+                    weight: None,
+                    hint_factor: renderer::Renderer::hint_factor(renderer),
+                })
+                .min_bounds()
+                .width
+            };
+            width(&format!("{text}x")) - width("x")
+        };
+        let padding = self.padding();
+        Rectangle {
+            x: left + x - padding,
+            y: top - padding,
+            width: padding * 2.,
+            height: height + padding * 2.,
         }
     }
 
@@ -321,6 +378,20 @@ pub(super) struct State {
     /// The revision and width `heights` were measured at.
     measured: Option<(u64, f32)>,
     pub(super) focused: bool,
+    /// The caret moved, so the next layout reveals it.
+    moved: bool,
+    reveal: Reveal,
+}
+
+/// The caret to scroll into view, once, handed to the code block's viewport
+/// through [`Operation::custom`].
+#[derive(Default)]
+pub(super) struct Reveal(Option<Rectangle>);
+
+impl Reveal {
+    pub(super) fn take(&mut self) -> bool {
+        self.0.take().is_some()
+    }
 }
 
 impl<Message> Meta for Editor<'_, Message> {}
@@ -342,6 +413,8 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
             heights: Vec::new(),
             measured: None,
             focused: false,
+            moved: false,
+            reveal: Reveal::default(),
         })
     }
 
@@ -379,9 +452,9 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
         } = tree;
         let state = state.downcast_mut::<State>();
         let padding = self.padding();
-        let width = limits.max.width;
         let lines = state.content.line_count().max(1);
         let left = padding + self.gutter(lines).map_or(0., |gutter| gutter + 12.);
+        let width = limits.max.width;
         state.width = (width - left - padding).max(0.);
         let line_height = self.listing.line_height();
         if !self.listing.wrap {
@@ -418,13 +491,30 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
             state.measured = Some((state.revision, state.width));
         }
         // Every line shows: the editor's buffer must not stop at the viewport, or
-        // it leaves the lines below unshaped.
-        let editor_limits = layout::Limits::new(Size::ZERO, Size::new(state.width, f32::INFINITY));
+        // it leaves the lines below unshaped. Unwrapped, it is as wide as its
+        // longest line and the code block scrolls it like the listing.
+        // The editor fills the viewport at least, so a click right of the text
+        // lands in it.
+        let editor_limits = layout::Limits::with_flags(
+            Size::ZERO,
+            Size::new(state.width, f32::INFINITY),
+            Size::new(false, false),
+            Size::new(!self.listing.wrap, false),
+        );
         self.editor(state)
             .layout(&mut children[0], renderer, &editor_limits);
+        state.width = children[0].size.width;
+        let width = if self.listing.wrap {
+            width
+        } else {
+            left + state.width + padding
+        };
         children[0].translation = Vector::new(left, 0.);
         let rows: f32 = state.heights.iter().sum();
         *size = Size::new(width, children[0].size.height.max(rows));
+        if std::mem::take(&mut state.moved) {
+            state.reveal = Reveal(Some(self.caret(state, renderer, left)));
+        }
     }
 
     fn update(
@@ -487,6 +577,10 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
                 continue;
             }
             edited |= action.is_edit();
+            if !matches!(action, Action::Scroll { .. }) && !state.moved {
+                state.moved = true;
+                shell.invalidate_layout();
+            }
             match action {
                 Action::Edit(Edit::Indent) => indent(&mut state.content, false),
                 Action::Edit(Edit::Unindent) => indent(&mut state.content, true),
@@ -658,6 +752,10 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
             .next()
             .expect("the editor has one child");
         operation.custom(None, layout.bounds(), &mut Editable);
+        if let Some(caret) = state.reveal.0 {
+            let caret = caret + Vector::new(layout.position().x, layout.position().y);
+            operation.custom(None, caret, &mut state.reveal);
+        }
         self.editor(state)
             .operate(child_tree, child_layout, viewport, renderer, operation);
         state.focused = focus::count(|op| {

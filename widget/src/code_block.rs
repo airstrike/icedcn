@@ -234,7 +234,7 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
         let disabled = Inherited::default().with_disabled(disabled);
         let mut content = content;
         content.inherit(&disabled);
-        let content_wrap = content.wrap;
+        let wrap = content.wrap;
         let mut panel = column![].width(Fill);
         let has_header = header.is_some();
         if let Some(mut header) = header {
@@ -257,9 +257,12 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
             actions.inherit(&disabled.with_code_actions(Placement::Floating));
         }
         let (body, viewport) = content.view(compact, disabled.is_disabled());
-        // An editor wraps or scrolls its long lines itself.
-        let wrap = content_wrap || viewport.editable;
-        let content_width = if wrap { Fill } else { Shrink };
+        // An editor fills the viewport, so a click right of its text lands in it.
+        let content_width = if wrap || viewport.editable {
+            Fill
+        } else {
+            Shrink
+        };
         let body = container(body)
             .padding(Padding {
                 top: if has_header {

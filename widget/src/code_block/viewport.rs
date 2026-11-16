@@ -1,6 +1,9 @@
 //! Focus and keyboard navigation around the native scrollable; scrolling stays native.
+use std::any::Any;
+
 use iced_core::Widget;
 use iced_core::keyboard::{self, Key, key::Named};
+use iced_core::widget::operation::scrollable::AbsoluteOffset;
 use iced_core::widget::operation::{self, Focusable, Scrollable};
 use iced_core::widget::tree::{self, Tree};
 use iced_core::widget::{Id, Meta, Operation};
@@ -10,6 +13,8 @@ use iced_core::{
 };
 use iced_widget::Renderer;
 use icedcn_core::Theme;
+
+use super::editor::Reveal;
 
 pub(super) struct Viewport<'a, Message> {
     content: Element<'a, Message, Theme, Renderer>,
@@ -70,6 +75,7 @@ struct Scroll {
     metrics: Metrics,
     key: Option<Named>,
     vertical: bool,
+    reveal: Option<AbsoluteOffset<Option<f32>>>,
     found: bool,
 }
 impl Operation for Scroll {
@@ -93,6 +99,10 @@ impl Operation for Scroll {
         self.found = true;
         self.metrics = Metrics { offset, end };
         let animation = operation::Animation::Instant;
+        if let Some(offset) = self.reveal {
+            state.scroll_to(offset, animation, bounds, content);
+            return;
+        }
         let delta = match self.key {
             Some(Named::ArrowLeft) => Vector::new(-40., 0.),
             Some(Named::ArrowRight) => Vector::new(40., 0.),
@@ -104,7 +114,7 @@ impl Operation for Scroll {
             }
             Some(Named::Home) => {
                 state.scroll_to(
-                    operation::scrollable::AbsoluteOffset {
+                    AbsoluteOffset {
                         x: Some(0.),
                         y: self.vertical.then_some(0.),
                     },
@@ -116,7 +126,7 @@ impl Operation for Scroll {
             }
             Some(Named::End) => {
                 state.scroll_to(
-                    operation::scrollable::AbsoluteOffset {
+                    AbsoluteOffset {
                         x: (!self.vertical || end.y == 0.).then_some(end.x),
                         y: self.vertical.then_some(end.y),
                     },
@@ -131,7 +141,7 @@ impl Operation for Scroll {
         // Relative operations use the scrollable's current offset even when
         // several key presses arrive before the next redraw.
         state.scroll_by(
-            operation::scrollable::AbsoluteOffset {
+            AbsoluteOffset {
                 x: delta.x,
                 y: delta.y,
             },
@@ -141,6 +151,58 @@ impl Operation for Scroll {
         );
     }
 }
+/// Finds a moved editor caret and where the scrollable shows its content.
+#[derive(Default)]
+struct Caret {
+    viewport: Option<(Rectangle, Vector)>,
+    caret: Option<Rectangle>,
+}
+impl Operation for Caret {
+    fn traverse(&mut self, f: &mut dyn FnMut(&mut dyn Operation)) {
+        f(self);
+    }
+    fn scrollable(
+        &mut self,
+        _: Option<&Id>,
+        bounds: Rectangle,
+        _: Size,
+        offset: Vector,
+        _: &mut dyn Scrollable,
+    ) {
+        self.viewport.get_or_insert((bounds, offset));
+    }
+    fn custom(&mut self, _: Option<&Id>, bounds: Rectangle, state: &mut dyn Any) {
+        if let Some(reveal) = state.downcast_mut::<Reveal>()
+            && reveal.take()
+        {
+            self.caret = Some(bounds);
+        }
+    }
+}
+impl Caret {
+    /// The offset that shows the caret, or `None` when it already shows.
+    fn offset(&self) -> Option<AbsoluteOffset<Option<f32>>> {
+        let ((bounds, offset), caret) = (self.viewport?, self.caret?);
+        // Near the start, show the start (the line numbers) rather than the
+        // caret flush against the edge.
+        let reveal = |start: f32, length: f32, offset: f32, size: f32| {
+            let end = start + length;
+            if start >= offset && end <= offset + size {
+                None
+            } else if end <= size {
+                Some(0.)
+            } else if start < offset {
+                Some(start)
+            } else {
+                Some(end - size)
+            }
+        };
+        let x = reveal(caret.x - bounds.x, caret.width, offset.x, bounds.width);
+        let y = reveal(caret.y - bounds.y, caret.height, offset.y, bounds.height);
+        (x.is_some() || y.is_some()).then_some(AbsoluteOffset { x, y })
+    }
+}
+
 impl<Message> Meta for Viewport<'_, Message> {}
 impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
     fn tag(&self) -> tree::Tag {
@@ -161,6 +223,27 @@ impl<Message> Widget<Message, Theme, Renderer> for Viewport<'_, Message> {
     fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) {
         self.content.layout(&mut tree.children[0], renderer, limits);
         tree.size = tree.children[0].size;
+        let bounds = Rectangle::with_size(tree.size);
+        let mut caret = Caret::default();
+        self.content.operate(
+            &mut tree.children[0],
+            Layout::new(tree.size),
+            &bounds,
+            renderer,
+            &mut caret,
+        );
+        if let Some(offset) = caret.offset() {
+            self.content.operate(
+                &mut tree.children[0],
+                Layout::new(tree.size),
+                &bounds,
+                renderer,
+                &mut Scroll {
+                    reveal: Some(offset),
+                    ..Scroll::default()
+                },
+            );
+        }
         let mut scroll = Scroll::default();
         self.content.operate(
             &mut tree.children[0],
