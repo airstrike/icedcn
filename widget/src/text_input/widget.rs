@@ -1704,6 +1704,25 @@ where
                                 } else {
                                     state.cursor.move_to(self.value.len());
                                 }
+                            } else if modifiers.jump()
+                                && edit::WordRight::PLATFORM == edit::WordRight::NextStart
+                            {
+                                let from = if modifiers.shift() {
+                                    state.cursor.end(&self.value)
+                                } else {
+                                    state
+                                        .cursor
+                                        .selection(&self.value)
+                                        .map_or(state.cursor.end(&self.value), |(_, right)| right)
+                                };
+                                let to = self.value.next_start_of_word(from);
+                                if modifiers.shift() {
+                                    state
+                                        .cursor
+                                        .select_range(state.cursor.start(&self.value), to);
+                                } else {
+                                    state.cursor.move_to(to);
+                                }
                             } else if modifiers.jump() {
                                 if modifiers.shift() {
                                     state.cursor.select_right_by_words(&self.value);

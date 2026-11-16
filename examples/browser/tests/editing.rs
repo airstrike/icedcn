@@ -980,3 +980,28 @@ fn the_editor_caret_sits_on_whole_pixels() {
         }
     }
 }
+
+#[test]
+fn a_word_motion_to_the_right_follows_the_platform() {
+    // Option+Right on macOS stops at the end of the word; Ctrl+Right on
+    // Windows at the start of the next one.
+    let (jump, expected) = if cfg!(target_os = "macos") {
+        (Modifiers::ALT, ["foo@   bar baz", "foo   bar@ baz"])
+    } else if cfg!(target_os = "windows") {
+        (Modifiers::CTRL, ["foo   @bar baz", "foo   bar @baz"])
+    } else {
+        (Modifiers::CTRL, ["foo@   bar baz", "foo   bar@ baz"])
+    };
+    for name in ["input", "textarea", "code block"] {
+        for (count, expected) in [1, 2].into_iter().zip(expected) {
+            let mut desk = Desk::new(field(name, "foo   bar baz"));
+            desk.focus();
+            desk.key(Named::Home, Modifiers::empty());
+            for _ in 0..count {
+                desk.key(Named::ArrowRight, jump);
+            }
+            type_text(&mut desk, "@");
+            assert_eq!(desk.field().1, expected, "{name}, {count} words");
+        }
+    }
+}

@@ -65,6 +65,15 @@ impl Value {
             .unwrap_or(self.len())
     }
 
+    /// Returns the position of the start of the next word after the given
+    /// grapheme `index`, past the spaces after the word at `index`.
+    pub fn next_start_of_word(&self, index: usize) -> usize {
+        let text = self.to_string();
+        let start = self.graphemes[..index.min(self.len())].concat().len();
+        let next = crate::edit::next_word_start(&text, start);
+        UnicodeSegmentation::graphemes(&text[..next], true).count()
+    }
+
     /// Returns a new [`Value`] containing the graphemes from `start` until the
     /// given `end`.
     pub fn select(&self, start: usize, end: usize) -> Self {

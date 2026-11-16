@@ -22,9 +22,11 @@ use iced_core::{
     renderer, touch, window,
 };
 use iced_widget::anchored::{Align, Position, Side};
+use iced_widget::text_editor::Content;
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
 use icedcn_core::theme::popover::content;
+use unicode_segmentation::UnicodeSegmentation;
 
 use crate::compose::Slot;
 use crate::container::Container;
@@ -88,6 +90,70 @@ pub(crate) fn opens_menu(key: &Key, modifiers: Modifiers) -> bool {
         Key::Named(Named::ContextMenu) => true,
         _ => false,
     }
+}
+
+/// Where a word motion to the right stops.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum WordRight {
+    /// At the end of the word: macOS, and Linux.
+    End,
+    /// At the start of the next word, past the spaces after this one: Windows.
+    /// A web build cannot tell the host apart and takes the PC convention,
+    /// as its command key does.
+    NextStart,
+}
+
+impl WordRight {
+    /// The convention of the platform the app runs on.
+    pub(crate) const PLATFORM: Self = if cfg!(any(target_os = "windows", target_arch = "wasm32")) {
+        Self::NextStart
+    } else {
+        Self::End
+    };
+}
+
+/// The byte index in `text` where the next word after `index` starts, past
+/// the rest of the word at `index` and the spaces after it; or the end.
+pub(crate) fn next_word_start(text: &str, index: usize) -> usize {
+    text.split_word_bound_indices()
+        .find(|(start, word)| *start > index && !word.trim_start().is_empty())
+        .map_or(text.len(), |(start, _)| start)
+}
+
+/// The caret a Windows word motion to the right (Ctrl+Right, with Shift to
+/// select) puts in `content`: the start of the next word on the caret's
+/// line. Elsewhere, and at the end of a line, the editor's own motion runs.
+pub(crate) fn word_right(
+    content: &Content<Renderer>,
+    key: &Key,
+    modifiers: Modifiers,
+) -> Option<Cursor> {
+    if WordRight::PLATFORM != WordRight::NextStart
+        || !matches!(key, Key::Named(Named::ArrowRight))
+        || !modifiers.jump()
+        || modifiers.macos_command()
+    {
+        return None;
+    }
+    let cursor = content.cursor();
+    let caret = cursor.position;
+    let line = content.line(caret.line)?;
+    if caret.index >= line.text.len() {
+        return None;
+    }
+    let position = text::Position {
+        index: next_word_start(&line.text, caret.index),
+        ..caret
+    };
+
+    Some(Cursor {
+        position,
+        selection: if modifiers.shift() {
+            Some(cursor.selection.unwrap_or(caret))
+        } else {
+            None
+        },
+    })
 }
 
 /// Whether a right press that put the caret at `position` landed inside the
@@ -531,6 +597,42 @@ mod tests {
     use super::{Command, snap};
     use iced_core::keyboard::key::{Code, Named, Physical};
     use iced_core::keyboard::{Key, Modifiers};
+
+    #[test]
+    fn a_windows_word_motion_skips_the_spaces_after_the_word() {
+        let text = "let  value = foo.bar(1);";
+        let stops: Vec<usize> = std::iter::successors(Some(0), |&at| {
+            (at < text.len()).then(|| super::next_word_start(text, at))
+        })
+        .collect();
+        assert_eq!(
+            stops.iter().map(|&at| &text[at..]).collect::<Vec<_>>(),
+            [
+                "let  value = foo.bar(1);",
+                "value = foo.bar(1);",
+                "= foo.bar(1);",
+                // Unicode word bounds keep `foo.bar` whole, as a double
+                // click selects it.
+                "foo.bar(1);",
+                "(1);",
+                "1);",
+                ");",
+                ";",
+                "",
+            ]
+        );
+        assert_eq!(super::next_word_start("foo   ", 1), 6, "to the end");
+    }
+
+    #[test]
+    fn the_word_motion_follows_the_platform() {
+        let expected = if cfg!(any(target_os = "windows", target_arch = "wasm32")) {
+            super::WordRight::NextStart
+        } else {
+            super::WordRight::End
+        };
+        assert_eq!(super::WordRight::PLATFORM, expected);
+    }
 
     #[test]
     fn undo_and_redo_keys_follow_the_platform() {

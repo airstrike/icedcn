@@ -277,6 +277,12 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
                     shell.capture_event();
                     return;
                 }
+                if let Some(cursor) = edit::word_right(&state.content, key, *modifiers) {
+                    state.content.move_to(cursor);
+                    shell.request_redraw();
+                    shell.capture_event();
+                    return;
+                }
                 if let Some(command) = Command::from_key(key, *physical_key, *modifiers) {
                     let action = self.command(state, command, shell);
                     self.perform(state, action, shell);
