@@ -162,7 +162,7 @@ def main():
             for name in ("Geist-OFL.txt", "GeistMono-OFL.txt", "TwemojiMozilla-LICENSE.txt")
         ))
         shutil.copyfile(ROOT / "assets/Chromium-LICENSE", output / "third-party-licenses.txt")
-        # The wasm outgrows Workers Static Assets; deploy-browser-web.py puts it in R2.
+        # The wasm outgrows Workers Static Assets; scripts/deploy-browser-web puts it in R2.
         (output / ".assetsignore").write_text("browser-*.wasm\n")
         # Only generated modules in this dedicated output tree are stale.
         for pattern in ("browser-*.wasm", "browser-*.js"):

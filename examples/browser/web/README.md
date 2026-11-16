@@ -16,10 +16,12 @@ Set WASM_BINDGEN to select a specific CLI executable. CC_wasm32_unknown_unknown 
 To deploy the generated assets to icedcn.airstrike.fyi from an authenticated Cloudflare account, run
 
 ```sh
-python3 scripts/deploy-browser-web.py
+rawr run scripts/deploy-browser-web
 ```
 
-Workers Static Assets serves files of up to 25 MiB, and the browser's wasm is larger since the Playground example embeds the rawr engine. The build writes an `.assetsignore` that leaves the wasm out of the assets; the deploy script uploads it to the `icedcn-wasm` R2 bucket, then deploys. `web/worker.js` runs only for `/browser-*.wasm` and serves it from R2 with an immutable cache; every other path stays a static asset. To test locally, put the wasm in the local bucket before `wrangler dev`:
+The deploy is a small Rust crate run by [rawr](https://github.com/airstrike/rawr); add `-- --dry-run` to print the wrangler commands instead. It also builds with Cargo (`cargo run --manifest-path scripts/deploy-browser-web/Cargo.toml`). Its process and filesystem calls live in the native `src/sys.rs`, since rawr's interpreter doesn't run `std::process` or those `std::fs` calls yet (rawr #2082, #646).
+
+Workers Static Assets serves files of up to 25 MiB, and the browser's wasm is larger since the Playground example embeds the rawr engine. The build writes an `.assetsignore` that leaves the wasm out of the assets; the deploy uploads it to the `icedcn-wasm` R2 bucket, then deploys. `web/worker.js` runs only for `/browser-*.wasm` and serves it from R2 with an immutable cache; every other path stays a static asset. To test locally, put the wasm in the local bucket before `wrangler dev`:
 
 ```sh
 npx --yes wrangler@4.69.0 r2 object put icedcn-wasm/<browser-hash>.wasm --file target/browser-web/<browser-hash>.wasm --content-type application/wasm --local --config examples/browser/wrangler.jsonc

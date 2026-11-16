@@ -4,3 +4,4 @@ plan/
 .nova/
 .cargo*
 .wrangler/
+/scripts/deploy-browser-web/target/
