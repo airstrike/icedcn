@@ -92,7 +92,7 @@ def main():
         build, packages["iced_winit"], "winit", "src/window.rs",
         configure,
         f"if surface_size.width > 0 && surface_size.height > 0 {{\n            {configure}\n        }}",
-        patch=[ROOT / "examples/browser/web/clipboard.patch", ROOT / "examples/browser/web/ime.patch"],
+        patch=ROOT / "examples/browser/web/ime.patch",
     )
     # Probe adapter/device compatibility on a disposable canvas. A failed WebGPU
     # attempt must leave the application's canvas free to acquire a 2D context.

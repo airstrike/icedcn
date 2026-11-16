@@ -1,14 +1,22 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -44,7 +44,7 @@
- 
- [target.'cfg(target_arch = "wasm32")'.dependencies]
- web-sys.workspace = true
--web-sys.features = ["Clipboard", "Document", "Window", "HtmlCanvasElement", "Navigator"]
-+web-sys.features = ["Clipboard", "Document", "Window", "HtmlCanvasElement", "Navigator", "HtmlInputElement", "CssStyleDeclaration", "FocusEvent", "FocusOptions", "InputEvent", "CompositionEvent", "KeyboardEvent", "KeyboardEventInit", "DomRect"]
- wasm-bindgen-futures.workspace = true
- 
- [target.'cfg(target_os = "linux")'.dependencies]
+@@ -47,9 +47,16 @@
+ web-sys.features = [
+     "Clipboard",
+     "ClipboardEvent",
++    "CompositionEvent",
++    "CssStyleDeclaration",
+     "DataTransfer",
+     "Document",
++    "DomRect",
++    "FocusEvent",
++    "FocusOptions",
+     "HtmlCanvasElement",
++    "HtmlInputElement",
++    "InputEvent",
+     "KeyboardEvent",
+     "KeyboardEventInit",
+     "Navigator",
 --- a/src/lib.rs
 +++ b/src/lib.rs
 @@ -32,6 +32,8 @@
@@ -150,7 +158,7 @@
              self.ime_state = None;
 --- /dev/null
 +++ b/src/web_input.rs
-@@ -0,0 +1,337 @@
+@@ -0,0 +1,343 @@
 +//! DOM input methods for the canvas backend, owned by the iced window.
 +
 +use std::cell::{Cell, RefCell};
@@ -321,7 +329,13 @@
 +                        {
 +                            let _ = canvas.dispatch_event(&forwarded);
 +                        }
-+                        event.prevent_default();
++                        // The browser pastes into this field, and iced_winit's
++                        // clipboard takes the text from the paste event.
++                        let paste = key.eq_ignore_ascii_case("v") && !event.alt_key()
++                            || key == "Insert" && event.shift_key();
++                        if !paste {
++                            event.prevent_default();
++                        }
 +                    }
 +                })?);
 +        }

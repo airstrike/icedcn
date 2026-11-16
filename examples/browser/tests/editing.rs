@@ -868,7 +868,6 @@ impl Desk {
 }
 
 #[test]
-#[ignore = "needs the editor-column branch of the iced fork"]
 fn up_and_down_keep_the_column_across_short_lines() {
     let text = "a line that is long\nab\n\nanother long line here\nxy";
     for name in ["textarea", "code block"] {
@@ -914,7 +913,6 @@ fn up_and_down_keep_the_column_across_short_lines() {
 }
 
 #[test]
-#[ignore = "needs the editor-column branch of the iced fork"]
 fn a_click_or_an_edit_sets_the_column_up_and_down_keep() {
     let text = "a line that is long\nab\nanother long line here";
     for name in ["textarea", "code block"] {
@@ -952,7 +950,6 @@ fn a_click_or_an_edit_sets_the_column_up_and_down_keep() {
 }
 
 #[test]
-#[ignore = "needs the editor-column branch of the iced fork"]
 fn the_editor_caret_sits_on_whole_pixels() {
     for name in ["textarea", "code block"] {
         for value in ["ab", "abc", "a line"] {

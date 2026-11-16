@@ -38,7 +38,7 @@ def main():
         tmp = Path(tmp)
         patched = tmp / "winit"
         shutil.copytree(Path(packages["iced_winit"]["manifest_path"]).parent, patched)
-        for patch in ["clipboard.patch", "ime.patch"]:
+        for patch in ["ime.patch"]:
             run(["patch", "-s", "-p1", "-i", str(WEB / patch)], cwd=patched)
         source = tmp / "src"
         source.mkdir()
