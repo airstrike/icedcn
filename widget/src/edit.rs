@@ -240,6 +240,11 @@ impl Menu {
         shell.request_redraw();
     }
 
+    /// Whether the menu is open.
+    pub(crate) fn is_open(&self) -> bool {
+        self.open.is_some()
+    }
+
     /// Take the command chosen in the menu, if any.
     pub(crate) fn take(&mut self) -> Option<Command> {
         self.chosen.take()

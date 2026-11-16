@@ -246,6 +246,9 @@ where
         shell: &mut Shell<'_, Message>,
     ) {
         history.edited(&self.value, cursor);
+        // An input nobody listens to publishes nothing, so no rebuild would
+        // draw the edit until the caret's next blink.
+        shell.request_redraw();
         if !self.is_controlled {
             *uncontrolled = Some(self.value.clone());
         }
@@ -436,12 +439,17 @@ where
         let secure_value = self.is_secure.then(|| value.secure());
         let value = secure_value.as_ref().unwrap_or(value);
 
-        let _ = state.value.update(Text {
+        if state.value.update(Text {
             content: &value.to_string(),
             ..placeholder_text
-        });
+        }) {
+            state.revision = state.revision.wrapping_add(1);
+        }
 
         state.reveal_cursor(text_bounds.width, value);
+        if state.is_focused() {
+            state.measure(value);
+        }
 
         if let Some(icon) = &self.icon {
             let mut content = [0; 4];
@@ -569,18 +577,18 @@ where
             return InputMethod::Disabled;
         };
 
-        let secure_value = self.is_secure.then(|| value.secure());
-        let value = secure_value.as_ref().unwrap_or(value);
-
         let text_bounds = text_layout.bounds();
 
+        // A secure value has as many graphemes as the value it masks.
         let caret_index = match state.cursor.state(value) {
             cursor::State::Index(position) => position,
             cursor::State::Selection { start, end } => start.min(end),
         };
 
         let text = state.value.raw();
-        let caret_x = cursor_x(&state.value, caret_index);
+        let caret_x = state
+            .measured_x(caret_index)
+            .unwrap_or_else(|| cursor_x(&state.value, caret_index));
         let scroll_offset = state.scroll_offset;
 
         let alignment_offset =
@@ -618,11 +626,10 @@ where
         viewport: &Rectangle,
     ) {
         let state = tree.state.downcast_ref::<State<Renderer::Paragraph>>();
+        // A secure value draws its own paragraph and has as many graphemes
+        // as the value it masks, so the frame reads the value unmasked.
         let value = value.unwrap_or(&self.value);
         let is_disabled = self.is_disabled;
-
-        let secure_value = self.is_secure.then(|| value.secure());
-        let value = secure_value.as_ref().unwrap_or(value);
 
         let bounds = layout.bounds();
 
@@ -645,7 +652,14 @@ where
                 ((focus.now - focus.updated_at).as_millis() / CURSOR_BLINK_INTERVAL_MILLIS)
                     .is_multiple_of(2)
             });
-            let glyphs = value.to_string().chars().collect::<Vec<_>>();
+            let glyphs = if self.is_secure {
+                value.secure()
+            } else {
+                value.clone()
+            }
+            .to_string()
+            .chars()
+            .collect::<Vec<_>>();
             let selection = state.cursor.selection(value);
             for i in 0..slots.count {
                 let cell = Rectangle {
@@ -831,7 +845,7 @@ where
                     );
                 }
 
-                let text = value.to_string();
+                let is_empty = value.is_empty();
 
                 let offset = if state.is_focused() {
                     state.scroll_offset
@@ -852,7 +866,9 @@ where
                 {
                     match state.cursor.state(value) {
                         cursor::State::Index(position) => {
-                            let text_value_width = cursor_x(&state.value, position);
+                            let text_value_width = state
+                                .measured_x(position)
+                                .unwrap_or_else(|| cursor_x(&state.value, position));
 
                             let is_cursor_visible = !is_disabled
                                 && ((focus.now - focus.updated_at).as_millis()
@@ -887,8 +903,12 @@ where
                             let left = start.min(end);
                             let right = end.max(start);
 
-                            let left_position = cursor_x(&state.value, left);
-                            let right_position = cursor_x(&state.value, right);
+                            let left_position = state
+                                .measured_x(left)
+                                .unwrap_or_else(|| cursor_x(&state.value, left));
+                            let right_position = state
+                                .measured_x(right)
+                                .unwrap_or_else(|| cursor_x(&state.value, right));
 
                             let width = right_position - left_position;
 
@@ -914,7 +934,7 @@ where
                 };
 
                 let draw = |renderer: &mut Renderer, viewport| {
-                    let paragraph = if text.is_empty()
+                    let paragraph = if is_empty
                         && state
                             .preedit
                             .as_ref()
@@ -959,7 +979,7 @@ where
                     renderer.fill_paragraph(
                         paragraph,
                         origin,
-                        if text.is_empty() {
+                        if is_empty {
                             style.placeholder
                         } else {
                             style.value
@@ -1077,6 +1097,9 @@ where
         window: Size,
     ) -> Vec<overlay::Element<'b, Message, Theme, Renderer>> {
         let state = state::<Renderer>(tree);
+        if !state.menu.is_open() {
+            return Vec::new();
+        }
         let selected = !self.is_secure && state.cursor.selection(&self.value).is_some();
         let available = edit::Available {
             undo: Some(self.is_editable() && state.history.can_undo()),
@@ -1959,6 +1982,9 @@ where
 
         let state = state::<Renderer>(tree);
         state.history.follow(state.cursor);
+        if state.is_focused() {
+            state.measure(&self.value);
+        }
 
         let status = if self.is_disabled {
             Status::Disabled
@@ -2063,6 +2089,13 @@ pub struct State<P: text::Paragraph> {
     uncontrolled: Option<Value>,
     history: History,
     menu: edit::Menu,
+    /// Bumped whenever the value's paragraph is reshaped.
+    revision: u64,
+    /// The last measured grapheme offsets of the value's paragraph, newest
+    /// first, with the revision they were measured at: measuring reshapes
+    /// the whole paragraph, so it happens once per edit or caret move, never
+    /// per frame.
+    measured: [Option<(u64, usize, f32)>; 2],
 }
 
 impl<P: text::Paragraph> Default for State<P> {
@@ -2085,6 +2118,8 @@ impl<P: text::Paragraph> Default for State<P> {
             uncontrolled: None,
             history: History::default(),
             menu: edit::Menu::default(),
+            revision: 0,
+            measured: [None; 2],
             focus_anim: Animation::new(false)
                 .easing(Easing::Custom(|t| {
                     crate::animation::cubic_bezier(0.4, 0.0, 0.2, 1.0, t)
@@ -2178,11 +2213,46 @@ impl<P: text::Paragraph> State<P> {
     /// Scroll just enough to show the caret, without the margin typing
     /// leaves after it: a press or a drag near the edge must not move the
     /// text under the pointer.
+    /// The offset of grapheme `index` in the value's paragraph, measured
+    /// at most once per paragraph and index.
+    fn caret_x(&mut self, index: usize) -> f32 {
+        if let Some(x) = self.measured_x(index) {
+            return x;
+        }
+        let x = cursor_x(&self.value, index);
+        self.measured = [Some((self.revision, index, x)), self.measured[0]];
+        x
+    }
+
+    /// The offset of grapheme `index`, if it is measured for the current
+    /// paragraph.
+    fn measured_x(&self, index: usize) -> Option<f32> {
+        self.measured
+            .iter()
+            .flatten()
+            .find(|(revision, at, _)| *revision == self.revision && *at == index)
+            .map(|(_, _, x)| *x)
+    }
+
+    /// Measure the edges of the caret or the selection in `value`, for the
+    /// frames to read.
+    fn measure(&mut self, value: &Value) {
+        match self.cursor.state(value) {
+            cursor::State::Index(index) => {
+                let _ = self.caret_x(index);
+            }
+            cursor::State::Selection { start, end } => {
+                let _ = self.caret_x(start);
+                let _ = self.caret_x(end);
+            }
+        }
+    }
+
     fn keep_in_view(&mut self, text_bounds_width: f32, value: &Value) {
         if !self.is_focused() {
             return;
         }
-        let caret = cursor_x(&self.value, self.cursor.end(value));
+        let caret = self.caret_x(self.cursor.end(value));
         let max_offset =
             (self.value.raw().min_width() + CURSOR_RIGHT_PADDING - text_bounds_width).max(0.0);
         self.scroll_offset = self
@@ -2209,7 +2279,7 @@ impl<P: text::Paragraph> State<P> {
             cursor::State::Selection { end, .. } => end,
         };
 
-        let cursor_x = cursor_x(&self.value, focus_position);
+        let cursor_x = self.caret_x(focus_position);
         let visible_right = self.scroll_offset + text_bounds_width;
 
         if cursor_x + CURSOR_RIGHT_PADDING > visible_right {
@@ -2385,6 +2455,7 @@ fn replace_paragraph<Renderer>(
 
     let text_bounds = text_layout.bounds();
 
+    state.revision = state.revision.wrapping_add(1);
     state.value = paragraph::Plain::new(Text {
         font,
         line_height,

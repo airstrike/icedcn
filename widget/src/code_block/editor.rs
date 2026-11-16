@@ -989,6 +989,10 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
         window: Size,
     ) -> Vec<overlay::Element<'b, Message, Theme, Renderer>> {
         let state = tree.state.downcast_mut::<State>();
+        // Reading the selection copies it: only an open menu needs it.
+        if !state.menu.is_open() {
+            return Vec::new();
+        }
         let available = self.available(state);
 
         state
