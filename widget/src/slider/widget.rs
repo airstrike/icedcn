@@ -106,8 +106,8 @@ where
     default: Option<Values>,
     on_change: Option<Box<dyn Fn(Values) -> Message + 'a>>,
     on_release: Option<Message>,
-    width: Length,
-    height: Length,
+    width: Option<Length>,
+    height: Option<Length>,
     orientation: Orientation,
     class: Theme::Class<'a>,
     status: Option<Status>,
@@ -120,8 +120,11 @@ where
     Message: Clone,
     Theme: Catalog,
 {
-    /// The default height of a [`Slider`].
+    /// The default thickness of a [`Slider`] across its track.
     pub const DEFAULT_HEIGHT: f32 = 16.0;
+
+    /// The default length of a vertical [`Slider`] (`min-h-40`).
+    pub const DEFAULT_VERTICAL_HEIGHT: f32 = 160.0;
 
     /// Creates an uncontrolled [`Slider`] over `range`, starting at its
     /// start.
@@ -173,8 +176,8 @@ where
             shift_step: None,
             on_change: None,
             on_release: None,
-            width: Fill,
-            height: 16.into(),
+            width: None,
+            height: None,
             orientation: Orientation::Horizontal,
             class: Theme::default(),
             status: None,
@@ -229,11 +232,7 @@ where
 
     /// Set the track axis. A vertical track increases from bottom to top.
     pub fn orientation(mut self, orientation: impl Into<Orientation>) -> Self {
-        let orientation = orientation.into();
-        if self.orientation != orientation {
-            std::mem::swap(&mut self.width, &mut self.height);
-        }
-        self.orientation = orientation;
+        self.orientation = orientation.into();
         self
     }
 
@@ -256,15 +255,17 @@ where
         self
     }
 
-    /// Sets the width of the [`Slider`].
+    /// Sets the width of the [`Slider`]: its length when horizontal
+    /// (default `Fill`), its thickness when vertical (default 16).
     pub fn width(mut self, width: impl Into<Length>) -> Self {
-        self.width = width.into();
+        self.width = Some(width.into());
         self
     }
 
-    /// Sets the height of the [`Slider`].
-    pub fn height(mut self, height: impl Into<Pixels>) -> Self {
-        self.height = height.into().0.into();
+    /// Sets the height of the [`Slider`]: its thickness when horizontal
+    /// (default 16), its length when vertical (default 160).
+    pub fn height(mut self, height: impl Into<Length>) -> Self {
+        self.height = Some(height.into());
         self
     }
 
@@ -346,11 +347,22 @@ where
     }
 
     fn size(&self) -> Size<Length> {
-        Size::new(self.width, self.height)
+        let thickness = Slider::<T, Message, Theme>::DEFAULT_HEIGHT.into();
+        let length = Slider::<T, Message, Theme>::DEFAULT_VERTICAL_HEIGHT.into();
+        match self.orientation {
+            Orientation::Horizontal => {
+                Size::new(self.width.unwrap_or(Fill), self.height.unwrap_or(thickness))
+            }
+            Orientation::Vertical => Size::new(
+                self.width.unwrap_or(thickness),
+                self.height.unwrap_or(length),
+            ),
+        }
     }
 
     fn layout(&mut self, tree: &mut Tree, _renderer: &Renderer, limits: &layout::Limits) {
-        tree.size = layout::atomic(limits, self.width, self.height);
+        let size = Widget::<Message, Theme, Renderer>::size(self);
+        tree.size = layout::atomic(limits, size.width, size.height);
     }
 
     fn operate(
@@ -420,8 +432,8 @@ where
                 Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
                     Some((cursor.position(), Pointer::Mouse))
                 }
-                Event::Touch(touch::Event::FingerPressed { id, position, .. }) => {
-                    Some((Some(*position), Pointer::Touch(*id)))
+                Event::Touch(touch::Event::FingerPressed { id, .. }) => {
+                    Some((cursor.position(), Pointer::Touch(*id)))
                 }
                 _ => None,
             };
@@ -447,16 +459,21 @@ where
                 }
             } else {
                 match event {
-                    Event::Mouse(mouse::Event::CursorMoved { position }) => {
-                        if let Some((i, Pointer::Mouse)) = state.dragging {
-                            target = Some((i, at(*position)));
+                    // Event positions are window coordinates; only the cursor
+                    // carries the translation of enclosing scrollables.
+                    Event::Mouse(mouse::Event::CursorMoved { .. }) => {
+                        if let Some((i, Pointer::Mouse)) = state.dragging
+                            && let Some(position) = cursor.observe().position()
+                        {
+                            target = Some((i, at(position)));
                         }
                     }
-                    Event::Touch(touch::Event::FingerMoved { id, position, .. }) => {
+                    Event::Touch(touch::Event::FingerMoved { id, .. }) => {
                         if let Some((i, Pointer::Touch(active))) = state.dragging
                             && active == *id
+                            && let Some(position) = cursor.observe().position()
                         {
-                            target = Some((i, at(*position)));
+                            target = Some((i, at(position)));
                         }
                     }
                     Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
