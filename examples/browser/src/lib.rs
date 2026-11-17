@@ -161,14 +161,19 @@ pub fn run() -> iced::Result {
         }));
         parser_heap::install();
     }
-    font::use_geist_mono();
+    font::install();
     let application = iced::application(Browser::new, Browser::update, Browser::view)
         .title(Browser::title)
         .window_size([1600.0, 1000.0])
         .antialiasing(true)
         .subscription(Browser::subscription)
         .theme(Browser::theme)
-        .fonts([icon::FONT, palette::icon::FONT, font::GEIST_MONO]);
+        .fonts([
+            icon::FONT,
+            palette::icon::FONT,
+            font::GEIST_MONO,
+            font::SYMBOLS,
+        ]);
     #[cfg(target_arch = "wasm32")]
     let application = application
         .fonts([include_bytes!("../fonts/Geist.ttf").as_slice(), font::EMOJI])

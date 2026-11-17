@@ -1,4 +1,4 @@
-//! Bundled monospace font for inline and fenced code rendering.
+//! Bundled fonts: Geist Mono for code, the symbols Geist lacks, and emoji.
 //!
 //! Ships [Geist Mono] (1.8.0, SIL OFL 1.1) for consistent code rendering.
 //!
@@ -12,7 +12,12 @@
 //!
 //! [Geist Mono]: https://github.com/vercel/geist-font
 
+use std::mem;
+use std::sync::LazyLock;
+
+use iced::advanced::graphics::text::cosmic_text::{Fallback, FontSystem, PlatformFallback};
 use iced::advanced::graphics::text::font_system;
+use unicode_script::Script;
 
 /// Sans family shared by the browser controls and documentation prose.
 pub const BODY: &str = "Geist";
@@ -29,12 +34,52 @@ pub const GEIST_MONO: &[u8] = include_bytes!("../fonts/GeistMono-Regular.ttf");
 /// the font to a widget or markdown style field.
 pub const GEIST_MONO_NAME: &str = "Geist Mono";
 
+/// The key and interface symbols Geist and Geist Mono lack: ⌘ ⌥ ⌃ ⌄ ⌫ ⌦ ⏎ ⎋
+/// ⇪ ⇞ ⇟ ⏏ ✓ ✗ and a few shapes. A subset of [Inter] 4.001 (SIL OFL 1.1),
+/// variable in weight, renamed so it never stands in for a full Inter. The
+/// license lives next to the TTF at `examples/browser/fonts/InterSymbols-OFL.txt`.
+///
+/// [Inter]: https://github.com/rsms/inter
+pub const SYMBOLS: &[u8] = include_bytes!("../fonts/InterSymbols.ttf");
+
+/// Family name of [`SYMBOLS`].
+pub const SYMBOLS_NAME: &str = "Inter Symbols";
+
+/// The fallback order: [`SYMBOLS`] before the platform's own fallbacks, so a
+/// symbol looks the same natively and on the web, where no system fonts exist.
+struct Symbols;
+
+impl Fallback for Symbols {
+    fn common_fallback(&self) -> &[&'static str] {
+        static COMMON: LazyLock<Vec<&'static str>> = LazyLock::new(|| {
+            [SYMBOLS_NAME]
+                .into_iter()
+                .chain(PlatformFallback.common_fallback().iter().copied())
+                .collect()
+        });
+        &COMMON
+    }
+
+    fn forbidden_fallback(&self) -> &[&'static str] {
+        PlatformFallback.forbidden_fallback()
+    }
+
+    fn script_fallback(&self, script: Script, locale: &str) -> &[&'static str] {
+        PlatformFallback.script_fallback(script, locale)
+    }
+}
+
 /// Resolve the generic monospace family to Geist Mono, so code blocks and
-/// inline code keep their default [`iced::Font::MONOSPACE`]. Call it before
-/// the application starts, before any text is shaped.
-pub fn use_geist_mono() {
+/// inline code keep their default [`iced::Font::MONOSPACE`], and fall back to
+/// [`SYMBOLS`] first for glyphs a font lacks. Call it before the application
+/// starts, before any text is shaped.
+pub fn install() {
     if let Ok(mut fonts) = font_system().write() {
-        fonts.raw().db_mut().set_monospace_family(GEIST_MONO_NAME);
+        let raw = fonts.raw();
+        let locale = raw.locale().to_owned();
+        let mut database = mem::take(raw.db_mut());
+        database.set_monospace_family(GEIST_MONO_NAME);
+        *raw = FontSystem::new_with_locale_and_db_and_fallback(locale, database, Symbols);
     }
 }
 
@@ -45,11 +90,84 @@ pub const EMOJI: &[u8] = include_bytes!("../fonts/TwemojiMozilla.ttf");
 
 #[cfg(test)]
 mod tests {
+    use iced_widget::renderer::graphics::text::cosmic_text::skrifa::{FontRef, MetadataProvider};
     use iced_widget::renderer::graphics::text::cosmic_text::{
-        Attrs, Buffer, Family, FontSystem, Metrics, Shaping, SwashCache, SwashContent, fontdb,
+        Attrs, Buffer, Family, FontSystem, Metrics, Shaping, SwashCache, SwashContent, Weight,
+        fontdb,
     };
 
-    use super::{BODY, EMOJI};
+    use super::{BODY, EMOJI, GEIST_MONO, GEIST_MONO_NAME, SYMBOLS, SYMBOLS_NAME, Symbols};
+
+    /// Every symbol the browser and the widgets show, or that a shortcut label
+    /// can spell: the Mac modifier and key symbols, arrows, marks, typography
+    /// and the box drawing of the composition snippets.
+    const INVENTORY: &str =
+        "⌘⌥⇧⌃⌄⌅⇪⌫⌦↩↵⏎⇥⇤⎋⇞⇟⏏␣↑↓←→↖↗↘↙↔↕↺↻⇐⇒⇔✓✗×÷−±≠≤≥≈∞∅…•·◦‹›«»‘’“”–—■□▪◆◇▲▼◀▶●○★☆─│└├┌┐┘┤┬┴┼╭╮╯╰";
+
+    /// The fonts a web build has, which has no system fonts to fall back on.
+    fn web() -> FontSystem {
+        let mut database = fontdb::Database::new();
+        database.load_font_data(crate::icon::FONT.to_vec());
+        database.load_font_data(GEIST_MONO.to_vec());
+        database.load_font_data(SYMBOLS.to_vec());
+        database.load_font_data(include_bytes!("../fonts/Geist.ttf").to_vec());
+        database.load_font_data(EMOJI.to_vec());
+        database.set_monospace_family(GEIST_MONO_NAME);
+        FontSystem::new_with_locale_and_db_and_fallback("en-US".into(), database, Symbols)
+    }
+
+    #[test]
+    fn symbols_cover_what_geist_lacks() {
+        let charmap = |bytes| FontRef::new(bytes).expect("bundled font parses").charmap();
+        let geist = charmap(include_bytes!("../fonts/Geist.ttf"));
+        let symbols = charmap(SYMBOLS);
+        let box_drawing = '\u{2500}'..='\u{257F}';
+        let missing: String = INVENTORY
+            .chars()
+            .filter(|c| !box_drawing.contains(c))
+            .filter(|&c| geist.map(c).is_none() && symbols.map(c).is_none())
+            .collect();
+        assert!(missing.is_empty(), "no bundled sans glyph: {missing}");
+    }
+
+    #[test]
+    fn every_symbol_shapes_from_a_bundled_font_without_system_fonts() {
+        let mut fonts = web();
+        for family in [Family::Name(BODY), Family::Monospace] {
+            for weight in [Weight::NORMAL, Weight::MEDIUM, Weight::SEMIBOLD] {
+                for symbol in INVENTORY.chars() {
+                    let text = format!("{symbol}Z");
+                    let mut buffer = Buffer::new(&mut fonts, Metrics::new(14.0, 20.0));
+                    buffer.set_text(
+                        &text,
+                        &Attrs::new().family(family).weight(weight),
+                        Shaping::Advanced,
+                        None,
+                    );
+                    buffer.shape_until_scroll(&mut fonts, false);
+                    let glyph = buffer
+                        .layout_runs()
+                        .flat_map(|run| run.glyphs.iter())
+                        .find(|glyph| glyph.start == 0)
+                        .expect("symbol shapes")
+                        .clone();
+                    assert_ne!(
+                        glyph.glyph_id, 0,
+                        "tofu: {symbol} in {family:?} at {weight:?}"
+                    );
+                    let face = fonts.db().face(glyph.font_id).expect("shaped face");
+                    let name = &face.families[0].0;
+                    assert!(
+                        !face.post_script_name.contains("Emoji"),
+                        "emoji for {symbol} in {family:?}: {name}"
+                    );
+                    if "⌘⌥⌃⌄⌫⏎".contains(symbol) && family == Family::Name(BODY) {
+                        assert_eq!(name, SYMBOLS_NAME, "{symbol} at {weight:?}");
+                    }
+                }
+            }
+        }
+    }
 
     #[test]
     fn emoji_fallback_shapes_and_rasterizes_in_color_without_system_fonts() {

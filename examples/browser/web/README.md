@@ -60,8 +60,13 @@ supported by the locked cosmic-text/Swash renderer on both WebGPU and the CPU
 fallback. This is the unmodified [Mozilla release font](https://github.com/mozilla/twemoji-colr/releases/tag/v0.7.0),
 with Twemoji artwork under CC BY 4.0 and font-generation code under Apache 2.0;
 its attribution, upstream license notice, source URL and SHA-256 are recorded in
-`../fonts/TwemojiMozilla-LICENSE.txt`. The build includes all bundled font
-licenses at `/font-licenses.txt`.
+`../fonts/TwemojiMozilla-LICENSE.txt`.
+
+For the same reason it bundles Inter Symbols, a subset of [Inter](https://github.com/rsms/inter)
+4.001 (SIL OFL 1.1) with the key and interface symbols Geist lacks (⌘ ⌥ ⌃ ⌄ ⌫ ⏎
+✓ ✗ and others), renamed so it never stands in for a full Inter. The browser
+falls back to it before any system font, natively too, so both draw the same
+symbols. The build includes all bundled font licenses at `/font-licenses.txt`.
 
 The loader preserves Cmd/Ctrl+R and Cmd/Ctrl+Shift+R as native browser shortcuts,
 preventing the canvas event handler from cancelling them. Right-clicks on the
