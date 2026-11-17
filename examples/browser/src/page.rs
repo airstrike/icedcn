@@ -52,6 +52,9 @@ const PREVIEW_PADDING: f32 = 24.0;
 /// Collapsed code-snippet height when not expanded by the user (px).
 const COLLAPSED_CODE_HEIGHT: f32 = 160.0;
 
+/// Lines of source a collapsed code panel previews.
+const PREVIEW_LINES: usize = 3;
+
 /// Static metadata for a component page.
 pub struct Meta {
     pub title: &'static str,
@@ -463,7 +466,14 @@ fn render_example<'a>(
                 .md_items
                 .get(snippet_path)
                 .and_then(|opt| opt.as_ref())
-                .map(|items| snippet(page_index, items, viewer))
+                .map(|items| {
+                    panel_snippet(
+                        page_index,
+                        items,
+                        viewer,
+                        !st.code_expanded.contains(&block_pos),
+                    )
+                })
                 .unwrap_or_else(|| text("Missing snippet!").into());
             code_panel_with_border(
                 page_index,
@@ -628,8 +638,8 @@ fn code_panel_with_border<'a>(
 
         let overlay = container(view_code_btn)
             .center(Fill)
-            .style(style(code_fade_overlay))
-            .height(COLLAPSED_CODE_HEIGHT);
+            .padding(iced::Padding::default().bottom(16))
+            .style(style(code_fade_overlay));
         stack![Element::from(truncated), Element::from(overlay)].boxed()
     }
 }
@@ -754,6 +764,55 @@ pub fn snippet<'a>(
     items: &'a Vec<markdown::Item>,
     viewer: &'a SnippetViewer,
 ) -> Slot<'a, super::Message> {
+    markdown::view_with(items, snippet_settings(viewer), viewer)
+        .map(move |url| super::Message::Page(page_index, Message::LinkClicked(url)))
+        .boxed()
+        .into()
+}
+
+/// The body of an example's code panel. Its source is numbered like a
+/// component source; collapsed, it shows the first lines of the first one.
+fn panel_snippet<'a>(
+    page_index: usize,
+    items: &'a [markdown::Item],
+    viewer: &'a SnippetViewer,
+    collapsed: bool,
+) -> Slot<'a, super::Message> {
+    let settings = snippet_settings(viewer);
+    let source = |item: &'a markdown::Item, limit: usize| match item {
+        markdown::Item::CodeBlock {
+            language,
+            code,
+            lines,
+        } => Some(viewer.numbered(
+            settings,
+            language.as_deref(),
+            code,
+            &lines[..lines.len().min(limit)],
+        )),
+        _ => None,
+    };
+
+    let preview = collapsed
+        .then(|| items.iter().find_map(|item| source(item, PREVIEW_LINES)))
+        .flatten();
+
+    let body = preview.unwrap_or_else(|| {
+        column(items.iter().map(|item| {
+            source(item, usize::MAX).unwrap_or_else(|| {
+                markdown::view_with(std::slice::from_ref(item), settings, viewer)
+            })
+        }))
+        .spacing(settings.spacing)
+        .boxed()
+    });
+
+    body.map(move |url| super::Message::Page(page_index, Message::LinkClicked(url)))
+        .boxed()
+        .into()
+}
+
+fn snippet_settings(viewer: &SnippetViewer) -> markdown::Settings {
     let mut settings = markdown::Settings {
         code_size: Pixels(13.0),
         line_height: markdown::LineHeight::Relative(1.75),
@@ -765,10 +824,7 @@ pub fn snippet<'a>(
     // than body. Pin inline at 13 to land visually-balanced with the
     // surrounding prose.
     settings.style.inline_code_size = Pixels(13.0);
-    markdown::view_with(items, settings, viewer)
-        .map(move |url| super::Message::Page(page_index, Message::LinkClicked(url)))
-        .boxed()
-        .into()
+    settings
 }
 
 /// Build a [`markdown::Style`] whose inline-code chip pulls from the
@@ -864,6 +920,55 @@ impl SnippetViewer {
         self.theme = theme;
         self.map = map;
         self.code_theme_id = Id::unique();
+    }
+
+    /// Highlighted source after a gutter of line numbers, without chrome:
+    /// the code panel around it provides that. The numbers stay put while
+    /// the source scrolls sideways and are left out of a selection.
+    fn numbered<'a>(
+        &'a self,
+        settings: markdown::Settings,
+        language: Option<&'a str>,
+        code: &'a str,
+        lines: &'a [markdown::Text],
+    ) -> iced::Element<'a, markdown::Uri, Theme, iced::Renderer> {
+        use iced::alignment::Horizontal;
+        use iced::widget::{row, text};
+        use icedcn::core::oklch;
+        use icedcn::widget::scrollable;
+
+        let key = (
+            code,
+            lines.len(),
+            language,
+            &self.code_theme_id,
+            settings.style.code_block_font,
+            settings.code_size.0.to_bits(),
+        );
+        let body = lazy(key, move |_| {
+            markdown::code(settings, lines, Some(&self.map)).on_link_click(|url| url)
+        })
+        .boxed();
+        let source: iced::Element<'a, markdown::Uri, Theme, iced::Renderer> =
+            scrollable::scrollable(body).horizontal().spacing(2).into();
+
+        let numbers = (1..=lines.len())
+            .map(|number| number.to_string())
+            .collect::<Vec<_>>()
+            .join("\n");
+        let color = if self.theme.neutral.is_dark {
+            oklch(0.72, 0.0, 0.0)
+        } else {
+            oklch(0.56, 0.0, 0.0)
+        };
+        let gutter = text(numbers)
+            .font(settings.style.code_block_font)
+            .size(settings.code_size)
+            .color(color)
+            .align_x(Horizontal::Right)
+            .width(24);
+
+        row![gutter, source].spacing(24).boxed()
     }
 }
 
