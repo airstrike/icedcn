@@ -573,6 +573,7 @@ dependencies = [
  "js-sys",
  "open",
  "palette",
+ "png",
  "rawr",
  "reqwest",
  "rfd",

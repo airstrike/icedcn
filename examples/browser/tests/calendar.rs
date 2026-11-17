@@ -11,6 +11,8 @@ use icedcn::Theme;
 use icedcn::widget::calendar::{Date, Selection, persian};
 use icedcn::widget::{Inherited, Slot, calendar};
 use std::borrow::Cow;
+use std::fs::File;
+use std::io::BufReader;
 
 #[derive(Clone, Debug, PartialEq)]
 enum Message {
@@ -590,4 +592,77 @@ fn installed_range_rejects_future_and_pre_1900_days() {
         "12",
         "future dates leave the range intact"
     );
+}
+
+/// Renders `calendar` with `day` of November 2026 selected and returns the
+/// selected square's center and the center of the numeral's ink, in device pixels.
+fn selected_ink(day: u32) -> ((f32, f32), (f32, f32)) {
+    let element: Element<'static, Message, Theme> = calendar()
+        .default_month(Date::from_ymd_opt(2026, 11, 1).unwrap())
+        .default_selected(Selection::single(
+            Date::from_ymd_opt(2026, 11, day).unwrap(),
+        ))
+        .on_select(Message::Pick)
+        .into();
+    let settings = Settings {
+        font: "Geist".into(),
+        ..Default::default()
+    };
+    let mut ui = Simulator::with_size(settings, Size::new(260., 320.), element);
+    let label = ui.find(day.to_string()).unwrap().bounds();
+    let dir = std::env::temp_dir().join(format!("icedcn-calendar-{}-{day}", std::process::id()));
+    let snapshot = ui.snapshot(&Theme::light()).unwrap();
+    assert!(snapshot.matches_image(dir.join("day")).unwrap());
+    let path = std::fs::read_dir(&dir)
+        .unwrap()
+        .next()
+        .unwrap()
+        .unwrap()
+        .path();
+    let mut reader = png::Decoder::new(BufReader::new(File::open(&path).unwrap()))
+        .read_info()
+        .unwrap();
+    let mut rgba = vec![0; reader.output_buffer_size().unwrap()];
+    let info = reader.next_frame(&mut rgba).unwrap();
+    std::fs::remove_dir_all(&dir).unwrap();
+    let width = info.width as usize;
+    let luma = |x: usize, y: usize| rgba[(y * width + x) * 4] as u32;
+    let extent = |points: Vec<(usize, usize)>| {
+        let (xs, ys): (Vec<_>, Vec<_>) = points.into_iter().unzip();
+        let span = |v: &[usize]| (*v.iter().min().unwrap() + *v.iter().max().unwrap()) as f32 / 2.;
+        ((span(&xs), span(&ys)), (xs, ys))
+    };
+    let scale = 2.;
+    let (cx, cy) = (label.center_x() * scale, label.center_y() * scale);
+    let region = |r: f32, keep: &dyn Fn(usize, usize) -> bool| {
+        let mut points = Vec::new();
+        for y in (cy - r) as usize..(cy + r) as usize {
+            for x in (cx - r) as usize..(cx + r) as usize {
+                if keep(x, y) {
+                    points.push((x, y));
+                }
+            }
+        }
+        points
+    };
+    let (square, (xs, ys)) = extent(region(40., &|x, y| luma(x, y) < 60));
+    let (left, right) = (*xs.iter().min().unwrap(), *xs.iter().max().unwrap());
+    let (top, bottom) = (*ys.iter().min().unwrap(), *ys.iter().max().unwrap());
+    assert_eq!(bottom - top, right - left, "day {day} paints a full square");
+    // Inset past the rounded corners so only the numeral's ink is light.
+    let (ink, _) = extent(region(40., &|x, y| {
+        x > left + 8 && x + 8 < right && y > top + 8 && y + 8 < bottom && luma(x, y) > 160
+    }));
+    (square, ink)
+}
+
+#[test]
+fn day_numerals_are_centered_in_their_cells() {
+    for day in [5, 17] {
+        let ((sx, sy), (ix, iy)) = selected_ink(day);
+        assert!(
+            (ix - sx).abs() <= 1. && (iy - sy).abs() <= 1.,
+            "day {day}: square center ({sx}, {sy}), ink center ({ix}, {iy})"
+        );
+    }
 }

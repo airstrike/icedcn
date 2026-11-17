@@ -41,3 +41,4 @@ iced_lucide = { git = "https://github.com/airstrike/iced_lucide", branch = "code
 
 [dev-dependencies]
 iced_test.workspace = true
+png = "0.18"

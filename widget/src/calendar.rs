@@ -17,15 +17,13 @@ use iced_core::font;
 use iced_core::keyboard::key::Named;
 use iced_core::text::LineHeight;
 use iced_core::{Alignment, Element, Padding};
-use iced_widget::button::Style;
 use iced_widget::component::{self, Component};
 use iced_widget::text::StyleFn;
 use iced_widget::{Renderer, Widget};
 use iced_widget::{rich_text, span};
 use icedcn_core::theme;
-use icedcn_core::theme::button::ghost;
 use icedcn_core::theme::container::PageBackground;
-use icedcn_core::theme::tweak::{Token, border, radius};
+use icedcn_core::theme::tweak::{Bg, Fg, Token, border, radius};
 use icedcn_core::{Radius, Theme};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -525,7 +523,10 @@ impl<Message> Calendar<'_, Message> {
                 let mut label = rich_text([span(self.system.number(d))
                     .strikethrough(unavailable && self.strike_unavailable)])
                 .size(14)
-                .line_height(LineHeight::Relative(1.));
+                .line_height(LineHeight::Relative(1.))
+                // `leading-none`: the box is the 14px line slot. Shrink would add the
+                // ink overflowing the slot to the bottom only, drawing the digits high.
+                .height(14);
                 if self.system == System::Persian {
                     label = label.font(persian::FAMILY);
                 }
@@ -579,42 +580,33 @@ impl<Message> Calendar<'_, Message> {
                     .width(self.cell_size)
                     .height(self.cell_size)
                     .focus_ring(3., |t| t.neutral.ring.alpha(0.5))
-                    .style(Box::new(move |theme: &Theme, status| {
-                        let mut style = ghost(theme, status);
-                        style.border.width = 0.;
-                        style.border.radius = (if band || range_endpoint || day == today && !active
-                        {
-                            8.0
-                        } else {
-                            10.0
-                        })
-                        .into();
+                    .style({
+                        let mut style = button::Ghost
+                            + border::Width(0.)
+                            + radius(if band || range_endpoint || day == today && !active {
+                                8.
+                            } else {
+                                10.
+                            });
                         if edge {
-                            style.background = Some(theme.primary.base.into());
-                            style.text_color = theme.primary.foreground;
+                            style = style + Bg(Token::Primary) + Fg(Token::PrimaryForeground);
                         } else if active || day == today {
-                            style.background = Some(theme.muted.base.into());
-                            style.text_color = theme.neutral.foreground;
+                            style = style + Bg(Token::Muted) + Fg(Token::Foreground);
                         }
                         if band && !edge {
-                            style.border.radius = Radius {
-                                top_left: if left { 8. } else { 0. },
-                                top_right: if right { 8. } else { 0. },
-                                bottom_right: if right { 8. } else { 0. },
-                                bottom_left: if left { 8. } else { 0. },
-                            };
+                            style = style
+                                + Radius {
+                                    top_left: if left { 8. } else { 0. },
+                                    top_right: if right { 8. } else { 0. },
+                                    bottom_right: if right { 8. } else { 0. },
+                                    bottom_left: if left { 8. } else { 0. },
+                                };
                         }
-                        if outside {
-                            style.text_color = theme.muted.foreground;
+                        if outside || unavailable {
+                            style = style + Fg(Token::MutedForeground);
                         }
-                        if unavailable {
-                            style.text_color = theme.muted.foreground.alpha(0.5);
-                            if let Some(background) = style.background {
-                                style.background = Some(background.scale_alpha(0.5));
-                            }
-                        }
-                        Style::from(style)
-                    }))
+                        style
+                    })
                     .disabled(unavailable)
                     .on_press(Event::Pick(day));
                 if !unavailable {

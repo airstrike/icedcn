@@ -227,14 +227,6 @@ impl Spec {
                 ..Border::default()
             });
         }
-        if status.disabled {
-            paint.background = paint.background.map(|bg| bg.scale_alpha(0.5));
-            paint.text_color = paint.text_color.alpha(paint.text_color.a * 0.5);
-            paint.border.color = paint.border.color.alpha(paint.border.color.a * 0.5);
-            if let Some(ring) = &mut ring {
-                ring.color.a *= 0.5;
-            }
-        }
         let mut ring_offset = 0.0;
         for tweak in &self.tweaks.0 {
             apply(
@@ -245,6 +237,15 @@ impl Spec {
                 theme,
                 status,
             );
+        }
+        // `disabled:opacity-50` composites the element, tweaked colors included.
+        if status.disabled {
+            paint.background = paint.background.map(|bg| bg.scale_alpha(0.5));
+            paint.text_color = paint.text_color.alpha(paint.text_color.a * 0.5);
+            paint.border.color = paint.border.color.alpha(paint.border.color.a * 0.5);
+            if let Some(ring) = &mut ring {
+                ring.color.a *= 0.5;
+            }
         }
         Style {
             paint: paint.into(),
