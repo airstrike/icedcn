@@ -151,6 +151,21 @@ fn splash<'a>(message: &str, progress_value: f32) -> Element<'a, Message, Theme>
     .into()
 }
 
+/// Whether the page shell found no usable WebGPU adapter. Set by
+/// `web/index.html` before the app starts; always false on native.
+pub(crate) fn webgpu_off() -> bool {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let key = js_sys::JsString::from("icedcnWebgpu");
+        web_sys::window()
+            .and_then(|window| js_sys::Reflect::get(&window, &key).ok())
+            .and_then(|value| value.as_bool())
+            == Some(false)
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    false
+}
+
 /// Run the component browser with its bundled fonts and theme.
 pub fn run() -> iced::Result {
     #[cfg(target_arch = "wasm32")]
@@ -169,6 +184,14 @@ pub fn run() -> iced::Result {
         .subscription(Browser::subscription)
         .theme(Browser::theme)
         .fonts([icon::FONT, palette::icon::FONT, font::GEIST_MONO]);
+    // Skip the wgpu attempt the page already knows will fail; this also makes
+    // `?webgpu=off` draw on the CPU.
+    #[cfg(target_arch = "wasm32")]
+    let application = if webgpu_off() {
+        application.backend(iced::Backend::Software)
+    } else {
+        application
+    };
     #[cfg(target_arch = "wasm32")]
     let application = application
         .fonts([include_bytes!("../fonts/Geist.ttf").as_slice(), font::EMOJI])

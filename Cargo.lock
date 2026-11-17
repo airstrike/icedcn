@@ -570,6 +570,7 @@ dependencies = [
  "iced_test",
  "iced_widget",
  "icedcn",
+ "js-sys",
  "open",
  "palette",
  "rawr",

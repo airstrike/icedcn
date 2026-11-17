@@ -27,7 +27,7 @@ use icedcn::widget::container;
 use icedcn::widget::markdown::highlighter::Map;
 use icedcn::widget::sidebar::MenuButtonSize;
 
-use icedcn::widget::{button, context_menu, rule, sidebar, text, toast, toaster};
+use icedcn::widget::{alert, button, context_menu, rule, sidebar, text, toast, toaster};
 use icedcn::{Size, Theme, Weight, theme};
 
 use crate::component;
@@ -61,6 +61,8 @@ pub struct App {
     fount: fonts::Fount,
     font_list: Vec<String>,
     current_font: String,
+    /// Show the CPU-rendering notice; only ever set on the web.
+    webgpu_off: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -96,6 +98,7 @@ pub enum Message {
     /// `App` ignores; `Browser` intercepts the `value == 100` case to dismiss
     /// the splash so it stays up until the bar visibly reaches the right edge.
     SplashIdle(f32),
+    DismissWebgpu,
 }
 
 impl App {
@@ -290,6 +293,7 @@ impl App {
             fount: fonts::Fount::new(),
             font_list: vec![default_font.clone()],
             current_font: default_font,
+            webgpu_off: crate::webgpu_off(),
         };
         let initial = browser_routing::location()
             .map(|path| Route::parse(&path, &app.routes))
@@ -604,6 +608,10 @@ impl App {
                 self.stars = stars;
                 Task::none()
             }
+            Message::DismissWebgpu => {
+                self.webgpu_off = false;
+                Task::none()
+            }
             Message::Navigate(page, section) => {
                 self.search = false;
                 let activate = self.update_inner(Message::SelectPage(page));
@@ -764,9 +772,37 @@ impl App {
     }
 
     pub fn view(&self) -> iced::Element<'_, Message, Theme> {
-        context_menu(|_| self.content().into(), |_| menu::view(self))
+        context_menu(|_| self.chrome().into(), |_| menu::view(self))
             .width(248)
             .into()
+    }
+
+    fn chrome(&self) -> iced::Element<'_, Message, Theme> {
+        if !self.webgpu_off {
+            return self.content();
+        }
+        let close = button(icon::x())
+            .style(button::Ghost)
+            .size(Size::Xs)
+            .square()
+            .on_press(Message::DismissWebgpu);
+        let notice = alert()
+            .icon(icon::triangle_alert().size(16).line_height(1.0))
+            .title("WebGPU is off")
+            .description(
+                "This page is drawing on the CPU, so it may feel slow. \
+                 Turn on WebGPU in your browser for full speed.",
+            )
+            .action(close)
+            .style(alert::Destructive)
+            .max_width(640);
+        column![
+            Element::from(container(notice).padding([12, 16]).center_x(Fill)),
+            self.content(),
+        ]
+        .width(Fill)
+        .height(Fill)
+        .boxed()
     }
 
     fn content(&self) -> iced::Element<'_, Message, Theme> {

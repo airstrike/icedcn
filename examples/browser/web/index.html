@@ -75,10 +75,22 @@
       return new Response(stream, { headers: { "Content-Type": "application/wasm" } });
     }
 
+    // Mirrors wgpu's own check. Without an adapter iced draws with tiny-skia,
+    // and the app shows a notice. `?webgpu=off` forces that path.
+    async function webgpu() {
+      if (new URLSearchParams(location.search).get("webgpu") === "off" || !navigator.gpu) return false;
+      try {
+        return (await navigator.gpu.requestAdapter()) !== null;
+      } catch {
+        return false;
+      }
+    }
+
     try {
-      const [{ default: start }, module_or_path] = await Promise.all([
-        import("/BROWSER_MODULE"), download(),
+      const [{ default: start }, module_or_path, gpu] = await Promise.all([
+        import("/BROWSER_MODULE"), download(), webgpu(),
       ]);
+      globalThis.icedcnWebgpu = gpu;
       await start({ module_or_path });
       splash.setAttribute("aria-hidden", "true");
     } catch (error) {

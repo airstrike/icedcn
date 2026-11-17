@@ -29,6 +29,7 @@ tokio = { version = "1", features = ["fs"] }
 # The playground's rawr engine seeds its hash maps from getrandom, which
 # takes the page's crypto in a browser.
 getrandom = { version = "0.3", features = ["wasm_js"] }
+js-sys = "0.3"
 tree-sitter.workspace = true
 wasmtimer = "0.4"
 web-sys = { version = "0.3", features = ["Window", "Navigator", "console"] }
