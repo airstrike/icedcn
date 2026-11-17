@@ -13,6 +13,8 @@ python3 -m http.server --directory target/browser-web 8080
 
 The page draws with WebGPU, then WebGL2, then the CPU. Add `?renderer=webgl` or `?renderer=cpu` to the URL to force a tier.
 
+No startup step can hang the splash. A WebGPU request gets 5 seconds before the page moves on to WebGL2. If the app has not shown its first view 20 seconds after it starts, or panics before then, the page reloads with `?renderer=cpu`. On the CPU tier it shows an error instead. A download that stalls for 30 seconds, or a start that takes longer than 2 minutes, also shows an error.
+
 Set WASM_BINDGEN to select a specific CLI executable. CC_wasm32_unknown_unknown can select a WebAssembly-capable Clang if the system default lacks that target.
 
 To deploy the generated assets to icedcn.airstrike.fyi from an authenticated Cloudflare account, run

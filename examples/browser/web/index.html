@@ -54,22 +54,107 @@
 
     const splash = document.querySelector("#splash");
     const bar = document.querySelector("#progress");
+    const query = new URLSearchParams(location.search);
+
+    // Every startup step has a deadline, so a hung step ends in a message or
+    // in the CPU renderer instead of an endless splash.
+    const STALLED_DOWNLOAD = 30_000;
+    const SLOW_START = 120_000;
+    const GPU_REQUEST = 5_000;
+    const FIRST_VIEW = 20_000;
+
+    function fail(text, error) {
+      if (error) console.error(error);
+      let message = splash.querySelector('[role="alert"]');
+      if (!message) {
+        message = document.createElement("p");
+        message.setAttribute("role", "alert");
+        splash.append(message);
+      }
+      message.textContent = text;
+      bar.hidden = true;
+      splash.removeAttribute("aria-hidden");
+    }
+
+    const RELOAD = "The component browser could not start. Reload the page to try again.";
+
+    function deadline(promise, ms, error) {
+      let timer;
+      const expired = new Promise((_, reject) => { timer = setTimeout(() => reject(error), ms); });
+      return Promise.race([promise, expired]).finally(() => clearTimeout(timer));
+    }
+
+    // A WebGPU request that never settles (some mobile drivers) would stall
+    // wgpu's own probe forever. Past the deadline the adapter request reports
+    // no adapter and the device request fails, so wgpu moves on to WebGL2.
+    if (typeof GPU !== "undefined" && typeof GPUAdapter !== "undefined") {
+      const requestAdapter = GPU.prototype.requestAdapter;
+      GPU.prototype.requestAdapter = function (...options) {
+        const request = requestAdapter.apply(this, options);
+        return deadline(request, GPU_REQUEST, new Error("WebGPU adapter request timed out"))
+          .catch(error => { console.warn(error); return null; });
+      };
+      const requestDevice = GPUAdapter.prototype.requestDevice;
+      GPUAdapter.prototype.requestDevice = function (...options) {
+        const request = requestDevice.apply(this, options);
+        return deadline(request, GPU_REQUEST, new Error("WebGPU device request timed out"));
+      };
+    }
+
+    // Restarts on the CPU renderer when the GPU renderer failed or hung. The
+    // wasm is cached as immutable, so the restart skips the download.
+    function fallback(reason) {
+      if (globalThis.icedcnRenderer === "cpu") return false;
+      console.warn(`${reason}; restarting with the CPU renderer`);
+      query.set("renderer", "cpu");
+      location.replace(`${location.pathname}?${query}${location.hash}`);
+      return true;
+    }
+
+    let ready = false;
+    globalThis.icedcnReady = () => {
+      ready = true;
+      // A slow start may already have shown a message; the app covers it.
+      splash.querySelector('[role="alert"]')?.remove();
+      splash.setAttribute("aria-hidden", "true");
+    };
+    globalThis.icedcnFailed = error => {
+      if (!ready && fallback("The app panicked during startup")) return;
+      fail(ready ? "The component browser stopped working. Reload the page to try again." : RELOAD, error);
+    };
 
     async function download() {
-      const response = await fetch("/BROWSER_WASM");
+      const controller = new AbortController();
+      let stall = setTimeout(() => controller.abort(), STALLED_DOWNLOAD);
+      const stalled = () => controller.signal.aborted ? new Error("Wasm download stalled") : null;
+      let response;
+      try {
+        response = await fetch("/BROWSER_WASM", { signal: controller.signal });
+      } catch (error) {
+        clearTimeout(stall);
+        throw stalled() ?? error;
+      }
       if (!response.ok) throw new Error(`Wasm download failed (HTTP ${response.status})`);
-      if (!response.body || typeof TransformStream === "undefined") return response;
+      if (!response.body || typeof TransformStream === "undefined") {
+        clearTimeout(stall);
+        return response;
+      }
 
       // Fetch delivers decoded bytes, even when the server compresses the response.
       const total = BROWSER_BYTES;
       let received = 0;
       const stream = response.body.pipeThrough(new TransformStream({
-        transform(chunk, controller) {
+        transform(chunk, output) {
+          clearTimeout(stall);
+          stall = setTimeout(() => output.error(new Error("Wasm download stalled")), STALLED_DOWNLOAD);
           received += chunk.byteLength;
           const fraction = Math.min(received / total, 1);
           bar.firstElementChild.style.transform = `scaleX(${fraction})`;
           bar.setAttribute("aria-valuenow", Math.floor(fraction * 100));
-          controller.enqueue(chunk);
+          output.enqueue(chunk);
+        },
+        flush() {
+          clearTimeout(stall);
         },
       }));
       return new Response(stream, { headers: { "Content-Type": "application/wasm" } });
@@ -79,13 +164,14 @@
     // With neither, iced draws with tiny-skia and the app shows a notice.
     // `?renderer=webgl` or `?renderer=cpu` forces a tier.
     async function renderer() {
-      const forced = new URLSearchParams(location.search).get("renderer");
+      const forced = query.get("renderer");
       if (forced === "cpu") return "cpu";
-      // Hidden from wgpu too, so it takes the same path as a browser without WebGPU.
-      if (forced === "webgl") Object.defineProperty(navigator, "gpu", { value: undefined });
       try {
-        if (navigator.gpu && await navigator.gpu.requestAdapter()) return "webgpu";
+        if (forced !== "webgl" && navigator.gpu && await navigator.gpu.requestAdapter()) return "webgpu";
       } catch {}
+      // Hidden from wgpu too, so it goes straight to WebGL2 instead of
+      // waiting on a WebGPU adapter that is forced off, missing or hung.
+      if (navigator.gpu) Object.defineProperty(navigator, "gpu", { value: undefined });
       const gl = document.createElement("canvas").getContext("webgl2", { antialias: false });
       gl?.getExtension("WEBGL_lose_context")?.loseContext();
       return gl ? "webgl" : "cpu";
@@ -96,14 +182,15 @@
         import("/BROWSER_MODULE"), download(), renderer(),
       ]);
       globalThis.icedcnRenderer = tier;
-      await start({ module_or_path });
-      splash.setAttribute("aria-hidden", "true");
+      // Compiles the wasm and starts iced, which then sets up its renderer
+      // and asks for the first view in the background.
+      await deadline(start({ module_or_path }), SLOW_START, new Error("Startup timed out"));
+      setTimeout(() => {
+        if (ready || splash.querySelector('[role="alert"]')) return;
+        if (!fallback("The renderer did not start")) fail(RELOAD);
+      }, FIRST_VIEW);
     } catch (error) {
-      const message = document.createElement("p");
-      message.setAttribute("role", "alert");
-      message.textContent = "The component browser could not start. Reload the page to try again.";
-      bar.replaceWith(message);
-      console.error(error);
+      fail(RELOAD, error);
     }
   </script>
 </body>

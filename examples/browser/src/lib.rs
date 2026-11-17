@@ -109,6 +109,13 @@ impl Browser {
     }
 
     pub fn view(&self) -> Element<'_, Message, Theme> {
+        // iced asks for the first view only once its renderer exists.
+        #[cfg(target_arch = "wasm32")]
+        {
+            use std::sync::Once;
+            static READY: Once = Once::new();
+            READY.call_once(|| shell("icedcnReady", ""));
+        }
         if self.font_loaded {
             self.app.view()
         } else {
@@ -167,13 +174,33 @@ pub(crate) fn cpu_renderer() -> bool {
     false
 }
 
+/// Calls the page shell's `name` callback, if `web/index.html` defined one.
+#[cfg(target_arch = "wasm32")]
+fn shell(name: &str, argument: &str) {
+    use js_sys::{Function, JsString, Reflect};
+
+    let Some(window) = web_sys::window() else {
+        return;
+    };
+    let Ok(value) = Reflect::get(&window, &JsString::from(name)) else {
+        return;
+    };
+    if value.is_function() {
+        let _ = Function::from(value).call1(&window, &JsString::from(argument));
+    }
+}
+
 /// Run the component browser with its bundled fonts and theme.
 pub fn run() -> iced::Result {
     #[cfg(target_arch = "wasm32")]
     {
         use web_sys::console;
+        // Startup runs after the shell's `start()` has resolved, so a panic
+        // there is reported to the shell, which otherwise keeps its splash.
         std::panic::set_hook(Box::new(|panic| {
-            console::error_1(&panic.to_string().into());
+            let message = panic.to_string();
+            console::error_1(&message.as_str().into());
+            shell("icedcnFailed", &message);
         }));
         parser_heap::install();
     }
