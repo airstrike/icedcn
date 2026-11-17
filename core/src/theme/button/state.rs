@@ -173,6 +173,9 @@ impl Spec {
             paint.text_color = theme.primary.base;
         }
         paint.border.width = 1.0;
+        // Browsers paint border boxes on device pixels; a centered button lands on
+        // half points, where an unsnapped 1px border smears into two faint rows.
+        paint.snap = true;
         paint.border.radius = if status.small { 8.0 } else { 10.0 }.into();
         if status.anchor && status.hovered && matches!(self.kind, Variant::Default) {
             paint.background = Some(theme.primary.base.alpha(0.8).into());
@@ -409,6 +412,19 @@ mod tests {
                     )
                     .underline
             );
+        }
+    }
+
+    #[test]
+    fn nova_variants_paint_on_the_pixel_grid() {
+        for theme in [Theme::light(), Theme::dark()] {
+            for spec in [
+                Spec::from(super::super::Default),
+                Spec::from(super::super::Outline),
+                Spec::from(super::super::Ghost),
+            ] {
+                assert!(spec.resolve_state(&theme, Status::default()).paint.snap);
+            }
         }
     }
 
