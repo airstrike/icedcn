@@ -54,6 +54,7 @@
 //! conditional-push pattern `alert::Alert` uses for its title/description
 //! pair.
 
+use crate::text;
 use iced_widget::Widget;
 pub mod widget;
 
@@ -142,13 +143,13 @@ pub fn group<'a, Message: 'a>(
 
 /// A medium-weight field label with the same line height as a plain string passed to `.label()`.
 pub fn label<'a>(content: impl iced_core::text::IntoFragment<'a>) -> crate::text::Text<'a> {
-    crate::text::label(content).line_height(1.375)
+    crate::text::label(content).line_height(text::leading::SNUG)
 }
 
 /// The larger heading used by the default FieldLegend. Use `text::label`
 /// for Nova's smaller label variant.
 pub fn legend<'a>(label: impl iced_core::text::IntoFragment<'a>) -> crate::text::Text<'a> {
-    crate::text::small(label).size(16).medium().line_height(1.5)
+    crate::text::p(label).medium()
 }
 
 /// A fieldset with its legend, optional description and related controls.
@@ -159,7 +160,11 @@ pub fn set<'a, Message: 'a>(
 ) -> Column<'a, Message> {
     let mut header = Column::with_children([legend.into()]);
     if let Some(description) = description {
-        header = header.push(crate::text::muted(description).line_height(1.5).into());
+        header = header.push(
+            crate::text::muted(description)
+                .line_height(text::leading::NORMAL)
+                .into(),
+        );
     }
     Column::with_children([header.into(), controls.into()])
         .spacing(16)
@@ -558,13 +563,17 @@ pub trait IntoDescription<'a, Message> {
 
 impl<'a, Message: 'a> IntoDescription<'a, Message> for &'a str {
     fn into_description(self) -> Slot<'a, Message> {
-        crate::text::muted(self).line_height(1.5).into()
+        crate::text::muted(self)
+            .line_height(text::leading::NORMAL)
+            .into()
     }
 }
 
 impl<'a, Message: 'a> IntoDescription<'a, Message> for String {
     fn into_description(self) -> Slot<'a, Message> {
-        crate::text::muted(self).line_height(1.5).into()
+        crate::text::muted(self)
+            .line_height(text::leading::NORMAL)
+            .into()
     }
 }
 
@@ -588,13 +597,13 @@ pub trait IntoError<'a, Message> {
 
 impl<'a, Message: 'a> IntoError<'a, Message> for &'a str {
     fn into_error(self) -> Slot<'a, Message> {
-        crate::text::error(self).line_height(1.5).into()
+        crate::text::error(self).into()
     }
 }
 
 impl<'a, Message: 'a> IntoError<'a, Message> for String {
     fn into_error(self) -> Slot<'a, Message> {
-        crate::text::error(self).line_height(1.5).into()
+        crate::text::error(self).into()
     }
 }
 

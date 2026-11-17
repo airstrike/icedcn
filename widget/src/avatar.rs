@@ -36,6 +36,7 @@ pub mod badge;
 pub mod group;
 mod widget;
 
+use crate::text;
 use iced_core::Length::Fill;
 use iced_core::image::Handle;
 use iced_widget::{Renderer, Widget};
@@ -234,11 +235,11 @@ impl<'a, Message: 'a> Compose<Message> for Avatar<'a, Message> {
         let mut fallback = fallback.unwrap_or_else(|| Slot::from(""));
         fallback.inherit(
             &Inherited::default()
-                .with_size(crate::Size::Custom(geometry.font_size))
-                .with_line_height(if geometry.font_size == 12.0 {
-                    16.0
+                // `text-sm`, `text-xs` on the small avatar.
+                .with_size(if geometry.font_size == 12.0 {
+                    text::size::XS
                 } else {
-                    20.0
+                    text::size::SM
                 })
                 .with_selectable(false)
                 .or(inherited),
@@ -251,7 +252,7 @@ impl<'a, Message: 'a> Compose<Message> for Avatar<'a, Message> {
             badge.inherit(
                 &Inherited::default()
                     .with_size(crate::Size::Custom(geometry.badge_icon_size))
-                    .with_line_height(geometry.badge_icon_size)
+                    .with_line_height(iced_core::Pixels(geometry.badge_icon_size))
                     .with_selectable(false)
                     .or(inherited),
             );

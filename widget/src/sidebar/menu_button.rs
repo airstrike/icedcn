@@ -50,6 +50,19 @@ impl MenuButtonSize {
         }
     }
 
+    /// The label's `text-*` size. Docs' `text-[0.8rem]` keeps the
+    /// `text-sm` leading (20px at 14px, 18.3px at 12.8px).
+    pub fn text(&self) -> Size {
+        match self {
+            Self::Default | Self::Lg => Size::Default,
+            Self::Sm => Size::Xs,
+            Self::Docs => Size::Text {
+                size: 12.8,
+                leading: 1.25 / 0.875,
+            },
+        }
+    }
+
     pub fn text_size(&self) -> f32 {
         match self {
             Self::Default | Self::Lg => 14.0, // text-sm
@@ -149,18 +162,15 @@ impl<'a, Message: Clone + 'a> From<SidebarMenuButton<'a, Message>>
     for iced_core::Element<'a, Message, Theme, Renderer>
 {
     fn from(mut btn: SidebarMenuButton<'a, Message>) -> Self {
-        let text_size = btn.size.text_size();
         let docs = btn.size == MenuButtonSize::Docs;
-        let line_height = if docs { text_size * 20.0 / 14.0 } else { 20.0 };
         btn.content.inherit(
             &Inherited::default()
-                .with_size(Size::Custom(text_size))
+                .with_size(btn.size.text())
                 .with_weight(if docs || btn.active {
                     crate::Weight::Medium
                 } else {
                     crate::Weight::Normal
                 })
-                .with_line_height(line_height)
                 .with_selectable(false),
         );
 

@@ -25,7 +25,7 @@
 //! Pass `alert::Destructive` to `.style(..)` for an error alert.
 
 use iced_core::alignment::{Horizontal, Vertical};
-use iced_core::text::{IntoFragment, LineHeight, Wrapping};
+use iced_core::text::{IntoFragment, Wrapping};
 use iced_core::{Font, Length::*, Padding, Pixels};
 use iced_widget::Renderer;
 use iced_widget::Widget;
@@ -73,23 +73,14 @@ impl<'a, Message: 'a> Alert<'a, Message> {
 
     /// Set the title text. Rendered at `text-sm` with medium weight.
     pub fn title(mut self, title: impl IntoFragment<'a>) -> Self {
-        self.title = Some(
-            text::Text::new(title)
-                .size(text::size::SM)
-                .line_height(LineHeight::Absolute(Pixels(20.0)))
-                .medium(),
-        );
+        self.title = Some(text::Text::new(title).size(text::size::SM).medium());
         self
     }
 
     /// Set the description text, rendered at `text-sm` in the style's
     /// description color.
     pub fn description(mut self, description: impl IntoFragment<'a>) -> Self {
-        self.description = Some(
-            text::Text::new(description)
-                .size(text::size::SM)
-                .line_height(LineHeight::Absolute(Pixels(20.0))),
-        );
+        self.description = Some(text::Text::new(description).size(text::size::SM));
         self
     }
 

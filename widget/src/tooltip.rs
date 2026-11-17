@@ -123,11 +123,8 @@ impl<'a, Message: 'a> Compose<Message> for Tooltip<'a, Message> {
     where
         Self: 'b,
     {
-        self.content.inherit(
-            &Inherited::default()
-                .with_size(Size::Xs)
-                .with_line_height(16.),
-        );
+        self.content
+            .inherit(&Inherited::default().with_size(Size::Xs));
 
         let panel = crate::container(self.content)
             .padding(self.padding)

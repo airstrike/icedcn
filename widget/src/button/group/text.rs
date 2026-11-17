@@ -32,8 +32,7 @@ impl<'a, Message: 'a> Compose<Message> for Text<'a, Message> {
         self.content.inherit(
             &inherited.or(Inherited::default()
                 .with_size(Size::Default)
-                .with_weight(Weight::Medium)
-                .with_line_height(20.)),
+                .with_weight(Weight::Medium)),
         );
         let padding = Padding::from([1., 11.]);
         let padding = self

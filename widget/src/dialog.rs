@@ -32,7 +32,6 @@ use std::rc::Rc;
 use iced_core::Element;
 use iced_core::Length::{Fill, Fit, Shrink};
 use iced_core::alignment::Horizontal;
-use iced_core::text::LineHeight;
 use iced_core::time::Instant;
 use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
@@ -333,10 +332,10 @@ pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> Slot<'a,
     column![
         text::Text::new(title)
             .size(text::size::BASE)
-            .line_height(LineHeight::Relative(1.0))
+            .line_height(text::leading::NONE)
             .medium()
             .style(theme::text::Foreground),
-        text::muted(description).line_height(LineHeight::Absolute(20.0.into())),
+        text::muted(description),
     ]
     // Native heading metrics extend below its 16px CSS line box.
     .spacing(4)

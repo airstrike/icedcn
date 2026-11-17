@@ -119,9 +119,12 @@ impl<'a, Message: 'a> Header<'a, Message> {
 
     pub(super) fn view(self, compact: bool, spec: Spec) -> Element<'a, Message, Theme, Renderer> {
         let text = Inherited::default()
-            .with_size(if compact { 12. } else { 14. })
-            .with_weight(Weight::Medium)
-            .with_line_height(if compact { 16. } else { 20. });
+            .with_size(if compact {
+                crate::Size::Xs
+            } else {
+                crate::Size::Default
+            })
+            .with_weight(Weight::Medium);
         let titled = self
             .items
             .iter()

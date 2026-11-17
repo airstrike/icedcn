@@ -1,9 +1,10 @@
 //! Framed conversational content with optional corner reactions.
+use crate::text;
 use iced_core::Length::{Fill, FillPortion};
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::{Element, Vector};
 use iced_widget::{Renderer, Widget, float, stack};
-use icedcn_core::{Border, Color, Padding, Radius, Theme, font_size, radius};
+use icedcn_core::{Border, Color, Padding, Radius, Theme, radius};
 
 use crate::button::widget::Button;
 use crate::container::widget::Container;
@@ -241,8 +242,8 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Bubble<'a, Message> {
         let align = self.align.unwrap_or(Horizontal::Left);
         self.content.inherit(
             &Inherited::default()
-                .with_size(font_size::SM)
-                .with_line_height(22.75)
+                .with_size(text::size::SM)
+                .with_line_height(text::leading::RELAXED)
                 .with_disabled(self.disabled),
         );
         if self.interactive {
@@ -314,7 +315,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Bubble<'a, Message> {
             reaction.inherit(
                 &Inherited::default()
                     .with_size(Size::Sm)
-                    .with_line_height(20.0)
+                    .with_line_height(iced_core::Pixels(20.0))
                     .with_disabled(self.disabled),
             );
             let chip = container(reaction)

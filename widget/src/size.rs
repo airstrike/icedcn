@@ -11,7 +11,13 @@ pub enum Size {
     Default,
     Lg,
     Icon,
+    /// `text-[npx]`: a font size alone; the line height is inherited.
     Custom(f32),
+    /// A `text-*` step: a font size with its unitless leading (`text::size::LG`).
+    Text {
+        size: f32,
+        leading: f32,
+    },
 }
 
 impl Size {
@@ -22,7 +28,7 @@ impl Size {
             Size::Sm => 28.0,
             Size::Default | Size::Icon => 32.0,
             Size::Lg => 36.0,
-            Size::Custom(_) => 32.0,
+            Size::Custom(_) | Size::Text { .. } => 32.0,
         }
     }
 
@@ -64,7 +70,7 @@ impl Size {
                 left: 0.0,
                 right: 0.0,
             },
-            Size::Custom(_) => Padding {
+            Size::Custom(_) | Size::Text { .. } => Padding {
                 top: 6.0,
                 bottom: 6.0,
                 left: 10.0,
@@ -79,7 +85,23 @@ impl Size {
             Size::Xs => 12.0,
             Size::Sm => 12.8,
             Size::Custom(v) => v,
+            Size::Text { size, .. } => size,
             _ => 14.0,
+        }
+    }
+
+    /// The unitless leading this size sets, like a `text-*` utility. `None`
+    /// for [`Size::Custom`], which keeps the inherited leading.
+    ///
+    /// The control sizes carry the leading of their `text-*` class: `Xs` is
+    /// `text-xs`, `Default`, `Lg` and `Icon` are `text-sm`. `Sm` is nova's
+    /// `text-[0.8rem]`, which replaces the base `text-sm` and so inherits.
+    pub const fn leading(self) -> Option<f32> {
+        match self {
+            Size::Xs => Some(1.0 / 0.75),
+            Size::Default | Size::Lg | Size::Icon => Some(1.25 / 0.875),
+            Size::Sm | Size::Custom(_) => None,
+            Size::Text { leading, .. } => Some(leading),
         }
     }
 
@@ -118,6 +140,7 @@ impl From<Size> for icedcn_core::Radius {
             Size::Default | Size::Icon => icedcn_core::radius::MD.into(),
             Size::Lg => icedcn_core::radius::LG.into(),
             Size::Custom(v) => v.into(),
+            Size::Text { .. } => icedcn_core::radius::MD.into(),
         }
     }
 }

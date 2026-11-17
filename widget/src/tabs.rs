@@ -255,9 +255,7 @@ impl Handle {
         let line = self.line;
         let rounded = self.rounded;
         let mut label = label.into();
-        let inherited = Inherited::default()
-            .with_size(Size::Default)
-            .with_line_height(20.0);
+        let inherited = Inherited::default().with_size(Size::Default);
         label.inherit(&inherited);
         let style: iced_widget::button::StyleFn<'a, Theme> = Box::new(move |theme, status| {
             let mut style = tabs::trigger(theme, status, active);

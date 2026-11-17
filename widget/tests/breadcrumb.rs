@@ -3,9 +3,10 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use iced_core::keyboard::key::Named;
+use iced_core::text::LineHeight;
 use iced_core::widget::Id;
 use iced_core::widget::operation::{self, Operation, Outcome, focusable};
-use iced_core::{Element, Event, Point, Size, mouse};
+use iced_core::{Element, Event, Pixels, Point, Size, mouse};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space, Widget};
 use icedcn_core::Theme;
@@ -153,7 +154,7 @@ fn typography_cascades_without_overwriting_explicit_child_values() {
     let inherited = Inherited::default()
         .with_size(18.0)
         .with_weight(Weight::Bold)
-        .with_line_height(24.);
+        .with_line_height(Pixels(24.));
     let observed = Rc::new(RefCell::new(Inherited::default()));
     let child = Slot::new(Recorded(
         observed.clone(),
@@ -165,7 +166,10 @@ fn typography_cascades_without_overwriting_explicit_child_values() {
     let actual = *observed.borrow();
     assert_eq!(actual.size().unwrap().text_size(), 12.);
     assert_eq!(actual.weight(), Some(Weight::Bold));
-    assert_eq!(actual.line_height(), Some(24.));
+    assert_eq!(
+        actual.line_height(),
+        Some(LineHeight::Absolute(Pixels(24.)))
+    );
 }
 
 #[test]

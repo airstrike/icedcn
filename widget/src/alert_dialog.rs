@@ -31,7 +31,6 @@
 use iced_core::Element;
 use iced_core::Length::Fill;
 use iced_core::alignment::{Horizontal, Vertical};
-use iced_core::text::LineHeight;
 use iced_widget::Renderer;
 use icedcn_core::Theme;
 use icedcn_core::theme::alert_dialog;
@@ -163,12 +162,7 @@ impl Handle {
         } else {
             Horizontal::Left
         };
-        self.header_content(
-            title,
-            text::muted(description)
-                .line_height(LineHeight::Absolute(20.0.into()))
-                .align_x(alignment),
-        )
+        self.header_content(title, text::muted(description).align_x(alignment))
     }
 
     /// Build a header with a composed description, such as rich text with a link.
@@ -286,7 +280,6 @@ impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
         };
         let title = text::Text::new(title)
             .size(text::size::BASE)
-            .line_height(LineHeight::Absolute(24.0.into()))
             .medium()
             .style(Foreground)
             .align_x(alignment);

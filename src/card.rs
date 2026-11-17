@@ -30,7 +30,6 @@ use iced_core::{Length, Padding};
 use iced_widget::Column;
 use iced_widget::Row;
 use iced_widget::container::StyleFn;
-use iced_widget::text::LineHeight;
 use iced_widget::{Renderer, Widget};
 
 use crate::Gap;
@@ -164,7 +163,7 @@ impl<'a, Message: 'a> Compose<Message> for Card<'a, Message> {
             .with_card(spacing, if small { 14.0 } else { 16.0 })
             .with_card_gap(gap.unwrap_or(spacing));
         // The Card's text-sm is local; enclosing control sizes do not resize it.
-        content.inherit(&inherited.with_size(Size::Default).with_line_height(20.0));
+        content.inherit(&inherited.with_size(Size::Default));
         iced_widget::container(content.compose())
             .width(width)
             .height(height)
@@ -192,13 +191,13 @@ pub fn title<'a>(content: impl IntoFragment<'a>) -> text::Text<'a> {
     text::Text::new(content)
         .card_title()
         .medium()
-        .line_height(LineHeight::Relative(1.375))
+        .line_height(text::leading::SNUG)
         .style(theme::text::Foreground)
 }
 
-/// Creates muted description text for a card with a 20-pixel line height.
+/// Creates muted `text-sm` description text for a card.
 pub fn description<'a>(content: impl IntoFragment<'a>) -> text::Text<'a> {
-    text::muted(content).line_height(iced_core::Pixels(20.0))
+    text::muted(content)
 }
 
 /// Marks content as a card action. Pass it to [`Header::action`] to place it at the top right

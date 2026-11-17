@@ -1,12 +1,13 @@
 //! Inline notes and labeled separators for an activity or conversation.
+use crate::text;
 use iced_core::Length::Fill;
 use iced_core::{Alignment, Element};
 use iced_widget::Renderer;
+use icedcn_core::Theme;
 use icedcn_core::theme::{
     container::Transparent,
     tweak::{Fg, Token},
 };
-use icedcn_core::{Theme, font_size};
 
 use crate::{Compose, Inherited, Slot, column, container, row, separator};
 
@@ -64,11 +65,8 @@ impl<'a, Message: 'a> Compose<Message> for StatusMarker<'a, Message> {
     where
         Self: 'b,
     {
-        self.content.inherit(
-            &Inherited::default()
-                .with_size(font_size::SM)
-                .with_line_height(20.0),
-        );
+        self.content
+            .inherit(&Inherited::default().with_size(text::size::SM));
         let icon: Option<Slot<'a, Message>> = self
             .icon
             .take()

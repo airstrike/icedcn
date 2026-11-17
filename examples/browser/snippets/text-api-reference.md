@@ -40,10 +40,10 @@ The Typography examples use a larger article scale than the control-oriented hea
 
 | Builder | Type | Description |
 | --- | --- | --- |
-| `.size(size)` | `impl Into<Size>` | Override the font size. Accepts `Size::Xs`/`Sm`/`Default`/`Lg`, an `f32` (px), or `Size::Custom(v)`. |
+| `.size(size)` | `impl Into<Size>` | Override the font size. A `text::size` step or `Size::Xs`/`Default`/`Lg` also sets its line height. A number (`f32` px, `Size::Custom(v)`) sets only the size and keeps the inherited line height. |
 | `.weight(weight)` | `impl Into<Weight>` | Override the font weight. Accepts `Weight::Medium`/`Semibold`/`Bold`/etc. or a numeric `u16`. |
 | `.font(font)` | `iced::Font` | Select a font family. |
-| `.line_height(height)` | `impl Into<text::LineHeight>` | Pass `Pixels(28.)` for an absolute line box or `1.5` for a relative multiplier. |
+| `.line_height(height)` | `impl Into<text::LineHeight>` | Pass `Pixels(28.)` for an absolute line box, or a `text::leading` ratio (`SNUG`, `1.5`) that scales with the size. Wins over the size's line height. |
 | `.wrapping(strategy)` | `text::Wrapping` | Choose a line-breaking strategy, including balanced headlines. |
 | `.medium()` | — | Shorthand for `.weight(Weight::Medium)`. |
 | `.semibold()` | — | Shorthand for `.weight(Weight::Semibold)`. |
@@ -72,31 +72,45 @@ The `text::list(items)` constructor takes any
 empty list (no panic). Items are rendered at body size + foreground
 color and have no further builder methods today.
 
+### Line height
+
+A size step sets a line height ratio. Children inherit the ratio and
+multiply it by their own size, so a 28px text inside a 14px card gets
+40px lines. A `Pixels(..)` line height is inherited as pixels. Text
+outside any container uses a 1.5 ratio.
+
 ### `text::size` constants
 
-Raw `f32` constants for the type scale, exposed
-for call sites that want a literal pixel size (e.g. `Span::size`).
+Each step is a `Size` that sets the font size and its line height ratio.
+Call `.text_size()` for the pixel size alone.
 
-| Constant | Value (px) |
-| --- | --- |
-| `text::size::XS` | 12 |
-| `text::size::SM` | 14 |
-| `text::size::BASE` | 16 |
-| `text::size::LG` | 18 |
-| `text::size::XL` | 20 |
-| `text::size::XL2` | 24 |
-| `text::size::XL3` | 30 |
-| `text::size::XL4` | 36 |
+| Constant | Size (px) | Line height |
+| --- | --- | --- |
+| `text::size::XS` | 12 | 16px (4/3) |
+| `text::size::SM` | 14 | 20px (10/7) |
+| `text::size::BASE` | 16 | 24px (1.5) |
+| `text::size::LG` | 18 | 28px (14/9) |
+| `text::size::XL` | 20 | 28px (1.4) |
+| `text::size::XL2` | 24 | 32px (4/3) |
+| `text::size::XL3` | 30 | 36px (1.2) |
+| `text::size::XL4` | 36 | 40px (10/9) |
+| `text::size::XL5` … `XL9` | 48 … 128 | 1 |
+
+### `text::leading` constants
+
+`NONE` (1), `TIGHT` (1.25), `SNUG` (1.375), `NORMAL` (1.5), `RELAXED`
+(1.625) and `LOOSE` (2) are ratios.
 
 ### `Size`
 
 | Variant | `text_size()` (px) | Notes |
 | --- | --- | --- |
-| `Size::Xs` | 12 | Extra-small text. |
-| `Size::Sm` | 12.8 | Small text. |
-| `Size::Default` | 14 | Default body size. |
+| `Size::Xs` | 12 | Extra-small text, 16px lines. |
+| `Size::Sm` | 12.8 | Small text. Keeps the inherited line height. |
+| `Size::Default` | 14 | Default body size, 20px lines. |
 | `Size::Lg` | 14 | Same as `Default` — drives container height, not text size. |
-| `Size::Custom(v)` | `v` | Arbitrary pixel size. `From<f32>` / `From<u16>` / `From<i32>` blanket impls let you pass numerics directly. |
+| `Size::Custom(v)` | `v` | Arbitrary pixel size; keeps the inherited line height. `From<f32>` / `From<u16>` / `From<i32>` let you pass numbers directly. |
+| `Size::Text { size, leading }` | `size` | A size with its line height ratio, as in `text::size`. |
 
 ### `Weight`
 

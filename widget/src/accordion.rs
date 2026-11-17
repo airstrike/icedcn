@@ -299,11 +299,10 @@ impl<'a, Message: 'a, Key: Clone + PartialEq + 'static, Selection: 'a, Identity:
 {
     fn from(a: Accordion<'a, Message, Key, Selection, Identity>) -> Self {
         let label = Inherited::default()
-            .with_size(14)
+            .with_size(crate::Size::Default)
             .with_weight(Weight::Medium)
-            .with_line_height(20.0)
             .with_selectable(false);
-        let content = Inherited::default().with_size(14).with_line_height(20.0);
+        let content = Inherited::default().with_size(crate::Size::Default);
         let items = a
             .items
             .into_iter()

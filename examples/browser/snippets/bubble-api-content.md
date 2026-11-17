@@ -4,7 +4,7 @@ The bubble content wrapper is the content `Slot` passed to `bubble(content)`, so
 
 | Builder | Type | Default | Behavior |
 |---|---|---|---|
-| `bubble(content)` | `impl Into<Slot<'a, Message>>` | Required | Inherits 14px text with 22.75px line height unless explicitly set. |
+| `bubble(content)` | `impl Into<Slot<'a, Message>>` | Required | Inherits 14px text with a 1.625 line height (22.75px) unless explicitly set. |
 | `.padding(padding)` | `impl Into<Padding>` | `[10, 12]`; zero for Ghost | Space inside the reserved one-pixel border. |
 | `.radius(radius)` | `impl Into<Radius>` | 22px; zero for Ghost | Corner radius. |
 | `.interactive(true)` | `bool` | `false` | Enable pointer activation and keyboard focus on the bubble. |

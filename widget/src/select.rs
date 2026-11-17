@@ -499,7 +499,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
                 icon.inherit(
                     &Inherited::default()
                         .with_size(Size::Default)
-                        .with_line_height(16.),
+                        .with_line_height(iced_core::Pixels(16.)),
                 );
                 icon
             }

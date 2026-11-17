@@ -8,7 +8,7 @@ use iced_core::{Element, Point, Rectangle};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space, Widget};
 use icedcn_core::Theme;
-use icedcn_widget::{Compose, Inherited, Size, Slot, Weight, avatar, button};
+use icedcn_widget::{Compose, Inherited, Size, Slot, Weight, avatar, button, text};
 
 #[derive(Default)]
 struct Bounds(Vec<Rectangle>);
@@ -130,7 +130,7 @@ fn group_badge_and_count_receive_props_without_overriding_explicit_children() {
         [
             Some(Size::Custom(19.0)),
             Some(Size::Custom(8.0)),
-            Some(Size::Custom(14.0))
+            Some(text::size::SM)
         ]
     );
     assert!(props.iter().all(|p| p.is_disabled()

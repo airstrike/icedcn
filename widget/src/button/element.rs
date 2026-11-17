@@ -6,6 +6,7 @@ use iced_core::Padding;
 use iced_core::alignment;
 use iced_core::border;
 use iced_core::mouse;
+use iced_core::text::LineHeight;
 use iced_widget::Widget;
 
 use crate::Size;
@@ -68,6 +69,7 @@ where
     icon_end: bool,
     focus_ring: Option<Ring>,
     code_action: Option<Placement>,
+    leading: Option<LineHeight>,
     pressed: bool,
     on_press: Option<Message>,
     disabled: bool,
@@ -100,6 +102,7 @@ pub fn button<'a, Message: Clone + 'a>(
         icon_end: false,
         focus_ring: None,
         code_action: None,
+        leading: None,
         pressed: false,
         on_press: None,
         disabled: false,
@@ -302,18 +305,15 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
     fn from(mut btn: Button<'a, Message>) -> Self {
         let size = btn.size.unwrap_or_default();
         let h = btn.size_height();
-        let line_height = match size {
-            Size::Xs => 16.0,
-            Size::Sm => 22.4,
-            _ => 20.0,
-        };
         let mut inherited = Inherited::default()
             .with_size(size)
             .with_weight(btn.weight.unwrap_or(crate::Weight::Medium))
             .with_selectable(false)
             .with_disabled(btn.disabled);
-        if btn.nova {
-            inherited = inherited.with_line_height(line_height);
+        // `text-[0.8rem]` (Sm) and custom sizes replace the base `text-sm`,
+        // so their leading is the one around the button.
+        if let Some(leading) = btn.leading.filter(|_| size.leading().is_none()) {
+            inherited = inherited.with_line_height(leading);
         }
         for child in &mut btn.content {
             child.inherit(&inherited);
@@ -462,6 +462,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Button<'a, Message> {
         self.join = self.join.or(from.join());
         self.weight = self.weight.or(from.weight());
         self.size = self.size.or(from.size());
+        self.leading = self.leading.or(from.line_height());
         self.code_action = self.code_action.or(from.code_actions());
         self.disabled |= from.is_disabled();
     }

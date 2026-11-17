@@ -192,7 +192,7 @@ impl Layout {
             line.inherit(
                 &Inherited::default()
                     .with_size(size)
-                    .with_line_height(line_height)
+                    .with_line_height(LineHeight::Absolute(line_height.into()))
                     .with_font(font)
                     .with_selectable(true),
             );

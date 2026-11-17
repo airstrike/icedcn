@@ -122,10 +122,9 @@ pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> Slot<'a,
         column![
             text::Text::new(title)
                 .size(text::size::BASE)
-                .line_height(1.5)
                 .medium()
                 .style(theme::text::Foreground),
-            text::muted(description).line_height(20. / 14.),
+            text::muted(description),
         ]
         .spacing(2)
         .width(Fill),

@@ -334,7 +334,12 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             let modal = self.modal;
             let disabled = item.disabled || self.inherited.is_disabled();
             let mut line: Slot<'a, Event> = line.into();
-            line.inherit(&self.inherited.with_line_height(20.).with_selectable(false));
+            line.inherit(
+                &self
+                    .inherited
+                    .with_size(crate::Size::Default)
+                    .with_selectable(false),
+            );
             let entry = widget::Button::new(line.compose())
                 .width(Fill)
                 .padding([6, 8])

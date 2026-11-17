@@ -459,9 +459,7 @@ impl<'a, Message: 'a> Compose<Message> for Cell<'a, Message> {
             align_y,
         } = *self;
 
-        let mut inherited = Inherited::default()
-            .with_size(Size::Default)
-            .with_line_height(20.);
+        let mut inherited = Inherited::default().with_size(Size::Default);
         if kind == cell::Kind::Head {
             inherited = inherited.with_weight(Weight::Medium);
         }
@@ -501,11 +499,7 @@ impl<'a, Message: 'a> Compose<Message> for Caption<'a, Message> {
         Self: 'b,
     {
         let Caption { mut content } = *self;
-        content.inherit(
-            &Inherited::default()
-                .with_size(Size::Default)
-                .with_line_height(20.),
-        );
+        content.inherit(&Inherited::default().with_size(Size::Default));
 
         container(content)
             .padding(Padding::ZERO.top(16.0))

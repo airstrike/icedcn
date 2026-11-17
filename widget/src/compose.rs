@@ -24,6 +24,7 @@ use crate::button::group::Join;
 use crate::text::Text;
 use iced_core::Element;
 use iced_core::alignment::Horizontal;
+use iced_core::text::LineHeight;
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
 
@@ -42,7 +43,7 @@ pub struct Inherited {
     join: Option<Join>,
     size: Option<Size>,
     weight: Option<Weight>,
-    line_height: Option<f32>,
+    line_height: Option<LineHeight>,
     font: Option<iced_core::Font>,
     disabled: bool,
     selectable: Option<bool>,
@@ -107,9 +108,15 @@ impl Inherited {
         self
     }
 
-    /// Cascade a [`Size`] (text size, control height).
+    /// Cascade a [`Size`] (text size, control height). A size with a
+    /// leading (a `text-*` step) replaces the inherited line height, so
+    /// call [`with_line_height`](Self::with_line_height) after it.
     pub fn with_size(mut self, size: impl Into<Size>) -> Self {
-        self.size = Some(size.into());
+        let size = size.into();
+        if size.leading().is_some() {
+            self.line_height = None;
+        }
+        self.size = Some(size);
         self
     }
 
@@ -119,10 +126,13 @@ impl Inherited {
         self
     }
 
-    /// Cascade an absolute line height in logical pixels (nova `leading-4`
-    /// is `16.0`).
-    pub fn with_line_height(mut self, line_height: f32) -> Self {
-        self.line_height = Some(line_height);
+    /// Cascade a line height, like a `leading-*` utility: a
+    /// [`LineHeight::Relative`] ratio (`leading-snug`) scales by each
+    /// descendant's own size, a [`Pixels`](iced_core::Pixels) length
+    /// (`leading-5` is `Pixels(20.0)`) inherits as is. It wins over the
+    /// leading of [`with_size`](Self::with_size).
+    pub fn with_line_height(mut self, line_height: impl Into<LineHeight>) -> Self {
+        self.line_height = Some(line_height.into());
         self
     }
 
@@ -164,9 +174,11 @@ impl Inherited {
         self.weight
     }
 
-    /// The cascaded absolute line height, if any.
-    pub fn line_height(&self) -> Option<f32> {
+    /// The cascaded line height: the explicit one, else the leading of the
+    /// cascaded `text-*` [`Size`].
+    pub fn line_height(&self) -> Option<LineHeight> {
         self.line_height
+            .or(self.size.and_then(Size::leading).map(LineHeight::Relative))
     }
 
     /// Whether an ancestor is disabled.
@@ -195,7 +207,8 @@ impl Inherited {
             join: self.join.or(fallback.join),
             size: self.size.or(fallback.size),
             weight: self.weight.or(fallback.weight),
-            line_height: self.line_height.or(fallback.line_height),
+            // Our own `text-*` size replaces an inherited leading.
+            line_height: self.line_height().or(fallback.line_height()),
             font: self.font.or(fallback.font),
             disabled: self.disabled || fallback.disabled,
             selectable: self.selectable.or(fallback.selectable),

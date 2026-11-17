@@ -205,7 +205,6 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
         content.inherit(
             &Inherited::default()
                 .with_size(crate::Size::Default)
-                .with_line_height(20.)
                 .with_selectable(false),
         );
         let mut line = row![container(content).width(Fill)]

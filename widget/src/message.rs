@@ -1,15 +1,16 @@
 //! A conversation turn with an avatar, content and lightweight metadata.
+use crate::text;
 use crate::{Column, Compose, Inherited, Size, Slot, Weight, column, container, row};
 use iced_core::Element;
 use iced_core::Length::Fill;
 use iced_core::Padding;
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_widget::Renderer;
+use icedcn_core::Theme;
 use icedcn_core::theme::{
     container::Transparent,
     tweak::{Fg, Token},
 };
-use icedcn_core::{Theme, font_size};
 
 pub struct Message<'a, Event> {
     content: Slot<'a, Event>,
@@ -64,7 +65,6 @@ fn metadata<'a, Event: 'a>(
     content.inherit(
         &Inherited::default()
             .with_size(Size::Xs)
-            .with_line_height(16.0)
             .with_weight(Weight::Medium),
     );
     container(content)
@@ -90,7 +90,7 @@ impl<'a, Event: 'a> Compose<Event> for Message<'a, Event> {
     {
         self.content.inherit(
             &Inherited::default()
-                .with_size(font_size::SM)
+                .with_size(text::size::SM)
                 .with_conversation_alignment(self.align),
         );
         let footer_present = self.footer.is_some();

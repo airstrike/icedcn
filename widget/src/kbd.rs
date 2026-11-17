@@ -71,8 +71,7 @@ impl<'a, Message: 'a> Compose<Message> for Kbd<'a, Message> {
         self.content.inherit(
             &Inherited::default()
                 .with_size(Size::Xs)
-                .with_weight(Weight::Medium)
-                .with_line_height(16.0),
+                .with_weight(Weight::Medium),
         );
 
         // `h-5 min-w-5 px-1`, centered.

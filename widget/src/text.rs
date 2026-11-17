@@ -32,16 +32,41 @@ use crate::rule;
 use icedcn_core::Theme;
 use icedcn_core::theme;
 
-/// Text size presets in logical pixels.
+/// The `text-*` steps of Tailwind v4's `theme.css`: each sets a font size
+/// and its unitless leading, which descendants scale by their own size.
 pub mod size {
-    pub const XS: f32 = 12.0;
-    pub const SM: f32 = 14.0;
-    pub const BASE: f32 = 16.0;
-    pub const LG: f32 = 18.0;
-    pub const XL: f32 = 20.0;
-    pub const XL2: f32 = 24.0;
-    pub const XL3: f32 = 30.0;
-    pub const XL4: f32 = 36.0;
+    use crate::Size;
+
+    const fn step(size: f32, leading: f32) -> Size {
+        Size::Text { size, leading }
+    }
+
+    pub const XS: Size = step(12.0, 1.0 / 0.75);
+    pub const SM: Size = step(14.0, 1.25 / 0.875);
+    pub const BASE: Size = step(16.0, 1.5);
+    pub const LG: Size = step(18.0, 1.75 / 1.125);
+    pub const XL: Size = step(20.0, 1.75 / 1.25);
+    pub const XL2: Size = step(24.0, 2.0 / 1.5);
+    pub const XL3: Size = step(30.0, 2.25 / 1.875);
+    pub const XL4: Size = step(36.0, 2.5 / 2.25);
+    pub const XL5: Size = step(48.0, 1.0);
+    pub const XL6: Size = step(60.0, 1.0);
+    pub const XL7: Size = step(72.0, 1.0);
+    pub const XL8: Size = step(96.0, 1.0);
+    pub const XL9: Size = step(128.0, 1.0);
+}
+
+/// The `leading-*` ratios of Tailwind v4. `leading-N` is a length
+/// (`N * 4px`): pass `Pixels(..)` for it, which inherits as pixels.
+pub mod leading {
+    use super::LineHeight;
+
+    pub const NONE: LineHeight = LineHeight::Relative(1.0);
+    pub const TIGHT: LineHeight = LineHeight::Relative(1.25);
+    pub const SNUG: LineHeight = LineHeight::Relative(1.375);
+    pub const NORMAL: LineHeight = LineHeight::Relative(1.5);
+    pub const RELAXED: LineHeight = LineHeight::Relative(1.625);
+    pub const LOOSE: LineHeight = LineHeight::Relative(2.0);
 }
 
 /// Text widget wrapper with semantic styling
@@ -49,6 +74,8 @@ pub struct Text<'a> {
     fragment: Fragment<'a>,
     font: Option<iced_core::Font>,
     size: Option<f32>,
+    /// The leading of the `text-*` step or the cascade; `line_height` wins.
+    leading: Option<LineHeight>,
     card_title: bool,
     weight: Option<Weight>,
     italic: bool,
@@ -69,6 +96,7 @@ impl<'a> Text<'a> {
             fragment: content.into_fragment(),
             font: None,
             size: None,
+            leading: None,
             card_title: false,
             weight: None,
             italic: false,
@@ -84,8 +112,13 @@ impl<'a> Text<'a> {
         }
     }
 
+    /// Set the font size. A `text-*` step (`text::size::LG`, a control
+    /// [`Size`]) also sets its leading; a number sets only the size and
+    /// keeps the inherited leading, like `text-[28px]`.
     pub fn size(mut self, size: impl Into<Size>) -> Self {
-        self.size = Some(size.into().text_size());
+        let size = size.into();
+        self.size = Some(size.text_size());
+        self.leading = size.leading().map(LineHeight::Relative);
         self
     }
 
@@ -194,7 +227,10 @@ impl<'a> Text<'a> {
             .wrapping(self.wrapping)
             .ellipsis(self.ellipsis);
 
-        if let Some(size) = self.size.or(self.card_title.then_some(size::BASE)) {
+        if let Some(size) = self
+            .size
+            .or(self.card_title.then_some(size::BASE.text_size()))
+        {
             widget = widget.size(size);
         }
 
@@ -222,9 +258,8 @@ impl<'a> Text<'a> {
             widget = widget.letter_spacing(letter_spacing);
         }
 
-        if let Some(line_height) = self.line_height {
-            widget = widget.line_height(line_height);
-        }
+        // Preflight's `html { line-height: 1.5 }` is the root of the cascade.
+        widget = widget.line_height(self.line_height.or(self.leading).unwrap_or(leading::NORMAL));
 
         if let Some(style) = self.style {
             widget = widget.style(style);
@@ -257,27 +292,15 @@ impl<'a, Message: 'a> From<Text<'a>> for Slot<'a, Message> {
 impl<'a, Message: 'a> Compose<Message> for Text<'a> {
     fn inherit(&mut self, from: &Inherited) {
         self.selectable = self.selectable.or(from.selectable());
-        // A cascaded leading belongs to the cascaded size (a card's text-sm is
-        // 14/20), so a text with another size keeps its own leading instead of
-        // squeezing, say, a 28px heading onto 20px lines.
-        let leading = from
-            .line_height()
-            .filter(|_| match (self.size, from.size()) {
-                (Some(own), Some(cascaded)) => own == cascaded.text_size(),
-                _ => true,
-            });
         self.size = self.size.or(if self.card_title {
-            from.card_title_size().or(Some(size::BASE))
+            from.card_title_size().or(Some(size::BASE.text_size()))
         } else {
             from.size().map(Size::text_size)
         });
         self.weight = self.weight.or(from.weight().map(Into::into));
         self.font = self.font.or(from.font());
-        // The inherited value is absolute logical pixels (nova `leading-4` is
-        // 16px); `From<f32> for LineHeight` would read it as a relative factor.
-        self.line_height = self
-            .line_height
-            .or(leading.map(|pixels| LineHeight::Absolute(iced_core::Pixels(pixels))));
+        // A relative leading scales by this text's own size, as CSS does.
+        self.leading = self.leading.or(from.line_height());
     }
 
     fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
@@ -374,12 +397,11 @@ pub fn muted<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     Text::new(content).size(size::SM).style(theme::text::Muted)
 }
 
-/// Field error text in the destructive color, with the same tight line height as the label.
+/// Field error text: `text-sm` in the destructive color.
 pub fn error<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     Text::new(content)
         .size(size::SM)
         .style(theme::text::Destructive)
-        .line_height(LineHeight::Relative(1.0))
 }
 
 pub fn xs<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
@@ -673,29 +695,89 @@ mod tests {
         let _ = Box::new(button(Slot::new(label)).width(40)).compose();
     }
 
+    /// The line box a text gets once `from` has cascaded into it.
+    fn line_box(text: Text<'static>, from: &Inherited) -> f32 {
+        let mut text = text;
+        <Text as Compose<()>>::inherit(&mut text, from);
+        let size = text.size.expect("a sized text");
+        text.line_height
+            .or(text.leading)
+            .unwrap_or(leading::NORMAL)
+            .to_absolute(Pixels(size))
+            .0
+    }
+
+    fn card() -> Inherited {
+        Inherited::default().with_size(Size::Default)
+    }
+
+    fn assert_px(actual: f32, expected: f32) {
+        assert!(
+            (actual - expected).abs() < 0.01,
+            "line box {actual}px, expected {expected}px"
+        );
+    }
+
     #[test]
-    fn cascaded_leading_follows_its_size() {
-        let card = Inherited::default()
-            .with_size(Size::Default)
-            .with_line_height(20.0);
-        let leading = |text: Text<'static>| {
-            let mut text = text;
-            <Text as Compose<()>>::inherit(&mut text, &card);
-            text.line_height
-        };
-        assert_eq!(
-            leading(Text::new("Body")),
-            Some(LineHeight::Absolute(Pixels(20.0)))
-        );
-        assert_eq!(
-            leading(small("Body")),
-            Some(LineHeight::Absolute(Pixels(20.0)))
-        );
-        assert_eq!(leading(h3("Start with a style.").size(28)), None);
-        assert_eq!(leading(xs("Native components.")), None);
-        assert_eq!(
-            leading(h3("Title").size(28).line_height(Pixels(32.0))),
-            Some(LineHeight::Absolute(Pixels(32.0)))
+    fn same_size_text_takes_the_cascaded_ratio() {
+        assert_px(line_box(Text::new("Body"), &card()), 20.0);
+        assert_px(line_box(small("Body"), &card()), 20.0);
+    }
+
+    #[test]
+    fn custom_size_scales_the_inherited_ratio() {
+        // `text-[28px]` inside a `text-sm` card: 28 * 1.25 / 0.875.
+        assert_px(line_box(h3("Start with a style.").size(28), &card()), 40.0);
+        assert_px(line_box(Text::new("Caption").size(12.8), &card()), 18.2857);
+    }
+
+    #[test]
+    fn token_size_sets_its_own_ratio() {
+        assert_px(line_box(xs("Native components."), &card()), 16.0);
+        assert_px(line_box(h3("Title"), &card()), 28.0);
+        assert_px(line_box(p("Body"), &card()), 24.0);
+        assert_px(line_box(xl3("Title"), &card()), 36.0);
+        assert_px(line_box(Text::new("Body").size(size::XL4), &card()), 40.0);
+    }
+
+    #[test]
+    fn explicit_line_height_wins() {
+        let text = h3("Title").size(28).line_height(Pixels(32.0));
+        assert_px(line_box(text, &card()), 32.0);
+        let text = small("Label").line_height(leading::NONE);
+        assert_px(line_box(text, &card()), 14.0);
+        // Order does not matter: the `leading-*` wins over a later `text-*`.
+        let text = Text::new("Title")
+            .line_height(leading::SNUG)
+            .size(size::BASE);
+        assert_px(line_box(text, &card()), 22.0);
+    }
+
+    #[test]
+    fn absolute_cascade_inherits_as_pixels() {
+        let leading_6 = Inherited::default()
+            .with_size(Size::Custom(14.0))
+            .with_line_height(Pixels(24.0));
+        assert_px(line_box(Text::new("Body"), &leading_6), 24.0);
+        assert_px(line_box(Text::new("Big").size(28), &leading_6), 24.0);
+        // A `text-*` step replaces the inherited length.
+        assert_px(line_box(xs("Small"), &leading_6), 16.0);
+    }
+
+    #[test]
+    fn nested_text_size_replaces_an_ancestor_leading() {
+        let outer = Inherited::default().with_line_height(Pixels(24.0));
+        let inner = Inherited::default().with_size(Size::Xs).or(outer);
+        assert_px(line_box(Text::new("Badge"), &inner), 16.0);
+        let inner = outer.with_size(Size::Default);
+        assert_px(line_box(Text::new("Card"), &inner), 20.0);
+    }
+
+    #[test]
+    fn uncascaded_custom_size_uses_the_root_leading() {
+        assert_px(
+            line_box(Text::new("Body").size(20), &Inherited::default()),
+            30.0,
         );
     }
 
@@ -705,7 +787,8 @@ mod tests {
             text: Text::new("Forms"),
             check: |text| {
                 assert_eq!(text.size, Some(12.0));
-                assert_eq!(text.line_height, Some(LineHeight::Absolute(Pixels(16.0))));
+                assert_eq!(text.line_height, None);
+                assert_eq!(text.leading, Some(LineHeight::Relative(1.0 / 0.75)));
                 assert_eq!(text.weight, Some(Weight::Medium));
                 assert_eq!(text.selectable, Some(false));
             },
@@ -714,7 +797,7 @@ mod tests {
         badge.inherit(
             &Inherited::default()
                 .with_size(Size::Default)
-                .with_line_height(20.0)
+                .with_line_height(Pixels(20.0))
                 .with_weight(crate::Weight::Bold)
                 .with_selectable(true),
         );
@@ -738,7 +821,7 @@ mod tests {
         badge.inherit(
             &Inherited::default()
                 .with_size(Size::Default)
-                .with_line_height(20.0),
+                .with_line_height(Pixels(20.0)),
         );
         let _ = Box::new(badge).compose();
     }

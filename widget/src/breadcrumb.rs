@@ -202,8 +202,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Breadcrumb<'a, Message> {
             inherited,
         } = *self;
         let inherited = inherited.or(Inherited::default()
-            .with_size(14.0)
-            .with_line_height(20.0)
+            .with_size(crate::Size::Default)
             .with_weight(Weight::Normal));
 
         let make_separator: SeparatorFn<'a, Message> =

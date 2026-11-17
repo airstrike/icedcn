@@ -192,7 +192,6 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Badge<'a, Message> {
             .inherited
             .with_size(crate::Size::Xs)
             .with_weight(Weight::Medium)
-            .with_line_height(16.0)
             .with_disabled(self.disabled);
         if self.on_press.is_some() {
             inherited = inherited.with_selectable(false);

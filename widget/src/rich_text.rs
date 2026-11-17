@@ -28,6 +28,7 @@
 //! algorithm here and resolve `Token` → `Color` at draw time, rebuilding
 //! the cached paragraph when the palette changes.
 
+use crate::text::leading;
 use std::cell::RefCell;
 use std::ops::Add;
 
@@ -255,7 +256,9 @@ pub struct RichText<'a> {
     font: Option<iced_core::Font>,
     spans: Vec<Span<'a>>,
     size: Option<Pixels>,
-    line_height: text::LineHeight,
+    line_height: Option<text::LineHeight>,
+    /// The leading of the `text-*` step or the cascade; `line_height` wins.
+    leading: Option<text::LineHeight>,
     width: Length,
     height: Length,
     align_x: Alignment,
@@ -275,7 +278,8 @@ pub fn rich_text<'a>(spans: impl IntoIterator<Item = Span<'a>>) -> RichText<'a> 
         font: None,
         spans: spans.into_iter().collect(),
         size: None,
-        line_height: text::LineHeight::default(),
+        line_height: None,
+        leading: None,
         width: Length::Shrink,
         height: Length::Shrink,
         align_x: Alignment::Default,
@@ -294,7 +298,7 @@ impl<'a> RichText<'a> {
             bounds,
             size: self.size.unwrap_or_else(|| renderer.text_size()),
             font: self.font.unwrap_or_else(|| text::Renderer::font(renderer)),
-            line_height: self.line_height,
+            line_height: self.line_height.or(self.leading).unwrap_or(leading::NORMAL),
             align_x: self.align_x,
             align_y: self.align_y,
             shaping: Shaping::Advanced,
@@ -315,15 +319,18 @@ impl<'a> RichText<'a> {
     }
 
     /// Set the default font size of the rich text. Spans may override
-    /// per-span.
+    /// per-span. A `text-*` step also sets its leading, like
+    /// [`Text::size`](crate::text::Text).
     pub fn size(mut self, size: impl Into<crate::Size>) -> Self {
-        self.size = Some(Pixels(size.into().text_size()));
+        let size = size.into();
+        self.size = Some(Pixels(size.text_size()));
+        self.leading = size.leading().map(text::LineHeight::Relative);
         self
     }
 
     /// Set the line height.
     pub fn line_height(mut self, line_height: impl Into<text::LineHeight>) -> Self {
-        self.line_height = line_height.into();
+        self.line_height = Some(line_height.into());
         self
     }
 
@@ -671,6 +678,7 @@ impl<'a, Message: 'a> Compose<Message> for RichText<'a> {
     fn inherit(&mut self, from: &Inherited) {
         self.selectable = self.selectable.or(from.selectable());
         self.font = self.font.or(from.font());
+        self.leading = self.leading.or(from.line_height());
         // Spans that set no size or weight of their own take the inherited
         // one, so `.size(Sm)` on an enclosing button cascades into them.
         if let Some(size) = from.size() {
