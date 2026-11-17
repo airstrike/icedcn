@@ -1793,7 +1793,8 @@ where
                 input_method::Event::Preedit(content, selection) => {
                     let state = state::<Renderer>(tree);
 
-                    if state.is_focused.is_some() {
+                    if let Some(focus) = &mut state.is_focused {
+                        focus.updated_at = Instant::now();
                         state.preedit = Some(input_method::Preedit {
                             content: content.to_owned(),
                             selection: selection.clone(),

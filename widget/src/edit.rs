@@ -24,7 +24,8 @@ use iced_core::shell::Bus;
 use iced_core::text;
 use iced_core::text::editor::Cursor;
 use iced_core::time::{Duration, Instant};
-use iced_core::widget::Tree;
+use iced_core::widget::operation::Focusable;
+use iced_core::widget::{Id, Operation, Tree};
 use iced_core::{
     Element, Event, Layout, Point, Rectangle, Shell, Size, Vector, layout, mouse, overlay,
     renderer, touch, window,
@@ -73,6 +74,22 @@ pub(crate) fn next_word_start(text: &str, index: usize) -> usize {
     text.split_word_bound_indices()
         .find(|(start, word)| *start > index && !word.trim_start().is_empty())
         .map_or(text.len(), |(start, _)| start)
+}
+
+/// Restarts the caret's blink in the focused editor it reaches, after a key
+/// press its widget ran itself: the caret stays on while keys come.
+pub(crate) struct Blink;
+
+impl Operation for Blink {
+    fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+        operate(self);
+    }
+
+    fn focusable(&mut self, _id: Option<&Id>, _bounds: Rectangle, state: &mut dyn Focusable) {
+        if state.is_focused() {
+            state.focus();
+        }
+    }
 }
 
 /// Whether a right press that put the caret at `position` landed inside the

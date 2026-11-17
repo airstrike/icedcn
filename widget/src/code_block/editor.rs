@@ -231,6 +231,25 @@ impl<'a, Message> Editor<'a, Message> {
         }
     }
 
+    /// Restart the caret's blink after a key press the widget ran itself.
+    fn blink(&self, tree: &mut Tree, layout: Layout, renderer: &Renderer, viewport: &Rectangle) {
+        let Tree {
+            state, children, ..
+        } = tree;
+        let state = state.downcast_mut::<State>();
+        let (child_layout, child_tree) = layout
+            .iter_mut(children)
+            .next()
+            .expect("the editor is the only child");
+        self.editor(state).operate(
+            child_tree,
+            child_layout,
+            viewport,
+            renderer,
+            &mut edit::Blink,
+        );
+    }
+
     /// Perform the editor's actions on the content and publish an edit.
     fn perform(
         &self,
@@ -703,6 +722,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
             let action = self.command(state, command, shell);
             self.perform(state, action, shell);
             shell.capture_event();
+            self.blink(tree, layout, renderer, viewport);
             return;
         }
         match event {
@@ -759,6 +779,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
                         let action = self.command(state, command, shell);
                         self.perform(state, action, shell);
                         shell.capture_event();
+                        self.blink(tree, layout, renderer, viewport);
                         return;
                     }
                     Some(intent) => {
@@ -772,6 +793,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
                         if edit::apply(&mut editing, intent, platform) {
                             shell.capture_event();
                         }
+                        self.blink(tree, layout, renderer, viewport);
                         return;
                     }
                     None => {}

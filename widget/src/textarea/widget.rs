@@ -118,6 +118,25 @@ impl<Message> Textarea<'_, Message> {
         }
     }
 
+    /// Restart the caret's blink after a key press the widget ran itself.
+    fn blink(&self, tree: &mut Tree, layout: Layout, renderer: &Renderer, viewport: &Rectangle) {
+        let Tree {
+            state, children, ..
+        } = tree;
+        let state = state.downcast_mut::<State>();
+        let (child_layout, child_tree) = layout
+            .iter_mut(children)
+            .next()
+            .expect("the editor is the only child");
+        self.editor(state).operate(
+            child_tree,
+            child_layout,
+            viewport,
+            renderer,
+            &mut edit::Blink,
+        );
+    }
+
     /// How many lines of the textarea laid out at `bounds` show at once.
     fn page(&self, bounds: Rectangle) -> i32 {
         let line = self.text_size
@@ -278,6 +297,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
             let action = self.command(state, command, shell);
             self.perform(state, action, shell);
             shell.capture_event();
+            self.blink(tree, layout, renderer, viewport);
             return;
         }
         match event {
@@ -328,6 +348,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
                         let action = self.command(state, command, shell);
                         self.perform(state, action, shell);
                         shell.capture_event();
+                        self.blink(tree, layout, renderer, viewport);
                         return;
                     }
                     Some(intent) => {
@@ -341,6 +362,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
                         if edit::apply(&mut editing, intent, platform) {
                             shell.capture_event();
                         }
+                        self.blink(tree, layout, renderer, viewport);
                         return;
                     }
                     None => {}
