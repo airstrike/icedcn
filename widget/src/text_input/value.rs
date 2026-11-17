@@ -1,5 +1,7 @@
 use unicode_segmentation::UnicodeSegmentation;
 
+use crate::edit::{self, Platform};
+
 /// The value of a [`TextInput`].
 ///
 /// The text is kept in one string with the byte offset where each grapheme
@@ -77,6 +79,18 @@ impl Value {
             .find(|(_, word)| !word.trim_start().is_empty())
             .map(|(i, next_word)| self.index(start + i + next_word.len()))
             .unwrap_or(self.len())
+    }
+
+    /// Where a word motion to the left from grapheme `index` stops on
+    /// `platform`.
+    pub(crate) fn word_left(&self, index: usize, platform: Platform) -> usize {
+        self.index(edit::word_left(&self.text, self.offset(index), platform))
+    }
+
+    /// Where a word motion to the right from grapheme `index` stops on
+    /// `platform`.
+    pub(crate) fn word_right(&self, index: usize, platform: Platform) -> usize {
+        self.index(edit::word_right(&self.text, self.offset(index), platform))
     }
 
     /// Returns the position of the start of the next word after the given
@@ -216,7 +230,7 @@ fn segment(text: &str) -> Vec<usize> {
 
 #[cfg(test)]
 mod tests {
-    use super::Value;
+    use super::{Platform, Value};
 
     #[test]
     fn edits_keep_the_graphemes() {
@@ -257,5 +271,8 @@ mod tests {
         assert_eq!(value.next_end_of_word(0), 5);
         assert_eq!(value.next_end_of_word(5), 12);
         assert_eq!(value.next_start_of_word(0), 7);
+        assert_eq!(value.word_right(0, Platform::Mac), 5);
+        assert_eq!(value.word_left(12, Platform::Linux), 7);
+        assert_eq!(value.word_right(0, Platform::Windows), 7);
     }
 }

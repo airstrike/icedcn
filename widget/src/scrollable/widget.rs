@@ -839,6 +839,32 @@ where
                 {
                     *cursor -= state.last_translation;
                 }
+
+                // Scroll the least that shows an area the content asked
+                // for, then ask the scrollables around to show it too.
+                if let Some(area) = shell.take_reveal() {
+                    let target = area - state.last_translation;
+                    let delta = |start: f32, size: f32, view: f32, extent: f32| {
+                        if start < view || size > extent {
+                            start - view
+                        } else {
+                            (start + size - view - extent).max(0.0)
+                        }
+                    };
+                    let x = delta(target.x, target.width, bounds.x, bounds.width);
+                    let y = delta(target.y, target.height, bounds.y, bounds.height);
+                    if x != 0.0 || y != 0.0 {
+                        state.scroll_by(
+                            AbsoluteOffset { x, y },
+                            Animation::Instant,
+                            bounds,
+                            content,
+                        );
+                        state.last_translation = state.translation(self.direction, bounds, content);
+                        shell.request_redraw();
+                    }
+                    shell.request_reveal(area - state.last_translation);
+                }
             }
 
             if self.focus_group

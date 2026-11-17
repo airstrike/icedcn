@@ -2,14 +2,16 @@
 //! editable code block.
 use std::sync::Arc;
 
-use iced_core::text;
-use iced_core::text::editor::{self, Action, Cursor, Edit};
+use iced_core::alignment::Vertical;
+use iced_core::text::editor::{self, Action, Binding, Cursor, Edit, KeyPress};
+use iced_core::text::{self, Paragraph as _};
+use iced_core::{Font, Point, Rectangle, Size};
 use iced_widget::Renderer;
 use iced_widget::text_editor::Content;
 use unicode_segmentation::UnicodeSegmentation;
 
 use super::key::{Intent, Motion, Scroll};
-use super::{Platform, kill, next_word_start};
+use super::{Platform, kill, next_word_start, word_left};
 
 /// A multi-line editor the intents of key presses run in.
 pub(crate) trait Target {
@@ -21,8 +23,23 @@ pub(crate) trait Target {
     fn perform(&mut self, action: Action);
     /// Put the caret and the selection at `cursor`.
     fn move_to(&mut self, cursor: Cursor);
-    /// How many lines a page scrolls.
+    /// How many lines show at once.
     fn page(&self) -> i32;
+    /// Scroll the view: the editor's own, or the scrollables around it.
+    fn reveal(&mut self, reveal: Reveal);
+    /// Switch between inserting and typing over the text.
+    fn overwrite(&mut self);
+}
+
+/// What a key press asks the view to show.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Reveal {
+    /// The caret, scrolling the least.
+    Caret,
+    /// The caret, in the middle.
+    Center,
+    /// A scroll that leaves the caret where it is.
+    Scroll(Scroll),
 }
 
 /// Carry out `intent` in `target` on `platform`. Commands are left to the
@@ -54,24 +71,42 @@ pub(crate) fn apply(target: &mut impl Target, intent: Intent, platform: Platform
             });
         }
         Intent::Scroll(scroll) => {
-            // Far enough for any text: the editor stops at its ends.
-            const ENDS: i32 = 1 << 20;
-            let lines = match scroll {
-                Scroll::Top => -ENDS,
-                Scroll::Bottom => ENDS,
-                Scroll::PageUp => -target.page(),
-                Scroll::PageDown => target.page(),
-            };
-            target.perform(Action::Scroll { lines });
-            return false;
+            target.reveal(Reveal::Scroll(scroll));
+            return true;
+        }
+        Intent::Center => {
+            target.reveal(Reveal::Center);
+            return true;
+        }
+        Intent::Overwrite => {
+            target.overwrite();
+            return true;
         }
     }
 
+    // A page key scrolls the view with the caret, by a page.
+    target.reveal(match intent {
+        Intent::Move(Motion::PageUp) | Intent::Select(Motion::PageUp) => {
+            Reveal::Scroll(Scroll::PageUp)
+        }
+        Intent::Move(Motion::PageDown) | Intent::Select(Motion::PageDown) => {
+            Reveal::Scroll(Scroll::PageDown)
+        }
+        _ => Reveal::Caret,
+    });
     true
 }
 
 fn key(position: text::Position) -> (usize, usize) {
     (position.line, position.index)
+}
+
+fn line_text(target: &impl Target, line: usize) -> String {
+    target
+        .content()
+        .line(line)
+        .map(|line| line.text.to_string())
+        .unwrap_or_default()
 }
 
 fn length(target: &impl Target, line: usize) -> usize {
@@ -107,6 +142,22 @@ fn travel(target: &mut impl Target, motion: Motion, select: bool, platform: Plat
     match motion {
         Motion::Left => target.perform(action(editor::Motion::Left)),
         Motion::Right => target.perform(action(editor::Motion::Right)),
+        Motion::WordLeft if platform == Platform::Windows => {
+            let from = match cursor.selection {
+                Some(anchor) if !select && key(anchor) < key(caret) => anchor,
+                _ => caret,
+            };
+            if from.index == 0 {
+                target.perform(action(editor::Motion::WordLeft));
+                return;
+            }
+            let text = line_text(target, from.line);
+            let position = text::Position {
+                index: word_left(&text, from.index, platform),
+                ..from
+            };
+            place(target, position, select);
+        }
         Motion::WordLeft => target.perform(action(editor::Motion::WordLeft)),
         Motion::WordRight if platform == Platform::Windows => {
             let from = match cursor.selection {
@@ -132,8 +183,18 @@ fn travel(target: &mut impl Target, motion: Motion, select: bool, platform: Plat
         Motion::WordRight => target.perform(action(editor::Motion::WordRight)),
         Motion::LineStart => target.perform(action(editor::Motion::Home)),
         Motion::LineEnd => target.perform(action(editor::Motion::End)),
-        Motion::PageUp => target.perform(action(editor::Motion::PageUp)),
-        Motion::PageDown => target.perform(action(editor::Motion::PageDown)),
+        // A page is what shows of the editor, which may be taller than its
+        // scrollable around it.
+        Motion::PageUp | Motion::PageDown => {
+            let motion = if motion == Motion::PageUp {
+                editor::Motion::Up
+            } else {
+                editor::Motion::Down
+            };
+            for _ in 0..target.page().saturating_sub(1).max(1) {
+                target.perform(action(motion));
+            }
+        }
         Motion::DocumentStart => target.perform(action(editor::Motion::DocumentStart)),
         Motion::DocumentEnd => target.perform(action(editor::Motion::DocumentEnd)),
         Motion::Up | Motion::Down => {
@@ -240,6 +301,17 @@ fn delete(target: &mut impl Target, motion: Motion, platform: Platform) {
         Motion::Left | Motion::Right => {
             target.perform(Action::Edit(one));
             return;
+        }
+        Motion::WordLeft if platform == Platform::Windows => {
+            if caret.index == 0 {
+                target.perform(Action::Edit(Edit::Backspace));
+                return;
+            }
+            let text = line_text(target, caret.line);
+            text::Position {
+                index: word_left(&text, caret.index, platform),
+                ..caret
+            }
         }
         Motion::WordLeft => {
             target.perform(Action::Edit(Edit::BackspaceWord));
@@ -367,6 +439,148 @@ pub(crate) fn transposed(text: &str, index: usize) -> Option<(usize, usize, usiz
         bounds[at],
         *bounds.get(at + 1)?,
     ))
+}
+
+/// The editor binding of typing and Enter, typing over the character after
+/// the caret when `over` holds the content, as overwrite mode does.
+pub(crate) fn typing<Message>(
+    press: KeyPress,
+    over: Option<&Content<Renderer>>,
+) -> Option<Binding<Message>> {
+    let binding = super::binding(press)?;
+
+    match (binding, over) {
+        (Binding::Insert(c), Some(content)) => {
+            let cursor = content.cursor();
+            let at_end = content
+                .line(cursor.position.line)
+                .is_none_or(|line| cursor.position.index >= line.text.len());
+
+            Some(if cursor.selection.is_some() || at_end {
+                Binding::Insert(c)
+            } else {
+                Binding::Sequence(vec![
+                    Binding::Select(editor::Motion::Right),
+                    Binding::Insert(c),
+                ])
+            })
+        }
+        (binding, _) => Some(binding),
+    }
+}
+
+/// The width of the block caret over the character after the caret in
+/// `content`, or over a space at the end of a line.
+pub(crate) fn block_width(
+    content: &Content<Renderer>,
+    font: Font,
+    size: f32,
+    renderer: &Renderer,
+) -> f32 {
+    let position = content.cursor().position;
+    let next = content
+        .line(position.line)
+        .and_then(|line| {
+            line.text[position.index.min(line.text.len())..]
+                .graphemes(true)
+                .next()
+                .map(str::to_owned)
+        })
+        .unwrap_or_else(|| " ".to_owned());
+
+    // A trailing space adds no width to a measured line, so measure up to
+    // a sentinel and take the sentinel away.
+    let width = |content: &str| {
+        <Renderer as text::Renderer>::Paragraph::with_text(text::Text {
+            content,
+            bounds: Size::INFINITE,
+            size: size.into(),
+            line_height: text::LineHeight::default(),
+            font,
+            align_x: text::Alignment::Default,
+            align_y: Vertical::Top,
+            shaping: text::Shaping::Advanced,
+            wrapping: text::Wrapping::None,
+            ellipsis: text::Ellipsis::None,
+            letter_spacing: Default::default(),
+            font_features: Vec::new(),
+            font_variations: Vec::new(),
+            weight: None,
+            hint_factor: iced_core::Renderer::hint_factor(renderer),
+        })
+        .min_bounds()
+        .width
+    };
+
+    (width(&format!("{next}x")) - width("x")).max(1.0)
+}
+
+/// The area the scrollables around an editor laid out at `bounds` must show
+/// for `reveal`, with its caret at `caret` and `viewport` visible.
+pub(crate) fn area(
+    reveal: Reveal,
+    bounds: Rectangle,
+    viewport: Rectangle,
+    caret: Rectangle,
+) -> Option<Rectangle> {
+    // Near an edge of the editor, show the edge too: its padding and the
+    // frame around it.
+    let margin = caret.height * 3.0;
+    let edge = |y: f32| {
+        Rectangle::new(
+            Point::new(bounds.x, y - margin),
+            Size::new(1.0, margin * 2.0),
+        )
+    };
+    let page = |sign: f32| Rectangle {
+        y: viewport.y + sign * viewport.height,
+        ..viewport
+    };
+
+    match reveal {
+        Reveal::Caret => {
+            let top = if caret.y - bounds.y < margin {
+                bounds.y - margin
+            } else {
+                caret.y
+            };
+            let bottom = if bounds.y + bounds.height - (caret.y + caret.height) < margin {
+                bounds.y + bounds.height + margin
+            } else {
+                caret.y + caret.height
+            };
+            Some(Rectangle {
+                y: top,
+                height: bottom - top,
+                ..caret
+            })
+        }
+        Reveal::Center => Some(Rectangle {
+            y: caret.center_y() - viewport.height / 2.0,
+            height: viewport.height,
+            ..caret
+        }),
+        Reveal::Scroll(Scroll::Top) => Some(edge(bounds.y)),
+        Reveal::Scroll(Scroll::Bottom) => Some(edge(bounds.y + bounds.height)),
+        Reveal::Scroll(Scroll::PageUp) => page(-1.0).intersection(&bounds),
+        Reveal::Scroll(Scroll::PageDown) => page(1.0).intersection(&bounds),
+    }
+}
+
+/// The lines a scroll of the editor's own text moves, or `None` for the
+/// caret, which the editor keeps in view itself.
+pub(crate) fn lines(reveal: Reveal, page: i32, caret: f32, middle: f32, line: f32) -> Option<i32> {
+    // Far enough for any text: the editor stops at its ends.
+    const ENDS: i32 = 1 << 20;
+
+    match reveal {
+        Reveal::Caret => None,
+        Reveal::Center => Some(((caret - middle) / line).round() as i32),
+        Reveal::Scroll(Scroll::Top) => Some(-ENDS),
+        Reveal::Scroll(Scroll::Bottom) => Some(ENDS),
+        Reveal::Scroll(Scroll::PageUp) => Some(-page),
+        Reveal::Scroll(Scroll::PageDown) => Some(page),
+    }
 }
 
 #[cfg(test)]

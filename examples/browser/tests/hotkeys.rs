@@ -5,10 +5,11 @@ use std::sync::Arc;
 use iced::keyboard::key::Named;
 use iced::keyboard::{self, Key, Modifiers};
 use iced::mouse::{self, Button};
-use iced::{Element, Event, Point, Rectangle, Size};
+use iced::{Element, Event, Point, Rectangle, Size, Vector};
 use iced_test::core::clipboard;
 use iced_test::core::renderer::Headless;
 use iced_test::core::shell::{Bus, Waker};
+use iced_test::core::time::Instant;
 use iced_test::core::widget::operation::{self, TextInput};
 use iced_test::core::widget::{Id, Operation};
 use iced_test::core::window;
@@ -17,7 +18,7 @@ use iced_test::renderer::Renderer;
 use iced_test::runtime::user_interface::{self, UserInterface};
 use iced_test::simulator;
 use icedcn::Theme;
-use icedcn::widget::{Platform, code_block, container, input, textarea};
+use icedcn::widget::{Platform, code_block, container, input, scrollable, textarea};
 
 const MAC: Platform = Platform::Mac;
 const WINDOWS: Platform = Platform::Windows;
@@ -39,6 +40,8 @@ struct Desk {
     platform: Platform,
     cursor: Point,
     clipboard: Option<String>,
+    /// The primary selection the fields made.
+    primary: Option<String>,
 }
 
 impl Desk {
@@ -58,6 +61,7 @@ impl Desk {
             platform,
             cursor: Point::ORIGIN,
             clipboard: None,
+            primary: None,
         };
         let (bounds, _) = desk.field();
         desk.click(Point::new(bounds.x + 14., bounds.y + 10.));
@@ -86,9 +90,17 @@ impl Desk {
                 if let Some(clipboard::Content::Text(text)) = clipboard.write {
                     self.clipboard = Some(text);
                 }
-                for _ in clipboard.reads {
+                if let Some(text) = clipboard.primary {
+                    self.primary = Some(text);
+                }
+                for kind in clipboard.reads {
+                    let source = if kind == clipboard::Kind::Primary {
+                        &self.primary
+                    } else {
+                        &self.clipboard
+                    };
                     events.push(Event::Clipboard(clipboard::Event::Read(
-                        self.clipboard
+                        source
                             .clone()
                             .map(|text| Arc::new(clipboard::Content::Text(text)))
                             .ok_or(clipboard::Error::ContentNotAvailable),
@@ -96,6 +108,39 @@ impl Desk {
                 }
             }
         }
+    }
+
+    fn middle_click(&mut self, position: Point) {
+        self.cursor = position;
+        self.send([
+            Event::Mouse(mouse::Event::CursorMoved { position }),
+            Event::Mouse(mouse::Event::ButtonPressed(Button::Middle)),
+            Event::Mouse(mouse::Event::ButtonReleased(Button::Middle)),
+        ]);
+    }
+
+    /// How far the first scrollable has scrolled down.
+    fn scrolled(&mut self) -> f32 {
+        #[derive(Default)]
+        struct Offset(Option<f32>);
+        impl Operation for Offset {
+            fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+                visit(self);
+            }
+            fn scrollable(
+                &mut self,
+                _: Option<&Id>,
+                _: Rectangle,
+                _: Size,
+                translation: Vector,
+                _: &mut dyn operation::Scrollable,
+            ) {
+                self.0.get_or_insert(translation.y);
+            }
+        }
+        let mut offset = Offset::default();
+        self.ui.operate(&self.renderer, &mut offset);
+        offset.0.expect("a scrollable")
     }
 
     fn click(&mut self, position: Point) {
@@ -137,6 +182,10 @@ impl Desk {
             with(simulator::release_key(key), modifiers),
             Event::Keyboard(keyboard::Event::ModifiersChanged(NONE)),
         ]);
+        // A frame lays the caret out, and shows it.
+        self.send([Event::Window(
+            window::Event::RedrawRequested(Instant::now()),
+        )]);
     }
 
     fn letter(&mut self, c: &str, modifiers: Modifiers) {
@@ -648,4 +697,153 @@ fn the_menu_shortcuts_name_the_platforms_keys() {
         matches!(find.finish(), operation::Outcome::Some(Some(_))),
         "Ctrl+C in the menu"
     );
+}
+
+#[test]
+fn word_stops_skip_punctuation_but_on_windows() {
+    let text = "say, \"hi\" now";
+    for platform in PLATFORMS {
+        let expected = if platform == WINDOWS {
+            ["say@, \"hi\" now", "say, @\"hi\" now"]
+        } else {
+            ["say@, \"hi\" now", "say, \"hi@\" now"]
+        };
+        for name in FIELDS {
+            for (count, expected) in [1, 2].into_iter().zip(expected) {
+                let mut desk = Desk::new(platform, field(name, text));
+                desk.start();
+                for _ in 0..count {
+                    desk.key(Named::ArrowRight, word(platform));
+                }
+                if platform == WINDOWS && count == 1 {
+                    // Windows stops at the start of the comma.
+                    assert_eq!(desk.caret(), "say@, \"hi\" now", "{name}");
+                } else {
+                    assert_eq!(desk.caret(), expected, "{platform:?} {name}, {count} words");
+                }
+            }
+
+            let mut desk = Desk::new(platform, field(name, text));
+            desk.end();
+            desk.key(Named::ArrowLeft, word(platform));
+            desk.key(Named::ArrowLeft, word(platform));
+            let expected = if platform == WINDOWS {
+                "say, \"hi@\" now"
+            } else {
+                "say, \"@hi\" now"
+            };
+            assert_eq!(desk.caret(), expected, "{platform:?} {name} left");
+        }
+    }
+}
+
+/// A textarea of sixty numbered lines in a scrollable 200 pixels tall.
+fn tall(name: &str) -> Element<'static, String, Theme> {
+    let lines: Vec<String> = (0..60).map(|line| format!("line {line}")).collect();
+    let value = lines.join("\n");
+    let field = match name {
+        "textarea" => Element::from(textarea("").default_value(value).on_input(|s| s)),
+        _ => code_block![code_block::content("").default_value(value).on_input(|s| s)].into(),
+    };
+    container(scrollable::scrollable(container(field).width(400)).height(200)).into()
+}
+
+/// The line the caret is on, by typing `@` there.
+fn caret_line(desk: &mut Desk) -> usize {
+    let text = desk.caret();
+    text[..text.find('@').expect("typed")].matches('\n').count()
+}
+
+#[test]
+fn page_down_moves_by_the_visible_part_of_a_tall_editor() {
+    for platform in [WINDOWS, LINUX] {
+        for name in EDITORS {
+            let mut desk = Desk::new(platform, tall(name));
+            desk.start();
+            desk.key(Named::PageDown, NONE);
+            let line = caret_line(&mut desk);
+            assert!((4..=12).contains(&line), "{platform:?} {name}: line {line}");
+            assert!(
+                desk.scrolled() > 0.0,
+                "{platform:?} {name} scrolls to the caret"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_caret_moved_past_the_view_scrolls_the_page() {
+    for name in EDITORS {
+        let mut desk = Desk::new(LINUX, tall(name));
+        desk.key(Named::End, CTRL);
+        let bottom = desk.scrolled();
+        assert!(bottom > 600.0, "{name} shows the end: {bottom}");
+        desk.key(Named::Home, CTRL);
+        assert_eq!(desk.scrolled(), 0.0, "{name} shows the start");
+    }
+}
+
+#[test]
+fn control_l_centers_the_caret_and_page_keys_scroll_on_a_mac() {
+    for name in EDITORS {
+        let mut desk = Desk::new(MAC, tall(name));
+        for _ in 0..20 {
+            desk.key(Named::ArrowDown, NONE);
+        }
+        let before = desk.scrolled();
+        desk.letter("l", CTRL);
+        let after = desk.scrolled();
+        assert!(after > before + 40.0, "{name}: {before} -> {after}");
+
+        desk.key(Named::Home, NONE);
+        assert_eq!(desk.scrolled(), 0.0, "{name} Home shows the top");
+        desk.key(Named::PageDown, NONE);
+        let page = desk.scrolled();
+        assert!((100.0..=200.0).contains(&page), "{name} pages by {page}");
+        desk.key(Named::End, NONE);
+        assert!(desk.scrolled() > 600.0, "{name} End shows the bottom");
+        assert_eq!(caret_line(&mut desk), 20, "{name}: the caret stays");
+    }
+}
+
+#[test]
+fn insert_types_over_the_text_on_a_pc() {
+    for platform in PLATFORMS {
+        for name in FIELDS {
+            let mut desk = Desk::new(platform, field(name, "abc"));
+            desk.start();
+            desk.key(Named::Insert, NONE);
+            desk.type_text("XYZW");
+            let expected = if platform == MAC { "XYZWabc" } else { "XYZW" };
+            assert_eq!(desk.text(), expected, "{platform:?} {name}");
+            desk.key(Named::Insert, NONE);
+            desk.start();
+            desk.type_text("-");
+            assert_eq!(
+                desk.text(),
+                format!("-{expected}"),
+                "{platform:?} {name} inserts again"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_selection_is_the_primary_selection_a_middle_click_pastes_on_linux() {
+    for platform in PLATFORMS {
+        for name in FIELDS {
+            let mut desk = Desk::new(platform, field(name, "abc"));
+            desk.start();
+            desk.key(Named::ArrowRight, SHIFT);
+            desk.key(Named::ArrowRight, SHIFT);
+            if platform != LINUX {
+                assert_eq!(desk.primary, None, "{platform:?} {name}");
+                continue;
+            }
+            assert_eq!(desk.primary.as_deref(), Some("ab"), "{name}");
+            let (bounds, _) = desk.field();
+            desk.middle_click(Point::new(bounds.x + bounds.width - 20., bounds.y + 10.));
+            assert_eq!(desk.text(), "abcab", "{name} pastes it");
+        }
+    }
 }

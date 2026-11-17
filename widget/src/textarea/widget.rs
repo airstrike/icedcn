@@ -22,6 +22,7 @@ use crate::core::renderer;
 use crate::core::shell::Bus;
 use crate::core::text::editor::Cursor;
 use crate::core::text::parser::PlainText;
+use crate::core::text::{self, Position};
 use crate::core::widget::tree::{self, Tree};
 use crate::core::widget::{Meta, Operation};
 use crate::core::{Event, Layout, Length, Padding, Rectangle, Shell, Size, Widget};
@@ -43,7 +44,15 @@ impl<Message> Textarea<'_, Message> {
                 20. / 14.
             })
             .padding(PADDING)
-            .key_binding(edit::binding)
+            .key_binding(move |press| {
+                edit::typing(press, state.overwrite.then_some(&state.content))
+            })
+            .caret_width(
+                state
+                    .block
+                    .filter(|_| state.overwrite)
+                    .map(|(_, width)| width),
+            )
             .height(
                 state
                     .height
@@ -137,15 +146,22 @@ impl<Message> Textarea<'_, Message> {
         );
     }
 
-    /// How many lines of the textarea laid out at `bounds` show at once.
-    fn page(&self, bounds: Rectangle) -> i32 {
-        let line = self.text_size
+    /// The height of a line of text.
+    fn line_height(&self) -> f32 {
+        self.text_size
             * if self.text_size >= 16. {
                 1.5
             } else {
                 20. / 14.
-            };
-        ((bounds.height - PADDING.top - PADDING.bottom) / line).max(1.0) as i32
+            }
+    }
+
+    /// How many lines of the textarea laid out at `bounds` show at once in
+    /// `viewport`: a textarea taller than its scrollable shows a part.
+    fn page(&self, bounds: Rectangle, viewport: &Rectangle) -> i32 {
+        let text = bounds.shrink(PADDING);
+        let visible = viewport.intersection(&text).unwrap_or(text);
+        (visible.height / self.line_height()).max(1.0) as i32
     }
 
     /// Perform the editor's actions on the content and publish an edit.
@@ -187,6 +203,7 @@ struct Editing<'a, 'b, 'c, Message> {
     state: &'a mut State,
     shell: &'a mut Shell<'c, Message>,
     page: i32,
+    bounds: Rectangle,
 }
 
 impl<Message> edit::Target for Editing<'_, '_, '_, Message> {
@@ -196,6 +213,33 @@ impl<Message> edit::Target for Editing<'_, '_, '_, Message> {
 
     fn editable(&self) -> bool {
         self.textarea.is_editable()
+    }
+
+    fn reveal(&mut self, reveal: edit::Reveal) {
+        // A textarea resized to a height scrolls its own text.
+        let own = self.textarea.resizable && self.state.height.is_some();
+        let line = self.textarea.line_height();
+        let lines = edit::lines(
+            reveal,
+            self.page,
+            self.state.caret.y - line / 2.0,
+            self.bounds.height / 2.0,
+            line,
+        );
+        match lines {
+            Some(lines) if own => {
+                self.textarea
+                    .perform(self.state, Some(Action::Scroll { lines }), self.shell);
+            }
+            _ => self.state.reveal = Some(reveal),
+        }
+        self.shell.request_redraw();
+    }
+
+    fn overwrite(&mut self) {
+        self.state.overwrite = !self.state.overwrite;
+        self.state.block = None;
+        self.shell.request_redraw();
     }
 
     fn perform(&mut self, action: Action) {
@@ -231,6 +275,9 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
             caret: Point::ORIGIN,
             menu: edit::Menu::default(),
             autoscroll: edit::Autoscroll::default(),
+            reveal: None,
+            overwrite: false,
+            block: None,
         })
     }
 
@@ -300,7 +347,34 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
             self.blink(tree, layout, renderer, viewport);
             return;
         }
+        if matches!(
+            event,
+            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
+        ) && state.focused
+        {
+            edit::share(shell, || state.content.selection());
+        }
         match event {
+            // A middle press pastes the primary selection where it lands, on Linux.
+            Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Middle))
+                if !self.disabled
+                    && edit::has_primary()
+                    && cursor
+                        .position_over(bounds)
+                        .is_some_and(|position| viewport.contains(position)) =>
+            {
+                for event in [
+                    Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
+                    Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)),
+                ] {
+                    self.update(tree, &event, layout, cursor, renderer, shell, viewport);
+                }
+                if self.is_editable() {
+                    shell.read_clipboard(clipboard::Kind::Primary);
+                }
+                shell.capture_event();
+                return;
+            }
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Right)) if !self.disabled => {
                 let press = Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left));
                 let Some(position) = cursor
@@ -347,20 +421,28 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
                     Some(Intent::Command(command)) => {
                         let action = self.command(state, command, shell);
                         self.perform(state, action, shell);
+                        if command == Command::SelectAll {
+                            edit::share(shell, || state.content.selection());
+                        }
                         shell.capture_event();
                         self.blink(tree, layout, renderer, viewport);
                         return;
                     }
                     Some(intent) => {
-                        let page = self.page(bounds);
+                        let selecting = matches!(intent, Intent::Select(_));
+                        let page = self.page(bounds, viewport);
                         let mut editing = Editing {
                             textarea: self,
                             state,
                             shell,
                             page,
+                            bounds,
                         };
                         if edit::apply(&mut editing, intent, platform) {
                             shell.capture_event();
+                        }
+                        if selecting {
+                            edit::share(shell, || state.content.selection());
                         }
                         self.blink(tree, layout, renderer, viewport);
                         return;
@@ -452,6 +534,34 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
 
             if let InputMethod::Enabled { cursor: caret, .. } = local.input_method() {
                 state.caret = Point::new(caret.x - bounds.x, caret.y + caret.height - bounds.y);
+            }
+            // Typing shows the caret, as the keys run here do.
+            if matches!(event, Event::Keyboard(keyboard::Event::KeyPressed { .. }))
+                && local.is_event_captured()
+            {
+                state.reveal = Some(edit::Reveal::Caret);
+            }
+            if matches!(event, Event::Window(window::Event::RedrawRequested(_)))
+                && let Some(reveal) = state.reveal.take()
+            {
+                let line = self.line_height();
+                let caret = Rectangle::new(
+                    Point::new(bounds.x + state.caret.x, bounds.y + state.caret.y - line),
+                    Size::new(1.0, line),
+                );
+                if let Some(area) = edit::area(reveal, bounds, *viewport, caret) {
+                    shell.request_reveal(area);
+                }
+            }
+            if state.overwrite && state.focused {
+                let position = state.content.cursor().position;
+                if state.block.is_none_or(|(at, _)| at != position) {
+                    let font = self
+                        .font
+                        .unwrap_or_else(|| <Renderer as text::Renderer>::font(renderer));
+                    let width = edit::block_width(&state.content, font, self.text_size, renderer);
+                    state.block = Some((position, width));
+                }
             }
             shell.request_redraw_at(local.redraw_request());
             shell.invalidate(local.invalidation());
@@ -706,6 +816,13 @@ struct State {
     caret: Point,
     menu: edit::Menu,
     autoscroll: edit::Autoscroll,
+    /// What the scrollables around must show, once the caret is laid out.
+    reveal: Option<edit::Reveal>,
+    /// Typing replaces the character after the caret.
+    overwrite: bool,
+    /// The width of the block caret of overwrite mode, and where it was
+    /// measured.
+    block: Option<(Position, f32)>,
 }
 
 fn grip(bounds: Rectangle) -> Rectangle {

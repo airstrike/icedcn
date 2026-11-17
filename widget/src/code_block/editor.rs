@@ -31,7 +31,7 @@ use crate::core::widget::tree::{self, Tree};
 use crate::core::widget::{Id, Meta, Operation};
 use crate::core::{
     Background, Code, Color, Event, InputMethod, Layout, Length, Point, Rectangle, Renderer as _,
-    Shell, Size, Vector, Widget, clipboard, overlay,
+    Shell, Size, Vector, Widget, clipboard, overlay, window,
 };
 use crate::edit::{self, Command, Intent, Platform};
 use crate::operation::control::Editable;
@@ -98,7 +98,13 @@ impl<'a, Message> Editor<'a, Message> {
             .wrapping(self.listing.wrapping())
             .padding(0)
             .height(Length::Shrink)
-            .key_binding(move |press| binding(press, &state.content))
+            .key_binding(move |press| binding(press, &state.content, state.overwrite))
+            .caret_width(
+                state
+                    .block
+                    .filter(|_| state.overwrite)
+                    .map(|(_, width)| width),
+            )
             .highlight_with::<Tokens>(
                 Settings {
                     revision: state.revision,
@@ -290,7 +296,11 @@ impl<'a, Message> Editor<'a, Message> {
 
 /// Tab indents and Shift+Tab outdents while editing; Enter keeps the indentation
 /// before the caret. Other keys keep the editor's own bindings.
-fn binding(press: KeyPress, content: &Content<Renderer>) -> Option<Binding<Action>> {
+fn binding(
+    press: KeyPress,
+    content: &Content<Renderer>,
+    overwrite: bool,
+) -> Option<Binding<Action>> {
     if !press.is_focused {
         return None;
     }
@@ -322,7 +332,7 @@ fn binding(press: KeyPress, content: &Content<Renderer>) -> Option<Binding<Actio
                     .collect(),
             ))
         }
-        _ => edit::binding(press),
+        _ => edit::typing(press, overwrite.then_some(content)),
     }
 }
 
@@ -501,6 +511,13 @@ pub(super) struct State {
     moved: bool,
     /// The last key pressed was Escape, so Tab moves the focus on.
     escaped: bool,
+    /// What the scrollables around must show, once the caret is laid out.
+    show: Option<edit::Reveal>,
+    /// Typing replaces the character after the caret.
+    overwrite: bool,
+    /// The width of the block caret of overwrite mode, and where it was
+    /// measured.
+    block: Option<(text::Position, f32)>,
     reveal: Reveal,
     gutter: Gutter,
     /// Below the caret, relative to the editor: where Shift+F10 opens the menu.
@@ -531,6 +548,18 @@ struct Editing<'a, 'b, 'c, Message> {
 }
 
 impl<Message> edit::Target for Editing<'_, '_, '_, Message> {
+    fn reveal(&mut self, reveal: edit::Reveal) {
+        // The code block shows every line: the scrollables around scroll.
+        self.state.show = Some(reveal);
+        self.shell.request_redraw();
+    }
+
+    fn overwrite(&mut self) {
+        self.state.overwrite = !self.state.overwrite;
+        self.state.block = None;
+        self.shell.request_redraw();
+    }
+
     fn content(&self) -> &Content<Renderer> {
         &self.state.content
     }
@@ -575,6 +604,9 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
             focused: false,
             moved: false,
             escaped: false,
+            show: None,
+            overwrite: false,
+            block: None,
             reveal: Reveal::default(),
             gutter: Gutter::default(),
             caret: Point::ORIGIN,
@@ -725,7 +757,34 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
             self.blink(tree, layout, renderer, viewport);
             return;
         }
+        if matches!(
+            event,
+            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
+        ) && state.focused
+        {
+            edit::share(shell, || state.content.selection());
+        }
         match event {
+            // A middle press pastes the primary selection where it lands, on Linux.
+            Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Middle))
+                if !self.disabled
+                    && edit::has_primary()
+                    && cursor
+                        .position_over(bounds)
+                        .is_some_and(|position| viewport.contains(position)) =>
+            {
+                for event in [
+                    Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
+                    Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)),
+                ] {
+                    self.update(tree, &event, layout, cursor, renderer, shell, viewport);
+                }
+                if self.is_editable() {
+                    shell.read_clipboard(clipboard::Kind::Primary);
+                }
+                shell.capture_event();
+                return;
+            }
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Right)) if !self.disabled => {
                 let press = Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left));
                 let Some(position) = cursor
@@ -778,12 +837,17 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
                     Some(Intent::Command(command)) => {
                         let action = self.command(state, command, shell);
                         self.perform(state, action, shell);
+                        if command == Command::SelectAll {
+                            edit::share(shell, || state.content.selection());
+                        }
                         shell.capture_event();
                         self.blink(tree, layout, renderer, viewport);
                         return;
                     }
                     Some(intent) => {
-                        let page = (viewport.height / self.listing.line_height()).max(1.0) as i32;
+                        let selecting = matches!(intent, Intent::Select(_));
+                        let visible = viewport.intersection(&bounds).unwrap_or(bounds);
+                        let page = (visible.height / self.listing.line_height()).max(1.0) as i32;
                         let mut editing = Editing {
                             editor: self,
                             state,
@@ -792,6 +856,9 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
                         };
                         if edit::apply(&mut editing, intent, platform) {
                             shell.capture_event();
+                        }
+                        if selecting {
+                            edit::share(shell, || state.content.selection());
                         }
                         self.blink(tree, layout, renderer, viewport);
                         return;
@@ -862,6 +929,36 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
             }
             if let InputMethod::Enabled { cursor: caret, .. } = local.input_method() {
                 state.caret = Point::new(caret.x - bounds.x, caret.y + caret.height - bounds.y);
+            }
+            // Typing shows the caret, as the keys run here do.
+            if matches!(event, Event::Keyboard(keyboard::Event::KeyPressed { .. }))
+                && local.is_event_captured()
+            {
+                state.show = Some(edit::Reveal::Caret);
+            }
+            if matches!(event, Event::Window(window::Event::RedrawRequested(_)))
+                && let Some(reveal) = state.show.take()
+            {
+                let line = self.listing.line_height();
+                let caret = Rectangle::new(
+                    Point::new(bounds.x + state.caret.x, bounds.y + state.caret.y - line),
+                    Size::new(1.0, line),
+                );
+                if let Some(area) = edit::area(reveal, bounds, *viewport, caret) {
+                    shell.request_reveal(area);
+                }
+            }
+            if state.overwrite && state.focused {
+                let position = state.content.cursor().position;
+                if state.block.is_none_or(|(at, _)| at != position) {
+                    let width = edit::block_width(
+                        &state.content,
+                        self.listing.font,
+                        self.listing.size(),
+                        renderer,
+                    );
+                    state.block = Some((position, width));
+                }
             }
             shell.request_redraw_at(local.redraw_request());
             shell.invalidate(local.invalidation());

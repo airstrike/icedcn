@@ -38,7 +38,7 @@ use unicode_segmentation::UnicodeSegmentation;
 
 pub(crate) use key::{Intent, Motion, binding, is_shortcut, resolve};
 pub use platform::Platform;
-pub(crate) use target::{Target, apply};
+pub(crate) use target::{Reveal, Target, apply, area, block_width, lines, typing};
 
 use crate::compose::Slot;
 use crate::container::Container;
@@ -71,9 +71,68 @@ pub(crate) fn opens_menu(key: &Key, modifiers: Modifiers) -> bool {
 /// The byte index in `text` where the next word after `index` starts, past
 /// the rest of the word at `index` and the spaces after it; or the end.
 pub(crate) fn next_word_start(text: &str, index: usize) -> usize {
-    text.split_word_bound_indices()
-        .find(|(start, word)| *start > index && !word.trim_start().is_empty())
-        .map_or(text.len(), |(start, _)| start)
+    word_starts(text)
+        .find(|start| *start > index)
+        .unwrap_or(text.len())
+}
+
+/// Where the words of `text` start, as Windows sees them: a run of
+/// punctuation is a word of its own.
+fn word_starts(text: &str) -> impl DoubleEndedIterator<Item = usize> + '_ {
+    let is_punctuation =
+        |word: &str| !word.trim_start().is_empty() && !word.chars().any(char::is_alphanumeric);
+    let segments: Vec<(usize, &str)> = text.split_word_bound_indices().collect();
+
+    (0..segments.len()).filter_map(move |i| {
+        let (start, word) = segments[i];
+        let joins = i > 0 && is_punctuation(word) && is_punctuation(segments[i - 1].1);
+        (!word.trim_start().is_empty() && !joins).then_some(start)
+    })
+}
+
+/// The byte index in `text` where a word motion to the left from `index`
+/// stops on `platform`: the start of the word before. Windows stops at runs
+/// of punctuation too; macOS and GTK skip them.
+pub(crate) fn word_left(text: &str, index: usize, platform: Platform) -> usize {
+    if platform == Platform::Windows {
+        word_starts(text).rfind(|start| *start < index).unwrap_or(0)
+    } else {
+        text.unicode_word_indices()
+            .rfind(|(start, _)| *start < index)
+            .map_or(0, |(start, _)| start)
+    }
+}
+
+/// The byte index in `text` where a word motion to the right from `index`
+/// stops on `platform`: the end of the word after, skipping punctuation; on
+/// Windows, the start of the next word or punctuation run.
+pub(crate) fn word_right(text: &str, index: usize, platform: Platform) -> usize {
+    if platform == Platform::Windows {
+        next_word_start(text, index)
+    } else {
+        text.unicode_word_indices()
+            .map(|(start, word)| start + word.len())
+            .find(|end| *end > index)
+            .unwrap_or(text.len())
+    }
+}
+
+/// Make `selection` the primary selection on Linux, which a middle click
+/// pastes.
+pub(crate) fn share<Message>(
+    shell: &mut Shell<'_, Message>,
+    selection: impl FnOnce() -> Option<String>,
+) {
+    if has_primary()
+        && let Some(text) = selection().filter(|text| !text.is_empty())
+    {
+        shell.write_primary(text);
+    }
+}
+
+/// Whether the platform has a primary selection: Linux, natively.
+pub(crate) fn has_primary() -> bool {
+    !cfg!(target_arch = "wasm32") && Platform::current() == Platform::Linux
 }
 
 /// Restarts the caret's blink in the focused editor it reaches, after a key
@@ -555,12 +614,60 @@ mod tests {
                 "foo.bar(1);",
                 "(1);",
                 "1);",
+                // A run of punctuation is one stop.
                 ");",
-                ";",
                 "",
             ]
         );
         assert_eq!(super::next_word_start("foo   ", 1), 6, "to the end");
+    }
+
+    #[test]
+    fn word_stops_skip_punctuation_but_on_windows() {
+        use super::{Platform, word_left, word_right};
+
+        let text = "say, \"hi\" -- now";
+        let stops = |platform, step: fn(&str, usize, Platform) -> usize, from: usize| {
+            std::iter::successors(Some(from), |&at| {
+                let next = step(text, at, platform);
+                (next != at).then_some(next)
+            })
+            .skip(1)
+            .map(|at| &text[at..])
+            .collect::<Vec<_>>()
+        };
+        assert_eq!(
+            stops(Platform::Mac, word_right, 0),
+            [", \"hi\" -- now", "\" -- now", ""]
+        );
+        assert_eq!(
+            stops(Platform::Linux, word_left, text.len()),
+            ["now", "hi\" -- now", "say, \"hi\" -- now"]
+        );
+        assert_eq!(
+            stops(Platform::Windows, word_right, 0),
+            [
+                ", \"hi\" -- now",
+                "\"hi\" -- now",
+                "hi\" -- now",
+                "\" -- now",
+                "-- now",
+                "now",
+                ""
+            ]
+        );
+        assert_eq!(
+            stops(Platform::Windows, word_left, text.len()),
+            [
+                "now",
+                "-- now",
+                "\" -- now",
+                "hi\" -- now",
+                "\"hi\" -- now",
+                ", \"hi\" -- now",
+                "say, \"hi\" -- now"
+            ]
+        );
     }
 
     #[test]

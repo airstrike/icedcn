@@ -33,6 +33,10 @@ pub(crate) enum Intent {
     Deselect,
     /// Scroll without moving the caret.
     Scroll(Scroll),
+    /// Scroll the caret to the middle of the view.
+    Center,
+    /// Switch between inserting and typing over the text.
+    Overwrite,
 }
 
 /// Where a motion takes the caret.
@@ -186,6 +190,7 @@ fn mac(key: &Key, physical: Physical, modifiers: Modifiers, lines: bool) -> Opti
             'y' if !shift => Intent::Yank,
             't' if !shift => Intent::Transpose,
             'o' if !shift && lines => Intent::OpenLine,
+            'l' if !shift => Intent::Center,
             _ => return None,
         }
     })
@@ -221,6 +226,7 @@ fn pc(
         }
 
         return Some(match named {
+            Named::Insert if !control && !shift => Intent::Overwrite,
             Named::Insert if control && !shift => Intent::Command(Command::Copy),
             Named::Insert if shift => Intent::Command(Command::Paste),
             Named::Delete if shift && !control => Intent::Command(Command::Cut),

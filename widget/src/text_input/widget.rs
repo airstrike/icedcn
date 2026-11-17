@@ -885,23 +885,35 @@ where
                                     / CURSOR_BLINK_INTERVAL_MILLIS)
                                     .is_multiple_of(2);
 
+                            // Overwrite mode draws a block over the character
+                            // after the caret, measured in `update`.
+                            let block = state.overwrite.then(|| {
+                                state
+                                    .measured_x(position + 1)
+                                    .filter(|_| position < value.len())
+                                    .map_or(caret_height * 0.4, |x| x - text_value_width)
+                            });
                             let cursor = if is_cursor_visible {
                                 Some((
                                     renderer::Quad {
                                         bounds: Rectangle {
                                             x: text_bounds.x + text_value_width,
                                             y: caret_y,
-                                            width: if renderer::CRISP {
+                                            width: block.unwrap_or(if renderer::CRISP {
                                                 (1.0 / renderer.hint_factor().unwrap_or(1.0))
                                                     .max(1.0)
                                             } else {
                                                 1.0
-                                            },
+                                            }),
                                             height: caret_height,
                                         },
                                         ..renderer::Quad::default()
                                     },
-                                    style.value,
+                                    if block.is_some() {
+                                        style.value.scale_alpha(0.4)
+                                    } else {
+                                        style.value
+                                    },
                                 ))
                             } else {
                                 None
@@ -1144,6 +1156,27 @@ where
         shell: &mut Shell<'_, Message>,
         viewport: &Rectangle,
     ) {
+        // A middle press pastes the primary selection where it lands, on Linux.
+        if let Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Middle)) = event
+            && edit::has_primary()
+            && self.is_editable()
+            && cursor
+                .position_over(layout.bounds())
+                .is_some_and(|position| viewport.contains(position))
+        {
+            for event in [
+                Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
+                Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)),
+            ] {
+                self.update(tree, &event, layout, cursor, renderer, shell, viewport);
+            }
+            let input = state::<Renderer>(tree);
+            shell.read_clipboard(clipboard::Kind::Primary);
+            input.is_pasting = Some(Paste::Reading);
+            shell.capture_event();
+            return;
+        }
+
         if let Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Right)) = event
             && !self.is_disabled
         {
@@ -1284,11 +1317,8 @@ where
                 Motion::Right => (from + 1).min(len),
                 Motion::WordLeft if secure => 0,
                 Motion::WordRight if secure => len,
-                Motion::WordLeft => value.previous_start_of_word(from),
-                Motion::WordRight if platform == Platform::Windows => {
-                    value.next_start_of_word(from)
-                }
-                Motion::WordRight => value.next_end_of_word(from),
+                Motion::WordLeft => value.word_left(from, platform),
+                Motion::WordRight => value.word_right(from, platform),
                 Motion::LineStart
                 | Motion::ParagraphStart
                 | Motion::ParagraphBackward
@@ -1399,7 +1429,14 @@ where
                         Editor::new(&mut self.value, &mut input.cursor).paste(Value::new(&swapped)),
                     )
                 }
-                Intent::Command(_) | Intent::Scroll(_) | Intent::OpenLine => return,
+                Intent::Overwrite => {
+                    input.overwrite = !input.overwrite;
+                    None
+                }
+                // A line has no middle to scroll to.
+                Intent::Command(_) | Intent::Scroll(_) | Intent::OpenLine | Intent::Center => {
+                    return;
+                }
             };
 
             let edited = edit.is_some();
@@ -1422,6 +1459,12 @@ where
                 && (edited || before != input.cursor)
             {
                 focus.updated_at = Instant::now();
+            }
+            if matches!(intent, Intent::Select(_)) && !secure {
+                let selection = input.cursor.selection(&self.value);
+                edit::share(shell, || {
+                    selection.map(|(start, end)| self.value.select(start, end).to_string())
+                });
             }
             input.history.follow(input.cursor);
             input.measure(&self.value);
@@ -1478,7 +1521,12 @@ where
                     }
                     return;
                 }
-                Command::SelectAll => input.cursor.select_all(&self.value),
+                Command::SelectAll => {
+                    input.cursor.select_all(&self.value);
+                    if !self.is_secure {
+                        edit::share(shell, || Some(self.value.to_string()));
+                    }
+                }
                 Command::Undo | Command::Redo => {
                     if !is_editable {
                         return;
@@ -1698,7 +1746,16 @@ where
                                 return;
                             }
 
-                            state.history.record(history::Kind::Typing, state.cursor);
+                            let caret = state.cursor.end(&self.value);
+                            if state.overwrite
+                                && state.cursor.selection(&self.value).is_none()
+                                && caret < self.value.len()
+                            {
+                                state.history.record(history::Kind::Other, state.cursor);
+                                state.cursor.select_range(caret, caret + 1);
+                            } else {
+                                state.history.record(history::Kind::Typing, state.cursor);
+                            }
                             let mut editor = Editor::new(&mut self.value, &mut state.cursor);
 
                             let change = editor.insert(c);
@@ -1921,6 +1978,17 @@ where
         }
 
         let state = state::<Renderer>(tree);
+        if matches!(
+            event,
+            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
+        ) && state.is_focused()
+            && !self.is_secure
+        {
+            let selection = state.cursor.selection(&self.value);
+            edit::share(shell, || {
+                selection.map(|(start, end)| self.value.select(start, end).to_string())
+            });
+        }
         state.history.follow(state.cursor);
         if state.is_focused() {
             state.measure(&self.value);
@@ -2023,6 +2091,8 @@ pub struct State<P: text::Paragraph> {
     last_click: Option<mouse::Click>,
     cursor: Cursor,
     keyboard_modifiers: keyboard::Modifiers,
+    /// Typing replaces the character after the caret.
+    overwrite: bool,
     scroll_offset: f32,
     focus_anim: crate::core::Animation<bool>,
     /// The value of an uncontrolled input, kept across rebuilds.
@@ -2057,6 +2127,7 @@ impl<P: text::Paragraph> Default for State<P> {
             last_click: None,
             cursor: Cursor::default(),
             keyboard_modifiers: keyboard::Modifiers::default(),
+            overwrite: false,
             scroll_offset: 0.0,
             uncontrolled: None,
             history: History::default(),
@@ -2182,6 +2253,9 @@ impl<P: text::Paragraph + Caret> State<P> {
     fn measure(&mut self, value: &Value) {
         match self.cursor.state(value) {
             cursor::State::Index(index) => {
+                if self.overwrite && index < value.len() {
+                    let _ = self.caret_x(index + 1);
+                }
                 let _ = self.caret_x(index);
             }
             cursor::State::Selection { start, end } => {
