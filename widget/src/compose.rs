@@ -250,6 +250,8 @@ impl<'a, Message: 'a, T: 'a, R: 'a> Slot<'a, Message, T, R> {
 
     /// Wrap any [`Compose`] implementor.
     pub fn new(child: impl Compose<Message, T, R> + 'a) -> Self {
+        #[cfg(feature = "symbols")]
+        crate::font::load();
         Self(Box::new(child))
     }
 

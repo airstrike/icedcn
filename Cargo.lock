@@ -580,7 +580,6 @@ dependencies = [
  "sweeten",
  "tokio",
  "tree-sitter",
- "unicode-script",
  "wasmtimer",
  "web-sys",
 ]

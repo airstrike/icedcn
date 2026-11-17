@@ -11,7 +11,7 @@ categories.workspace = true
 keywords.workspace = true
 
 [features]
-default = []
+default = ["symbols"]
 fount = ["dep:fount", "iced/tokio"]
 chart = ["icedcn_core/chart", "icedcn_widget/chart"]
 highlighter = ["icedcn_widget/highlighter"]
@@ -19,6 +19,7 @@ markdown = ["icedcn_core/markdown", "icedcn_widget/markdown"]
 spinner = ["icedcn_widget/spinner"]
 svg = ["icedcn_core/svg", "icedcn_widget/svg"]
 sweeten = ["icedcn_widget/sweeten"]
+symbols = ["icedcn_widget/symbols"]
 
 [dependencies]
 fount = { path = "vendor/fount", optional = true }
@@ -53,7 +54,7 @@ rust-version = "1.85"
 [workspace.dependencies]
 icedcn = { path = "." }
 icedcn_core = { path = "./core" }
-icedcn_widget = { path = "./widget" }
+icedcn_widget = { path = "./widget", default-features = false }
 hyozu = { git = "https://github.com/airstrike/hyozu", rev = "2892f6c6a99639ad5d4c96cf926ed9fe3c616d86" }
 
 iced = "0.15.0-dev"

@@ -2,6 +2,8 @@
 //! and customize their appearance with the shared theme and design tokens.
 
 pub mod card;
+#[cfg(feature = "symbols")]
+pub use icedcn_widget::font;
 #[cfg(feature = "fount")]
 pub mod fount;
 pub mod separator;

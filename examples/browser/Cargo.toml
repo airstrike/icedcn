@@ -12,7 +12,6 @@ reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"
 serde.workspace = true
 serde_json.workspace = true
 rfd = "0.17"
-unicode-script = "0.5"
 icedcn = { workspace = true, features = ["chart", "fount", "markdown", "spinner", "svg", "sweeten"] }
 iced = { workspace = true, features = ["advanced", "advanced-shaping", "markdown", "highlighter", "selector", "svg", "image"] }
 iced_widget.workspace = true

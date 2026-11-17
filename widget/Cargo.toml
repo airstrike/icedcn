@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 
 [features]
-default = []
+default = ["symbols"]
 chart = ["dep:hyozu", "icedcn_core/chart"]
 canvas = ["iced_widget/canvas"]
 crisp = []
@@ -24,6 +24,9 @@ markdown = ["dep:pulldown-cmark", "highlighter"]
 spinner = ["canvas", "dep:lyon_algorithms"]
 svg = ["iced_widget/svg", "icedcn_core/svg"]
 sweeten = ["dep:sweeten", "icedcn_core/sweeten"]
+# Bundle Inter Symbols (SIL OFL 1.1, `fonts/InterSymbols-OFL.txt`) as a fallback
+# for the key and interface symbols the widgets draw.
+symbols = []
 
 [dependencies]
 hyozu = { workspace = true, optional = true }

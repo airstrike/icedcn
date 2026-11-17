@@ -158,10 +158,12 @@ def main():
         webmetadata = runpy.run_path(str(ROOT / "examples/browser/web/webmetadata.py"))
         webmetadata["build"](routes, output, html)
         (output / "font-licenses.txt").write_text("\n\n".join(
-            (ROOT / "examples/browser/fonts" / name).read_text()
-            for name in (
-                "Geist-OFL.txt", "GeistMono-OFL.txt", "InterSymbols-OFL.txt",
-                "TwemojiMozilla-LICENSE.txt",
+            (ROOT / path).read_text()
+            for path in (
+                "examples/browser/fonts/Geist-OFL.txt",
+                "examples/browser/fonts/GeistMono-OFL.txt",
+                "widget/fonts/InterSymbols-OFL.txt",
+                "examples/browser/fonts/TwemojiMozilla-LICENSE.txt",
             )
         ))
         shutil.copyfile(ROOT / "assets/Chromium-LICENSE", output / "third-party-licenses.txt")

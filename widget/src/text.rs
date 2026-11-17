@@ -186,6 +186,8 @@ impl<'a> Text<'a> {
 
     /// Build the iced text widget
     fn build(self) -> iced_widget::Text<'a, Theme> {
+        #[cfg(feature = "symbols")]
+        crate::font::load();
         let mut widget = iced_widget::text(self.fragment)
             .selectable(self.selectable.unwrap_or(true))
             .height(self.height)

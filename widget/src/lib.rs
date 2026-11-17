@@ -32,6 +32,8 @@ pub mod dropdown_menu;
 mod edit;
 pub mod empty;
 pub mod field;
+#[cfg(feature = "symbols")]
+pub mod font;
 #[cfg(feature = "highlighter")]
 #[path = "markdown/highlighter.rs"]
 pub mod highlighter;
