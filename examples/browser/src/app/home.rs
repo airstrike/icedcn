@@ -1,7 +1,7 @@
 //! The library landing page: real, interactive compositions of the public widgets.
 
 use iced::widget::component::{Component, component};
-use iced::{Bottom, Center, Element, Fill, Padding, Pixels, Top, Widget};
+use iced::{Bottom, Center, Element, Fill, Pixels, Top, Widget};
 use icedcn::core::Border;
 use icedcn::core::design::Accent;
 use icedcn::theme::container::Style;
@@ -16,6 +16,10 @@ use icedcn::{Size, Slot, Theme, card, radius, theme};
 use super::Message;
 use crate::icon;
 
+#[expect(
+    dead_code,
+    reason = "kept for a future Rhea design; the Home cards use Nova"
+)]
 mod rhea;
 #[cfg(test)]
 mod tests;
@@ -119,53 +123,35 @@ pub(super) fn view<'a>(width: f32) -> Element<'a, Message, Theme> {
 }
 
 fn panel<'a, M: 'a>(content: impl Into<Slot<'a, M>>) -> Slot<'a, M> {
-    card(container(content).padding(20).width(Fill))
-        .padding(0)
-        .width(Fill)
-        .style(|theme| rhea::card(theme).into())
-        .into()
+    card(card::content(content)).width(Fill).into()
 }
 
 fn controls<'a>() -> Slot<'a, Message> {
-    let (track_width, track_height) = rhea::TRACK;
     panel(column![
         row![
-            button!["Button", icon::arrow_right()]
-                .style(rhea::button(button::Default))
-                .padding(Padding::from([0, 12]).right(10)),
-            button("Secondary")
-                .style(rhea::button(button::Secondary))
-                .padding([0, 12]),
-            button("Outline").style(rhea::outline()).padding([0, 12]),
+            button!["Button", icon::arrow_right()],
+            button("Secondary").style(button::Secondary),
+            button("Outline").style(button::Outline),
         ]
         .spacing(8),
         input_group(input("Name"))
-            .addon(input_group::addon(icon::search()).align(input_group::Align::InlineEnd))
-            .style(rhea::field()),
-        textarea("Message").resizable(false).style(rhea::field()),
+            .addon(input_group::addon(icon::search()).align(input_group::Align::InlineEnd)),
+        textarea("Message").resizable(false),
         row![
             badge("Badge"),
             badge("Secondary").style(badge::Secondary),
             space::horizontal(),
-            radio_group(|g| row![
-                g.item("apple").style(rhea::radio),
-                g.item("banana").style(rhea::radio),
-            ]
-            .spacing(12)
-            .into())
-            .default_value("apple"),
-            checkbox().default_checked(true).style(rhea::checkbox()),
-            switch()
-                .default_checked(true)
-                .track(track_width, track_height)
-                .style(rhea::switch()),
+            radio_group(|g| row![g.item("apple"), g.item("banana")].spacing(12).into())
+                .default_value("apple"),
+            checkbox().default_checked(true),
+            switch().default_checked(true),
         ]
         .spacing(8)
         .align_y(Center)
         .width(Fill),
         row![
             alert_dialog(
-                |a| a.trigger(button("Alert Dialog").style(rhea::outline()).padding([0, 12])),
+                |a| a.trigger(button("Alert Dialog").style(button::Outline)),
                 |a| column![
                     a.header("Allow accessory to connect?", "Do you want to allow the USB accessory to connect to this device and your data?"),
                     a.footer([
@@ -176,9 +162,9 @@ fn controls<'a>() -> Slot<'a, Message> {
             ).size(Size::Sm),
             space::horizontal(),
             button_group![
-                button("Button Group").style(rhea::outline()).padding([0, 12]),
+                button("Button Group").style(button::Outline),
                 dropdown_menu(
-                    |m| m.trigger(button(icon::chevron_up()).style(rhea::outline()).square()),
+                    |m| m.trigger(button(icon::chevron_up()).style(button::Outline).square()),
                     |_| column![
                         menu::label("Quick Actions"),
                         menu::item("Mute Conversation"),
