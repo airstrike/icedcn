@@ -28,6 +28,7 @@ struct Desk {
     renderer: Renderer,
     cursor: Point,
     clipboard: Option<String>,
+    reads: usize,
     messages: Vec<String>,
 }
 
@@ -46,6 +47,7 @@ impl Desk {
             renderer,
             cursor: Point::ORIGIN,
             clipboard: None,
+            reads: 0,
             messages: Vec::new(),
         }
     }
@@ -70,6 +72,7 @@ impl Desk {
                     self.clipboard = Some(text);
                 }
                 for _ in clipboard.reads {
+                    self.reads += 1;
                     events.push(Event::Clipboard(clipboard::Event::Read(
                         self.clipboard
                             .clone()
@@ -227,6 +230,19 @@ fn command_v_pastes_and_command_c_x_copy_and_cut_the_selection() {
         desk.key(character("v"), Modifiers::COMMAND);
         assert_eq!(desk.text(), "pasted", "{name} pastes");
         assert_eq!(desk.messages.last().map(String::as_str), Some("pasted"));
+    }
+}
+
+#[test]
+fn a_paste_shortcut_reads_the_clipboard_once() {
+    for (name, view) in views("test") {
+        let mut desk = Desk::new(view);
+        desk.focus();
+        desk.key(character("a"), Modifiers::COMMAND);
+        desk.key(character("c"), Modifiers::COMMAND);
+        desk.key(character("v"), Modifiers::COMMAND);
+        assert_eq!(desk.reads, 1, "{name} reads once");
+        assert_eq!(desk.text(), "test", "{name} pastes once");
     }
 }
 
