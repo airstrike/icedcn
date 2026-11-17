@@ -241,6 +241,35 @@ where
     }
 }
 
+impl<W, Theme> Container<'_, W, Theme>
+where
+    Theme: Catalog,
+{
+    /// The cursor and viewport the content sees. Content cut off by a
+    /// clipping container cannot be pointed at outside of it.
+    fn clipped(
+        &self,
+        bounds: Rectangle,
+        cursor: mouse::Cursor,
+        viewport: &Rectangle,
+    ) -> (mouse::Cursor, Rectangle) {
+        if !self.clip {
+            return (cursor, *viewport);
+        }
+
+        let cursor = if cursor
+            .position()
+            .is_some_and(|position| !bounds.contains(position))
+        {
+            cursor.obstruct()
+        } else {
+            cursor
+        };
+
+        (cursor, bounds.intersection(viewport).unwrap_or_default())
+    }
+}
+
 impl<W, Theme> widget::Meta for Container<'_, W, Theme> where Theme: Catalog {}
 
 impl<W, Message, Theme, Renderer> Widget<Message, Theme, Renderer> for Container<'_, W, Theme>
@@ -335,10 +364,12 @@ where
         shell: &mut Shell<'_, Message>,
         viewport: &Rectangle,
     ) {
+        let bounds = layout.bounds();
         let (layout, tree) = layout.iter_mut(&mut tree.children).next().unwrap();
+        let (cursor, viewport) = self.clipped(bounds, cursor, viewport);
 
         self.content
-            .update(tree, event, layout, cursor, renderer, shell, viewport);
+            .update(tree, event, layout, cursor, renderer, shell, &viewport);
     }
 
     fn mouse_interaction(
@@ -349,10 +380,12 @@ where
         viewport: &Rectangle,
         renderer: &Renderer,
     ) -> mouse::Interaction {
+        let bounds = layout.bounds();
         let (layout, tree) = layout.iter(&tree.children).next().unwrap();
+        let (cursor, viewport) = self.clipped(bounds, cursor, viewport);
 
         self.content
-            .mouse_interaction(tree, layout, cursor, viewport, renderer)
+            .mouse_interaction(tree, layout, cursor, &viewport, renderer)
     }
 
     fn draw(
@@ -372,22 +405,29 @@ where
             draw_background(renderer, &style, bounds);
 
             let (layout, tree) = layout.iter(&tree.children).next().unwrap();
+            let (cursor, content_viewport) = self.clipped(bounds, cursor, viewport);
+            let style = renderer::Style {
+                text_color: style.text_color.unwrap_or(renderer_style.text_color),
+            };
+            let draw = |renderer: &mut Renderer| {
+                self.content.draw(
+                    tree,
+                    renderer,
+                    theme,
+                    &style,
+                    layout,
+                    cursor,
+                    &content_viewport,
+                );
+            };
 
-            self.content.draw(
-                tree,
-                renderer,
-                theme,
-                &renderer::Style {
-                    text_color: style.text_color.unwrap_or(renderer_style.text_color),
-                },
-                layout,
-                cursor,
-                if self.clip {
-                    &clipped_viewport
-                } else {
-                    viewport
-                },
-            );
+            // Most widgets only cull against the viewport. The quads, meshes
+            // and images of content laid out past it need a layer to be cut.
+            if self.clip {
+                renderer.with_layer(clipped_viewport, draw);
+            } else {
+                draw(renderer);
+            }
         }
     }
 
