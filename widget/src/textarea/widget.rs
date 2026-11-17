@@ -9,7 +9,7 @@
 use super::Textarea;
 use crate::core::Renderer as _;
 use crate::core::{Border, Color, InputMethod, Point, Vector, clipboard, overlay, touch, window};
-use crate::edit::{self, Command};
+use crate::edit::{self, Command, Intent, Platform};
 use crate::operation::focus;
 use iced_widget::Renderer;
 use iced_widget::text_editor::{Action, Content, Edit, Motion, Status, TextEditor};
@@ -20,6 +20,7 @@ use crate::core::layout;
 use crate::core::mouse;
 use crate::core::renderer;
 use crate::core::shell::Bus;
+use crate::core::text::editor::Cursor;
 use crate::core::text::parser::PlainText;
 use crate::core::widget::tree::{self, Tree};
 use crate::core::widget::{Meta, Operation};
@@ -42,6 +43,7 @@ impl<Message> Textarea<'_, Message> {
                 20. / 14.
             })
             .padding(PADDING)
+            .key_binding(edit::binding)
             .height(
                 state
                     .height
@@ -116,6 +118,17 @@ impl<Message> Textarea<'_, Message> {
         }
     }
 
+    /// How many lines of the textarea laid out at `bounds` show at once.
+    fn page(&self, bounds: Rectangle) -> i32 {
+        let line = self.text_size
+            * if self.text_size >= 16. {
+                1.5
+            } else {
+                20. / 14.
+            };
+        ((bounds.height - PADDING.top - PADDING.bottom) / line).max(1.0) as i32
+    }
+
     /// Perform the editor's actions on the content and publish an edit.
     fn perform(
         &self,
@@ -148,6 +161,38 @@ impl<Message> Textarea<'_, Message> {
 }
 
 impl<Message> Meta for Textarea<'_, Message> {}
+
+/// A textarea running the intents of key presses on its content.
+struct Editing<'a, 'b, 'c, Message> {
+    textarea: &'a Textarea<'b, Message>,
+    state: &'a mut State,
+    shell: &'a mut Shell<'c, Message>,
+    page: i32,
+}
+
+impl<Message> edit::Target for Editing<'_, '_, '_, Message> {
+    fn content(&self) -> &Content<Renderer> {
+        &self.state.content
+    }
+
+    fn editable(&self) -> bool {
+        self.textarea.is_editable()
+    }
+
+    fn perform(&mut self, action: Action) {
+        self.textarea.perform(self.state, Some(action), self.shell);
+        self.shell.request_redraw();
+    }
+
+    fn move_to(&mut self, cursor: Cursor) {
+        self.state.content.move_to(cursor);
+        self.shell.request_redraw();
+    }
+
+    fn page(&self) -> i32 {
+        self.page
+    }
+}
 
 impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
     fn tag(&self) -> tree::Tag {
@@ -277,17 +322,28 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
                     shell.capture_event();
                     return;
                 }
-                if let Some(cursor) = edit::word_right(&state.content, key, *modifiers) {
-                    state.content.move_to(cursor);
-                    shell.request_redraw();
-                    shell.capture_event();
-                    return;
-                }
-                if let Some(command) = Command::from_key(key, *physical_key, *modifiers) {
-                    let action = self.command(state, command, shell);
-                    self.perform(state, action, shell);
-                    shell.capture_event();
-                    return;
+                let platform = Platform::current();
+                match edit::resolve(key, *physical_key, *modifiers, platform, true) {
+                    Some(Intent::Command(command)) => {
+                        let action = self.command(state, command, shell);
+                        self.perform(state, action, shell);
+                        shell.capture_event();
+                        return;
+                    }
+                    Some(intent) => {
+                        let page = self.page(bounds);
+                        let mut editing = Editing {
+                            textarea: self,
+                            state,
+                            shell,
+                            page,
+                        };
+                        if edit::apply(&mut editing, intent, platform) {
+                            shell.capture_event();
+                        }
+                        return;
+                    }
+                    None => {}
                 }
             }
             _ => {}
@@ -696,7 +752,7 @@ mod tests {
     use iced_test::simulator;
 
     #[test]
-    fn focus_and_escape_blur_redraw_without_editing_or_moving_the_pointer() {
+    fn focus_redraws_and_escape_keeps_it_without_editing_or_moving_the_pointer() {
         let renderer =
             block_on(Renderer::new(Default::default(), None)).expect("headless renderer");
         let mut textarea: Textarea<'_, ()> = textarea("").resizable(false);
@@ -719,7 +775,7 @@ mod tests {
                 Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
                 true,
             ),
-            (simulator::press_key(Named::Escape, None), false),
+            (simulator::press_key(Named::Escape, None), true),
         ];
 
         for (index, (event, focused)) in events.into_iter().enumerate() {
@@ -741,7 +797,7 @@ mod tests {
                 shell.is_empty(),
                 "focus changes publish no application message"
             );
-            if index > 0 {
+            if index == 1 {
                 assert_eq!(shell.redraw_request(), window::RedrawRequest::NextFrame);
             }
         }

@@ -2114,6 +2114,7 @@ dependencies = [
  "tree-sitter-rust",
  "unicode-normalization",
  "unicode-segmentation",
+ "web-sys",
 ]
 
 [[package]]

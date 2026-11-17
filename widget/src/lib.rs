@@ -119,6 +119,7 @@ pub use date_picker::{DatePicker, date_picker};
 pub use dialog::Dialog;
 pub use drawer::drawer;
 pub use dropdown_menu::DropdownMenu;
+pub use edit::Platform;
 pub use empty::Empty;
 pub use field::Field;
 pub use hover_card::HoverCard;

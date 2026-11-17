@@ -8,7 +8,7 @@ use iced_test::core::widget::operation::{Outcome, TextInput, focusable};
 use iced_test::core::widget::{Id, Operation};
 use iced_test::simulator;
 use icedcn::Theme;
-use icedcn::widget::{column, field, textarea};
+use icedcn::widget::{Platform, column, field, textarea};
 
 #[derive(Default)]
 struct Editors(Vec<(Rectangle, String)>);
@@ -90,7 +90,10 @@ fn controlled_replacements_remain_authoritative_and_keep_a_valid_cursor() {
     let mut ui = Simulator::new(view("初\nA"));
     ui.click("Message").unwrap();
     ui.tap_key(Named::ArrowDown);
+    // End moves the caret on a PC; on a Mac it only scrolls.
+    Platform::set(Some(Platform::Linux));
     ui.tap_key(Named::End);
+    Platform::set(None);
     ui.typewrite("B");
     assert_eq!(ui.drain().last().as_deref(), Some("初\nAB"));
     let mut ui = ui.rebuild(view(""));

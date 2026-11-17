@@ -48,5 +48,8 @@ unicode-segmentation = "1.11.0"
 jalali-rs = "0.1.1"
 chrono = { version = "0.4.45", default-features = false, features = ["clock", "wasmbind"] }
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "0.3", features = ["Navigator", "Window"] }
+
 [dev-dependencies]
 iced_test.workspace = true

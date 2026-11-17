@@ -1,6 +1,7 @@
 //! Pointer and keyboard editing of the Input, the Textarea and the editable
 //! code block: hit-testing while scrolled, autoscroll, undo, word motion and
-//! clipping, driven through a user interface whose clipboard the test owns.
+//! clipping, driven through a user interface whose clipboard the test owns,
+//! with the keys of a PC.
 use std::sync::Arc;
 
 use iced::keyboard::key::Named;
@@ -20,7 +21,7 @@ use iced_test::renderer::Renderer;
 use iced_test::runtime::user_interface::{self, UserInterface};
 use iced_test::simulator;
 use icedcn::Theme;
-use icedcn::widget::{button, code_block, column, container, input, textarea};
+use icedcn::widget::{Platform, button, code_block, column, container, input, textarea};
 
 /// A user interface with a clipboard of its own.
 struct Desk {
@@ -41,6 +42,8 @@ impl Desk {
 
     /// A desk drawn by the given `backend`.
     fn with(view: impl Into<Element<'static, String, Theme>>, backend: Option<&str>) -> Self {
+        // The tests drive the PC keys; `hotkeys.rs` covers each platform's.
+        Platform::set(Some(Platform::Linux));
         let mut renderer =
             block_on(Renderer::new(Default::default(), backend)).expect("headless renderer");
         let ui = UserInterface::build(
@@ -228,10 +231,10 @@ impl Desk {
         self.modifiers(held);
     }
 
-    /// The selected text, through Command+C.
+    /// The selected text, through Ctrl+C.
     fn selection(&mut self) -> Option<String> {
         self.clipboard = None;
-        self.key(character("c"), Modifiers::COMMAND);
+        self.key(character("c"), Modifiers::CTRL);
         self.clipboard.take()
     }
 
@@ -691,11 +694,11 @@ fn type_text(desk: &mut Desk, text: &str) {
 }
 
 fn undo(desk: &mut Desk) {
-    desk.key(character("z"), Modifiers::COMMAND);
+    desk.key(character("z"), Modifiers::CTRL);
 }
 
 fn redo(desk: &mut Desk) {
-    desk.key(character("z"), Modifiers::COMMAND | Modifiers::SHIFT);
+    desk.key(character("z"), Modifiers::CTRL | Modifiers::SHIFT);
 }
 
 #[test]
@@ -717,8 +720,8 @@ fn an_input_undoes_a_run_of_typing_as_one_step_and_redoes_it() {
     assert_eq!(desk.field().1, "");
     redo(&mut desk);
     assert_eq!(desk.field().1, "hello");
-    desk.key(character("y"), Modifiers::COMMAND);
-    assert_eq!(desk.field().1, "hello!", "Command+Y redoes too");
+    desk.key(character("y"), Modifiers::CTRL);
+    assert_eq!(desk.field().1, "hello!", "Ctrl+Y redoes too");
     redo(&mut desk);
     assert_eq!(desk.field().1, "hello!", "nothing more to redo");
 }
@@ -729,18 +732,12 @@ fn an_input_undoes_a_paste_a_cut_and_a_word_deletion_as_steps_of_their_own() {
     desk.focus();
     type_text(&mut desk, "one two");
     desk.clipboard = Some(" pasted".into());
-    desk.key(character("v"), Modifiers::COMMAND);
+    desk.key(character("v"), Modifiers::CTRL);
     type_text(&mut desk, " three");
-    // Option+Backspace on macOS, Ctrl+Backspace elsewhere.
-    let jump = if cfg!(target_os = "macos") {
-        Modifiers::ALT
-    } else {
-        Modifiers::CTRL
-    };
-    desk.key(Named::Backspace, jump);
+    desk.key(Named::Backspace, Modifiers::CTRL);
     assert_eq!(desk.field().1, "one two pasted ");
-    desk.key(character("a"), Modifiers::COMMAND);
-    desk.key(character("x"), Modifiers::COMMAND);
+    desk.key(character("a"), Modifiers::CTRL);
+    desk.key(character("x"), Modifiers::CTRL);
     assert_eq!(desk.field().1, "");
     undo(&mut desk);
     assert_eq!(desk.field().1, "one two pasted ", "the cut");
@@ -860,7 +857,7 @@ fn an_editor_undoes_a_paste_and_a_newline_as_steps_of_their_own() {
         desk.focus();
         type_text(&mut desk, "one");
         desk.clipboard = Some(" pasted".into());
-        desk.key(character("v"), Modifiers::COMMAND);
+        desk.key(character("v"), Modifiers::CTRL);
         type_text(&mut desk, " two");
         desk.key(Named::Enter, Modifiers::empty());
         type_text(&mut desk, "three");
@@ -1027,31 +1024,6 @@ fn the_editor_caret_sits_on_whole_pixels() {
     }
 }
 
-#[test]
-fn a_word_motion_to_the_right_follows_the_platform() {
-    // Option+Right on macOS stops at the end of the word; Ctrl+Right on
-    // Windows at the start of the next one.
-    let (jump, expected) = if cfg!(target_os = "macos") {
-        (Modifiers::ALT, ["foo@   bar baz", "foo   bar@ baz"])
-    } else if cfg!(target_os = "windows") {
-        (Modifiers::CTRL, ["foo   @bar baz", "foo   bar @baz"])
-    } else {
-        (Modifiers::CTRL, ["foo@   bar baz", "foo   bar@ baz"])
-    };
-    for name in ["input", "textarea", "code block"] {
-        for (count, expected) in [1, 2].into_iter().zip(expected) {
-            let mut desk = Desk::new(field(name, "foo   bar baz"));
-            desk.focus();
-            desk.key(Named::Home, Modifiers::empty());
-            for _ in 0..count {
-                desk.key(Named::ArrowRight, jump);
-            }
-            type_text(&mut desk, "@");
-            assert_eq!(desk.field().1, expected, "{name}, {count} words");
-        }
-    }
-}
-
 /// The pixels outside `bounds`, grown by `margin`, that differ from the
 /// window's background.
 fn ink_outside(pixels: &[Vec<u8>], bounds: Rectangle, margin: f32) -> Vec<(usize, usize)> {
@@ -1132,10 +1104,10 @@ fn text_stays_inside_the_fields_border() {
             match state {
                 "focused at the end" => {
                     desk.focus();
-                    desk.key(Named::End, Modifiers::COMMAND);
+                    desk.key(Named::End, Modifiers::CTRL);
                     desk.key(Named::End, Modifiers::empty());
                 }
-                "selecting" => desk.key(character("a"), Modifiers::COMMAND),
+                "selecting" => desk.key(character("a"), Modifiers::CTRL),
                 _ => {}
             }
             desk.move_to(Point::new(790., 590.));
@@ -1166,7 +1138,7 @@ fn a_scrolled_textarea_clips_its_lines_to_its_border() {
     for _ in 0..14 {
         desk.key(Named::ArrowDown, Modifiers::empty());
     }
-    desk.key(character("a"), Modifiers::COMMAND);
+    desk.key(character("a"), Modifiers::CTRL);
     desk.move_to(Point::new(790., 590.));
     let pixels = desk.pixels();
     let (field, _) = desk.field();

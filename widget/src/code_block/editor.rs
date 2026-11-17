@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 use iced_widget::Renderer;
 use iced_widget::text_editor::{
-    Action, Binding, Content, Edit, KeyPress, Status, Style, TextEditor,
+    Action, Binding, Content, Cursor, Edit, KeyPress, Status, Style, TextEditor,
 };
 use icedcn_core::Theme;
 
@@ -33,7 +33,7 @@ use crate::core::{
     Background, Code, Color, Event, InputMethod, Layout, Length, Point, Rectangle, Renderer as _,
     Shell, Size, Vector, Widget, clipboard, overlay,
 };
-use crate::edit::{self, Command};
+use crate::edit::{self, Command, Intent, Platform};
 use crate::operation::control::Editable;
 use crate::operation::focus;
 use crate::textarea::sync;
@@ -276,10 +276,16 @@ fn binding(press: KeyPress, content: &Content<Renderer>) -> Option<Binding<Actio
         return None;
     }
     match press.key.as_ref() {
+        Key::Named(Named::Tab)
+            if press.modifiers.control() || press.modifiers.alt() || press.modifiers.logo() =>
+        {
+            None
+        }
         Key::Named(Named::Tab) if press.modifiers.shift() => {
             Some(Binding::Custom(Action::Edit(Edit::Unindent)))
         }
         Key::Named(Named::Tab) => Some(Binding::Custom(Action::Edit(Edit::Indent))),
+        Key::Named(Named::Enter) if edit::binding::<Action>(press.clone()).is_none() => None,
         Key::Named(Named::Enter) => {
             let cursor = content.cursor().position;
             let indent: String = content
@@ -297,7 +303,7 @@ fn binding(press: KeyPress, content: &Content<Renderer>) -> Option<Binding<Actio
                     .collect(),
             ))
         }
-        _ => Binding::from_key_press(press),
+        _ => edit::binding(press),
     }
 }
 
@@ -474,6 +480,8 @@ pub(super) struct State {
     pub(super) focused: bool,
     /// The caret moved, so the next layout reveals it.
     moved: bool,
+    /// The last key pressed was Escape, so Tab moves the focus on.
+    escaped: bool,
     reveal: Reveal,
     gutter: Gutter,
     /// Below the caret, relative to the editor: where Shift+F10 opens the menu.
@@ -495,6 +503,40 @@ impl Reveal {
 
 impl<Message> Meta for Editor<'_, Message> {}
 
+/// An editable code block running the intents of key presses on its content.
+struct Editing<'a, 'b, 'c, Message> {
+    editor: &'a Editor<'b, Message>,
+    state: &'a mut State,
+    shell: &'a mut Shell<'c, Message>,
+    page: i32,
+}
+
+impl<Message> edit::Target for Editing<'_, '_, '_, Message> {
+    fn content(&self) -> &Content<Renderer> {
+        &self.state.content
+    }
+
+    fn editable(&self) -> bool {
+        self.editor.is_editable()
+    }
+
+    fn perform(&mut self, action: Action) {
+        self.editor.perform(self.state, Some(action), self.shell);
+        self.shell.request_redraw();
+    }
+
+    fn move_to(&mut self, cursor: Cursor) {
+        self.state.content.move_to(cursor);
+        self.state.moved = true;
+        self.shell.invalidate_layout();
+        self.shell.request_redraw();
+    }
+
+    fn page(&self) -> i32 {
+        self.page
+    }
+}
+
 impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
     fn tag(&self) -> tree::Tag {
         tree::Tag::of::<State>()
@@ -513,6 +555,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
             measured: None,
             focused: false,
             moved: false,
+            escaped: false,
             reveal: Reveal::default(),
             gutter: Gutter::default(),
             caret: Point::ORIGIN,
@@ -699,24 +742,39 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
                 modifiers,
                 ..
             }) if state.focused && !self.disabled => {
+                // Tab indents; after Escape, it leaves for the next field.
+                let escaped =
+                    std::mem::replace(&mut state.escaped, *key == Key::Named(Named::Escape));
+                if escaped && *key == Key::Named(Named::Tab) {
+                    return;
+                }
                 if edit::opens_menu(key, *modifiers) {
                     state.menu.open(state.caret, true, shell);
                     shell.capture_event();
                     return;
                 }
-                if let Some(cursor) = edit::word_right(&state.content, key, *modifiers) {
-                    state.content.move_to(cursor);
-                    state.moved = true;
-                    shell.invalidate_layout();
-                    shell.request_redraw();
-                    shell.capture_event();
-                    return;
-                }
-                if let Some(command) = Command::from_key(key, *physical_key, *modifiers) {
-                    let action = self.command(state, command, shell);
-                    self.perform(state, action, shell);
-                    shell.capture_event();
-                    return;
+                let platform = Platform::current();
+                match edit::resolve(key, *physical_key, *modifiers, platform, true) {
+                    Some(Intent::Command(command)) => {
+                        let action = self.command(state, command, shell);
+                        self.perform(state, action, shell);
+                        shell.capture_event();
+                        return;
+                    }
+                    Some(intent) => {
+                        let page = (viewport.height / self.listing.line_height()).max(1.0) as i32;
+                        let mut editing = Editing {
+                            editor: self,
+                            state,
+                            shell,
+                            page,
+                        };
+                        if edit::apply(&mut editing, intent, platform) {
+                            shell.capture_event();
+                        }
+                        return;
+                    }
+                    None => {}
                 }
             }
             _ => {}

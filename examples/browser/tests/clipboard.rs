@@ -19,7 +19,7 @@ use iced_test::renderer::Renderer;
 use iced_test::runtime::user_interface::{self, UserInterface};
 use iced_test::{Selector, simulator};
 use icedcn::Theme;
-use icedcn::widget::{code_block, column, input, textarea};
+use icedcn::widget::{Platform, code_block, column, input, textarea};
 
 /// A user interface with a clipboard of its own: writes land in `clipboard`,
 /// and reads are answered from it with the event the runtime sends.
@@ -231,11 +231,15 @@ fn command_v_pastes_and_command_c_x_copy_and_cut_the_selection() {
 }
 
 #[test]
-fn shift_delete_cuts_ctrl_insert_copies_and_shift_insert_pastes() {
-    for (name, view) in views("hello") {
+fn shift_delete_cuts_ctrl_insert_copies_and_shift_insert_pastes_on_a_pc() {
+    for (platform, (name, view)) in [Platform::Windows, Platform::Linux]
+        .into_iter()
+        .flat_map(|platform| views("hello").into_iter().map(move |view| (platform, view)))
+    {
+        Platform::set(Some(platform));
         let mut desk = Desk::new(view);
         desk.focus();
-        desk.key(character("a"), Modifiers::COMMAND);
+        desk.key(character("a"), Modifiers::CTRL);
         desk.key(Named::Insert, Modifiers::CTRL);
         assert_eq!(desk.clipboard.as_deref(), Some("hello"), "{name} copies");
         assert_eq!(desk.text(), "hello");
@@ -246,6 +250,7 @@ fn shift_delete_cuts_ctrl_insert_copies_and_shift_insert_pastes() {
         desk.key(Named::Insert, Modifiers::SHIFT);
         assert_eq!(desk.text(), "backback", "{name} pastes");
     }
+    Platform::set(None);
 }
 
 #[test]

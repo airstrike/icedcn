@@ -37,7 +37,7 @@ use super::editor::Editor;
 use super::history::{self, History};
 use super::value::Value;
 use crate::button::group::{Join, join};
-use crate::edit::{self, Command};
+use crate::edit::{self, Command, Intent, Motion, Platform, kill};
 use crate::input_otp::Slots;
 
 use crate::core::Animation;
@@ -1228,17 +1228,22 @@ where
         let is_disabled = self.is_disabled;
 
         let input = state::<Renderer>(tree);
-        let command = input.menu.take().or_else(|| match event {
-            Event::Keyboard(keyboard::Event::KeyPressed {
-                key,
-                physical_key,
-                modifiers,
-                ..
-            }) if input.is_focused.is_some() && !is_disabled => {
-                Command::from_key(key, *physical_key, *modifiers)
-            }
-            _ => None,
-        });
+        let platform = Platform::current();
+        let intent = input
+            .menu
+            .take()
+            .map(Intent::Command)
+            .or_else(|| match event {
+                Event::Keyboard(keyboard::Event::KeyPressed {
+                    key,
+                    physical_key,
+                    modifiers,
+                    ..
+                }) if input.is_focused.is_some() && !is_disabled => {
+                    edit::resolve(key, *physical_key, *modifiers, platform, false)
+                }
+                _ => None,
+            });
 
         if let Event::Keyboard(keyboard::Event::KeyPressed { key, modifiers, .. }) = event
             && input.is_focused.is_some()
@@ -1257,7 +1262,173 @@ where
             return;
         }
 
-        if let Some(command) = command {
+        if let Some(intent) = intent
+            && !matches!(intent, Intent::Command(_))
+        {
+            if matches!(intent, Intent::Scroll(_)) {
+                return;
+            }
+            shell.capture_event();
+
+            let len = self.value.len();
+            let (anchor, caret) = match input.cursor.state(&self.value) {
+                cursor::State::Index(index) => (index, index),
+                cursor::State::Selection { start, end } => (start, end),
+            };
+            let selection = input.cursor.selection(&self.value);
+            let secure = self.is_secure;
+            let value = &self.value;
+            // Where `motion` from `from` lands on one line.
+            let land = |motion: Motion, from: usize| match motion {
+                Motion::Left => from.saturating_sub(1),
+                Motion::Right => (from + 1).min(len),
+                Motion::WordLeft if secure => 0,
+                Motion::WordRight if secure => len,
+                Motion::WordLeft => value.previous_start_of_word(from),
+                Motion::WordRight if platform == Platform::Windows => {
+                    value.next_start_of_word(from)
+                }
+                Motion::WordRight => value.next_end_of_word(from),
+                Motion::LineStart
+                | Motion::ParagraphStart
+                | Motion::ParagraphBackward
+                | Motion::Up
+                | Motion::PageUp
+                | Motion::DocumentStart => 0,
+                Motion::LineEnd
+                | Motion::ParagraphEnd
+                | Motion::ParagraphForward
+                | Motion::Down
+                | Motion::PageDown
+                | Motion::DocumentEnd => len,
+            };
+            let (left, right) = (anchor.min(caret), anchor.max(caret));
+            let before = input.cursor;
+
+            let edit = match intent {
+                Intent::Move(Motion::Left) => {
+                    input.cursor.move_left(&self.value);
+                    None
+                }
+                Intent::Move(Motion::Right) => {
+                    input.cursor.move_right(&self.value);
+                    None
+                }
+                Intent::Move(motion @ Motion::WordLeft) => {
+                    input.cursor.move_to(land(motion, left));
+                    None
+                }
+                Intent::Move(motion @ Motion::WordRight) => {
+                    input.cursor.move_to(land(motion, right));
+                    None
+                }
+                Intent::Move(motion) => {
+                    input.cursor.move_to(land(motion, caret));
+                    None
+                }
+                Intent::Select(motion) => {
+                    input.cursor.select_range(anchor, land(motion, caret));
+                    None
+                }
+                Intent::Deselect => {
+                    input.cursor.move_to(caret);
+                    None
+                }
+                _ if !self.is_editable() => return,
+                Intent::Delete(motion) => {
+                    let one = selection.is_none() && matches!(motion, Motion::Left | Motion::Right);
+                    let kind = if one {
+                        history::Kind::Deleting
+                    } else {
+                        history::Kind::Other
+                    };
+                    if selection.is_none() && !one {
+                        let to = land(motion, caret);
+                        if to == caret {
+                            return;
+                        }
+                        input.history.record(kind, input.cursor);
+                        input.cursor.select_range(caret, to);
+                    } else {
+                        input.history.record(kind, input.cursor);
+                    }
+                    let mut editor = Editor::new(&mut self.value, &mut input.cursor);
+                    Some(if motion == Motion::Right && one {
+                        editor.delete()
+                    } else {
+                        editor.backspace()
+                    })
+                }
+                Intent::Kill => {
+                    let (start, end) = selection.unwrap_or((caret, len));
+                    if start == end {
+                        return;
+                    }
+                    if !secure {
+                        kill::push(self.value.select(start, end).as_str());
+                    }
+                    input.history.record(history::Kind::Other, input.cursor);
+                    input.cursor.select_range(start, end);
+                    Some(Editor::new(&mut self.value, &mut input.cursor).backspace())
+                }
+                Intent::Yank => {
+                    let Some(text) = kill::yank() else {
+                        return;
+                    };
+                    let content = self.insertion(&input.cursor, Value::new(&text));
+                    input.history.record(history::Kind::Other, input.cursor);
+                    Some(Editor::new(&mut self.value, &mut input.cursor).paste(content))
+                }
+                Intent::Transpose => {
+                    let at = if caret == len {
+                        caret.saturating_sub(1)
+                    } else {
+                        caret
+                    };
+                    if selection.is_some() || at == 0 || at >= len {
+                        return;
+                    }
+                    let swapped = format!(
+                        "{}{}",
+                        self.value.select(at, at + 1),
+                        self.value.select(at - 1, at)
+                    );
+                    input.history.record(history::Kind::Other, input.cursor);
+                    input.cursor.select_range(at - 1, at + 1);
+                    Some(
+                        Editor::new(&mut self.value, &mut input.cursor).paste(Value::new(&swapped)),
+                    )
+                }
+                Intent::Command(_) | Intent::Scroll(_) | Intent::OpenLine => return,
+            };
+
+            let edited = edit.is_some();
+            if let Some(change) = edit {
+                self.changed(
+                    &mut input.uncontrolled,
+                    &mut input.history,
+                    change,
+                    input.cursor,
+                    false,
+                    shell,
+                );
+                update_cache(input, &self.value);
+            } else if before != input.cursor {
+                let text_bounds = text_layout.bounds();
+                input.reveal_cursor(text_bounds.width, &self.value);
+                shell.request_redraw();
+            }
+            if let Some(focus) = &mut input.is_focused
+                && (edited || before != input.cursor)
+            {
+                focus.updated_at = Instant::now();
+            }
+            input.history.follow(input.cursor);
+            input.measure(&self.value);
+            return;
+        }
+
+        if let Some(Intent::Command(command)) = intent {
             shell.capture_event();
 
             let is_editable = self.is_editable();
@@ -1498,20 +1669,19 @@ where
                     shell.capture_event();
                 }
             }
-            // Only macOS shortcuts read the unmodified key here.
-            #[cfg_attr(not(target_os = "macos"), allow(unused_variables))]
             Event::Keyboard(keyboard::Event::KeyPressed {
                 key,
                 text,
-                modified_key,
+                modifiers,
                 ..
             }) => {
                 let state = state::<Renderer>(tree);
 
                 if let Some(focus) = &mut state.is_focused {
-                    let modifiers = state.keyboard_modifiers;
-
-                    if let Some(text) = text {
+                    if let Some(text) = text
+                        .as_ref()
+                        .filter(|_| !edit::is_shortcut(*modifiers, platform))
+                    {
                         if !self.is_editable() {
                             return;
                         }
@@ -1549,251 +1719,11 @@ where
                         }
                     }
 
-                    #[cfg(target_os = "macos")]
-                    let macos_shortcut = convert_macos_shortcut(key, modifiers);
-
-                    #[cfg(target_os = "macos")]
-                    let modified_key = macos_shortcut.as_ref().unwrap_or(modified_key);
-
-                    match modified_key.as_ref() {
-                        keyboard::Key::Named(key::Named::Enter) => {
-                            if let Some(on_submit) = self.on_submit.clone() {
-                                shell.publish(on_submit);
-                                shell.capture_event();
-                            }
-                        }
-                        keyboard::Key::Named(key::Named::Backspace) => {
-                            if !self.is_editable() {
-                                return;
-                            }
-
-                            let kind = if state.cursor.selection(&self.value).is_none()
-                                && !modifiers.jump()
-                                && !modifiers.macos_command()
-                            {
-                                history::Kind::Deleting
-                            } else {
-                                history::Kind::Other
-                            };
-                            state.history.record(kind, state.cursor);
-
-                            if state.cursor.selection(&self.value).is_none() {
-                                if (self.is_secure && modifiers.jump()) || modifiers.macos_command()
-                                {
-                                    state
-                                        .cursor
-                                        .select_range(state.cursor.start(&self.value), 0);
-                                } else if modifiers.jump() {
-                                    state.cursor.select_left_by_words(&self.value);
-                                }
-                            }
-
-                            let mut editor = Editor::new(&mut self.value, &mut state.cursor);
-                            let change = editor.backspace();
-
-                            self.changed(
-                                &mut state.uncontrolled,
-                                &mut state.history,
-                                change,
-                                state.cursor,
-                                false,
-                                shell,
-                            );
-                            shell.capture_event();
-
-                            focus.updated_at = Instant::now();
-                            update_cache(state, &self.value);
-                        }
-                        keyboard::Key::Named(key::Named::Delete) => {
-                            if !self.is_editable() {
-                                return;
-                            }
-
-                            let kind = if state.cursor.selection(&self.value).is_none()
-                                && !modifiers.jump()
-                                && !modifiers.macos_command()
-                            {
-                                history::Kind::Deleting
-                            } else {
-                                history::Kind::Other
-                            };
-                            state.history.record(kind, state.cursor);
-
-                            if state.cursor.selection(&self.value).is_none() {
-                                if (self.is_secure && modifiers.jump()) || modifiers.macos_command()
-                                {
-                                    state.cursor.select_range(
-                                        state.cursor.start(&self.value),
-                                        self.value.len(),
-                                    );
-                                } else if modifiers.jump() {
-                                    state.cursor.select_right_by_words(&self.value);
-                                }
-                            }
-
-                            let mut editor = Editor::new(&mut self.value, &mut state.cursor);
-                            let change = editor.delete();
-
-                            self.changed(
-                                &mut state.uncontrolled,
-                                &mut state.history,
-                                change,
-                                state.cursor,
-                                false,
-                                shell,
-                            );
-                            shell.capture_event();
-
-                            focus.updated_at = Instant::now();
-                            update_cache(state, &self.value);
-                        }
-                        keyboard::Key::Named(key::Named::Home) => {
-                            let cursor_before = state.cursor;
-
-                            if modifiers.shift() {
-                                state
-                                    .cursor
-                                    .select_range(state.cursor.start(&self.value), 0);
-                            } else {
-                                state.cursor.move_to(0);
-                            }
-
-                            if cursor_before != state.cursor {
-                                focus.updated_at = Instant::now();
-
-                                let text_bounds = text_layout.bounds();
-                                state.reveal_cursor(text_bounds.width, &self.value);
-
-                                shell.request_redraw();
-                            }
-
-                            shell.capture_event();
-                        }
-                        keyboard::Key::Named(key::Named::End) => {
-                            let cursor_before = state.cursor;
-
-                            if modifiers.shift() {
-                                state.cursor.select_range(
-                                    state.cursor.start(&self.value),
-                                    self.value.len(),
-                                );
-                            } else {
-                                state.cursor.move_to(self.value.len());
-                            }
-
-                            if cursor_before != state.cursor {
-                                focus.updated_at = Instant::now();
-
-                                let text_bounds = text_layout.bounds();
-                                state.reveal_cursor(text_bounds.width, &self.value);
-
-                                shell.request_redraw();
-                            }
-
-                            shell.capture_event();
-                        }
-                        keyboard::Key::Named(key::Named::ArrowLeft) => {
-                            let cursor_before = state.cursor;
-
-                            if (self.is_secure && modifiers.jump()) || modifiers.macos_command() {
-                                if modifiers.shift() {
-                                    state
-                                        .cursor
-                                        .select_range(state.cursor.start(&self.value), 0);
-                                } else {
-                                    state.cursor.move_to(0);
-                                }
-                            } else if modifiers.jump() {
-                                if modifiers.shift() {
-                                    state.cursor.select_left_by_words(&self.value);
-                                } else {
-                                    state.cursor.move_left_by_words(&self.value);
-                                }
-                            } else if modifiers.shift() {
-                                state.cursor.select_left(&self.value);
-                            } else {
-                                state.cursor.move_left(&self.value);
-                            }
-
-                            if cursor_before != state.cursor {
-                                focus.updated_at = Instant::now();
-
-                                let text_bounds = text_layout.bounds();
-                                state.reveal_cursor(text_bounds.width, &self.value);
-
-                                shell.request_redraw();
-                            }
-
-                            shell.capture_event();
-                        }
-                        keyboard::Key::Named(key::Named::ArrowRight) => {
-                            let cursor_before = state.cursor;
-
-                            if (self.is_secure && modifiers.jump()) || modifiers.macos_command() {
-                                if modifiers.shift() {
-                                    state.cursor.select_range(
-                                        state.cursor.start(&self.value),
-                                        self.value.len(),
-                                    );
-                                } else {
-                                    state.cursor.move_to(self.value.len());
-                                }
-                            } else if modifiers.jump()
-                                && edit::WordRight::PLATFORM == edit::WordRight::NextStart
-                            {
-                                let from = if modifiers.shift() {
-                                    state.cursor.end(&self.value)
-                                } else {
-                                    state
-                                        .cursor
-                                        .selection(&self.value)
-                                        .map_or(state.cursor.end(&self.value), |(_, right)| right)
-                                };
-                                let to = self.value.next_start_of_word(from);
-                                if modifiers.shift() {
-                                    state
-                                        .cursor
-                                        .select_range(state.cursor.start(&self.value), to);
-                                } else {
-                                    state.cursor.move_to(to);
-                                }
-                            } else if modifiers.jump() {
-                                if modifiers.shift() {
-                                    state.cursor.select_right_by_words(&self.value);
-                                } else {
-                                    state.cursor.move_right_by_words(&self.value);
-                                }
-                            } else if modifiers.shift() {
-                                state.cursor.select_right(&self.value);
-                            } else {
-                                state.cursor.move_right(&self.value);
-                            }
-
-                            if cursor_before != state.cursor {
-                                focus.updated_at = Instant::now();
-
-                                let text_bounds = text_layout.bounds();
-                                state.reveal_cursor(text_bounds.width, &self.value);
-
-                                shell.request_redraw();
-                            }
-
-                            shell.capture_event();
-                        }
-                        keyboard::Key::Named(key::Named::Escape) => {
-                            state.is_focused = None;
-                            state.is_dragging = None;
-                            state.is_pasting = None;
-
-                            state.keyboard_modifiers = keyboard::Modifiers::default();
-
-                            if let Some(on_blur) = &self.on_blur {
-                                shell.publish(on_blur.clone());
-                            }
-
-                            shell.capture_event();
-                        }
-                        _ => {}
+                    if let keyboard::Key::Named(key::Named::Enter) = key.as_ref()
+                        && let Some(on_submit) = self.on_submit.clone()
+                    {
+                        shell.publish(on_submit);
+                        shell.capture_event();
                     }
                 }
             }
@@ -2596,29 +2526,6 @@ fn alignment_offset(
             alignment::Horizontal::Right => text_bounds_width - text_min_width,
         }
     }
-}
-
-/// Converts macOS Ctrl shortcuts to their standard equivalents.
-#[cfg(target_os = "macos")]
-fn convert_macos_shortcut(
-    key: &keyboard::Key,
-    modifiers: keyboard::Modifiers,
-) -> Option<keyboard::Key> {
-    if modifiers != keyboard::Modifiers::CTRL {
-        return None;
-    }
-
-    let key = match key.as_ref() {
-        keyboard::Key::Character("b") => key::Named::ArrowLeft,
-        keyboard::Key::Character("f") => key::Named::ArrowRight,
-        keyboard::Key::Character("a") => key::Named::Home,
-        keyboard::Key::Character("e") => key::Named::End,
-        keyboard::Key::Character("h") => key::Named::Backspace,
-        keyboard::Key::Character("d") => key::Named::Delete,
-        _ => return None,
-    };
-
-    Some(keyboard::Key::Named(key))
 }
 
 pub use crate::operation::{focus_next, focus_previous};

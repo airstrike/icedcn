@@ -13,6 +13,7 @@ use iced::{Point, Size};
 use iced_test::core::Settings;
 use iced_test::simulator::{self, Simulator};
 use icedcn::Theme;
+use icedcn::widget::Platform;
 use icedcn::widget::calendar::{Date, today};
 
 type Preview<'a> = Simulator<'a, Message, Theme, iced::Renderer>;
@@ -123,7 +124,10 @@ fn time_and_range_previews_render_at_phone_and_desktop_widths() {
         } else {
             ui.find("Start Time").expect("start time");
             ui.click("10:30:00").expect("focus editable start time");
+            // End moves the caret on a PC; on a Mac it only scrolls.
+            Platform::set(Some(Platform::Linux));
             ui.tap_key(Named::End);
+            Platform::set(None);
             ui.tap_key(Named::Backspace);
             let _ = ui.typewrite("5");
             ui.find("10:30:05").expect("start time changes");

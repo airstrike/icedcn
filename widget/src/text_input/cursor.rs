@@ -66,10 +66,6 @@ impl Cursor {
         self.move_right_by_amount(value, 1);
     }
 
-    pub(crate) fn move_right_by_words(&mut self, value: &Value) {
-        self.move_to(value.next_end_of_word(self.right(value)));
-    }
-
     pub(crate) fn move_right_by_amount(&mut self, value: &Value, amount: usize) {
         match self.state(value) {
             State::Index(index) => {
@@ -87,61 +83,11 @@ impl Cursor {
         }
     }
 
-    pub(crate) fn move_left_by_words(&mut self, value: &Value) {
-        self.move_to(value.previous_start_of_word(self.left(value)));
-    }
-
     pub(crate) fn select_range(&mut self, start: usize, end: usize) {
         if start == end {
             self.state = State::Index(start);
         } else {
             self.state = State::Selection { start, end };
-        }
-    }
-
-    pub(crate) fn select_left(&mut self, value: &Value) {
-        match self.state(value) {
-            State::Index(index) if index > 0 => {
-                self.select_range(index, index - 1);
-            }
-            State::Selection { start, end } if end > 0 => {
-                self.select_range(start, end - 1);
-            }
-            _ => {}
-        }
-    }
-
-    pub(crate) fn select_right(&mut self, value: &Value) {
-        match self.state(value) {
-            State::Index(index) if index < value.len() => {
-                self.select_range(index, index + 1);
-            }
-            State::Selection { start, end } if end < value.len() => {
-                self.select_range(start, end + 1);
-            }
-            _ => {}
-        }
-    }
-
-    pub(crate) fn select_left_by_words(&mut self, value: &Value) {
-        match self.state(value) {
-            State::Index(index) => {
-                self.select_range(index, value.previous_start_of_word(index));
-            }
-            State::Selection { start, end } => {
-                self.select_range(start, value.previous_start_of_word(end));
-            }
-        }
-    }
-
-    pub(crate) fn select_right_by_words(&mut self, value: &Value) {
-        match self.state(value) {
-            State::Index(index) => {
-                self.select_range(index, value.next_end_of_word(index));
-            }
-            State::Selection { start, end } => {
-                self.select_range(start, value.next_end_of_word(end));
-            }
         }
     }
 
@@ -165,19 +111,5 @@ impl Cursor {
         };
 
         end.min(value.len())
-    }
-
-    fn left(&self, value: &Value) -> usize {
-        match self.state(value) {
-            State::Index(index) => index,
-            State::Selection { start, end } => start.min(end),
-        }
-    }
-
-    fn right(&self, value: &Value) -> usize {
-        match self.state(value) {
-            State::Index(index) => index,
-            State::Selection { start, end } => start.max(end),
-        }
     }
 }

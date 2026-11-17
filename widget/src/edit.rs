@@ -5,12 +5,20 @@
 //! at the caret by Shift+F10 and the context menu key. The menu is an overlay
 //! of the widget that opened it; it records the chosen command and leaves the
 //! event uncaptured, so the widget performs the command on the same event.
+//!
+//! Every other key follows the text fields of the platform the app runs on,
+//! a web build asking the browser which one that is: see [`Platform`].
+
+mod key;
+pub(crate) mod kill;
+mod platform;
+mod target;
 
 use std::fmt;
 
 use iced_core::Length::Fill;
 use iced_core::Widget as _;
-use iced_core::keyboard::key::{Named, Physical};
+use iced_core::keyboard::key::Named;
 use iced_core::keyboard::{self, Key, Modifiers};
 use iced_core::shell::Bus;
 use iced_core::text;
@@ -22,11 +30,14 @@ use iced_core::{
     renderer, touch, window,
 };
 use iced_widget::anchored::{Align, Position, Side};
-use iced_widget::text_editor::Content;
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
 use icedcn_core::theme::popover::content;
 use unicode_segmentation::UnicodeSegmentation;
+
+pub(crate) use key::{Intent, Motion, binding, is_shortcut, resolve};
+pub use platform::Platform;
+pub(crate) use target::{Target, apply};
 
 use crate::compose::Slot;
 use crate::container::Container;
@@ -44,72 +55,16 @@ pub(crate) enum Command {
     SelectAll,
 }
 
-impl Command {
-    /// The command a key press runs in a focused text widget: the platform
-    /// shortcuts, plus Shift+Delete, Ctrl+Insert and Shift+Insert.
-    pub(crate) fn from_key(key: &Key, physical: Physical, modifiers: Modifiers) -> Option<Self> {
-        if let Key::Named(named) = key {
-            let shift = modifiers.shift() && !modifiers.control() && !modifiers.logo();
-            let control = modifiers.control() && !modifiers.shift() && !modifiers.alt();
-
-            // Alt+Backspace undoes on Windows; on macOS, Option+Backspace
-            // deletes the word before the caret.
-            let alt = modifiers.alt() && !modifiers.control() && !modifiers.shift();
-
-            return match named {
-                Named::Backspace if alt && cfg!(target_os = "windows") => Some(Self::Undo),
-                Named::Delete if shift && !modifiers.alt() => Some(Self::Cut),
-                Named::Insert if control => Some(Self::Copy),
-                Named::Insert if shift && !modifiers.alt() => Some(Self::Paste),
-                _ => None,
-            };
-        }
-
-        if !modifiers.command() {
-            return None;
-        }
-
-        match key.to_latin(physical)?.to_ascii_lowercase() {
-            'x' => Some(Self::Cut),
-            'c' => Some(Self::Copy),
-            'v' if !modifiers.alt() => Some(Self::Paste),
-            'a' => Some(Self::SelectAll),
-            'z' if modifiers.shift() => Some(Self::Redo),
-            'z' => Some(Self::Undo),
-            'y' => Some(Self::Redo),
-            _ => None,
-        }
-    }
-}
-
 /// Whether a key press opens the menu at the caret: Shift+F10, or the context
 /// menu key.
 pub(crate) fn opens_menu(key: &Key, modifiers: Modifiers) -> bool {
     match key {
-        Key::Named(Named::F10) => modifiers.shift() && !modifiers.command(),
+        Key::Named(Named::F10) => {
+            modifiers.shift() && !modifiers.control() && !modifiers.logo() && !modifiers.alt()
+        }
         Key::Named(Named::ContextMenu) => true,
         _ => false,
     }
-}
-
-/// Where a word motion to the right stops.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum WordRight {
-    /// At the end of the word: macOS, and Linux.
-    End,
-    /// At the start of the next word, past the spaces after this one: Windows.
-    /// A web build cannot tell the host apart and takes the PC convention,
-    /// as its command key does.
-    NextStart,
-}
-
-impl WordRight {
-    /// The convention of the platform the app runs on.
-    pub(crate) const PLATFORM: Self = if cfg!(any(target_os = "windows", target_arch = "wasm32")) {
-        Self::NextStart
-    } else {
-        Self::End
-    };
 }
 
 /// The byte index in `text` where the next word after `index` starts, past
@@ -118,42 +73,6 @@ pub(crate) fn next_word_start(text: &str, index: usize) -> usize {
     text.split_word_bound_indices()
         .find(|(start, word)| *start > index && !word.trim_start().is_empty())
         .map_or(text.len(), |(start, _)| start)
-}
-
-/// The caret a Windows word motion to the right (Ctrl+Right, with Shift to
-/// select) puts in `content`: the start of the next word on the caret's
-/// line. Elsewhere, and at the end of a line, the editor's own motion runs.
-pub(crate) fn word_right(
-    content: &Content<Renderer>,
-    key: &Key,
-    modifiers: Modifiers,
-) -> Option<Cursor> {
-    if WordRight::PLATFORM != WordRight::NextStart
-        || !matches!(key, Key::Named(Named::ArrowRight))
-        || !modifiers.jump()
-        || modifiers.macos_command()
-    {
-        return None;
-    }
-    let cursor = content.cursor();
-    let caret = cursor.position;
-    let line = content.line(caret.line)?;
-    if caret.index >= line.text.len() {
-        return None;
-    }
-    let position = text::Position {
-        index: next_word_start(&line.text, caret.index),
-        ..caret
-    };
-
-    Some(Cursor {
-        position,
-        selection: if modifiers.shift() {
-            Some(cursor.selection.unwrap_or(caret))
-        } else {
-            None
-        },
-    })
 }
 
 /// Whether a right press that put the caret at `position` landed inside the
@@ -322,7 +241,7 @@ impl<Message> Themed<Message, Renderer> for Theme {
 
 /// The menu panel: `min-w-36 p-1 rounded-lg bg-popover shadow-md ring-1`.
 fn panel<'b>(available: Available, keyboard: bool) -> Element<'b, Command, Theme, Renderer> {
-    let mac = cfg!(target_os = "macos");
+    let mac = Platform::current() == Platform::Mac;
     let item = |label: &'static str,
                 shortcut: (&'static str, &'static str),
                 command: Command,
@@ -599,9 +518,7 @@ impl Autoscroll {
 
 #[cfg(test)]
 mod tests {
-    use super::{Command, snap};
-    use iced_core::keyboard::key::{Code, Named, Physical};
-    use iced_core::keyboard::{Key, Modifiers};
+    use super::snap;
 
     #[test]
     fn a_windows_word_motion_skips_the_spaces_after_the_word() {
@@ -627,50 +544,6 @@ mod tests {
             ]
         );
         assert_eq!(super::next_word_start("foo   ", 1), 6, "to the end");
-    }
-
-    #[test]
-    fn the_word_motion_follows_the_platform() {
-        let expected = if cfg!(any(target_os = "windows", target_arch = "wasm32")) {
-            super::WordRight::NextStart
-        } else {
-            super::WordRight::End
-        };
-        assert_eq!(super::WordRight::PLATFORM, expected);
-    }
-
-    #[test]
-    fn undo_and_redo_keys_follow_the_platform() {
-        let press = |key: Key, code: Code, modifiers: Modifiers| {
-            Command::from_key(&key, Physical::Code(code), modifiers)
-        };
-        let z = || Key::Character("z".into());
-        assert_eq!(
-            press(z(), Code::KeyZ, Modifiers::COMMAND),
-            Some(Command::Undo)
-        );
-        assert_eq!(
-            press(
-                Key::Character("Z".into()),
-                Code::KeyZ,
-                Modifiers::COMMAND | Modifiers::SHIFT
-            ),
-            Some(Command::Redo)
-        );
-        assert_eq!(
-            press(Key::Character("y".into()), Code::KeyY, Modifiers::COMMAND),
-            Some(Command::Redo)
-        );
-        // Option+Backspace deletes a word on macOS; Alt+Backspace undoes on
-        // Windows.
-        assert_eq!(
-            press(
-                Key::Named(Named::Backspace),
-                Code::Backspace,
-                Modifiers::ALT
-            ),
-            cfg!(target_os = "windows").then_some(Command::Undo)
-        );
     }
 
     #[test]

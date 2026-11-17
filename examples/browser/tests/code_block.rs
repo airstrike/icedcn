@@ -11,7 +11,7 @@ use iced_test::runtime::UserInterface;
 use iced_test::{Simulator, simulator};
 use icedcn::Theme;
 use icedcn::widget::code_block::{Added, CodeBlock, Removed, line};
-use icedcn::widget::{code_block, column, container, rich_text, span};
+use icedcn::widget::{Platform, code_block, column, container, rich_text, span};
 
 #[derive(Default)]
 struct Viewports(Vec<(Rectangle, Size)>);
@@ -441,6 +441,8 @@ const LONG: &str = "fn main() { println!(\"a line that is much longer than the c
 
 #[test]
 fn a_long_line_in_an_unwrapped_editor_scrolls_on_a_horizontal_wheel_and_while_typing() {
+    // Home and End move the caret on a PC; on a Mac they only scroll.
+    Platform::set(Some(Platform::Linux));
     let block: Element<'static, (), Theme> = container(code_block![
         code_block::content("")
             .language("rust")
@@ -484,6 +486,7 @@ fn a_long_line_in_an_unwrapped_editor_scrolls_on_a_horizontal_wheel_and_while_ty
     );
     ui.tap_key(Named::Home);
     assert_eq!(offsets(&mut ui)[0].2.x, 0., "Home shows the start again");
+    Platform::set(None);
 }
 
 fn page(content: code_block::Content<'static, ()>) -> Element<'static, (), Theme> {
