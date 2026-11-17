@@ -257,6 +257,15 @@ impl<'a, Message: 'a> From<Text<'a>> for Slot<'a, Message> {
 impl<'a, Message: 'a> Compose<Message> for Text<'a> {
     fn inherit(&mut self, from: &Inherited) {
         self.selectable = self.selectable.or(from.selectable());
+        // A cascaded leading belongs to the cascaded size (a card's text-sm is
+        // 14/20), so a text with another size keeps its own leading instead of
+        // squeezing, say, a 28px heading onto 20px lines.
+        let leading = from
+            .line_height()
+            .filter(|_| match (self.size, from.size()) {
+                (Some(own), Some(cascaded)) => own == cascaded.text_size(),
+                _ => true,
+            });
         self.size = self.size.or(if self.card_title {
             from.card_title_size().or(Some(size::BASE))
         } else {
@@ -266,9 +275,9 @@ impl<'a, Message: 'a> Compose<Message> for Text<'a> {
         self.font = self.font.or(from.font());
         // The inherited value is absolute logical pixels (nova `leading-4` is
         // 16px); `From<f32> for LineHeight` would read it as a relative factor.
-        self.line_height = self.line_height.or(from
-            .line_height()
-            .map(|pixels| LineHeight::Absolute(iced_core::Pixels(pixels))));
+        self.line_height = self
+            .line_height
+            .or(leading.map(|pixels| LineHeight::Absolute(iced_core::Pixels(pixels))));
     }
 
     fn compose<'b>(self: Box<Self>) -> iced_core::Element<'b, Message, Theme, Renderer>
@@ -662,6 +671,32 @@ mod tests {
             },
         };
         let _ = Box::new(button(Slot::new(label)).width(40)).compose();
+    }
+
+    #[test]
+    fn cascaded_leading_follows_its_size() {
+        let card = Inherited::default()
+            .with_size(Size::Default)
+            .with_line_height(20.0);
+        let leading = |text: Text<'static>| {
+            let mut text = text;
+            <Text as Compose<()>>::inherit(&mut text, &card);
+            text.line_height
+        };
+        assert_eq!(
+            leading(Text::new("Body")),
+            Some(LineHeight::Absolute(Pixels(20.0)))
+        );
+        assert_eq!(
+            leading(small("Body")),
+            Some(LineHeight::Absolute(Pixels(20.0)))
+        );
+        assert_eq!(leading(h3("Start with a style.").size(28)), None);
+        assert_eq!(leading(xs("Native components.")), None);
+        assert_eq!(
+            leading(h3("Title").size(28).line_height(Pixels(32.0))),
+            Some(LineHeight::Absolute(Pixels(32.0)))
+        );
     }
 
     #[test]
