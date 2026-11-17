@@ -94,21 +94,12 @@ def main():
         f"if surface_size.width > 0 && surface_size.height > 0 {{\n            {configure}\n        }}",
         patch=ROOT / "examples/browser/web/ime.patch",
     )
-    # Probe adapter/device compatibility on a disposable canvas. A failed WebGPU
-    # attempt must leave the application's canvas free to acquire a 2D context.
-    probe = "wgpu::SurfaceTarget::Window(Box::new(compatible_window))"
-    disposable = """{
-                use wgpu::web_sys::{self, HtmlCanvasElement, wasm_bindgen::JsCast};
-                let _ = compatible_window;
-                let canvas = web_sys::window()
-                    .and_then(|window| window.document())
-                    .and_then(|doc| doc.create_element("canvas").ok())
-                    .and_then(|element| element.dyn_into::<HtmlCanvasElement>().ok())
-                    .ok_or(Error::IncompatibleSurface)?;
-                wgpu::SurfaceTarget::Canvas(canvas)
-            }"""
+    # A failed GPU attempt must leave the application's canvas free for the
+    # CPU renderer's 2D context. WebGPU probes on a spare canvas; WebGL, whose
+    # adapter is bound to its canvas, is set up on a spare one first, then on
+    # the application's.
     gpu = patched_source(build, packages["iced_wgpu"], "wgpu", "src/window/compositor.rs",
-                         probe, disposable)
+                         patch=ROOT / "examples/browser/web/canvas-probe.patch")
     # Safari rejects repeated copies from one mapped upload buffer at submit
     # (gfx-rs/wgpu#10460). Recheck the workaround whenever the locked belt changes.
     wgpu = packages["wgpu"]
@@ -129,7 +120,7 @@ def main():
     # Cargo can ignore an unused paths override. Check the resolved artifact
     # on fresh and incremental builds before creating any deployable files.
     artifacts = [json.loads(line) for line in result.stdout.splitlines()]
-    for name, patched in [("wgpu", uploads), ("iced_winit", winit)]:
+    for name, patched in [("wgpu", uploads), ("iced_winit", winit), ("iced_wgpu", gpu)]:
         if not any(item.get("reason") == "compiler-artifact"
                    and Path(item["manifest_path"]).resolve() == (patched / "Cargo.toml").resolve()
                    for item in artifacts):

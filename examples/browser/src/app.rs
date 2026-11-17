@@ -62,7 +62,7 @@ pub struct App {
     font_list: Vec<String>,
     current_font: String,
     /// Show the CPU-rendering notice; only ever set on the web.
-    webgpu_off: bool,
+    cpu_renderer: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -98,7 +98,7 @@ pub enum Message {
     /// `App` ignores; `Browser` intercepts the `value == 100` case to dismiss
     /// the splash so it stays up until the bar visibly reaches the right edge.
     SplashIdle(f32),
-    DismissWebgpu,
+    DismissCpuRenderer,
 }
 
 impl App {
@@ -293,7 +293,7 @@ impl App {
             fount: fonts::Fount::new(),
             font_list: vec![default_font.clone()],
             current_font: default_font,
-            webgpu_off: crate::webgpu_off(),
+            cpu_renderer: crate::cpu_renderer(),
         };
         let initial = browser_routing::location()
             .map(|path| Route::parse(&path, &app.routes))
@@ -608,8 +608,8 @@ impl App {
                 self.stars = stars;
                 Task::none()
             }
-            Message::DismissWebgpu => {
-                self.webgpu_off = false;
+            Message::DismissCpuRenderer => {
+                self.cpu_renderer = false;
                 Task::none()
             }
             Message::Navigate(page, section) => {
@@ -778,20 +778,20 @@ impl App {
     }
 
     fn chrome(&self) -> iced::Element<'_, Message, Theme> {
-        if !self.webgpu_off {
+        if !self.cpu_renderer {
             return self.content();
         }
         let close = button(icon::x())
             .style(button::Ghost)
             .size(Size::Xs)
             .square()
-            .on_press(Message::DismissWebgpu);
+            .on_press(Message::DismissCpuRenderer);
         let notice = alert()
             .icon(icon::triangle_alert().size(16).line_height(1.0))
-            .title("WebGPU is off")
+            .title("Hardware acceleration is off")
             .description(
                 "This page is drawing on the CPU, so it may feel slow. \
-                 Turn on WebGPU in your browser for full speed.",
+                 Turn on hardware acceleration in your browser for full speed.",
             )
             .action(close)
             .style(alert::Destructive)

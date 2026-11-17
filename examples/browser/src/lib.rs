@@ -151,16 +151,17 @@ fn splash<'a>(message: &str, progress_value: f32) -> Element<'a, Message, Theme>
     .into()
 }
 
-/// Whether the page shell found no usable WebGPU adapter. Set by
-/// `web/index.html` before the app starts; always false on native.
-pub(crate) fn webgpu_off() -> bool {
+/// Whether the page shell found neither WebGPU nor WebGL2, so iced draws
+/// with tiny-skia. Set by `web/index.html` before the app starts; always
+/// false on native.
+pub(crate) fn cpu_renderer() -> bool {
     #[cfg(target_arch = "wasm32")]
     {
-        let key = js_sys::JsString::from("icedcnWebgpu");
+        let key = js_sys::JsString::from("icedcnRenderer");
         web_sys::window()
             .and_then(|window| js_sys::Reflect::get(&window, &key).ok())
-            .and_then(|value| value.as_bool())
-            == Some(false)
+            .and_then(|value| value.as_string())
+            .is_some_and(|renderer| renderer == "cpu")
     }
     #[cfg(not(target_arch = "wasm32"))]
     false
@@ -184,10 +185,10 @@ pub fn run() -> iced::Result {
         .subscription(Browser::subscription)
         .theme(Browser::theme)
         .fonts([icon::FONT, palette::icon::FONT, font::GEIST_MONO]);
-    // Skip the wgpu attempt the page already knows will fail; this also makes
-    // `?webgpu=off` draw on the CPU.
+    // Skip the wgpu attempts the page already knows will fail; this also makes
+    // `?renderer=cpu` draw on the CPU.
     #[cfg(target_arch = "wasm32")]
-    let application = if webgpu_off() {
+    let application = if cpu_renderer() {
         application.backend(iced::Backend::Software)
     } else {
         application

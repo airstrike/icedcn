@@ -75,22 +75,27 @@
       return new Response(stream, { headers: { "Content-Type": "application/wasm" } });
     }
 
-    // Mirrors wgpu's own check. Without an adapter iced draws with tiny-skia,
-    // and the app shows a notice. `?webgpu=off` forces that path.
-    async function webgpu() {
-      if (new URLSearchParams(location.search).get("webgpu") === "off" || !navigator.gpu) return false;
+    // Mirrors the checks wgpu makes: a WebGPU adapter, then a WebGL2 context.
+    // With neither, iced draws with tiny-skia and the app shows a notice.
+    // `?renderer=webgl` or `?renderer=cpu` forces a tier.
+    async function renderer() {
+      const forced = new URLSearchParams(location.search).get("renderer");
+      if (forced === "cpu") return "cpu";
+      // Hidden from wgpu too, so it takes the same path as a browser without WebGPU.
+      if (forced === "webgl") Object.defineProperty(navigator, "gpu", { value: undefined });
       try {
-        return (await navigator.gpu.requestAdapter()) !== null;
-      } catch {
-        return false;
-      }
+        if (navigator.gpu && await navigator.gpu.requestAdapter()) return "webgpu";
+      } catch {}
+      const gl = document.createElement("canvas").getContext("webgl2", { antialias: false });
+      gl?.getExtension("WEBGL_lose_context")?.loseContext();
+      return gl ? "webgl" : "cpu";
     }
 
     try {
-      const [{ default: start }, module_or_path, gpu] = await Promise.all([
-        import("/BROWSER_MODULE"), download(), webgpu(),
+      const [{ default: start }, module_or_path, tier] = await Promise.all([
+        import("/BROWSER_MODULE"), download(), renderer(),
       ]);
-      globalThis.icedcnWebgpu = gpu;
+      globalThis.icedcnRenderer = tier;
       await start({ module_or_path });
       splash.setAttribute("aria-hidden", "true");
     } catch (error) {

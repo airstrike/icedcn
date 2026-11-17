@@ -1,0 +1,166 @@
+--- a/src/window/compositor.rs
++++ b/src/window/compositor.rs
+@@ -53,35 +53,90 @@
+         compatible_window: impl compositor::Window,
+         shell: Shell,
+     ) -> Result<Self, Error> {
+-        let instance = wgpu::util::new_instance_with_webgpu_detection(wgpu::InstanceDescriptor {
+-            backends: settings.backends,
+-            flags: if cfg!(feature = "strict-assertions") {
+-                wgpu::InstanceFlags::debugging()
+-            } else {
+-                wgpu::InstanceFlags::empty()
+-            },
+-            ..wgpu::InstanceDescriptor::new_with_display_handle(Box::new(display))
+-        })
+-        .await;
++        // A failed attempt must leave the application's canvas free for the
++        // CPU renderer's 2D context. A WebGPU adapter works with any canvas,
++        // so it is probed on a spare one. A WebGL adapter is bound to the
++        // canvas its context came from, so WebGL is set up on a spare canvas
++        // first and, once that works, again on the application's.
++        let flags = if cfg!(feature = "strict-assertions") {
++            wgpu::InstanceFlags::debugging()
++        } else {
++            wgpu::InstanceFlags::empty()
++        };
+ 
+         log::info!("{settings:#?}");
+ 
+-        #[cfg(not(target_arch = "wasm32"))]
+-        if log::max_level() >= log::LevelFilter::Info {
+-            let available_adapters: Vec<_> = instance
+-                .enumerate_adapters(settings.backends)
+-                .await
+-                .iter()
+-                .map(wgpu::Adapter::get_info)
+-                .collect();
+-            log::info!("Available adapters: {available_adapters:#?}");
++        let mut error = Error::NoAdapterFound(format!("{:?}", settings.backends));
++
++        if settings.backends.contains(wgpu::Backends::BROWSER_WEBGPU)
++            && wgpu::util::is_browser_webgpu_supported().await
++        {
++            let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
++                backends: wgpu::Backends::BROWSER_WEBGPU,
++                flags,
++                ..wgpu::InstanceDescriptor::new_without_display_handle()
++            });
++
++            match Self::connect(&instance, &settings, wgpu::SurfaceTarget::Canvas(spare()?)).await
++            {
++                Ok(parts) => return Ok(Self::finish(instance, parts, settings, shell)),
++                Err(webgpu) => {
++                    log::warn!("WebGPU failed: {webgpu}");
++                    error = webgpu;
++                }
++            }
+         }
+ 
+-        #[allow(unsafe_code)]
+-        let compatible_surface = instance
+-            .create_surface(wgpu::SurfaceTarget::Window(Box::new(compatible_window)))
+-            .ok();
++        if !settings.backends.contains(wgpu::Backends::GL) {
++            return Err(error);
++        }
+ 
++        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
++            backends: wgpu::Backends::GL,
++            flags,
++            ..wgpu::InstanceDescriptor::new_with_display_handle(Box::new(display))
++        });
++
++        let probe = Self::connect(&instance, &settings, wgpu::SurfaceTarget::Canvas(spare()?))
++            .await
++            .inspect_err(|webgl| log::warn!("WebGL failed: {webgl}"))?;
++        drop(probe);
++
++        let parts = Self::connect(
++            &instance,
++            &settings,
++            wgpu::SurfaceTarget::Window(Box::new(compatible_window)),
++        )
++        .await?;
++
++        Ok(Self::finish(instance, parts, settings, shell))
++    }
++
++    fn finish(
++        instance: wgpu::Instance,
++        (adapter, format, alpha_mode, device, queue): Parts,
++        settings: Settings,
++        shell: Shell,
++    ) -> Self {
++        let engine = Engine::new(&adapter, device, queue, format, settings.antialiasing, shell);
++
++        Compositor {
++            instance,
++            adapter,
++            format,
++            alpha_mode,
++            engine,
++            settings,
++        }
++    }
++
++    async fn connect(
++        instance: &wgpu::Instance,
++        settings: &Settings,
++        target: wgpu::SurfaceTarget<'static>,
++    ) -> Result<Parts, Error> {
++        let compatible_surface = instance.create_surface(target).ok();
++
+         let power_preference = match settings.power_preference {
+             backend::PowerPreference::None => wgpu::PowerPreference::None,
+             backend::PowerPreference::LowPower => wgpu::PowerPreference::LowPower,
+@@ -188,23 +243,7 @@
+ 
+             match result {
+                 Ok((device, queue)) => {
+-                    let engine = Engine::new(
+-                        &adapter,
+-                        device,
+-                        queue,
+-                        format,
+-                        settings.antialiasing,
+-                        shell,
+-                    );
+-
+-                    return Ok(Compositor {
+-                        instance,
+-                        adapter,
+-                        format,
+-                        alpha_mode,
+-                        engine,
+-                        settings,
+-                    });
++                    return Ok((adapter, format, alpha_mode, device, queue));
+                 }
+                 Err(error) => {
+                     errors.push((required_limits, error));
+@@ -216,6 +255,24 @@
+     }
+ }
+ 
++type Parts = (
++    wgpu::Adapter,
++    wgpu::TextureFormat,
++    wgpu::CompositeAlphaMode,
++    wgpu::Device,
++    wgpu::Queue,
++);
++
++fn spare() -> Result<wgpu::web_sys::HtmlCanvasElement, Error> {
++    use wgpu::web_sys::wasm_bindgen::JsCast;
++
++    wgpu::web_sys::window()
++        .and_then(|window| window.document())
++        .and_then(|document| document.create_element("canvas").ok())
++        .and_then(|element| element.dyn_into().ok())
++        .ok_or(Error::IncompatibleSurface)
++}
++
+ /// Creates a [`Compositor`] with the given [`Settings`] and window.
+ pub async fn new(
+     settings: Settings,

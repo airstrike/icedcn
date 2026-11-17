@@ -11,6 +11,8 @@ uv run --with pillow==12.0.0 python scripts/build-browser-web.py
 python3 -m http.server --directory target/browser-web 8080
 ```
 
+The page draws with WebGPU, then WebGL2, then the CPU. Add `?renderer=webgl` or `?renderer=cpu` to the URL to force a tier.
+
 Set WASM_BINDGEN to select a specific CLI executable. CC_wasm32_unknown_unknown can select a WebAssembly-capable Clang if the system default lacks that target.
 
 To deploy the generated assets to icedcn.airstrike.fyi from an authenticated Cloudflare account, run

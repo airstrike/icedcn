@@ -29,6 +29,8 @@ tokio = { version = "1", features = ["fs"] }
 # The playground's rawr engine seeds its hash maps from getrandom, which
 # takes the page's crypto in a browser.
 getrandom = { version = "0.3", features = ["wasm_js"] }
+# WebGL2 is the GPU fallback for browsers without WebGPU.
+iced = { workspace = true, features = ["webgl"] }
 js-sys = "0.3"
 tree-sitter.workspace = true
 wasmtimer = "0.4"
