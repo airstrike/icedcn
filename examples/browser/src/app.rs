@@ -1,3 +1,4 @@
+mod fade;
 mod header;
 mod home;
 mod menu;
@@ -14,13 +15,13 @@ use iced::Widget;
 use iced::font::set_defaults;
 use iced::mouse::Interaction;
 use iced::theme::Mode;
-use iced::widget::{column, operation, row, space, stack};
+use iced::widget::{column, operation, responsive, row, space, stack};
 use iced::{clipboard, system, window};
 use icedcn::widget::scrollable;
 use route::Route;
 use std::time::Duration;
 
-use iced::{Center, Fill, Font, Pixels, Subscription, Task};
+use iced::{Fill, Font, Pixels, Shrink, Subscription, Task};
 use icedcn::theme::tweak::Bg;
 use icedcn::theme::tweak::token::Token;
 use icedcn::widget::container;
@@ -674,18 +675,35 @@ impl App {
         self.font_list = names;
     }
 
+    /// The docs sidebar: `--sidebar-width` (288px) inside the window's `px-2`,
+    /// `top-[calc(var(--header-height)+0.6rem)]` and `h-[calc(100svh-10rem)]`.
     fn sidebar(&self) -> iced::Element<'_, Message, Theme> {
-        let sidebar_header = container(
-            text::xs("Components")
-                .selectable(false)
-                .weight(Weight::Medium)
-                .style(theme::text::Muted),
-        )
-        .height(32)
-        .padding([0, 8])
-        .align_y(Center);
+        // `SidebarGroupLabel` is `h-8 px-2`; the menu button's 1px inset below
+        // it supplies the label's last pixel.
+        let label = |title: &'static str| {
+            container(
+                text::xs(title)
+                    .selectable(false)
+                    .weight(Weight::Medium)
+                    .style(theme::text::Muted),
+            )
+            .height(31)
+            .padding(iced::Padding::ZERO.top(8).right(8).left(8))
+        };
 
-        let sidebar_items = column(
+        let current_slug = page::slug(self.pages[self.current_page].meta().title);
+        // `gap-1` between the sections' 30px items, `gap-0.5` between the components'.
+        let sections = column(header::GUIDES.iter().map(|&(label, url)| {
+            Element::from(
+                sidebar::menu_button(label)
+                    .active(url.rsplit('/').next() == Some(current_slug.as_str()))
+                    .size(MenuButtonSize::Docs)
+                    .inset(1)
+                    .on_press(Message::OpenUrl(url)),
+            )
+        }))
+        .spacing(2);
+        let components = column(
             self.pages
                 .iter()
                 .take(self.component_count)
@@ -702,70 +720,26 @@ impl App {
         )
         .width(Fill);
 
-        let current_slug = page::slug(self.pages[self.current_page].meta().title);
-        let sections = column(header::GUIDES.iter().map(|&(label, url)| {
-            Element::from(
-                sidebar::menu_button(label)
-                    .active(url.rsplit('/').next() == Some(current_slug.as_str()))
-                    .size(MenuButtonSize::Docs)
-                    .inset(1)
-                    .on_press(Message::OpenUrl(url)),
-            )
-        }));
-        let sections_label = container(
-            text::xs("Sections")
-                .selectable(false)
-                .weight(Weight::Medium)
-                .style(theme::text::Muted),
-        )
-        .height(32)
-        .padding([0, 8])
-        .align_y(Center);
-        let sidebar_scrollable = scrollable::scrollable(
-            column![
-                Element::from(sections_label),
-                sections,
-                space::vertical().height(16),
-                Element::from(sidebar_header),
-                sidebar_items
-            ]
-            .padding(iced::Padding::ZERO.top(48).right(8).bottom(8).left(24))
-            .width(240),
-        )
-        .height(Fill);
+        // `SidebarContent` is `--sidebar-menu-width` (224px) wide with `pl-2.5`.
+        // Its `p-2` groups sit `gap-2` apart, and the first opens with `pt-12`.
+        let menu = column![
+            Element::from(label("Sections")),
+            sections,
+            space::vertical().height(23),
+            Element::from(label("Components")),
+            components,
+        ]
+        .padding(iced::Padding::ZERO.top(48).right(8).bottom(7).left(18))
+        .width(224);
+        // The scroll region reaches the divider, so its scrollbar runs along it.
+        let menu = scrollable::scrollable(menu).width(Fill).height(Fill);
 
-        // Top fade-to-bg overlay (`apps/v4/components/docs-sidebar.tsx`):
-        // `h-8 from-bg via-bg/80 to-bg/50`. Pinned to top via column+space.
-        // Layered over the scrollable so wheel events pass through — the
-        // container has no on_press, so its `mouse_interaction` returns
-        // None and `stack!` levitates the cursor through.
-        let top_fade = container(space::vertical())
-            .width(Fill)
-            .height(32)
-            .style(|t: &Theme| {
-                use iced::gradient::Linear;
-                use std::f32::consts::PI;
-                use theme::container::Style;
-                Style {
-                    background: Some(
-                        Linear::new(PI)
-                            .add_stop(0.0, t.neutral.base.into())
-                            .add_stop(0.5, t.neutral.base.alpha(0.8).into())
-                            .add_stop(1.0, t.neutral.base.alpha(0.5).into())
-                            .into(),
-                    ),
-                    ..Style::default()
-                }
-            });
-        let fade_overlay = column![Element::from(top_fade), space::vertical()]
-            .width(Fill)
-            .height(Fill);
-
-        sidebar::fixed(
-            stack![Element::from(sidebar_scrollable), fade_overlay]
-                .width(240)
-                .height(Fill),
-        )
+        sidebar::fixed(row![
+            fade::fade(menu, |theme| theme.neutral.base.into()),
+            responsive(divider).width(1).boxed(),
+        ])
+        .padding(iced::Padding::ZERO.top(9.6).right(8).bottom(86.4).left(8))
+        .width(296)
         .height(Fill)
         .class(theme::sidebar::Default + Bg(Token::Background))
         .into()
@@ -847,7 +821,13 @@ impl App {
         let current = &*self.pages[self.current_page];
         let meta = current.meta();
         let title = text::h1(meta.title);
-        let description = text::p(meta.description).style(theme::text::Muted);
+        // `sm:text-balance md:max-w-[80%]` of the 640px column.
+        let mut description = text::p(meta.description).style(theme::text::Muted);
+        if width >= 640.0 {
+            description = description.wrapping(text::Wrapping::Balanced);
+        }
+        let description =
+            container(description).max_width(if width >= 768.0 { 512.0 } else { f32::INFINITY });
 
         let total = self.pages.len();
         let curr = self.current_page;
@@ -875,46 +855,46 @@ impl App {
         .align_y(iced::Alignment::Start);
         let page_header = column![title_row, Element::from(description)].spacing(8);
 
-        let (page_body, page_nav) =
-            page::view_with_toc(current, &self.snippet_viewer, width >= 1280.0);
+        // The sidebar shows from `lg`, the table of contents from `xl`.
+        let desktop = width >= 1024.0;
+        let wide = width >= 1280.0;
+        let page_body = page::body(current, &self.snippet_viewer, wide);
 
-        let content = container(
-            column![page_header, Element::from(container(page_body).width(Fill))]
-                .spacing(24)
-                .padding(32)
-                .width(700),
+        // `max-w-160 px-4 py-6 md:px-0 lg:py-8` below `--top-spacing` (16px at `lg`).
+        let gutter = if width >= 768.0 { 0.0 } else { 16.0 };
+        let (top, bottom) = if desktop { (48.0, 32.0) } else { (24.0, 24.0) };
+        let article = container(
+            column![page_header, Element::from(container(page_body).width(Fill))].spacing(24),
         )
-        .center_x(Fill);
-
+        .padding(iced::Padding {
+            top,
+            right: gutter,
+            bottom,
+            left: gutter,
+        })
+        .width(Fill)
+        .max_width(640);
+        // The column scrolls to the window's edge, like the page, and keeps the
+        // `px-2` gutter and the table of contents' `--sidebar-width` clear.
+        let content = container(article).center_x(Fill).padding(
+            iced::Padding::ZERO
+                .right(if wide { 296.0 } else { 8.0 })
+                .left(if desktop { 0.0 } else { 8.0 }),
+        );
         let main = scrollable::scrollable(content)
             .width(Fill)
             .height(Fill)
             .id(current.scrollable_id());
 
-        let sidebar_divider = rule::vertical(1).style(Box::new(|theme: &Theme| {
-            use iced::gradient::Linear;
-            use std::f32::consts::PI;
-            let border = theme.neutral.border;
-            rule::Style {
-                background: Linear::new(PI)
-                    .add_stop(0.0, iced::color!(0x000000, 0.0))
-                    .add_stop(0.5, border.into())
-                    .add_stop(1.0, iced::color!(0x000000, 0.0))
-                    .into(),
-                ..rule::Style::default()
-            }
-        }) as rule::StyleFn<'_, Theme>);
-
+        let mut docs = stack![Element::from(main)].width(Fill).height(Fill);
+        if wide && page::has_toc(current) {
+            docs = docs.push(responsive(move |area| toc(current, area)).boxed());
+        }
         let mut body = row![].width(Fill).height(Fill);
-        if width >= 1024.0 {
-            body = body.push(self.sidebar()).push(sidebar_divider.into());
+        if desktop {
+            body = body.push(self.sidebar());
         }
-        body = body.push(Element::from(main));
-        if width >= 1280.0
-            && let Some(nav) = page_nav
-        {
-            body = body.push(Element::from(nav));
-        }
+        body = body.push(docs.boxed());
 
         let layout = column![header, body].width(Fill).height(Fill);
 
@@ -922,4 +902,52 @@ impl App {
             .position(toast::Position::TopCenter)
             .into()
     }
+}
+
+/// The sidebar's `w-px` rule, `absolute top-12 right-2 h-full`: it starts 48px
+/// down, and its `transparent, border 10%, border 90%, transparent` gradient
+/// spans the sidebar's full height, so the sidebar clips its last 48px.
+fn divider<'a>(sidebar: iced::Size) -> Element<'a, Message, Theme> {
+    use iced::gradient::Linear;
+    use std::f32::consts::PI;
+    const TOP: f32 = 48.0;
+    let shown = (sidebar.height - TOP) / sidebar.height;
+    if shown.is_nan() || shown <= 0.0 {
+        return space().boxed();
+    }
+    let rule = rule::vertical(1).style(Box::new(move |theme: &Theme| {
+        let border: iced::Color = theme.neutral.border.into();
+        let background = [0.0, 0.1, 0.9]
+            .into_iter()
+            .filter(|&at| at < shown)
+            .chain([shown])
+            .fold(Linear::new(PI), |gradient, at: f32| {
+                let alpha = (at / 0.1).min((1.0 - at) / 0.1).clamp(0.0, 1.0);
+                gradient.add_stop(at / shown, border.scale_alpha(alpha))
+            });
+        rule::Style {
+            background: background.into(),
+            ..rule::Style::default()
+        }
+    }) as rule::StyleFn<'_, Theme>);
+    container(Element::from(rule))
+        .padding(iced::Padding::ZERO.top(TOP))
+        .height(Fill)
+        .into()
+}
+
+/// The "On This Page" column at the docs column's right edge: `sticky
+/// top-[calc(var(--header-height)+1px)] h-[90svh] w-(--sidebar-width) gap-4
+/// pb-8` after `--top-spacing`, with the links in a `px-8 scroll-fade
+/// scrollbar-none` region. `area` is the window below the 64px header.
+fn toc<'a>(page: &'a dyn page::Page, area: iced::Size) -> Element<'a, Message, Theme> {
+    let links = scrollable::scrollable(container(page::toc(page)).width(Fill).padding([0, 32]))
+        .width(Fill)
+        .height(Shrink)
+        .class(theme::scrollable::Hidden);
+    let column = container(fade::fade(links, |theme| theme.neutral.base.into()))
+        .padding(iced::Padding::ZERO.top(33).bottom(32))
+        .width(288)
+        .height(1.0 + 0.9 * (area.height + 64.0));
+    row![space::horizontal(), Element::from(column), space().width(8)].boxed()
 }

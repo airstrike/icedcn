@@ -19,8 +19,8 @@ mod bundled {
 use iced::Alignment::*;
 use iced::border;
 use iced::mouse::Interaction;
-use iced::widget::{Id, column, lazy, scrollable, stack, themer};
-use iced::{Background, Fill, Font, Pixels, Subscription, Task};
+use iced::widget::{Id, column, lazy, stack, themer};
+use iced::{Background, Fill, Font, Pixels, Shrink, Subscription, Task};
 
 use icedcn::FontFamily;
 use icedcn::Size::{Lg, Sm};
@@ -31,7 +31,8 @@ use icedcn::theme::container::{
 use icedcn::theme::tweak::Opaque;
 use icedcn::widget::markdown;
 use icedcn::widget::markdown::widget::Highlight;
-use icedcn::widget::{button, rule, text};
+use icedcn::widget::sidebar::MenuButtonSize;
+use icedcn::widget::{Text, button, rule, text};
 use icedcn::widget::{container, toast};
 use icedcn::{Slot, Theme, Weight, radius, theme};
 
@@ -323,17 +324,22 @@ pub fn view<'a>(
     page: &'a dyn Page,
     viewer: &'a SnippetViewer,
 ) -> (Slot<'a, super::Message>, Option<Slot<'a, super::Message>>) {
-    view_with_toc(page, viewer, true)
+    (body(page, viewer, true), has_toc(page).then(|| toc(page)))
 }
 
-pub fn view_with_toc<'a>(
+/// Render a page's body. `show_toc` reports the visible sections to the
+/// "On This Page" nav.
+pub fn body<'a>(
     page: &'a dyn Page,
     viewer: &'a SnippetViewer,
     show_toc: bool,
-) -> (Slot<'a, super::Message>, Option<Slot<'a, super::Message>>) {
-    let body = render_blocks(page, viewer, show_toc);
-    let nav = (show_toc && sections(page).nth(1).is_some()).then(|| toc(page));
-    (body, nav)
+) -> Slot<'a, super::Message> {
+    render_blocks(page, viewer, show_toc)
+}
+
+/// Whether the page has enough sections for an "On This Page" nav.
+pub fn has_toc(page: &dyn Page) -> bool {
+    sections(page).nth(1).is_some()
 }
 
 /// Heading widget for a TOC-bearing section. Depth 0 → `h2`, depth >= 1
@@ -648,7 +654,7 @@ fn code_panel_with_border<'a>(
 ///
 /// Visible headings brighten toward the center of the viewport. The active
 /// heading uses the foreground color and medium weight.
-fn toc<'a>(page: &'a dyn Page) -> Slot<'a, super::Message> {
+pub fn toc<'a>(page: &'a dyn Page) -> Slot<'a, super::Message> {
     /// Keep off-screen links legible against both documentation surfaces.
     const TOC_ALPHA_FLOOR: f32 = 0.9;
 
@@ -700,7 +706,11 @@ fn toc<'a>(page: &'a dyn Page) -> Slot<'a, super::Message> {
     use iced_widget::button::StyleFn;
     use theme::button::{Status, Style};
     let nav_items = entries.into_iter().map(|(i, depth, title)| {
-        let indent = 8.0 + f32::from(depth) * 12.0;
+        let indent = match depth {
+            0 => 0.0,
+            1 => 16.0,
+            _ => 24.0,
+        };
         let is_active = Some(i) == active_index;
         let alpha = alpha_for(i);
         let toc_style: StyleFn<'_, Theme> = Box::new(move |theme, status| {
@@ -728,34 +738,37 @@ fn toc<'a>(page: &'a dyn Page) -> Slot<'a, super::Message> {
         } else {
             Weight::Normal
         };
-        let entry: Slot<'_, super::Message> = button(text(title).width(Fill))
-            .size(Sm)
+        let entry: Slot<'_, super::Message> = button(Text::new(title).width(Fill))
+            .size(MenuButtonSize::Docs.text())
+            .height(Shrink)
+            .padding(0)
             .width(Fill)
             .weight(weight)
             .translate(false)
             .style(toc_style)
-            .inset([1, 0])
             .interaction(Interaction::Pointer)
             .on_press(super::Message::Page(pi, Message::ScrollTo(i)))
             .into();
         let row: iced::Element<'_, super::Message, Theme> = container(entry)
             .width(Fill)
-            .padding([0.0, 8.0, 0.0, indent])
+            .padding(iced::Padding::ZERO.left(indent))
             .into();
         row
     });
 
-    let header = container(text::muted("On This Page").selectable(false)).padding([0, 8]);
-
-    let items = scrollable(column(nav_items).width(Fill).spacing(2))
-        .width(Fill)
-        .height(Fill);
+    // `flex flex-col gap-2 p-4 pt-0`, headed by an `h-6 text-xs font-medium` label.
+    let header = container(
+        text::xs("On This Page")
+            .selectable(false)
+            .weight(Weight::Medium)
+            .style(theme::text::Muted),
+    )
+    .height(24);
     column![Element::from(header)]
-        .push(items.boxed())
-        .spacing(16)
-        .padding([24, 8])
-        .width(220)
-        .height(Fill)
+        .extend(nav_items)
+        .spacing(8)
+        .padding(iced::Padding::ZERO.right(16).bottom(16).left(16))
+        .width(Fill)
         .into()
 }
 
