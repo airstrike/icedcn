@@ -41,23 +41,10 @@ pub use icedcn_core::theme::toggle::{Default, Outline};
 /// - `toggle!(content)` defers to [`toggle()`].
 /// - `toggle![child1, child2, ...]` wraps the children in a row with the
 ///   nova `gap-1` (4px).
-/// - `toggle![italic, "Italic"]` reads a bare leading identifier as
-///   `icon::italic()`, as `button!` does.
 #[macro_export]
 macro_rules! toggle {
     ($single:expr $(,)?) => {
         $crate::toggle::toggle($single)
-    };
-    ($first:ident, $($rest:expr),+ $(,)?) => {
-        $crate::toggle::toggle(
-            $crate::compose::Slot::new(
-                $crate::row::Row::with_children([
-                    Into::<$crate::compose::Slot<'_, _>>::into(icon::$first()),
-                    $(Into::<$crate::compose::Slot<'_, _>>::into($rest)),+
-                ])
-                .spacing(4)
-            )
-        )
     };
     ($($child:expr),+ $(,)?) => {
         $crate::toggle::toggle(

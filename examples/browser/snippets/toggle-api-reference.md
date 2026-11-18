@@ -2,7 +2,7 @@
 
 ### `toggle()`
 
-`toggle(content)` creates an off, uncontrolled toggle. `toggle![icon, "Label"]` lays several children out with a 4px gap.
+`toggle(content)` creates an off, uncontrolled toggle. `toggle![icon::italic(), "Label"]` lays several children out with a 4px gap.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |

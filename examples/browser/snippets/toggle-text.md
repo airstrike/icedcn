@@ -1,5 +1,5 @@
 ```rust
 use icedcn::widget::toggle;
 
-toggle![italic, "Italic"]
+toggle![icon::italic(), "Italic"]
 ```

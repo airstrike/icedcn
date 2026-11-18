@@ -1,6 +1,6 @@
 ### Button
 
-`button(content)` creates a Button from any `impl Into<Slot>`. `button![icon, "Label"]` composes inline children with the size variant's gap. Application messages belong in `on_press`; without a handler, the button stays enabled and can serve as an owner's trigger.
+`button(content)` creates a Button from any `impl Into<Slot>`. `button![icon::plus(), "Label"]` composes inline children with the size variant's gap. Application messages belong in `on_press`; without a handler, the button stays enabled and can serve as an owner's trigger.
 
 | Builder | Type | Default | Behavior |
 | --- | --- | --- | --- |

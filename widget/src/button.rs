@@ -38,11 +38,9 @@ pub use icedcn_core::theme::button::{
 /// The variant is a style, set after the macro:
 ///
 /// ```ignore
-/// button!["Submit"]
 /// button![icon::mail(), "Login with Email"]
 /// button![icon::git_branch(), "Branch"].style(button::Outline)
-/// button!("Delete").style(button::Destructive)
-/// button![arrow_up, "Submit"]                  // leading-ident sugar
+/// button!["Accept", kbd("⏎")].style(button::Outline)
 /// ```
 #[macro_export]
 macro_rules! button {
@@ -50,26 +48,15 @@ macro_rules! button {
     ($single:expr $(,)?) => {
         $crate::button::button($single)
     };
-    // Leading-ident icon sugar: the first arg as a bare ident is rewritten
-    // to `icon::$first()`. Requires `use crate::icon;` (or equivalent path
-    // to an `icon` module exposing `fn $first() -> Text`) in scope at the
-    // call site. Macro hygiene: `icon` here resolves at the call site, not
-    // the def site.
-    //
-    // `button![arrow_up, "Submit"]` => button(row![icon::arrow_up(), "Submit"])
-    ($first:ident, $($rest:expr),+ $(,)?) => {
-        $crate::button::button(icon::$first())$(.push($rest))+
-    };
     ($first:expr, $($rest:expr),+ $(,)?) => {
         $crate::button::button($first)$(.push($rest))+
     };
-
 }
 
 #[cfg(test)]
 mod macro_smoke {
-    //! Compile-only smoke tests: invoke the macro single-arg, multi-arg and
-    //! with the leading-ident sugar, and verify the result is a `Button`.
+    //! Compile-only smoke tests: invoke the macro single-arg and multi-arg,
+    //! and verify the result is a `Button`.
 
     use crate::button::{self, Button};
 
@@ -83,23 +70,10 @@ mod macro_smoke {
         let _: Button<'_, Msg> = crate::button!("d").style(button::Destructive);
     }
 
-    /// Leading-ident sugar: `button![my_icon, "Submit"]` rewrites the bare
-    /// ident to `icon::my_icon()` at the call site, then prepends it to the
-    /// row of remaining children.
+    /// A leading identifier is an ordinary expression: the local itself.
     #[test]
-    fn leading_ident_sugar_arm() {
-        // Local `icon` module — the sugar arm expands to `icon::$first()`
-        // resolved at the call site, so this module name is load-bearing.
-        mod icon {
-            pub fn my_icon<'a, T>() -> iced_widget::Text<'a, T>
-            where
-                T: iced_widget::text::Catalog,
-            {
-                iced_widget::Text::new("")
-            }
-        }
-
-        let _: Button<'_, Msg> = crate::button![my_icon, "Submit"];
-        let _: Button<'_, Msg> = crate::button![my_icon, "Click"].style(button::Ghost);
+    fn leading_ident_is_an_expression() {
+        let label = "Submit";
+        let _: Button<'_, Msg> = crate::button![label, "Now"];
     }
 }

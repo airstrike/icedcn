@@ -13,8 +13,7 @@
 //! badge("Open Link").style(badge::Secondary).on_press(Message::Open)
 //!
 //! // Macro form: single-arg defers to [`badge`]; multi-arg wraps children
-//! // in a `row::Row::with_children([...]).spacing(4)` to land the nova
-//! // `gap-1` (4px) icon-text gap automatically.
+//! // in a row at the nova `gap-1` (4px).
 //! badge!["Verified", icon::badge_check()]
 //! badge!["Verified", icon::badge_check()].style(badge::Secondary)
 //! badge!["Bookmark", icon::bookmark()].style(badge::Outline)
@@ -39,32 +38,13 @@ use iced_widget::Widget;
 /// ```ignore
 /// badge!["Verified", icon::badge_check()]
 /// badge!["Verified", icon::badge_check()].style(badge::Secondary)
-/// badge![spinner(), "Deleting"].style(badge::Destructive)
-/// badge![badge_check, "Verified"]                    // leading-ident sugar
+/// badge![spinner(), "Deleting"].icon_start().style(badge::Destructive)
 /// ```
 #[macro_export]
 macro_rules! badge {
     // Single-arg arm
     ($single:expr $(,)?) => {
         $crate::badge::badge($single)
-    };
-    // Leading-ident icon sugar: the first arg as a bare ident is rewritten
-    // to `icon::$first()`. Requires `use crate::icon;` (or equivalent path
-    // to an `icon` module exposing `fn $first() -> Text`) in scope at the
-    // call site. Macro hygiene: `icon` here resolves at the call site, not
-    // the def site, as in `button!`.
-    //
-    // `badge![badge_check, "Verified"]` => badge(row![icon::badge_check(), "Verified"].spacing(4))
-    ($first:ident, $($rest:expr),+ $(,)?) => {
-        $crate::badge::badge(
-            $crate::compose::Slot::new(
-                $crate::row::Row::with_children([
-                    Into::<$crate::compose::Slot<'_, _>>::into(icon::$first()),
-                    $(Into::<$crate::compose::Slot<'_, _>>::into($rest)),+
-                ])
-                .spacing(4)
-            )
-        ).icon_start()
     };
     // Multi-arg arm — wraps children in a row with 4px gap.
     ($($child:expr),+ $(,)?) => {
@@ -220,8 +200,8 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Badge<'a, Message> {
 
 #[cfg(test)]
 mod macro_smoke {
-    //! Compile-only smoke tests: invoke the macro single-arg, multi-arg and
-    //! with the leading-ident sugar, and verify the result is a [`Badge`].
+    //! Compile-only smoke tests: invoke the macro single-arg and multi-arg,
+    //! and verify the result is a [`Badge`].
 
     use crate::badge::{self, Badge};
 
@@ -235,23 +215,10 @@ mod macro_smoke {
         let _: Badge<'_, Msg> = crate::badge!("o").style(badge::Outline);
     }
 
-    /// Leading-ident sugar: `badge![my_icon, "Tag"]` rewrites the bare
-    /// ident to `icon::my_icon()` at the call site, then prepends it to the
-    /// row of remaining children.
+    /// A leading identifier is an ordinary expression: the local itself.
     #[test]
-    fn leading_ident_sugar_arm() {
-        // Local `icon` module — name load-bearing because the sugar arm
-        // expands to `icon::$first()` resolved at the call site.
-        mod icon {
-            pub fn my_icon<'a, T>() -> iced_widget::Text<'a, T>
-            where
-                T: iced_widget::text::Catalog,
-            {
-                iced_widget::Text::new("")
-            }
-        }
-
-        let _: Badge<'_, Msg> = crate::badge![my_icon, "Tag"];
-        let _: Badge<'_, Msg> = crate::badge![my_icon, "Deleting"].style(badge::Destructive);
+    fn leading_ident_is_an_expression() {
+        let label = "Tag";
+        let _: Badge<'_, Msg> = crate::badge![label, "New"];
     }
 }

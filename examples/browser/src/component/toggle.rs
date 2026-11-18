@@ -131,14 +131,14 @@ impl page::Page for TogglePage {
             "demo" => component(Bookmark).boxed(),
 
             "outline" => row![
-                toggle![italic, "Italic"].style(toggle::Outline),
-                toggle![bold, "Bold"].style(toggle::Outline),
+                toggle![icon::italic(), "Italic"].style(toggle::Outline),
+                toggle![icon::bold(), "Bold"].style(toggle::Outline),
             ]
             .spacing(8)
             .align_y(iced::Center)
             .into(),
 
-            "text" => toggle![italic, "Italic"].into(),
+            "text" => toggle![icon::italic(), "Italic"].into(),
 
             "sizes" => row![
                 toggle("Small").size(Size::Sm).style(toggle::Outline),
