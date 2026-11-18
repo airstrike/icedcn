@@ -7,8 +7,9 @@
 //! actual default lives in `super::element` (impl `Catalog` for
 //! `icedcn_core::Theme`).
 //!
-//! No additional builder fields beyond stock iced — only the [`Catalog`]
-//! plumbing is local. The cross-crate flow:
+//! Beyond stock iced it adds [`Visibility`] and a hide delay, after Radix
+//! ScrollArea's `type` and `scrollHideDelay`, and fades idle scrollbars out.
+//! The cross-crate flow:
 //!
 //! 1. User calls `.style(...)` on the wrapper in `widget/src/scrollable.rs`.
 //! 2. Wrapper stores an `scrollable::StyleFn` so existing
@@ -43,6 +44,10 @@ use iced_widget::container;
 
 mod fling;
 mod velocity;
+mod visibility;
+
+use visibility::Fade;
+pub use visibility::{FADE, HIDE_DELAY, Visibility};
 
 use crate::core::Em;
 use crate::core::alignment;
@@ -125,6 +130,8 @@ pub struct Scrollable<
     focus_group: bool,
     smooth_scroll: bool,
     click_to_scroll: bool,
+    visibility: Visibility,
+    hide_delay: Duration,
     content: W,
     on_scroll: Option<Box<dyn Fn(Scroll) -> Action<Message> + 'a>>,
     class: Theme::Class<'a>,
@@ -150,6 +157,8 @@ where
             focus_group: false,
             smooth_scroll: true,
             click_to_scroll: false,
+            visibility: Visibility::Always,
+            hide_delay: HIDE_DELAY,
             content,
             on_scroll: None,
             class: Theme::default(),
@@ -336,6 +345,19 @@ where
         self
     }
 
+    /// Sets when the scrollbars are shown. [`Visibility::Always`] by default.
+    pub fn visibility(mut self, visibility: impl Into<Visibility>) -> Self {
+        self.visibility = visibility.into();
+        self
+    }
+
+    /// Sets how long an idle scrollbar stays before it fades out, in [`Visibility::Hover`]
+    /// and [`Visibility::Scroll`]. [`HIDE_DELAY`] by default.
+    pub fn hide_delay(mut self, delay: impl Into<Duration>) -> Self {
+        self.hide_delay = delay.into();
+        self
+    }
+
     /// Sets the style of this [`Scrollable`].
     #[must_use]
     pub fn style(mut self, style: impl Fn(&Theme, Status) -> Style + 'a) -> Self
@@ -415,7 +437,6 @@ impl Default for Direction {
 /// A scrollbar within a [`Scrollable`].
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Scrollbar {
-    auto_hide: bool,
     width: f32,
     margin: f32,
     scroller_width: f32,
@@ -427,7 +448,6 @@ pub struct Scrollbar {
 impl Default for Scrollbar {
     fn default() -> Self {
         Self {
-            auto_hide: false,
             width: 10.0,
             margin: 0.0,
             scroller_width: 10.0,
@@ -448,13 +468,6 @@ impl Scrollbar {
     /// scroller.
     pub fn hidden() -> Self {
         Self::default().width(0).scroller_width(0)
-    }
-
-    /// Show this overlay only while scrolling, pointing at its rail, or dragging it.
-    /// Embedded scrollbars remain visible.
-    pub fn auto_hide(mut self, enabled: bool) -> Self {
-        self.auto_hide = enabled;
-        self
     }
 
     /// Sets the scrollbar width of the [`Scrollbar`] .
@@ -745,7 +758,6 @@ where
         let scrollbars = Scrollbars::new(state.last_translation, self.direction, bounds, content);
         let mouse_over_scrollbar = scrollbars.is_mouse_over(cursor);
         let last_offsets = (state.offset_x, state.offset_y);
-        let previous_translation = state.last_translation;
 
         if self.focus_group
             && state.focused
@@ -945,19 +957,38 @@ where
         };
 
         if let Event::Window(window::Event::RedrawRequested(now)) = event {
-            let transient = |bar: &Scrollbar| bar.auto_hide && bar.spacing.is_none();
-            if self.direction.horizontal().is_some_and(transient)
-                || self.direction.vertical().is_some_and(transient)
-            {
-                if previous_translation != state.last_translation {
-                    state.indicator_until = Some(*now + Duration::from_millis(600));
-                }
-                if let Some(until) = state.indicator_until {
-                    if *now < until {
-                        shell.request_redraw_at(until);
-                    } else {
-                        state.indicator_until = None;
+            if self.visibility.hides() {
+                // The first frame settles the initial offset; it is not a scroll.
+                let moved = state
+                    .faded_translation
+                    .replace(state.last_translation)
+                    .map_or(Vector::ZERO, |faded| state.last_translation - faded);
+                let dragged = state.interaction.axis();
+                let over = cursor_over_scrollable.is_some();
+                let mut next = None;
+                for (axis, scrollbar, fade, moved) in [
+                    (Axis::X, &scrollbars.x, &mut state.fade_x, moved.x != 0.0),
+                    (Axis::Y, &scrollbars.y, &mut state.fade_y, moved.y != 0.0),
+                ] {
+                    if scrollbar.is_none() {
+                        continue;
                     }
+                    // A hidden scrollbar still takes presses here, so pointing at it shows it
+                    // in either mode; Radix unmounts it instead.
+                    let held = mouse_over_scrollbar == Some(axis)
+                        || match self.visibility {
+                            Visibility::Hover => over || dragged.is_some(),
+                            _ => dragged == Some(axis),
+                        };
+                    let scrolled = self.visibility == Visibility::Scroll && moved;
+                    if let Some(at) = fade.advance(*now, held, scrolled, self.hide_delay) {
+                        next = Some(next.map_or(at, |next: Instant| next.min(at)));
+                    }
+                }
+                match next {
+                    Some(at) if at <= *now => shell.request_redraw(),
+                    Some(at) => shell.request_redraw_at(at),
+                    None => {}
                 }
             }
             state.last_status = Some(status);
@@ -1077,23 +1108,30 @@ where
                 renderer.start_layer(viewport);
             }
 
-            let visible = |axis, bar: Option<&Scrollbar>| {
-                bar.is_some_and(|bar| !bar.auto_hide || bar.spacing.is_some())
-                    || state.indicator_until.is_some()
-                    || mouse_over_scrollbar == Some(axis)
-                    || state.interaction.axis() == Some(axis)
+            let alpha = |fade: &Fade, scrollbar: &internals::Scrollbar| {
+                if self.visibility.hides() && scrollbar.floating {
+                    fade.alpha()
+                } else {
+                    1.0
+                }
             };
 
-            if let Some(scrollbar) = scrollbars.y
-                && visible(Axis::Y, self.direction.vertical())
-            {
-                draw_scrollbar(renderer, style.vertical_rail, &scrollbar);
+            if let Some(scrollbar) = scrollbars.y {
+                let alpha = alpha(&state.fade_y, &scrollbar);
+                if alpha > 0.0 {
+                    draw_scrollbar(renderer, style.vertical_rail.scale_alpha(alpha), &scrollbar);
+                }
             }
 
-            if let Some(scrollbar) = scrollbars.x
-                && visible(Axis::X, self.direction.horizontal())
-            {
-                draw_scrollbar(renderer, style.horizontal_rail, &scrollbar);
+            if let Some(scrollbar) = scrollbars.x {
+                let alpha = alpha(&state.fade_x, &scrollbar);
+                if alpha > 0.0 {
+                    draw_scrollbar(
+                        renderer,
+                        style.horizontal_rail.scale_alpha(alpha),
+                        &scrollbar,
+                    );
+                }
             }
 
             if let (Some(x), Some(y)) = (scrollbars.x, scrollbars.y) {
@@ -1450,7 +1488,9 @@ struct State {
     interaction: Interaction,
     keyboard_modifiers: keyboard::Modifiers,
     last_notified: Option<Viewport>,
-    indicator_until: Option<Instant>,
+    fade_x: Fade,
+    fade_y: Fade,
+    faded_translation: Option<Vector>,
     is_scrollbar_visible: bool,
     last_status: Option<Status>,
     last_id: Option<widget::Id>,
@@ -1711,7 +1751,9 @@ impl Default for State {
             interaction: Interaction::None,
             keyboard_modifiers: keyboard::Modifiers::default(),
             last_notified: None,
-            indicator_until: None,
+            fade_x: Fade::default(),
+            fade_y: Fade::default(),
+            faded_translation: None,
             is_scrollbar_visible: true,
             last_status: None,
             last_id: None,
@@ -4047,6 +4089,27 @@ pub struct Rail {
     pub border: Border,
     /// The appearance of the [`Scroller`] of a scrollbar.
     pub scroller: Scroller,
+}
+
+impl Rail {
+    /// Fade the rail and its scroller by `factor`, as a hiding scrollbar does.
+    #[must_use]
+    pub fn scale_alpha(self, factor: f32) -> Self {
+        let fade = |border: Border| Border {
+            color: border.color.scale_alpha(factor),
+            ..border
+        };
+        Rail {
+            background: self
+                .background
+                .map(|background| background.scale_alpha(factor)),
+            border: fade(self.border),
+            scroller: Scroller {
+                background: self.scroller.background.scale_alpha(factor),
+                border: fade(self.scroller.border),
+            },
+        }
+    }
 }
 
 /// The appearance of the scroller of a scrollable.

@@ -731,8 +731,12 @@ impl App {
         ]
         .padding(iced::Padding::ZERO.top(48).right(8).bottom(7).left(18))
         .width(224);
-        // The scroll region reaches the divider, so its scrollbar runs along it.
-        let menu = scrollable::scrollable(menu).width(Fill).height(Fill);
+        // The scroll region reaches the divider, so its scrollbar runs along it. It shows
+        // while the menu scrolls and fades out once idle, like an overlay scrollbar.
+        let menu = scrollable::scrollable(menu)
+            .width(Fill)
+            .height(Fill)
+            .visibility(scrollable::Visibility::Scroll);
 
         sidebar::fixed(row![
             fade::fade(menu, |theme| theme.neutral.base.into()),
@@ -939,12 +943,13 @@ fn divider<'a>(sidebar: iced::Size) -> Element<'a, Message, Theme> {
 /// The "On This Page" column at the docs column's right edge: `sticky
 /// top-[calc(var(--header-height)+1px)] h-[90svh] w-(--sidebar-width) gap-4
 /// pb-8` after `--top-spacing`, with the links in a `px-8 scroll-fade
-/// scrollbar-none` region. `area` is the window below the 64px header.
+/// scrollbar-none` region. Its thin scrollbar shows only while it scrolls, the
+/// sidebar's way. `area` is the window below the 64px header.
 fn toc<'a>(page: &'a dyn page::Page, area: iced::Size) -> Element<'a, Message, Theme> {
     let links = scrollable::scrollable(container(page::toc(page)).width(Fill).padding([0, 32]))
         .width(Fill)
         .height(Shrink)
-        .class(theme::scrollable::Hidden);
+        .visibility(scrollable::Visibility::Scroll);
     let column = container(fade::fade(links, |theme| theme.neutral.base.into()))
         .padding(iced::Padding::ZERO.top(33).bottom(32))
         .width(288)

@@ -11,7 +11,7 @@ use icedcn_core::theme::container::Style;
 use icedcn_core::{Border, Theme};
 
 use crate::compose::{Compose, Inherited, Slot};
-use crate::scrollable::{Direction, scrollbar};
+use crate::scrollable::{Direction, Visibility, scrollbar};
 use crate::{Size, Weight, column, container, rule, scrollable};
 
 /// Root table slot.
@@ -257,7 +257,8 @@ impl<'a, Message: 'a> Compose<Message> for Table<'a, Message> {
         let Table { children, width } = *self;
 
         scrollable(column(children).spacing(0).width(Fill))
-            .direction(Direction::Horizontal(scrollbar().auto_hide(true)))
+            .direction(Direction::Horizontal(scrollbar()))
+            .visibility(Visibility::Scroll)
             .focus_group()
             .width(width)
             .into()

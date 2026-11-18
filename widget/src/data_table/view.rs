@@ -1,7 +1,7 @@
 use super::{Event, Table, Value};
 use crate::compose::Slot;
 use crate::icon::Icon;
-use crate::scrollable::{Direction, scrollbar};
+use crate::scrollable::{Direction, Visibility, scrollbar};
 use crate::table::Track;
 use crate::{
     Size, button, checkbox, column, container, dropdown_menu, input, menu, row, scrollable, table,
@@ -161,12 +161,17 @@ impl<'a, T: 'a, K: Ord + Clone + 'static, M: Clone + 'static> Table<'a, T, K, M>
         let grid = table::grid(std::iter::repeat_n(Track::Auto, tracks))
             .header(table::header([table::row(heads)]))
             .body(table::body(rows));
-        let overflow = Direction::Horizontal(scrollbar().auto_hide(true));
-        let body = container(scrollable(grid).direction(overflow).width(Fill))
-            .padding(1)
-            .width(Fill)
-            .clip(true)
-            .style(border);
+        let overflow = Direction::Horizontal(scrollbar());
+        let body = container(
+            scrollable(grid)
+                .direction(overflow)
+                .visibility(Visibility::Scroll)
+                .width(Fill),
+        )
+        .padding(1)
+        .width(Fill)
+        .clip(true)
+        .style(border);
         let mut footer = row![];
         if self.selectable {
             footer = footer.push(

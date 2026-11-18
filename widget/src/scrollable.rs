@@ -3,12 +3,13 @@ mod element;
 pub mod widget;
 
 pub use widget::{
-    AbsoluteOffset, Anchor, AutoScroll, Direction, Rail, RelativeOffset, Scrollbar, Scroller,
-    Status, Style, StyleFn, Viewport,
+    AbsoluteOffset, Anchor, AutoScroll, Direction, FADE, HIDE_DELAY, Rail, RelativeOffset,
+    Scrollbar, Scroller, Status, Style, StyleFn, Viewport, Visibility,
 };
 
 use crate::compose::{Compose, Inherited, Slot};
 use iced_core::Length;
+use iced_core::time::Duration;
 use iced_core::widget::Id;
 use iced_widget::Renderer;
 use icedcn_core::Theme;
@@ -51,6 +52,8 @@ pub struct Scrollable<'a, Message> {
     direction: Direction,
     auto_scroll: bool,
     focus_group: bool,
+    visibility: Visibility,
+    hide_delay: Duration,
     on_scroll: Option<Box<dyn Fn(Viewport) -> Message + 'a>>,
     style: Option<iced_widget::scrollable::StyleFn<'static, Theme>>,
 }
@@ -67,6 +70,8 @@ impl<'a, Message: 'a> Scrollable<'a, Message> {
             direction: Direction::Vertical(scrollbar()),
             auto_scroll: false,
             focus_group: false,
+            visibility: Visibility::Always,
+            hide_delay: HIDE_DELAY,
             on_scroll: None,
             style: None,
         }
@@ -128,6 +133,21 @@ impl<'a, Message: 'a> Scrollable<'a, Message> {
             }
             Direction::Both { .. } => {}
         }
+        self
+    }
+
+    /// When the scrollbars are shown, like Radix ScrollArea's `type`. [`Visibility::Always`]
+    /// by default.
+    pub fn visibility(mut self, visibility: impl Into<Visibility>) -> Self {
+        self.visibility = visibility.into();
+        self
+    }
+
+    /// How long an idle scrollbar stays before it fades out in [`Visibility::Hover`] and
+    /// [`Visibility::Scroll`], like Radix's `scrollHideDelay`. [`HIDE_DELAY`] (600ms) by
+    /// default.
+    pub fn hide_delay(mut self, delay: impl Into<Duration>) -> Self {
+        self.hide_delay = delay.into();
         self
     }
 
@@ -220,6 +240,8 @@ impl<'a, Message: 'a> Compose<Message> for Scrollable<'a, Message> {
             .width(self.width)
             .height(self.height)
             .auto_scroll(self.auto_scroll)
+            .visibility(self.visibility)
+            .hide_delay(self.hide_delay)
             .focus_group(self.focus_group);
 
         if let Some(id) = self.id {

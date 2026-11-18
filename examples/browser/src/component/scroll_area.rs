@@ -124,8 +124,8 @@ impl page::Page for ScrollAreaPage {
                         let handle = cache.get_or_init(|| image::Handle::from_bytes(bytes));
                         column![
                             image(handle.clone())
-                                .width(300)
-                                .height(400)
+                                .width(150)
+                                .height(200)
                                 .content_fit(ContentFit::Cover)
                                 .border_radius(6)
                                 .boxed(),
@@ -133,7 +133,7 @@ impl page::Page for ScrollAreaPage {
                                 text::muted("Photo by").size(12.0),
                                 text::xs(artist).semibold()
                             ]
-                            .spacing(4)
+                            .spacing(3)
                         ]
                         .spacing(8)
                         .into()
@@ -143,8 +143,7 @@ impl page::Page for ScrollAreaPage {
                 frame(
                     scroll_area(container(figures).padding(16))
                         .direction(Direction::Horizontal(scroll_area::bar()))
-                        .width(384)
-                        .height(460),
+                        .width(382),
                 )
             }
             .into(),
