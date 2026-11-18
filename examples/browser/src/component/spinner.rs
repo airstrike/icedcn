@@ -136,13 +136,16 @@ impl page::Page for SpinnerPage {
             "button" => column![
                 button![spinner(), "Loading..."]
                     .size(Size::Sm)
+                    .icon_start()
                     .disabled(true),
                 button![spinner(), "Please wait"]
                     .size(Size::Sm)
+                    .icon_start()
                     .style(button::Outline)
                     .disabled(true),
                 button![spinner(), "Processing"]
                     .size(Size::Sm)
+                    .icon_start()
                     .style(button::Secondary)
                     .disabled(true),
             ]
@@ -151,9 +154,13 @@ impl page::Page for SpinnerPage {
             .into(),
 
             "badge" => row![
-                badge![spinner().size(12.0), "Syncing"],
-                badge![spinner().size(12.0), "Updating"].style(badge::Secondary),
-                badge![spinner().size(12.0), "Processing"].style(badge::Outline),
+                badge![spinner().size(12.0), "Syncing"].icon_start(),
+                badge![spinner().size(12.0), "Updating"]
+                    .icon_start()
+                    .style(badge::Secondary),
+                badge![spinner().size(12.0), "Processing"]
+                    .icon_start()
+                    .style(badge::Outline),
             ]
             .spacing(16)
             .align_y(iced::Center)
