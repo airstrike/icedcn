@@ -122,7 +122,7 @@ fn accordion_arrows_skip_disabled_headers_and_activate_the_selected_item() {
 #[test]
 fn accordion_edits_and_input_focus_follow_keys_across_rebuilds() {
     use iced_core::widget::Id;
-    use icedcn_widget::{container, input};
+    use icedcn_widget::{Platform, container, input};
 
     fn entries(keys: &[&'static str]) -> Element<'static, Message, Theme, Renderer> {
         accordion::keyed(keys.iter().copied().map(|key| {
@@ -143,7 +143,11 @@ fn accordion_edits_and_input_focus_follow_keys_across_rebuilds() {
     ui = ui.rebuild(entries(&["b", "c", "a"]));
     ui.typewrite("2");
     ui.click(Id::new("a")).expect("moved editor");
+    // The null renderer places a clicked caret at 0. End moves it on a PC;
+    // on a Mac it only scrolls.
+    Platform::set(Some(Platform::Linux));
     ui.tap_key(Named::End);
+    Platform::set(None);
     ui.typewrite("3");
 
     ui = ui.rebuild(entries(&["c", "b"]));
