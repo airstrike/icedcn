@@ -523,10 +523,7 @@ impl<Message> Calendar<'_, Message> {
                 let mut label = rich_text([span(self.system.number(d))
                     .strikethrough(unavailable && self.strike_unavailable)])
                 .size(14)
-                .line_height(LineHeight::Relative(1.))
-                // `leading-none`: the box is the 14px line slot. Shrink would add the
-                // ink overflowing the slot to the bottom only, drawing the digits high.
-                .height(14);
+                .line_height(LineHeight::Relative(1.));
                 if self.system == System::Persian {
                     label = label.font(persian::FAMILY);
                 }

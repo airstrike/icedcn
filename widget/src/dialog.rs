@@ -337,8 +337,7 @@ pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> Slot<'a,
             .style(theme::text::Foreground),
         text::muted(description),
     ]
-    // Native heading metrics extend below its 16px CSS line box.
-    .spacing(4)
+    .spacing(8)
     .into()
 }
 
