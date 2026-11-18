@@ -5,7 +5,7 @@ use icedcn::theme::tweak::Alpha;
 use icedcn::widget::{field, radio_group, text};
 use icedcn::{Horizontal, Slot};
 
-fn availability<M: Clone + 'static>() -> Slot<'static, M> {
+fn availability<'a, M: Clone + 'static>() -> Slot<'a, M> {
     radio_group(|g| {
         field::group(["Disabled", "Option 2", "Option 3"].map(|name| {
             let disabled = name == "Disabled";

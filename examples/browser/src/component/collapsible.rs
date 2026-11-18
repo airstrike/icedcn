@@ -70,9 +70,7 @@ impl CollapsiblePage {
     }
 }
 
-fn bordered<Message: 'static>(
-    content: impl Into<Slot<'static, Message>>,
-) -> Slot<'static, Message> {
+fn bordered<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
     container(content)
         .width(Fill)
         .padding([9, 17])
@@ -85,7 +83,7 @@ fn bordered<Message: 'static>(
         .into()
 }
 
-fn detail<Message: 'static>(title: &'static str, body: &'static str) -> Slot<'static, Message> {
+fn detail<'a, Message: 'a>(title: &'a str, body: &'a str) -> Slot<'a, Message> {
     bordered(column![
         text::small(title)
             .medium()
@@ -94,7 +92,7 @@ fn detail<Message: 'static>(title: &'static str, body: &'static str) -> Slot<'st
     ])
 }
 
-fn demo<Message: Clone + 'static>() -> Slot<'static, Message> {
+fn demo<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     collapsible(|c| {
         column![
             column![
@@ -145,7 +143,7 @@ fn demo<Message: Clone + 'static>() -> Slot<'static, Message> {
     .into()
 }
 
-fn basic<Message: Clone + 'static>() -> Slot<'static, Message> {
+fn basic<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     card(
         card::content(
             collapsible(|c| {
@@ -186,7 +184,7 @@ fn basic<Message: Clone + 'static>() -> Slot<'static, Message> {
     .into()
 }
 
-fn settings<Message: Clone + 'static>() -> Slot<'static, Message> {
+fn settings<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     card(
         column![
             card::header(text::small("Radius").medium().line_height(1.375))
@@ -306,7 +304,7 @@ const FILE_TREE: &[Entry] = &[
     Entry::File(".gitignore"),
 ];
 
-fn entry<Message: Clone + 'static>(node: &'static Entry) -> Slot<'static, Message> {
+fn entry<'a, Message: Clone + 'static>(node: &'a Entry) -> Slot<'a, Message> {
     match node {
         Entry::File(name) => button(
             row![icon::file().size(14).line_height(1.0), *name,]
@@ -351,7 +349,7 @@ fn entry<Message: Clone + 'static>(node: &'static Entry) -> Slot<'static, Messag
     }
 }
 
-fn file_tree<Message: Clone + 'static>() -> Slot<'static, Message> {
+fn file_tree<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     let header = tabs(|tabs| {
         tabs.list([
             tabs.trigger("explorer", "Explorer"),

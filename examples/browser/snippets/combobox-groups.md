@@ -1,7 +1,7 @@
 ```rust
 use icedcn::widget::combobox;
 
-fn timezones<Message: 'static>(groups: &[(&str, &[&str])]) -> combobox::Combobox<'static, Message> {
+fn timezones<'a, Message: 'a>(groups: &[(&str, &[&str])]) -> combobox::Combobox<'a, Message> {
     let options = groups.iter().flat_map(|&(group, zones)| {
         zones
             .iter()

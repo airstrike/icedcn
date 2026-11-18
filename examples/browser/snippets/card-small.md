@@ -3,7 +3,7 @@ use iced::Fill;
 use icedcn::widget::{button, column, text};
 use icedcn::{Size, card};
 
-fn small<Message: Clone + 'static>() -> card::Card<'static, Message> {
+fn small<'a, Message: Clone + 'a>() -> card::Card<'a, Message> {
     card(column![
         card::header("Small Card")
             .description("This card uses the small size variant."),

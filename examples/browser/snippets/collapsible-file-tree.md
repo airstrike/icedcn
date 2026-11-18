@@ -67,7 +67,7 @@ const FILE_TREE: &[Entry] = &[
     Entry::File(".gitignore"),
 ];
 
-fn entry<Message: Clone + 'static>(node: &'static Entry) -> Slot<'static, Message> {
+fn entry<'a, Message: Clone + 'static>(node: &'a Entry) -> Slot<'a, Message> {
     match node {
         Entry::File(name) => button(
             row![icon::file().size(14).line_height(1.0), *name,]
@@ -112,7 +112,7 @@ fn entry<Message: Clone + 'static>(node: &'static Entry) -> Slot<'static, Messag
     }
 }
 
-fn file_tree<Message: Clone + 'static>() -> Slot<'static, Message> {
+fn file_tree<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     let header = tabs(|tabs| {
         tabs.list([
             tabs.trigger("explorer", "Explorer"),

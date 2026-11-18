@@ -9,7 +9,7 @@ enum Message {
     Align(bool),
 }
 
-fn alignment(aligned: bool) -> Slot<'static, Message> {
+fn alignment<'a>(aligned: bool) -> Slot<'a, Message> {
     column![
         field(switch().checked(aligned).on_checked_change(Message::Align))
             .orientation(Horizontal)

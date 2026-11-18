@@ -139,14 +139,14 @@ impl page::Page for CarouselPage {
     }
 }
 
-fn slide<Message: 'static>(
+fn slide<'a, Message: 'a>(
     index: usize,
     font_size: f32,
     line_height: f32,
     vertical: bool,
     margin: f32,
-) -> Slot<'static, Message> {
-    let content: Slot<'static, Message> = if vertical {
+) -> Slot<'a, Message> {
+    let content: Slot<'a, Message> = if vertical {
         container(
             text::p((index + 1).to_string())
                 .size(font_size)
@@ -158,7 +158,7 @@ fn slide<Message: 'static>(
         .padding(24)
         .into()
     } else {
-        responsive(move |bounds| -> Element<'static, Message, Theme> {
+        responsive(move |bounds| -> Element<'a, Message, Theme> {
             container(
                 text::p((index + 1).to_string())
                     .size(font_size)
@@ -186,13 +186,13 @@ fn slide<Message: 'static>(
     .into()
 }
 
-pub fn demo<Message: Clone + 'static>(window_width: f32) -> Slot<'static, Message> {
+pub fn demo<'a, Message: Clone + 'static>(window_width: f32) -> Slot<'a, Message> {
     carousel(5, |index| slide(index, 36.0, 40.0, false, 4.0))
         .width(if window_width < 640.0 { 192.0 } else { 320.0 })
         .into()
 }
 
-pub fn size<Message: Clone + 'static>(window_width: f32) -> Slot<'static, Message> {
+pub fn size<'a, Message: Clone + 'static>(window_width: f32) -> Slot<'a, Message> {
     carousel(5, |index| slide(index, 30.0, 36.0, false, 4.0))
         .visible(if window_width < 1024.0 { 2 } else { 3 })
         .align(Alignment::Start)
@@ -206,7 +206,7 @@ pub fn size<Message: Clone + 'static>(window_width: f32) -> Slot<'static, Messag
         .into()
 }
 
-pub fn spacing<Message: Clone + 'static>(window_width: f32) -> Slot<'static, Message> {
+pub fn spacing<'a, Message: Clone + 'static>(window_width: f32) -> Slot<'a, Message> {
     carousel(5, |index| slide(index, 24.0, 32.0, false, 4.0))
         .visible(if window_width < 1024.0 { 2 } else { 3 })
         .spacing(4.0)
@@ -220,7 +220,7 @@ pub fn spacing<Message: Clone + 'static>(window_width: f32) -> Slot<'static, Mes
         .into()
 }
 
-pub fn orientation<Message: Clone + 'static>() -> Slot<'static, Message> {
+pub fn orientation<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     carousel(5, |index| slide(index, 30.0, 36.0, true, 4.0))
         .orientation(Orientation::Vertical)
         .align(Alignment::Start)
@@ -231,7 +231,7 @@ pub fn orientation<Message: Clone + 'static>() -> Slot<'static, Message> {
         .into()
 }
 
-pub fn plugin<Message: Clone + 'static>(window_width: f32) -> Slot<'static, Message> {
+pub fn plugin<'a, Message: Clone + 'static>(window_width: f32) -> Slot<'a, Message> {
     carousel(5, |index| slide(index, 36.0, 40.0, false, 4.0))
         .width(if window_width < 640.0 { 160.0 } else { 320.0 })
         .autoplay(Duration::from_secs(2))

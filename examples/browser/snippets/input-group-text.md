@@ -4,7 +4,7 @@ use icedcn::Slot;
 use icedcn::widget::input_group::{Align, addon};
 use icedcn::widget::{column, input, input_group, textarea};
 
-fn text_addons<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn text_addons<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     column![
         input_group(input("0.00").text_size(size))
             .addon(addon(input_group::text("$")))

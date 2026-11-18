@@ -31,7 +31,7 @@ impl<'a> Component<'a, Message, Theme> for Visitors<'a> {
         None
     }
     fn view(&self, mobile: &bool) -> impl Widget<bool, Theme> + 'a {
-        let metric = |label: &'static str, total: &'static str, is_mobile: bool| {
+        let metric = |label: &'a str, total: &'a str, is_mobile: bool| {
             button(
                 column![
                     text::muted(label).size(12).line_height(Pixels(16.0)),

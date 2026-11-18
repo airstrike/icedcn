@@ -4,7 +4,7 @@ use icedcn::widget::{button, popover, row, text};
 use icedcn::{Size, Slot};
 
 pub fn view<'a>() -> Slot<'a, ()> {
-    let panel = |label: &'static str, alignment, content: &'static str| {
+    let panel = |label: &'a str, alignment, content: &'a str| {
         popover(
             move |p| {
                 p.trigger(

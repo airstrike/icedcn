@@ -4,10 +4,10 @@ use icedcn::Horizontal;
 use icedcn::Slot;
 use icedcn::widget::{button, checkbox, column, field, row, select, separator, text, textarea};
 
-fn payment<M: Clone + 'static>(
-    required: impl Fn(&'static str, &'static str) -> field::Field<'static, M>,
+fn payment<'a, M: Clone + 'static>(
+    required: impl Fn(&'a str, &'a str) -> field::Field<'a, M>,
     submit: M,
-) -> Slot<'static, M> {
+) -> Slot<'a, M> {
     let date = |range: std::ops::RangeInclusive<u16>, hint| {
         select(range.map(|n| {
             let label = format!("{n:02}");

@@ -12,14 +12,14 @@ pub fn date(month: u32, day: u32) -> Date {
     Date::from_ymd_opt(today().year(), month, day).unwrap_or_else(today)
 }
 
-pub fn demo<Message: 'static>() -> Element<'static, Message, Theme> {
+pub fn demo<'a, Message: 'static>() -> Element<'a, Message, Theme> {
     calendar()
         .bordered(true)
         .default_selected(Selection::single(today()))
         .caption_dropdown(true)
         .into()
 }
-pub fn hijri<Message: 'static>() -> Element<'static, Message, Theme> {
+pub fn hijri<'a, Message: 'static>() -> Element<'a, Message, Theme> {
     calendar()
         .bordered(true)
         .system(System::Persian)
@@ -30,10 +30,10 @@ pub fn hijri<Message: 'static>() -> Element<'static, Message, Theme> {
         ))
         .into()
 }
-pub fn basic<Message: 'static>() -> Element<'static, Message, Theme> {
+pub fn basic<'a, Message: 'static>() -> Element<'a, Message, Theme> {
     calendar().bordered(true).into()
 }
-pub fn range<Message: 'static>(wide: Option<bool>) -> Element<'static, Message, Theme> {
+pub fn range<'a, Message: 'static>(wide: Option<bool>) -> Element<'a, Message, Theme> {
     let start = date(1, 12);
     let current = today();
     let mut picker = calendar()
@@ -46,10 +46,10 @@ pub fn range<Message: 'static>(wide: Option<bool>) -> Element<'static, Message, 
     }
     card(picker).padding(0).into()
 }
-pub fn caption<Message: 'static>() -> Element<'static, Message, Theme> {
+pub fn caption<'a, Message: 'static>() -> Element<'a, Message, Theme> {
     calendar().bordered(true).caption_dropdown(true).into()
 }
-pub fn booked_dates<Message: 'static>() -> Element<'static, Message, Theme> {
+pub fn booked_dates<'a, Message: 'static>() -> Element<'a, Message, Theme> {
     let booked = date(2, 12)..=date(2, 26);
     card(
         calendar()
@@ -60,7 +60,7 @@ pub fn booked_dates<Message: 'static>() -> Element<'static, Message, Theme> {
     .padding(0)
     .into()
 }
-pub fn custom_days<Message: 'static>(wide: bool) -> Element<'static, Message, Theme> {
+pub fn custom_days<'a, Message: 'static>(wide: bool) -> Element<'a, Message, Theme> {
     card(
         calendar()
             .mode(Mode::Range)
@@ -80,7 +80,7 @@ pub fn custom_days<Message: 'static>(wide: bool) -> Element<'static, Message, Th
     .padding(0)
     .into()
 }
-pub fn week_numbers<Message: 'static>() -> Element<'static, Message, Theme> {
+pub fn week_numbers<'a, Message: 'static>() -> Element<'a, Message, Theme> {
     card(
         calendar()
             .default_selected(Selection::single(date(2, 3)))
@@ -218,7 +218,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme> for Times {
         None
     }
     fn view(&self, state: &Hours) -> impl Widget<Time, Theme> + 'a {
-        let time_field = |label: &'static str, value: &str, edit: fn(String) -> Time| {
+        let time_field = |label: &'a str, value: &str, edit: fn(String) -> Time| {
             field(
                 input_group(
                     input("HH:mm:ss")

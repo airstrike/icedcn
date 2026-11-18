@@ -3,7 +3,7 @@ use iced::Fill;
 use icedcn::Slot;
 use icedcn::widget::{field, select};
 
-fn department<M: Clone + 'static>() -> Slot<'static, M> {
+fn department<'a, M: Clone + 'static>() -> Slot<'a, M> {
     let options = [
         ("engineering", "Engineering"),
         ("design", "Design"),

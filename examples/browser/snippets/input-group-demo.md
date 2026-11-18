@@ -5,7 +5,7 @@ use icedcn::Slot;
 use icedcn::widget::input_group::{Align, addon};
 use icedcn::widget::{container, input, input_group};
 
-fn demo<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn demo<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     container(
         input_group(input("Search...").text_size(size))
             .addon(addon(icon::search().size(16).line_height(1.0)))

@@ -4,7 +4,7 @@ use icedcn::Slot;
 use icedcn::theme::text::muted;
 use icedcn::widget::{field, input, input_group};
 
-fn website<Message: Clone + 'static>() -> Slot<'static, Message> {
+fn website<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
     let info = icon::info()
         .size(16)
         .line_height(1.0)

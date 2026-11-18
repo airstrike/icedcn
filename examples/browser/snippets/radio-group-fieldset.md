@@ -2,7 +2,7 @@
 use icedcn::widget::{field, radio_group, text};
 use icedcn::{Horizontal, Slot};
 
-fn subscription_plan<M: Clone + 'static>() -> Slot<'static, M> {
+fn subscription_plan<'a, M: Clone + 'static>() -> Slot<'a, M> {
     let plans = [
         ("monthly", "Monthly ($9.99/month)"),
         ("yearly", "Yearly ($99.99/year)"),

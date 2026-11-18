@@ -15,7 +15,7 @@ pub fn view<'a>(window_width: f32) -> Slot<'a, ()> {
             )
         },
         move |_| {
-            let dimension = |label: &'static str, value| {
+            let dimension = |label: &'a str, value| {
                 field(
                     input("")
                         .default_value(value)

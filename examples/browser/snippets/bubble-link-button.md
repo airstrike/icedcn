@@ -27,7 +27,7 @@ fn example<'a>() -> Slot<'a, ()> {
     .into()
 }
 
-fn frame(body: impl Into<Slot<'static, ()>>) -> Slot<'static, ()> {
+fn frame<'a>(body: impl Into<Slot<'a, ()>>) -> Slot<'a, ()> {
     container(body)
         .padding([48, 0])
         .width(Fill)
@@ -35,7 +35,7 @@ fn frame(body: impl Into<Slot<'static, ()>>) -> Slot<'static, ()> {
         .into()
 }
 
-fn suggestion(label: &'static str, notice: &'static str) -> Slot<'static, ()> {
+fn suggestion<'a>(label: &'a str, notice: &'a str) -> Slot<'a, ()> {
     toast::trigger(
         bubble(label).style(Tinted).align(Right).interactive(true),
         toast::toast(notice),

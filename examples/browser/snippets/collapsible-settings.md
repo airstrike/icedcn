@@ -6,7 +6,7 @@ use iced::{Fill, Padding};
 use icedcn::widget::{button, collapsible, column, container, input, row, text};
 use icedcn::{Slot, card};
 
-fn settings<Message: Clone + 'static>() -> Slot<'static, Message> {
+fn settings<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     card(
         column![
             card::header(text::small("Radius").medium().line_height(1.375))

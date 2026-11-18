@@ -10,7 +10,7 @@ use icedcn::widget::code_block::copy_button;
 use icedcn::widget::input_group::{Align, addon};
 use icedcn::widget::{button, column, input, input_group, popover, text};
 
-fn buttons<M: Clone + 'static>(size: f32, favorite: bool, toggle: M) -> Slot<'static, M> {
+fn buttons<'a, M: Clone + 'static>(size: f32, favorite: bool, toggle: M) -> Slot<'a, M> {
     let url = "https://github.com/airstrike/icedcn";
     let info = popover(
         |p| {

@@ -2,7 +2,7 @@
 use icedcn::widget::calendar;
 use icedcn::widget::calendar::{Selection, today};
 
-pub fn demo<Message: 'static>() -> calendar::Calendar<'static, Message> {
+pub fn demo<'a, Message: 'a>() -> calendar::Calendar<'a, Message> {
     calendar()
         .bordered(true)
         .default_selected(Selection::single(today()))

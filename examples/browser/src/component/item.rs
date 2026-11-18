@@ -130,7 +130,7 @@ fn people() -> [(&'static str, &'static str, image::Handle); 3] {
     ]
 }
 
-fn artwork(bytes: &'static [u8], handle: &'static OnceLock<image::Handle>) -> image::Image {
+fn artwork(bytes: &'static [u8], handle: &OnceLock<image::Handle>) -> image::Image {
     image(
         handle
             .get_or_init(|| image::Handle::from_bytes(bytes))

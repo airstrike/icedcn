@@ -9,7 +9,7 @@ enum Message {
     Undo,
 }
 
-fn show_toast() -> Slot<'static, Message> {
+fn show_toast<'a>() -> Slot<'a, Message> {
     toast::trigger(
         button("Show Toast").style(button::Outline),
         toast::toast("Event has been created")

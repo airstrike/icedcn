@@ -7,7 +7,7 @@ fn date(month: u32, day: u32) -> Date {
     Date::from_ymd_opt(today().year(), month, day).unwrap_or_else(today)
 }
 
-pub fn custom_days<Message: 'static>(window_width: f32) -> card::Card<'static, Message> {
+pub fn custom_days<'a, Message: 'static>(window_width: f32) -> card::Card<'a, Message> {
     card(
         calendar()
             .mode(Mode::Range)

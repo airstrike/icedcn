@@ -1,7 +1,7 @@
 ```rust
 use icedcn::widget::calendar;
 
-pub fn caption<Message: 'static>() -> calendar::Calendar<'static, Message> {
+pub fn caption<'a, Message: 'a>() -> calendar::Calendar<'a, Message> {
     calendar().bordered(true).caption_dropdown(true)
 }
 ```

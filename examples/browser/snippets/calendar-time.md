@@ -46,8 +46,8 @@ impl Hours {
         }
     }
 
-    pub fn view(&self, window_width: f32) -> Element<'_, Edit, Theme> {
-        let time_field = |label: &'static str, value: &str, edit: fn(String) -> Edit| {
+    pub fn view<'a>(&'a self, window_width: f32) -> Element<'a, Edit, Theme> {
+        let time_field = |label: &'a str, value: &str, edit: fn(String) -> Edit| {
             let control = input("HH:mm:ss")
                 .value(value.to_owned())
                 .on_input(edit)

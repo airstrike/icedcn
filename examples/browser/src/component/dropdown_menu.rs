@@ -236,8 +236,8 @@ fn shortcuts() -> Slot<'static, Message> {
     .into()
 }
 
-fn icons() -> Slot<'static, Message> {
-    let caption = |glyph: Text<'static, Theme>, label: &'static str| {
+fn icons<'a>() -> Slot<'a, Message> {
+    let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };
     let item = move |glyph, label| menu::item(caption(glyph, label));
@@ -256,8 +256,8 @@ fn icons() -> Slot<'static, Message> {
     .into()
 }
 
-fn destructive() -> Slot<'static, Message> {
-    let caption = |glyph: Text<'static, Theme>, label: &'static str| {
+fn destructive<'a>() -> Slot<'a, Message> {
+    let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };
     let item = move |glyph, label| menu::item(caption(glyph, label));
@@ -275,8 +275,8 @@ fn destructive() -> Slot<'static, Message> {
     .into()
 }
 
-fn avatar_menu(photo: image::Handle) -> Slot<'static, Message> {
-    let caption = |glyph: Text<'static, Theme>, label: &'static str| {
+fn avatar_menu<'a>(photo: image::Handle) -> Slot<'a, Message> {
+    let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };
     let item = move |glyph, label| menu::item(caption(glyph, label));
@@ -325,8 +325,8 @@ fn checkboxes(checked: [bool; 3]) -> Slot<'static, [bool; 3]> {
     .into()
 }
 
-fn checkboxes_icons(checked: [bool; 3]) -> Slot<'static, [bool; 3]> {
-    let caption = |glyph: Text<'static, Theme>, label: &'static str| {
+fn checkboxes_icons<'a>(checked: [bool; 3]) -> Slot<'a, [bool; 3]> {
+    let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };
     let toggle = move |i: usize, value| {
@@ -361,7 +361,7 @@ fn checkboxes_icons(checked: [bool; 3]) -> Slot<'static, [bool; 3]> {
     .into()
 }
 
-fn radio_group(selected: &'static str) -> Slot<'static, &'static str> {
+fn radio_group<'a>(selected: &'static str) -> Slot<'a, &'static str> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
@@ -377,8 +377,8 @@ fn radio_group(selected: &'static str) -> Slot<'static, &'static str> {
     .into()
 }
 
-fn radio_icons(selected: &'static str) -> Slot<'static, &'static str> {
-    let caption = |glyph: Text<'static, Theme>, label: &'static str| {
+fn radio_icons<'a>(selected: &'static str) -> Slot<'a, &'static str> {
+    let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };
     dropdown_menu(
@@ -411,8 +411,8 @@ fn radio_icons(selected: &'static str) -> Slot<'static, &'static str> {
     .into()
 }
 
-fn complex(p: Preferences) -> Slot<'static, Preferences> {
-    let caption = |glyph: Text<'static, Theme>, label: &'static str| {
+fn complex<'a>(p: Preferences) -> Slot<'a, Preferences> {
+    let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };
     let item = move |glyph, label| menu::item(caption(glyph, label));

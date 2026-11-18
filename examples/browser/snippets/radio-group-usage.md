@@ -6,10 +6,10 @@ Use `.default_value(..)` to let the group own its selection. Use `.value(..)` an
 use icedcn::widget::{field, radio_group};
 use icedcn::{Horizontal, Slot};
 
-fn delivery<M: Clone + 'static>(
+fn delivery<'a, M: Clone + 'static>(
     value: String,
-    changed: impl Fn(String) -> M + 'static,
-) -> Slot<'static, M> {
+    changed: impl Fn(String) -> M + 'a,
+) -> Slot<'a, M> {
     radio_group(|g| {
         field::group(["Email", "SMS"].map(|name| {
             field(g.item(name))

@@ -2,7 +2,7 @@
 use icedcn::Slot;
 use icedcn::widget::{button, field};
 
-fn profile<M: Clone + 'static>(name: field::Field<'static, M>, submit: M) -> Slot<'static, M> {
+fn profile<'a, M: Clone + 'a>(name: field::Field<'a, M>, submit: M) -> Slot<'a, M> {
     field::set(
         field::legend("Profile"),
         Some("Fill in your profile information."),

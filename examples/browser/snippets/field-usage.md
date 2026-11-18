@@ -7,7 +7,7 @@ use iced::Fill;
 use icedcn::Slot;
 use icedcn::widget::{field, input};
 
-fn full_name() -> Slot<'static, ()> {
+fn full_name<'a>() -> Slot<'a, ()> {
     field(input("Evil Rabbit").width(Fill))
         .label("Full name")
         .description("This appears on invoices and emails.")

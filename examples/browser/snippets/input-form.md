@@ -38,17 +38,16 @@ impl Contact {
     }
 
     fn view<'a>(&self) -> Slot<'a, Edit> {
-        let entry =
-            |label: &'static str, hint: &'static str, value: &str, edit: fn(String) -> Edit| {
-                field(
-                    input(hint)
-                        .width(Fill)
-                        .value(value.to_owned())
-                        .on_input(edit)
-                        .on_submit(Edit::Submit),
-                )
-                .label(label)
-            };
+        let entry = |label: &'a str, hint: &'a str, value: &str, edit: fn(String) -> Edit| {
+            field(
+                input(hint)
+                    .width(Fill)
+                    .value(value.to_owned())
+                    .on_input(edit)
+                    .on_submit(Edit::Submit),
+            )
+            .label(label)
+        };
         let mut name = entry("Name", "Evil Rabbit", &self.name, Edit::Name);
         let mut email = entry("Email", "john@example.com", &self.email, Edit::Email)
             .description("We'll never share your email with anyone.");

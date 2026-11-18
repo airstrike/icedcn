@@ -7,7 +7,7 @@ use icedcn::theme::text_input;
 use icedcn::widget::input_group::{Align, addon};
 use icedcn::widget::{column, dropdown_menu, input, input_group, menu, row};
 
-fn dropdowns<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn dropdowns<'a, M: Clone + 'static>(size: f32) -> Slot<'a, M> {
     column![
         input_group(input("Enter file name").text_size(size)).addon(
             addon(

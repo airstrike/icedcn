@@ -12,7 +12,7 @@ fn zone(label: &str, items: &[(&str, &str)]) -> select::Entry {
     )
 }
 
-fn timezones<Message: 'static>() -> Slot<'static, Message> {
+fn timezones<'a, Message: 'static>() -> Slot<'a, Message> {
     select([
         zone(
             "North America",

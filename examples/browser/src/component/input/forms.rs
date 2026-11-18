@@ -52,7 +52,7 @@ impl Values {
         }
     }
 
-    fn group(&self, text_size: f32) -> Slot<'static, Edit> {
+    fn group<'a>(&self, text_size: f32) -> Slot<'a, Edit> {
         field::group([
             field(
                 input("Jordan Lee")
@@ -84,19 +84,18 @@ impl Values {
         .into()
     }
 
-    fn form(&self, text_size: f32) -> Slot<'static, Edit> {
-        let entry =
-            |label: &'static str, hint: &'static str, value: &str, edit: fn(String) -> Edit| {
-                field(
-                    input(hint)
-                        .text_size(text_size)
-                        .width(Fill)
-                        .value(value.to_owned())
-                        .on_input(edit)
-                        .on_submit(Edit::Submit),
-                )
-                .label(label)
-            };
+    fn form<'a>(&self, text_size: f32) -> Slot<'a, Edit> {
+        let entry = |label: &'a str, hint: &'a str, value: &str, edit: fn(String) -> Edit| {
+            field(
+                input(hint)
+                    .text_size(text_size)
+                    .width(Fill)
+                    .value(value.to_owned())
+                    .on_input(edit)
+                    .on_submit(Edit::Submit),
+            )
+            .label(label)
+        };
         let mut name = entry("Name", "Evil Rabbit", &self.name, Edit::Name);
         let mut email = entry("Email", "john@example.com", &self.email, Edit::Email)
             .description("We'll never share your email with anyone.");

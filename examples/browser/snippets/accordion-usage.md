@@ -24,10 +24,10 @@ When the application owns the selection, pass its current `Option<usize>` and ha
 ```rust
 use icedcn::widget::{Accordion, accordion};
 
-fn questions<M: 'static>(
+fn questions<'a, M: 'a>(
     selected: Option<usize>,
-    changed: impl Fn(Option<usize>) -> M + 'static,
-) -> Accordion<'static, M> {
+    changed: impl Fn(Option<usize>) -> M + 'a,
+) -> Accordion<'a, M> {
     accordion![
         ("Shipping", "Standard and express delivery."),
         ("Returns", "Within 30 days.")
@@ -43,11 +43,11 @@ Use record keys for a collection whose order can change. This example keeps the 
 use icedcn::Slot;
 use icedcn::widget::accordion;
 
-fn records<M: 'static>(
+fn records<'a, M: 'a>(
     items: impl IntoIterator<Item = (u64, String, String)>,
     selected: Vec<u64>,
-    changed: impl Fn(Vec<u64>) -> M + 'static,
-) -> Slot<'static, M> {
+    changed: impl Fn(Vec<u64>) -> M + 'a,
+) -> Slot<'a, M> {
     accordion::keyed(
         items
             .into_iter()

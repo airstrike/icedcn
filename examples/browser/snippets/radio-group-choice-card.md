@@ -2,7 +2,7 @@
 use icedcn::widget::{field, radio_group};
 use icedcn::{Horizontal, Slot};
 
-fn plans<M: Clone + 'static>() -> Slot<'static, M> {
+fn plans<'a, M: Clone + 'static>() -> Slot<'a, M> {
     let plans = [
         ("Plus", "For individuals and small teams."),
         ("Pro", "For growing businesses."),

@@ -4,7 +4,7 @@ use icedcn::Theme;
 use icedcn::widget::calendar;
 use icedcn::widget::calendar::{Date, Selection, System};
 
-pub fn hijri<Message: 'static>() -> Element<'static, Message, Theme> {
+pub fn hijri<'a, Message: 'static>() -> Element<'a, Message, Theme> {
     calendar()
         .bordered(true)
         .system(System::Persian)

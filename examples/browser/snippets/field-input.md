@@ -3,7 +3,7 @@ use iced::Fill;
 use icedcn::Slot;
 use icedcn::widget::{field, input};
 
-fn credentials<M: Clone + 'static>(text_size: f32) -> Slot<'static, M> {
+fn credentials<'a, M: Clone + 'a>(text_size: f32) -> Slot<'a, M> {
     field::group([
         field(input("Max Leiter").width(Fill).text_size(text_size))
             .label("Username")

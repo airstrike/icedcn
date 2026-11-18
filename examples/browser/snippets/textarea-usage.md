@@ -6,7 +6,7 @@ A textarea keeps its own text and grows as you type. Use `.default_value("Draft"
 use icedcn::Slot;
 use icedcn::widget::textarea;
 
-pub fn message(value: &str) -> Slot<'static, String> {
+pub fn message<'a>(value: &str) -> Slot<'a, String> {
     textarea("Type your message here.")
         .value(value)
         .on_input(|edited| edited)

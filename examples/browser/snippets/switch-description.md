@@ -2,7 +2,7 @@
 use icedcn::widget::{field, switch};
 use icedcn::{Horizontal, Slot};
 
-fn sharing<M: Clone + 'static>() -> Slot<'static, M> {
+fn sharing<'a, M: Clone + 'a>() -> Slot<'a, M> {
     field(switch())
         .orientation(Horizontal)
         .control_last()

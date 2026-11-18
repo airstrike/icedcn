@@ -18,7 +18,7 @@ pub fn view<'a>() -> Slot<'a, ()> {
     .spacing(8)
     .into()
 }
-fn side(edge: sheet::Side, label: &'static str) -> Slot<'static, ()> {
+fn side<'a>(edge: sheet::Side, label: &'a str) -> Slot<'a, ()> {
     sheet(
         move |s| s.trigger(button(label).style(button::Outline)),
         |s| {

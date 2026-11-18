@@ -9,7 +9,7 @@ struct Example {
     width: f32,
 }
 
-impl<'a, Message: Clone + 'static> Component<'a, Message, Theme> for Example {
+impl<'a, Message: Clone + 'a> Component<'a, Message, Theme> for Example {
     type State = usize;
     type Event = usize;
 
@@ -41,7 +41,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme> for Example {
     }
 }
 
-pub(super) fn view<Message: Clone + 'static>(window_width: f32) -> Slot<'static, Message> {
+pub(super) fn view<'a, Message: Clone + 'a>(window_width: f32) -> Slot<'a, Message> {
     component(Example {
         width: if window_width < 640.0 { 160.0 } else { 320.0 },
     })

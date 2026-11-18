@@ -10,7 +10,7 @@ enum Message {
     Selection(Vec<String>),
 }
 
-fn frameworks(selected: &[String]) -> combobox::Combobox<'static, Message> {
+fn frameworks<'a>(selected: &[String]) -> combobox::Combobox<'a, Message> {
     combobox(["iced", "egui", "Slint", "GTK", "Druid"])
         .values(selected.iter().cloned())
         .on_values_change(Message::Selection)

@@ -7,7 +7,7 @@ use icedcn::theme::tweak::{Bg, Token};
 use icedcn::widget::{button, collapsible, column, container, space, text};
 use icedcn::{Size, Slot, card, radius};
 
-fn basic<Message: Clone + 'static>() -> Slot<'static, Message> {
+fn basic<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     card(
         card::content(
             collapsible(|c| {

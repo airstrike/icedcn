@@ -3,7 +3,7 @@ use icedcn::Horizontal;
 use icedcn::Slot;
 use icedcn::widget::{field, radio_group};
 
-fn environment<M: Clone + 'static>() -> Slot<'static, M> {
+fn environment<'a, M: Clone + 'static>() -> Slot<'a, M> {
     let environments = [
         (
             "kubernetes",

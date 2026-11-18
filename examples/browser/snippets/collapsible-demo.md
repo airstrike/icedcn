@@ -8,9 +8,7 @@ use icedcn::theme::tweak::{Token, border};
 use icedcn::widget::{button, collapsible, column, container, row, space, text};
 use icedcn::{Slot, radius};
 
-fn bordered<Message: 'static>(
-    content: impl Into<Slot<'static, Message>>,
-) -> Slot<'static, Message> {
+fn bordered<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
     container(content)
         .width(Fill)
         .padding([9, 17])
@@ -23,7 +21,7 @@ fn bordered<Message: 'static>(
         .into()
 }
 
-fn detail<Message: 'static>(title: &'static str, body: &'static str) -> Slot<'static, Message> {
+fn detail<'a, Message: 'a>(title: &'a str, body: &'a str) -> Slot<'a, Message> {
     bordered(column![
         text::small(title)
             .medium()
@@ -32,7 +30,7 @@ fn detail<Message: 'static>(title: &'static str, body: &'static str) -> Slot<'st
     ])
 }
 
-fn demo<Message: Clone + 'static>() -> Slot<'static, Message> {
+fn demo<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     collapsible(|c| {
         column![
             column![

@@ -7,7 +7,7 @@ fn date(month: u32, day: u32) -> Date {
     Date::from_ymd_opt(today().year(), month, day).unwrap_or_else(today)
 }
 
-pub fn week_numbers<Message: 'static>() -> card::Card<'static, Message> {
+pub fn week_numbers<'a, Message: 'static>() -> card::Card<'a, Message> {
     card(
         calendar()
             .default_selected(Selection::single(date(2, 3)))

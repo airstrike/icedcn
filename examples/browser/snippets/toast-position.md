@@ -6,7 +6,7 @@ use icedcn::{
 };
 use toast::Position::*;
 
-fn positions() -> Slot<'static, ()> {
+fn positions<'a>() -> Slot<'a, ()> {
     let places = [
         ("Top Left", TopLeft),
         ("Top Center", TopCenter),

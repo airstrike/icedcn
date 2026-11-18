@@ -7,7 +7,7 @@ fn date(month: u32, day: u32) -> Date {
     Date::from_ymd_opt(today().year(), month, day).unwrap_or_else(today)
 }
 
-pub fn range<Message: 'static>(window_width: f32) -> card::Card<'static, Message> {
+pub fn range<'a, Message: 'static>(window_width: f32) -> card::Card<'a, Message> {
     let start = date(1, 12);
     let current = today();
     let picker = calendar()

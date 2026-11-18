@@ -19,7 +19,7 @@ fn example<'a>() -> Slot<'a, ()> {
     )
 }
 
-fn frame(body: impl Into<Slot<'static, ()>>) -> Slot<'static, ()> {
+fn frame<'a>(body: impl Into<Slot<'a, ()>>) -> Slot<'a, ()> {
     container(body)
         .padding([48, 0])
         .width(Fill)
@@ -27,7 +27,7 @@ fn frame(body: impl Into<Slot<'static, ()>>) -> Slot<'static, ()> {
         .into()
 }
 
-fn review() -> Slot<'static, ()> {
+fn review<'a>() -> Slot<'a, ()> {
     const REVIEW: &str = "The accessibility review found two focus states that were visually too subtle in dark mode.\n\nI checked the dialog, menu, and drawer paths because each one renders focusable controls inside a layered surface.\n\nThe dialog and drawer are fine. The menu needs the hover and focus tokens split so keyboard focus stays visible when the pointer is not involved.\n\nI also recommend keeping the change in the style file instead of the primitive so the other themes can choose their own focus treatment later.";
     collapsible(|c| {
         let description = if c.is_open() {

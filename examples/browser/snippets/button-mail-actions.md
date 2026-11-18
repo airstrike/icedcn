@@ -11,8 +11,7 @@ pub enum Message {
 
 pub fn view<'a>(window_width: f32, selected: &'static str) -> Slot<'a, Message> {
     let outline = |label| button(label).style(button::Outline);
-    let caption =
-        |icon: Text<'static, Theme>, label: &'static str| row![icon.size(16), label].spacing(8);
+    let caption = |icon: Text<'a, Theme>, label: &'a str| row![icon.size(16), label].spacing(8);
     let actions = dropdown_menu(
         move |m| {
             button_group![

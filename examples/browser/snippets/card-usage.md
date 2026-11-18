@@ -5,7 +5,7 @@ use iced::Fill;
 use icedcn::card;
 use icedcn::widget::{column, text};
 
-fn preview() -> card::Card<'static, ()> {
+fn preview<'a>() -> card::Card<'a, ()> {
     card(
         column![
             card::header("Card Title")

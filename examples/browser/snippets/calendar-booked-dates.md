@@ -7,7 +7,7 @@ fn date(month: u32, day: u32) -> Date {
     Date::from_ymd_opt(today().year(), month, day).unwrap_or_else(today)
 }
 
-pub fn booked_dates<Message: 'static>() -> card::Card<'static, Message> {
+pub fn booked_dates<'a, Message: 'static>() -> card::Card<'a, Message> {
     let booked = date(2, 12)..=date(2, 26);
     card(
         calendar()

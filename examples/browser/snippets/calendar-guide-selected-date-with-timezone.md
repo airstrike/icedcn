@@ -6,13 +6,13 @@ Calendar selections are civil dates without a time of day. `today()` uses the us
 use icedcn::widget::calendar;
 use icedcn::widget::calendar::{Date, Selection, today};
 
-pub fn calendar_for_local_date<Message: 'static>(
+pub fn calendar_for_local_date<'a, Message: 'a>(
     local_date: Date,
-) -> calendar::Calendar<'static, Message> {
+) -> calendar::Calendar<'a, Message> {
     calendar().default_selected(Selection::single(local_date))
 }
 
-pub fn example<'a, Message: 'static>() -> calendar::Calendar<'a, Message> {
+pub fn example<'a, Message: 'a>() -> calendar::Calendar<'a, Message> {
     calendar_for_local_date(today())
 }
 ```

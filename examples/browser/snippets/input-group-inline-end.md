@@ -5,7 +5,7 @@ use icedcn::Slot;
 use icedcn::widget::input_group::{Align, addon};
 use icedcn::widget::{container, field, input, input_group};
 
-fn inline_end<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn inline_end<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     container(
         field(
             input_group(input("Enter password").text_size(size).secure(true))

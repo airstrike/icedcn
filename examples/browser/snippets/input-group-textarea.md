@@ -6,7 +6,7 @@ use icedcn::Slot;
 use icedcn::widget::input_group::{Align, addon};
 use icedcn::widget::{button, container, input_group, row, space, textarea};
 
-fn editor<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn editor<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     container(
         input_group(
             textarea("console.log('Hello, world!');")

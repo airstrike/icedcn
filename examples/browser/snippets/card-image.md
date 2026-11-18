@@ -7,11 +7,11 @@ use iced::{ContentFit, Fill, Widget};
 use icedcn::widget::{aspect_ratio, badge, button, column};
 use icedcn::{Theme, card, radius};
 
-fn event_card<Message: Clone + 'static>(
+fn event_card<'a, Message: Clone + 'a>(
     light: image::Handle,
     dark: image::Handle,
     theme: &Theme,
-) -> card::Card<'static, Message> {
+) -> card::Card<'a, Message> {
     let photo = if theme.neutral.is_dark { dark } else { light };
     let photo = image(photo)
         .width(Fill)

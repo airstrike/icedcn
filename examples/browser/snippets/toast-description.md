@@ -4,7 +4,7 @@ use icedcn::{
     widget::{button, toast},
 };
 
-fn description() -> Slot<'static, ()> {
+fn description<'a>() -> Slot<'a, ()> {
     toast::trigger(
         button("Show Toast").style(button::Outline),
         toast::toast("Event has been created").description("Monday, January 3rd at 6:00pm"),

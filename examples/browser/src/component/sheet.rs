@@ -88,7 +88,7 @@ fn profile(input_size: f32) -> Slot<'static, Message> {
     .into()
 }
 
-fn side(edge: sheet::Side, label: &'static str) -> Slot<'static, Message> {
+fn side<'a>(edge: sheet::Side, label: &'a str) -> Slot<'a, Message> {
     sheet(
         move |s| s.trigger(button(label).style(button::Outline)),
         |s| {

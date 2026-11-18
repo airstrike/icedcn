@@ -3,7 +3,7 @@ use iced::Shrink;
 use icedcn::widget::{field, radio_group};
 use icedcn::{Horizontal, Slot};
 
-fn described<M: Clone + 'static>() -> Slot<'static, M> {
+fn described<'a, M: Clone + 'static>() -> Slot<'a, M> {
     let choices = [
         ("Default", "Standard spacing for most use cases."),
         ("Comfortable", "More space between elements."),

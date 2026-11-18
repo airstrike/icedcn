@@ -11,7 +11,7 @@ enum Message {
     CreateEvent,
 }
 
-fn types() -> Slot<'static, Message> {
+fn types<'a>() -> Slot<'a, Message> {
     let kinds = [
         ("Default", Default, "Event has been created"),
         ("Success", Success, "Event has been created"),

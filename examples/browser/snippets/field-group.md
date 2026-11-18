@@ -6,7 +6,7 @@ use icedcn::Slot;
 use icedcn::theme::text::muted;
 use icedcn::widget::{checkbox, column, field, separator, text};
 
-fn notifications<M: Clone + 'static>(manage: M) -> Slot<'static, M> {
+fn notifications<'a, M: Clone + 'a>(manage: M) -> Slot<'a, M> {
     let description = rich_text([
         span("Get notified when tasks you've created have updates. "),
         span("Manage tasks").link(()).underline(true),

@@ -3,7 +3,7 @@ use icedcn::theme;
 use icedcn::widget::{field, radio_group, text};
 use icedcn::{Horizontal, Slot};
 
-fn notifications<M: Clone + 'static>() -> Slot<'static, M> {
+fn notifications<'a, M: Clone + 'static>() -> Slot<'a, M> {
     let choices = radio_group(|g| {
         field::group(["Email only", "SMS only", "Both Email & SMS"].map(|name| {
             field(g.item(name).invalid(true))

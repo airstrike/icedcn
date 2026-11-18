@@ -13,7 +13,7 @@ pub struct Preferences {
 }
 
 pub fn view<'a>(p: Preferences) -> Slot<'a, Preferences> {
-    let caption = |glyph: Text<'static, Theme>, label: &'static str| {
+    let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };
     let item = move |glyph, label| menu::item(caption(glyph, label));

@@ -5,7 +5,7 @@ use icedcn::widget::{button, dropdown_menu, menu, menu_group};
 use icedcn::{Slot, Theme};
 
 pub fn view<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
-    let caption = |glyph: Text<'static, Theme>, label: &'static str| {
+    let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };
     let item = move |glyph, label| menu::item(caption(glyph, label));

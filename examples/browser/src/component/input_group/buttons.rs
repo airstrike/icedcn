@@ -28,7 +28,7 @@ impl Component<'static, Message, Theme> for Buttons {
     }
 }
 
-fn buttons<M: Clone + 'static>(size: f32, favorite: bool, toggle: M) -> Slot<'static, M> {
+fn buttons<'a, M: Clone + 'static>(size: f32, favorite: bool, toggle: M) -> Slot<'a, M> {
     let url = "https://github.com/airstrike/icedcn";
     let info = popover(
         |p| {

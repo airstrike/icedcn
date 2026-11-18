@@ -28,7 +28,7 @@ fn example<'a>() -> Slot<'a, ()> {
     )
 }
 
-fn frame(body: impl Into<Slot<'static, ()>>) -> Slot<'static, ()> {
+fn frame<'a>(body: impl Into<Slot<'a, ()>>) -> Slot<'a, ()> {
     container(body)
         .padding([48, 0])
         .width(Fill)

@@ -2,7 +2,7 @@
 use icedcn::widget::{field, switch};
 use icedcn::{Horizontal, Slot};
 
-fn sizes<M: Clone + 'static>() -> Slot<'static, M> {
+fn sizes<'a, M: Clone + 'a>() -> Slot<'a, M> {
     field::group([
         field(switch().size(switch::Size::Sm))
             .orientation(Horizontal)

@@ -87,7 +87,7 @@ impl BreadcrumbPage {
     }
 }
 
-fn destinations(_: &dropdown_menu::Handle) -> Slot<'static, Message> {
+fn destinations<'a>(_: &dropdown_menu::Handle) -> Slot<'a, Message> {
     menu::group([
         menu::item("Documentation").into(),
         menu::item("Themes").into(),

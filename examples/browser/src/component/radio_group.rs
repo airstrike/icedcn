@@ -124,7 +124,7 @@ impl page::Page for RadioGroupPage {
     }
 }
 
-fn density<M: Clone + 'static>() -> Slot<'static, M> {
+fn density<'a, M: Clone + 'static>() -> Slot<'a, M> {
     radio_group(|g| {
         field::group(["Default", "Comfortable", "Compact"].map(|name| {
             field(g.item(name))
@@ -140,7 +140,7 @@ fn density<M: Clone + 'static>() -> Slot<'static, M> {
     .into()
 }
 
-fn described<M: Clone + 'static>() -> Slot<'static, M> {
+fn described<'a, M: Clone + 'static>() -> Slot<'a, M> {
     let choices = [
         ("Default", "Standard spacing for most use cases."),
         ("Comfortable", "More space between elements."),
@@ -162,7 +162,7 @@ fn described<M: Clone + 'static>() -> Slot<'static, M> {
     .into()
 }
 
-fn plans<M: Clone + 'static>() -> Slot<'static, M> {
+fn plans<'a, M: Clone + 'static>() -> Slot<'a, M> {
     let plans = [
         ("Plus", "For individuals and small teams."),
         ("Pro", "For growing businesses."),
@@ -186,7 +186,7 @@ fn plans<M: Clone + 'static>() -> Slot<'static, M> {
     .into()
 }
 
-fn availability<M: Clone + 'static>() -> Slot<'static, M> {
+fn availability<'a, M: Clone + 'static>() -> Slot<'a, M> {
     radio_group(|g| {
         field::group(["Disabled", "Option 2", "Option 3"].map(|name| {
             let disabled = name == "Disabled";
@@ -206,7 +206,7 @@ fn availability<M: Clone + 'static>() -> Slot<'static, M> {
     .into()
 }
 
-fn notifications<M: Clone + 'static>() -> Slot<'static, M> {
+fn notifications<'a, M: Clone + 'static>() -> Slot<'a, M> {
     let choices = radio_group(|g| {
         field::group(["Email only", "SMS only", "Both Email & SMS"].map(|name| {
             field(g.item(name).invalid(true))

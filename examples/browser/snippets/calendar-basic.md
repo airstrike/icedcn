@@ -1,7 +1,7 @@
 ```rust
 use icedcn::widget::calendar;
 
-pub fn basic<Message: 'static>() -> calendar::Calendar<'static, Message> {
+pub fn basic<'a, Message: 'a>() -> calendar::Calendar<'a, Message> {
     calendar().bordered(true)
 }
 ```

@@ -6,7 +6,7 @@ use iced::{ContentFit, Fill, Widget};
 use icedcn::radius;
 use icedcn::widget::aspect_ratio;
 
-fn photo(handle: image::Handle) -> aspect_ratio::AspectRatio<'static, ()> {
+fn photo<'a>(handle: image::Handle) -> aspect_ratio::AspectRatio<'a, ()> {
     let photo = image(handle)
         .width(Fill)
         .height(Fill)

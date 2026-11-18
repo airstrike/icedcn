@@ -8,7 +8,7 @@ use icedcn::Slot;
 use icedcn::theme::text_input::Invalid;
 use icedcn::widget::{field, input};
 
-fn username(value: String, unavailable: bool) -> Slot<'static, ()> {
+fn username<'a>(value: String, unavailable: bool) -> Slot<'a, ()> {
     let control = input("Username").width(Fill).default_value(value);
     if unavailable {
         field(control.style(Invalid))

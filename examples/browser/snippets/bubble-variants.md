@@ -38,7 +38,7 @@ fn example<'a>(theme: &Theme) -> Slot<'a, ()> {
     )
 }
 
-fn frame(body: impl Into<Slot<'static, ()>>) -> Slot<'static, ()> {
+fn frame<'a>(body: impl Into<Slot<'a, ()>>) -> Slot<'a, ()> {
     container(body)
         .padding([48, 0])
         .width(Fill)
@@ -46,7 +46,7 @@ fn frame(body: impl Into<Slot<'static, ()>>) -> Slot<'static, ()> {
         .into()
 }
 
-fn ghost_text(theme: &Theme) -> Slot<'static, ()> {
+fn ghost_text<'a>(theme: &Theme) -> Slot<'a, ()> {
     let bold = Font::DEFAULT.weight(Weight::Bold);
     let code = Span::<()>::new("code")
         .font("Geist Mono")

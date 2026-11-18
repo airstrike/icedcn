@@ -3,7 +3,7 @@ use iced::Shrink;
 use icedcn::widget::{field, radio_group, text};
 use icedcn::{Horizontal, Slot};
 
-fn density<M: Clone + 'static>() -> Slot<'static, M> {
+fn density<'a, M: Clone + 'static>() -> Slot<'a, M> {
     radio_group(|g| {
         field::group(["Default", "Comfortable", "Compact"].map(|name| {
             field(g.item(name))

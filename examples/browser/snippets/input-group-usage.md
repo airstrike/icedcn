@@ -6,7 +6,7 @@ Place the input or textarea inside the group. A passive addon focuses the contro
 use icedcn::Slot;
 use icedcn::widget::{input, input_group};
 
-fn website<M: Clone + 'static>() -> Slot<'static, M> {
+fn website<'a, M: Clone + 'a>() -> Slot<'a, M> {
     input_group(input("example.com"))
         .addon(input_group::addon(input_group::text("https://")))
         .into()

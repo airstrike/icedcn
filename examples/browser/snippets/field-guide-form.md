@@ -15,12 +15,12 @@ enum Event {
     Submit,
 }
 
-fn required(
+fn required<'a>(
     name: &'static str,
-    hint: &'static str,
+    hint: &'a str,
     value: &str,
     attempted: bool,
-) -> field::Field<'static, Event> {
+) -> field::Field<'a, Event> {
     let control = input(hint)
         .width(Fill)
         .value(value.to_owned())

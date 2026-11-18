@@ -193,7 +193,7 @@ impl page::Page for InputGroupPage {
     }
 }
 
-fn demo<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn demo<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     container(
         input_group(input("Search...").text_size(size))
             .addon(addon(icon::search().size(16).line_height(1.0)))
@@ -204,7 +204,7 @@ fn demo<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
     .into()
 }
 
-fn icons<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn icons<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     column![
         input_group(input("Search...").text_size(size))
             .addon(addon(icon::search().size(16).line_height(1.0))),
@@ -230,7 +230,7 @@ fn icons<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
     .into()
 }
 
-fn text_addons<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn text_addons<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     column![
         input_group(input("0.00").text_size(size))
             .addon(addon(input_group::text("$")))
@@ -255,7 +255,7 @@ fn text_addons<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
     .into()
 }
 
-fn shortcut<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn shortcut<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     container(
         input_group(input("Search...").text_size(size))
             .addon(addon(icon::search().size(16).line_height(1.0)))
@@ -266,7 +266,7 @@ fn shortcut<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
     .into()
 }
 
-fn inline_start<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn inline_start<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     container(
         field(
             input_group(input("Search...").text_size(size))
@@ -280,7 +280,7 @@ fn inline_start<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
     .into()
 }
 
-fn inline_end<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn inline_end<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     container(
         field(
             input_group(input("Enter password").text_size(size).secure(true))
@@ -294,7 +294,7 @@ fn inline_end<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
     .into()
 }
 
-fn block_start<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn block_start<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     column![
         field(
             input_group(input("Enter your name").text_size(size))
@@ -331,7 +331,7 @@ fn block_start<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
     .into()
 }
 
-fn block_end<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn block_end<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     column![
         field(
             input_group(input("Enter amount").text_size(size))
@@ -364,7 +364,7 @@ fn block_end<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
     .into()
 }
 
-fn dropdowns<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn dropdowns<'a, M: Clone + 'static>(size: f32) -> Slot<'a, M> {
     column![
         input_group(input("Enter file name").text_size(size)).addon(
             addon(
@@ -418,7 +418,7 @@ fn dropdowns<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
     .into()
 }
 
-fn spinners<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn spinners<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     column![
         input_group(input("Searching...").text_size(size))
             .addon(addon(spinner().circle()).align(Align::InlineEnd)),
@@ -437,7 +437,7 @@ fn spinners<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
     .into()
 }
 
-fn editor<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn editor<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     container(
         input_group(
             textarea("console.log('Hello, world!');")
@@ -482,7 +482,7 @@ fn editor<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
     .into()
 }
 
-fn custom<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn custom<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     container(
         input_group(textarea("Autoresize textarea...").text_size(size)).addon(
             addon(

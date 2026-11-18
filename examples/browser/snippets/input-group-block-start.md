@@ -5,7 +5,7 @@ use icedcn::Slot;
 use icedcn::widget::input_group::{Align, addon};
 use icedcn::widget::{column, field, input, input_group, row, space, textarea};
 
-fn block_start<M: Clone + 'static>(size: f32) -> Slot<'static, M> {
+fn block_start<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
     column![
         field(
             input_group(input("Enter your name").text_size(size))

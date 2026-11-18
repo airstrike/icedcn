@@ -3,7 +3,7 @@ use icedcn::Horizontal;
 use icedcn::Slot;
 use icedcn::widget::{field, switch};
 
-fn authentication<M: Clone + 'static>() -> Slot<'static, M> {
+fn authentication<'a, M: Clone + 'a>() -> Slot<'a, M> {
     field(switch())
         .orientation(Horizontal)
         .control_last()

@@ -6,14 +6,14 @@ use icedcn::Orientation;
 use icedcn::widget::{carousel, container, text};
 use icedcn::{Slot, Theme, card};
 
-fn slide<Message: 'static>(
+fn slide<'a, Message: 'a>(
     index: usize,
     font_size: f32,
     line_height: f32,
     vertical: bool,
     margin: f32,
-) -> Slot<'static, Message> {
-    let content: Slot<'static, Message> = if vertical {
+) -> Slot<'a, Message> {
+    let content: Slot<'a, Message> = if vertical {
         container(
             text::p((index + 1).to_string())
                 .size(font_size)
@@ -25,7 +25,7 @@ fn slide<Message: 'static>(
         .padding(24)
         .into()
     } else {
-        responsive(move |bounds| -> Element<'static, Message, Theme> {
+        responsive(move |bounds| -> Element<'a, Message, Theme> {
             container(
                 text::p((index + 1).to_string())
                     .size(font_size)

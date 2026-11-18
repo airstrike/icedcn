@@ -3,7 +3,7 @@ use icedcn::theme::text::Destructive;
 use icedcn::widget::{field, switch};
 use icedcn::{Horizontal, Slot};
 
-fn terms<M: Clone + 'static>() -> Slot<'static, M> {
+fn terms<'a, M: Clone + 'a>() -> Slot<'a, M> {
     field(switch().style(switch::Invalid))
         .orientation(Horizontal)
         .control_last()

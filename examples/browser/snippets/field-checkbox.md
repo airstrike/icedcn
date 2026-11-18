@@ -3,7 +3,7 @@ use icedcn::Horizontal;
 use icedcn::Slot;
 use icedcn::widget::{checkbox, field, separator, text};
 
-fn devices<M: Clone + 'static>() -> Slot<'static, M> {
+fn devices<'a, M: Clone + 'a>() -> Slot<'a, M> {
     let devices = [
         "Hard disks",
         "External disks",
