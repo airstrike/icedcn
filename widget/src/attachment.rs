@@ -254,7 +254,7 @@ impl<'a, Message: 'a> Compose<Message> for Attachment<'a, Message> {
             }
             col.width(Fill).into()
         } else {
-            let mut line = row().spacing(gap).align_y(Vertical::Center);
+            let mut line = row![].spacing(gap).align_y(Vertical::Center);
             if let Some(media) = media {
                 line = line.push(media.into());
             }

@@ -197,9 +197,11 @@ pub fn center<'a, Message: 'a>(
     container::Container::new(content).center(iced_core::Length::Fill)
 }
 
-/// Create a [`Row`].
-pub fn row<'a, Message: 'a>() -> Row<'a, Message> {
-    Row::new()
+/// Create a [`Row`] with the given children.
+pub fn row<'a, Message: 'a>(
+    children: impl IntoIterator<Item = compose::Slot<'a, Message>>,
+) -> Row<'a, Message> {
+    Row::with_children(children)
 }
 
 /// Create an uncontrolled, nova-styled [`Slider`] over `range`.

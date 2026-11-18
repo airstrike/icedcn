@@ -191,7 +191,7 @@ impl<Message> Compose<Message> for Tooltip<Message> {
                 Vertical::Center
             })
             .width(Fill);
-            let mut item = row();
+            let mut item = row![];
             if let Some(swatch) = swatch {
                 item = item.push(swatch);
             }
