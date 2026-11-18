@@ -41,7 +41,7 @@ use crate::core::widget::tree::{self, Tree};
 use crate::core::window;
 use crate::core::{
     self, Animation, Background, Color, Event, Layout, Length, Pixels, Point, Rectangle, Shell,
-    Size, Theme, Widget,
+    Size, Theme, Vector, Widget,
 };
 
 use crate::core::Length::Fill;
@@ -49,6 +49,7 @@ use crate::core::widget::{Operation, operation};
 use crate::operation::control::Control;
 use iced_widget::slider;
 use icedcn_core::Orientation;
+use std::cell::Cell;
 use std::cmp::Ordering;
 
 use std::ops::RangeInclusive;
@@ -410,17 +411,9 @@ where
                 state.focus[0].0 = true;
             }
             let focus = state.focus.iter().position(|f| f.0);
+            let geometry = Geometry::new(bounds, self.orientation, state.shape.get());
             let at = |point: Point| {
-                let (offset, extent) = match self.orientation {
-                    Orientation::Horizontal => (point.x - bounds.x, bounds.width),
-                    Orientation::Vertical => (bounds.y + bounds.height - point.y, bounds.height),
-                };
-                let cross = match self.orientation {
-                    Orientation::Horizontal => bounds.height,
-                    Orientation::Vertical => bounds.width,
-                };
-                let pad = (cross * 0.5).min(extent * 0.5);
-                let fraction = ((offset - pad) / (extent - 2.0 * pad).max(1.0)).clamp(0.0, 1.0);
+                let fraction = geometry.fraction(point);
                 if fraction == 1.0 {
                     end
                 } else {
@@ -443,16 +436,38 @@ where
                     let point = point.filter(|p| bounds.contains(*p) && viewport.contains(*p));
                     state.focus.fill(Focus::default());
                     if let Some(point) = point {
-                        let candidate = at(point);
-                        let index = closest(self.value.values(), candidate, focus);
+                        let values = self.value.values();
+                        let grabbed = values
+                            .iter()
+                            .map(|v| geometry.center(fraction(*v, start, end)))
+                            .enumerate()
+                            .filter(|(_, center)| geometry.grips(*center, point))
+                            .min_by(|(_, a), (_, b)| {
+                                geometry
+                                    .distance(*a, point)
+                                    .total_cmp(&geometry.distance(*b, point))
+                                    .then(Ordering::Greater)
+                            });
+                        let (index, grab, candidate) = match grabbed {
+                            Some((index, center)) => (index, point - center, None),
+                            None => {
+                                let candidate = at(point);
+                                let index = closest(values, candidate, focus);
+                                (index, Vector::ZERO, Some(candidate))
+                            }
+                        };
                         state.focus[index].0 = true;
                         if state.keyboard_modifiers.command() {
                             if let Some(default) = self.default {
                                 next = self.clamp(default);
                             }
                         } else {
-                            state.dragging = Some((index, pointer));
-                            target = Some((index, candidate));
+                            state.dragging = Some(Drag {
+                                index,
+                                pointer,
+                                grab,
+                            });
+                            target = candidate.map(|value| (index, value));
                         }
                         shell.capture_event();
                     }
@@ -461,19 +476,26 @@ where
                 match event {
                     // Event positions are window coordinates; only the cursor
                     // carries the translation of enclosing scrollables.
-                    Event::Mouse(mouse::Event::CursorMoved { .. }) => {
-                        if let Some((i, Pointer::Mouse)) = state.dragging
+                    Event::Mouse(mouse::Event::CursorMoved { .. })
+                    | Event::Touch(touch::Event::FingerMoved { .. }) => {
+                        let pointer = match event {
+                            Event::Touch(touch::Event::FingerMoved { id, .. }) => {
+                                Pointer::Touch(*id)
+                            }
+                            _ => Pointer::Mouse,
+                        };
+                        if let Some(drag) = &mut state.dragging
+                            && drag.pointer == pointer
                             && let Some(position) = cursor.observe().position()
                         {
-                            target = Some((i, at(position)));
-                        }
-                    }
-                    Event::Touch(touch::Event::FingerMoved { id, .. }) => {
-                        if let Some((i, Pointer::Touch(active))) = state.dragging
-                            && active == *id
-                            && let Some(position) = cursor.observe().position()
-                        {
-                            target = Some((i, at(position)));
+                            let value = at(position - drag.grab);
+                            let index = handoff(self.value.values(), drag.index, value);
+                            if index != drag.index {
+                                state.focus[drag.index].0 = false;
+                                state.focus[index].0 = true;
+                                drag.index = index;
+                            }
+                            target = Some((index, value));
                         }
                     }
                     Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
@@ -487,7 +509,7 @@ where
                             ) => Pointer::Touch(*id),
                             _ => Pointer::Mouse,
                         };
-                        if state.dragging.is_some_and(|(_, active)| active == pointer) {
+                        if state.dragging.is_some_and(|drag| drag.pointer == pointer) {
                             state.dragging = None;
                             if let Some(message) = &self.on_release {
                                 shell.publish(message.clone());
@@ -617,43 +639,15 @@ where
             None
         };
 
-        let (handle_width, handle_height, handle_border_radius) = match style.handle.shape {
-            HandleShape::Circle { radius } => (radius * 2.0, radius * 2.0, radius.into()),
-            HandleShape::Rectangle {
-                width,
-                border_radius,
-            } => (
-                f32::from(width),
-                bounds.width.min(bounds.height),
-                border_radius,
-            ),
+        let handle_border_radius = match style.handle.shape {
+            HandleShape::Circle { radius } => radius.into(),
+            HandleShape::Rectangle { border_radius, .. } => border_radius,
         };
+        state.shape.set(Some(style.handle.shape));
+        let geometry = Geometry::new(bounds, self.orientation, Some(style.handle.shape));
 
         let (start, end) = ((*self.range.start()).as_(), (*self.range.end()).as_());
-        let fraction = |v: T| {
-            if end > start {
-                ((v.as_() - start) / (end - start)).clamp(0.0, 1.0) as f32
-            } else {
-                0.0
-            }
-        };
         let vertical = self.orientation == Orientation::Vertical;
-        let point = |v: T| {
-            let f = fraction(v);
-            if vertical {
-                Point::new(
-                    bounds.center_x(),
-                    bounds.y
-                        + handle_height / 2.0
-                        + (1.0 - f) * (bounds.height - handle_height).max(0.0),
-                )
-            } else {
-                Point::new(
-                    bounds.x + handle_width / 2.0 + f * (bounds.width - handle_width).max(0.0),
-                    bounds.center_y(),
-                )
-            }
-        };
         let rail = if vertical {
             Rectangle {
                 x: bounds.center_x() - style.rail.width / 2.0,
@@ -677,16 +671,14 @@ where
         let (Some(&first), Some(&last)) = (values.first(), values.last()) else {
             return;
         };
-        let from = if values.len() == 1 {
-            if vertical {
-                Point::new(rail.center_x(), rail.y + rail.height)
-            } else {
-                Point::new(rail.x, rail.center_y())
-            }
+        // Radix's Range spans percentages of the whole track, so its ends
+        // sit under the thumbs rather than at their centres.
+        let from = geometry.track(if values.len() == 1 {
+            0.0
         } else {
-            point(first)
-        };
-        let to = point(last);
+            fraction(first, start, end)
+        });
+        let to = geometry.track(fraction(last, start, end));
         let filled = if vertical {
             Rectangle {
                 y: to.y,
@@ -708,13 +700,7 @@ where
             style.rail.backgrounds.0,
         );
         for (i, value) in values.iter().copied().enumerate() {
-            let center = point(value);
-            let handle_bounds = Rectangle {
-                x: center.x - handle_width / 2.0,
-                y: center.y - handle_height / 2.0,
-                width: handle_width,
-                height: handle_height,
-            };
+            let handle_bounds = geometry.thumb(geometry.center(fraction(value, start, end)));
             if let Some(ring) = style.ring
                 && ring.width > 0.0
                 && (values.len() == 1
@@ -771,6 +757,127 @@ where
     }
 }
 
+/// Where the thumbs sit on a slider's track.
+///
+/// Radix keeps a thumb inside the slider with `getThumbInBoundsOffset`, so a
+/// thumb's centre travels the track's length minus the thumb's own. Pointer
+/// positions map back through the same inset, which keeps a pressed thumb's
+/// value where it is drawn.
+#[derive(Debug, Clone, Copy)]
+struct Geometry {
+    bounds: Rectangle,
+    orientation: Orientation,
+    thumb: Size,
+}
+
+impl Geometry {
+    /// `after:-inset-2`: the thumb's pointer target reaches 8px past it.
+    const GRIP: f32 = 8.0;
+
+    /// A slider not drawn yet has no measured thumb; it maps pointers over
+    /// its whole length.
+    fn new(bounds: Rectangle, orientation: Orientation, shape: Option<HandleShape>) -> Self {
+        let thumb = match shape {
+            Some(HandleShape::Circle { radius }) => Size::new(radius * 2.0, radius * 2.0),
+            Some(HandleShape::Rectangle { width, .. }) => {
+                Size::new(f32::from(width), bounds.width.min(bounds.height))
+            }
+            None => Size::ZERO,
+        };
+        Self {
+            bounds,
+            orientation,
+            thumb,
+        }
+    }
+
+    /// The track's length and the thumb's half length along it.
+    fn axis(&self) -> (f32, f32) {
+        let (length, thumb) = match self.orientation {
+            Orientation::Horizontal => (self.bounds.width, self.thumb.width),
+            Orientation::Vertical => (self.bounds.height, self.thumb.height),
+        };
+        (length, thumb.min(length) / 2.0)
+    }
+
+    /// The point `inset` from the start edge plus `fraction` of the rest.
+    fn along(&self, fraction: f32, inset: f32) -> Point {
+        let (length, _) = self.axis();
+        let offset = inset + fraction * (length - 2.0 * inset);
+        match self.orientation {
+            Orientation::Horizontal => Point::new(self.bounds.x + offset, self.bounds.center_y()),
+            Orientation::Vertical => Point::new(
+                self.bounds.center_x(),
+                self.bounds.y + self.bounds.height - offset,
+            ),
+        }
+    }
+
+    /// The point on the track at `fraction`.
+    fn track(&self, fraction: f32) -> Point {
+        self.along(fraction, 0.0)
+    }
+
+    /// The centre of a thumb at `fraction`.
+    fn center(&self, fraction: f32) -> Point {
+        self.along(fraction, self.axis().1)
+    }
+
+    fn thumb(&self, center: Point) -> Rectangle {
+        Rectangle::new(
+            center - Vector::new(self.thumb.width, self.thumb.height) * 0.5,
+            self.thumb,
+        )
+    }
+
+    /// Whether a press at `point` lands on the thumb centred at `center`.
+    fn grips(&self, center: Point, point: Point) -> bool {
+        self.thumb(center).expand(Self::GRIP).contains(point)
+    }
+
+    fn distance(&self, center: Point, point: Point) -> f32 {
+        match self.orientation {
+            Orientation::Horizontal => (point.x - center.x).abs(),
+            Orientation::Vertical => (point.y - center.y).abs(),
+        }
+    }
+
+    /// The fraction of a thumb centred on `point`.
+    fn fraction(&self, point: Point) -> f32 {
+        let (length, half) = self.axis();
+        let offset = match self.orientation {
+            Orientation::Horizontal => point.x - self.bounds.x,
+            Orientation::Vertical => self.bounds.y + self.bounds.height - point.y,
+        };
+        let travel = length - 2.0 * half;
+        if travel > 0.0 {
+            ((offset - half) / travel).clamp(0.0, 1.0)
+        } else {
+            0.0
+        }
+    }
+}
+
+fn fraction<T: num_traits::AsPrimitive<f64>>(value: T, start: f64, end: f64) -> f32 {
+    if end > start {
+        ((value.as_() - start) / (end - start)).clamp(0.0, 1.0) as f32
+    } else {
+        0.0
+    }
+}
+
+/// Thumbs stacked on one value move apart in the direction of the drag.
+fn handoff<T: num_traits::AsPrimitive<f64>>(values: &[T], mut index: usize, value: f64) -> usize {
+    let at = |i: usize| values[i].as_();
+    while index + 1 < values.len() && at(index + 1) == at(index) && value > at(index) {
+        index += 1;
+    }
+    while index > 0 && at(index - 1) == at(index) && value < at(index) {
+        index -= 1;
+    }
+    index
+}
+
 fn closest<T: num_traits::AsPrimitive<f64>>(
     values: &[T],
     value: f64,
@@ -788,6 +895,14 @@ fn closest<T: num_traits::AsPrimitive<f64>>(
         }
     }
     best
+}
+
+#[derive(Clone, Copy)]
+struct Drag {
+    index: usize,
+    pointer: Pointer,
+    /// From the grabbed thumb's centre to the pointer, kept while dragging.
+    grab: Vector,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -813,8 +928,10 @@ impl operation::Focusable for Focus {
 struct State {
     /// The value of an uncontrolled slider, kept across rebuilds.
     uncontrolled: Vec<f64>,
-    dragging: Option<(usize, Pointer)>,
+    dragging: Option<Drag>,
     focus: Vec<Focus>,
+    /// The thumb's shape as last drawn, which only the theme knows.
+    shape: Cell<Option<HandleShape>>,
     control: Control,
     keyboard_modifiers: keyboard::Modifiers,
     ring: Animation<bool>,
@@ -827,6 +944,7 @@ impl Default for State {
             uncontrolled: Vec::new(),
             dragging: None,
             focus: Vec::new(),
+            shape: Cell::new(None),
             control: Control::new(false),
             keyboard_modifiers: keyboard::Modifiers::default(),
             ring: Animation::new(false)
