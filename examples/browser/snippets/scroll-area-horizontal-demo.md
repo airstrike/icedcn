@@ -25,7 +25,7 @@ let figures = Row::with_children(works.into_iter().zip(&IMAGES).map(
                 .border_radius(6)
                 .boxed(),
             row![
-                text::muted("Photo by").size(12.0),
+                text::xs("Photo by").style(theme::text::Muted),
                 text::xs(artist).semibold()
             ]
             .spacing(3)

@@ -5,6 +5,7 @@ use iced::{ContentFit, Widget};
 use icedcn::Slot;
 use icedcn::Theme;
 use icedcn::core::Border;
+use icedcn::theme;
 use icedcn::theme::container::Style;
 use icedcn::widget::scrollable::Direction;
 use icedcn::widget::{Row, column, container, row, scroll_area, separator, text};
@@ -100,7 +101,7 @@ impl page::Page for ScrollAreaPage {
                 let contents = column![text::label("Tags"), column(rows).spacing(8)]
                     .spacing(16)
                     .padding(16);
-                frame(scroll_area(contents).width(192).height(288))
+                frame(scroll_area(contents).width(190).height(286))
             }
             .into(),
             "horizontal-demo" => {
@@ -130,7 +131,7 @@ impl page::Page for ScrollAreaPage {
                                 .border_radius(6)
                                 .boxed(),
                             row![
-                                text::muted("Photo by").size(12.0),
+                                text::xs("Photo by").style(theme::text::Muted),
                                 text::xs(artist).semibold()
                             ]
                             .spacing(3)
