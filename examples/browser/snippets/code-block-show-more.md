@@ -2,13 +2,12 @@
 use icedcn::widget::code_block;
 
 code_block::show_more(256, || {
-    code_block![
-        code_block::header![
-            "src/notebook.rs",
-            code_block::actions![code_block::copy_button(CODE)],
-        ],
-        code_block::content(CODE).language("rust").line_numbers(true),
-    ]
+    code_block(
+        code_block::content(CODE)
+            .language("rust")
+            .line_numbers(true),
+    )
+    .header(code_block::header("src/notebook.rs").actions(code_block::copy_button(CODE)))
 })
 
 const CODE: &str = r##"use icedcn::widget::{button, column, input, text};

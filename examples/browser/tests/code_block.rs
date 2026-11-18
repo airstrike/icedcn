@@ -297,12 +297,12 @@ fn editor<'a, M: 'a>(ui: &mut Simulator<'a, M, Theme>) -> (Rectangle, String) {
 }
 
 fn editable(value: &str) -> Element<'static, String, Theme> {
-    code_block![
+    code_block(
         code_block::content(value.to_owned())
             .language("rust")
             .line_numbers(true)
-            .on_input(|source| source)
-    ]
+            .on_input(|source| source),
+    )
     .into()
 }
 
@@ -383,20 +383,20 @@ fn editable_and_read_only_blocks_lay_out_to_the_same_size() {
     use icedcn::widget::text;
 
     let source = "fn main() {\n    println!(\"hi\");\n}\n";
-    let read_only: Element<'static, String, Theme> = code_block![
-        code_block::header![code_block::title("main.rs")],
+    let read_only: Element<'static, String, Theme> = code_block(
         code_block::content(source)
             .language("rust")
-            .line_numbers(true)
-    ]
+            .line_numbers(true),
+    )
+    .header(code_block::header(code_block::title("main.rs")))
     .into();
-    let editable: Element<'static, String, Theme> = code_block![
-        code_block::header![code_block::title("main.rs")],
+    let editable: Element<'static, String, Theme> = code_block(
         code_block::content(source)
             .language("rust")
             .line_numbers(true)
-            .on_input(|source| source)
-    ]
+            .on_input(|source| source),
+    )
+    .header(code_block::header(code_block::title("main.rs")))
     .into();
     let mut sizes = Vec::new();
     for block in [read_only, editable] {
@@ -443,12 +443,12 @@ const LONG: &str = "fn main() { println!(\"a line that is much longer than the c
 fn a_long_line_in_an_unwrapped_editor_scrolls_on_a_horizontal_wheel_and_while_typing() {
     // Home and End move the caret on a PC; on a Mac they only scroll.
     Platform::set(Some(Platform::Linux));
-    let block: Element<'static, (), Theme> = container(code_block![
+    let block: Element<'static, (), Theme> = container(code_block(
         code_block::content("")
             .language("rust")
             .line_numbers(true)
-            .default_value(LONG)
-    ])
+            .default_value(LONG),
+    ))
     .width(320)
     .into();
     let mut ui = Simulator::with_size(Default::default(), Size::new(320., 400.), block);
@@ -492,7 +492,7 @@ fn a_long_line_in_an_unwrapped_editor_scrolls_on_a_horizontal_wheel_and_while_ty
 fn page(content: code_block::Content<'static, ()>) -> Element<'static, (), Theme> {
     use iced::widget::space;
     use icedcn::widget::scrollable::scrollable;
-    scrollable(column![code_block![content], space().height(2000)].width(iced::Fill))
+    scrollable(column![code_block(content), space().height(2000)].width(iced::Fill))
         .width(iced::Fill)
         .height(iced::Fill)
         .into()
@@ -656,7 +656,7 @@ fn line_numbers_stay_put_while_the_code_scrolls_sideways() {
     let source = format!("let a = 1;\n{LONG}let b = 2;\n");
     for editable in [false, true] {
         let block: Element<'static, (), Theme> =
-            container(code_block![numbered_block(&source, editable)])
+            container(code_block(numbered_block(&source, editable)))
                 .width(320)
                 .into();
         let mut frames = Frames::new(block, Size::new(320., 160.));
@@ -674,12 +674,12 @@ fn line_numbers_stay_put_while_the_code_scrolls_sideways() {
         );
     }
 
-    let block: Element<'static, (), Theme> = container(code_block![
+    let block: Element<'static, (), Theme> = container(code_block(
         code_block::content(source.clone())
             .language("rust")
             .line_numbers(true)
-            .start_line(995)
-    ])
+            .start_line(995),
+    ))
     .width(320)
     .into();
     let mut ui = Simulator::with_size(Default::default(), Size::new(320., 160.), block);
@@ -699,9 +699,9 @@ fn pinned_line_numbers_scroll_vertically_with_their_rows() {
         .collect();
     let mut gutters = Vec::new();
     for editable in [false, true] {
-        let block: Element<'static, (), Theme> = container(code_block![
-            numbered_block(&source, editable).max_height(120)
-        ])
+        let block: Element<'static, (), Theme> = container(code_block(
+            numbered_block(&source, editable).max_height(120),
+        ))
         .width(320)
         .into();
         let mut frames = Frames::new(block, Size::new(320., 160.));
@@ -715,12 +715,12 @@ fn pinned_line_numbers_scroll_vertically_with_their_rows() {
         "the editor's numbers match the listing's"
     );
 
-    let block: Element<'static, (), Theme> = container(code_block![
+    let block: Element<'static, (), Theme> = container(code_block(
         code_block::content(source.clone())
             .line_numbers(true)
             .start_line(995)
-            .max_height(120)
-    ])
+            .max_height(120),
+    ))
     .width(320)
     .into();
     let mut ui = Simulator::with_size(Default::default(), Size::new(320., 160.), block);
@@ -739,12 +739,12 @@ fn pinned_line_numbers_scroll_vertically_with_their_rows() {
 fn a_click_on_a_line_number_puts_the_caret_at_the_line_start() {
     let source = format!("{LONG}let b = 2;\n");
     let block = |value: &str| -> Element<'static, String, Theme> {
-        container(code_block![
+        container(code_block(
             code_block::content(value.to_owned())
                 .language("rust")
                 .line_numbers(true)
-                .on_input(|source| source)
-        ])
+                .on_input(|source| source),
+        ))
         .width(320)
         .into()
     };

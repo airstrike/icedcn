@@ -6,11 +6,11 @@ use iced_widget::Renderer;
 use icedcn_core::theme::container::Style;
 use icedcn_core::{Border, Theme, radius};
 
-use super::Placement;
+use super::{CopyButton, Placement};
 use crate::compose::{Compose, Inherited, Slot};
-use crate::{Row, Size, container};
+use crate::{Button, Row, Size, container};
 
-/// Build actions from any number of buttons.
+/// Build actions from buttons of different types.
 ///
 /// ```ignore
 /// code_block::actions![
@@ -18,16 +18,18 @@ use crate::{Row, Size, container};
 ///     code_block::copy_button(CODE),
 /// ]
 /// ```
+#[doc(hidden)]
 #[macro_export]
-macro_rules! actions {
+macro_rules! __code_block_actions {
     ($first:expr $(, $rest:expr)* $(,)?) => {
         $crate::code_block::actions($first)$(.push($rest))*
     };
 }
 
-/// Buttons 4px apart. In a header they sit at the end; as a direct child of
-/// the block they float at the top end of the content and show on hover or
-/// focus, each on the page background with a faint ring.
+/// Buttons 4px apart. In a [`Header`](super::Header) they sit at the end; on
+/// the block itself ([`CodeBlock::actions`](super::CodeBlock::actions)) they
+/// float at the top end of the content and show on hover or focus, each on
+/// the page background with a faint ring.
 ///
 /// Buttons default to `Size::Xs`. A ghost button in the header is muted until
 /// hovered or [`pressed`](crate::Button::pressed).
@@ -90,6 +92,18 @@ impl<'a, Message: 'a> Compose<Message> for Actions<'a, Message> {
         .spacing(4)
         .align_y(Vertical::Center)
         .into()
+    }
+}
+
+impl<'a, Message: Clone + 'a> From<Button<'a, Message>> for Actions<'a, Message> {
+    fn from(button: Button<'a, Message>) -> Self {
+        actions(button)
+    }
+}
+
+impl<'a, Message: 'a> From<CopyButton<'a>> for Actions<'a, Message> {
+    fn from(button: CopyButton<'a>) -> Self {
+        actions(button)
     }
 }
 

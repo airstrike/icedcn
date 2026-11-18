@@ -3,13 +3,10 @@ use crate::icon;
 use icedcn::widget::code_block;
 use icedcn::widget::code_block::ansi;
 
-code_block![
-    code_block::header![
-        code_block::title![terminal, "Terminal"],
-        code_block::actions![code_block::copy_button(ansi::strip(OUTPUT))],
-    ],
-    code_block::content(OUTPUT).language("ansi").wrap(true),
-]
+code_block(code_block::content(OUTPUT).language("ansi").wrap(true)).header(
+    code_block::header(code_block::title("Terminal").icon(icon::terminal()))
+        .actions(code_block::copy_button(ansi::strip(OUTPUT))),
+)
 
 const OUTPUT: &str = concat!(
     "$ cargo test --color always\n",

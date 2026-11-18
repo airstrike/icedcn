@@ -1,1 +1,1 @@
-Each part is a function in `code_block`. Parts with several children also have a macro: `code_block!`, `header!`, `title!`, `actions!` and `footer!`.
+Each part is a function in `code_block`. `code_block::actions!` also builds actions from buttons of different types.

@@ -1,13 +1,13 @@
 ```rust
 use icedcn::widget::code_block;
 
-code_block![
-    code_block::header!["src/notebooks.rs"],
+code_block(
     code_block::content(CODE)
         .language("rust")
         .line_numbers(true)
         .start_line(995),
-]
+)
+.header(code_block::header("src/notebooks.rs"))
 
 const CODE: &str = r##"    let query = self.query.trim().to_lowercase();
 

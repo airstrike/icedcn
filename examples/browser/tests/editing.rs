@@ -516,12 +516,12 @@ const CODE: &str = "fn main() { println!(\"a line that is much longer than the c
 
 /// An editable code block 320 pixels wide holding `value`.
 fn block(value: &str) -> Element<'static, String, Theme> {
-    container(code_block![
+    container(code_block(
         code_block::content("")
             .language("rust")
             .default_value(value.to_owned())
-            .on_input(|s| s)
-    ])
+            .on_input(|s| s),
+    ))
     .width(320)
     .into()
 }
@@ -774,7 +774,7 @@ fn controlled(index: usize, value: &str) -> Element<'static, String, Theme> {
     match index {
         0 => input("").value(value.to_owned()).on_input(|s| s).into(),
         1 => textarea("").value(value.to_owned()).on_input(|s| s).into(),
-        _ => code_block![code_block::content(value.to_owned()).on_input(|s| s)].into(),
+        _ => code_block(code_block::content(value.to_owned()).on_input(|s| s)).into(),
     }
 }
 
@@ -822,7 +822,7 @@ fn field(name: &str, value: &str) -> Element<'static, String, Theme> {
             .on_input(|s| s)
             .into(),
         "textarea" => textarea("").default_value(value).on_input(|s| s).into(),
-        _ => code_block![code_block::content("").default_value(value).on_input(|s| s)].into(),
+        _ => code_block(code_block::content("").default_value(value).on_input(|s| s)).into(),
     }
 }
 

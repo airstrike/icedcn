@@ -8,9 +8,8 @@ enum Message {
     Download,
 }
 
-code_block![
-    code_block::header![
-        code_block::title![terminal, "Terminal"],
+code_block(code_block::content(OUTPUT).wrap(wrap)).header(
+    code_block::header(code_block::title("Terminal").icon(icon::terminal())).actions(
         code_block::actions![
             button(icon::wrap_text())
                 .style(button::Ghost)
@@ -23,9 +22,8 @@ code_block![
                 .on_press(Message::Download),
             code_block::copy_button(OUTPUT),
         ],
-    ],
-    code_block::content(OUTPUT).wrap(wrap),
-]
+    ),
+)
 
 const OUTPUT: &str = r##"$ cargo clippy -- -D warnings
     Checking notebook v0.1.0

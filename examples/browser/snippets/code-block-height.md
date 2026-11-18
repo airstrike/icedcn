@@ -6,11 +6,6 @@ let logs = (0..40)
     .collect::<Vec<_>>()
     .join("\n");
 
-code_block![
-    code_block::header![
-        "Logs",
-        code_block::actions![code_block::copy_button(&logs)],
-    ],
-    code_block::content(&logs).max_height(192),
-]
+code_block(code_block::content(logs.clone()).max_height(192))
+    .header(code_block::header("Logs").actions(code_block::copy_button(logs)))
 ```

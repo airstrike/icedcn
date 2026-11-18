@@ -283,9 +283,9 @@ fn field(name: &str, value: &str) -> Element<'static, String, Theme> {
         "textarea" => container(textarea("").default_value(value).on_input(|s| s))
             .width(400)
             .into(),
-        _ => container(code_block![
-            code_block::content("").default_value(value).on_input(|s| s)
-        ])
+        _ => container(code_block(
+            code_block::content("").default_value(value).on_input(|s| s),
+        ))
         .width(400)
         .into(),
     }
@@ -743,7 +743,7 @@ fn tall(name: &str) -> Element<'static, String, Theme> {
     let value = lines.join("\n");
     let field = match name {
         "textarea" => Element::from(textarea("").default_value(value).on_input(|s| s)),
-        _ => code_block![code_block::content("").default_value(value).on_input(|s| s)].into(),
+        _ => code_block(code_block::content("").default_value(value).on_input(|s| s)).into(),
     };
     container(scrollable::scrollable(container(field).width(400)).height(200)).into()
 }

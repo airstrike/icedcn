@@ -10,16 +10,13 @@ fn style(line: &str) -> LineStyle {
     }
 }
 
-code_block![
-    code_block::header![
-        "src/search.rs",
-        code_block::actions![code_block::copy_button(PATCH)],
-    ],
+code_block(
     PATCH
         .lines()
         .map(|line| code_block::line(&line[1..]).style(style(line)))
         .collect::<Vec<_>>(),
-]
+)
+.header(code_block::header("src/search.rs").actions(code_block::copy_button(PATCH)))
 
 const PATCH: &str = r##" fn matches(query: &str, title: &str) -> bool {
 -    title.contains(query)

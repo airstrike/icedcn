@@ -8,9 +8,15 @@ enum Message {
     Download,
 }
 
-code_block![
-    code_block::header![
-        code_block::title![file_code, "src/view.rs"],
+code_block(
+    code_block::content(CODE)
+        .language("rust")
+        .line_numbers(true)
+        .wrap(wrap)
+        .line_style(6..=10, code_block::Highlighted),
+)
+.header(
+    code_block::header(code_block::title("src/view.rs").icon(icon::file_code())).actions(
         code_block::actions![
             button(icon::wrap_text())
                 .style(button::Ghost)
@@ -23,13 +29,8 @@ code_block![
                 .on_press(Message::Download),
             code_block::copy_button(CODE),
         ],
-    ],
-    code_block::content(CODE)
-        .language("rust")
-        .line_numbers(true)
-        .wrap(wrap)
-        .line_style(6..=10, code_block::Highlighted),
-]
+    ),
+)
 
 const CODE: &str = r##"use icedcn::{Slot, widget::{column, input, text}};
 

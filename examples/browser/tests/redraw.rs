@@ -148,12 +148,12 @@ fn fields() -> [(&'static str, Element<'static, String, Theme>); 4] {
         ("textarea", textarea("").on_input(|s| s).into()),
         (
             "code block",
-            container(code_block![
+            container(code_block(
                 code_block::content("")
                     .language("rust")
                     .default_value(String::new())
-                    .on_input(|s| s)
-            ])
+                    .on_input(|s| s),
+            ))
             .width(320)
             .into(),
         ),
@@ -336,11 +336,11 @@ fn the_caret_stays_on_while_keys_come_and_blinks_again_after_a_pause() {
                 let view: Element<'static, String, Theme> = match name {
                     "input" => input("").width(300).on_input(|s| s).into(),
                     "textarea" => container(textarea("").on_input(|s| s)).width(300).into(),
-                    _ => container(code_block![
+                    _ => container(code_block(
                         code_block::content("")
                             .default_value(String::new())
-                            .on_input(|s| s)
-                    ])
+                            .on_input(|s| s),
+                    ))
                     .width(300)
                     .into(),
                 };

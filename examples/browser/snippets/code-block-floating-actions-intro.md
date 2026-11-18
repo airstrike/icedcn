@@ -1,3 +1,3 @@
 ## Floating Actions
 
-Without a header, put `code_block::actions!` directly inside `code_block!`. The actions float at the top end and stay hidden while the pointer is away and nothing inside has focus.
+Without a header, pass the actions to the block's own `.actions(..)`. They float at the top end and stay hidden while the pointer is away and nothing inside has focus.

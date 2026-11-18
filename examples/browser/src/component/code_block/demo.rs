@@ -127,7 +127,7 @@ impl State {
         ]
     }
     fn replay(&self, id: &'static str) -> Slot<'static, Message> {
-        button![rotate_ccw, "Replay"]
+        button![icon::rotate_ccw(), "Replay"]
             .style(button::Outline)
             .size(Size::Sm)
             .disabled(self.streaming.contains_key(id))
@@ -197,50 +197,44 @@ impl State {
     }
     fn example(&self, id: &str, dark: bool) -> Slot<'static, Message> {
         match id {
-            "demo" => code_block![
-                code_block::header![
-                    code_block::title![file_code, "src/view.rs"],
-                    self.toolbar("demo", DEMO, "view.rs"),
-                ],
+            "demo" => code_block(
                 code_block::content(DEMO)
                     .language("rust")
                     .line_numbers(true)
                     .wrap(self.wrap("demo"))
                     .line_style(6..=10, code_block::Highlighted),
-            ]
+            )
+            .header(
+                code_block::header(code_block::title("src/view.rs").icon(icon::file_code()))
+                    .actions(self.toolbar("demo", DEMO, "view.rs")),
+            )
             .into(),
             "basic" => code_block(BASIC).into(),
-            "header" => code_block![
-                code_block::header![
-                    code_block::title![terminal, "Terminal"],
-                    code_block::actions![code_block::copy_button(COMMAND)],
-                ],
-                HEADER,
-            ]
-            .into(),
-            "actions" => code_block![
-                code_block::header![
-                    code_block::title![terminal, "Terminal"],
-                    self.toolbar("actions", ACTIONS, "clippy.log"),
-                ],
-                code_block::content(ACTIONS).wrap(self.wrap("actions")),
-            ]
-            .into(),
-            "floating-actions" => code_block![
-                code_block::actions![code_block::copy_button(FLOATING_ACTIONS)],
-                FLOATING_ACTIONS,
-            ]
-            .into(),
+            "header" => code_block(HEADER)
+                .header(
+                    code_block::header(code_block::title("Terminal").icon(icon::terminal()))
+                        .actions(code_block::copy_button(COMMAND)),
+                )
+                .into(),
+            "actions" => code_block(code_block::content(ACTIONS).wrap(self.wrap("actions")))
+                .header(
+                    code_block::header(code_block::title("Terminal").icon(icon::terminal()))
+                        .actions(self.toolbar("actions", ACTIONS, "clippy.log")),
+                )
+                .into(),
+            "floating-actions" => code_block(FLOATING_ACTIONS)
+                .actions(code_block::copy_button(FLOATING_ACTIONS))
+                .into(),
             "line-numbers" => {
                 code_block(code_block::content(LINE_NUMBERS).line_numbers(true)).into()
             }
-            "start-line" => code_block![
-                code_block::header!["src/notebooks.rs"],
+            "start-line" => code_block(
                 code_block::content(START_LINE)
                     .language("rust")
                     .line_numbers(true)
                     .start_line(995),
-            ]
+            )
+            .header(code_block::header("src/notebooks.rs"))
             .into(),
             "wrap" => column![
                 code_block(WRAP),
@@ -255,62 +249,51 @@ impl State {
                     .line_style(3..=4, code_block::Highlighted),
             )
             .into(),
-            "diff" => code_block![
-                code_block::header![
-                    "src/search.rs",
-                    code_block::actions![code_block::copy_button(DIFF)],
-                ],
+            "diff" => code_block(
                 DIFF.lines()
                     .map(|row| code_block::line(&row[1..]).style(diff_style(row)))
                     .collect::<Vec<_>>(),
-            ]
+            )
+            .header(code_block::header("src/search.rs").actions(code_block::copy_button(DIFF)))
             .into(),
-            "height" => code_block![
-                code_block::header![
-                    "Logs",
-                    code_block::actions![code_block::copy_button(self.logs.clone())],
-                ],
-                code_block::content(self.logs.clone()).max_height(192),
-            ]
-            .into(),
+            "height" => code_block(code_block::content(self.logs.clone()).max_height(192))
+                .header(
+                    code_block::header("Logs").actions(code_block::copy_button(self.logs.clone())),
+                )
+                .into(),
             "show-more" => code_block::show_more(256, || {
-                code_block![
-                    code_block::header![
-                        "src/notebook.rs",
-                        code_block::actions![code_block::copy_button(SHOW_MORE)],
-                    ],
+                code_block(
                     code_block::content(SHOW_MORE)
                         .language("rust")
                         .line_numbers(true),
-                ]
+                )
+                .header(
+                    code_block::header("src/notebook.rs")
+                        .actions(code_block::copy_button(SHOW_MORE)),
+                )
             })
             .into(),
             "show-more-scroll" => code_block::show_more(256, || {
-                code_block![
-                    code_block::header![
-                        "src/notebook.rs",
-                        code_block::actions![code_block::copy_button(SHOW_MORE)],
-                    ],
+                code_block(
                     code_block::content(SHOW_MORE)
                         .language("rust")
                         .line_numbers(true)
                         .max_height(384),
-                ]
+                )
+                .header(
+                    code_block::header("src/notebook.rs")
+                        .actions(code_block::copy_button(SHOW_MORE)),
+                )
             })
             .into(),
             "size" => column![terminal(SIZE), terminal(SIZE).size(Size::Sm),]
                 .width(Fill)
                 .spacing(16)
                 .into(),
-            "destructive" => code_block![
-                code_block::header![
-                    "Error",
-                    code_block::actions![code_block::copy_button(DESTRUCTIVE)],
-                ],
-                code_block::content(DESTRUCTIVE).wrap(true),
-            ]
-            .style(Destructive)
-            .into(),
+            "destructive" => code_block(code_block::content(DESTRUCTIVE).wrap(true))
+                .header(code_block::header("Error").actions(code_block::copy_button(DESTRUCTIVE)))
+                .style(Destructive)
+                .into(),
             "trace" => trace([
                 tool_output("Ran cargo --version", TRACE, false),
                 tool_output("Failed to run cargo run --bin notes", TRACE_ERROR, true),
@@ -324,18 +307,20 @@ impl State {
                 ])]
                 .spacing(8);
                 for file in FILES {
-                    body = body.push(t.content(
-                        file.id,
-                        code_block![
-                            code_block::header![
-                                file.title,
-                                code_block::actions![code_block::copy_button(file.code)],
-                            ],
-                            code_block::content(file.code)
-                                .language(file.language)
-                                .line_numbers(true),
-                        ],
-                    ));
+                    body = body.push(
+                        t.content(
+                            file.id,
+                            code_block(
+                                code_block::content(file.code)
+                                    .language(file.language)
+                                    .line_numbers(true),
+                            )
+                            .header(
+                                code_block::header(file.title)
+                                    .actions(code_block::copy_button(file.code)),
+                            ),
+                        ),
+                    );
                 }
                 body.into()
             })
@@ -347,13 +332,10 @@ impl State {
                 message(
                     column![
                         text::p("Compare the query and each title in lowercase."),
-                        code_block![
-                            code_block::header![
-                                "src/search.rs",
-                                code_block::actions![code_block::copy_button(CHAT)],
-                            ],
-                            code_block::content(CHAT).language("rust"),
-                        ],
+                        code_block(code_block::content(CHAT).language("rust")).header(
+                            code_block::header("src/search.rs")
+                                .actions(code_block::copy_button(CHAT))
+                        ),
                         text::p("The result borrows the matching titles from the original list."),
                     ]
                     .spacing(12)
@@ -364,53 +346,49 @@ impl State {
             "typeset" => column![
                 text::h3("Read a notebook index"),
                 prose(&self.typeset_before, dark),
-                code_block![
-                    code_block::header![
-                        code_block::title![file_code, "src/index.rs"],
-                        code_block::actions![code_block::copy_button(TYPESET)],
-                    ],
+                code_block(
                     code_block::content(TYPESET)
                         .language("rust")
-                        .line_numbers(true),
-                ],
+                        .line_numbers(true)
+                )
+                .header(
+                    code_block::header(code_block::title("src/index.rs").icon(icon::file_code()))
+                        .actions(code_block::copy_button(TYPESET))
+                ),
                 prose(&self.typeset_after, dark),
             ]
             .spacing(12)
             .into(),
-            "editable" => code_block![
-                code_block::header![code_block::title![file_code, "src/greet.rs"]],
+            "editable" => code_block(
                 code_block::content("")
                     .default_value(EDITABLE)
                     .language("rust")
                     .line_numbers(true),
-            ]
+            )
+            .header(code_block::header(
+                code_block::title("src/greet.rs").icon(icon::file_code()),
+            ))
             .into(),
-            "highlighting" => code_block![
-                code_block::header!["src/notebook.rs"],
-                code_block::content(HIGHLIGHTING).language("rust"),
-            ]
-            .into(),
+            "highlighting" => code_block(code_block::content(HIGHLIGHTING).language("rust"))
+                .header(code_block::header("src/notebook.rs"))
+                .into(),
             "languages" => {
                 let mut samples = column![].width(Fill).spacing(16);
                 for sample in SAMPLES {
                     samples = samples.push(
-                        code_block![
-                            code_block::header![sample.title],
-                            code_block::content(sample.code).language(sample.language),
-                        ]
-                        .into(),
+                        code_block(code_block::content(sample.code).language(sample.language))
+                            .header(code_block::header(sample.title))
+                            .into(),
                     );
                 }
                 samples.into()
             }
-            "ansi" => code_block![
-                code_block::header![
-                    code_block::title![terminal, "Terminal"],
-                    code_block::actions![code_block::copy_button(ansi::strip(ANSI))],
-                ],
-                code_block::content(ANSI).language("ansi").wrap(true),
-            ]
-            .into(),
+            "ansi" => code_block(code_block::content(ANSI).language("ansi").wrap(true))
+                .header(
+                    code_block::header(code_block::title("Terminal").icon(icon::terminal()))
+                        .actions(code_block::copy_button(ansi::strip(ANSI))),
+                )
+                .into(),
             "streaming" => self.streaming(),
             "markdown" => self.markdown(dark),
             _ => unreachable!("unknown Code Block example {id}"),
@@ -419,13 +397,10 @@ impl State {
 }
 
 fn terminal(output: &'static str) -> code_block::CodeBlock<'static, Message> {
-    code_block![
-        code_block::header![
-            code_block::title![terminal, "Terminal"],
-            code_block::actions![code_block::copy_button(output)],
-        ],
-        code_block::content(output).wrap(true),
-    ]
+    code_block(code_block::content(output).wrap(true)).header(
+        code_block::header(code_block::title("Terminal").icon(icon::terminal()))
+            .actions(code_block::copy_button(output)),
+    )
 }
 
 fn diff_style(row: &str) -> LineStyle {
@@ -486,16 +461,13 @@ fn streaming_block(stream: &Stream, code: &str) -> Slot<'static, Message> {
         content = content.line_style(index + 1, style);
     }
     match stream.title {
-        Some(title) => code_block![
-            code_block::header![
-                title,
-                code_block::actions![
+        Some(title) => {
+            code_block(content)
+                .header(code_block::header(title).actions(
                     code_block::copy_button(source).disabled(code.len() < stream.code.len()),
-                ],
-            ],
-            content,
-        ]
-        .into(),
+                ))
+                .into()
+        }
         None => code_block(content).into(),
     }
 }
@@ -505,14 +477,12 @@ fn markdown_code_block(
     language: &'static str,
     incomplete: bool,
 ) -> Slot<'static, Message> {
-    code_block![
-        code_block::header![
-            language,
-            code_block::actions![code_block::copy_button(code.to_owned()).disabled(incomplete)],
-        ],
-        code_block::content(code.to_owned()).language(language),
-    ]
-    .into()
+    code_block(code_block::content(code.to_owned()).language(language))
+        .header(
+            code_block::header(language)
+                .actions(code_block::copy_button(code.to_owned()).disabled(incomplete)),
+        )
+        .into()
 }
 
 fn total_length(id: &str) -> usize {

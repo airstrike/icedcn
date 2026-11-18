@@ -2,14 +2,9 @@
 use icedcn::Destructive;
 use icedcn::widget::code_block;
 
-code_block![
-    code_block::header![
-        "Error",
-        code_block::actions![code_block::copy_button(ERROR)],
-    ],
-    code_block::content(ERROR).wrap(true),
-]
-.style(Destructive)
+code_block(code_block::content(ERROR).wrap(true))
+    .header(code_block::header("Error").actions(code_block::copy_button(ERROR)))
+    .style(Destructive)
 
 const ERROR: &str = r##"thread 'main' panicked at src/notebook.rs:18:22:
 index out of bounds: the len is 0 but the index is 0

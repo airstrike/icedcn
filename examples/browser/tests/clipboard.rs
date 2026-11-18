@@ -211,7 +211,7 @@ fn views(value: &'static str) -> [(&'static str, Element<'static, String, Theme>
         ),
         (
             "code block",
-            code_block![code_block::content("").default_value(value).on_input(|s| s)].into(),
+            code_block(code_block::content("").default_value(value).on_input(|s| s)).into(),
         ),
     ]
 }

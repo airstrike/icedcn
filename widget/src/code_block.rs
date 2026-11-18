@@ -3,17 +3,12 @@
 //! A block composes the same parts as the source component:
 //!
 //! ```ignore
-//! code_block![
-//!     code_block::header![
-//!         code_block::title("Terminal"),
-//!         code_block::actions![code_block::copy_button(OUTPUT)],
-//!     ],
-//!     OUTPUT,
-//! ]
+//! code_block(OUTPUT)
+//!     .header(code_block::header("Terminal").actions(code_block::copy_button(OUTPUT)))
 //! ```
 //!
-//! A string child is the content. [`content`] sets its props, [`actions`] as a
-//! direct child floats over the content, and [`footer`] sits below it.
+//! A string is the content; [`content`] sets its props. [`CodeBlock::actions`]
+//! floats them over the content, and [`CodeBlock::footer`] sits below it.
 mod actions;
 pub mod ansi;
 mod content;
@@ -32,8 +27,7 @@ mod show_more;
 mod syntax;
 mod viewport;
 
-#[doc(inline)]
-pub use crate::{actions, footer, header, title};
+pub use crate::__code_block_actions as actions;
 pub use actions::{Actions, actions};
 pub use content::{Content, Line, LineRange, content, line};
 pub use copy::{CopyButton, copy_button};
@@ -77,83 +71,18 @@ pub(crate) enum Placement {
     Floating,
 }
 
-/// Build a block from its parts: a header, floating actions, content and a footer.
-///
-/// ```ignore
-/// code_block![code_block::actions![code_block::copy_button(OUTPUT)], OUTPUT]
-/// ```
-#[macro_export]
-macro_rules! code_block {
-    ($first:expr $(, $rest:expr)* $(,)?) => {
-        $crate::code_block::code_block($first)$(.push($rest))*
-    };
-}
-
-/// A block holding one part. A string is the content.
-pub fn code_block<'a, Message: 'a>(part: impl Into<Part<'a, Message>>) -> CodeBlock<'a, Message> {
+/// A block showing `content`: a string, a list of [`line`]s, or [`content`] with its props.
+pub fn code_block<'a, Message: 'a>(
+    content: impl Into<Content<'a, Message>>,
+) -> CodeBlock<'a, Message> {
     CodeBlock {
         header: None,
         actions: None,
-        content: content(""),
+        content: content.into(),
         footer: None,
         size: Size::Default,
         style: Spec::default(),
         disabled: false,
-    }
-    .push(part)
-}
-
-/// A direct child of a [`CodeBlock`].
-pub enum Part<'a, Message> {
-    Header(Header<'a, Message>),
-    Actions(Actions<'a, Message>),
-    Content(Content<'a, Message>),
-    Footer(Footer<'a, Message>),
-}
-
-impl<'a, Message> From<Header<'a, Message>> for Part<'a, Message> {
-    fn from(header: Header<'a, Message>) -> Self {
-        Part::Header(header)
-    }
-}
-impl<'a, Message> From<Actions<'a, Message>> for Part<'a, Message> {
-    fn from(actions: Actions<'a, Message>) -> Self {
-        Part::Actions(actions)
-    }
-}
-impl<'a, Message> From<Content<'a, Message>> for Part<'a, Message> {
-    fn from(content: Content<'a, Message>) -> Self {
-        Part::Content(content)
-    }
-}
-impl<'a, Message> From<Footer<'a, Message>> for Part<'a, Message> {
-    fn from(footer: Footer<'a, Message>) -> Self {
-        Part::Footer(footer)
-    }
-}
-impl<'a, Message> From<&'a str> for Part<'a, Message> {
-    fn from(source: &'a str) -> Self {
-        Part::Content(content(source))
-    }
-}
-impl<'a, Message> From<&'a String> for Part<'a, Message> {
-    fn from(source: &'a String) -> Self {
-        Part::Content(content(source))
-    }
-}
-impl<'a, Message> From<String> for Part<'a, Message> {
-    fn from(source: String) -> Self {
-        Part::Content(content(source))
-    }
-}
-impl<'a, Message> From<Cow<'a, str>> for Part<'a, Message> {
-    fn from(source: Cow<'a, str>) -> Self {
-        Part::Content(content(source))
-    }
-}
-impl<'a, Message> From<Vec<Line<'a, Message>>> for Part<'a, Message> {
-    fn from(lines: Vec<Line<'a, Message>>) -> Self {
-        Part::Content(content(lines))
     }
 }
 
@@ -169,14 +98,21 @@ pub struct CodeBlock<'a, Message: 'a> {
 }
 
 impl<'a, Message: 'a> CodeBlock<'a, Message> {
-    /// Add a part. A later part of the same kind replaces the earlier one.
-    pub fn push(mut self, part: impl Into<Part<'a, Message>>) -> Self {
-        match part.into() {
-            Part::Header(header) => self.header = Some(header),
-            Part::Actions(actions) => self.actions = Some(actions),
-            Part::Content(content) => self.content = content,
-            Part::Footer(footer) => self.footer = Some(footer),
-        }
+    /// The row above the content: a [`header`] with a title and actions.
+    pub fn header(mut self, header: impl Into<Header<'a, Message>>) -> Self {
+        self.header = Some(header.into());
+        self
+    }
+
+    /// Actions that float over the top end of the content and show on hover or focus.
+    pub fn actions(mut self, actions: impl Into<Actions<'a, Message>>) -> Self {
+        self.actions = Some(actions.into());
+        self
+    }
+
+    /// The row below the content.
+    pub fn footer(mut self, footer: impl Into<Footer<'a, Message>>) -> Self {
+        self.footer = Some(footer.into());
         self
     }
 

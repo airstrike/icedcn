@@ -262,16 +262,15 @@ mod tests {
 
     #[test]
     fn header_copy_writes_the_complete_value_of_a_collapsed_block() {
-        use crate::code_block::{self, copy_button};
+        use crate::code_block::{self, code_block, copy_button};
 
         let renderer =
             block_on(Renderer::new(Default::default(), None)).expect("headless renderer");
         let source = "first\n\nlast";
-        let mut element: Element<'_, (), Theme, Renderer> = crate::code_block![
-            code_block::header!["Output", code_block::actions![copy_button(source)]],
-            code_block::content(source).max_height(16).collapsed(true),
-        ]
-        .into();
+        let mut element: Element<'_, (), Theme, Renderer> =
+            code_block(code_block::content(source).max_height(16).collapsed(true))
+                .header(code_block::header("Output").actions(copy_button(source)))
+                .into();
         let mut tree = Tree::new(&element);
         tree.diff(&mut element);
         let size = Size::new(200., 200.);

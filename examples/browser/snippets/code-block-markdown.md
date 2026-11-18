@@ -20,14 +20,12 @@ impl<'a> markdown::Viewer<'a, markdown::Uri, Theme> for Reply {
         _lines: &'a [markdown::Text],
     ) -> Element<'a, markdown::Uri, Theme> {
         let language = language.unwrap_or("text");
-        code_block![
-            code_block::header![
-                language,
-                code_block::actions![code_block::copy_button(code).disabled(!self.complete)],
-            ],
-            code_block::content(code).language(language),
-        ]
-        .into()
+        code_block(code_block::content(code).language(language))
+            .header(
+                code_block::header(language)
+                    .actions(code_block::copy_button(code).disabled(!self.complete)),
+            )
+            .into()
     }
 }
 

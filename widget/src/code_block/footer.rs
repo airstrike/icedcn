@@ -9,14 +9,6 @@ use icedcn_core::Theme;
 use crate::compose::{Compose, Inherited, Slot};
 use crate::{Row, container};
 
-/// Build a footer from any number of children.
-#[macro_export]
-macro_rules! footer {
-    ($first:expr $(, $rest:expr)* $(,)?) => {
-        $crate::code_block::footer($first)$(.push($rest))*
-    };
-}
-
 /// A row below the content, 8px apart and muted.
 pub struct Footer<'a, Message> {
     children: Vec<Slot<'a, Message>>,

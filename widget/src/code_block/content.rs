@@ -45,6 +45,32 @@ impl<'a, Message> From<Vec<Line<'a, Message>>> for Body<'a, Message> {
     }
 }
 
+impl<'a, Message> From<&'a str> for Content<'a, Message> {
+    fn from(source: &'a str) -> Self {
+        content(source)
+    }
+}
+impl<'a, Message> From<String> for Content<'a, Message> {
+    fn from(source: String) -> Self {
+        content(source)
+    }
+}
+impl<'a, Message> From<&'a String> for Content<'a, Message> {
+    fn from(source: &'a String) -> Self {
+        content(source)
+    }
+}
+impl<'a, Message> From<Cow<'a, str>> for Content<'a, Message> {
+    fn from(source: Cow<'a, str>) -> Self {
+        content(source)
+    }
+}
+impl<'a, Message> From<Vec<Line<'a, Message>>> for Content<'a, Message> {
+    fn from(lines: Vec<Line<'a, Message>>) -> Self {
+        content(lines)
+    }
+}
+
 /// One line of code, for a custom row.
 pub struct Line<'a, Message> {
     content: Slot<'a, Message>,

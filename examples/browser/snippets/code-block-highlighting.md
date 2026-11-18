@@ -1,10 +1,8 @@
 ```rust
 use icedcn::widget::code_block;
 
-code_block![
-    code_block::header!["src/notebook.rs"],
-    code_block::content(CODE).language("rust"),
-]
+code_block(code_block::content(CODE).language("rust"))
+    .header(code_block::header("src/notebook.rs"))
 
 const CODE: &str = r##"#[derive(Debug, Default)]
 struct Notebook {

@@ -136,8 +136,10 @@ fn collapsed_content_keeps_complete_source_and_does_not_scroll_vertically() {
 
 #[test]
 fn floating_actions_precede_content_and_survive_rebuild() {
-    let block =
-        || icedcn_widget::code_block![code_block::actions(button("Copy").on_press(())), "output"];
+    let block = || {
+        icedcn_widget::code_block("output")
+            .actions(code_block::actions(button("Copy").on_press(())))
+    };
     let mut view = ui(container(block()).width(448).into(), 600.);
     view.point_at(Point::new(550., 900.));
     view.draw(&Theme::light());
@@ -176,18 +178,16 @@ fn header_actions_stay_at_the_end_at_both_widths() {
             for title_width in [40., 800.] {
                 let title = container(Space::new().width(title_width).height(20)).id("title");
                 let action = container(button(Space::new().width(68).height(18)).on_press(()));
-                let block = icedcn_widget::code_block![
-                    code_block::header![
-                        code_block::title(Slot::from(title)),
-                        code_block::actions![action.id("actions")],
-                    ],
-                    "output",
-                ]
-                .size(if compact {
-                    icedcn_widget::Size::Sm
-                } else {
-                    icedcn_widget::Size::Default
-                });
+                let block = icedcn_widget::code_block("output")
+                    .header(
+                        code_block::header(code_block::title(Slot::from(title)))
+                            .actions(code_block::actions(action.id("actions"))),
+                    )
+                    .size(if compact {
+                        icedcn_widget::Size::Sm
+                    } else {
+                        icedcn_widget::Size::Default
+                    });
                 let mut view = ui(container(block).width(width).into(), width);
                 view.draw(&Theme::light());
                 let mut parts = Parts::default();
@@ -251,13 +251,8 @@ fn highlighted_patch_rebuilds_with_incoming_source_and_preserves_rows() {
 #[test]
 fn header_accepts_borrowed_source_and_messages() {
     fn view<'a, Message>(source: &'a str) -> CodeBlock<'a, Message> {
-        icedcn_widget::code_block![
-            code_block::header![
-                "Terminal",
-                code_block::actions![code_block::copy_button(source)]
-            ],
-            source,
-        ]
+        icedcn_widget::code_block(source)
+            .header(code_block::header("Terminal").actions(code_block::copy_button(source)))
     }
 
     fn mount<'a>(source: &'a mut str) -> Element<'a, &'a mut str, Theme, Renderer> {

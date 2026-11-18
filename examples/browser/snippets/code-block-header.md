@@ -2,13 +2,10 @@
 use crate::icon;
 use icedcn::widget::code_block;
 
-code_block![
-    code_block::header![
-        code_block::title![terminal, "Terminal"],
-        code_block::actions![code_block::copy_button(COMMAND)],
-    ],
-    OUTPUT,
-]
+code_block(OUTPUT).header(
+    code_block::header(code_block::title("Terminal").icon(icon::terminal()))
+        .actions(code_block::copy_button(COMMAND)),
+)
 
 const COMMAND: &str = "cargo check -p icedcn_widget";
 

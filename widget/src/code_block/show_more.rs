@@ -51,7 +51,7 @@ pub fn show_more<'a, Message: 'static>(
             Some(footer) => footer.push(toggle),
             None => footer(toggle).align_x(Horizontal::Center),
         };
-        block.push(footer).into()
+        block.footer(footer).into()
     })
     .width(Fill)
 }

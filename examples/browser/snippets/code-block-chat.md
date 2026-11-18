@@ -8,13 +8,9 @@ column![
     message(
         column![
             text::p("Compare the query and each title in lowercase."),
-            code_block![
-                code_block::header![
-                    "src/search.rs",
-                    code_block::actions![code_block::copy_button(CODE)],
-                ],
-                code_block::content(CODE).language("rust"),
-            ],
+            code_block(code_block::content(CODE).language("rust")).header(
+                code_block::header("src/search.rs").actions(code_block::copy_button(CODE))
+            ),
             text::p("The result borrows the matching titles from the original list."),
         ]
         .spacing(12)

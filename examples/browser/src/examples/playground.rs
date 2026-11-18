@@ -110,9 +110,8 @@ impl State {
             .language("rust")
             .line_numbers(true)
             .on_input(Message::Edited);
-        let editor = code_block![
-            code_block::header![
-                code_block::title![file_code, "main.rs"],
+        let editor = code_block(if wide { content.height(Fill) } else { content }).header(
+            code_block::header(code_block::title("main.rs").icon(icon::file_code())).actions(
                 code_block::actions![
                     button(icon::rotate_ccw())
                         .style(button::Ghost)
@@ -120,28 +119,22 @@ impl State {
                         .on_press(Message::Reset),
                     code_block::copy_button(self.source.as_str()),
                 ],
-            ],
-            if wide { content.height(Fill) } else { content },
-        ];
+            ),
+        );
 
         let (printed, failed) = match &self.outcome {
             Ok(printed) if printed.is_empty() => ("main printed nothing.", false),
             Ok(printed) => (printed.as_str(), false),
             Err(error) => (error.as_str(), true),
         };
-        let title = if failed {
-            code_block::title![circle_alert, "Output"]
+        let title = code_block::title("Output").icon(if failed {
+            icon::circle_alert()
         } else {
-            code_block::title![terminal, "Output"]
-        };
+            icon::terminal()
+        });
         let content = code_block::content(printed).wrap(failed);
-        let output = code_block![
-            code_block::header![
-                title,
-                code_block::actions![code_block::copy_button(printed)],
-            ],
-            if wide { content.height(Fill) } else { content },
-        ];
+        let output = code_block(if wide { content.height(Fill) } else { content })
+            .header(code_block::header(title).actions(code_block::copy_button(printed)));
         let output = if failed {
             output.style(Destructive)
         } else {
