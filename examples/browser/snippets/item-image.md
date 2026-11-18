@@ -1,4 +1,14 @@
 ```rust
+use iced::widget::image;
+use iced::{ContentFit, Widget};
+use std::sync::OnceLock;
+use icedcn::widget::{column, item};
+
+#[derive(Debug, Clone)]
+enum Message {
+    Open,
+}
+
 fn artwork(bytes: &'static [u8], handle: &OnceLock<image::Handle>) -> image::Image {
     image(
         handle
@@ -53,7 +63,7 @@ column(
                     .into(),
             ])
             .style(item::Outline)
-            .on_press(top.clone())
+            .on_press(Message::Open)
         }),
 )
 .spacing(16)

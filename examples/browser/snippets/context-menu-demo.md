@@ -5,6 +5,13 @@ use icedcn::theme::tweak::{Token, border};
 use icedcn::widget::{column, container, context_menu, menu, text};
 use icedcn::{Slot, radius};
 
+#[derive(Debug, Clone)]
+enum Message {
+    Bookmarks(bool),
+    FullUrls(bool),
+    Person(&'static str),
+}
+
 fn view<'a>(bookmarks: bool, full_urls: bool, person: &'static str) -> Slot<'a, Message> {
     // `bookmarks`, `full_urls` and `person` live in your state.
     context_menu(

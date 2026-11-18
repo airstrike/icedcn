@@ -1,6 +1,11 @@
 ```rust
 use icedcn::widget::{button, column, item};
 
+#[derive(Debug, Clone)]
+enum Message {
+    Open,
+}
+
 column![
     item::item([
         item::content([
@@ -21,10 +26,7 @@ column![
     ])
     .style(item::Outline)
     .size(item::Size::Sm)
-    .on_press(Message::Page(
-        page_index,
-        page::Message::LinkClicked("#".into())
-    )),
+    .on_press(Message::Open),
 ]
 .spacing(24)
 .width(Fill)

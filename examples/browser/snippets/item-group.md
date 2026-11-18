@@ -1,4 +1,7 @@
 ```rust
+use iced::widget::image;
+use icedcn::widget::{avatar, button, column, item};
+
 fn people() -> [(&'static str, &'static str, image::Handle); 3] {
     [
         ("Alex Chen", "alex@example.com", alex_handle()),

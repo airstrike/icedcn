@@ -1,5 +1,7 @@
 ```rust
-stack([
+use icedcn::widget::{avatar, button, column, item};
+
+column([
     item::item([
         item::media(
             avatar(Some(evilrabbit_handle()))
@@ -41,4 +43,7 @@ stack([
     .style(item::Outline)
     .into(),
 ])
+.spacing(24)
+.width(Fill)
+.max_width(448.0)
 ```

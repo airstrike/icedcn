@@ -1,4 +1,12 @@
 ```rust
+use icedcn::widget::{column, item};
+
+#[derive(Debug, Clone)]
+enum Message {
+    Open,
+    OpenUrl(&'static str),
+}
+
 column![
     item::item([
         item::content([
@@ -8,7 +16,7 @@ column![
         .into(),
         item::actions([icon::chevron_right().size(16).into()])
     ])
-    .on_press(top),
+    .on_press(Message::Open),
     item::item([
         item::content([
             item::title("External resource").into(),

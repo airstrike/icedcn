@@ -1,6 +1,17 @@
 ```rust
 use icedcn::widget::{column, item};
 
+fn inbox<'a>(title: &'a str, description: &'a str) -> item::Item<'a, Message> {
+    item::item([
+        item::media(icon::inbox()).style(item::Icon).into(),
+        item::content([
+            item::title(title).into(),
+            item::description(description).into(),
+        ])
+        .into(),
+    ])
+}
+
 column![
     inbox("Default Size", "The standard size for most use cases.").style(item::Outline),
     inbox("Small Size", "A compact size for dense layouts.")
