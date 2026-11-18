@@ -109,16 +109,15 @@ impl Widget<Event, Theme, Renderer> for Grid<'_> {
                 return;
             }
         }
+        let press = matches!(
+            event,
+            iced_core::Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left))
+                | iced_core::Event::Touch(touch::Event::FingerPressed { .. })
+        );
         // A pressed button captures the event before later siblings can blur.
         // Clear this grid's old focus first so only the clicked day receives
         // subsequent arrow keys, even when it precedes the old day in the tree.
-        if !shell.is_event_captured()
-            && matches!(
-                event,
-                iced_core::Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left))
-                    | iced_core::Event::Touch(touch::Event::FingerPressed { .. })
-            )
-        {
+        if press && !shell.is_event_captured() {
             self.content.operate(
                 child,
                 layout,
@@ -129,6 +128,23 @@ impl Widget<Event, Theme, Renderer> for Grid<'_> {
         }
         self.content
             .update(child, event, layout, cursor, renderer, shell, viewport);
+        // DayPicker rings a focused day even when a pointer focused it.
+        if press && shell.is_event_captured() {
+            let count =
+                focus::count(|op| self.content.operate(child, layout, viewport, renderer, op));
+            if let Some(day) = count
+                .focused
+                .filter(|&i| self.targets.get(i).is_some_and(Option::is_some))
+            {
+                self.content.operate(
+                    child,
+                    layout,
+                    viewport,
+                    renderer,
+                    &mut focus::select(Some(day)),
+                );
+            }
+        }
     }
     fn draw(
         &self,

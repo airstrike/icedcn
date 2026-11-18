@@ -4,6 +4,7 @@ mod grid;
 #[cfg(feature = "svg")]
 mod icon;
 pub mod persian;
+mod week;
 
 use crate::Weight;
 use crate::column::Column;
@@ -21,10 +22,11 @@ use iced_widget::component::{self, Component};
 use iced_widget::text::StyleFn;
 use iced_widget::{Renderer, Widget};
 use iced_widget::{rich_text, span};
+use icedcn_core::Theme;
 use icedcn_core::theme;
+use icedcn_core::theme::calendar::Day;
 use icedcn_core::theme::container::PageBackground;
-use icedcn_core::theme::tweak::{Bg, Fg, Token, border, radius};
-use icedcn_core::{Radius, Theme};
+use icedcn_core::theme::tweak::{Token, border, radius};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
@@ -74,6 +76,10 @@ pub struct Calendar<'a, Message> {
     stacked: Option<bool>,
     long_months: bool,
     strike_unavailable: bool,
+    required: bool,
+    min: u32,
+    max: u32,
+    exclude_unavailable: bool,
     disabled: bool,
     unavailable: Option<Box<dyn Fn(Date) -> bool + 'a>>,
     annotation: Option<Box<dyn Fn(Date) -> String + 'a>>,
@@ -100,6 +106,10 @@ pub fn calendar<'a, Message>() -> Calendar<'a, Message> {
         stacked: None,
         long_months: false,
         strike_unavailable: false,
+        required: false,
+        min: 0,
+        max: 0,
+        exclude_unavailable: false,
         disabled: false,
         unavailable: None,
         annotation: None,
@@ -185,6 +195,30 @@ impl<'a, Message> Calendar<'a, Message> {
         self.strike_unavailable = strike;
         self
     }
+    /// Keep at least one date selected: picking the selected date again
+    /// leaves it selected instead of clearing it.
+    pub fn required(mut self, required: bool) -> Self {
+        self.required = required;
+        self
+    }
+    /// The fewest nights a range spans. A shorter range restarts from the
+    /// picked date.
+    pub fn min(mut self, nights: u32) -> Self {
+        self.min = nights;
+        self
+    }
+    /// The most nights a range spans. A longer range restarts from the
+    /// picked date.
+    pub fn max(mut self, nights: u32) -> Self {
+        self.max = nights;
+        self
+    }
+    /// Restart a range from the picked date when it would span an
+    /// unavailable date.
+    pub fn exclude_unavailable(mut self, exclude: bool) -> Self {
+        self.exclude_unavailable = exclude;
+        self
+    }
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
         self
@@ -247,32 +281,65 @@ impl<Message> Calendar<'_, Message> {
             && self.navigable_month(day)
             && !self.unavailable.as_ref().is_some_and(|f| f(day))
     }
+    /// DayPicker's `useSingle` and `useRange` with `addToRange`.
     fn choose(&self, old: Option<Selection>, day: Date) -> Option<Selection> {
-        match (self.mode, old) {
-            (Mode::Single, Some(s)) if s.start == day => None,
-            (Mode::Single, _) => Some(Selection::single(day)),
-            (Mode::Range, None) => Some(Selection::range(day, day)),
-            (Mode::Range, Some(Selection { start, end: None })) => {
-                (start != day).then(|| Selection::range(start, day))
-            }
-            (
-                Mode::Range,
-                Some(Selection {
-                    start,
-                    end: Some(end),
-                }),
-            ) => {
-                if start == day && end == day {
+        let open = |start| Some(Selection { start, end: None });
+        if self.mode == Mode::Single {
+            return match old {
+                Some(s) if s.start == day && !self.required => None,
+                _ => Some(Selection::single(day)),
+            };
+        }
+        let range = match old {
+            None if self.min > 0 => open(day),
+            None => Some(Selection::range(day, day)),
+            Some(Selection { start, end: None }) if start == day => {
+                if self.required {
+                    open(start)
+                } else {
                     None
-                } else if day == end {
-                    Some(Selection::range(day, day))
+                }
+            }
+            Some(Selection { start, end: None }) => Some(Selection::range(start, day)),
+            Some(Selection {
+                start,
+                end: Some(end),
+            }) => {
+                if start == day && end == day {
+                    if self.required { old } else { None }
+                } else if start == day || end == day {
+                    if self.min > 0 {
+                        open(day)
+                    } else {
+                        Some(Selection::range(day, day))
+                    }
                 } else if day < start {
                     Some(Selection::range(day, end))
                 } else {
                     Some(Selection::range(start, day))
                 }
             }
+        };
+        let Some(Selection {
+            start,
+            end: Some(end),
+        }) = range
+        else {
+            return range;
+        };
+        let nights = (end - start).num_days();
+        if self.max > 0 && nights > i64::from(self.max)
+            || self.min > 1 && nights < i64::from(self.min)
+        {
+            return open(day);
         }
+        if self.exclude_unavailable
+            && let Some(unavailable) = &self.unavailable
+            && start.iter_days().take_while(|d| *d <= end).any(unavailable)
+        {
+            return open(day);
+        }
+        range
     }
 
     fn header(
@@ -479,47 +546,56 @@ impl<Message> Calendar<'_, Message> {
             }
             weeks.push(std::array::from_fn(|i| start + Duration::days(i as i64)));
         }
+        let rtl = self.system == System::Persian;
         for week in weeks {
-            let mut cells = Vec::new();
+            let mut days = Vec::new();
+            let mut cells: Vec<Element<'static, Event, Theme, Renderer>> = Vec::new();
             if self.week_numbers {
+                days.push(None);
                 cells.push(
-                    container(
-                        text::muted(format!("{:02}", date::week_number(week[0])))
-                            .size(12.8)
-                            .line_height(LineHeight::Absolute(weekday_line_height.into())),
+                    Slot::from(
+                        container(
+                            text::muted(format!("{:02}", date::week_number(week[0])))
+                                .size(12.8)
+                                .line_height(LineHeight::Absolute(weekday_line_height.into())),
+                        )
+                        .width(self.cell_size)
+                        .height(self.cell_size)
+                        .center_y(self.cell_size)
+                        .align_x(Horizontal::Center),
                     )
-                    .width(self.cell_size)
-                    .height(self.cell_size)
-                    .center_y(self.cell_size)
-                    .align_x(Horizontal::Center)
-                    .into(),
+                    .compose(),
                 );
             }
             for weekday in 0..7 {
-                let day = week[if self.system == System::Persian {
-                    6 - weekday
-                } else {
-                    weekday
-                }];
+                let index = if rtl { 6 - weekday } else { weekday };
+                let day = week[index];
                 if !self.navigable_month(day) {
+                    days.push(None);
                     cells.push(
-                        container("")
-                            .width(self.cell_size)
-                            .height(self.cell_size)
-                            .into(),
+                        Slot::from(container("").width(self.cell_size).height(self.cell_size))
+                            .compose(),
                     );
                     continue;
                 }
                 let (_, m, d) = self.system.parts(day);
-                let outside = m != self.system.parts(month).1;
-                let active = selected.is_some_and(|s| s.contains(day));
-                let edge = selected.is_some_and(|s| s.start == day || s.end == Some(day));
-                let band = self.mode == Mode::Range
-                    && selected
-                        .is_some_and(|s| s.end.is_some_and(|end| end > s.start) && s.contains(day));
-                let range_endpoint =
-                    self.mode == Mode::Range && edge && selected.is_some_and(|s| s.end.is_some());
                 let unavailable = !self.selectable(day);
+                let range = self.mode == Mode::Range;
+                let complete = selected.and_then(|s| s.end.map(|end| (s.start, end)));
+                let paint = Day {
+                    selected: selected.is_some_and(|s| s.contains(day)),
+                    range_start: range && complete.is_some_and(|(start, _)| start == day),
+                    range_end: range && complete.is_some_and(|(_, end)| end == day),
+                    range_middle: range
+                        && complete.is_some_and(|(start, end)| start < day && day < end),
+                    today: day == today,
+                    outside: m != self.system.parts(month).1,
+                    disabled: unavailable,
+                    struck: unavailable && self.strike_unavailable,
+                    first: index == 0,
+                    last: index == 6,
+                    rtl,
+                };
                 let mut label = rich_text([span(self.system.number(d))
                     .strikethrough(unavailable && self.strike_unavailable)])
                 .size(14)
@@ -528,109 +604,56 @@ impl<Message> Calendar<'_, Message> {
                     label = label.font(persian::FAMILY);
                 }
                 let label: Slot<'static, Event> = label.into();
-                let label: Slot<'static, Event> =
-                    if !outside && let Some(annotate) = &self.annotation {
-                        column![
-                            label,
-                            text::Text::new(annotate(day))
-                                .style(Box::new(move |t: &Theme| theme::text::Style {
-                                    color: Some(
-                                        (if edge {
-                                            t.primary.foreground
-                                        } else {
-                                            t.neutral.foreground
-                                        })
-                                        .alpha(0.7)
-                                    )
-                                }
-                                .into())
-                                    as StyleFn<'static, Theme>)
-                                .size(12)
-                                .line_height(LineHeight::Absolute(16.0.into()))
-                        ]
-                        .spacing(4)
-                        .align_x(Horizontal::Center)
-                        .into()
-                    } else {
-                        label
-                    };
-                let rtl = self.system == System::Persian;
-                let left = weekday == 0
-                    || selected.is_some_and(|s| {
-                        if rtl {
-                            s.end == Some(day)
-                        } else {
-                            s.start == day
-                        }
-                    });
-                let right = weekday == 6
-                    || selected.is_some_and(|s| {
-                        if rtl {
-                            s.start == day
-                        } else {
-                            s.end == Some(day)
-                        }
-                    });
-                let cell = button(label)
-                    .square()
-                    .weight(Weight::Normal)
-                    .width(self.cell_size)
-                    .height(self.cell_size)
-                    .focus_ring(3., |t| t.neutral.ring.alpha(0.5))
-                    .style({
-                        let mut style = button::Ghost
-                            + border::Width(0.)
-                            + radius(if band || range_endpoint || day == today && !active {
-                                8.
-                            } else {
-                                10.
-                            });
-                        if edge {
-                            style = style + Bg(Token::Primary) + Fg(Token::PrimaryForeground);
-                        } else if active || day == today {
-                            style = style + Bg(Token::Muted) + Fg(Token::Foreground);
-                        }
-                        if band && !edge {
-                            style = style
-                                + Radius {
-                                    top_left: if left { 8. } else { 0. },
-                                    top_right: if right { 8. } else { 0. },
-                                    bottom_right: if right { 8. } else { 0. },
-                                    bottom_left: if left { 8. } else { 0. },
-                                };
-                        }
-                        if outside || unavailable {
-                            style = style + Fg(Token::MutedForeground);
-                        }
-                        style
-                    })
-                    .disabled(unavailable)
-                    .on_press(Event::Pick(day));
+                let label: Slot<'static, Event> = if !paint.outside
+                    && let Some(annotate) = &self.annotation
+                {
+                    column![
+                        label,
+                        text::Text::new(annotate(day))
+                            .style(Box::new(move |t: &Theme| theme::text::Style {
+                                color: Some(paint.foreground(t).scale_alpha(0.7))
+                            }
+                            .into())
+                                as StyleFn<'static, Theme>)
+                            .size(12)
+                            .line_height(LineHeight::Absolute(16.0.into()))
+                    ]
+                    .spacing(4)
+                    .align_x(Horizontal::Center)
+                    .into()
+                } else {
+                    label
+                };
                 if !unavailable {
-                    if !outside {
+                    if !paint.outside {
                         in_month.push(targets.len());
                     }
                     targets.push(Some(day));
                 }
+                days.push(Some(paint));
                 cells.push(
-                    container(cell)
-                        .style(move |theme: &Theme| {
-                            let mut style: theme::container::Style = Default::default();
-                            if band {
-                                style.background = Some(theme.muted.base.into());
-                                style.border.radius = Radius {
-                                    top_left: if left { 8. } else { 0. },
-                                    top_right: if right { 8. } else { 0. },
-                                    bottom_right: if right { 8. } else { 0. },
-                                    bottom_left: if left { 8. } else { 0. },
-                                };
-                            }
-                            style
-                        })
-                        .into(),
+                    Slot::from(
+                        button(label)
+                            .square()
+                            .weight(Weight::Normal)
+                            .width(self.cell_size)
+                            .height(self.cell_size)
+                            .style(paint)
+                            .disabled(unavailable)
+                            .on_press(Event::Pick(day)),
+                    )
+                    .compose(),
                 );
             }
-            rows.push(Row::with_children(cells).align_y(Alignment::Center).into());
+            rows.push(
+                week::Week {
+                    days,
+                    children: cells,
+                    size: self.cell_size,
+                }
+                .boxed()
+                .into(),
+            );
         }
         column![header, Column::with_children(rows).spacing(8)]
             .spacing(16)
@@ -882,6 +905,55 @@ mod tests {
         ] {
             assert_eq!(picker.choose(previous, clicked), expected);
         }
+    }
+    #[test]
+    fn range_constraints_follow_add_to_range() {
+        let day = |d| Date::from_ymd_opt(2026, 1, d).unwrap();
+        let open = |d| {
+            Some(Selection {
+                start: day(d),
+                end: None,
+            })
+        };
+        let range = |a, b| Some(Selection::range(day(a), day(b)));
+        let picker = || calendar::<()>().mode(Mode::Range);
+        let required = picker().required(true);
+        for (previous, clicked, expected) in [
+            (range(5, 5), 5, range(5, 5)),
+            (open(5), 5, open(5)),
+            (open(5), 3, range(3, 5)),
+        ] {
+            assert_eq!(required.choose(previous, day(clicked)), expected);
+        }
+        assert_eq!(picker().choose(open(5), day(5)), None);
+        // A range shorter than `min` nights stays open at the picked date.
+        let min = picker().min(3);
+        for (previous, clicked, expected) in [
+            (None, 5, open(5)),
+            (open(5), 7, open(7)),
+            (open(5), 8, range(5, 8)),
+            (range(5, 8), 5, open(5)),
+            (range(5, 8), 8, open(8)),
+            (range(5, 8), 9, range(5, 9)),
+        ] {
+            assert_eq!(min.choose(previous, day(clicked)), expected);
+        }
+        let max = picker().max(4);
+        assert_eq!(max.choose(range(5, 6), day(9)), range(5, 9));
+        assert_eq!(max.choose(range(5, 6), day(10)), open(10));
+        let blocked = picker()
+            .unavailable(|d| d == Date::from_ymd_opt(2026, 1, 7).unwrap())
+            .exclude_unavailable(true);
+        assert_eq!(blocked.choose(range(5, 5), day(9)), open(9));
+        assert_eq!(blocked.choose(range(8, 8), day(9)), range(8, 9));
+        let single = calendar::<()>();
+        assert_eq!(single.choose(Some(Selection::single(day(5))), day(5)), None);
+        assert_eq!(
+            single
+                .required(true)
+                .choose(Some(Selection::single(day(5))), day(5)),
+            Some(Selection::single(day(5)))
+        );
     }
     #[test]
     fn keyboard_months_clamp_and_disabled_weeks_keep_the_weekday() {

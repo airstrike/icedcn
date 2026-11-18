@@ -24,6 +24,9 @@
 | `.disabled(bool)` | `false` | Disable all interaction; disabled ancestors also apply. |
 | `.unavailable(predicate)` | All dates available | Disable matching dates for both pointer and keyboard selection. |
 | `.strike_unavailable(bool)` | `false` | Cross out unavailable dates. |
+| `.required(bool)` | `false` | Picking the selected date, or a one-day range's date, again keeps it selected. |
+| `.min(u32)` / `.max(u32)` | No limit | Limit a range's nights; a range outside the limit restarts at the picked date. |
+| `.exclude_unavailable(bool)` | `false` | Restart a range at the picked date when it would span an unavailable date. |
 | `.annotate(formatter)` | None | Add a secondary line to in-month cells. |
 | `.system(System::Persian)` | Gregorian | Use Solar Hijri month geometry, numerals and right-to-left weeks. |
 | `Selection::single(date)` | — | A date, or an externally supplied open range endpoint. |

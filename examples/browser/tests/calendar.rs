@@ -1,4 +1,5 @@
-//! Calendar's date navigation, state ownership and installed recipe geometry.
+//! Calendar's date navigation, state ownership, range selection and fills,
+//! and installed recipe geometry.
 use browser::component::calendar::CalendarPage;
 use browser::component::calendar::recipes;
 use iced::keyboard::key::Named;
@@ -7,12 +8,14 @@ use iced::{Element, Point, Rectangle, Size};
 use iced_test::core::Settings;
 use iced_test::core::widget::operation::{self, Focusable, Operation, Outcome, Text, focusable};
 use iced_test::simulator::{self, Simulator};
-use icedcn::Theme;
-use icedcn::widget::calendar::{Date, Selection, persian};
+use icedcn::widget::calendar::{Date, Datelike, Duration, Mode, Selection, persian};
 use icedcn::widget::{Inherited, Slot, calendar};
+use icedcn::{Theme, card};
 use std::borrow::Cow;
 use std::fs::File;
 use std::io::BufReader;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::{thread, time};
 
 #[derive(Clone, Debug, PartialEq)]
 enum Message {
@@ -594,6 +597,50 @@ fn installed_range_rejects_future_and_pre_1900_days() {
     );
 }
 
+/// A snapshot's pixels, addressed in logical points at the snapshot's 2x scale.
+struct Pixels {
+    rgba: Vec<u8>,
+    width: usize,
+}
+impl Pixels {
+    const SCALE: f32 = 2.;
+    fn new<'a, Message: 'a>(
+        ui: &mut Simulator<'a, Message, Theme, iced::Renderer>,
+        theme: &Theme,
+    ) -> Self {
+        static RENDERS: AtomicUsize = AtomicUsize::new(0);
+        let render = RENDERS.fetch_add(1, Ordering::Relaxed);
+        let dir =
+            std::env::temp_dir().join(format!("icedcn-calendar-{}-{render}", std::process::id()));
+        let snapshot = ui.snapshot(theme).unwrap();
+        assert!(snapshot.matches_image(dir.join("frame")).unwrap());
+        let path = std::fs::read_dir(&dir)
+            .unwrap()
+            .next()
+            .unwrap()
+            .unwrap()
+            .path();
+        let mut reader = png::Decoder::new(BufReader::new(File::open(&path).unwrap()))
+            .read_info()
+            .unwrap();
+        let mut rgba = vec![0; reader.output_buffer_size().unwrap()];
+        let info = reader.next_frame(&mut rgba).unwrap();
+        std::fs::remove_dir_all(&dir).unwrap();
+        Self {
+            rgba,
+            width: info.width as usize,
+        }
+    }
+    /// The red channel of the device pixel at `(x, y)`.
+    fn luma(&self, x: usize, y: usize) -> u32 {
+        self.rgba[(y * self.width + x) * 4] as u32
+    }
+    /// The red channel of the device pixel covering the point `(x, y)`.
+    fn at(&self, x: f32, y: f32) -> u32 {
+        self.luma((x * Self::SCALE) as usize, (y * Self::SCALE) as usize)
+    }
+}
+
 /// Renders `calendar` with `day` of November 2026 selected and returns the
 /// selected square's center and the center of the numeral's ink, in device pixels.
 fn selected_ink(day: u32) -> ((f32, f32), (f32, f32)) {
@@ -610,29 +657,14 @@ fn selected_ink(day: u32) -> ((f32, f32), (f32, f32)) {
     };
     let mut ui = Simulator::with_size(settings, Size::new(260., 320.), element);
     let label = ui.find(day.to_string()).unwrap().bounds();
-    let dir = std::env::temp_dir().join(format!("icedcn-calendar-{}-{day}", std::process::id()));
-    let snapshot = ui.snapshot(&Theme::light()).unwrap();
-    assert!(snapshot.matches_image(dir.join("day")).unwrap());
-    let path = std::fs::read_dir(&dir)
-        .unwrap()
-        .next()
-        .unwrap()
-        .unwrap()
-        .path();
-    let mut reader = png::Decoder::new(BufReader::new(File::open(&path).unwrap()))
-        .read_info()
-        .unwrap();
-    let mut rgba = vec![0; reader.output_buffer_size().unwrap()];
-    let info = reader.next_frame(&mut rgba).unwrap();
-    std::fs::remove_dir_all(&dir).unwrap();
-    let width = info.width as usize;
-    let luma = |x: usize, y: usize| rgba[(y * width + x) * 4] as u32;
+    let pixels = Pixels::new(&mut ui, &Theme::light());
+    let luma = |x: usize, y: usize| pixels.luma(x, y);
     let extent = |points: Vec<(usize, usize)>| {
         let (xs, ys): (Vec<_>, Vec<_>) = points.into_iter().unzip();
         let span = |v: &[usize]| (*v.iter().min().unwrap() + *v.iter().max().unwrap()) as f32 / 2.;
         ((span(&xs), span(&ys)), (xs, ys))
     };
-    let scale = 2.;
+    let scale = Pixels::SCALE;
     let (cx, cy) = (label.center_x() * scale, label.center_y() * scale);
     let region = |r: f32, keep: &dyn Fn(usize, usize) -> bool| {
         let mut points = Vec::new();
@@ -663,6 +695,414 @@ fn day_numerals_are_centered_in_their_cells() {
         assert!(
             (ix - sx).abs() <= 1. && (iy - sy).abs() <= 1.,
             "day {day}: square center ({sx}, {sy}), ink center ({ix}, {iy})"
+        );
+    }
+}
+
+type Range = Simulator<'static, Message, Theme, iced::Renderer>;
+
+/// The range example's calendar: two months side by side from `month`.
+fn range_view(
+    month: Date,
+    selected: Option<Selection>,
+    unavailable: Option<Date>,
+) -> Element<'static, Message, Theme> {
+    let mut picker = calendar()
+        .mode(Mode::Range)
+        .number_of_months(2)
+        .stacked(false)
+        .default_month(month)
+        .on_select(Message::Pick)
+        .on_month_change(Message::Month);
+    if let Some(selected) = selected {
+        picker = picker.default_selected(selected);
+    }
+    if let Some(day) = unavailable {
+        picker = picker.unavailable(move |d| d == day);
+    }
+    card(picker).padding(0).into()
+}
+fn range_ui(element: Element<'static, Message, Theme>) -> Range {
+    Simulator::with_size(Settings::default(), Size::new(460., 300.), element)
+}
+fn opening() -> Option<Selection> {
+    Some(Selection::range(date(1, 12), date(2, 11)))
+}
+/// The cell showing `day` in the month grid `offset` months after `first`,
+/// placed from the first month's caption.
+fn day_cell(ui: &mut Range, first: Date, offset: u32, day: Date) -> Rectangle {
+    let title = ui.find(first.format("%B %Y").to_string()).unwrap().bounds();
+    let month = Date::from_ymd_opt(first.year(), first.month() + offset, 1).unwrap();
+    let lead = i64::from(month.weekday().num_days_from_sunday());
+    let index = (day - month).num_days() + lead;
+    let (row, col) = (index.div_euclid(7), index.rem_euclid(7));
+    Rectangle {
+        x: title.center_x() - 98. + offset as f32 * 212. + col as f32 * 28.,
+        y: title.center_y() - 14. + 28. + 16. + 12.8 * 20. / 14. + 8. + row as f32 * 36.,
+        width: 28.,
+        height: 28.,
+    }
+}
+fn press(ui: &mut Range, cell: Rectangle) -> Vec<Message> {
+    ui.point_at(cell.center());
+    ui.simulate(simulator::click());
+    ui.drain().collect()
+}
+fn red(color: impl Into<iced::Color>) -> u32 {
+    color.into().into_rgba8()[0] as u32
+}
+/// `top` composited at `alpha` over `bottom`, one channel.
+fn over(top: u32, bottom: u32, alpha: f32) -> u32 {
+    (top as f32 * alpha + bottom as f32 * (1. - alpha)).round() as u32
+}
+#[track_caller]
+fn near(actual: u32, expected: u32, what: &str) {
+    assert!(
+        actual.abs_diff(expected) <= 1,
+        "{what}: {actual} != {expected}"
+    );
+}
+fn focused_bounds(ui: &mut Range) -> Rectangle {
+    #[derive(Default)]
+    struct Focused(Option<Rectangle>);
+    impl Operation for Focused {
+        fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+            visit(self);
+        }
+        fn focusable(&mut self, _: Option<&Id>, bounds: Rectangle, state: &mut dyn Focusable) {
+            if state.is_focused() {
+                self.0 = Some(bounds);
+            }
+        }
+    }
+    let mut focused = Focused::default();
+    ui.operate(&mut focused);
+    focused.0.expect("a day has focus")
+}
+
+#[test]
+fn range_clicks_follow_day_picker() {
+    let first = date(1, 1);
+    let december = |day| Date::from_ymd_opt(2025, 12, day).unwrap();
+    let mut ui = range_ui(range_view(first, opening(), None));
+    for (offset, day, expected, why) in [
+        (
+            0,
+            date(1, 20),
+            Some((date(1, 12), date(1, 20))),
+            "inside: the new end",
+        ),
+        (
+            0,
+            date(1, 5),
+            Some((date(1, 5), date(1, 20))),
+            "before the start",
+        ),
+        (
+            0,
+            date(1, 5),
+            Some((date(1, 5), date(1, 5))),
+            "the start again",
+        ),
+        (0, date(1, 5), None, "a one-day range again"),
+        (
+            0,
+            date(1, 10),
+            Some((date(1, 10), date(1, 10))),
+            "a first click",
+        ),
+        (
+            0,
+            date(1, 3),
+            Some((date(1, 3), date(1, 10))),
+            "a second click before",
+        ),
+        (
+            0,
+            date(1, 10),
+            Some((date(1, 10), date(1, 10))),
+            "the end again",
+        ),
+        (
+            0,
+            december(30),
+            Some((december(30), date(1, 10))),
+            "an outside day",
+        ),
+        (
+            1,
+            date(2, 5),
+            Some((december(30), date(2, 5))),
+            "the next month",
+        ),
+        (
+            0,
+            date(1, 14),
+            Some((december(30), date(1, 14))),
+            "after the start",
+        ),
+        (
+            0,
+            date(1, 24),
+            Some((december(30), date(1, 24))),
+            "after the end",
+        ),
+    ] {
+        let cell = day_cell(&mut ui, first, offset, day);
+        assert_eq!(
+            press(&mut ui, cell),
+            [Message::Pick(expected.map(|(a, b)| Selection::range(a, b)))],
+            "{why}"
+        );
+        assert_eq!(
+            focused_bounds(&mut ui),
+            cell,
+            "{why}: the clicked day takes focus"
+        );
+    }
+    ui.find("January 2026")
+        .expect("picking an outside day keeps the visible months");
+    let unavailable = day_cell(&mut ui, first, 0, date(1, 31));
+    ui = ui.rebuild(range_view(first, opening(), Some(date(1, 31))));
+    assert!(
+        press(&mut ui, unavailable).is_empty(),
+        "unavailable days ignore clicks"
+    );
+}
+
+#[test]
+fn outside_days_shown_twice_focus_the_copy_that_was_clicked() {
+    let first = date(3, 1);
+    let mut ui = range_ui(range_view(first, None, None));
+    for offset in [1, 0] {
+        let cell = day_cell(&mut ui, first, offset, date(3, 31));
+        assert_eq!(
+            press(&mut ui, cell).len(),
+            1,
+            "March 31 in grid {offset} picks"
+        );
+        assert_eq!(focused_bounds(&mut ui), cell);
+    }
+}
+
+#[test]
+fn range_band_runs_unbroken_between_rounded_end_caps() {
+    let first = date(1, 1);
+    for theme in [Theme::light(), Theme::dark()] {
+        let mut ui = range_ui(range_view(first, opening(), None));
+        let cell = |ui: &mut Range, offset, day| day_cell(ui, first, offset, day);
+        let (start, saturday) = (cell(&mut ui, 0, date(1, 12)), cell(&mut ui, 0, date(1, 17)));
+        let sunday = cell(&mut ui, 0, date(1, 18));
+        let (january, february) = (cell(&mut ui, 0, date(1, 31)), cell(&mut ui, 1, date(2, 1)));
+        let end = cell(&mut ui, 1, date(2, 11));
+        let px = Pixels::new(&mut ui, &theme);
+        let (card, muted) = (red(theme.card.base), red(theme.muted.base));
+        // Above the numerals and along the top edge, from the start pill to the
+        // row's rounded end, every device pixel is the band: no seams.
+        for y in [start.y + 0.25, start.y + 3.] {
+            let mut x = start.x + start.width + 0.25;
+            while x < saturday.x + saturday.width - 8. {
+                near(px.at(x, y), muted, &format!("band at ({x}, {y})"));
+                x += 0.5;
+            }
+        }
+        for boundary in [14., 15., 16.] {
+            let x = start.x + (boundary - 11.) * 28.;
+            for dy in [0.25, 14., 27.75] {
+                near(
+                    px.at(x - 0.25, start.y + dy),
+                    muted,
+                    "left of a cell boundary",
+                );
+                near(
+                    px.at(x + 0.25, start.y + dy),
+                    muted,
+                    "right of a cell boundary",
+                );
+            }
+        }
+        let corner = |cell: Rectangle, right: bool, bottom: bool| {
+            px.at(
+                if right {
+                    cell.x + cell.width - 0.25
+                } else {
+                    cell.x + 0.25
+                },
+                if bottom {
+                    cell.y + cell.height - 0.25
+                } else {
+                    cell.y + 0.25
+                },
+            )
+        };
+        for bottom in [false, true] {
+            near(
+                corner(start, false, bottom),
+                card,
+                "the start's outer corner",
+            );
+            near(
+                corner(start, true, bottom),
+                muted,
+                "the after: block under the start",
+            );
+            near(
+                corner(saturday, true, bottom),
+                card,
+                "a row's last day rounds",
+            );
+            near(
+                corner(sunday, false, bottom),
+                card,
+                "a row's first day rounds",
+            );
+            near(
+                corner(january, true, bottom),
+                card,
+                "the last day of January rounds",
+            );
+            near(
+                corner(february, false, bottom),
+                card,
+                "the first day of February rounds",
+            );
+            near(
+                corner(end, false, bottom),
+                muted,
+                "the after: block under the end",
+            );
+            near(corner(end, true, bottom), card, "the end's outer corner");
+        }
+    }
+}
+
+#[test]
+fn single_day_ranges_and_today_keep_nova_cell_corners() {
+    let theme = Theme::light();
+    let (card, muted) = (red(theme.card.base), red(theme.muted.base));
+    let corners = |ui: &mut Range, first: Date, day: Date| {
+        let cell = day_cell(ui, first, 0, day);
+        let px = Pixels::new(ui, &theme);
+        [(false, false), (true, false), (true, true), (false, true)].map(|(right, bottom)| {
+            px.at(
+                if right {
+                    cell.x + cell.width - 0.25
+                } else {
+                    cell.x + 0.25
+                },
+                if bottom {
+                    cell.y + cell.height - 0.25
+                } else {
+                    cell.y + 0.25
+                },
+            )
+        })
+    };
+    let one = Selection::range(date(1, 5), date(1, 5));
+    let mut ui = range_ui(range_view(date(1, 1), Some(one), None));
+    let [top_left, top_right, bottom_right, bottom_left] = corners(&mut ui, date(1, 1), date(1, 5));
+    for (pixel, expected, what) in [
+        (
+            top_left,
+            muted,
+            "left-0 wins: the after: block squares the left",
+        ),
+        (
+            bottom_left,
+            muted,
+            "left-0 wins: the after: block squares the left",
+        ),
+        (top_right, card, "the right stays round"),
+        (bottom_right, card, "the right stays round"),
+    ] {
+        near(pixel, expected, what);
+    }
+    let today = calendar::today();
+    let first = today.with_day(1).unwrap();
+    for selected in [
+        Selection::range(today - Duration::days(1), today),
+        Selection::range(today, today),
+    ] {
+        let mut ui = range_ui(range_view(first, Some(selected), None));
+        for pixel in corners(&mut ui, first, today) {
+            near(pixel, muted, "a selected today's cell is square");
+        }
+    }
+}
+
+#[test]
+fn a_clicked_range_end_rings_under_its_band_and_square_corners_stay_square() {
+    let theme = Theme::light();
+    let first = date(1, 1);
+    let mut ui = range_ui(range_view(first, opening(), None));
+    let end = day_cell(&mut ui, first, 0, date(1, 20));
+    press(&mut ui, end);
+    ui.point_at(Point::new(450., 290.));
+    let px = Pixels::new(&mut ui, &theme);
+    let (card, muted) = (red(theme.card.base), red(theme.muted.base));
+    let ring = over(red(theme.neutral.ring), card, 0.5);
+    near(
+        px.at(end.x + end.width + 1.5, end.center_y()),
+        ring,
+        "ring beside the end",
+    );
+    near(
+        px.at(end.center_x(), end.y - 1.5),
+        ring,
+        "ring above the end",
+    );
+    near(
+        px.at(end.x - 1.5, end.center_y()),
+        muted,
+        "the band's later button paints over the isolated end's ring",
+    );
+    // A middle day's square corners grow a square ring, as CSS spreads it.
+    ui.tap_key(Named::ArrowUp);
+    let middle = day_cell(&mut ui, first, 0, date(1, 13));
+    let px = Pixels::new(&mut ui, &theme);
+    near(
+        px.at(middle.x - 2.75, middle.y - 2.75),
+        ring,
+        "square ring corner",
+    );
+}
+
+#[test]
+fn dark_hover_lifts_range_days_to_half_muted() {
+    let theme = Theme::dark();
+    let first = date(1, 1);
+    let mut ui = range_ui(range_view(first, opening(), None));
+    let (card, muted) = (red(theme.card.base), red(theme.muted.base));
+    for (day, expected, what) in [
+        (
+            date(1, 20),
+            over(muted, card, 0.5),
+            "a middle day opens a hole in the band",
+        ),
+        (date(1, 12), muted, "the start pill drops its primary fill"),
+    ] {
+        let cell = day_cell(&mut ui, first, 0, day);
+        ui.point_at(cell.center());
+        ui.draw(&theme);
+        // Let the 150ms hover transition finish.
+        thread::sleep(time::Duration::from_millis(200));
+        let px = Pixels::new(&mut ui, &theme);
+        near(px.at(cell.x + 4., cell.y + 2.), expected, what);
+    }
+}
+
+#[test]
+fn unavailable_days_inside_a_range_fade_to_a_quarter() {
+    let first = date(1, 1);
+    for theme in [Theme::light(), Theme::dark()] {
+        let mut ui = range_ui(range_view(first, opening(), Some(date(1, 21))));
+        let cell = day_cell(&mut ui, first, 0, date(1, 21));
+        let px = Pixels::new(&mut ui, &theme);
+        let (card, muted) = (red(theme.card.base), red(theme.muted.base));
+        near(
+            px.at(cell.x + 2., cell.y + 2.),
+            over(muted, card, 0.25),
+            "opacity-50 on the cell and on the disabled button",
         );
     }
 }

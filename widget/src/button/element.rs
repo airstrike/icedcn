@@ -18,6 +18,16 @@ use icedcn_core::theme::button::state::{self, IntoStyle};
 
 use super::widget;
 
+/// A spread shadow's corner, as CSS grows it: corners smaller than the
+/// spread are sharpened by `1 + (r - 1)^3`, so a square corner stays square.
+fn spread(radius: f32, extent: f32) -> f32 {
+    if extent <= 0.0 || radius >= extent {
+        return radius + extent;
+    }
+    let ratio = radius / extent - 1.0;
+    radius + extent * (1.0 + ratio * ratio * ratio)
+}
+
 fn default(theme: &Theme, status: widget::Status) -> widget::Style {
     // theme::button::default returns our OKLCH-native Style; convert
     // through iced::button::Style → widget::Style.
@@ -430,10 +440,10 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
                 let extent = ring.width + resolved.ring_offset;
                 let radius = style.border.radius;
                 ring.radius = border::Radius {
-                    top_left: radius.top_left + extent,
-                    top_right: radius.top_right + extent,
-                    bottom_left: radius.bottom_left + extent,
-                    bottom_right: radius.bottom_right + extent,
+                    top_left: spread(radius.top_left, extent),
+                    top_right: spread(radius.top_right, extent),
+                    bottom_left: spread(radius.bottom_left, extent),
+                    bottom_right: spread(radius.bottom_right, extent),
                 };
             }
             style
