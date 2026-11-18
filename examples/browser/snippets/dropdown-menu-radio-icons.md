@@ -1,7 +1,7 @@
 ```rust
 use crate::icon;
 use iced::widget::Text;
-use icedcn::widget::{button, dropdown_menu, menu, menu_group};
+use icedcn::widget::{button, dropdown_menu, menu};
 use icedcn::{Slot, Theme};
 
 pub fn view<'a>(selected: &'static str) -> Slot<'a, &'static str> {
@@ -11,7 +11,7 @@ pub fn view<'a>(selected: &'static str) -> Slot<'a, &'static str> {
     dropdown_menu(
         |m| m.trigger(button("Payment Method").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 menu::label("Select Payment Method"),
                 menu::radio_item(
                     caption(icon::credit_card(), "Credit Card"),

@@ -47,8 +47,7 @@ use icedcn_core::theme::container::{Style, StyleFn};
 use crate::compose::{Compose, Inherited, Slot};
 use crate::container::Container;
 
-#[doc(inline)]
-pub use crate::group;
+pub use crate::__avatar_group as group;
 #[doc(inline)]
 pub use badge::{badge, dot};
 #[doc(inline)]

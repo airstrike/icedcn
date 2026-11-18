@@ -4,7 +4,7 @@ use iced::Fill;
 use icedcn::theme::text_input;
 use icedcn::theme::tweak::{Bg, Fg, Token, hover};
 use icedcn::widget::input_group::Align;
-use icedcn::widget::{button, button_group, input, input_group, tooltip};
+use icedcn::widget::{button, input, input_group, tooltip};
 use icedcn::{Slot, radius};
 
 pub fn view<'a>(enabled: bool) -> Slot<'a, bool> {
@@ -26,14 +26,14 @@ pub fn view<'a>(enabled: bool) -> Slot<'a, bool> {
     let editor = input_group(input(placeholder).disabled(enabled))
         .style(text_input::Default + radius(9999.))
         .addon(input_group::addon(tooltip(toggle, "Voice Mode")).align(Align::InlineEnd));
-    button_group![
-        button_group![
+    button::group![
+        button::group![
             button(icon::plus().size(16).line_height(1.0))
                 .rounded()
                 .square()
                 .style(button::Outline)
         ],
-        button_group![editor].width(Fill),
+        button::group![editor].width(Fill),
     ]
     .width(Fill.max(256.))
     .into()

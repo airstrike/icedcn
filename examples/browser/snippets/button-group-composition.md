@@ -1,7 +1,7 @@
 ## Composition
 
 ```text
-button_group!
+button::group!
 ├── button(label)
 ├── group::separator()
 └── group::text(content)

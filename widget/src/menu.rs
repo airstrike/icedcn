@@ -40,6 +40,8 @@ use crate::marker::{self, Press};
 use crate::popover::Signal;
 use crate::{column, container, row, text};
 
+pub use crate::__menu_group as group;
+pub use crate::__menu_sub as sub;
 pub use icedcn_core::theme::menu::item::{Destructive, Variant};
 
 /// A `MenuItem`: a row that publishes its message and closes the menu
@@ -324,16 +326,18 @@ pub fn caption<'a, Message: 'a>(
 }
 
 /// Group menu children of different types.
+#[doc(hidden)]
 #[macro_export]
-macro_rules! menu_group {
+macro_rules! __menu_group {
     ($($item:expr),* $(,)?) => {
         $crate::menu::group([$(Into::<$crate::Slot<'_, _>>::into($item)),*])
     };
 }
 
 /// Open a submenu containing children of different types.
+#[doc(hidden)]
 #[macro_export]
-macro_rules! menu_sub {
+macro_rules! __menu_sub {
     ($trigger:expr, $($item:expr),+ $(,)?) => {
         $crate::menu::sub($trigger, [$(Into::<$crate::Slot<'_, _>>::into($item)),+])
     };

@@ -1,9 +1,9 @@
 ```rust
-use icedcn::widget::{column, kbd, kbd_group, text};
+use icedcn::widget::{column, kbd, text};
 
 column![
-    kbd_group![kbd("⌘"), kbd("⇧"), kbd("⌥"), kbd("⌃")],
-    kbd_group![kbd("Ctrl"), text::small("+"), kbd("B")],
+    kbd::group![kbd("⌘"), kbd("⇧"), kbd("⌥"), kbd("⌃")],
+    kbd::group![kbd("Ctrl"), text::small("+"), kbd("B")],
 ]
 .spacing(16)
 .align_x(Center)

@@ -21,7 +21,7 @@ pub struct ButtonGroup<'a, Message> {
     inherited: Inherited,
 }
 
-/// Group related controls. Use [`crate::button_group!`] for mixed child types.
+/// Group related controls. Use [`button::group!`](crate::button::group!) for mixed child types.
 pub fn group<'a, Message: 'a>(
     children: impl IntoIterator<Item = Slot<'a, Message>>,
 ) -> ButtonGroup<'a, Message> {
@@ -101,10 +101,11 @@ impl<'a, Message: 'a> From<ButtonGroup<'a, Message>>
     }
 }
 /// Compose related controls with the same children accepted by rows and columns.
+#[doc(hidden)]
 #[macro_export]
-macro_rules! button_group {
-    () => { $crate::button::group::group(::core::iter::empty()) };
-    ($($child:expr),+ $(,)?) => { $crate::button::group::group([
+macro_rules! __button_group {
+    () => { $crate::button::group(::core::iter::empty()) };
+    ($($child:expr),+ $(,)?) => { $crate::button::group([
         $(Into::<$crate::compose::Slot<'_, _>>::into($child)),+
     ]) };
 }

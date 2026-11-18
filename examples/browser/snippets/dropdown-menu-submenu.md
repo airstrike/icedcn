@@ -1,16 +1,16 @@
 ```rust
-use icedcn::widget::{button, dropdown_menu, menu, menu_group, menu_sub};
+use icedcn::widget::{button, dropdown_menu, menu};
 
 dropdown_menu(
     |m| m.trigger(button("Open").style(button::Outline)),
     move |_| {
-        menu_group![
+        menu::group![
             menu::item("Team"),
-            menu_sub![
+            menu::sub![
                 "Invite users",
                 menu::item("Email"),
                 menu::item("Message"),
-                menu_sub![
+                menu::sub![
                     "More options",
                     menu::item("Calendly"),
                     menu::item("Slack"),

@@ -1,6 +1,6 @@
 ### ButtonGroup
 
-A container that groups related buttons together with consistent styling. Construct it with `button_group![...]`, or `group::group` over an iterator of `Slot`s.
+A container that groups related buttons together with consistent styling. Construct it with `button::group![...]`, or `button::group(children)` over an iterator of `Slot`s.
 
 | Builder | Type | Default |
 | --- | --- | --- |
@@ -8,19 +8,16 @@ A container that groups related buttons together with consistent styling. Constr
 | `.width(...)` | `impl Into<Length>` | `Length::Shrink` |
 
 ```rust
-use icedcn::{
-    Slot,
-    widget::{button, button_group},
-};
+use icedcn::{Slot, widget::button};
 
 pub fn actions<'a>() -> Slot<'a, ()> {
-    button_group![button("Button 1"), button("Button 2")].into()
+    button::group![button("Button 1"), button("Button 2")].into()
 }
 
 pub fn nested<'a>() -> Slot<'a, ()> {
-    button_group![
-        button_group![button("Button 1")],
-        button_group![button("Button 2")],
+    button::group![
+        button::group![button("Button 1")],
+        button::group![button("Button 2")],
     ]
     .into()
 }

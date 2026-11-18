@@ -6,15 +6,15 @@ Display text within a button group with `group::text(content)`. The content acce
 use icedcn::widget::button::group;
 use icedcn::{
     Slot,
-    widget::{button, button_group, input, text},
+    widget::{button, input, text},
 };
 
 pub fn actions<'a>() -> Slot<'a, ()> {
-    button_group![group::text("Text"), button("Button")].into()
+    button::group![group::text("Text"), button("Button")].into()
 }
 
 pub fn custom_label<'a>() -> Slot<'a, ()> {
-    button_group![
+    button::group![
         group::text(text::label("Name")),
         input("Type something here...").width(192),
     ]

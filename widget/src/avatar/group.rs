@@ -9,18 +9,19 @@ use crate::compose::{Compose, Inherited, Slot};
 
 use super::{Avatar, Geometry, Size, avatar};
 
-/// Construct a group from avatars or image handles.
+/// Construct a group from avatars or image handles, each converted on its own.
 ///
 /// ```ignore
 /// avatar::group![avatar(portrait).fallback("AT"), another_portrait].count("+3")
 /// ```
+#[doc(hidden)]
 #[macro_export]
-macro_rules! group {
+macro_rules! __avatar_group {
     () => {
-        $crate::avatar::group::group(std::iter::empty::<$crate::avatar::Avatar<'_, _>>())
+        $crate::avatar::group(std::iter::empty::<$crate::avatar::Avatar<'_, _>>())
     };
     ($($avatar:expr),+ $(,)?) => {
-        $crate::avatar::group::group([
+        $crate::avatar::group([
             $(Into::<$crate::avatar::Avatar<'_, _>>::into($avatar)),*
         ])
     };

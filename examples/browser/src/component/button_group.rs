@@ -10,8 +10,8 @@ use icedcn::widget::Row;
 use icedcn::widget::button::group;
 use icedcn::widget::input_group::Align;
 use icedcn::widget::{
-    button, button_group, column, container, dropdown_menu, field, input, input_group, menu,
-    menu_group, popover, row, select, text, textarea, tooltip,
+    button, column, container, dropdown_menu, field, input, input_group, menu, popover, row,
+    select, text, textarea, tooltip,
 };
 use icedcn::{Slot, Theme};
 
@@ -49,7 +49,7 @@ pub static BLOCKS: &[page::Block] = &[
     page::Block::Example {
         id: "nested",
         title: "Nested",
-        description: Some("Nest `button_group!` components to create button groups with spacing."),
+        description: Some("Nest `button::group!` components to create button groups with spacing."),
         snippet: "examples/browser/snippets/button-group-nested.md",
     },
     page::Block::Example {
@@ -181,7 +181,7 @@ fn mail_actions<'a>(wide: bool, selected: &'static str) -> Slot<'a, &'static str
     let mut actions = Row::new().spacing(8).align_y(iced::Center);
     if wide {
         actions = actions.push(
-            button_group![
+            button::group![
                 button(icon::arrow_left().size(16).line_height(1.0))
                     .square()
                     .style(button::Outline)
@@ -191,7 +191,7 @@ fn mail_actions<'a>(wide: bool, selected: &'static str) -> Slot<'a, &'static str
     }
     let more = dropdown_menu(
         |m| {
-            button_group![
+            button::group![
                 button("Snooze").style(button::Outline),
                 m.trigger(
                     button(icon::ellipsis().size(16).line_height(1.0))
@@ -209,7 +209,7 @@ fn mail_actions<'a>(wide: bool, selected: &'static str) -> Slot<'a, &'static str
             let item = |glyph, label| menu::item(caption(glyph, label));
             let labels = ["Personal", "Work", "Other"]
                 .map(|label| menu::radio_item(label, label, Some(selected), |value| value).into());
-            menu_group![
+            menu::group![
                 item(icon::mail_check(), "Mark as Read"),
                 item(icon::archive(), "Archive"),
                 menu::separator(),
@@ -226,7 +226,7 @@ fn mail_actions<'a>(wide: bool, selected: &'static str) -> Slot<'a, &'static str
     .width(160);
     actions
         .push(
-            button_group![
+            button::group![
                 button("Archive").style(button::Outline),
                 button("Report").style(button::Outline)
             ]
@@ -271,14 +271,14 @@ fn voice_input<'a>(enabled: bool) -> Slot<'a, bool> {
     let editor = input_group(input(placeholder).disabled(enabled))
         .style(text_input::Default + icedcn::radius(9999.))
         .addon(input_group::addon(tooltip(toggle, "Voice Mode")).align(Align::InlineEnd));
-    button_group![
-        button_group![
+    button::group![
+        button::group![
             button(icon::plus().size(16).line_height(1.0))
                 .rounded()
                 .square()
                 .style(button::Outline)
         ],
-        button_group![editor].width(Fill),
+        button::group![editor].width(Fill),
     ]
     .width(Fill.max(256.))
     .into()
@@ -289,7 +289,7 @@ pub(super) fn view<'a>(id: &str) -> Slot<'a, Message> {
 
     match id {
         "demo" => demo(),
-        "orientation" => button_group![
+        "orientation" => button::group![
             button(icon::plus().size(16).line_height(1.0))
                 .square()
                 .style(button::Outline),
@@ -303,7 +303,7 @@ pub(super) fn view<'a>(id: &str) -> Slot<'a, Message> {
         "size" => column([(Sm, "Small"), (Default, "Default"), (Lg, "Large")].map(
             |(size, first)| {
                 let action = |label| button(label).size(size).style(button::Outline);
-                button_group![
+                button::group![
                     action(first),
                     action("Button"),
                     action("Group"),
@@ -319,13 +319,13 @@ pub(super) fn view<'a>(id: &str) -> Slot<'a, Message> {
         .align_x(iced::Left)
         .into(),
 
-        "nested" => button_group![
-            button_group![
+        "nested" => button::group![
+            button::group![
                 button(icon::plus().size(16).line_height(1.0))
                     .square()
                     .style(button::Outline)
             ],
-            button_group![
+            button::group![
                 input_group(input("Send a message...")).addon(
                     input_group::addon(tooltip(
                         icon::audio_lines().size(16).line_height(1.0),
@@ -339,14 +339,14 @@ pub(super) fn view<'a>(id: &str) -> Slot<'a, Message> {
         .width(Fill.max(256.))
         .into(),
 
-        "separator" => button_group![
+        "separator" => button::group![
             button("Copy").style(button::Secondary).size(Sm),
             group::separator(),
             button("Paste").style(button::Secondary).size(Sm),
         ]
         .into(),
 
-        "split" => button_group![
+        "split" => button::group![
             button("Button").style(button::Secondary),
             group::separator(),
             button(icon::plus().size(16).line_height(1.0))
@@ -355,7 +355,7 @@ pub(super) fn view<'a>(id: &str) -> Slot<'a, Message> {
         ]
         .into(),
 
-        "input" => button_group![
+        "input" => button::group![
             input("Search...").width(Fill),
             button(icon::search().size(16).line_height(1.0)).style(button::Outline)
         ]
@@ -366,7 +366,7 @@ pub(super) fn view<'a>(id: &str) -> Slot<'a, Message> {
 
         "dropdown" => dropdown_menu(
             |&m| {
-                button_group![
+                button::group![
                     button("Follow").style(button::Outline),
                     m.trigger(
                         button(icon::chevron_down().size(16).line_height(1.0))
@@ -381,7 +381,7 @@ pub(super) fn view<'a>(id: &str) -> Slot<'a, Message> {
                 let item = |glyph: Text<'a, Theme>, label| {
                     menu::item(menu::caption(glyph.size(16).line_height(1.0), label))
                 };
-                menu_group![
+                menu::group![
                     item(icon::volume_off(), "Mute Conversation"),
                     item(icon::check(), "Mark as Read"),
                     item(icon::triangle_alert(), "Report Conversation"),
@@ -397,8 +397,8 @@ pub(super) fn view<'a>(id: &str) -> Slot<'a, Message> {
         .width(176)
         .into(),
 
-        "select" => button_group![
-            button_group![
+        "select" => button::group![
+            button::group![
                 select(
                     [("$", "US Dollar"), ("€", "Euro"), ("£", "British Pound")]
                         .map(|(value, label)| select::item(value, label))
@@ -416,7 +416,7 @@ pub(super) fn view<'a>(id: &str) -> Slot<'a, Message> {
                 input("10.00").width(Fill)
             ]
             .width(Fill),
-            button_group![
+            button::group![
                 button(icon::arrow_right().size(16).line_height(1.0))
                     .square()
                     .style(button::Outline)
@@ -427,7 +427,7 @@ pub(super) fn view<'a>(id: &str) -> Slot<'a, Message> {
 
         "popover" => popover(
             |&p| {
-                button_group![
+                button::group![
                     button![icon::bot().size(16).line_height(1.0), "Copilot"]
                         .style(button::Outline),
                     p.trigger(

@@ -2,10 +2,10 @@
 use crate::icon;
 use iced::Fill;
 use icedcn::Slot;
-use icedcn::widget::{button, button_group, input};
+use icedcn::widget::{button, input};
 
 pub fn view<'a>() -> Slot<'a, ()> {
-    button_group![
+    button::group![
         input("Search...").width(Fill),
         button(icon::search().size(16).line_height(1.0)).style(button::Outline)
     ]

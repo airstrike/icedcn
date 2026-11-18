@@ -2,12 +2,12 @@
 use crate::icon;
 use iced::Fill;
 use icedcn::Slot;
-use icedcn::widget::{button, button_group, column, field, popover, textarea};
+use icedcn::widget::{button, column, field, popover, textarea};
 
 pub fn view<'a>() -> Slot<'a, ()> {
     popover(
         |&p| {
-            button_group![
+            button::group![
                 button![icon::bot().size(16).line_height(1.0), "Copilot"].style(button::Outline),
                 p.trigger(
                     button(icon::chevron_down().size(16).line_height(1.0))

@@ -3,7 +3,7 @@ use crate::icon;
 use iced::alignment::Horizontal::Right;
 use icedcn::Slot;
 use icedcn::widget::table::Track::Auto;
-use icedcn::widget::{button, dropdown_menu, menu, menu_group, table, text};
+use icedcn::widget::{button, dropdown_menu, menu, table, text};
 
 pub fn actions<'a, M: Clone + 'static>() -> Slot<'a, M> {
     let products = [
@@ -29,7 +29,7 @@ pub fn actions<'a, M: Clone + 'static>() -> Slot<'a, M> {
                 )
             },
             |_| {
-                menu_group![
+                menu::group![
                     menu::item("Edit"),
                     menu::item("Duplicate"),
                     menu::separator(),

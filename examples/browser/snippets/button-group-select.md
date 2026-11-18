@@ -2,11 +2,11 @@
 use crate::icon;
 use iced::Fill;
 use icedcn::Slot;
-use icedcn::widget::{button, button_group, input, row, select, text};
+use icedcn::widget::{button, input, row, select, text};
 
 pub fn view<'a>() -> Slot<'a, ()> {
-    button_group![
-        button_group![
+    button::group![
+        button::group![
             select(
                 [("$", "US Dollar"), ("€", "Euro"), ("£", "British Pound")]
                     .map(|(value, label)| select::item(value, label))
@@ -24,7 +24,7 @@ pub fn view<'a>() -> Slot<'a, ()> {
             input("10.00").width(Fill)
         ]
         .width(Fill),
-        button_group![
+        button::group![
             button(icon::arrow_right().size(16).line_height(1.0))
                 .square()
                 .style(button::Outline)

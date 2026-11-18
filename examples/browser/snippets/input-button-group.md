@@ -1,9 +1,9 @@
 ```rust
 use iced::Fill;
-use icedcn::widget::{button, button_group, field, input};
+use icedcn::widget::{button, field, input};
 
 field(
-    button_group![
+    button::group![
         input("Type to search...").width(Fill),
         button("Search").style(button::Outline)
     ]

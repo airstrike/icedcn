@@ -1,7 +1,7 @@
 ```rust
 use crate::icon;
 use iced::{Fill, widget::Text};
-use icedcn::widget::{button, button_group, column, dropdown_menu, menu, row};
+use icedcn::widget::{button, column, dropdown_menu, menu, row};
 use icedcn::{Slot, Theme};
 
 #[derive(Clone, Debug)]
@@ -14,7 +14,7 @@ pub fn view<'a>(window_width: f32, selected: &'static str) -> Slot<'a, Message> 
     let caption = |icon: Text<'a, Theme>, label: &'a str| row![icon.size(16), label].spacing(8);
     let actions = dropdown_menu(
         move |m| {
-            button_group![
+            button::group![
                 outline("Snooze"),
                 m.trigger(
                     button(icon::ellipsis().size(16))
@@ -53,7 +53,7 @@ pub fn view<'a>(window_width: f32, selected: &'static str) -> Slot<'a, Message> 
     let mut groups = row![];
     if window_width >= 640.0 {
         groups = groups.push(
-            button_group![
+            button::group![
                 button(icon::arrow_left().size(16))
                     .square()
                     .style(button::Outline),
@@ -62,7 +62,7 @@ pub fn view<'a>(window_width: f32, selected: &'static str) -> Slot<'a, Message> 
         );
     }
     groups
-        .push(button_group![outline("Archive"), outline("Report")].into())
+        .push(button::group![outline("Archive"), outline("Report")].into())
         .push(actions.into())
         .spacing(8)
         .into()

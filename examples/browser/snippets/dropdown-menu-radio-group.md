@@ -1,12 +1,12 @@
 ```rust
 use icedcn::Slot;
-use icedcn::widget::{button, dropdown_menu, menu, menu_group};
+use icedcn::widget::{button, dropdown_menu, menu};
 
 pub fn view<'a>(selected: &'static str) -> Slot<'a, &'static str> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 menu::label("Panel Position"),
                 menu::radio_item("Top", "top", Some(selected), |v| v),
                 menu::radio_item("Bottom", "bottom", Some(selected), |v| v),

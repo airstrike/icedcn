@@ -2,7 +2,7 @@
 use crate::icon;
 use iced::widget::{Text, responsive};
 use iced::{Fill, Shrink, Widget};
-use icedcn::widget::{Row, button, button_group, container, dropdown_menu, menu, menu_group};
+use icedcn::widget::{Row, button, container, dropdown_menu, menu};
 use icedcn::{Slot, Theme};
 
 pub fn view<'a>(selected: &'static str) -> Slot<'a, &'static str> {
@@ -15,11 +15,11 @@ pub fn view<'a>(selected: &'static str) -> Slot<'a, &'static str> {
         };
         let mut groups = Row::new().spacing(8).align_y(iced::Center);
         if area.width >= 320. {
-            groups = groups.push(button_group![square(icon::arrow_left())].into());
+            groups = groups.push(button::group![square(icon::arrow_left())].into());
         }
         let more = dropdown_menu(
             move |m| {
-                button_group![
+                button::group![
                     outline("Snooze"),
                     m.trigger(square(icon::ellipsis()).has_popup(true)),
                 ]
@@ -33,7 +33,7 @@ pub fn view<'a>(selected: &'static str) -> Slot<'a, &'static str> {
                 let labels = ["Personal", "Work", "Other"].map(|label| {
                     menu::radio_item(label, label, Some(selected), |value| value).into()
                 });
-                menu_group![
+                menu::group![
                     item(icon::mail_check(), "Mark as Read"),
                     item(icon::archive(), "Archive"),
                     menu::separator(),
@@ -51,7 +51,7 @@ pub fn view<'a>(selected: &'static str) -> Slot<'a, &'static str> {
         Slot::from(
             container(
                 groups
-                    .push(button_group![outline("Archive"), outline("Report")].into())
+                    .push(button::group![outline("Archive"), outline("Report")].into())
                     .push(more.into()),
             )
             .center_x(Fill),

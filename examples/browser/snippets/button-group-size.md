@@ -1,6 +1,6 @@
 ```rust
 use crate::icon;
-use icedcn::widget::{button, button_group, column};
+use icedcn::widget::{button, column};
 use icedcn::{Size, Slot};
 
 pub fn view<'a>() -> Slot<'a, ()> {
@@ -11,7 +11,7 @@ pub fn view<'a>() -> Slot<'a, ()> {
     ];
     column(sizes.map(|(size, first)| {
         let action = |label| button(label).size(size).style(button::Outline);
-        button_group![
+        button::group![
             action(first),
             action("Button"),
             action("Group"),

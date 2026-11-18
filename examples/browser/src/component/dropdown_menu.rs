@@ -4,7 +4,7 @@ use iced::widget::Text;
 use iced::widget::component::{Component, component};
 use iced::{Element, Task, Widget};
 
-use icedcn::widget::{avatar, button, dropdown_menu, menu, menu_group, menu_sub};
+use icedcn::widget::{avatar, button, dropdown_menu, menu};
 use icedcn::{Slot, Theme};
 
 use crate::Message;
@@ -144,14 +144,14 @@ fn demo() -> Slot<'static, Message> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 menu::label("My Account"),
                 menu::item("Profile").shortcut("⇧⌘P"),
                 menu::item("Billing").shortcut("⌘B"),
                 menu::item("Settings").shortcut("⌘S"),
                 menu::separator(),
                 menu::item("Team"),
-                menu_sub![
+                menu::sub![
                     "Invite users",
                     menu::item("Email"),
                     menu::item("Message"),
@@ -177,7 +177,7 @@ fn basic() -> Slot<'static, Message> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 menu::label("My Account"),
                 menu::item("Profile"),
                 menu::item("Billing"),
@@ -196,13 +196,13 @@ fn submenu() -> Slot<'static, Message> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 menu::item("Team"),
-                menu_sub![
+                menu::sub![
                     "Invite users",
                     menu::item("Email"),
                     menu::item("Message"),
-                    menu_sub![
+                    menu::sub![
                         "More options",
                         menu::item("Calendly"),
                         menu::item("Slack"),
@@ -223,7 +223,7 @@ fn shortcuts() -> Slot<'static, Message> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 menu::label("My Account"),
                 menu::item("Profile").shortcut("⇧⌘P"),
                 menu::item("Billing").shortcut("⌘B"),
@@ -244,7 +244,7 @@ fn icons<'a>() -> Slot<'a, Message> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 item(icon::user(), "Profile"),
                 item(icon::credit_card(), "Billing"),
                 item(icon::settings(), "Settings"),
@@ -264,7 +264,7 @@ fn destructive<'a>() -> Slot<'a, Message> {
     dropdown_menu(
         |m| m.trigger(button("Actions").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 item(icon::pencil(), "Edit"),
                 item(icon::share(), "Share"),
                 menu::separator(),
@@ -291,7 +291,7 @@ fn avatar_menu<'a>(photo: image::Handle) -> Slot<'a, Message> {
             )
         },
         move |_| {
-            menu_group![
+            menu::group![
                 item(icon::badge_check(), "Account"),
                 item(icon::credit_card(), "Billing"),
                 item(icon::bell(), "Notifications"),
@@ -313,7 +313,7 @@ fn checkboxes(checked: [bool; 3]) -> Slot<'static, [bool; 3]> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 menu::label("Appearance"),
                 menu::checkbox_item("Status Bar", checked[0], |v| toggle(0, v)),
                 menu::checkbox_item("Activity Bar", checked[1], |v| toggle(1, v)).disabled(true),
@@ -337,7 +337,7 @@ fn checkboxes_icons<'a>(checked: [bool; 3]) -> Slot<'a, [bool; 3]> {
     dropdown_menu(
         |m| m.trigger(button("Notifications").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 menu::label("Notification Preferences"),
                 menu::checkbox_item(
                     caption(icon::mail(), "Email notifications"),
@@ -365,7 +365,7 @@ fn radio_group<'a>(selected: &'static str) -> Slot<'a, &'static str> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 menu::label("Panel Position"),
                 menu::radio_item("Top", "top", Some(selected), |v| v),
                 menu::radio_item("Bottom", "bottom", Some(selected), |v| v),
@@ -384,7 +384,7 @@ fn radio_icons<'a>(selected: &'static str) -> Slot<'a, &'static str> {
     dropdown_menu(
         |m| m.trigger(button("Payment Method").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 menu::label("Select Payment Method"),
                 menu::radio_item(
                     caption(icon::credit_card(), "Credit Card"),
@@ -419,12 +419,12 @@ fn complex<'a>(p: Preferences) -> Slot<'a, Preferences> {
     dropdown_menu(
         |m| m.trigger(button("Complex Menu").style(button::Outline)),
         move |_| {
-            let projects = menu_sub![
+            let projects = menu::sub![
                 caption(icon::ellipsis(), "More Projects"),
                 item(icon::file_code(), "Project Gamma"),
                 item(icon::file_code(), "Project Delta")
             ];
-            let recent = menu_sub![
+            let recent = menu::sub![
                 caption(icon::folder_open(), "Open Recent"),
                 menu::label("Recent Projects"),
                 item(icon::file_code(), "Project Alpha"),
@@ -438,14 +438,14 @@ fn complex<'a>(p: Preferences) -> Slot<'a, Preferences> {
                     Preferences { theme, ..p }
                 })
             };
-            let appearance = menu_sub![
+            let appearance = menu::sub![
                 caption(icon::palette(), "Theme"),
                 menu::label("Appearance"),
                 theme(icon::sun(), "Light", "light"),
                 theme(icon::moon(), "Dark", "dark"),
                 theme(icon::monitor(), "System", "system")
             ];
-            let notifications = menu_sub![
+            let notifications = menu::sub![
                 caption(icon::bell(), "Notifications"),
                 menu::label("Notification Types"),
                 menu::checkbox_item(
@@ -459,7 +459,7 @@ fn complex<'a>(p: Preferences) -> Slot<'a, Preferences> {
                     |email| Preferences { email, ..p }
                 )
             ];
-            let settings = menu_sub![
+            let settings = menu::sub![
                 caption(icon::settings(), "Settings"),
                 menu::label("Preferences"),
                 item(icon::keyboard(), "Keyboard Shortcuts"),
@@ -468,7 +468,7 @@ fn complex<'a>(p: Preferences) -> Slot<'a, Preferences> {
                 menu::separator(),
                 item(icon::shield(), "Privacy & Security")
             ];
-            menu_group![
+            menu::group![
                 menu::label("File"),
                 item(icon::file(), "New File").shortcut("⌘N"),
                 item(icon::folder(), "New Folder").shortcut("⇧⌘N"),

@@ -7,8 +7,8 @@ use crate::icon;
 use icedcn::Theme;
 use icedcn::theme;
 use icedcn::theme::tweak::Alpha;
+use icedcn::widget::input_group;
 use icedcn::widget::{Slot, badge, button, container, field, input, row, space, text};
-use icedcn::widget::{button_group, input_group};
 
 use crate::Message;
 use crate::page;
@@ -287,7 +287,7 @@ impl page::Page for InputPage {
             .width(320)
             .into(),
             "button-group" => field(
-                button_group![
+                button::group![
                     input("Type to search...").width(Fill),
                     button("Search").style(button::Outline)
                 ]

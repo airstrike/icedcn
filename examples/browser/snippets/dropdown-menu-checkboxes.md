@@ -1,6 +1,6 @@
 ```rust
 use icedcn::Slot;
-use icedcn::widget::{button, dropdown_menu, menu, menu_group};
+use icedcn::widget::{button, dropdown_menu, menu};
 
 pub fn view<'a>(checked: [bool; 3]) -> Slot<'a, [bool; 3]> {
     let toggle = move |i: usize, value| {
@@ -11,7 +11,7 @@ pub fn view<'a>(checked: [bool; 3]) -> Slot<'a, [bool; 3]> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 menu::label("Appearance"),
                 menu::checkbox_item("Status Bar", checked[0], |v| toggle(0, v)),
                 menu::checkbox_item("Activity Bar", checked[1], |v| toggle(1, v)).disabled(true),

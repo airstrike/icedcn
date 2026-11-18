@@ -2,7 +2,7 @@ use iced::alignment::Horizontal::Right;
 use iced::{Fill, Task};
 use icedcn::widget::table::Track::Auto;
 
-use icedcn::widget::{button, container, dropdown_menu, menu, menu_group, table, text};
+use icedcn::widget::{button, container, dropdown_menu, menu, table, text};
 use icedcn::{Slot, Theme};
 
 use crate::{Message, icon, page};
@@ -117,7 +117,7 @@ fn actions<'a, M: Clone + 'static>() -> Slot<'a, M> {
                 )
             },
             |_| {
-                menu_group![
+                menu::group![
                     menu::item("Edit"),
                     menu::item("Duplicate"),
                     menu::separator(),

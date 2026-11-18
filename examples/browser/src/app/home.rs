@@ -7,9 +7,9 @@ use icedcn::core::design::Accent;
 use icedcn::theme::container::Style;
 use icedcn::widget::calendar::{Selection, today};
 use icedcn::widget::{
-    alert_dialog, avatar, badge, button, button_group, calendar, checkbox, column, container,
-    dropdown_menu, field, input, input_group, menu, progress, radio_group, row, scrollable,
-    separator, slider, space, switch, text, textarea,
+    alert_dialog, avatar, badge, button, calendar, checkbox, column, container, dropdown_menu,
+    field, input, input_group, menu, progress, radio_group, row, scrollable, separator, slider,
+    space, switch, text, textarea,
 };
 use icedcn::{Size, Slot, Theme, card, radius, theme};
 
@@ -161,7 +161,7 @@ fn controls<'a>() -> Slot<'a, Message> {
                 ].width(Fill).into(),
             ).size(Size::Sm),
             space::horizontal(),
-            button_group![
+            button::group![
                 button("Button Group").style(button::Outline),
                 dropdown_menu(
                     |m| m.trigger(button(icon::chevron_up()).style(button::Outline).square()),

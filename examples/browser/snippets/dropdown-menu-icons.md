@@ -1,7 +1,7 @@
 ```rust
 use crate::icon;
 use iced::widget::Text;
-use icedcn::widget::{button, dropdown_menu, menu, menu_group};
+use icedcn::widget::{button, dropdown_menu, menu};
 use icedcn::{Slot, Theme};
 
 pub fn view<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
@@ -12,7 +12,7 @@ pub fn view<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 item(icon::user(), "Profile"),
                 item(icon::credit_card(), "Billing"),
                 item(icon::settings(), "Settings"),

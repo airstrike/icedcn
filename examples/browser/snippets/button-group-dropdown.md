@@ -1,13 +1,13 @@
 ```rust
 use crate::icon;
 use iced::widget::Text;
-use icedcn::widget::{button, button_group, dropdown_menu, menu, menu_group};
+use icedcn::widget::{button, dropdown_menu, menu};
 use icedcn::{Slot, Theme};
 
 pub fn view<'a>() -> Slot<'a, ()> {
     dropdown_menu(
         |&m| {
-            button_group![
+            button::group![
                 button("Follow").style(button::Outline),
                 m.trigger(
                     button(icon::chevron_down().size(16).line_height(1.0))
@@ -22,7 +22,7 @@ pub fn view<'a>() -> Slot<'a, ()> {
             let item = |glyph: Text<'a, Theme>, label| {
                 menu::item(menu::caption(glyph.size(16).line_height(1.0), label))
             };
-            menu_group![
+            menu::group![
                 item(icon::volume_off(), "Mute Conversation"),
                 item(icon::check(), "Mark as Read"),
                 item(icon::triangle_alert(), "Report Conversation"),

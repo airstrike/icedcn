@@ -2,9 +2,7 @@
 
 use iced::widget::component::{Component, component};
 use iced::{Center, Element, Fill, Widget};
-use icedcn::widget::{
-    badge, button, column, dropdown_menu, menu, menu_group, row, separator, space, text,
-};
+use icedcn::widget::{badge, button, column, dropdown_menu, menu, row, separator, space, text};
 use icedcn::{Size, Theme, card};
 
 use crate::{Message, icon};
@@ -59,7 +57,7 @@ impl<'a> Component<'a, Message, Theme> for Preview {
                                     .style(button::Ghost)
                                     .size(Size::Icon)
                             ),
-                            move |_| menu_group![
+                            move |_| menu::group![
                                 menu::item("View details").on_select(Event::Details(index)),
                                 menu::item("Mark as paid")
                                     .on_select(Event::MarkPaid(index))

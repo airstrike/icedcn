@@ -21,8 +21,9 @@ mod element;
 pub mod group;
 pub mod widget;
 
+pub use crate::__button_group as group;
 pub use element::{Button, button};
-pub use group::ButtonGroup;
+pub use group::{ButtonGroup, group};
 pub use icedcn_core::theme::button::{
     Default, Destructive, Ghost, IntoStyle, Link, Outline, Secondary,
 };

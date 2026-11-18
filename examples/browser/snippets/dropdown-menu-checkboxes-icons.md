@@ -1,7 +1,7 @@
 ```rust
 use crate::icon;
 use iced::widget::Text;
-use icedcn::widget::{button, dropdown_menu, menu, menu_group};
+use icedcn::widget::{button, dropdown_menu, menu};
 use icedcn::{Slot, Theme};
 
 pub fn view<'a>(checked: [bool; 3]) -> Slot<'a, [bool; 3]> {
@@ -16,7 +16,7 @@ pub fn view<'a>(checked: [bool; 3]) -> Slot<'a, [bool; 3]> {
     dropdown_menu(
         |m| m.trigger(button("Notifications").style(button::Outline)),
         move |_| {
-            menu_group![
+            menu::group![
                 menu::label("Notification Preferences"),
                 menu::checkbox_item(
                     caption(icon::mail(), "Email notifications"),

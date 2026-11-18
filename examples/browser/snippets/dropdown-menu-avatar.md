@@ -1,7 +1,7 @@
 ```rust
 use crate::icon;
 use iced::widget::Text;
-use icedcn::widget::{avatar, button, dropdown_menu, menu, menu_group};
+use icedcn::widget::{avatar, button, dropdown_menu, menu};
 use icedcn::{Slot, Theme};
 
 pub fn view<'a, Message: Clone + 'static>(photo: iced::widget::image::Handle) -> Slot<'a, Message> {
@@ -20,7 +20,7 @@ pub fn view<'a, Message: Clone + 'static>(photo: iced::widget::image::Handle) ->
             )
         },
         move |_| {
-            menu_group![
+            menu::group![
                 item(icon::badge_check(), "Account"),
                 item(icon::credit_card(), "Billing"),
                 item(icon::bell(), "Notifications"),

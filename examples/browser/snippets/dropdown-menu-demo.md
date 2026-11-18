@@ -1,17 +1,17 @@
 ```rust
-use icedcn::widget::{button, dropdown_menu, menu, menu_group, menu_sub};
+use icedcn::widget::{button, dropdown_menu, menu};
 
 dropdown_menu(
     |m| m.trigger(button("Open").style(button::Outline)),
     move |_| {
-        menu_group![
+        menu::group![
             menu::label("My Account"),
             menu::item("Profile").shortcut("⇧⌘P"),
             menu::item("Billing").shortcut("⌘B"),
             menu::item("Settings").shortcut("⌘S"),
             menu::separator(),
             menu::item("Team"),
-            menu_sub![
+            menu::sub![
                 "Invite users",
                 menu::item("Email"),
                 menu::item("Message"),

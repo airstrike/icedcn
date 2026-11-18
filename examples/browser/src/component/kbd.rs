@@ -3,9 +3,7 @@ use iced::Task;
 use crate::icon;
 use icedcn::Theme;
 use icedcn::widget::input_group::Align;
-use icedcn::widget::{
-    button, button_group, column, container, input, input_group, kbd, kbd_group, row, text, tooltip,
-};
+use icedcn::widget::{button, column, container, input, input_group, kbd, row, text, tooltip};
 
 use crate::Message;
 use crate::page;
@@ -29,7 +27,7 @@ pub static BLOCKS: &[page::Block] = &[
             page::Block::Example {
                 id: "group",
                 title: "Group",
-                description: Some("Use `kbd_group!` to group keyboard keys together."),
+                description: Some("Use `kbd::group!` to group keyboard keys together."),
                 snippet: "examples/browser/snippets/kbd-group.md",
             },
             page::Block::Example {
@@ -99,8 +97,8 @@ impl page::Page for KbdPage {
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {
         match id {
             "demo" => column![
-                kbd_group![kbd("⌘"), kbd("⇧"), kbd("⌥"), kbd("⌃")],
-                kbd_group![kbd("Ctrl"), text::small("+"), kbd("B")],
+                kbd::group![kbd("⌘"), kbd("⇧"), kbd("⌥"), kbd("⌃")],
+                kbd::group![kbd("Ctrl"), text::small("+"), kbd("B")],
             ]
             .spacing(16)
             .align_x(iced::Center)
@@ -108,7 +106,7 @@ impl page::Page for KbdPage {
 
             "group" => row![
                 text::muted("Use"),
-                kbd_group![kbd("Ctrl + B"), kbd("Ctrl + K")],
+                kbd::group![kbd("Ctrl + B"), kbd("Ctrl + K")],
                 text::muted("to open the command palette"),
             ]
             .spacing(4)
@@ -117,7 +115,7 @@ impl page::Page for KbdPage {
 
             "button" => button!["Accept", kbd("⏎")].style(button::Outline).into(),
 
-            "tooltip" => button_group![
+            "tooltip" => button::group![
                 tooltip(
                     button("Save").style(button::Outline),
                     row![text::xs("Save Changes"), kbd("S").style(kbd::Tooltip)].spacing(4)
@@ -126,7 +124,7 @@ impl page::Page for KbdPage {
                     button("Print").style(button::Outline),
                     row![
                         text::xs("Print Document"),
-                        kbd_group![
+                        kbd::group![
                             kbd("Ctrl").style(kbd::Tooltip),
                             kbd("P").style(kbd::Tooltip)
                         ]
@@ -140,7 +138,7 @@ impl page::Page for KbdPage {
                 input_group(input("Search..."))
                     .addon(input_group::addon(icon::search()))
                     .addon(
-                        input_group::addon(kbd_group![kbd("⌘"), kbd("K")]).align(Align::InlineEnd),
+                        input_group::addon(kbd::group![kbd("⌘"), kbd("K")]).align(Align::InlineEnd),
                     ),
             )
             .max_width(320)

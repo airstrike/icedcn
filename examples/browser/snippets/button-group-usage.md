@@ -1,13 +1,10 @@
 ## Usage
 
 ```rust
-use icedcn::{
-    Slot,
-    widget::{button, button_group},
-};
+use icedcn::{Slot, widget::button};
 
 pub fn view<'a>() -> Slot<'a, ()> {
-    button_group![button("Button 1"), button("Button 2")].into()
+    button::group![button("Button 1"), button("Button 2")].into()
 }
 ```
 

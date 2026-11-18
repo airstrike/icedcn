@@ -1,4 +1,4 @@
-//! Keyboard shortcut labels. [`group`] and `kbd_group!` arrange several keycaps with a
+//! Keyboard shortcut labels. [`group`] and `kbd::group!` arrange several keycaps with a
 //! four-pixel gap.
 //!
 //! # Example
@@ -6,8 +6,8 @@
 //! ```ignore
 //! use icedcn::widget::kbd;
 //!
-//! kbd_group![kbd("⌘"), kbd("⇧"), kbd("⌥"), kbd("⌃")]
-//! kbd_group![kbd("Ctrl"), "+", kbd("B")]
+//! kbd::group![kbd("⌘"), kbd("⇧"), kbd("⌥"), kbd("⌃")]
+//! kbd::group![kbd("Ctrl"), "+", kbd("B")]
 //!
 //! // Inside tooltip content.
 //! kbd("S").style(kbd::Tooltip)
@@ -23,15 +23,17 @@ use crate::compose::{Compose, Inherited, Slot};
 use crate::row::Row;
 use crate::{Size, Weight};
 
+pub use crate::__kbd_group as group;
 pub use icedcn_core::theme::kbd::{Default, Tooltip};
 
 /// Lay out keys in a kbd group.
 ///
 /// ```ignore
-/// kbd_group![kbd("Ctrl"), "+", kbd("B")]
+/// kbd::group![kbd("Ctrl"), "+", kbd("B")]
 /// ```
+#[doc(hidden)]
 #[macro_export]
-macro_rules! kbd_group {
+macro_rules! __kbd_group {
     ($($child:expr),+ $(,)?) => {
         $crate::kbd::group([
             $(Into::<$crate::compose::Slot<'_, _>>::into($child)),+

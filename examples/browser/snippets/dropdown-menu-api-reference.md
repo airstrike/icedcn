@@ -26,6 +26,6 @@ A `Popover` holding a menu: as wide as its trigger (at least 128px) unless given
 | `menu::group(children)` | `DropdownMenuGroup`. |
 | `menu::sub(content, items)` | `DropdownMenuSub`: opens `items` (like `group`'s) to the right while hovered; selecting inside closes the whole menu. |
 
-Use `menu_group![...]` and `menu_sub![trigger, ...]` to combine different item types. `menu::caption(icon, label)` aligns a leading icon with its label.
+Use `menu::group![...]` and `menu::sub![trigger, ...]` to combine different item types. `menu::caption(icon, label)` aligns a leading icon with its label.
 
 Press Enter, Space or Down Arrow on the focused trigger to open the menu at its first item. Pointer opening leaves the items unselected until you point at one or use the keyboard. Up and Down Arrow move between enabled items. Home and End jump to the first and last. Type a label prefix to focus a match. Right Arrow opens the focused submenu, and Left Arrow returns to its parent.

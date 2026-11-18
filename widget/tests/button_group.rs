@@ -7,8 +7,7 @@ use iced_widget::{Renderer, Space, Widget};
 use icedcn_core::Theme;
 use icedcn_widget::button::group;
 use icedcn_widget::{
-    Compose, Inherited, Size, Slot, Weight, button, button_group, input, input_group, select,
-    tooltip,
+    Compose, Inherited, Size, Slot, Weight, button, input, input_group, select, tooltip,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -38,7 +37,7 @@ impl Operation for Controls {
 #[test]
 fn nested_mapped_slots_and_tooltips_preserve_the_cascade() {
     let received = Rc::new(RefCell::new(Inherited::default()));
-    let mut slot: Slot<'_, ()> = button_group![button_group![tooltip(
+    let mut slot: Slot<'_, ()> = button::group![button::group![tooltip(
         Slot::new(Probe(received.clone())),
         "Hint"
     )]]
@@ -56,7 +55,7 @@ fn nested_mapped_slots_and_tooltips_preserve_the_cascade() {
 }
 #[test]
 fn inherited_disabled_reaches_buttons_inputs_select_and_input_group() {
-    let mut slot: Slot<'_, bool> = button_group![
+    let mut slot: Slot<'_, bool> = button::group![
         button("Action").on_press(true),
         input("Input").width(90),
         select([select::item("one", "One")])
@@ -81,7 +80,7 @@ fn inherited_disabled_reaches_buttons_inputs_select_and_input_group() {
 }
 #[test]
 fn separator_axis_and_text_are_independent_public_parts() {
-    let element: Element<'_, (), Theme, Renderer> = button_group![
+    let element: Element<'_, (), Theme, Renderer> = button::group![
         group::text("Prefix"),
         group::separator().orientation(group::Horizontal),
         button("Action").width(120),
@@ -102,7 +101,7 @@ fn adjoining_actions_keep_separate_pointer_and_keyboard_targets() {
     use iced_core::widget::operation::Outcome;
     use iced_core::{Event, mouse};
 
-    let group = button_group![
+    let group = button::group![
         button("Left").width(60).on_press("left"),
         button("Right").width(60).on_press("right"),
     ];
