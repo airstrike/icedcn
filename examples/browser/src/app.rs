@@ -736,7 +736,8 @@ impl App {
         let menu = scrollable::scrollable(menu)
             .width(Fill)
             .height(Fill)
-            .visibility(scrollable::Visibility::Scroll);
+            .visibility(scrollable::Visibility::Scroll)
+            .fade(scrollable::FADE);
 
         sidebar::fixed(row![
             fade::fade(menu, |theme| theme.neutral.base.into()),
@@ -949,7 +950,8 @@ fn toc<'a>(page: &'a dyn page::Page, area: iced::Size) -> Element<'a, Message, T
     let links = scrollable::scrollable(container(page::toc(page)).width(Fill).padding([0, 32]))
         .width(Fill)
         .height(Shrink)
-        .visibility(scrollable::Visibility::Scroll);
+        .visibility(scrollable::Visibility::Scroll)
+        .fade(scrollable::FADE);
     let column = container(fade::fade(links, |theme| theme.neutral.base.into()))
         .padding(iced::Padding::ZERO.top(33).bottom(32))
         .width(288)

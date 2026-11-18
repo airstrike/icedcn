@@ -54,6 +54,7 @@ pub struct Scrollable<'a, Message> {
     focus_group: bool,
     visibility: Visibility,
     hide_delay: Duration,
+    fade: Duration,
     on_scroll: Option<Box<dyn Fn(Viewport) -> Message + 'a>>,
     style: Option<iced_widget::scrollable::StyleFn<'static, Theme>>,
 }
@@ -72,6 +73,7 @@ impl<'a, Message: 'a> Scrollable<'a, Message> {
             focus_group: false,
             visibility: Visibility::Always,
             hide_delay: HIDE_DELAY,
+            fade: Duration::ZERO,
             on_scroll: None,
             style: None,
         }
@@ -143,11 +145,19 @@ impl<'a, Message: 'a> Scrollable<'a, Message> {
         self
     }
 
-    /// How long an idle scrollbar stays before it fades out in [`Visibility::Hover`] and
+    /// How long an idle scrollbar stays before it hides in [`Visibility::Hover`] and
     /// [`Visibility::Scroll`], like Radix's `scrollHideDelay`. [`HIDE_DELAY`] (600ms) by
     /// default.
     pub fn hide_delay(mut self, delay: impl Into<Duration>) -> Self {
         self.hide_delay = delay.into();
+        self
+    }
+
+    /// Fade a hiding scrollbar out over `duration` once its hide delay has passed, in
+    /// [`Visibility::Hover`] and [`Visibility::Scroll`]. By default it disappears at once,
+    /// like Radix; [`FADE`] (200ms) suits overlay-style scrollbars.
+    pub fn fade(mut self, duration: impl Into<Duration>) -> Self {
+        self.fade = duration.into();
         self
     }
 
@@ -242,6 +252,7 @@ impl<'a, Message: 'a> Compose<Message> for Scrollable<'a, Message> {
             .auto_scroll(self.auto_scroll)
             .visibility(self.visibility)
             .hide_delay(self.hide_delay)
+            .fade(self.fade)
             .focus_group(self.focus_group);
 
         if let Some(id) = self.id {

@@ -8,7 +8,7 @@
 //! `icedcn_core::Theme`).
 //!
 //! Beyond stock iced it adds [`Visibility`] and a hide delay, after Radix
-//! ScrollArea's `type` and `scrollHideDelay`, and fades idle scrollbars out.
+//! ScrollArea's `type` and `scrollHideDelay`, and an optional fade-out.
 //! The cross-crate flow:
 //!
 //! 1. User calls `.style(...)` on the wrapper in `widget/src/scrollable.rs`.
@@ -132,6 +132,7 @@ pub struct Scrollable<
     click_to_scroll: bool,
     visibility: Visibility,
     hide_delay: Duration,
+    fade: Duration,
     content: W,
     on_scroll: Option<Box<dyn Fn(Scroll) -> Action<Message> + 'a>>,
     class: Theme::Class<'a>,
@@ -159,6 +160,7 @@ where
             click_to_scroll: false,
             visibility: Visibility::Always,
             hide_delay: HIDE_DELAY,
+            fade: Duration::ZERO,
             content,
             on_scroll: None,
             class: Theme::default(),
@@ -355,6 +357,14 @@ where
     /// and [`Visibility::Scroll`]. [`HIDE_DELAY`] by default.
     pub fn hide_delay(mut self, delay: impl Into<Duration>) -> Self {
         self.hide_delay = delay.into();
+        self
+    }
+
+    /// Fades a hiding scrollbar out over `duration` once its hide delay has passed, in
+    /// [`Visibility::Hover`] and [`Visibility::Scroll`]. By default it hides at once, like
+    /// Radix; [`FADE`] suits overlay-style scrollbars.
+    pub fn fade(mut self, duration: impl Into<Duration>) -> Self {
+        self.fade = duration.into();
         self
     }
 
@@ -981,7 +991,8 @@ where
                             _ => dragged == Some(axis),
                         };
                     let scrolled = self.visibility == Visibility::Scroll && moved;
-                    if let Some(at) = fade.advance(*now, held, scrolled, self.hide_delay) {
+                    if let Some(at) = fade.advance(*now, held, scrolled, self.hide_delay, self.fade)
+                    {
                         next = Some(next.map_or(at, |next: Instant| next.min(at)));
                     }
                 }

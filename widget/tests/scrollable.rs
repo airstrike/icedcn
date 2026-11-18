@@ -1,6 +1,6 @@
 //! A scrollable's visibility modes, read through the redraws it schedules: a shown scrollbar
-//! that may hide asks for a frame when its hide delay ends, fades over the frames after it, and
-//! a hidden or steady one asks for nothing.
+//! that may hide asks for a frame when its hide delay ends, then hides at once or, with a fade,
+//! over the frames after it. A hidden or steady one asks for nothing.
 use iced_core::renderer::Headless;
 use iced_core::time::{Duration, Instant};
 use iced_core::window::RedrawRequest;
@@ -21,6 +21,7 @@ const SCROLL_END: Duration = Duration::from_millis(100);
 struct Harness {
     visibility: Visibility,
     delay: Duration,
+    fade: Duration,
     renderer: Renderer,
     cache: Option<Cache>,
     cursor: Point,
@@ -32,12 +33,21 @@ impl Harness {
         Harness::with_delay(visibility, HIDE_DELAY)
     }
 
+    fn fading(visibility: Visibility) -> Self {
+        Harness::with(visibility, HIDE_DELAY, FADE)
+    }
+
     fn with_delay(visibility: Visibility, delay: Duration) -> Self {
+        Harness::with(visibility, delay, Duration::ZERO)
+    }
+
+    fn with(visibility: Visibility, delay: Duration, fade: Duration) -> Self {
         let renderer = block_on(Renderer::new(renderer::Settings::default(), None))
             .expect("the null renderer always builds");
         let mut harness = Harness {
             visibility,
             delay,
+            fade,
             renderer,
             cache: Some(Cache::default()),
             cursor: OUTSIDE,
@@ -54,6 +64,7 @@ impl Harness {
             .height(100)
             .visibility(self.visibility)
             .hide_delay(self.delay)
+            .fade(self.fade)
             .into()
     }
 
@@ -104,9 +115,19 @@ impl Harness {
         })])
     }
 
-    /// Draw the frames of a fade that starts at `millis`, and expect it to end hidden.
-    fn fade_out(&mut self, millis: u64) {
-        let fade = FADE.as_millis() as u64;
+    /// Draw the frame where the hide delay ends at `millis`, and any fade after it, and expect
+    /// the scrollbar to end hidden.
+    fn hide(&mut self, millis: u64) {
+        if self.fade.is_zero() {
+            assert_eq!(
+                self.redraw(millis),
+                RedrawRequest::Wait,
+                "it hides at once and asks for no fade frames"
+            );
+            assert_eq!(self.redraw(millis + 100), RedrawRequest::Wait);
+            return;
+        }
+        let fade = self.fade.as_millis() as u64;
         assert_eq!(
             self.redraw(millis),
             RedrawRequest::NextFrame,
@@ -154,7 +175,7 @@ fn hover_shows_on_enter_and_fades_after_the_delay() {
         ui.redraw(3_100),
         RedrawRequest::At(ui.at(3_000) + HIDE_DELAY)
     );
-    ui.fade_out(3_000 + millis(HIDE_DELAY));
+    ui.hide(3_000 + millis(HIDE_DELAY));
     assert_eq!(ui.redraw(5_000), RedrawRequest::Wait);
 }
 
@@ -197,12 +218,13 @@ fn scroll_shows_on_wheel_and_fades_after_the_scroll_ends() {
         RedrawRequest::At(hide),
         "scrolling again extends it"
     );
-    ui.fade_out(1_200 + millis(SCROLL_END + HIDE_DELAY));
+    ui.hide(1_200 + millis(SCROLL_END + HIDE_DELAY));
 }
 
 #[test]
 fn scroll_holds_while_the_pointer_is_on_the_scrollbar() {
     let mut ui = Harness::new(Visibility::Scroll);
+    let _ = ui.point(INSIDE);
     let _ = ui.wheel();
     let _ = ui.redraw(16);
     let _ = ui.point(ON_BAR);
@@ -218,7 +240,7 @@ fn scroll_holds_while_the_pointer_is_on_the_scrollbar() {
         RedrawRequest::At(ui.at(6_000) + HIDE_DELAY),
         "leaving the scrollbar starts the hide delay"
     );
-    ui.fade_out(6_000 + millis(HIDE_DELAY));
+    ui.hide(6_000 + millis(HIDE_DELAY));
 }
 
 #[test]
@@ -242,5 +264,25 @@ fn a_custom_hide_delay_is_used() {
     let _ = ui.redraw(16);
     let _ = ui.point(OUTSIDE);
     assert_eq!(ui.redraw(100), RedrawRequest::At(ui.at(100) + delay));
-    ui.fade_out(100 + millis(delay));
+    ui.hide(100 + millis(delay));
+}
+
+#[test]
+fn hover_fades_out_when_asked() {
+    let mut ui = Harness::fading(Visibility::Hover);
+    let _ = ui.point(INSIDE);
+    let _ = ui.redraw(16);
+    let _ = ui.point(OUTSIDE);
+    assert_eq!(ui.redraw(100), RedrawRequest::At(ui.at(100) + HIDE_DELAY));
+    ui.hide(100 + millis(HIDE_DELAY));
+}
+
+#[test]
+fn scroll_fades_out_when_asked() {
+    let mut ui = Harness::fading(Visibility::Scroll);
+    let _ = ui.point(INSIDE);
+    let _ = ui.wheel();
+    let hide = ui.at(16) + SCROLL_END + HIDE_DELAY;
+    assert_eq!(ui.redraw(16), RedrawRequest::At(hide));
+    ui.hide(16 + millis(SCROLL_END + HIDE_DELAY));
 }

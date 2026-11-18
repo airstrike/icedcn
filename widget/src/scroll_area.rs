@@ -9,8 +9,8 @@ use crate::scrollable::{Direction, Scrollable, Scrollbar, Visibility};
 /// Nova's vertical scroll area. Set a height to constrain its viewport.
 ///
 /// Like Radix's default `type="hover"`, its scrollbars show while the pointer is over it and
-/// fade out [`HIDE_DELAY`](crate::scrollable::HIDE_DELAY) after it leaves. Change that with
-/// `.visibility(..)` and `.hide_delay(..)`.
+/// hide [`HIDE_DELAY`](crate::scrollable::HIDE_DELAY) after it leaves. Change that with
+/// `.visibility(..)` and `.hide_delay(..)`, and fade them out with `.fade(..)`.
 pub fn scroll_area<'a, Message: 'a>(
     content: impl Into<Slot<'a, Message>>,
 ) -> Scrollable<'a, Message> {

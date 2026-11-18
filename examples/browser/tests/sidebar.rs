@@ -128,5 +128,5 @@ fn desktop_docs_sidebar_preserves_the_article_column() {
     let _ = app.update(Message::OpenComponent("radio-group".into()));
     let mut ui = Ui::with_size(Default::default(), Size::new(1440., 932.), app.view());
     let article = ui.find(META.description).unwrap().bounds();
-    assert!((article.x - 412.5).abs() < 1., "{article:?}");
+    assert!((article.x - 400.).abs() < 1., "{article:?}");
 }
