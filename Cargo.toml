@@ -12,7 +12,7 @@ keywords.workspace = true
 
 [features]
 default = ["symbols"]
-fount = ["dep:fount", "dep:iced_futures", "dep:iced_runtime", "iced_futures/tokio"]
+fount = ["dep:fount", "dep:iced_runtime"]
 chart = ["icedcn_core/chart", "icedcn_widget/chart"]
 highlighter = ["icedcn_widget/highlighter"]
 markdown = ["icedcn_core/markdown", "icedcn_widget/markdown"]
@@ -22,11 +22,10 @@ sweeten = ["icedcn_widget/sweeten"]
 symbols = ["icedcn_widget/symbols"]
 
 [dependencies]
-fount = { path = "vendor/fount", optional = true }
+fount = { git = "https://github.com/airstrike/fount", rev = "319c642bdca4181bea76b11933697326b1a424f2", optional = true }
 icedcn_core.workspace = true
 icedcn_widget.workspace = true
 iced_core.workspace = true
-iced_futures = { workspace = true, optional = true }
 iced_runtime = { workspace = true, optional = true }
 iced_widget.workspace = true
 
@@ -35,7 +34,6 @@ members = [
     "cli",
   "core",
   "widget",
-  "vendor/fount",
   "examples/browser",
   "examples/browser/routing",
   "examples/highlight",
@@ -61,7 +59,6 @@ hyozu = { git = "https://github.com/airstrike/hyozu", rev = "2892f6c6a99639ad5d4
 # Dependents pick the renderer. Examples opt into iced's defaults themselves.
 iced = { version = "0.15.0-dev", default-features = false }
 iced_core = "0.15.0-dev"
-iced_futures = "0.15.0-dev"
 iced_graphics = "0.15.0-dev"
 iced_renderer = "0.15.0-dev"
 iced_runtime = "0.15.0-dev"

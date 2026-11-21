@@ -5,8 +5,7 @@
 //! family returns [`load`], which registers every downloaded face with iced
 //! before publishing one completion message. It does not change the app's font.
 //!
-//! The feature selects iced's Tokio executor on native platforms; web builds
-//! keep iced's browser executor.
+//! fount runs under any executor, so the app keeps iced's choice.
 //!
 //! Native applications refresh Google's catalog with a disk cache. Web apps
 //! use the complete bundled catalog snapshot and CORS-safe TrueType URLs;

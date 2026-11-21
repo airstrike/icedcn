@@ -170,7 +170,7 @@ Native apps use Google's catalog with a disk cache and an offline fallback.
 Web apps use the complete bundled snapshot and CORS-safe TrueType downloads;
 they do not require an API key or proxy. The snapshot currently contains 1,961
 families, refreshed on 2026-11-15. Its provenance and refresh command are in
-[vendor/fount/README.md](vendor/fount/README.md).
+[fount's README](https://github.com/airstrike/fount#catalog-snapshot).
 
 ## Examples and development
 
