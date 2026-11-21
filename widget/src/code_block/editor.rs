@@ -26,7 +26,7 @@ use crate::core::layout;
 use crate::core::mouse;
 use crate::core::renderer;
 use crate::core::shell::Bus;
-use crate::core::text::{self, Paragraph as _, Renderer as _, highlighter};
+use crate::core::text::{self, Renderer as _, highlighter};
 use crate::core::widget::tree::{self, Tree};
 use crate::core::widget::{Id, Meta, Operation};
 use crate::core::{
@@ -150,7 +150,7 @@ impl<'a, Message> Editor<'a, Message> {
             // A trailing space adds no width to a measured line, so measure up
             // to a sentinel and take the sentinel away.
             let width = |content: &str| {
-                <Renderer as text::Renderer>::Paragraph::with_text(text::Text {
+                crate::text::min_bounds::<Renderer>(text::Text {
                     content,
                     bounds: Size::INFINITE,
                     size: self.listing.size().into(),
@@ -167,7 +167,6 @@ impl<'a, Message> Editor<'a, Message> {
                     weight: None,
                     hint_factor: renderer::Renderer::hint_factor(renderer),
                 })
-                .min_bounds()
                 .width
             };
             width(&format!("{text}x")) - width("x")
@@ -673,7 +672,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
                 .content
                 .lines()
                 .map(|line| {
-                    <Renderer as text::Renderer>::Paragraph::with_text(text::Text {
+                    crate::text::min_bounds::<Renderer>(text::Text {
                         content: line.text.as_ref(),
                         bounds: Size::new(state.width, f32::INFINITY),
                         size: self.listing.size().into(),
@@ -690,7 +689,6 @@ impl<Message> Widget<Message, Theme, Renderer> for Editor<'_, Message> {
                         weight: None,
                         hint_factor: renderer::Renderer::hint_factor(renderer),
                     })
-                    .min_bounds()
                     .height
                     .max(line_height)
                 })

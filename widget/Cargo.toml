@@ -7,7 +7,14 @@ license.workspace = true
 repository.workspace = true
 
 [features]
-default = ["symbols"]
+default = ["wgpu", "vello-cpu", "symbols"]
+# Pick the concrete `iced_widget::Renderer` the widgets draw with, as iced's
+# features of the same names do. With both on, wgpu is tried first and
+# vello_cpu is the fallback. With neither, iced_widget's renderer is `()`.
+# `wgpu` carries wgpu's default backends, like iced's: without them the wgpu
+# compositor panics instead of falling back.
+wgpu = ["iced_widget/wgpu", "iced_renderer/wgpu"]
+vello-cpu = ["iced_renderer/vello-cpu"]
 chart = ["dep:hyozu", "icedcn_core/chart"]
 canvas = ["iced_widget/canvas"]
 crisp = []
@@ -33,9 +40,8 @@ hyozu = { workspace = true, optional = true }
 icedcn_core.workspace = true
 iced_core.workspace = true
 iced_graphics.workspace = true
-# The widgets draw with the concrete `iced_widget::Renderer`, so they need a
-# renderer even with no features on. Dependents can add wgpu as well.
-iced_renderer = { workspace = true, features = ["vello-cpu"] }
+# Only here so the renderer features can reach `iced_renderer`'s.
+iced_renderer.workspace = true
 iced_highlighter = { workspace = true, optional = true }
 iced_runtime = { workspace = true, features = ["selector"] }
 iced_widget = { workspace = true, features = ["image", "svg"] }

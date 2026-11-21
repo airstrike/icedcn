@@ -16,6 +16,7 @@
 use iced_widget::Widget;
 use std::marker::PhantomData;
 
+use crate::core;
 use crate::core::Length;
 use crate::core::Length::Fill;
 use crate::core::alignment::Horizontal;
@@ -31,6 +32,17 @@ use crate::compose::{Compose, Inherited, Slot};
 use crate::rule;
 use icedcn_core::Theme;
 use icedcn_core::theme;
+
+/// The smallest bounds that fit `text`, shaped as `R`'s paragraph.
+///
+/// Generic over the renderer, as iced's own widgets are: with no renderer
+/// feature on, iced's renderer is `()` and so is its paragraph, which measures
+/// as zero.
+pub(crate) fn min_bounds<R: core::text::Renderer>(text: core::Text<&str>) -> core::Size {
+    use core::text::Paragraph as _;
+
+    R::Paragraph::with_text(text).min_bounds()
+}
 
 /// The `text-*` steps of Tailwind v4's `theme.css`: each sets a font size
 /// and its unitless leading, which descendants scale by their own size.

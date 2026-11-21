@@ -38,7 +38,6 @@ use crate::core::layout;
 use crate::core::mouse;
 use crate::core::renderer;
 use crate::core::text;
-use crate::core::text::Renderer as _;
 use crate::core::text::paragraph::Paragraph as _;
 use crate::core::widget::text::{Alignment, Catalog, Shaping, Wrapping};
 use crate::core::widget::tree::{self, Tree};
@@ -292,7 +291,7 @@ pub fn rich_text<'a>(spans: impl IntoIterator<Item = Span<'a>>) -> RichText<'a> 
 }
 
 impl<'a> RichText<'a> {
-    fn format(&self, renderer: &Renderer, bounds: Size) -> Text<()> {
+    fn format<R: text::Renderer>(&self, renderer: &R, bounds: Size) -> Text<()> {
         Text {
             content: (),
             bounds,
@@ -308,7 +307,7 @@ impl<'a> RichText<'a> {
             font_features: Vec::new(),
             font_variations: Vec::new(),
             weight: None,
-            hint_factor: <Renderer as crate::core::Renderer>::hint_factor(renderer),
+            hint_factor: renderer.hint_factor(),
         }
     }
 
@@ -438,16 +437,17 @@ impl<P: text::Paragraph> operation::Text for Operand<'_, P> {
 
 impl Meta for RichText<'_> {}
 
-impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
+// Generic over the renderer, as iced's text widgets are, so the paragraph is
+// the renderer's own type rather than a concrete one fixed by features.
+impl<'a, Message: 'a, R: text::Renderer> Widget<Message, Theme, R> for RichText<'a> {
     fn tag(&self) -> tree::Tag {
-        tree::Tag::of::<State<<Renderer as text::Renderer>::Paragraph>>()
+        tree::Tag::of::<State<R::Paragraph>>()
     }
 
     fn state(&self) -> tree::State {
-        let paragraph = <<Renderer as text::Renderer>::Paragraph>::default();
         tree::State::new(State {
             spans: Vec::<text::Span<'static, ()>>::new(),
-            paragraph,
+            paragraph: R::Paragraph::default(),
             colored: RefCell::default(),
         })
     }
@@ -459,14 +459,12 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
         }
     }
 
-    fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) {
+    fn layout(&mut self, tree: &mut Tree, renderer: &R, limits: &layout::Limits) {
         // We don't have the theme here, so layout uses each span's
         // *layout* shape (no color). Color is rendering-only and gets
         // applied in `draw` by reshaping the paragraph against the live
         // palette. The cached paragraph's dimensions are color-independent.
-        let state = tree
-            .state
-            .downcast_mut::<State<<Renderer as text::Renderer>::Paragraph>>();
+        let state = tree.state.downcast_mut::<State<R::Paragraph>>();
         let default_font = self.font.unwrap_or_else(|| text::Renderer::font(renderer));
         let layout_spans: Vec<_> = self
             .spans
@@ -503,7 +501,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
     fn draw(
         &self,
         tree: &Tree,
-        renderer: &mut Renderer,
+        renderer: &mut R,
         theme: &Theme,
         defaults: &renderer::Style,
         layout: Layout,
@@ -513,9 +511,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
         if !layout.bounds().intersects(viewport) {
             return;
         }
-        let state = tree
-            .state
-            .downcast_ref::<State<<Renderer as text::Renderer>::Paragraph>>();
+        let state = tree.state.downcast_ref::<State<R::Paragraph>>();
 
         let paragraph = &state.paragraph;
         let anchor = layout
@@ -536,7 +532,6 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
             };
             let regions = paragraph.span_bounds(index);
             for (i, bounds) in regions.iter().enumerate() {
-                use crate::core::Renderer as _;
                 use crate::core::border::Radius;
 
                 let starts = i == 0;
@@ -600,7 +595,6 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
             *viewport,
         );
         for region in paragraph.selection() {
-            use crate::core::Renderer as _;
             renderer.fill_quad(
                 renderer::Quad {
                     bounds: *region + (anchor - Point::ORIGIN),
@@ -616,12 +610,10 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
         tree: &mut Tree,
         layout: Layout,
         _viewport: &Rectangle,
-        _renderer: &Renderer,
+        _renderer: &R,
         operation: &mut dyn Operation,
     ) {
-        let state = tree
-            .state
-            .downcast_mut::<State<<Renderer as text::Renderer>::Paragraph>>();
+        let state = tree.state.downcast_mut::<State<R::Paragraph>>();
         let bounds = layout.bounds();
         let anchor = bounds.anchor(state.paragraph.min_bounds(), self.align_x, self.align_y);
         operation.text(
@@ -641,11 +633,9 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for RichText<'a> {
         layout: Layout,
         cursor: mouse::Cursor,
         viewport: &Rectangle,
-        _renderer: &Renderer,
+        _renderer: &R,
     ) -> mouse::Interaction {
-        let state = tree
-            .state
-            .downcast_ref::<State<<Renderer as text::Renderer>::Paragraph>>();
+        let state = tree.state.downcast_ref::<State<R::Paragraph>>();
         let bounds = layout.bounds();
         let anchor = bounds.anchor(state.paragraph.min_bounds(), self.align_x, self.align_y);
         if self.selectable.unwrap_or(true)

@@ -11,7 +11,12 @@ categories.workspace = true
 keywords.workspace = true
 
 [features]
-default = ["symbols"]
+default = ["wgpu", "vello-cpu", "symbols"]
+# Renderers, mirroring iced's features of the same names: wgpu first, vello_cpu
+# as the fallback. Turn off default features and pick one to compile only that
+# renderer.
+wgpu = ["icedcn_widget/wgpu"]
+vello-cpu = ["icedcn_widget/vello-cpu"]
 fount = ["dep:fount", "dep:iced_runtime"]
 chart = ["icedcn_core/chart", "icedcn_widget/chart"]
 highlighter = ["icedcn_widget/highlighter"]

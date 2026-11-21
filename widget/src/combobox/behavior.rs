@@ -3,7 +3,7 @@
 use iced_core::alignment::Vertical;
 use iced_core::keyboard::{self, Key, key::Named};
 use iced_core::length::Sizing;
-use iced_core::text::{self, Paragraph as _};
+use iced_core::text;
 use iced_core::touch;
 use iced_core::widget::operation::TextInput;
 use iced_core::widget::{Id, Meta, Operation, Tree, tree};
@@ -132,7 +132,7 @@ impl<Message: Clone> Widget<Message, Theme, Renderer> for Behavior<'_, Message> 
             {
                 // HTML inputs default to size=20. Derive ch from the renderer's
                 // actual font instead of copying a screenshot's pixel width.
-                let paragraph = <Renderer as text::Renderer>::Paragraph::with_text(text::Text {
+                let ch = crate::text::min_bounds::<Renderer>(text::Text {
                     content: "0",
                     bounds: Size::new(f32::INFINITY, f32::INFINITY),
                     size: text_size.into(),
@@ -148,8 +148,8 @@ impl<Message: Clone> Widget<Message, Theme, Renderer> for Behavior<'_, Message> 
                     font_variations: Vec::new(),
                     hint_factor: iced_core::Renderer::hint_factor(renderer),
                     weight: None,
-                });
-                let ch = paragraph.min_width();
+                })
+                .width;
                 // Null renderer has no font metrics; retain a usable test layout.
                 limits.width(20.0 * if ch > 0.0 { ch } else { text_size * 0.5 } + extra)
             } else {

@@ -3,8 +3,8 @@
 use std::sync::Arc;
 
 use iced_core::alignment::Vertical;
+use iced_core::text;
 use iced_core::text::editor::{self, Action, Binding, Cursor, Edit, KeyPress};
-use iced_core::text::{self, Paragraph as _};
 use iced_core::{Font, Point, Rectangle, Size};
 use iced_widget::Renderer;
 use iced_widget::text_editor::Content;
@@ -491,7 +491,7 @@ pub(crate) fn block_width(
     // A trailing space adds no width to a measured line, so measure up to
     // a sentinel and take the sentinel away.
     let width = |content: &str| {
-        <Renderer as text::Renderer>::Paragraph::with_text(text::Text {
+        crate::text::min_bounds::<Renderer>(text::Text {
             content,
             bounds: Size::INFINITE,
             size: size.into(),
@@ -508,7 +508,6 @@ pub(crate) fn block_width(
             weight: None,
             hint_factor: iced_core::Renderer::hint_factor(renderer),
         })
-        .min_bounds()
         .width
     };
 
