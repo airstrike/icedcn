@@ -33,6 +33,9 @@ hyozu = { workspace = true, optional = true }
 icedcn_core.workspace = true
 iced_core.workspace = true
 iced_graphics.workspace = true
+# The widgets draw with the concrete `iced_widget::Renderer`, so they need a
+# renderer even with no features on. Dependents can add wgpu as well.
+iced_renderer = { workspace = true, features = ["vello-cpu"] }
 iced_highlighter = { workspace = true, optional = true }
 iced_runtime = { workspace = true, features = ["selector"] }
 iced_widget = { workspace = true, features = ["image", "svg"] }

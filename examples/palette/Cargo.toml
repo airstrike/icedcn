@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 icedcn = { workspace = true, features = ["chart", "spinner", "svg"] }
-iced = { workspace = true, features = ["svg"] }
+iced = { workspace = true, features = ["default", "svg"] }
 iced_widget = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

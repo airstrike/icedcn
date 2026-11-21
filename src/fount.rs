@@ -16,8 +16,8 @@ pub use ::fount::{Catalog, Error, Fount, google};
 #[cfg(not(target_arch = "wasm32"))]
 pub use ::fount::{Config, system};
 
-use iced::Task;
-use iced::font::{self, Family};
+use iced_core::font::Family;
+use iced_runtime::{Task, font};
 
 /// Results from font discovery and registration, mapped into the app's message.
 #[derive(Debug, Clone)]

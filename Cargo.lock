@@ -767,6 +767,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "color"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ec7c5eb7a16992b1904d76c517d170ab353b0e0b3d5a0c81a8a0cd1037893cf"
+dependencies = [
+ "bytemuck",
+]
+
+[[package]]
 name = "color_quant"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1220,6 +1229,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "fearless_simd"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "629c9d6b6f30b5604089e0980f4d924a013aacb1654a6cdf5d3d852224f68651"
+
+[[package]]
+name = "fearless_simd_macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e91d94c6885390b81782d7ee60fd6583b33907333a8b340de25ccf468353315"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 3.0.9",
+]
+
+[[package]]
 name = "find-msvc-tools"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1562,6 +1588,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37bfe73dc8ec21f54d181e5a60554327ec3f1c600c455a75ccbfc65d2106a6c4"
 
 [[package]]
+name = "glifo"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ae2e3b09ea1cc45c994a405e4d4154901d4caa867d3e1be3a02be641f62fefa"
+dependencies = [
+ "bytemuck",
+ "foldhash 0.2.0",
+ "hashbrown 0.17.1",
+ "log",
+ "peniko",
+ "skrifa 0.49.0",
+ "smallvec",
+ "vello_common",
+]
+
+[[package]]
 name = "glow"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1604,6 +1646,15 @@ checksum = "b62d5865c036cb1393e23c50693df631d3f5d7bcca4c04fe4cc0fd592e74a782"
 dependencies = [
  "euclid",
  "svg_fmt",
+]
+
+[[package]]
+name = "guillotiere"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b17e70c989c36bad147b27a58d148c0741c51448aa5653436547323e524d0ab"
+dependencies = [
+ "euclid",
 ]
 
 [[package]]
@@ -1828,7 +1879,7 @@ dependencies = [
 [[package]]
 name = "iced"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "iced_core",
  "iced_debug",
@@ -1845,7 +1896,7 @@ dependencies = [
 [[package]]
 name = "iced_core"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "bitflags",
  "bytes",
@@ -1864,7 +1915,7 @@ dependencies = [
 [[package]]
 name = "iced_debug"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "iced_core",
  "iced_futures",
@@ -1874,7 +1925,7 @@ dependencies = [
 [[package]]
 name = "iced_futures"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "futures",
  "iced_core",
@@ -1888,7 +1939,7 @@ dependencies = [
 [[package]]
 name = "iced_graphics"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "bitflags",
  "bytemuck",
@@ -1908,7 +1959,7 @@ dependencies = [
 [[package]]
 name = "iced_highlighter"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "iced_core",
  "two-face",
@@ -1931,7 +1982,7 @@ dependencies = [
 [[package]]
 name = "iced_program"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "iced_graphics",
  "iced_runtime",
@@ -1940,10 +1991,10 @@ dependencies = [
 [[package]]
 name = "iced_renderer"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "iced_graphics",
- "iced_tiny_skia",
+ "iced_vello_cpu",
  "iced_wgpu",
  "log",
  "thiserror 2.0.18",
@@ -1952,7 +2003,7 @@ dependencies = [
 [[package]]
 name = "iced_runtime"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "bytes",
  "iced_core",
@@ -1964,7 +2015,7 @@ dependencies = [
 [[package]]
 name = "iced_selector"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "iced_core",
 ]
@@ -1972,7 +2023,7 @@ dependencies = [
 [[package]]
 name = "iced_test"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "iced_futures",
  "iced_program",
@@ -1986,32 +2037,30 @@ dependencies = [
 ]
 
 [[package]]
-name = "iced_tiny_skia"
+name = "iced_vello_cpu"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "bytemuck",
- "cosmic-text",
  "iced_debug",
  "iced_graphics",
- "kurbo 0.13.0",
  "log",
  "resvg",
  "rustc-hash 2.1.1",
  "softbuffer",
- "tiny-skia",
+ "vello_cpu",
 ]
 
 [[package]]
 name = "iced_wgpu"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "bitflags",
  "bytemuck",
  "cryoglyph",
  "futures",
- "guillotiere",
+ "guillotiere 0.6.2",
  "iced_debug",
  "iced_graphics",
  "log",
@@ -2025,7 +2074,7 @@ dependencies = [
 [[package]]
 name = "iced_widget"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "iced_highlighter",
  "iced_renderer",
@@ -2042,7 +2091,7 @@ dependencies = [
 [[package]]
 name = "iced_winit"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#eea7f10d22cf3f8e6fcb831789035dddcbe1d395"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#fe442a18797c12157fb54c782da1ca267981b096"
 dependencies = [
  "arboard",
  "iced_debug",
@@ -2050,6 +2099,9 @@ dependencies = [
  "iced_runtime",
  "log",
  "mundy",
+ "objc2",
+ "objc2-app-kit",
+ "objc2-foundation",
  "rustc-hash 2.1.1",
  "thiserror 2.0.18",
  "tracing",
@@ -2063,8 +2115,9 @@ name = "icedcn"
 version = "0.1.0"
 dependencies = [
  "fount",
- "iced",
  "iced_core",
+ "iced_futures",
+ "iced_runtime",
  "iced_widget",
  "icedcn_core",
  "icedcn_widget",
@@ -2099,6 +2152,7 @@ dependencies = [
  "iced_core",
  "iced_graphics",
  "iced_highlighter",
+ "iced_renderer",
  "iced_runtime",
  "iced_test",
  "iced_widget",
@@ -2492,12 +2546,13 @@ dependencies = [
 
 [[package]]
 name = "kurbo"
-version = "0.13.0"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7564e90fe3c0d5771e1f0bc95322b21baaeaa0d9213fa6a0b61c99f8b17b3bfb"
+checksum = "4b60dfc32f652b926df6192e55525b16d186c69d47876c3ead4da5cc9f8450e2"
 dependencies = [
  "arrayvec",
  "euclid",
+ "polycool",
  "smallvec",
 ]
 
@@ -2947,9 +3002,9 @@ dependencies = [
 
 [[package]]
 name = "objc2"
-version = "0.6.4"
+version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a12a8ed07aefc768292f076dc3ac8c48f3781c8f2d5851dd3d98950e8c5a89f"
+checksum = "08849bbd4767dfae9457696856ae1c84fe4e0281bbe4a7abff2d0e06fb7981f8"
 dependencies = [
  "objc2-encode",
 ]
@@ -3292,6 +3347,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35fb2e5f958ec131621fdd531e9fc186ed768cbe395337403ae56c17a74c68ec"
 
 [[package]]
+name = "peniko"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "839c8299360d2e998bdb106dc0a6cd71dcc5f4df51df1b620361bf50e283cca6"
+dependencies = [
+ "bytemuck",
+ "color",
+ "kurbo 0.13.1",
+ "linebender_resource_handle",
+ "smallvec",
+]
+
+[[package]]
 name = "percent-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3401,6 +3469,15 @@ name = "pollster"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f3a9f18d041e6d0e102a0a46750538147e5e8992d3b4873aaafee2520b00ce3"
+
+[[package]]
+name = "polycool"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50596ddc09eb5ad5f75cacd40209568e66df71baf86e1499a0e99c4cff12a5a6"
+dependencies = [
+ "arrayvec",
+]
 
 [[package]]
 name = "portable-atomic"
@@ -3824,6 +3901,20 @@ dependencies = [
  "bytemuck",
  "font-types 0.12.7",
  "once_cell",
+]
+
+[[package]]
+name = "read-fonts"
+version = "0.46.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bdaa4fffe9ff3ca2c353fa9729792805b9b3e324695ff5a081f860612e81b330"
+dependencies = [
+ "bytemuck",
+ "foldhash 0.2.0",
+ "font-types 0.12.7",
+ "once_cell",
+ "smallvec",
+ "yoke",
 ]
 
 [[package]]
@@ -4289,6 +4380,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "skrifa"
+version = "0.49.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7459fb60888ad9a5f367dd293fa2fb9df142cb451aa6bfd6cd66a7d6a9b739d"
+dependencies = [
+ "bytemuck",
+ "once_cell",
+ "read-fonts 0.46.0",
+ "smallvec",
+ "yoke",
+]
+
+[[package]]
 name = "slab"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4481,7 +4585,7 @@ version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "695b5790b3131dafa99b3bbfd25a216edb3d216dad9ca208d4657bfb8f2abc3d"
 dependencies = [
- "kurbo 0.13.0",
+ "kurbo 0.13.1",
  "siphasher",
 ]
 
@@ -5110,7 +5214,7 @@ checksum = "977d0a4abdef933f424a99fe09f95576e089b90aebc6f016a3bc813762493e91"
 dependencies = [
  "data-url",
  "imagesize",
- "kurbo 0.13.0",
+ "kurbo 0.13.1",
  "log",
  "pico-args",
  "roxmltree 0.21.1",
@@ -5153,6 +5257,36 @@ dependencies = [
  "aligned-vec",
  "num-traits",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "vello_common"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d9447018538224861c1bd825471dcc67ffa973c97de666bf6296b72dbb2f166"
+dependencies = [
+ "bytemuck",
+ "fearless_simd",
+ "fearless_simd_macros",
+ "guillotiere 0.7.0",
+ "log",
+ "peniko",
+ "smallvec",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "vello_cpu"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d6b3db720c5d3aa8783cb1c042d8a77142df70bd0f742dc9005f6d6efe33ebf"
+dependencies = [
+ "bytemuck",
+ "fearless_simd",
+ "fearless_simd_macros",
+ "glifo",
+ "hashbrown 0.17.1",
+ "vello_common",
 ]
 
 [[package]]

@@ -12,7 +12,7 @@ keywords.workspace = true
 
 [features]
 default = ["symbols"]
-fount = ["dep:fount", "iced/tokio"]
+fount = ["dep:fount", "dep:iced_futures", "dep:iced_runtime", "iced_futures/tokio"]
 chart = ["icedcn_core/chart", "icedcn_widget/chart"]
 highlighter = ["icedcn_widget/highlighter"]
 markdown = ["icedcn_core/markdown", "icedcn_widget/markdown"]
@@ -25,8 +25,9 @@ symbols = ["icedcn_widget/symbols"]
 fount = { path = "vendor/fount", optional = true }
 icedcn_core.workspace = true
 icedcn_widget.workspace = true
-iced.workspace = true
 iced_core.workspace = true
+iced_futures = { workspace = true, optional = true }
+iced_runtime = { workspace = true, optional = true }
 iced_widget.workspace = true
 
 [workspace]
@@ -57,9 +58,12 @@ icedcn_core = { path = "./core" }
 icedcn_widget = { path = "./widget", default-features = false }
 hyozu = { git = "https://github.com/airstrike/hyozu", rev = "2892f6c6a99639ad5d4c96cf926ed9fe3c616d86" }
 
-iced = "0.15.0-dev"
+# Dependents pick the renderer. Examples opt into iced's defaults themselves.
+iced = { version = "0.15.0-dev", default-features = false }
 iced_core = "0.15.0-dev"
+iced_futures = "0.15.0-dev"
 iced_graphics = "0.15.0-dev"
+iced_renderer = "0.15.0-dev"
 iced_runtime = "0.15.0-dev"
 iced_highlighter = "0.15.0-dev"
 iced_selector = "0.15.0-dev"
@@ -103,7 +107,7 @@ iced_renderer = { git = "https://github.com/airstrike/iced.git", branch = "dev" 
 iced_program = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
 iced_winit = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
 iced_wgpu = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
-iced_tiny_skia = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
+iced_vello_cpu = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
 iced_futures = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
 iced_debug = { git = "https://github.com/airstrike/iced.git", branch = "dev" }
 iced_highlighter = { git = "https://github.com/airstrike/iced.git", branch = "dev" }

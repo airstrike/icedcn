@@ -210,7 +210,7 @@ fn pressing_a_thumb_centre_keeps_its_value() {
             release(&mut ui);
             assert_eq!(
                 ui.into_messages().collect::<Vec<_>>(),
-                [],
+                Vec::<u8>::new(),
                 "{orientation:?} at {value}"
             );
         }
@@ -244,7 +244,7 @@ fn tapping_a_thumb_centre_keeps_its_value() {
             ]);
             assert_eq!(
                 ui.into_messages().collect::<Vec<_>>(),
-                [],
+                Vec::<u8>::new(),
                 "{orientation:?}"
             );
         }
@@ -348,5 +348,5 @@ fn a_disabled_slider_ignores_presses() {
     release(&mut ui);
     press(&mut ui, at(Horizontal, 0.0));
     release(&mut ui);
-    assert_eq!(ui.into_messages().collect::<Vec<_>>(), []);
+    assert_eq!(ui.into_messages().collect::<Vec<_>>(), Vec::<u8>::new());
 }

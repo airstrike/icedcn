@@ -421,7 +421,7 @@ compose_widget!(iced_widget::Svg<'a, Theme>);
 compose_widget!(iced_widget::Text<'a, Theme>);
 compose_widget!(iced_widget::TextInput<'a, Message, Theme> where + Clone);
 compose_widget!(iced_widget::Toggler<'a, Message, Theme> where + Clone);
-compose_widget!(iced_widget::Tooltip<'a, El<'a, Message>, El<'a, Message>, Theme> where + Clone);
+compose_widget!(iced_widget::Tooltip<El<'a, Message>, El<'a, Message>> where + Clone);
 compose_widget!(iced_widget::text::Rich<'a, Message, Message, Theme> where + Clone);
 
 impl<'a, T, Message> Compose<Message> for iced_widget::Slider<'a, T, Message, Theme>
