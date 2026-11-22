@@ -1,7 +1,7 @@
 use crate::operation::focus;
 use iced_core::keyboard::{self, Key, key::Named};
 use iced_core::time::{Duration, Instant};
-use iced_core::widget::operation::{Focusable, Scrollable, Text};
+use iced_core::widget::operation::{Focusable, Scrollable, Text, TextInput};
 use iced_core::widget::{
     Id, Meta, Operation,
     tree::{self, Tree},
@@ -154,6 +154,13 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
                 shell.capture_event();
                 return;
             }
+            // A focused text field, such as a menu's search, takes typed
+            // characters; typeahead over the rows would steal them.
+            let editing = matches!(key.as_ref(), Key::Character(_)) && {
+                let mut rows = Rows::default();
+                visit(&mut rows);
+                rows.editing
+            };
             if count.total > 0 && (vertical || count.focused.is_some()) {
                 let last = count.total - 1;
                 let next = match (key.as_ref(), self.horizontal) {
@@ -168,7 +175,10 @@ impl<Message> Widget<Message, Theme, Renderer> for List<'_, Message> {
                     (Key::Named(Named::ArrowLeft), Some(true)) => focus::adjacent(count, true),
                     (Key::Named(Named::ArrowRight), Some(true)) => focus::adjacent(count, false),
                     (Key::Character(c), Some(false))
-                        if !modifiers.command() && !modifiers.alt() && !modifiers.control() =>
+                        if !editing
+                            && !modifiers.command()
+                            && !modifiers.alt()
+                            && !modifiers.control() =>
                     {
                         match &self.autofocus {
                             Initial::Choice { labels, .. } => {
@@ -323,6 +333,11 @@ struct Rows {
     items: Vec<Rectangle>,
     labels: Vec<String>,
     focused: Option<usize>,
+    /// The bounds of the last text field reported, which reports itself
+    /// before its focusable.
+    field: Option<Rectangle>,
+    /// Whether the focused control is a text field.
+    editing: bool,
 }
 
 impl Operation for Rows {
@@ -339,10 +354,15 @@ impl Operation for Rows {
     ) {
         self.translation = offset;
     }
+    fn text_input(&mut self, _: Option<&Id>, bounds: Rectangle, _: &mut dyn TextInput) {
+        self.field = Some(bounds);
+    }
     fn focusable(&mut self, _: Option<&Id>, bounds: Rectangle, control: &mut dyn Focusable) {
         if control.is_focused() {
             self.focused = Some(self.items.len());
+            self.editing = self.field == Some(bounds);
         }
+        self.field = None;
         self.items.push(bounds);
         self.labels.push(String::new());
     }

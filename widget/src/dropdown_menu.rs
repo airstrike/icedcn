@@ -34,6 +34,9 @@ use crate::popover::{self, Popover};
 
 pub use crate::popover::{Align, Handle, Side};
 
+#[cfg(test)]
+mod tests;
+
 /// A menu opened from its trigger.
 pub struct DropdownMenu<'a, Message> {
     popover: Popover<'a, Message>,
