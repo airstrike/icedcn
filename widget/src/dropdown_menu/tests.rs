@@ -106,3 +106,38 @@ fn a_focused_search_field_takes_typed_letters_before_row_typeahead() {
         "no row was chosen: {messages:?}"
     );
 }
+
+#[test]
+fn escape_returns_focus_to_the_trigger_with_its_ring_but_a_pointer_dismissal_does_not() {
+    let trigger = Point::new(20., 16.);
+    for escape in [true, false] {
+        let mut ui = Simulator::with_size(Default::default(), Size::new(640., 480.), view(false));
+        ui.draw(&Theme::light());
+        ui.point_at(trigger);
+        ui.simulate(simulator::click());
+        ui = rebuild(ui);
+        assert!(indicators(&mut ui).len() > 1, "the menu opened");
+        if escape {
+            ui.tap_key(Named::Escape);
+        } else {
+            ui.point_at(Point::new(600., 440.));
+            ui.simulate(simulator::click());
+        }
+        ui = frame(rebuild(ui));
+        ui = frame(ui);
+        let controls = indicators(&mut ui);
+        assert_eq!(controls.len(), 1, "the menu closed (escape {escape})");
+        if escape {
+            assert_eq!(
+                controls[0],
+                (true, true),
+                "Escape hands focus back with its ring"
+            );
+        } else {
+            assert!(
+                !controls[0].1,
+                "a pointer dismissal shows no ring: {controls:?}"
+            );
+        }
+    }
+}

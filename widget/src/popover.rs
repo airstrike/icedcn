@@ -37,6 +37,8 @@ use crate::menu::list::{Initial, List};
 use crate::{column, text};
 use iced_core::widget::Id;
 
+mod focus;
+
 pub use iced_widget::anchored::{Align, Side};
 
 /// A closure that builds part of a [`Popover`].
@@ -89,6 +91,10 @@ pub enum Event<Message> {
     Set(bool),
     /// The content published an app message.
     App(Message),
+    /// `Escape` reached the open panel unclaimed, so it closes by keyboard.
+    Escaped,
+    /// The trigger took focus back after a keyboard dismissal.
+    Refocused,
 }
 
 /// The open state of an uncontrolled popover.
@@ -96,6 +102,8 @@ pub enum Event<Message> {
 pub struct State {
     open: Option<bool>,
     keyboard: bool,
+    /// A keyboard dismissal hands focus back to the trigger.
+    refocus: bool,
 }
 
 /// Create a closed, uncontrolled [`Popover`]: `trigger` builds what sits in
@@ -341,6 +349,14 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
     ) -> Option<Message> {
         let next = match event {
             Event::App(message) => return Some(message),
+            Event::Escaped => {
+                state.refocus = true;
+                return None;
+            }
+            Event::Refocused => {
+                state.refocus = false;
+                return None;
+            }
             Event::Toggle | Event::KeyboardToggle => {
                 state.keyboard = matches!(event, Event::KeyboardToggle);
                 !self.is_open(state)
@@ -350,6 +366,9 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
 
         if next == self.is_open(state) {
             return None;
+        }
+        if next {
+            state.refocus = false;
         }
 
         if self.open.is_none() {
@@ -379,6 +398,13 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
                 }
             },
         );
+        // Always wrapped, so the trigger keeps its state across a refocus.
+        let trigger = focus::Refocus {
+            content: Element::from(trigger),
+            pending: state.refocus && !handle.is_open,
+            on_focus: || Event::Refocused,
+        }
+        .boxed();
 
         let panel: Element<'a, Event<Message>, Theme, Renderer> = if handle.is_open {
             let mut body = (self.content)(&handle);
@@ -441,7 +467,17 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
             Space::new().boxed()
         };
 
-        let mut anchor = anchored(Element::from(trigger), panel)
+        let panel = if handle.is_open {
+            focus::Escape {
+                content: panel,
+                on_escape: || Event::Escaped,
+            }
+            .boxed()
+        } else {
+            panel
+        };
+
+        let mut anchor = anchored(trigger, panel)
             .position(self.position)
             .width(if self.width.is_some() {
                 anchored::Width::Content
