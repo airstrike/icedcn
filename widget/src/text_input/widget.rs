@@ -53,6 +53,7 @@ use crate::core::keyboard::key;
 use crate::core::layout;
 use crate::core::mouse::{self, click};
 use crate::core::renderer;
+use crate::core::shell;
 use crate::core::text::paragraph::{self, Paragraph as _};
 use crate::core::text::{self, Text};
 use crate::core::time::{Duration, Instant};
@@ -243,6 +244,7 @@ where
     fn changed(
         &self,
         uncontrolled: &mut Option<Value>,
+        pending: &mut Option<Pending>,
         history: &mut History,
         change: Option<history::Change>,
         cursor: Cursor,
@@ -266,8 +268,25 @@ where
         };
 
         if let Some(on_change) = on_change {
-            shell.publish(on_change(self.value.to_string()));
+            self.publish(on_change, pending, shell);
         }
+    }
+
+    /// Publish the edited value and remember it while the application has
+    /// not seen it: a view built before then still holds the value from
+    /// before the edit, and the rest of the burst must edit this one instead.
+    fn publish(
+        &self,
+        on_change: &dyn Fn(String) -> Message,
+        pending: &mut Option<Pending>,
+        shell: &mut Shell<'_, Message>,
+    ) {
+        let tracking = shell.publish_and_track(on_change(self.value.to_string()));
+
+        *pending = self.is_controlled.then(|| Pending {
+            value: self.value.clone(),
+            tracking,
+        });
     }
 
     /// Makes the [`TextInput`] uncontrolled: it starts with `value` and keeps
@@ -1077,6 +1096,16 @@ where
 
         if self.is_controlled {
             state.uncontrolled = None;
+            // While the application has not seen the last edit, the value it
+            // gave this view predates the edit: keep editing the edit. Once
+            // it has, its value wins, whether it took, rewrote or refused it.
+            match state.pending.take() {
+                Some(pending) if !pending.tracking.is_processed() => {
+                    self.value.clone_from(&pending.value);
+                    state.pending = Some(pending);
+                }
+                _ => {}
+            }
             state.history.sync(&self.value);
         } else {
             let value = state.uncontrolled.get_or_insert_with(|| self.value.clone());
@@ -1443,6 +1472,7 @@ where
             if let Some(change) = edit {
                 self.changed(
                     &mut input.uncontrolled,
+                    &mut input.pending,
                     &mut input.history,
                     change,
                     input.cursor,
@@ -1501,6 +1531,7 @@ where
 
                         self.changed(
                             &mut input.uncontrolled,
+                            &mut input.pending,
                             &mut input.history,
                             change,
                             input.cursor,
@@ -1544,7 +1575,7 @@ where
                         input.uncontrolled = Some(self.value.clone());
                     }
                     if let Some(on_input) = &self.on_input {
-                        shell.publish(on_input(self.value.to_string()));
+                        self.publish(on_input, &mut input.pending, shell);
                     }
                 }
             }
@@ -1762,6 +1793,7 @@ where
 
                             self.changed(
                                 &mut state.uncontrolled,
+                                &mut state.pending,
                                 &mut state.history,
                                 change,
                                 state.cursor,
@@ -1825,6 +1857,7 @@ where
 
                     self.changed(
                         &mut state.uncontrolled,
+                        &mut state.pending,
                         &mut state.history,
                         change,
                         state.cursor,
@@ -1879,6 +1912,7 @@ where
 
                         self.changed(
                             &mut state.uncontrolled,
+                            &mut state.pending,
                             &mut state.history,
                             change,
                             state.cursor,
@@ -2097,6 +2131,9 @@ pub struct State<P: text::Paragraph> {
     focus_anim: crate::core::Animation<bool>,
     /// The value of an uncontrolled input, kept across rebuilds.
     uncontrolled: Option<Value>,
+    /// The last value a controlled input published, while the application
+    /// has not seen it.
+    pending: Option<Pending>,
     history: History,
     menu: edit::Menu,
     /// Bumped whenever the value's paragraph is reshaped.
@@ -2109,6 +2146,14 @@ pub struct State<P: text::Paragraph> {
     /// the whole paragraph, so it happens once per edit or caret move, never
     /// per frame.
     measured: [Option<(u64, usize, f32)>; 2],
+}
+
+/// A value a controlled [`TextInput`] published, with the tracking of its
+/// message.
+#[derive(Debug, Clone)]
+struct Pending {
+    value: Value,
+    tracking: shell::Tracking,
 }
 
 impl<P: text::Paragraph> Default for State<P> {
@@ -2130,6 +2175,7 @@ impl<P: text::Paragraph> Default for State<P> {
             overwrite: false,
             scroll_offset: 0.0,
             uncontrolled: None,
+            pending: None,
             history: History::default(),
             menu: edit::Menu::default(),
             revision: 0,
