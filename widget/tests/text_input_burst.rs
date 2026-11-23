@@ -11,6 +11,8 @@
 //! gave it when it was built: the input inside is a new widget, holding the
 //! value from before the burst, while the rest of the burst arrives.
 use iced_core::clipboard;
+use iced_core::edit;
+use iced_core::event;
 use iced_core::input_method;
 use iced_core::keyboard::{self, key};
 use iced_core::mouse;
@@ -267,6 +269,47 @@ fn a_burst_of_keystrokes_reaches_the_application() {
             String::from("abcd"),
         ))
     );
+}
+
+#[test]
+fn native_undo_and_redo_use_the_focused_inputs_history() {
+    let outcome = each(|host| {
+        let mut app = App::new(host, "a");
+        assert_eq!(app.burst(simulator::typewrite("b")), "ab");
+        assert_eq!(app.burst([Event::Edit(edit::Command::Undo)]), "a");
+        assert_eq!(app.shown(), "a");
+        assert_eq!(app.burst([Event::Edit(edit::Command::Redo)]), "ab");
+        app.shown()
+    });
+
+    assert_eq!(outcome, all(String::from("ab")));
+}
+
+#[test]
+fn native_history_commands_propagate_unless_the_input_is_active_and_editable() {
+    let commands = [
+        Event::Edit(edit::Command::Undo),
+        Event::Edit(edit::Command::Redo),
+    ];
+    let mut ui = simulator::simulator(field("a").compose());
+    assert_eq!(ui.simulate(commands.clone()), [event::Status::Ignored; 2]);
+
+    ui.operate(&mut operation::focusable::focus(INPUT));
+    // An active editor owns these commands even when its history is empty.
+    assert_eq!(ui.simulate(commands.clone()), [event::Status::Captured; 2]);
+
+    let _ = ui.simulate([Event::Window(window::Event::Unfocused)]);
+    assert_eq!(ui.simulate(commands.clone()), [event::Status::Ignored; 2]);
+
+    let _ = ui.simulate([Event::Window(window::Event::Focused)]);
+    let disabled: Element<'_, Message, Theme, Renderer> = input("")
+        .id(INPUT)
+        .value("a")
+        .on_input(Message::Input)
+        .disabled(true)
+        .into();
+    let mut ui = ui.rebuild(disabled);
+    assert_eq!(ui.simulate(commands), [event::Status::Ignored; 2]);
 }
 
 #[test]

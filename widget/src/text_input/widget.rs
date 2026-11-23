@@ -1304,6 +1304,19 @@ where
                 }) if input.is_focused.is_some() && !is_disabled => {
                     edit::resolve(key, *physical_key, *modifiers, platform, false)
                 }
+                Event::Edit(command)
+                    if input
+                        .is_focused
+                        .as_ref()
+                        .is_some_and(|focus| focus.is_window_focused)
+                        && self.is_editable() =>
+                {
+                    match command {
+                        crate::core::edit::Command::Undo => Some(Intent::Command(Command::Undo)),
+                        crate::core::edit::Command::Redo => Some(Intent::Command(Command::Redo)),
+                        _ => None,
+                    }
+                }
                 _ => None,
             });
 
