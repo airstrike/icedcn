@@ -20,7 +20,7 @@ use iced_core::renderer;
 use iced_core::shell;
 use iced_core::widget::{self, operation};
 use iced_core::window;
-use iced_core::{Element, Event, Rectangle, Size};
+use iced_core::{Clipboard, Element, Event, Rectangle, Size};
 use iced_runtime::UserInterface;
 use iced_runtime::user_interface;
 use iced_test::simulator;
@@ -101,6 +101,9 @@ struct App {
     cache: user_interface::Cache,
     /// Every message the application received, in order.
     received: Vec<String>,
+    /// What the last burst asked of the clipboard; nothing when the burst
+    /// left the widget tree outdated.
+    clipboard: Option<Clipboard>,
 }
 
 impl App {
@@ -121,6 +124,7 @@ impl App {
             renderer,
             cache: user_interface::Cache::default(),
             received: Vec::new(),
+            clipboard: None,
         };
 
         app.frame(|ui, renderer| {
@@ -157,9 +161,10 @@ impl App {
     fn burst(&mut self, events: impl IntoIterator<Item = Event>) -> &str {
         let events: Vec<Event> = events.into_iter().collect();
         let mut messages = shell::Bus::new();
+        let mut clipboard = None;
 
         self.frame(|ui, renderer| {
-            let _ = ui.update(
+            let (state, _statuses) = ui.update(
                 &window::Headless,
                 &shell::Waker::noop(),
                 &events,
@@ -167,7 +172,15 @@ impl App {
                 renderer,
                 &mut messages,
             );
+            if let user_interface::State::Updated {
+                clipboard: requests,
+                ..
+            } = state
+            {
+                clipboard = Some(requests);
+            }
         });
+        self.clipboard = clipboard;
 
         for (message, _receipt) in messages.drain() {
             let Message::Input(value) = message else {
@@ -310,6 +323,140 @@ fn native_history_commands_propagate_unless_the_input_is_active_and_editable() {
         .into();
     let mut ui = ui.rebuild(disabled);
     assert_eq!(ui.simulate(commands), [event::Status::Ignored; 2]);
+}
+
+/// The text the last burst wrote to the clipboard.
+fn written(app: &App) -> Option<String> {
+    match app.clipboard.as_ref()?.write.as_ref()? {
+        clipboard::Content::Text(text) => Some(text.clone()),
+        _ => None,
+    }
+}
+
+/// The clipboard reads the last burst asked for.
+fn reads(app: &App) -> Vec<clipboard::Kind> {
+    app.clipboard
+        .as_ref()
+        .map(|clipboard| clipboard.reads.clone())
+        .unwrap_or_default()
+}
+
+fn reply(text: &str) -> Event {
+    Event::Clipboard(clipboard::Event::Read(Ok(Arc::new(
+        clipboard::Content::Text(text.to_owned()),
+    ))))
+}
+
+#[test]
+fn native_clipboard_commands_edit_the_focused_input() {
+    let outcome = each(|host| {
+        let mut app = App::new(host, "abc");
+        assert_eq!(app.burst([Event::Edit(edit::Command::SelectAll)]), "abc");
+        assert_eq!(app.burst([Event::Edit(edit::Command::Copy)]), "abc");
+        assert_eq!(written(&app).as_deref(), Some("abc"));
+        assert_eq!(app.burst([Event::Edit(edit::Command::Cut)]), "");
+        assert_eq!(app.shown(), "");
+        assert_eq!(app.burst([Event::Edit(edit::Command::Paste)]), "");
+        assert_eq!(reads(&app), [clipboard::Kind::Text]);
+        assert_eq!(app.burst([reply("xyz")]), "xyz");
+        app.shown()
+    });
+
+    assert_eq!(outcome, all(String::from("xyz")));
+}
+
+#[test]
+fn native_cut_writes_the_selection_it_removes() {
+    let mut app = App::new(Host::Plain, "abc");
+    let _ = app.burst([Event::Edit(edit::Command::SelectAll)]);
+    assert_eq!(app.burst([Event::Edit(edit::Command::Cut)]), "");
+    assert_eq!(written(&app).as_deref(), Some("abc"));
+}
+
+#[test]
+fn native_copy_and_cut_leave_a_secure_input_and_the_clipboard_alone() {
+    let secret: Element<'_, Message, Theme, Renderer> = input("")
+        .id(INPUT)
+        .value("secret")
+        .secure(true)
+        .on_input(Message::Input)
+        .into();
+    let mut renderer = iced_runtime::futures::futures::executor::block_on(
+        <Renderer as renderer::Headless>::new(renderer::Settings::default(), None),
+    )
+    .expect("create headless renderer");
+    let mut ui = UserInterface::build(
+        secret,
+        Size::new(400.0, 300.0),
+        user_interface::Cache::default(),
+        &mut renderer,
+    );
+    ui.operate(&renderer, &mut operation::focusable::focus(INPUT));
+    let mut messages = shell::Bus::new();
+
+    let (state, statuses) = ui.update(
+        &window::Headless,
+        &shell::Waker::noop(),
+        &[
+            Event::Edit(edit::Command::SelectAll),
+            Event::Edit(edit::Command::Copy),
+            Event::Edit(edit::Command::Cut),
+        ],
+        mouse::Cursor::Unavailable,
+        &mut renderer,
+        &mut messages,
+    );
+
+    assert_eq!(statuses, [event::Status::Captured; 3]);
+    let user_interface::State::Updated { clipboard, .. } = state else {
+        panic!("a secure input publishes nothing, so the tree stays current");
+    };
+    assert!(
+        clipboard.write.is_none(),
+        "a secret never reaches the clipboard"
+    );
+    assert_eq!(messages.drain().count(), 0, "a secure input cuts nothing");
+}
+
+#[test]
+fn native_clipboard_commands_propagate_unless_the_input_is_active() {
+    let commands = [
+        Event::Edit(edit::Command::Copy),
+        Event::Edit(edit::Command::Cut),
+        Event::Edit(edit::Command::Paste),
+        Event::Edit(edit::Command::SelectAll),
+    ];
+    let mut ui = simulator::simulator(field("a").compose());
+    assert_eq!(ui.simulate(commands.clone()), [event::Status::Ignored; 4]);
+
+    ui.operate(&mut operation::focusable::focus(INPUT));
+    assert_eq!(ui.simulate(commands.clone()), [event::Status::Captured; 4]);
+
+    let _ = ui.simulate([Event::Window(window::Event::Unfocused)]);
+    assert_eq!(ui.simulate(commands.clone()), [event::Status::Ignored; 4]);
+
+    let _ = ui.simulate([Event::Window(window::Event::Focused)]);
+    // A read-only input copies and selects, but cuts and pastes nothing.
+    let read_only: Element<'_, Message, Theme, Renderer> = input("").id(INPUT).value("a").into();
+    let mut ui = ui.rebuild(read_only);
+    assert_eq!(
+        ui.simulate(commands.clone()),
+        [
+            event::Status::Captured,
+            event::Status::Ignored,
+            event::Status::Ignored,
+            event::Status::Captured,
+        ]
+    );
+
+    let disabled: Element<'_, Message, Theme, Renderer> = input("")
+        .id(INPUT)
+        .value("a")
+        .on_input(Message::Input)
+        .disabled(true)
+        .into();
+    let mut ui = ui.rebuild(disabled);
+    assert_eq!(ui.simulate(commands), [event::Status::Ignored; 4]);
 }
 
 #[test]

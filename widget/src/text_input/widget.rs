@@ -1309,13 +1309,10 @@ where
                         .is_focused
                         .as_ref()
                         .is_some_and(|focus| focus.is_window_focused)
-                        && self.is_editable() =>
+                        && !is_disabled =>
                 {
-                    match command {
-                        crate::core::edit::Command::Undo => Some(Intent::Command(Command::Undo)),
-                        crate::core::edit::Command::Redo => Some(Intent::Command(Command::Redo)),
-                        _ => None,
-                    }
+                    let command = Command::from(*command);
+                    (!command.edits() || self.is_editable()).then_some(Intent::Command(command))
                 }
                 _ => None,
             });

@@ -56,6 +56,28 @@ pub(crate) enum Command {
     SelectAll,
 }
 
+impl Command {
+    /// Whether the command changes the text, so that only an editable widget
+    /// runs it.
+    pub(crate) fn edits(self) -> bool {
+        matches!(self, Self::Undo | Self::Redo | Self::Cut | Self::Paste)
+    }
+}
+
+/// The command a native Edit menu sends to the focused widget.
+impl From<iced_core::edit::Command> for Command {
+    fn from(command: iced_core::edit::Command) -> Self {
+        match command {
+            iced_core::edit::Command::Copy => Self::Copy,
+            iced_core::edit::Command::Cut => Self::Cut,
+            iced_core::edit::Command::Paste => Self::Paste,
+            iced_core::edit::Command::SelectAll => Self::SelectAll,
+            iced_core::edit::Command::Undo => Self::Undo,
+            iced_core::edit::Command::Redo => Self::Redo,
+        }
+    }
+}
+
 /// Whether a key press opens the menu at the caret: Shift+F10, or the context
 /// menu key.
 pub(crate) fn opens_menu(key: &Key, modifiers: Modifiers) -> bool {
