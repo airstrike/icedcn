@@ -1,6 +1,6 @@
 --- a/src/window/compositor.rs
 +++ b/src/window/compositor.rs
-@@ -53,35 +53,90 @@
+@@ -55,35 +55,91 @@
          compatible_window: impl compositor::Window,
          shell: Shell,
      ) -> Result<Self, Error> {
@@ -64,7 +64,7 @@
 +        if !settings.backends.contains(wgpu::Backends::GL) {
 +            return Err(error);
 +        }
- 
++
 +        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
 +            backends: wgpu::Backends::GL,
 +            flags,
@@ -82,13 +82,13 @@
 +            wgpu::SurfaceTarget::Window(Box::new(compatible_window)),
 +        )
 +        .await?;
-+
+ 
 +        Ok(Self::finish(instance, parts, settings, shell))
 +    }
 +
 +    fn finish(
 +        instance: wgpu::Instance,
-+        (adapter, format, alpha_mode, device, queue): Parts,
++        (adapter, format, alpha_mode, usage, device, queue): Parts,
 +        settings: Settings,
 +        shell: Shell,
 +    ) -> Self {
@@ -99,6 +99,7 @@
 +            adapter,
 +            format,
 +            alpha_mode,
++            usage,
 +            engine,
 +            settings,
 +        }
@@ -114,7 +115,7 @@
          let power_preference = match settings.power_preference {
              backend::PowerPreference::None => wgpu::PowerPreference::None,
              backend::PowerPreference::LowPower => wgpu::PowerPreference::LowPower,
-@@ -188,23 +243,7 @@
+@@ -193,24 +249,7 @@
  
              match result {
                  Ok((device, queue)) => {
@@ -132,21 +133,25 @@
 -                        adapter,
 -                        format,
 -                        alpha_mode,
+-                        usage,
 -                        engine,
 -                        settings,
 -                    });
-+                    return Ok((adapter, format, alpha_mode, device, queue));
++                    return Ok((adapter, format, alpha_mode, usage, device, queue));
                  }
                  Err(error) => {
                      errors.push((required_limits, error));
-@@ -216,6 +255,24 @@
-     }
- }
+@@ -220,6 +259,25 @@
  
+         Err(Error::RequestDeviceFailed(errors))
+     }
++}
++
 +type Parts = (
 +    wgpu::Adapter,
 +    wgpu::TextureFormat,
 +    wgpu::CompositeAlphaMode,
++    wgpu::TextureUsages,
 +    wgpu::Device,
 +    wgpu::Queue,
 +);
@@ -159,8 +164,6 @@
 +        .and_then(|document| document.create_element("canvas").ok())
 +        .and_then(|element| element.dyn_into().ok())
 +        .ok_or(Error::IncompatibleSurface)
-+}
-+
+ }
+ 
  /// Creates a [`Compositor`] with the given [`Settings`] and window.
- pub async fn new(
-     settings: Settings,
