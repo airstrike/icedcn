@@ -1,6 +1,6 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -47,9 +47,16 @@
+@@ -47,10 +47,17 @@
  web-sys.features = [
      "Clipboard",
      "ClipboardEvent",
@@ -9,6 +9,7 @@
      "DataTransfer",
      "Document",
 +    "DomRect",
+     "Element",
 +    "FocusEvent",
 +    "FocusOptions",
      "HtmlCanvasElement",
@@ -19,8 +20,8 @@
      "Navigator",
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -32,6 +32,8 @@
- mod error;
+@@ -33,6 +33,8 @@
+ mod menu;
  mod proxy;
  mod window;
 +#[cfg(target_arch = "wasm32")]
@@ -28,10 +29,12 @@
  
  pub use clipboard::Clipboard;
  pub use error::Error;
-@@ -208,10 +210,52 @@
+@@ -207,6 +209,27 @@
+             let is_move_or_resize = matches!(
+                 event,
                  winit::event::WindowEvent::Resized(_) | winit::event::WindowEvent::Moved(_)
-             );
- 
++            );
++
 +            #[cfg(target_arch = "wasm32")]
 +            use winit::event;
 +
@@ -51,13 +54,13 @@
 +                    },
 +                    ..
 +                }
-+            );
-+
+             );
+ 
              self.process_event(
-                 event_loop,
+@@ -214,6 +237,27 @@
                  Event::EventLoopAwakened(winit::event::Event::WindowEvent { window_id, event }),
              );
-+
+ 
 +            #[cfg(target_arch = "wasm32")]
 +            if input_gesture {
 +                // winit web emits redraws before AboutToWait. Settle this input
@@ -78,12 +81,13 @@
 +                    );
 +                });
 +            }
- 
++
              // TODO: Remove when unnecessary
              // On Windows, we emulate an `AboutToWait` event after every `Resized` event
+             // since the event loop does not resume during resize interaction.
 --- a/src/window.rs
 +++ b/src/window.rs
-@@ -5,6 +5,10 @@
+@@ -7,6 +7,10 @@
  pub use crate::core::window::{Event, Id, RedrawRequest, Settings};
  
  use crate::Proxy;
@@ -94,11 +98,10 @@
  use crate::conversion;
  use crate::core;
  use crate::core::alignment;
-@@ -69,6 +73,21 @@
-         compositor.configure_surface(&mut surface, surface_size.width, surface_size.height);
+@@ -77,6 +81,21 @@
  
          let renderer = compositor.create_renderer(renderer_settings);
-+
+ 
 +        #[cfg(target_arch = "wasm32")]
 +        let web_input = {
 +            let proxy = proxy.clone();
@@ -113,10 +116,11 @@
 +                .ok()
 +            })
 +        };
- 
++
          let waker = shell::Waker::new(move || {
              proxy.send_action(iced_runtime::Action::Event {
-@@ -98,6 +117,8 @@
+                 window: id,
+@@ -105,6 +124,8 @@
                  },
                  preedit: None,
                  ime_state: None,
@@ -125,7 +129,7 @@
                  last_frame: None,
                  frame_burst: 0,
              },
-@@ -199,6 +220,8 @@
+@@ -223,6 +244,8 @@
      frame_clock: FrameClock,
      preedit: Option<Preedit<P::Renderer>>,
      ime_state: Option<(Rectangle, input_method::Purpose)>,
@@ -134,7 +138,23 @@
      last_frame: Option<Instant>,
      frame_burst: usize,
  }
-@@ -374,6 +397,10 @@
+@@ -318,7 +341,14 @@
+     pub fn clipboard_owner(&self) -> Option<crate::clipboard::Owner> {
+         use winit::platform::web::WindowExtWebSys;
+ 
+-        self.raw.canvas().map(crate::clipboard::Owner::new)
++        self.raw.canvas().map(|canvas| {
++            let owner = crate::clipboard::Owner::new(canvas);
++
++            match &self.web_input {
++                Some(input) => owner.with_input_method(input.element().clone().into()),
++                None => owner,
++            }
++        })
+     }
+ 
+     pub fn configure_surface(&mut self, compositor: &mut C) {
+@@ -413,6 +443,10 @@
      }
  
      fn enable_ime(&mut self, cursor: Rectangle, purpose: input_method::Purpose) {
@@ -145,7 +165,7 @@
          if self.ime_state.is_none() {
              self.raw.set_ime_allowed(true);
          }
-@@ -390,6 +417,10 @@
+@@ -429,6 +463,10 @@
      }
  
      fn disable_ime(&mut self) {
@@ -158,7 +178,7 @@
              self.ime_state = None;
 --- /dev/null
 +++ b/src/web_input.rs
-@@ -0,0 +1,343 @@
+@@ -0,0 +1,349 @@
 +//! DOM input methods for the canvas backend, owned by the iced window.
 +
 +use std::cell::{Cell, RefCell};
@@ -436,6 +456,12 @@
 +            },
 +        )?);
 +        Ok(input)
++    }
++
++    /// The field that holds the DOM focus while a text widget is edited, so
++    /// the browser's Edit menu fires its clipboard events at it.
++    pub fn element(&self) -> &HtmlInputElement {
++        &self.element
 +    }
 +
 +    pub fn enable(&mut self, cursor: Rectangle, purpose: input_method::Purpose) {
