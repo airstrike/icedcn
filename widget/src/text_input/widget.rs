@@ -246,8 +246,7 @@ where
         uncontrolled: &mut Option<Value>,
         pending: &mut Option<Pending>,
         history: &mut History,
-        change: Option<history::Change>,
-        cursor: Cursor,
+        (change, cursor): (Option<history::Change>, Cursor),
         is_paste: bool,
         shell: &mut Shell<'_, Message>,
     ) {
@@ -1484,8 +1483,7 @@ where
                     &mut input.uncontrolled,
                     &mut input.pending,
                     &mut input.history,
-                    change,
-                    input.cursor,
+                    (change, input.cursor),
                     false,
                     shell,
                 );
@@ -1543,8 +1541,7 @@ where
                             &mut input.uncontrolled,
                             &mut input.pending,
                             &mut input.history,
-                            change,
-                            input.cursor,
+                            (change, input.cursor),
                             false,
                             shell,
                         );
@@ -1805,8 +1802,7 @@ where
                                 &mut state.uncontrolled,
                                 &mut state.pending,
                                 &mut state.history,
-                                change,
-                                state.cursor,
+                                (change, state.cursor),
                                 false,
                                 shell,
                             );
@@ -1869,8 +1865,7 @@ where
                         &mut state.uncontrolled,
                         &mut state.pending,
                         &mut state.history,
-                        change,
-                        state.cursor,
+                        (change, state.cursor),
                         true,
                         shell,
                     );
@@ -1924,8 +1919,7 @@ where
                             &mut state.uncontrolled,
                             &mut state.pending,
                             &mut state.history,
-                            change,
-                            state.cursor,
+                            (change, state.cursor),
                             false,
                             shell,
                         );
