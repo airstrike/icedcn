@@ -798,7 +798,7 @@ fn panel_snippet<'a>(
             code,
             lines,
         } => Some(viewer.numbered(
-            settings,
+            settings.clone(),
             language.as_deref(),
             code,
             &lines[..lines.len().min(limit)],
@@ -813,7 +813,7 @@ fn panel_snippet<'a>(
     let body = preview.unwrap_or_else(|| {
         column(items.iter().map(|item| {
             source(item, usize::MAX).unwrap_or_else(|| {
-                markdown::view_with(std::slice::from_ref(item), settings, viewer)
+                markdown::view_with(std::slice::from_ref(item), settings.clone(), viewer)
             })
         }))
         .spacing(settings.spacing)
@@ -829,7 +829,7 @@ fn snippet_settings(viewer: &SnippetViewer) -> markdown::Settings {
     let mut settings = markdown::Settings {
         code_size: Pixels(13.0),
         line_height: markdown::LineHeight::Relative(1.75),
-        ..markdown::Settings::with_style(viewer.style)
+        ..markdown::Settings::with_style(viewer.style.clone())
     };
     // `Settings::with_style` auto-derives inline_code_size as text_size *
     // 0.875 (= 14 for body 16). Geist Mono's cap-height reads ~1px taller
@@ -950,16 +950,18 @@ impl SnippetViewer {
         use icedcn::core::oklch;
         use icedcn::widget::scrollable;
 
+        let font = settings.style.code_block_font;
+        let size = settings.code_size;
         let key = (
             code,
             lines.len(),
             language,
             &self.code_theme_id,
-            settings.style.code_block_font,
-            settings.code_size.0.to_bits(),
+            font,
+            size.0.to_bits(),
         );
         let body = lazy(key, move |_| {
-            markdown::code(settings, lines, Some(&self.map)).on_link_click(|url| url)
+            markdown::code(settings.clone(), lines, Some(&self.map)).on_link_click(|url| url)
         })
         .boxed();
         let source: iced::Element<'a, markdown::Uri, Theme, iced::Renderer> =
@@ -975,8 +977,8 @@ impl SnippetViewer {
             oklch(0.56, 0.0, 0.0)
         };
         let gutter = text(numbers)
-            .font(settings.style.code_block_font)
-            .size(settings.code_size)
+            .font(font)
+            .size(size)
             .color(color)
             .align_x(Horizontal::Right)
             .width(24);
@@ -1013,7 +1015,7 @@ impl<'a> markdown::Viewer<'a, markdown::Uri, Theme, iced::Renderer> for SnippetV
             settings.code_size.0.to_bits(),
         );
         let body = lazy(key, move |_| {
-            markdown::code(settings, lines, Some(&self.map)).on_link_click(Self::on_link_click)
+            markdown::code(settings.clone(), lines, Some(&self.map)).on_link_click(Self::on_link_click)
         })
         .boxed();
         let scroll = scrollable::scrollable(body).horizontal().spacing(2);
