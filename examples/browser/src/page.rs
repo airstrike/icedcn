@@ -1015,7 +1015,8 @@ impl<'a> markdown::Viewer<'a, markdown::Uri, Theme, iced::Renderer> for SnippetV
             settings.code_size.0.to_bits(),
         );
         let body = lazy(key, move |_| {
-            markdown::code(settings.clone(), lines, Some(&self.map)).on_link_click(Self::on_link_click)
+            markdown::code(settings.clone(), lines, Some(&self.map))
+                .on_link_click(Self::on_link_click)
         })
         .boxed();
         let scroll = scrollable::scrollable(body).horizontal().spacing(2);

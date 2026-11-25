@@ -1511,12 +1511,12 @@ where
 {
     row![
         rule::vertical(4),
-        column(
-            contents
-                .iter()
-                .enumerate()
-                .map(|(i, content)| item(viewer, settings.clone(), content, i)),
-        )
+        column(contents.iter().enumerate().map(|(i, content)| item(
+            viewer,
+            settings.clone(),
+            content,
+            i
+        )),)
         .spacing(settings.spacing.0),
     ]
     .height(Shrink)
@@ -1552,13 +1552,16 @@ where
     let table = table(
         columns.iter().enumerate().map(move |(i, column)| {
             let settings = settings.clone();
-            table::column(items(viewer, settings.clone(), &column.header), move |row: &Row| {
-                if let Some(cells) = row.cells.get(i) {
-                    items(viewer, settings.clone(), cells)
-                } else {
-                    text("").boxed()
-                }
-            })
+            table::column(
+                items(viewer, settings.clone(), &column.header),
+                move |row: &Row| {
+                    if let Some(cells) = row.cells.get(i) {
+                        items(viewer, settings.clone(), cells)
+                    } else {
+                        text("").boxed()
+                    }
+                },
+            )
             .align_x(match column.alignment {
                 pulldown_cmark::Alignment::None | pulldown_cmark::Alignment::Left => {
                     alignment::Horizontal::Left
