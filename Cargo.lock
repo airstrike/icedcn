@@ -163,7 +163,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -174,7 +174,7 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -1012,7 +1012,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -1139,7 +1139,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -1791,7 +1791,7 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 [[package]]
 name = "hyozu"
 version = "0.3.0"
-source = "git+https://github.com/airstrike/hyozu?rev=5aa52b35a9055123b2916fc7267c8212bdcf86ce#5aa52b35a9055123b2916fc7267c8212bdcf86ce"
+source = "git+https://github.com/airstrike/hyozu?rev=e28ddc619773e47bf91e36ce545f17cce705c8a6#e28ddc619773e47bf91e36ce545f17cce705c8a6"
 dependencies = [
  "iced_core",
  "iced_widget",
@@ -1886,7 +1886,7 @@ dependencies = [
 [[package]]
 name = "iced"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "iced_core",
  "iced_debug",
@@ -1903,7 +1903,7 @@ dependencies = [
 [[package]]
 name = "iced_core"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "bitflags",
  "bytes",
@@ -1922,7 +1922,7 @@ dependencies = [
 [[package]]
 name = "iced_debug"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "iced_core",
  "iced_futures",
@@ -1932,7 +1932,7 @@ dependencies = [
 [[package]]
 name = "iced_futures"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "futures",
  "iced_core",
@@ -1946,7 +1946,7 @@ dependencies = [
 [[package]]
 name = "iced_graphics"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "bitflags",
  "bytemuck",
@@ -1966,7 +1966,7 @@ dependencies = [
 [[package]]
 name = "iced_highlighter"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "iced_core",
  "two-face",
@@ -1989,7 +1989,7 @@ dependencies = [
 [[package]]
 name = "iced_program"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "iced_graphics",
  "iced_runtime",
@@ -1998,7 +1998,7 @@ dependencies = [
 [[package]]
 name = "iced_renderer"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "iced_graphics",
  "iced_vello_cpu",
@@ -2010,7 +2010,7 @@ dependencies = [
 [[package]]
 name = "iced_runtime"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "bytes",
  "iced_core",
@@ -2022,7 +2022,7 @@ dependencies = [
 [[package]]
 name = "iced_selector"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "iced_core",
 ]
@@ -2030,7 +2030,7 @@ dependencies = [
 [[package]]
 name = "iced_test"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "iced_futures",
  "iced_program",
@@ -2046,7 +2046,7 @@ dependencies = [
 [[package]]
 name = "iced_vello_cpu"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "bytemuck",
  "iced_debug",
@@ -2061,7 +2061,7 @@ dependencies = [
 [[package]]
 name = "iced_wgpu"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "bitflags",
  "bytemuck",
@@ -2081,7 +2081,7 @@ dependencies = [
 [[package]]
 name = "iced_widget"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "iced_highlighter",
  "iced_renderer",
@@ -2098,7 +2098,7 @@ dependencies = [
 [[package]]
 name = "iced_winit"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/iced.git?branch=dev#e395308a35be369dea06efbf2d1018ac96e0fdc2"
+source = "git+https://github.com/airstrike/iced.git?branch=dev#d6bcaafb7e4f9b89eceb858513cf21a5d8d89f7b"
 dependencies = [
  "arboard",
  "iced_debug",
@@ -3289,7 +3289,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d8fae84b431384b68627d0f9b3b1245fcf9f46f6c0e3dc902e9dce64edd1967"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.45.0",
 ]
 
 [[package]]
@@ -4127,7 +4127,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -4473,7 +4473,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a766e1110788c36f4fa1c2b71b387a7815aa65f88ce0229841826633d93723e"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -4532,7 +4532,7 @@ dependencies = [
  "cfg-if",
  "libc",
  "psm",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -4610,7 +4610,7 @@ dependencies = [
 [[package]]
 name = "sweeten"
 version = "0.15.0-dev"
-source = "git+https://github.com/airstrike/sweeten.git?branch=dev#3e75c197d019c8a9469f34e438b8452b867b9f51"
+source = "git+https://github.com/airstrike/sweeten.git?branch=dev#b67fc5adc0bfb9fd68fb0173d5b7269c355deca3"
 dependencies = [
  "iced_core",
  "iced_runtime",
@@ -4698,7 +4698,7 @@ dependencies = [
  "getrandom 0.4.2",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -5135,7 +5135,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset",
  "tempfile",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -5842,7 +5842,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]

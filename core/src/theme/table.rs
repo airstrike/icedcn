@@ -47,12 +47,12 @@ pub mod sweeten_table {
 
     pub fn default(theme: &Theme) -> Style {
         let p = theme;
-        let separator = p.neutral.border.into();
+        let separator = p.neutral.border;
 
         Style {
-            separator_x: separator,
-            separator_y: separator,
-            border: separator,
+            separator_x: separator.into(),
+            separator_y: separator.into(),
+            border: separator.into(),
             sticky_background: p.neutral.base.into(),
             header_underline: None,
         }

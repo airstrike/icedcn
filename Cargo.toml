@@ -59,7 +59,7 @@ rust-version = "1.85"
 icedcn = { path = "." }
 icedcn_core = { path = "./core" }
 icedcn_widget = { path = "./widget", default-features = false }
-hyozu = { git = "https://github.com/airstrike/hyozu", rev = "5aa52b35a9055123b2916fc7267c8212bdcf86ce" }
+hyozu = { git = "https://github.com/airstrike/hyozu", rev = "e28ddc619773e47bf91e36ce545f17cce705c8a6" }
 
 # Dependents pick the renderer. Examples opt into iced's defaults themselves.
 iced = { version = "0.15.0-dev", default-features = false }
