@@ -852,7 +852,7 @@ where
                 border: animated_border,
                 ..renderer::Quad::default()
             },
-            style.background,
+            style.background.clone(),
             self.join,
             *viewport,
             |renderer| {

@@ -145,7 +145,10 @@ impl<'a, Message: 'a> Bubble<'a, Message> {
     pub fn map_style(mut self, paint: impl Fn(&Theme, Status, Style) -> Style + 'a) -> Self {
         let previous = self.paint.take();
         self.paint = Some(Box::new(move |theme, status, style| {
-            let style = previous.as_ref().map_or(style, |f| f(theme, status, style));
+            let style = match &previous {
+                Some(f) => f(theme, status, style),
+                None => style,
+            };
             paint(theme, status, style)
         }));
         self
@@ -265,7 +268,10 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Bubble<'a, Message> {
         let paint = self.paint.take();
         let resolve = move |theme: &Theme, status| {
             let style = surface(variant, radius, theme, status);
-            paint.as_ref().map_or(style, |f| f(theme, status, style))
+            match &paint {
+                Some(f) => f(theme, status, style),
+                None => style,
+            }
         };
         let padding = padding + Padding::all(1.0);
         let content: Element<'a, Message, Theme, Renderer> = if self.interactive {

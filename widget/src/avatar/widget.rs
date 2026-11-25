@@ -108,7 +108,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Avatar<'_, Message> {
                 };
                 style
             });
-        surface(renderer, style, bounds, false);
+        surface(renderer, &style, bounds, false);
         let mut children = layout.iter(&tree.children);
         if let Some((child_layout, child_tree)) = children.next() {
             if let Some(handle) = self.handle.as_ref().filter(|_| loaded) {
@@ -140,12 +140,12 @@ impl<Message> Widget<Message, Theme, Renderer> for Avatar<'_, Message> {
         renderer.end_layer();
         renderer.start_layer(*viewport);
         // Paint the inset edge above the portrait.
-        surface(renderer, style, bounds, true);
+        surface(renderer, &style, bounds, true);
         if let Some((child_layout, child_tree)) = children.next() {
             let bounds = child_layout.bounds();
             ring(renderer, theme, bounds);
             let style = (self.badge_style)(theme);
-            surface(renderer, style, bounds, false);
+            surface(renderer, &style, bounds, false);
             self.children[1].draw(
                 child_tree,
                 renderer,
@@ -160,7 +160,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Avatar<'_, Message> {
                 cursor,
                 viewport,
             );
-            surface(renderer, style, bounds, true);
+            surface(renderer, &style, bounds, true);
         }
         renderer.end_layer();
     }
@@ -268,7 +268,7 @@ fn ring(renderer: &mut Renderer, theme: &Theme, bounds: Rectangle) {
     );
 }
 
-fn surface(renderer: &mut Renderer, style: Style, bounds: Rectangle, edge: bool) {
+fn surface(renderer: &mut Renderer, style: &Style, bounds: Rectangle, edge: bool) {
     let border = if edge {
         style.border.into()
     } else {
@@ -288,6 +288,7 @@ fn surface(renderer: &mut Renderer, style: Style, bounds: Rectangle, edge: bool)
         } else {
             style
                 .background
+                .clone()
                 .map(Background::from)
                 .unwrap_or(Color::TRANSPARENT.into())
         },

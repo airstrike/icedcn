@@ -645,7 +645,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Textarea<'_, Message> {
                 Color::TRANSPARENT,
             );
         }
-        self.editor(state).style(move |_, _| surface).draw(
+        self.editor(state).style(|_, _| surface.clone()).draw(
             child_tree,
             renderer,
             theme,

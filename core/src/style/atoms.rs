@@ -20,7 +20,7 @@ type BoxedStyleFn = StyleFn<Box<dyn Fn(Palette, Status) -> Style>>;
 pub fn bg(c: impl Into<Background>) -> BoxedStyleFn {
     let bg = c.into();
     from_stateless(move |_p| Style {
-        fill: Some(bg),
+        fill: Some(bg.clone()),
         ..Style::default()
     })
 }

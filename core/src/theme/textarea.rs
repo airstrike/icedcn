@@ -83,7 +83,8 @@ impl<'a> Appearance<'a> {
             Self::Field(style) => style(theme, input_status(status)),
             Self::Custom(style) => return (style(theme, status), None),
         };
-        (project(field), field.ring)
+        let ring = field.ring;
+        (project(field), ring)
     }
 }
 

@@ -650,19 +650,19 @@ where
 
                 // Only `Background::Color` is interpolable here; fall back to
                 // transparent for gradients so the draw code stays simple.
-                let bg_color = |bg: Background| match bg {
-                    Background::Color(c) => c,
+                let bg_color = |bg: &Background| match bg {
+                    Background::Color(c) => *c,
                     Background::Gradient(_) => Color::TRANSPARENT,
                 };
 
                 let background = Background::Color(state.animation.interpolate(
-                    bg_color(off.background),
-                    bg_color(on.background),
+                    bg_color(&off.background),
+                    bg_color(&on.background),
                     now,
                 ));
                 let foreground = Background::Color(state.animation.interpolate(
-                    bg_color(off.foreground),
-                    bg_color(on.foreground),
+                    bg_color(&off.foreground),
+                    bg_color(&on.foreground),
                     now,
                 ));
 

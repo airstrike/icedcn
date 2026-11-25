@@ -224,7 +224,7 @@ fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme, status: Status) {
             }
         }
         Tweak::Alpha(factor) => {
-            style.background = style.background.map(|bg| bg.scale_alpha(*factor));
+            style.background = style.background.take().map(|bg| bg.scale_alpha(*factor));
         }
         Tweak::State(trigger, tweaks) => {
             let applies = match trigger {

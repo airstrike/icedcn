@@ -701,8 +701,8 @@ where
             };
 
             fn bg_color(style: &Style) -> Option<Color> {
-                style.background.map(|b| match b {
-                    Background::Color(c) => c,
+                style.background.as_ref().map(|b| match b {
+                    Background::Color(c) => *c,
                     _ => Color::TRANSPARENT,
                 })
             }

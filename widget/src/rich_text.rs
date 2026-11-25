@@ -557,7 +557,7 @@ impl<'a, Message: 'a, R: text::Renderer> Widget<Message, Theme, R> for RichText<
                         },
                         ..Default::default()
                     },
-                    highlight.background,
+                    highlight.background.clone(),
                 );
             }
         }

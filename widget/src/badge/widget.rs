@@ -470,13 +470,8 @@ fn mix(a: Style, b: Style, t: f32, inherited: Color) -> Style {
         }
         (None, Some(icedcn_core::Background::Color(b))) => Some(color(b.alpha(0.0), b).into()),
         (Some(icedcn_core::Background::Color(a)), None) => Some(color(a, a.alpha(0.0)).into()),
-        _ => {
-            if t < 0.5 {
-                a.background
-            } else {
-                b.background
-            }
-        }
+        (a, _) if t < 0.5 => a,
+        (_, b) => b,
     };
     let ring = match (a.ring, b.ring) {
         (None, None) => None,

@@ -736,7 +736,7 @@ where
                     },
                     ..renderer::Quad::default()
                 },
-                style.handle.background,
+                style.handle.background.clone(),
             );
         }
     }
