@@ -18,7 +18,7 @@ use crate::{Background, Border, Color, Shadow, radius};
 
 /// OKLCH-native container style. Mirrors `iced_widget::container::Style`
 /// field-for-field, but the color-bearing fields use our types.
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Style {
     /// Optional text color cascaded into descendants.
     pub text_color: Option<Color>,
@@ -448,7 +448,7 @@ pub(crate) fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme) {
             }
         }
         Tweak::Alpha(factor) => {
-            if let Some(bg) = style.background {
+            if let Some(bg) = style.background.take() {
                 style.background = Some(bg.scale_alpha(*factor));
             }
         }

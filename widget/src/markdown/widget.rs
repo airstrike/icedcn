@@ -54,7 +54,7 @@ use iced_widget::{checkbox, column, container, rich_text, row, rule, scrollable,
 use super::highlighter;
 
 use std::borrow::BorrowMut;
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::mem;
 use std::ops::Range;
@@ -249,7 +249,7 @@ pub struct Row {
 #[derive(Debug, Clone)]
 pub struct Text {
     spans: Vec<Span>,
-    last_style: Cell<Option<Style>>,
+    last_style: RefCell<Option<Style>>,
     last_styled_spans: RefCell<Arc<[text::Span<'static, Uri>]>>,
 }
 
@@ -257,7 +257,7 @@ impl Text {
     fn new(spans: Vec<Span>) -> Self {
         Self {
             spans,
-            last_style: Cell::default(),
+            last_style: RefCell::default(),
             last_styled_spans: RefCell::default(),
         }
     }
@@ -282,7 +282,7 @@ impl Text {
                 .collect();
         }
 
-        if Some(style) != self.last_style.get() {
+        if self.last_style.borrow().as_ref() != Some(&style) {
             *self.last_styled_spans.borrow_mut() = self
                 .spans
                 .iter()
@@ -295,7 +295,7 @@ impl Text {
                 })
                 .collect();
 
-            self.last_style.set(Some(style));
+            *self.last_style.borrow_mut() = Some(style);
         }
 
         self.last_styled_spans.borrow().clone()
@@ -340,7 +340,7 @@ impl Span {
                     span.font(style.inline_code_font)
                         .size(style.inline_code_size)
                         .color(style.inline_code_color)
-                        .background(style.inline_code_highlight.background)
+                        .background(style.inline_code_highlight.background.clone())
                         .border(style.inline_code_highlight.border)
                         .padding(style.inline_code_padding)
                 } else if *strong || *emphasis {
@@ -1043,7 +1043,7 @@ fn parse_with<'a>(
 }
 
 /// Configuration controlling Markdown rendering in [`view`].
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Settings {
     /// The base text size.
     pub text_size: Pixels,
@@ -1115,7 +1115,7 @@ impl From<Theme> for Settings {
 }
 
 /// The text styling of some Markdown rendering in [`view`].
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Style {
     /// The [`Font`] to be applied to basic text.
     pub font: Font,
@@ -1242,7 +1242,7 @@ where
     let blocks = items
         .into_iter()
         .enumerate()
-        .map(|(i, item_)| item(viewer, settings, item_, i));
+        .map(|(i, item_)| item(viewer, settings.clone(), item_, i));
 
     column(blocks).spacing(settings.spacing).boxed()
 }
@@ -1384,7 +1384,7 @@ where
                 bullet.items(),
                 Settings {
                     spacing: settings.spacing * 0.6,
-                    ..settings
+                    ..settings.clone()
                 },
                 viewer,
             )
@@ -1421,7 +1421,7 @@ where
                 bullet.items(),
                 Settings {
                     spacing: settings.spacing * 0.6,
-                    ..settings
+                    ..settings.clone()
                 },
                 viewer,
             )
@@ -1478,6 +1478,7 @@ where
     Theme: Catalog + 'a,
     Renderer: core::text::Renderer + 'a,
 {
+    let code_size = settings.code_size;
     container(widget::Scrollable::with_direction(
         container(
             code(
@@ -1488,11 +1489,11 @@ where
             )
             .on_link_click(on_link_click),
         )
-        .padding(settings.code_size),
+        .padding(code_size),
         widget::Direction::Horizontal(scrollbar()),
     ))
     .width(Fill)
-    .padding(settings.code_size / 4)
+    .padding(code_size / 4)
     .class(Theme::code_block())
     .boxed()
 }
@@ -1514,7 +1515,7 @@ where
             contents
                 .iter()
                 .enumerate()
-                .map(|(i, content)| item(viewer, settings, content, i)),
+                .map(|(i, content)| item(viewer, settings.clone(), content, i)),
         )
         .spacing(settings.spacing.0),
     ]
@@ -1547,11 +1548,13 @@ where
 {
     use iced_widget::table;
 
+    let spacing = settings.spacing.0;
     let table = table(
         columns.iter().enumerate().map(move |(i, column)| {
-            table::column(items(viewer, settings, &column.header), move |row: &Row| {
+            let settings = settings.clone();
+            table::column(items(viewer, settings.clone(), &column.header), move |row: &Row| {
                 if let Some(cells) = row.cells.get(i) {
-                    items(viewer, settings, cells)
+                    items(viewer, settings.clone(), cells)
                 } else {
                     text("").boxed()
                 }
@@ -1566,12 +1569,12 @@ where
         }),
         rows,
     )
-    .padding_x(settings.spacing.0)
-    .padding_y(settings.spacing.0 / 2.0)
+    .padding_x(spacing)
+    .padding_y(spacing / 2.0)
     .separator_x(0);
 
     widget::Scrollable::with_direction(table, widget::Direction::Horizontal(scrollbar()))
-        .spacing(settings.spacing.0 / 2.0)
+        .spacing(spacing / 2.0)
         .boxed()
 }
 
@@ -1590,7 +1593,7 @@ where
         items
             .iter()
             .enumerate()
-            .map(|(i, content)| item(viewer, settings, content, i)),
+            .map(|(i, content)| item(viewer, settings.clone(), content, i)),
     )
     .spacing(settings.spacing.0)
     .boxed()

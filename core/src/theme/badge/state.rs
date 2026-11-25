@@ -29,7 +29,7 @@ impl Status {
 }
 
 /// Badge paint in the theme's native color space.
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Style {
     pub background: Option<Background>,
     pub text_color: Option<Color>,

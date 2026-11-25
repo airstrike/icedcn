@@ -724,7 +724,7 @@ where
                     if selected {
                         Background::Color(style.selection)
                     } else {
-                        style.background
+                        style.background.clone()
                     },
                 );
                 if first && i > 0 {
@@ -2548,7 +2548,7 @@ pub struct Ring {
 }
 
 /// The appearance of a text input.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Style {
     /// The [`Background`] of the text input.
     pub background: Background,

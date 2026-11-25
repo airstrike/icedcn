@@ -176,7 +176,7 @@ fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme) {
             }
         }
         Tweak::Alpha(factor) => {
-            if let Some(bg) = style.background {
+            if let Some(bg) = style.background.take() {
                 style.background = Some(bg.scale_alpha(*factor));
             }
         }

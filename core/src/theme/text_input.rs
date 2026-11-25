@@ -43,7 +43,7 @@ use crate::{Background, Border, Color, radius};
 /// OKLCH-native text input style. Mirrors `iced_widget::text_input::Style`
 /// field-for-field, plus a `ring` field with no iced equivalent — rendered
 /// by our vendored `widget::text_input` as a halo behind the main quad.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Style {
     /// The background of the text input.
     pub background: Background,
@@ -347,7 +347,7 @@ fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme, status: Status) {
             }
         }
         Tweak::Alpha(factor) => {
-            style.background = style.background.scale_alpha(*factor);
+            style.background = style.background.clone().scale_alpha(*factor);
         }
         Tweak::State(trigger, inner) => {
             if triggered(*trigger, status) {

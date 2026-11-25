@@ -9,7 +9,7 @@ use crate::Color;
 /// OKLCH `Color`. The `Gradient` arm wraps iced's gradient as-is — we don't
 /// vendor `gradient::*` (much larger surface) and gradients pass through to
 /// the renderer untouched.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Background {
     /// A solid color.
     Color(Color),

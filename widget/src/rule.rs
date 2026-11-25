@@ -146,7 +146,6 @@ where
                 )
             };
 
-            let background = Background::Color(style.border.color);
             renderer.fill_quad(
                 renderer::Quad {
                     bounds: first,
@@ -154,7 +153,7 @@ where
                     snap: style.snap,
                     ..renderer::Quad::default()
                 },
-                background,
+                style.border.color,
             );
             renderer.fill_quad(
                 renderer::Quad {
@@ -163,7 +162,7 @@ where
                     snap: style.snap,
                     ..renderer::Quad::default()
                 },
-                background,
+                style.border.color,
             );
         }
 

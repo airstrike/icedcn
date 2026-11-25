@@ -4077,7 +4077,7 @@ pub enum Status {
 }
 
 /// The appearance of a scrollable.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Style {
     /// The [`container::Style`] of a scrollable.
     pub container: container::Style,
@@ -4092,7 +4092,7 @@ pub struct Style {
 }
 
 /// The appearance of the scrollbar of a scrollable.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Rail {
     /// The [`Background`] of a scrollbar.
     pub background: Option<Background>,
@@ -4124,7 +4124,7 @@ impl Rail {
 }
 
 /// The appearance of the scroller of a scrollable.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Scroller {
     /// The [`Background`] of the scroller.
     pub background: Background,
@@ -4133,7 +4133,7 @@ pub struct Scroller {
 }
 
 /// The appearance of the autoscroll overlay of a scrollable.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct AutoScroll {
     /// The [`Background`] of the [`AutoScroll`] overlay.
     pub background: Background,
@@ -4162,7 +4162,7 @@ pub type StyleFn<'a, Theme> = Box<dyn Fn(&Theme, Status) -> Style + 'a>;
 
 impl<Theme> From<Style> for StyleFn<'_, Theme> {
     fn from(style: Style) -> Self {
-        Box::new(move |_theme, _status| style)
+        Box::new(move |_theme, _status| style.clone())
     }
 }
 

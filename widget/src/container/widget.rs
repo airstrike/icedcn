@@ -497,6 +497,7 @@ where
             },
             style
                 .background
+                .clone()
                 .unwrap_or(Background::Color(Color::TRANSPARENT)),
         );
     }
@@ -519,7 +520,7 @@ impl From<iced_widget::container::Style> for Style {
 }
 
 /// The appearance of a container.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Style {
     /// The text [`Color`] of the container.
     pub text_color: Option<Color>,
@@ -614,7 +615,7 @@ pub type StyleFn<'a, Theme> = Box<dyn Fn(&Theme) -> Style + 'a>;
 
 impl<Theme> From<Style> for StyleFn<'_, Theme> {
     fn from(style: Style) -> Self {
-        Box::new(move |_theme| style)
+        Box::new(move |_theme| style.clone())
     }
 }
 

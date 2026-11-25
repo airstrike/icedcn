@@ -15,7 +15,7 @@ use crate::{Background, Border, Color, radius};
 /// OKLCH-native checkbox style. Mirrors `iced_widget::checkbox::Style`
 /// field-for-field, plus a `ring` field with no iced equivalent — rendered
 /// by our vendored `widget::checkbox` as a halo behind the box.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Style {
     /// The background of the checkbox box.
     pub background: Background,
@@ -368,7 +368,7 @@ fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme, status: Status) {
             }
         }
         Tweak::Alpha(factor) => {
-            style.background = style.background.scale_alpha(*factor);
+            style.background = style.background.clone().scale_alpha(*factor);
         }
         Tweak::State(trigger, inner) => {
             if triggered(*trigger, status) {

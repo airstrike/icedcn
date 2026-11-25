@@ -19,7 +19,7 @@ use crate::{Background, Color};
 /// Field naming (`background` / `foreground`) is preserved verbatim from
 /// iced's stock toggler `Style`; `background` is the track (the bigger
 /// pill) and `foreground` is the thumb (the smaller circle that slides).
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Style {
     /// The track of the switch (the bigger pill).
     pub background: Background,
@@ -376,7 +376,7 @@ fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme, status: Status) {
         }
         Tweak::Alpha(factor) => {
             // Track-only — matches container's bg-only Alpha policy.
-            style.background = style.background.scale_alpha(*factor);
+            style.background = style.background.clone().scale_alpha(*factor);
         }
         Tweak::State(trigger, inner) => {
             if triggered(*trigger, status) {

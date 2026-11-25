@@ -54,7 +54,7 @@ impl Status {
 }
 
 /// Resolved paint plus decorations that iced's stock Button style cannot carry.
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Style {
     pub paint: button::Style,
     pub ring: Option<Border>,

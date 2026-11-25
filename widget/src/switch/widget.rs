@@ -851,7 +851,7 @@ pub struct Ring {
 }
 
 /// The appearance of a toggler.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Style {
     /// The background [`Color`] of the toggler.
     pub background: Background,

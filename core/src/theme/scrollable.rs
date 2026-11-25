@@ -179,7 +179,7 @@ pub fn default(theme: &Theme, status: Status) -> Style {
 
     Style {
         container: container::Style::default(),
-        vertical_rail: rail,
+        vertical_rail: rail.clone(),
         horizontal_rail: rail,
         gap: None,
         auto_scroll: auto_scroll_overlay(theme),
@@ -199,7 +199,7 @@ pub fn hidden(theme: &Theme, _status: Status) -> Style {
 
     Style {
         container: container::Style::default(),
-        vertical_rail: rail,
+        vertical_rail: rail.clone(),
         horizontal_rail: rail,
         gap: None,
         auto_scroll: auto_scroll_overlay(theme),

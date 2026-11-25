@@ -22,7 +22,7 @@ use crate::{Background, Border, Color, Shadow, radius};
 /// OKLCH-native button style. Mirrors `iced_widget::button::Style`
 /// field-for-field, but the color-bearing fields use our types so the
 /// whole resolve pipeline stays in OKLCH.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Style {
     /// The background of the button.
     pub background: Option<Background>,
@@ -562,7 +562,7 @@ fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme, status: Status) {
             // Background::Gradient: pass through unchanged.
         }
         Tweak::Alpha(factor) => {
-            if let Some(bg) = style.background {
+            if let Some(bg) = style.background.take() {
                 style.background = Some(bg.scale_alpha(*factor));
             }
         }

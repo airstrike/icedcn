@@ -920,7 +920,7 @@ pub struct Ring {
 }
 
 /// The style of a checkbox.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Style {
     /// The [`Background`] of the checkbox.
     pub background: Background,

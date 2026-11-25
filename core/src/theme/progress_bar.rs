@@ -18,7 +18,7 @@ const PILL_RADIUS: f32 = u32::MAX as f32;
 /// OKLCH-native progress-bar style. Mirrors
 /// `iced_widget::progress_bar::Style` field-for-field, but the
 /// color-bearing fields use our types.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Style {
     /// The track behind the bar.
     pub background: Background,
@@ -186,7 +186,7 @@ fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme) {
         }
         Tweak::Alpha(factor) => {
             // Track-only — matches container's bg-only Alpha policy.
-            style.background = style.background.scale_alpha(*factor);
+            style.background = style.background.clone().scale_alpha(*factor);
         }
         // No status → state combinators silently drop.
         Tweak::State(_, _) => {}
