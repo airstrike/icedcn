@@ -148,6 +148,9 @@ pub struct Select<'a, Message> {
     min_width: f32,
     padding: Padding,
     size: Size,
+    height: Option<f32>,
+    text_size: f32,
+    line_height: LineHeight,
     variant: Variant,
     trigger_paint: Option<TriggerPaint<'a>>,
     icon: Option<Box<dyn Fn() -> Slot<'a, Event> + 'a>>,
@@ -210,6 +213,9 @@ pub fn select<'a, Message>(entries: impl IntoIterator<Item = Entry>) -> Select<'
         // Nova's pl-2.5 / pr-2 plus the one-pixel border.
         padding: Padding::default().left(11).right(9),
         size: Size::Default,
+        height: None,
+        text_size: 14.,
+        line_height: LineHeight::Absolute(20.into()),
         variant: Variant::Default,
         trigger_paint: None,
         icon: None,
@@ -288,6 +294,24 @@ impl<'a, Message> Select<'a, Message> {
     /// Set the trigger's size: `Size::Sm` is `h-7`, the default `h-8`.
     pub fn size(mut self, size: impl Into<Size>) -> Self {
         self.size = size.into();
+        self
+    }
+
+    /// Set the trigger height in logical pixels, overriding the size preset.
+    pub fn height(mut self, height: f32) -> Self {
+        self.height = Some(height);
+        self
+    }
+
+    /// Set the trigger label and placeholder size in logical pixels (14 by default).
+    pub fn text_size(mut self, size: f32) -> Self {
+        self.text_size = size;
+        self
+    }
+
+    /// Set the trigger label and placeholder line height (20 logical pixels by default).
+    pub fn line_height(mut self, line_height: impl Into<LineHeight>) -> Self {
+        self.line_height = line_height.into();
         self
     }
 
@@ -484,7 +508,8 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
             Some(label) => text::small(label).style(Foreground + Alpha(opacity)),
             None => text::muted(self.placeholder.clone()).style(Muted + Alpha(opacity)),
         }
-        .line_height(LineHeight::Absolute(20.into()))
+        .size(self.text_size)
+        .line_height(self.line_height)
         .wrapping(Wrapping::None);
 
         let value = if let Some(font) = self.font {
@@ -565,7 +590,9 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
             });
 
         // `h-8` (`h-7` small).
-        let height = if self.size == Size::Sm { 28.0 } else { 32.0 };
+        let height = self
+            .height
+            .unwrap_or(if self.size == Size::Sm { 28.0 } else { 32.0 });
         let button = Button::new(line.compose())
             .padding(
                 self.inherited
