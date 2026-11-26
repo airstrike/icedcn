@@ -13,8 +13,11 @@ fn view(selected: Option<&str>, vertical: bool) -> Element<'_, String, Theme> {
         column![
             t.list([
                 t.trigger("one", "First entry"),
-                t.trigger("two", "Unavailable").disabled(true),
-                t.trigger("three", "Third entry"),
+                t.trigger("two", "Unavailable")
+                    .focus_border(1., |theme| theme.neutral.ring)
+                    .disabled(true),
+                t.trigger("three", "Third entry")
+                    .focus_border(1., |theme| theme.neutral.ring),
                 t.trigger("four", "Fourth entry"),
             ]),
             t.content("one", "First panel"),

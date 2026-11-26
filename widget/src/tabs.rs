@@ -329,6 +329,18 @@ impl<Message> Trigger<'_, Message> {
     }
 }
 
+impl<'a, Message: Clone + 'a> Trigger<'a, Message> {
+    /// Show an inset keyboard focus border instead of the default outer ring.
+    pub fn focus_border(
+        mut self,
+        width: impl Into<iced_core::Pixels>,
+        color: fn(&Theme) -> icedcn_core::Color,
+    ) -> Self {
+        self.button = self.button.focus_border(width, color);
+        self
+    }
+}
+
 impl<'a, Message: Clone + 'a> From<Trigger<'a, Message>> for Slot<'a, Message> {
     fn from(trigger: Trigger<'a, Message>) -> Self {
         Slot::new(trigger)

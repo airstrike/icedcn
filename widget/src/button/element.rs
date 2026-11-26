@@ -77,7 +77,7 @@ where
     anchor: bool,
     icon_start: bool,
     icon_end: bool,
-    focus_ring: Option<Ring>,
+    focus: Option<Focus>,
     code_action: Option<Placement>,
     leading: Option<LineHeight>,
     pressed: bool,
@@ -110,7 +110,7 @@ pub fn button<'a, Message: Clone + 'a>(
         anchor: false,
         icon_start: false,
         icon_end: false,
-        focus_ring: None,
+        focus: None,
         code_action: None,
         leading: None,
         pressed: false,
@@ -260,7 +260,17 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
         width: impl Into<iced_core::Pixels>,
         color: fn(&Theme) -> icedcn_core::Color,
     ) -> Self {
-        self.focus_ring = Some((width.into().0, color));
+        self.focus = Some(Focus::Ring(width.into().0, color));
+        self
+    }
+
+    /// Replace the outer keyboard focus ring with a border inside the button.
+    pub fn focus_border(
+        mut self,
+        width: impl Into<iced_core::Pixels>,
+        color: fn(&Theme) -> icedcn_core::Color,
+    ) -> Self {
+        self.focus = Some(Focus::Border(width.into().0, color));
         self
     }
 
@@ -431,10 +441,10 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
             if rounded {
                 style.border.radius = (u32::MAX as f32).into();
             }
-            if let Some((width, color)) = btn.focus_ring
+            if let Some(focus) = btn.focus
                 && matches!(s, widget::Status::Focused { .. })
             {
-                style.ring = Some(border::width(width).color(color(t)));
+                focus.paint(&mut style, t);
             }
             if let Some(ring) = &mut style.ring {
                 let extent = ring.width + resolved.ring_offset;
@@ -566,6 +576,24 @@ mod tests {
     }
 
     #[test]
+    fn an_inset_keyboard_border_replaces_the_ring_without_changing_the_fill() {
+        let theme = Theme::light();
+        let color = |theme: &Theme| theme.primary.base;
+        let mut style = super::widget::Style {
+            background: Some(iced_core::Color::WHITE.into()),
+            ..Default::default()
+        };
+        let fill = style.background.clone();
+        super::Focus::Ring(3., color).paint(&mut style, &theme);
+        assert_eq!(style.ring.unwrap().width, 3.);
+        super::Focus::Border(1., color).paint(&mut style, &theme);
+        assert!(style.ring.is_none());
+        assert_eq!(style.border.width, 1.);
+        assert_eq!(style.border.color, iced_core::Color::from(theme.primary.base));
+        assert_eq!(style.background, fill);
+    }
+
+    #[test]
     fn group_mapping_keeps_underlines_rings_and_mapped_corners() {
         let b: Button<'_, ()> =
             super::button("Link")
@@ -587,6 +615,23 @@ mod tests {
     }
 }
 
-type Ring = (f32, fn(&Theme) -> icedcn_core::Color);
+#[derive(Clone, Copy)]
+enum Focus {
+    Ring(f32, fn(&Theme) -> icedcn_core::Color),
+    Border(f32, fn(&Theme) -> icedcn_core::Color),
+}
+
+impl Focus {
+    fn paint(self, style: &mut widget::Style, theme: &Theme) {
+        match self {
+            Self::Ring(width, color) => style.ring = Some(border::width(width).color(color(theme))),
+            Self::Border(width, color) => {
+                style.ring = None;
+                style.border.width = width;
+                style.border.color = color(theme).into();
+            }
+        }
+    }
+}
 
 type Resolver<'a> = Rc<dyn Fn(&Theme, state::Status) -> state::Style + 'a>;
