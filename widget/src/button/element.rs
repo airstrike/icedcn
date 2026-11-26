@@ -589,7 +589,10 @@ mod tests {
         super::Focus::Border(1., color).paint(&mut style, &theme);
         assert!(style.ring.is_none());
         assert_eq!(style.border.width, 1.);
-        assert_eq!(style.border.color, iced_core::Color::from(theme.primary.base));
+        assert_eq!(
+            style.border.color,
+            iced_core::Color::from(theme.primary.base)
+        );
         assert_eq!(style.background, fill);
     }
 
