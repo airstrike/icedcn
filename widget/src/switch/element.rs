@@ -23,6 +23,28 @@ use icedcn_core::theme::switch;
 
 use super::widget;
 
+/// The core renderer's default opacity-group operation is a no-op. Use the
+/// ordinary disabled style when WGPU falls back to its software renderer.
+#[cfg(feature = "wgpu")]
+pub(super) fn supports_opacity(renderer: &iced_widget::Renderer) -> bool {
+    trait IsWgpu {
+        fn is_wgpu(&self) -> bool;
+    }
+    impl IsWgpu for iced_renderer::wgpu::Renderer {
+        fn is_wgpu(&self) -> bool {
+            true
+        }
+    }
+    impl<Software> IsWgpu
+        for iced_renderer::fallback::Renderer<iced_renderer::wgpu::Renderer, Software>
+    {
+        fn is_wgpu(&self) -> bool {
+            matches!(self, Self::Primary(_))
+        }
+    }
+    renderer.is_wgpu()
+}
+
 /// Convert our OKLCH-native core `Style` into the vendored widget's `Style`.
 /// Preserves `ring` end-to-end (the iced bridge would silently drop it
 /// because iced's Style has no halo field).

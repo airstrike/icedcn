@@ -56,6 +56,7 @@ where
     is_toggled: bool,
     is_controlled: bool,
     is_disabled: bool,
+    pub(super) disabled_opacity: Option<(f32, SupportsOpacity<Renderer>)>,
     on_toggle: Option<Box<dyn Fn(bool) -> Message + 'a>>,
     label: Option<text::Fragment<'a>>,
     width: Length,
@@ -75,6 +76,8 @@ where
     last_status: Option<Status>,
     renderer: PhantomData<Renderer>,
 }
+
+type SupportsOpacity<Renderer> = fn(&Renderer) -> bool;
 
 impl<'a, Message, Theme, Renderer> Toggler<'a, Message, Theme, Renderer>
 where
@@ -99,6 +102,7 @@ where
             is_toggled,
             is_controlled: true,
             is_disabled: false,
+            disabled_opacity: None,
             on_toggle: None,
             label: None,
             width: Length::Shrink,
@@ -638,6 +642,16 @@ where
         let current_status = self.last_status.unwrap_or(Status::Disabled {
             is_toggled: self.is_toggled,
         });
+        let opacity = self.disabled_opacity.and_then(|(alpha, supports_opacity)| {
+            (self.is_disabled && supports_opacity(renderer)).then_some(alpha)
+        });
+        let track_status = if opacity.is_some() {
+            Status::Active {
+                is_toggled: self.is_toggled,
+            }
+        } else {
+            current_status
+        };
 
         // While the toggle is animating, interpolate the fill colors between
         // the off- and on-state styles so the background/foreground fade in
@@ -645,8 +659,8 @@ where
         // flips.
         let style = match state.now {
             Some(now) if state.animation.is_animating(now) => {
-                let off = theme.style(&self.class, current_status.with_toggled(false));
-                let on = theme.style(&self.class, current_status.with_toggled(true));
+                let off = theme.style(&self.class, track_status.with_toggled(false));
+                let on = theme.style(&self.class, track_status.with_toggled(true));
 
                 // Only `Background::Color` is interpolable here; fall back to
                 // transparent for gradients so the draw code stays simple.
@@ -675,7 +689,7 @@ where
                     ..target
                 }
             }
-            _ => theme.style(&self.class, current_status),
+            _ => theme.style(&self.class, track_status),
         };
 
         let style =
@@ -694,7 +708,11 @@ where
                 label_layout.bounds(),
                 state.paragraph.raw(),
                 text_helpers::Style {
-                    color: style.text_color,
+                    color: if opacity.is_some() {
+                        theme.style(&self.class, current_status).text_color
+                    } else {
+                        style.text_color
+                    },
                     selection: None,
                 },
                 theme.selection(),
@@ -708,6 +726,12 @@ where
             1.
         };
         let bounds = toggler_layout.bounds();
+        if let Some(alpha) = opacity {
+            renderer.start_opacity(
+                bounds.expand(style.ring.map_or(0., |ring| ring.width)),
+                alpha,
+            );
+        }
 
         let border_radius = style
             .border_radius
@@ -802,6 +826,9 @@ where
             },
             style.foreground,
         );
+        if opacity.is_some() {
+            renderer.end_opacity();
+        }
     }
 }
 

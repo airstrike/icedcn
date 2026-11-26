@@ -46,6 +46,7 @@ pub struct Switch<'a, Message> {
     checked: Option<bool>,
     default_checked: bool,
     disabled: bool,
+    disabled_opacity: Option<f32>,
     label: Option<iced_core::text::Fragment<'a>>,
     width: Length,
     size: Size,
@@ -60,6 +61,7 @@ pub fn switch<'a, Message: 'a>() -> Switch<'a, Message> {
         checked: None,
         default_checked: false,
         disabled: false,
+        disabled_opacity: None,
         label: None,
         width: Length::Shrink,
         size: Size::Default,
@@ -93,6 +95,14 @@ impl<'a, Message: 'a> Switch<'a, Message> {
     /// Disable the switch.
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
+        self
+    }
+
+    /// On WGPU, paint the active track and thumb together at this opacity while
+    /// disabled. The inline label retains its disabled text style. Software rendering
+    /// and switches without this option use the style's ordinary disabled appearance.
+    pub fn disabled_opacity(mut self, opacity: f32) -> Self {
+        self.disabled_opacity = Some(opacity.clamp(0., 1.));
         self
     }
 
@@ -140,6 +150,10 @@ impl<'a, Message: 'a> From<Switch<'a, Message>>
             None => widget::Toggler::new(false).uncontrolled(s.default_checked),
         };
         let mut tg = tg.width(s.width).disabled(s.disabled);
+        #[cfg(feature = "wgpu")]
+        if let Some(opacity) = s.disabled_opacity {
+            tg.disabled_opacity = Some((opacity, element::supports_opacity));
+        }
         if let Size::Sm = s.size {
             tg = tg.track_size(24., 14.);
         }
