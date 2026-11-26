@@ -21,8 +21,8 @@ pub use icedcn_core::theme::checkbox::{Default, Disabled, Invalid};
 pub use widget::{Catalog, Ring, State, Status, Style, StyleFn};
 
 use crate::compose::{Compose, Inherited, Slot};
-use iced_core::Length;
-use iced_core::text::IntoFragment;
+use iced_core::text::{IntoFragment, LineHeight};
+use iced_core::{Length, Pixels};
 use iced_widget::Renderer;
 use icedcn_core::Theme;
 use icedcn_core::theme;
@@ -40,6 +40,8 @@ pub struct Checkbox<'a, Message> {
     default_checked: State,
     disabled: bool,
     label: Option<iced_core::text::Fragment<'a>>,
+    text_size: Option<Pixels>,
+    line_height: Option<LineHeight>,
     width: Length,
     on_checked_change: Option<Box<dyn Fn(bool) -> Message + 'a>>,
     style: Option<theme::checkbox::StyleFn<'a, Theme>>,
@@ -52,6 +54,8 @@ pub fn checkbox<'a, Message: 'a>() -> Checkbox<'a, Message> {
         default_checked: State::Unchecked,
         disabled: false,
         label: None,
+        text_size: None,
+        line_height: None,
         width: Length::Shrink,
         on_checked_change: None,
         style: None,
@@ -94,6 +98,18 @@ impl<'a, Message: 'a> Checkbox<'a, Message> {
         self
     }
 
+    /// Set the font size of the inline label. Defaults to the renderer's text size.
+    pub fn text_size(mut self, size: impl Into<Pixels>) -> Self {
+        self.text_size = Some(size.into());
+        self
+    }
+
+    /// Set the line height of the inline label.
+    pub fn line_height(mut self, height: impl Into<LineHeight>) -> Self {
+        self.line_height = Some(height.into());
+        self
+    }
+
     /// Set the checkbox's outer width. Defaults to `Length::Shrink`.
     pub fn width(mut self, width: impl Into<Length>) -> Self {
         self.width = width.into();
@@ -122,6 +138,12 @@ impl<'a, Message: 'a> From<Checkbox<'a, Message>>
 
         if let Some(label) = c.label {
             cb = cb.label(label);
+        }
+        if let Some(size) = c.text_size {
+            cb = cb.text_size(size);
+        }
+        if let Some(height) = c.line_height {
+            cb = cb.line_height(height);
         }
 
         if let Some(style) = c.style {

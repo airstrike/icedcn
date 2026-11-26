@@ -77,6 +77,51 @@ fn inline_label_reports_its_drawn_bounds_for_text_selection() {
     assert_eq!(ui.drain().collect::<Vec<_>>(), [true]);
 }
 
+#[cfg(any(feature = "wgpu", feature = "vello-cpu"))]
+#[test]
+fn inline_label_matches_ordinary_text_with_default_and_compact_typography() {
+    use iced_core::Pixels;
+    use iced_core::widget::Id;
+    use iced_widget::{Widget, container, text};
+
+    const LABEL: &str = "Clip content";
+    for compact in [false, true] {
+        let mut reference = text(LABEL);
+        if compact {
+            reference = reference.size(12).line_height(Pixels(16.));
+        }
+        let ordinary: Element<'_, bool, Theme, Renderer> = reference.boxed();
+        let expected = simulator(ordinary).find(LABEL).unwrap().bounds();
+        assert!(expected.width > 0.);
+        if compact {
+            assert_eq!(expected.height, 16.);
+        }
+        for selected in [false, true] {
+            let mut checkbox = checkbox()
+                .label(LABEL)
+                .checked(selected)
+                .on_checked_change(|value| value);
+            if compact {
+                checkbox = checkbox.text_size(12).line_height(Pixels(16.));
+            }
+            let element: Element<'_, bool, Theme, Renderer> = checkbox.into();
+            let mut ui = simulator(container(element).center_y(24).id("row").boxed());
+            let row = ui.find(Id::new("row")).unwrap().bounds();
+            let label = ui.find(LABEL).unwrap().bounds();
+            assert_eq!(
+                label.size(),
+                expected.size(),
+                "compact={compact}, selected={selected}"
+            );
+            assert_eq!(row.height, 24.);
+            assert!((label.center_y() - row.center_y()).abs() < 1.);
+            assert_eq!(focus_count(&mut ui).total, 1);
+            ui.click(LABEL).unwrap();
+            assert_eq!(ui.drain().collect::<Vec<_>>(), [!selected]);
+        }
+    }
+}
+
 #[test]
 fn space_activates_on_release_once_and_enter_does_not_toggle() {
     let mut ui = simulator(element());
