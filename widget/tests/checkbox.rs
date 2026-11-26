@@ -46,6 +46,37 @@ fn element() -> Element<'static, bool, Theme, Renderer> {
     checkbox().on_checked_change(|value| value).into()
 }
 
+#[cfg(any(feature = "wgpu", feature = "vello-cpu"))]
+#[test]
+fn inline_label_reports_its_drawn_bounds_for_text_selection() {
+    use iced_core::text::Target;
+    use iced_core::widget::operation::text;
+    use iced_test::selector;
+
+    let mut ui = simulator(Element::from(
+        checkbox()
+            .label("Clip content")
+            .width(120)
+            .on_checked_change(|value| value),
+    ));
+    advance(&mut ui, false);
+    let control = ui.find(selector::is_focused()).unwrap().bounds();
+    let label = ui.find("Clip content").unwrap().bounds();
+    assert_eq!(label.x, control.x + 16. + 8.);
+    assert_eq!(label.x + label.width, control.x + control.width);
+    assert_eq!(label.center_y(), control.center_y());
+
+    let start = Point::new(label.x + 6., label.center_y());
+    ui.operate(&mut text::select(start, start, Target::Word));
+    let mut copy = text::copy();
+    ui.operate(&mut black_box(&mut copy));
+    assert!(matches!(copy.finish(), Outcome::Some(word) if word == "Clip"));
+    assert!(!checked(&mut ui));
+    ui.tap_key(Named::Space);
+    assert!(checked(&mut ui));
+    assert_eq!(ui.drain().collect::<Vec<_>>(), [true]);
+}
+
 #[test]
 fn space_activates_on_release_once_and_enter_does_not_toggle() {
     let mut ui = simulator(element());

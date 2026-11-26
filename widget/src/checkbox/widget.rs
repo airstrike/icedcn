@@ -818,8 +818,7 @@ where
 
         let paragraph = &mut internal.paragraph;
 
-        let mut children = layout.iter(&tree.children);
-        let (layout, _) = children.next().expect("checkbox child");
+        let (layout, _) = layout.iter(&tree.children).nth(1).expect("checkbox label");
 
         operation.text(
             None,
