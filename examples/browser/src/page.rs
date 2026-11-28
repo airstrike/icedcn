@@ -573,8 +573,8 @@ fn framed_example<'a>(
 
 /// The collapsible code panel beneath a preview. Until expanded it is
 /// clipped to [`COLLAPSED_CODE_HEIGHT`] under a fade overlay carrying
-/// the "View Code" button; once expanded it shows the full snippet with
-/// a top-right copy button.
+/// the "View Code" button; once expanded it shows the full snippet. A
+/// top-right copy button sits over both.
 pub fn code_panel<'a>(
     page_index: usize,
     block_pos: usize,
@@ -617,25 +617,9 @@ fn code_panel_with_border<'a>(
         .width(Fill)
         .style(style(code_block_panel));
 
+    let copy = super::Message::Page(page_index, Message::CopyCode(block_pos));
     if expanded {
-        let copy_btn: View<'_, super::Message> = button(icon::copy().size(14))
-            .style(button::Ghost)
-            .size(Sm)
-            .square()
-            .on_press(super::Message::Page(
-                page_index,
-                Message::CopyCode(block_pos),
-            ))
-            .into();
-
-        let copy_corner = container(copy_btn)
-            .align_x(End)
-            .align_y(Start)
-            .padding([8, 8])
-            .width(Fill)
-            .height(Fill);
-
-        stack![Element::from(inner), Element::from(copy_corner)].boxed()
+        with_copy(inner, copy)
     } else {
         let truncated = inner.max_height(COLLAPSED_CODE_HEIGHT).clip(true);
 
@@ -651,7 +635,10 @@ fn code_panel_with_border<'a>(
             .center(Fill)
             .padding(iced::Padding::default().bottom(16))
             .style(style(code_fade_overlay));
-        stack![Element::from(truncated), Element::from(overlay)].boxed()
+        with_copy(
+            stack![Element::from(truncated), Element::from(overlay)].boxed(),
+            copy,
+        )
     }
 }
 
@@ -783,9 +770,47 @@ pub fn snippet<'a>(
     viewer: &'a SnippetViewer,
 ) -> View<'a, super::Message> {
     markdown::view_with(items, snippet_settings(viewer), viewer)
-        .map(move |url| super::Message::Page(page_index, Message::LinkClicked(url)))
+        .map(move |event| event.route(page_index))
         .boxed()
         .into()
+}
+
+/// What a rendered snippet publishes: a clicked link, or a code block's
+/// copy button. It owns the code: iced caches and maps elements only
+/// with `'static` messages.
+#[derive(Debug, Clone)]
+pub enum Snippet {
+    Link(markdown::Uri),
+    Copy(String),
+}
+
+impl Snippet {
+    fn route(self, page_index: usize) -> super::Message {
+        match self {
+            Snippet::Link(url) => super::Message::Page(page_index, Message::LinkClicked(url)),
+            Snippet::Copy(code) => super::Message::CopyText(code),
+        }
+    }
+}
+
+/// A ghost copy button inset in the top-right corner, layered over `body`.
+fn with_copy<'a, M: Clone + 'a>(
+    body: impl Into<iced::Element<'a, M, Theme>>,
+    on_copy: M,
+) -> iced::Element<'a, M, Theme> {
+    let copy: View<'a, M> = button(icon::copy().size(14))
+        .style(button::Ghost)
+        .size(Sm)
+        .square()
+        .on_press(on_copy)
+        .into();
+    let corner = container(copy)
+        .align_x(End)
+        .align_y(Start)
+        .padding(8)
+        .width(Fill)
+        .height(Fill);
+    stack![body.into(), Element::from(corner)].boxed()
 }
 
 /// The body of an example's code panel. Its source is numbered like a
@@ -825,7 +850,7 @@ fn panel_snippet<'a>(
         .boxed()
     });
 
-    body.map(move |url| super::Message::Page(page_index, Message::LinkClicked(url)))
+    body.map(move |event| event.route(page_index))
         .boxed()
         .into()
 }
@@ -949,7 +974,7 @@ impl SnippetViewer {
         language: Option<&'a str>,
         code: &'a str,
         lines: &'a [markdown::Text],
-    ) -> iced::Element<'a, markdown::Uri, Theme, iced::Renderer> {
+    ) -> iced::Element<'a, Snippet, Theme, iced::Renderer> {
         use iced::alignment::Horizontal;
         use iced::widget::{row, text};
         use icedcn::core::oklch;
@@ -966,10 +991,10 @@ impl SnippetViewer {
             size.0.to_bits(),
         );
         let body = lazy(key, move |_| {
-            markdown::code(settings.clone(), lines, Some(&self.map)).on_link_click(|url| url)
+            markdown::code(settings.clone(), lines, Some(&self.map)).on_link_click(Snippet::Link)
         })
         .boxed();
-        let source: iced::Element<'a, markdown::Uri, Theme, iced::Renderer> =
+        let source: iced::Element<'a, Snippet, Theme, iced::Renderer> =
             scrollable::scrollable(body).horizontal().spacing(2).into();
 
         let numbers = (1..=lines.len())
@@ -992,9 +1017,9 @@ impl SnippetViewer {
     }
 }
 
-impl<'a> markdown::Viewer<'a, markdown::Uri, Theme, iced::Renderer> for SnippetViewer {
-    fn on_link_click(url: markdown::Uri) -> markdown::Uri {
-        url
+impl<'a> markdown::Viewer<'a, Snippet, Theme, iced::Renderer> for SnippetViewer {
+    fn on_link_click(url: markdown::Uri) -> Snippet {
+        Snippet::Link(url)
     }
 
     fn code_theme(&'a self) -> Option<&'a dyn markdown::highlighter::Theme> {
@@ -1007,7 +1032,7 @@ impl<'a> markdown::Viewer<'a, markdown::Uri, Theme, iced::Renderer> for SnippetV
         language: Option<&'a str>,
         code: &'a str,
         lines: &'a [markdown::Text],
-    ) -> iced::Element<'a, markdown::Uri, Theme, iced::Renderer> {
+    ) -> iced::Element<'a, Snippet, Theme, iced::Renderer> {
         use icedcn::widget::scrollable;
 
         // Span construction clones every highlighted token. Reuse the selectable
@@ -1020,17 +1045,16 @@ impl<'a> markdown::Viewer<'a, markdown::Uri, Theme, iced::Renderer> for SnippetV
             settings.code_size.0.to_bits(),
         );
         let body = lazy(key, move |_| {
-            markdown::code(settings.clone(), lines, Some(&self.map))
-                .on_link_click(Self::on_link_click)
+            markdown::code(settings.clone(), lines, Some(&self.map)).on_link_click(Snippet::Link)
         })
         .boxed();
         let scroll = scrollable::scrollable(body).horizontal().spacing(2);
 
-        container(scroll)
+        let body = container(scroll)
             .padding([12, 16])
             .width(Fill)
-            .style(code_block)
-            .into()
+            .style(code_block);
+        with_copy(body, Snippet::Copy(code.to_owned()))
     }
 }
 
