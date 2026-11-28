@@ -38,7 +38,7 @@ fn frame<'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
     container(content)
         .clip(true)
         .padding(1)
-        .style(|theme| Style {
+        .style(|theme: &Theme| Style {
             border: Border {
                 color: theme.neutral.border,
                 width: 1.0,

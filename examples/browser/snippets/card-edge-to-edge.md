@@ -18,7 +18,7 @@ fn terms<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
         .width(Fill);
     let terms = container(scroll_area(body).height(192))
         .width(Fill)
-        .class(Transparent + Bg(Token::Muted) + Alpha(0.5));
+        .style(Transparent + Bg(Token::Muted) + Alpha(0.5));
     card(
         column![
             container(

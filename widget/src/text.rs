@@ -527,7 +527,7 @@ pub fn table<'a, M: 'a, const N: usize>(
     crate::container(grid)
         .width(Fill)
         .padding(1)
-        .style(|theme| Style {
+        .style(|theme: &Theme| Style {
             border: Border {
                 width: 1.,
                 color: theme.neutral.border,

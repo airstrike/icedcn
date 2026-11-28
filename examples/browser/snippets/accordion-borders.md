@@ -37,5 +37,5 @@ let inner = accordion(
 container(inner)
     .width(Fill.max(512))
     .padding(1)
-    .class(Transparent + border::Width(1.) + border::Color(Token::Border) + radius(radius::LG))
+    .style(Transparent + border::Width(1.) + border::Color(Token::Border) + radius(radius::LG))
 ```

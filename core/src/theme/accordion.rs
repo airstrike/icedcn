@@ -5,6 +5,7 @@ use std::ops::Add;
 
 use super::Theme;
 use super::tweak::{Trigger, Tweak, TweakSet};
+use super::variant::{sink, spec};
 use crate::palette::Palette;
 use crate::style;
 use crate::style::status;
@@ -411,6 +412,9 @@ impl<'a> From<Spec> for StyleFn<'a, Theme> {
         Box::new(move |theme, status| spec.resolve(theme, status))
     }
 }
+
+spec!(Spec, Default);
+sink!(StyleFn<'a, Theme>, Spec, tweaks);
 
 #[cfg(test)]
 mod tests {

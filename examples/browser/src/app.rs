@@ -746,7 +746,7 @@ impl App {
         .padding(iced::Padding::ZERO.top(9.6).right(8).bottom(86.4).left(8))
         .width(296)
         .height(Fill)
-        .class(theme::sidebar::Default + Bg(Token::Background))
+        .style(theme::sidebar::Default + Bg(Token::Background))
         .into()
     }
 

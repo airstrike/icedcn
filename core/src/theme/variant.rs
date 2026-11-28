@@ -2,8 +2,8 @@
 //!
 //! [`Destructive`] is one type: `.style(Destructive)` picks the destructive
 //! look of whichever component receives it, because each component's `Spec`
-//! implements `From<Destructive>`. A component without that variant simply
-//! has no such impl, so the mismatch is a compile error.
+//! implements `From<Destructive>`. A component whose style has no destructive
+//! look has no such impl, so the mismatch is a compile error.
 //!
 //! `Variant + tweak` builds a [`Tweaked`], which any `Spec` that converts
 //! from the variant also converts from:
@@ -31,7 +31,7 @@
 //!
 //! let mut design = Design::dark();
 //! design.destructive.base = oklch(0.6, 0.2, 280.0);
-//! let theme = Theme::new(design);
+//! let theme: Theme = design.into();
 //!
 //! let alert = alert::Spec::from(Destructive).resolve(&theme);
 //! let button = button::Spec::from(Destructive).resolve(&theme, button::Status::Active);
@@ -62,7 +62,7 @@
 //!
 //! icedcn_core::variant! {
 //!     /// The brand's call to action.
-//!     pub struct Brand;
+//!     pub struct Brand: button;
 //! }
 //!
 //! /// A meter's paint: its fill and the tweaks applied on top.
@@ -110,10 +110,10 @@
 //!     }
 //! }
 //!
-//! // Brand on an icedcn component: a Spec built from your own paint.
+//! // Brand on an icedcn component, listed in `variant!` above.
 //! impl From<Brand> for button::Spec {
 //!     fn from(_: Brand) -> button::Spec {
-//!         button::Spec::new(button::secondary)
+//!         button::Spec::from(button::Secondary) + Bg(Token::Primary)
 //!     }
 //! }
 //!
@@ -125,6 +125,9 @@
 //! let tweaked: button::Spec = (Brand + Bg(Token::Muted)).into();
 //! let style = tweaked.resolve(&theme, button::Status::Active);
 //! assert_eq!(style.background, Some(theme.muted.base.into()));
+//!
+//! // Listed, so a button's `.style(..)` takes it bare.
+//! let _ = button::IntoStyle::into_style(Brand);
 //! ```
 
 use std::ops::Add;
@@ -182,9 +185,49 @@ impl<V, T: Into<Tweak>> Add<T> for Tweaked<V> {
 ///
 /// let _ = Highlight + Opaque;
 /// ```
+///
+/// List the components the variant styles after its name, and each takes it
+/// bare: in `.style(..)`, or `.media_style(..)` for `alert_dialog`. The names
+/// are `button`, `badge`, `checkbox`, `switch`, `text_input`, `text`,
+/// `container`, `accordion`, `progress_bar`, `alert`, `alert_dialog`,
+/// `code_block` and `toggle`. Each listed component's `Spec` must convert
+/// from the variant; a missing conversion fails here, not at a call site:
+///
+/// ```
+/// use icedcn_core::Theme;
+/// use icedcn_core::theme::tweak::{Bg, Fg, Token};
+/// use icedcn_core::theme::{button, switch};
+///
+/// icedcn_core::variant! {
+///     /// An approving action.
+///     pub struct Confirm: button, switch;
+/// }
+///
+/// impl From<Confirm> for button::Spec {
+///     fn from(_: Confirm) -> button::Spec {
+///         button::Spec::from(button::Default) + Bg(Token::Success) + Fg(Token::SuccessForeground)
+///     }
+/// }
+///
+/// impl From<Confirm> for switch::Spec {
+///     fn from(_: Confirm) -> switch::Spec {
+///         switch::Spec::from(switch::Default) + Bg(Token::Success)
+///     }
+/// }
+///
+/// fn style<'a>(style: impl button::IntoStyle<'a>) -> button::state::StyleFn<'a> {
+///     style.into_style()
+/// }
+///
+/// let _ = style(Confirm);
+/// let _: switch::StyleFn<'_, Theme> = Confirm.into();
+/// ```
+///
+/// A component left off the list takes the variant through `Spec::from(..)`,
+/// through a builder that takes `impl Into<Spec>`, or once it has a tweak.
 #[macro_export]
 macro_rules! variant {
-    ($(#[$meta:meta])* $vis:vis struct $name:ident;) => {
+    ($(#[$meta:meta])* $vis:vis struct $name:ident $(: $($component:ident),+ $(,)?)?;) => {
         $(#[$meta])*
         #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
         $vis struct $name;
@@ -195,7 +238,101 @@ macro_rules! variant {
                 $crate::theme::Tweaked::new(self, rhs)
             }
         }
+
+        $($($crate::__adopt!($component, $name);)+)?
     };
+}
+
+/// Let `.style(..)` take a [`variant!`](crate::variant) bare on one component,
+/// through whatever that component's builder accepts.
+///
+/// A blanket impl over `Spec: From<V>` would overlap the closure impls, so each
+/// variant gets concrete impls instead. Only the type a builder takes is
+/// targeted: several `Spec`s convert into iced's container closure, and
+/// targeting it for each would conflict when they are listed together.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __adopt {
+    (button, $name:ident) => {
+        impl<'a> $crate::theme::button::IntoStyle<'a> for $name {
+            fn uses_border_box(&self) -> bool {
+                $crate::theme::button::IntoStyle::uses_border_box(&$crate::theme::variant::Adopt::<$crate::theme::button::Spec>::adopt(*self))
+            }
+            fn into_style(self) -> $crate::theme::button::state::StyleFn<'a> {
+                $crate::theme::button::IntoStyle::into_style($crate::theme::variant::Adopt::<$crate::theme::button::Spec>::adopt(self))
+            }
+        }
+    };
+    (badge, $name:ident) => {
+        impl<'a> $crate::theme::badge::state::IntoStyle<'a> for $name {
+            fn into_style(self) -> $crate::theme::badge::state::StyleFn<'a> {
+                $crate::theme::badge::state::IntoStyle::into_style($crate::theme::variant::Adopt::<$crate::theme::badge::Spec>::adopt(self))
+            }
+        }
+    };
+    (accordion, $name:ident) => {
+        $crate::__adopt!(@sink accordion, $name, $crate::theme::accordion::StyleFn<'_, $crate::Theme>);
+    };
+    (checkbox, $name:ident) => {
+        $crate::__adopt!(@sink checkbox, $name, $crate::theme::checkbox::StyleFn<'_, $crate::Theme>);
+    };
+    (switch, $name:ident) => {
+        $crate::__adopt!(@sink switch, $name, $crate::theme::switch::StyleFn<'_, $crate::Theme>);
+    };
+    (text_input, $name:ident) => {
+        $crate::__adopt!(@sink text_input, $name, $crate::theme::text_input::StyleFn<'_, $crate::Theme>);
+    };
+    (text, $name:ident) => {
+        $crate::__adopt!(@sink text, $name, $crate::iced_widget::text::StyleFn<'_, $crate::Theme>);
+    };
+    (container, $name:ident) => {
+        $crate::__adopt!(@sink container, $name, $crate::iced_widget::container::StyleFn<'_, $crate::Theme>);
+        impl<'a> $crate::theme::container::IntoStyle<'a> for $name {
+            fn into_style(self) -> $crate::iced_widget::container::StyleFn<'a, $crate::Theme> {
+                $crate::theme::variant::Adopt::<$crate::theme::container::Spec>::adopt(self).into()
+            }
+        }
+    };
+    (progress_bar, $name:ident) => {
+        $crate::__adopt!(@sink progress_bar, $name, $crate::iced_widget::progress_bar::StyleFn<'_, $crate::Theme>);
+    };
+    // These builders take `impl Into<Spec>`, which the variant already satisfies.
+    (alert, $name:ident) => { $crate::__adopt!(@spec alert, $name); };
+    (alert_dialog, $name:ident) => { $crate::__adopt!(@spec alert_dialog, $name); };
+    (code_block, $name:ident) => { $crate::__adopt!(@spec code_block, $name); };
+    (toggle, $name:ident) => { $crate::__adopt!(@spec toggle, $name); };
+    (@sink $component:ident, $name:ident, $sink:ty) => {
+        impl ::core::convert::From<$name> for $sink {
+            fn from(variant: $name) -> Self {
+                $crate::theme::variant::Adopt::<$crate::theme::$component::Spec>::adopt(variant).into()
+            }
+        }
+    };
+    (@spec $component:ident, $name:ident) => {
+        const _: () = {
+            let _ = <$name as $crate::theme::variant::Adopt<$crate::theme::$component::Spec>>::adopt;
+        };
+    };
+}
+
+/// The conversion `__adopt!` goes through, so a listed component whose `Spec`
+/// lacks `From<V>` reports that instead of the `Spec`'s blanket tweak impl.
+#[doc(hidden)]
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` is listed for `{Spec}`, which has no `From<{Self}>`",
+    label = "`{Spec}` cannot be built from `{Self}`",
+    note = "add `impl From<{Self}> for {Spec}`, or drop the component from the `variant!` list"
+)]
+pub trait Adopt<Spec> {
+    fn adopt(self) -> Spec;
+}
+
+// `do_not_recommend` keeps rustc from reporting this impl's unmet bound.
+#[diagnostic::do_not_recommend]
+impl<V, Spec: From<V>> Adopt<Spec> for V {
+    fn adopt(self) -> Spec {
+        Spec::from(self)
+    }
 }
 
 /// Implement the shared conversions into a component's `Spec`: from

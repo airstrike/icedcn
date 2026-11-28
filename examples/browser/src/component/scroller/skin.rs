@@ -1,27 +1,9 @@
 use iced::Vector;
 use iced::widget::button::{Status, StyleFn};
-use icedcn::core::{Border, Shadow};
+use icedcn::Theme;
+use icedcn::core::Border;
 use icedcn::theme::container::Style;
 use icedcn::theme::{button, popover};
-use icedcn::{Color, Theme};
-
-pub(super) fn card(theme: &Theme) -> Style {
-    let alpha = if theme.neutral.is_dark { 0.1 } else { 0.05 };
-    Style {
-        background: Some(theme.card.base.into()),
-        border: Border {
-            radius: 24.0.into(),
-            width: 1.0,
-            color: theme.neutral.foreground.alpha(alpha),
-        },
-        shadow: Shadow {
-            color: Color::BLACK.alpha(0.10),
-            offset: Vector::new(0.0, 1.0),
-            blur_radius: 3.0,
-        },
-        ..Style::default()
-    }
-}
 
 pub(super) fn tile(theme: &Theme) -> Style {
     Style {
@@ -34,9 +16,14 @@ pub(super) fn tile(theme: &Theme) -> Style {
     }
 }
 
+/// `cn-hover-card-content` with the outline's `rounded-2xl p-1`: Rhea's
+/// `ring-foreground/5 dark:ring-foreground/10` and `shadow-lg`.
 pub(super) fn outline(theme: &Theme) -> Style {
     let mut style = popover::content(theme);
     style.border.radius = 18.0.into();
+    if !theme.neutral.is_dark {
+        style.border.color = theme.neutral.foreground.alpha(0.05);
+    }
     style.shadow.offset = Vector::new(0., 10.);
     style.shadow.blur_radius = 15.;
     style

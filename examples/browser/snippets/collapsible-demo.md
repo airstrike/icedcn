@@ -12,7 +12,7 @@ fn bordered<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a, 
     container(content)
         .width(Fill)
         .padding([9, 17])
-        .class(
+        .style(
             theme::container::Transparent
                 + border::Width(1.0)
                 + border::Color(Token::Border)

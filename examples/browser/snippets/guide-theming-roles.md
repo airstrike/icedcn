@@ -1,11 +1,7 @@
 ## Semantic roles
 
-The theme exposes palettes for neutral, primary, secondary, muted, accent, destructive, info, success, and warning roles. A palette contains its fill, foreground, border, ring, and text color for transparent variants. Card, popover, code, and sidebar surfaces have their own roles.
+The theme has a palette for each role: neutral, primary, secondary, muted, accent, destructive, info, success, and warning. Card, popover, code, and the sidebar have their own surface palettes. `input` holds the input border color and `chart` the five chart colors.
 
-Choose a semantic variant before overriding an individual color. For example, `button::Destructive` keeps a destructive action's interaction styles together, while `button::Outline` supplies the outlined treatment. `Theme` wraps a `Design`; inspect `theme.design()` when building an application-wide palette editor.
+A palette holds a fill (`base`), the text drawn on it (`foreground`), a `border`, a focus `ring`, and `tint_text`, the text color for transparent variants such as outline and ghost. `Theme` dereferences to its `Design`, so `theme.primary.base` reads a role directly.
 
-A custom `Design` contains related fields, including derived tint colors and the seed used by stock iced widgets. Keep those values consistent when changing a whole palette. The repository's palette example provides a working application for inspecting theme roles:
-
-```sh
-cargo run --locked -p palette
-```
+Variants and tweaks refer to roles, never to fixed colors. That is what lets one style work in every theme.

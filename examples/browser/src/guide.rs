@@ -58,12 +58,17 @@ static ARTICLES: &[Article] = &[
     Article {
         meta: page::Meta {
             title: "Theming",
-            description: "Apply light and dark palettes, semantic roles, and widget styles.",
+            description: "Apply light and dark palettes, style widgets with variants and tweaks, and build your own design.",
         },
         blocks: &[
             page::Block::Md("examples/browser/snippets/guide-theming-mode.md"),
             page::Block::Md("examples/browser/snippets/guide-theming-roles.md"),
             page::Block::Md("examples/browser/snippets/guide-theming-styles.md"),
+            page::Block::Md("examples/browser/snippets/guide-theming-variants.md"),
+            page::Block::Md("examples/browser/snippets/guide-theming-tweaks.md"),
+            page::Block::Md("examples/browser/snippets/guide-theming-custom.md"),
+            page::Block::Md("examples/browser/snippets/guide-theming-components.md"),
+            page::Block::Md("examples/browser/snippets/guide-theming-design.md"),
         ],
     },
     Article {

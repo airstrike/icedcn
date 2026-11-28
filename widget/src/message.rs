@@ -71,7 +71,7 @@ fn metadata<'a, Event: 'a>(
         .padding(padding)
         .width(Fill)
         .align_x(align)
-        .class(Transparent + Fg(Token::MutedForeground))
+        .style(Transparent + Fg(Token::MutedForeground))
         .into()
 }
 impl<'a, Event: 'a> Compose<Event> for Message<'a, Event> {

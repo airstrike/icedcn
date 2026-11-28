@@ -195,7 +195,7 @@ impl<'a, Message: 'a> Compose<Message> for Item<'a, Message> {
         crate::container(content)
             .padding(padding)
             .width(Fill)
-            .class(style)
+            .style(style)
             .into()
     }
 }
@@ -334,7 +334,7 @@ impl<'a, Message: 'a> Compose<Message> for Media<'a, Message> {
             None => container,
         };
 
-        container.clip(frame.clip()).class(frame.paint()).into()
+        container.clip(frame.clip()).style(frame.paint()).into()
     }
 }
 

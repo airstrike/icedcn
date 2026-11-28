@@ -530,7 +530,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
             }
             None => Icon::Chevron.boxed().into(),
         };
-        let chevron = Container::new(chevron).style(move |theme| Style {
+        let chevron = Container::new(chevron).style(move |theme: &Theme| Style {
             text_color: Some(theme.muted.foreground.scale_alpha(opacity)),
             ..Style::default()
         });

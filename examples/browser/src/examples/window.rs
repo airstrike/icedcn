@@ -91,7 +91,7 @@ impl Platform {
             .max_height(if framed { 780. } else { f32::INFINITY })
             .min_height(if framed { 480. } else { 0. })
             .padding(if framed { 1 } else { 0 })
-            .style(move |theme| {
+            .style(move |theme: &Theme| {
                 if !framed {
                     return Style::default();
                 }
@@ -163,7 +163,7 @@ impl Platform {
             .width(Fill)
             .height(40)
             .center_y(Fill)
-            .style(|theme| Style {
+            .style(|theme: &Theme| Style {
                 background: Some(theme.muted.base.into()),
                 text_color: Some(theme.muted.foreground),
                 border: Border {
@@ -185,7 +185,7 @@ fn dot<'a, Message: 'a>(color: impl Into<Color>) -> Element<'a, Message, Theme> 
     container(space::horizontal().width(10).height(10))
         .width(10)
         .height(10)
-        .style(move |_| Style {
+        .style(move |_: &Theme| Style {
             background: Some(color.into()),
             border: Border::default().rounded(5),
             ..Style::default()

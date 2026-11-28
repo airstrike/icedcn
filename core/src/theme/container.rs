@@ -299,7 +299,9 @@ pub struct Spec {
 }
 
 impl Spec {
-    /// A spec painted by `variant`: the base of a variant of your own.
+    /// A spec painted by `variant` as given, with tweaks applied after it. For
+    /// a variant of your own, build from a built-in one with `Spec::from(..)`
+    /// and tweaks unless you need full control.
     pub fn new(variant: fn(&Theme) -> Style) -> Spec {
         Spec::variant(variant)
     }
@@ -535,6 +537,85 @@ sink!(iced_widget::container::StyleFn<'a, Theme>, Spec, tweaks);
 impl<'a> From<Destructive> for iced_widget::container::StyleFn<'a, Theme> {
     fn from(variant: Destructive) -> Self {
         Spec::from(variant).into()
+    }
+}
+
+/// What a container's `.style(..)` accepts: a variant, a `Spec`, tweaks, or a
+/// closure returning [`Style`].
+pub trait IntoStyle<'a> {
+    fn into_style(self) -> iced_widget::container::StyleFn<'a, Theme>;
+}
+
+impl<'a, F> IntoStyle<'a> for F
+where
+    F: Fn(&Theme) -> Style + 'a,
+{
+    fn into_style(self) -> iced_widget::container::StyleFn<'a, Theme> {
+        Box::new(move |theme| self(theme).into())
+    }
+}
+
+impl<'a, V> IntoStyle<'a> for super::Tweaked<V>
+where
+    Spec: From<V>,
+{
+    fn into_style(self) -> iced_widget::container::StyleFn<'a, Theme> {
+        self.into()
+    }
+}
+
+impl<F> IntoStyle<'static> for style::StyleFn<F>
+where
+    F: Fn(Palette, status::Status) -> style::Style + 'static,
+{
+    fn into_style(self) -> iced_widget::container::StyleFn<'static, Theme> {
+        self.into()
+    }
+}
+
+macro_rules! into_style {
+    ($($variant:ty),* $(,)?) => {
+        $(
+            impl<'a> IntoStyle<'a> for $variant {
+                fn into_style(self) -> iced_widget::container::StyleFn<'a, Theme> {
+                    self.into()
+                }
+            }
+        )*
+    };
+}
+
+into_style!(
+    Transparent,
+    PageBackground,
+    Card,
+    CardPreview,
+    CardMuted,
+    CodeBlock,
+    SidebarInset,
+    CodeFadeOverlay,
+    Destructive,
+    Spec,
+    TweakSet,
+    super::variant::Outline,
+    super::variant::Muted,
+    super::alert::Default,
+    super::alert::Spec,
+    super::alert_dialog::Spec,
+    super::badge::Default,
+    super::badge::Spec,
+    super::field::Card,
+    super::field::CardActive,
+    super::item::Default,
+    super::sidebar::Default,
+    super::sidebar::Floating,
+    super::sidebar::Inset,
+    super::sidebar::Spec,
+);
+
+impl IntoStyle<'static> for style::Tint {
+    fn into_style(self) -> iced_widget::container::StyleFn<'static, Theme> {
+        self.into()
     }
 }
 

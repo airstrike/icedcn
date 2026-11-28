@@ -24,6 +24,7 @@ use iced_core::{Alignment, Element, Padding, Pixels};
 use iced_widget::{Renderer, Widget};
 use iced_widget::{container, text_editor};
 use icedcn_core::Theme;
+use icedcn_core::theme;
 use icedcn_core::theme::input_group::{control, textarea};
 use icedcn_core::theme::text_input::{Default, StyleFn};
 
@@ -235,9 +236,11 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
             let addon = Container::new(content)
                 .padding(padding)
                 .align_y(Vertical::Center)
-                .class(Box::new(|theme: &Theme| {
-                    container::Style::default().color(theme.muted.foreground)
-                }) as container::StyleFn<'static, Theme>);
+                .style(|theme: &Theme| -> theme::container::Style {
+                    container::Style::default()
+                        .color(theme.muted.foreground)
+                        .into()
+                });
 
             let addon = match align {
                 Align::BlockStart | Align::BlockEnd => addon.width(Fill),

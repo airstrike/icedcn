@@ -2,6 +2,7 @@ use super::demo::{Demo, Event, Model};
 use super::fixtures::Role;
 use super::skin;
 use crate::icon;
+use crate::page::rhea;
 use iced::Alignment::Center;
 use iced::widget::text::{Ellipsis, LineHeight, Wrapping};
 use iced::{Element, Fill};
@@ -201,7 +202,7 @@ impl Demo {
             .width(Fill)
             .height(560)
             .padding([0, 0, 20, 0])
-            .style(skin::card);
+            .style(rhea::card);
         let card: Slot<'static, Event> = if side_outline {
             let outline = column(
                 self.turns()
@@ -239,7 +240,7 @@ impl Demo {
                         container(space::horizontal())
                             .width(16)
                             .height(2)
-                            .style(move |theme| Style {
+                            .style(move |theme: &Theme| Style {
                                 background: Some(
                                     if current {
                                         theme.neutral.foreground

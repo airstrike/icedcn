@@ -89,7 +89,7 @@ impl<'a, Message: 'a> Compose<Message> for StatusMarker<'a, Message> {
         };
         container(area)
             .width(Fill)
-            .class(Transparent + Fg(Token::MutedForeground))
+            .style(Transparent + Fg(Token::MutedForeground))
             .into()
     }
 }

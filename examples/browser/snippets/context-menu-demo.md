@@ -61,7 +61,7 @@ fn area<'a>() -> Slot<'a, Message> {
         .center(Fill)
         .width(320)
         .height(180)
-        .class(Transparent + border::Width(1.) + border::Color(Token::Border) + radius(radius::XL))
+        .style(Transparent + border::Width(1.) + border::Color(Token::Border) + radius(radius::XL))
         .into()
 }
 ```

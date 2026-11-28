@@ -158,18 +158,18 @@ impl<Message> Compose<Message> for Tooltip<Message> {
                     Dot => container(space::horizontal())
                         .width(10)
                         .height(10)
-                        .class(fill)
+                        .style(fill)
                         .into(),
                     Line => container(space::horizontal())
                         .width(4)
                         .height(Fill)
-                        .class(fill)
+                        .style(fill)
                         .into(),
                     Dashed => column((0..if nested { 5 } else { 2 }).map(|_| {
                         container(space::horizontal())
                             .width(3)
                             .height(3)
-                            .class(fill.clone())
+                            .style(fill.clone())
                             .into()
                     }))
                     .spacing(3)

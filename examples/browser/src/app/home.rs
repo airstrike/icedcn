@@ -16,11 +16,6 @@ use icedcn::{Size, Slot, Theme, card, radius, theme};
 use super::Message;
 use crate::icon;
 
-#[expect(
-    dead_code,
-    reason = "kept for a future Rhea design; the Home cards use Nova"
-)]
-mod rhea;
 #[cfg(test)]
 mod tests;
 
@@ -267,7 +262,7 @@ fn contributions<'a>() -> Slot<'a, Message> {
                         .width(Fill)
                         // CSS flex-shrink reserves the 16px label and 8px gap for the tallest bar.
                         .height((200.0 * amount / 1300.0).min(176.0))
-                        .style(move |_| Style {
+                        .style(move |_: &Theme| Style {
                             background: Some(colors[index].into()),
                             border: Border::default().rounded(radius::LG),
                             ..Style::default()
@@ -330,7 +325,7 @@ fn detail<'a>(label: &'static str, value: &'static str, note: &'static str) -> S
     // Include the source item's 1px border in its CSS padding-box dimensions.
     .padding([15, 17])
     .width(Fill)
-    .class(theme::container::CardMuted)
+    .style(theme::container::CardMuted)
     .into()
 }
 

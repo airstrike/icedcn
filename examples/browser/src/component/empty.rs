@@ -206,7 +206,7 @@ impl page::Page for EmptyPage {
             "background" => container(empty::empty().media(empty::media(icon::bell()).style(empty::Icon)).title("No Notifications")
     .description("You're all caught up. New notifications will appear here.")
     .content(button![icon::refresh_ccw(), "Refresh"].style(button::Outline))).width(Fill)
-    .style(|theme| Style { background: Some(theme.muted.base.alpha(0.3).into()), ..Style::default() }).into(),
+    .style(|theme: &Theme| Style { background: Some(theme.muted.base.alpha(0.3).into()), ..Style::default() }).into(),
 
             "avatar" => empty::empty().media(empty::media(avatar(Some(alex_handle())).fallback("AC").size(48.0)))
     .title("User Offline").description("This user is currently offline. You can leave a message to notify them or try again later.")

@@ -372,9 +372,9 @@ fn build(
         background: neutral.base.into(),
         text: neutral.foreground.into(),
         primary: primary.base.into(),
-        success: accent.base.into(),
+        success: success.base.into(),
         danger: destructive.base.into(),
-        warning: secondary.base.into(),
+        warning: warning.base.into(),
     };
     let name = name.to_string();
     let theme = iced_core::Theme::custom(name.clone(), seed);
@@ -406,7 +406,7 @@ fn build(
 mod tests {
     use super::{Accent, Base, Design, FontFamily};
     use crate::{Theme, oklch};
-    use iced_core::{Font, color, font};
+    use iced_core::{Font, font};
 
     #[test]
     fn iced_mode_selects_the_design_with_a_light_fallback() {
@@ -449,7 +449,7 @@ mod tests {
     }
 
     #[test]
-    fn finalization_preserves_explicit_colors_fonts_and_other_seed_roles() {
+    fn finalization_preserves_explicit_colors_and_fonts_and_follows_palettes() {
         let tokens = [oklch(0.7, 0.1, 150.0); 5];
         let fonts = FontFamily {
             regular: Font::MONOSPACE,
@@ -461,11 +461,16 @@ mod tests {
             .with_chart(tokens)
             .with_font_sans(fonts.clone());
         design.primary.base = oklch(0.6, 0.15, 50.0);
-        design.seed.success = color!(0xff0077);
+        design.destructive.base = oklch(0.6, 0.2, 280.0);
+        design.success.base = oklch(0.6, 0.15, 140.0);
+        design.warning.base = oklch(0.8, 0.15, 80.0);
         let theme: Theme = design.into();
         assert_eq!(theme.chart, tokens);
         assert_eq!(theme.font_sans, fonts);
-        assert_eq!(theme.seed.success, color!(0xff0077));
         assert_eq!(theme.seed.primary, theme.primary.base.into());
+        assert_eq!(theme.seed.danger, theme.destructive.base.into());
+        assert_eq!(theme.seed.success, theme.success.base.into());
+        assert_eq!(theme.seed.warning, theme.warning.base.into());
+        assert_eq!(theme.iced_theme().seed(), theme.seed);
     }
 }

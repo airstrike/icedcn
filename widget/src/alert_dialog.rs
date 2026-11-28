@@ -297,7 +297,7 @@ impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
                 .height(40)
                 .align_x(Horizontal::Center)
                 .align_y(Vertical::Center)
-                .class(media_style)
+                .style(media_style)
         });
 
         let header: Slot<'b, Message> = match (media, is_small) {

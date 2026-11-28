@@ -52,7 +52,7 @@ fn segmented<'a>(p: Progress) -> Slot<'a, questionnaire::Event> {
         container(space::horizontal())
             .width(Fill)
             .height(6)
-            .style(move |theme| Style {
+            .style(move |theme: &Theme| Style {
                 background: Some(
                     if i < p.current {
                         theme.primary.base

@@ -1,5 +1,5 @@
 use crate::icon;
-use crate::page::rhea;
+use crate::page::{rhea, theme_blue};
 use crate::{Message, page};
 use iced::widget::Id;
 use iced::widget::component::{Component, component};
@@ -8,7 +8,7 @@ use iced::{ContentFit, Fill, Widget};
 use iced::{Element, Task};
 use icedcn::Size;
 use icedcn::widget::attachment::State;
-use icedcn::widget::{attachment, column, container, dialog, spinner, tooltip};
+use icedcn::widget::{attachment, button, column, container, dialog, spinner, tooltip};
 use icedcn::{Slot, Theme};
 use page::Block;
 use std::collections::BTreeSet;
@@ -171,7 +171,9 @@ fn picture(index: usize, side: u32) -> Slot<'static, Edit> {
 }
 fn action(name: &'static str, cancel: bool) -> Slot<'static, Edit> {
     tooltip(
-        attachment::action(icon::x().size(12).selectable(false)).on_press(Edit::Remove(name)),
+        attachment::action(icon::x().size(12).selectable(false))
+            .style(rhea::button(button::Ghost))
+            .on_press(Edit::Remove(name)),
         if cancel {
             "Cancel upload".into()
         } else {
@@ -218,7 +220,9 @@ fn status_card(
     let mut card = attachment(name).description(meta).state(state).media(media);
     if state == State::Error {
         card = card.action(tooltip(
-            attachment::action(icon::refresh_cw().size(12).selectable(false)).on_press(Edit::Retry),
+            attachment::action(icon::refresh_cw().size(12).selectable(false))
+                .style(rhea::button(button::Ghost))
+                .on_press(Edit::Retry),
             "Retry upload",
         ));
     }
@@ -316,7 +320,9 @@ fn preview_dialog() -> Slot<'static, Edit> {
                 .media(icon::file_search().size(16).selectable(false))
                 .trigger(move |body| opener.trigger(attachment::trigger(body)))
                 .action(tooltip(
-                    attachment::action(icon::copy().size(12).selectable(false)).on_press(Edit::Copy),
+                    attachment::action(icon::copy().size(12).selectable(false))
+                        .style(rhea::button(button::Ghost))
+                        .on_press(Edit::Copy),
                     "Copy link",
                 ))
                 .action(action(name, false))
@@ -325,6 +331,8 @@ fn preview_dialog() -> Slot<'static, Edit> {
         move |_| dialog::header(name, "The attachment trigger fills the card and opens the dialog, while the actions stay independently clickable above it."),
     )
     .max_width(448.)
+    .padding(rhea::DIALOG_PADDING)
+    .style(rhea::dialog)
     .into()
 }
 impl<'a> Component<'a, Message, Theme> for Files {
@@ -461,12 +469,12 @@ impl page::Page for AttachmentPage {
         page::Backdrop {
             min_height: 0.,
             padding: iced::Padding::from([40, if self.wide { 40 } else { 32 }]),
-            ..rhea::backdrop()
+            ..theme_blue::backdrop()
         }
     }
 
     fn preview_theme(&self, outer: &Theme) -> Option<Theme> {
-        Some(rhea::theme(outer))
+        Some(theme_blue::theme(outer))
     }
 
     fn preview(&self, id: &str) -> Element<'_, Message, Theme> {

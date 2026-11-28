@@ -128,8 +128,8 @@ impl App {
             use icedcn::theme::tweak::{Opaque, radius};
             let card = container(text::muted(format!("Loading {slug}\u{2026}")))
                 .padding([8, 16])
-                .class(theme::container::Card + Opaque + radius(Lg));
-            center(card).class(theme::container::CodeFadeOverlay)
+                .style(theme::container::Card + Opaque + radius(Lg));
+            center(card).style(theme::container::CodeFadeOverlay)
         });
 
         let mut style = markdown::Style::from(&iced::Theme::TokyoNight);
@@ -148,7 +148,7 @@ impl App {
                 container(code)
                     .padding(16)
                     .width(Fill)
-                    .class(theme::container::CodeBlock)
+                    .style(theme::container::CodeBlock)
             ),
             label.map(Element::from)
         ];

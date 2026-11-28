@@ -13,7 +13,7 @@ drawer(
             container(Space::new())
                 .width(Fill)
                 .height(v as f32 * 0.3)
-                .class(Transparent + Bg(Token::Primary))
+                .style(Transparent + Bg(Token::Primary))
                 .into()
         }))
         .spacing(5)

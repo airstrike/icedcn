@@ -111,7 +111,7 @@ fn color_tile(color: Color) -> Slot<'static, Message> {
     container(space::vertical())
         .width(Fill)
         .height(Fill)
-        .style(move |_| theme::container::Style {
+        .style(move |_: &Theme| theme::container::Style {
             background: Some(color.into()),
             border: Border {
                 radius: 6.0.into(),

@@ -12,6 +12,10 @@ pub mod shadow;
 pub mod style;
 pub mod theme;
 
+// Paths for `variant!` expansions in crates that do not depend on iced_widget.
+#[doc(hidden)]
+pub use iced_widget;
+
 pub use background::Background;
 pub use border::{Border, Radius, radius};
 pub use color::{Color, oklch, oklch_alpha};

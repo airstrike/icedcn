@@ -119,7 +119,9 @@ pub struct Spec {
 }
 
 impl Spec {
-    /// A spec painted by `variant`: the base of a variant of your own.
+    /// A spec painted by `variant` as given, with tweaks applied after it. For
+    /// a variant of your own, build from a built-in one with `Spec::from(..)`
+    /// and tweaks unless you need full control.
     pub fn new(variant: fn(&Theme) -> Style) -> Spec {
         Spec::variant(variant)
     }

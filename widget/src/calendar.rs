@@ -818,7 +818,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Calendar<
         let mut surface =
             container(content).padding(self.padding + if self.bordered { 1. } else { 0. });
         if self.bordered {
-            surface = surface.class(
+            surface = surface.style(
                 PageBackground + border::Color(Token::Border) + border::Width(1.) + radius(10.),
             );
         }

@@ -1,4 +1,5 @@
 use crate::icon;
+use crate::page::{rhea, theme_blue};
 use crate::{Message, page};
 use iced::alignment::{Horizontal::Right, Vertical::Bottom};
 use iced::widget::Id;
@@ -206,18 +207,20 @@ impl<'a> Component<'a, Message, Theme> for Actions {
             tooltip(
                 button(icon::copy())
                     .square()
-                    .style(button::Ghost)
+                    .style(rhea::button(button::Ghost))
                     .on_press(Action::Copy),
                 "Copy"
             ),
             tooltip(
                 toggle(icon::thumbs_up())
+                    .style(rhea::toggle())
                     .pressed(state.vote == Some(true))
                     .on_pressed_change(|_| Action::Vote(true)),
                 "Like"
             ),
             tooltip(
                 toggle(icon::thumbs_down())
+                    .style(rhea::toggle())
                     .pressed(state.vote == Some(false))
                     .on_pressed_change(|_| Action::Vote(false)),
                 "Dislike"
@@ -234,7 +237,7 @@ impl<'a> Component<'a, Message, Theme> for Actions {
                     button(icon::refresh_ccw())
                         .square()
                         .size(Size::Xs)
-                        .style(button::Ghost)
+                        .style(rhea::button(button::Ghost))
                         .on_press(Action::Retry),
                     "Retry"
                 )
@@ -270,7 +273,7 @@ fn attachment_example() -> Slot<'static, Message> {
     let download = tooltip(
         attachment::action(icon::download())
             .size(Size::Sm)
-            .style(button::Secondary)
+            .style(rhea::button(button::Secondary))
             .on_press(Message::SaveAttachment),
         "Download",
     );
@@ -330,6 +333,16 @@ impl page::Page for MessagePage {
     }
     fn reset_volatile(&mut self) {
         self.state.reset_volatile();
+    }
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            min_height: 0.0,
+            padding: 40.into(),
+            ..page::Backdrop::default()
+        }
+    }
+    fn preview_theme(&self, outer: &Theme) -> Option<Theme> {
+        Some(theme_blue::theme(outer))
     }
     fn preview(&self, id: &str) -> Element<'_, Message, Theme> {
         match id {

@@ -1,6 +1,11 @@
 mod heading;
+#[allow(
+    dead_code,
+    reason = "the fields, radios, checkboxes and switches wait for a Rhea Home"
+)]
 pub(crate) mod rhea;
 mod sections;
+pub(crate) mod theme_blue;
 
 use iced::Element;
 use iced::Widget;

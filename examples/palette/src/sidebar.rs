@@ -142,7 +142,7 @@ impl Mark {
     fn view(self) -> Slot<'static, Message> {
         match self {
             Self::Swatch(name) => container(space().width(16).height(16))
-                .style(move |_| Style {
+                .style(move |_: &Theme| Style {
                     background: Some(swatch(name).into()),
                     border: Border {
                         radius: 8.0.into(),
@@ -385,7 +385,7 @@ fn action(label: &str, message: Message) -> Slot<'static, Message> {
 fn divider() -> Slot<'static, Message> {
     container(space().height(1))
         .width(Fill)
-        .style(|_| Style {
+        .style(|_: &Theme| Style {
             background: Some(oklch(0.28, 0.0, 0.0).into()),
             ..Style::default()
         })

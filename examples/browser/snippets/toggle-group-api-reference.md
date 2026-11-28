@@ -11,7 +11,7 @@
 | `.value(values)` | `impl IntoIterator<Item = impl Into<String>>` | - | Control the group: `values` is always the pressed set. |
 | `.on_value_change(f)` | `Fn(Vec<String>) -> Message` | `None` | The message published with the complete new pressed set. |
 | `.disabled(disabled)` | `bool` | `false` | Disable every item. A disabled ancestor disables them too. |
-| `.style(style)` | `impl Into<button::Spec>` | `toggle_group::Default` | `toggle_group::Outline`, or a tweaked `Spec`. |
+| `.style(style)` | `impl Into<toggle::Spec>` | `toggle_group::Default` | `toggle_group::Outline`, or a tweaked `Spec`. |
 | `.size(size)` | `impl Into<Size>` | `Default` | The size of every item. |
 | `.orientation(orientation)` | `impl Into<Orientation>` | `Horizontal` | Lay the items out in a row or a column. |
 | `.spacing(spacing)` | `impl Into<Pixels>` | `0` | The gap between items. |

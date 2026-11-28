@@ -212,7 +212,7 @@ impl<'a, Message: 'a> Compose<Message> for Attachment<'a, Message> {
             container(item)
                 .center(media_side)
                 .clip(true)
-                .style(move |theme| Style {
+                .style(move |theme: &Theme| Style {
                     background: Some(
                         if state == State::Error {
                             theme.destructive.base.alpha(0.1)

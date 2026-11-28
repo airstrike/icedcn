@@ -1,7 +1,7 @@
 //! Message bubble styles, corners and composition.
 
 use crate::icon;
-use crate::page::rhea;
+use crate::page::{rhea, theme_blue};
 use crate::{Message, page};
 use iced::border;
 use iced::font::Weight;
@@ -178,7 +178,7 @@ fn review<'a>() -> Slot<'a, Message> {
                     ]
                     .spacing(4)
                 )
-                .style(button::Link + Fg(Token::MutedForeground))
+                .style(rhea::button(button::Link + Fg(Token::MutedForeground)))
                 .padding(0)
                 .inset(0)
             )
@@ -326,7 +326,10 @@ fn reactions() -> Slot<'static, Message> {
                 .style(Destructive)
                 .reactions(
                     toast::trigger(
-                        button("Yes, run it").size(Size::Xs).style(button::Ghost),
+                        button("Yes, run it")
+                            .size(Size::Xs)
+                            .padding(rhea::padding(Size::Xs))
+                            .style(rhea::button(button::Ghost)),
                         toast::toast("You clicked yes, running command...")
                             .kind(toast::Kind::Success)
                     ),
@@ -362,7 +365,7 @@ fn tooltip_example() -> Slot<'static, Message> {
                         button(icon::check().size(16).line_height(1.0))
                             .size(Size::Xs)
                             .square()
-                            .style(button::Ghost),
+                            .style(rhea::button(button::Ghost)),
                         "Read on Jan 5, 2026 at 4:32 PM"
                     ),
                     Right,
@@ -385,14 +388,14 @@ fn popover_example() -> Slot<'static, Message> {
                     popover(
                         |p| p.trigger(
                             button(icon::info().size(16).line_height(1.0))
-                                .style(
+                                .style(rhea::button(
                                     button::Ghost
                                         + Fg(if p.is_open() {
                                             Token::Destructive
                                         } else {
                                             Token::Foreground
                                         })
-                                )
+                                ))
                                 .size(Size::Xs)
                                 .square()
                         ),
@@ -444,10 +447,10 @@ impl page::Page for BubblePage {
         }
     }
     fn preview_theme(&self, outer: &Theme) -> Option<Theme> {
-        Some(rhea::theme(outer))
+        Some(theme_blue::theme(outer))
     }
     fn themed_preview(&self, id: &str, outer: &Theme) -> Element<'_, Message, Theme> {
-        let theme = rhea::theme(outer);
+        let theme = theme_blue::theme(outer);
         let content = if id == "variants" {
             variants(&theme).into()
         } else {

@@ -120,13 +120,17 @@ impl Deref for Theme {
     }
 }
 
-/// Finalize a configured design, refreshing the derived iced theme once.
+/// Finalize a configured design: the seed follows its palettes, and the
+/// derived iced theme is rebuilt once.
 /// `Theme::new` remains the literal constructor for temporary paint overrides.
 impl From<Design> for Theme {
     fn from(mut design: Design) -> Self {
         design.seed.background = design.neutral.base.into();
         design.seed.text = design.neutral.foreground.into();
         design.seed.primary = design.primary.base.into();
+        design.seed.success = design.success.base.into();
+        design.seed.warning = design.warning.base.into();
+        design.seed.danger = design.destructive.base.into();
         design.theme = iced_core::Theme::custom(design.name.clone(), design.seed);
         Self::new(design)
     }

@@ -194,7 +194,7 @@ fn terms<'a>() -> Slot<'a, Message> {
         .width(Fill);
     let terms = container(scroll_area(body).height(192))
         .width(Fill)
-        .style(|t| Style {
+        .style(|t: &Theme| Style {
             background: Some(t.muted.base.alpha(0.5).into()),
             ..Style::default()
         });

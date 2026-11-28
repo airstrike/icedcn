@@ -410,7 +410,10 @@ pub struct Spec {
 }
 
 impl Spec {
-    /// A spec painted by `variant`: the base of a variant of your own.
+    /// A spec painted by `variant` as given. The function receives the stock
+    /// status and owns the geometry and the disabled look; the focus and
+    /// invalid rings and every tweak still apply. Build from a built-in
+    /// variant instead to keep Nova's sizing and disabled fade.
     pub fn new(variant: fn(&Theme, Status) -> Style) -> Spec {
         Spec::variant(variant)
     }

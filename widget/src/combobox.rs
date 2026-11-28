@@ -575,7 +575,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             match &self.icon {
                 Some(icon) => icon().map(Event::App),
                 None => Container::new(Icon::Chevron.boxed())
-                    .style(move |theme| theme::container::Style {
+                    .style(move |theme: &Theme| theme::container::Style {
                         text_color: Some(theme.muted.foreground.scale_alpha(if disabled {
                             0.25
                         } else {
@@ -620,7 +620,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                         )
                         .padding(Padding::ZERO.left(6))
                         .height(21)
-                        .style(|theme| theme::container::Style {
+                        .style(|theme: &Theme| theme::container::Style {
                             background: Some(theme.muted.base.into()),
                             text_color: Some(theme.neutral.foreground),
                             border: icedcn_core::Border {
@@ -673,12 +673,12 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 }
                 if !self.popup {
                     let end = if self.clear && !choice.is_empty() {
-                        input_group::button(Container::new(Icon::Remove.boxed()).style(|theme| {
-                            theme::container::Style {
+                        input_group::button(Container::new(Icon::Remove.boxed()).style(
+                            |theme: &Theme| theme::container::Style {
                                 text_color: Some(theme.muted.foreground),
                                 ..Default::default()
-                            }
-                        }))
+                            },
+                        ))
                         .square()
                         .translate(false)
                         .on_press(Event::Clear)

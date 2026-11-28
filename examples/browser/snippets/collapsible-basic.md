@@ -37,7 +37,7 @@ fn basic<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
                     .width(Fill),
                 )
                 .width(Fill)
-                .class(surface)
+                .style(surface)
                 .into()
             })
             .width(Fill),

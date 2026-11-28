@@ -169,7 +169,7 @@ impl<'a, Message: 'a> Compose<Message> for Card<'a, Message> {
             .height(height)
             .padding(padding)
             .clip(clip)
-            .class(style)
+            .style(style)
             .boxed()
     }
 }

@@ -327,7 +327,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Bubble<'a, Message> {
             let chip = container(reaction)
                 .fit_content()
                 .padding(self.reaction_padding)
-                .style(|theme| Style {
+                .style(|theme: &Theme| Style {
                     background: Some(theme.muted.base.into()),
                     text_color: Some(theme.neutral.foreground),
                     border: Border {
@@ -340,7 +340,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Bubble<'a, Message> {
             // participate in either the 75% chip translation or the 12px inset.
             let ring: Element<'a, Message, Theme, Renderer> = container(chip)
                 .padding(3)
-                .style(|theme| Style {
+                .style(|theme: &Theme| Style {
                     background: Some(theme.card.base.into()),
                     border: Border {
                         radius: 100.0.into(),

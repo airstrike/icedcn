@@ -151,16 +151,20 @@ impl<'a> IntoStyle<'a> for Spec {
 impl Spec {
     /// Resolve Nova defaults before applying the caller's ordered tweaks.
     pub fn resolve_state(&self, theme: &Theme, status: Status) -> Style {
-        if matches!(
-            self.kind,
-            Variant::Custom | Variant::Sidebar | Variant::SidebarActive
-        ) {
+        if matches!(self.kind, Variant::Sidebar | Variant::SidebarActive) {
             return Style {
                 paint: self.resolve(theme, status.stock()).into(),
                 ..Style::default()
             };
         }
         let dark = super::is_dark(theme);
+        if matches!(self.kind, Variant::Custom) {
+            // The function owns the geometry and the disabled look; the rings
+            // and conditional tweaks still follow the full status.
+            let mut paint = (self.variant)(theme, status.stock());
+            let ring = rings(theme, status, false, dark, &mut paint);
+            return self.finish(paint, ring, theme, status, false);
+        }
         // Press changes geometry, not the hover surface's opacity.
         let base_status = if status.hovered && !status.disabled {
             button::Status::Hovered
@@ -196,37 +200,19 @@ impl Spec {
                 _ => {}
             }
         }
-        let mut ring = None;
-        if status.focused && !status.disabled {
-            let destructive = matches!(self.kind, Variant::Destructive);
-            paint.border.color = if destructive {
-                theme.destructive.base.alpha(0.4)
-            } else {
-                theme.neutral.ring
-            };
-            let color = if destructive {
-                theme.destructive.base.alpha(if dark { 0.4 } else { 0.2 })
-            } else {
-                theme.neutral.ring.alpha(0.5)
-            };
-            ring = Some(Border {
-                color: color.into(),
-                width: 3.0,
-                ..Border::default()
-            });
-        }
-        if status.invalid {
-            paint.border.color = theme.destructive.base.alpha(if dark { 0.5 } else { 1.0 });
-            ring = Some(Border {
-                color: theme
-                    .destructive
-                    .base
-                    .alpha(if dark { 0.4 } else { 0.2 })
-                    .into(),
-                width: 3.0,
-                ..Border::default()
-            });
-        }
+        let destructive = matches!(self.kind, Variant::Destructive);
+        let ring = rings(theme, status, destructive, dark, &mut paint);
+        self.finish(paint, ring, theme, status, true)
+    }
+
+    fn finish(
+        &self,
+        mut paint: super::Style,
+        mut ring: Option<Border>,
+        theme: &Theme,
+        status: Status,
+        fade: bool,
+    ) -> Style {
         let mut ring_offset = 0.0;
         for tweak in &self.tweaks.0 {
             apply(
@@ -239,7 +225,7 @@ impl Spec {
             );
         }
         // `disabled:opacity-50` composites the element, tweaked colors included.
-        if status.disabled {
+        if fade && status.disabled {
             paint.background = paint.background.map(|bg| bg.scale_alpha(0.5));
             paint.text_color = paint.text_color.alpha(paint.text_color.a * 0.5);
             paint.border.color = paint.border.color.alpha(paint.border.color.a * 0.5);
@@ -254,6 +240,47 @@ impl Spec {
             ring_offset,
         }
     }
+}
+
+/// Nova's focus and invalid rings, which also recolor the border.
+fn rings(
+    theme: &Theme,
+    status: Status,
+    destructive: bool,
+    dark: bool,
+    paint: &mut super::Style,
+) -> Option<Border> {
+    let mut ring = None;
+    if status.focused && !status.disabled {
+        paint.border.color = if destructive {
+            theme.destructive.base.alpha(0.4)
+        } else {
+            theme.neutral.ring
+        };
+        let color = if destructive {
+            theme.destructive.base.alpha(if dark { 0.4 } else { 0.2 })
+        } else {
+            theme.neutral.ring.alpha(0.5)
+        };
+        ring = Some(Border {
+            color: color.into(),
+            width: 3.0,
+            ..Border::default()
+        });
+    }
+    if status.invalid {
+        paint.border.color = theme.destructive.base.alpha(if dark { 0.5 } else { 1.0 });
+        ring = Some(Border {
+            color: theme
+                .destructive
+                .base
+                .alpha(if dark { 0.4 } else { 0.2 })
+                .into(),
+            width: 3.0,
+            ..Border::default()
+        });
+    }
+    ring
 }
 
 fn apply(
@@ -585,6 +612,48 @@ mod tests {
                 )
                 .paint,
             primary.resolve_state(&theme, hover).paint
+        );
+    }
+
+    #[test]
+    fn custom_specs_keep_their_geometry_and_still_get_rings_and_tweaks() {
+        let theme = Theme::light();
+        let focus = Status {
+            focused: true,
+            ..Status::default()
+        };
+        let custom = Spec::new(super::super::secondary);
+        let rest = custom.resolve_state(&theme, Status::default());
+        assert!(rest.ring.is_none());
+        assert_eq!(
+            rest.paint,
+            super::super::secondary(&theme, button::Status::Active).into()
+        );
+        let focused = custom.resolve_state(&theme, focus);
+        assert_eq!(focused.ring.expect("focus ring").width, 3.0);
+        assert_eq!(
+            focused.paint.border.radius, rest.paint.border.radius,
+            "a custom spec keeps its own radius"
+        );
+        let tweaked = (Spec::new(super::super::secondary)
+            + tweak::focus(Ring {
+                color: theme.primary.base.into(),
+                width: 5.0,
+                offset: 0.0,
+            }))
+        .resolve_state(&theme, focus);
+        assert_eq!(tweaked.ring.expect("tweak ring").width, 5.0);
+        let disabled = custom.resolve_state(
+            &theme,
+            Status {
+                disabled: true,
+                ..Status::default()
+            },
+        );
+        assert_eq!(
+            disabled.paint,
+            super::super::secondary(&theme, button::Status::Disabled).into(),
+            "the function owns its disabled look"
         );
     }
 }

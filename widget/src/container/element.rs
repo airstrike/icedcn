@@ -10,7 +10,7 @@ use super::widget;
 
 fn default(_theme: &Theme) -> widget::Style {
     // Iced's stock default is "transparent"; our container default is the
-    // same shape. Users override per call site via `.class(...)`, so this
+    // same shape. Users override per call site via `.style(...)`, so this
     // default is rarely hit.
     widget::Style::default()
 }

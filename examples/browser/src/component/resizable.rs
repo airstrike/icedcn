@@ -48,7 +48,7 @@ fn frame(group: impl Into<Slot<'static, Message>>, width: f32) -> Slot<'static, 
         .height(200)
         .padding(1)
         .clip(true)
-        .style(|theme| Style {
+        .style(|theme: &Theme| Style {
             border: Border {
                 width: 1.0,
                 color: theme.neutral.border,

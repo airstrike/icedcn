@@ -1,78 +1,199 @@
-//! Blue preview palette for conversation widgets.
-use super::Backdrop;
-use icedcn::core::{Border, Radius, oklch};
-use icedcn::theme::container::Style;
-use icedcn::{Color, Palette, Theme};
+//! The Rhea style: Nova's components with rounder corners, filled fields
+//! and compact controls. Upstream draws the showcase cards and the chat
+//! component previews with it.
 
-pub(crate) fn theme(outer: &Theme) -> Theme {
-    let mut design = outer.design().clone();
-    let dark = design.neutral.is_dark;
-    let primary = if dark {
-        oklch(0.424, 0.199, 265.638)
-    } else {
-        oklch(0.488, 0.243, 264.376)
-    };
-    design.primary = tint(primary, oklch(0.97, 0.014, 254.604), dark);
-    design.secondary = if dark {
-        tint(oklch(0.274, 0.006, 286.033), oklch(0.985, 0.0, 0.0), dark)
-    } else {
-        tint(
-            oklch(0.967, 0.001, 286.375),
-            oklch(0.21, 0.006, 285.885),
-            dark,
-        )
-    };
-    Theme::new(design)
-}
+use iced::{Padding, Vector};
+use icedcn::core::{Border, Color, Radius, Shadow};
+use icedcn::theme::tweak::{Alpha, Bg, Token, border, hover};
+use icedcn::theme::{button, checkbox, container, dialog, radio, switch, text_input, toggle};
+use icedcn::{Size, Theme, radius};
 
-fn tint(base: Color, foreground: Color, is_dark: bool) -> Palette {
-    Palette {
-        base,
-        foreground,
-        border: base,
-        ring: base.alpha(0.5),
-        tint_text: base,
-        is_dark,
+/// `rounded-2xl`.
+const ROUNDED: f32 = radius::XL2;
+
+/// `cn-card`: `rounded-[min(var(--radius-4xl),24px)] shadow-sm ring-1
+/// ring-foreground/5 dark:ring-foreground/10`.
+pub fn card(theme: &Theme) -> container::Style {
+    let dark = theme.neutral.is_dark;
+    container::Style {
+        background: Some(theme.card.base.into()),
+        border: Border {
+            radius: radius::XL4.min(24.).into(),
+            width: 1.,
+            color: theme
+                .neutral
+                .foreground
+                .alpha(if dark { 0.1 } else { 0.05 }),
+        },
+        shadow: Shadow {
+            color: Color::BLACK.alpha(0.1),
+            offset: Vector::new(0., 1.),
+            blur_radius: 3.,
+        },
+        ..container::Style::default()
     }
 }
 
-fn canvas(theme: &Theme) -> Style {
-    let surface = if theme.neutral.is_dark {
-        theme.neutral.base
-    } else {
-        oklch(0.98, 0.0, 0.0)
+/// `cn-button` with the default or secondary variant.
+pub fn button(variant: impl Into<button::Spec>) -> button::Spec {
+    variant.into() + Radius::from(ROUNDED)
+}
+
+/// `cn-button-size-{xs,sm,default,lg}`: `px-2.5`, `px-3`, `px-3`, `px-4`,
+/// at Nova's heights.
+pub fn padding(size: Size) -> Padding {
+    let x = match size {
+        Size::Xs => 10.,
+        Size::Lg => 16.,
+        _ => 12.,
     };
-    Style {
-        background: Some(surface.into()),
+    Padding {
+        left: x,
+        right: x,
+        ..size.padding()
+    }
+}
+
+/// `cn-toggle`: `rounded-2xl`.
+pub fn toggle() -> toggle::Spec {
+    (toggle::Default + Radius::from(ROUNDED)).into()
+}
+
+/// `cn-dialog-content`: `rounded-[min(var(--radius-4xl),24px)] p-6
+/// shadow-xl ring-foreground/5 dark:ring-foreground/10`. iced shadows have
+/// no spread, so `shadow-xl` drops its `-5px`.
+pub fn dialog(theme: &Theme) -> container::Style {
+    let dark = theme.neutral.is_dark;
+    let nova = dialog::content(theme);
+    container::Style {
         border: Border {
-            radius: Radius {
-                top_left: 25.0,
-                top_right: 25.0,
-                ..Radius::default()
+            radius: radius::XL4.min(24.).into(),
+            color: theme
+                .neutral
+                .foreground
+                .alpha(if dark { 0.1 } else { 0.05 }),
+            ..nova.border
+        },
+        shadow: Shadow {
+            color: Color::BLACK.alpha(0.1),
+            offset: Vector::new(0., 20.),
+            blur_radius: 25.,
+        },
+        ..nova
+    }
+}
+
+/// `cn-dialog-content`: `p-6`.
+pub const DIALOG_PADDING: u16 = 24;
+
+/// `cn-button-variant-outline`: `border-border bg-background
+/// dark:bg-transparent hover:bg-muted dark:hover:bg-input/30`. On a card
+/// the background reads as transparent in both modes.
+pub fn outline() -> button::Spec {
+    (button::Outline
+        + Radius::from(ROUNDED)
+        + border::Color(Token::Border)
+        + Alpha(0.)
+        + hover(Bg(Token::Input) + Alpha(0.3)))
+    .into()
+}
+
+/// `cn-input-group` and `cn-textarea`: `bg-input/50 border-transparent`,
+/// `focus-visible:border-ring ring-ring/30`.
+pub fn field<'a>() -> text_input::StyleFn<'a, Theme> {
+    Box::new(|theme, status| {
+        let nova = text_input::default(theme, status);
+        let focused = matches!(status, text_input::Status::Focused { .. });
+        text_input::Style {
+            background: theme.input.scale_alpha(0.5).into(),
+            border: Border {
+                radius: ROUNDED.into(),
+                color: if focused {
+                    nova.border.color
+                } else {
+                    Color::TRANSPARENT
+                },
+                ..nova.border
             },
-            ..Border::default()
+            ring: nova.ring.map(|ring| text_input::Ring {
+                color: theme.neutral.ring.alpha(0.3),
+                ..ring
+            }),
+            ..nova
+        }
+    })
+}
+
+/// `cn-radio-group-item`: `bg-input/90 border-transparent
+/// data-checked:bg-primary`.
+pub fn radio(theme: &Theme, status: radio::Status) -> radio::Style {
+    let nova = radio::default(theme, status);
+    let (radio::Status::Active { is_selected } | radio::Status::Hovered { is_selected }) = status;
+    radio::Style {
+        background: if is_selected {
+            nova.background
+        } else {
+            theme.input.scale_alpha(0.9).into()
         },
-        ..Style::default()
+        border_color: iced::Color::TRANSPARENT,
+        ..nova
     }
 }
 
-fn border(theme: &Theme) -> Style {
-    Style {
-        background: Some(theme.neutral.base.into()),
-        border: Border {
-            width: 1.0,
-            color: theme.neutral.border,
-            radius: 26.0.into(),
-        },
-        ..Style::default()
-    }
+/// `cn-checkbox`: `bg-input/90 border-transparent rounded-[5px]`, primary
+/// while checked.
+pub fn checkbox<'a>() -> checkbox::StyleFn<'a, Theme> {
+    Box::new(|theme, status| {
+        let nova = checkbox::default(theme, status);
+        let (checkbox::Status::Active { is_checked }
+        | checkbox::Status::Hovered { is_checked }
+        | checkbox::Status::Disabled { is_checked }) = status;
+        checkbox::Style {
+            background: if is_checked {
+                nova.background
+            } else {
+                theme.input.scale_alpha(0.9).into()
+            },
+            border: Border {
+                radius: 5.0.into(),
+                color: if is_checked {
+                    nova.border.color
+                } else {
+                    Color::TRANSPARENT
+                },
+                ..nova.border
+            },
+            ..nova
+        }
+    })
 }
 
-pub(crate) fn backdrop() -> Backdrop {
-    Backdrop {
-        padding: [64, 40].into(),
-        surface: canvas,
-        border,
-        ..Backdrop::default()
-    }
+/// `cn-switch` track: 32 × 20.
+pub const TRACK: (f32, f32) = (32., 20.);
+
+/// `cn-switch`: `border-2 data-checked:border-primary
+/// data-unchecked:bg-input/90 data-unchecked:border-transparent`, a 16px
+/// thumb inside the 2px border.
+pub fn switch<'a>() -> switch::StyleFn<'a, Theme> {
+    Box::new(|theme, status| {
+        let nova = switch::default(theme, status);
+        let (switch::Status::Active { is_toggled }
+        | switch::Status::Hovered { is_toggled }
+        | switch::Status::Disabled { is_toggled }) = status;
+        switch::Style {
+            background: if is_toggled {
+                nova.background
+            } else {
+                theme.input.scale_alpha(0.9).into()
+            },
+            background_border_width: 2.,
+            background_border_color: if is_toggled {
+                theme.primary.base
+            } else {
+                Color::TRANSPARENT
+            },
+            padding_ratio: 2. / TRACK.1,
+            ..nova
+        }
+    })
 }

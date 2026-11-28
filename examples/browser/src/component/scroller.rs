@@ -6,7 +6,7 @@ mod skin;
 mod turn;
 
 use self::demo::Demo;
-use crate::page::rhea;
+use crate::page::theme_blue;
 use crate::{Message, page};
 use iced::widget::component::component;
 use iced::{Task, Widget};
@@ -167,7 +167,7 @@ impl page::Page for Page {
     }
 
     fn backdrop(&self) -> page::Backdrop {
-        let mut backdrop = rhea::backdrop();
+        let mut backdrop = theme_blue::backdrop();
         backdrop.padding = match self.width {
             width if width < 480. => 16.into(),
             width if width < 560. => 32.into(),
@@ -178,7 +178,7 @@ impl page::Page for Page {
     }
 
     fn preview_theme(&self, outer: &Theme) -> Option<Theme> {
-        Some(rhea::theme(outer))
+        Some(theme_blue::theme(outer))
     }
 
     fn preview(&self, id: &str) -> iced::Element<'_, Message, Theme> {

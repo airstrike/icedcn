@@ -34,7 +34,7 @@ Wraps multiple children in a `Row` with 4px spacing. The variant is set after th
 
 Variants retain their hover and focus rules. A `Spec` applies its tweaks after those rules, in the order supplied; `hover`, `focus`, `active` and `disabled` conditions are supported. Focus rings require an interactive badge with keyboard-visible focus. Pointer activation retains focus without showing the keyboard ring.
 
-Existing one-argument `container::StyleFn` style functions remain accepted by `.style()`. They supply static paint in every state, without automatic variant hover, underline or focus effects. Use `.state_style()` for a two-argument style function. The last `.style()` or `.state_style()` call replaces all earlier styling. A style function can extend a variant by resolving a `Spec` for the supplied `Status`.
+Existing one-argument `container::StyleFn` style functions remain accepted by `.style()`. They supply static paint in every state, without automatic variant hover, underline or focus effects. Use `.state_style()` for a two-argument style function. The last `.style()` or `.state_style()` call replaces all earlier styling. A style function can extend a variant by resolving a `Spec` for the supplied `Status`. A variant of your own declared with `variant! { pub struct Confirm: badge; }` is accepted bare by `.style(..)`; see [Theming](icedcn://guide/theming).
 
 ```rust
 use icedcn::theme::tweak::{Fg, Token};

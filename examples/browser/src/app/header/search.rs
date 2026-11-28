@@ -47,7 +47,7 @@ pub(super) fn field(input: Input<'_, command::Event>) -> Slot<'_, command::Event
         .height(36)
         .align_y(Center)
         .padding([0, 4])
-        .style(|theme| {
+        .style(|theme: &Theme| {
             // CSS paints bg-input/50 under the border as well as the field.
             let fill = theme.input.scale_alpha(0.5).over(theme.popover.base);
             Style {

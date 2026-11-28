@@ -27,6 +27,7 @@ use iced_widget::component::{self, Component};
 use iced_widget::radio::{Status, Style};
 use iced_widget::{Renderer, Space, Widget, container};
 use icedcn_core::Theme;
+use icedcn_core::theme;
 use icedcn_core::theme::radio;
 use std::convert::Infallible;
 use std::rc::Rc;
@@ -216,11 +217,12 @@ impl<Message: 'static> Compose<Message> for Item {
             Container::new(Space::new())
                 .width(8)
                 .height(8)
-                .class(Box::new(move |theme: &Theme| {
+                .style(move |theme: &Theme| -> theme::container::Style {
                     container::Style::default()
                         .background(paint(theme).dot_color)
                         .border(Border::default().rounded(4))
-                }) as container::StyleFn<'static, Theme>)
+                        .into()
+                })
                 .into()
         } else {
             Slot::from(Space::new())

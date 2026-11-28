@@ -10,5 +10,5 @@ container(
         .content(button![icon::refresh_ccw(), "Refresh"].style(button::Outline)),
 )
 .width(Fill)
-.class(Transparent + Bg(Token::Muted) + Alpha(0.3))
+.style(Transparent + Bg(Token::Muted) + Alpha(0.3))
 ```

@@ -9,6 +9,7 @@ use std::ops::Add;
 
 use super::Theme;
 use super::tweak::{Tweak, TweakSet};
+use super::variant::{sink, spec};
 use crate::{Background, Border, Color};
 
 /// Pill-shape radius — clamped to a huge value so the bar renders as a
@@ -229,6 +230,10 @@ impl<'a> From<Spec> for iced_widget::progress_bar::StyleFn<'a, Theme> {
         Box::new(move |t| spec.resolve(t).into())
     }
 }
+
+spec!(Spec, Default);
+sink!(StyleFn<'a, Theme>, Spec, tweaks);
+sink!(iced_widget::progress_bar::StyleFn<'a, Theme>, Spec, tweaks);
 
 #[cfg(test)]
 mod tests {

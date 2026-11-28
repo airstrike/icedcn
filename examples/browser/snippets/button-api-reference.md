@@ -26,3 +26,5 @@
 | `.map_style(transform)` | Stock Style → Stock Style | Identity | Transform stock paint fields while retaining rich underline/ring information. Button Group uses this to join corners. |
 
 Stock `iced::widget::button::StyleFn` callbacks and typed closures remain supported. Their paint is retained without guessing a variant from its colors; they do not acquire an underline or focus ring automatically. Variant tags and `Spec` preserve that information before conversion. The legacy stock callback geometry remains unchanged.
+
+A variant of your own declared with `variant! { pub struct Confirm: button; }` is accepted bare by `.style(..)`; see [Theming](icedcn://guide/theming). `Spec::new(function)` keeps the function's paint, geometry and disabled look, and still adds the focus and invalid rings and any tweaks.

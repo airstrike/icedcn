@@ -28,5 +28,5 @@ pub fn main_styled<'a, Message: 'a>(
     Container::new(content)
         .width(Fill)
         .height(Fill)
-        .class(container::SidebarInset)
+        .style(container::SidebarInset)
 }

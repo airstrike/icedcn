@@ -1,3 +1,4 @@
+use crate::page::theme_blue;
 use crate::{Message, icon, page};
 use iced::widget::Id;
 use iced::{Element, Fill, Task};
@@ -174,6 +175,16 @@ impl page::Page for MarkerPage {
     }
     fn reset_volatile(&mut self) {
         self.state.reset_volatile();
+    }
+    fn backdrop(&self) -> page::Backdrop {
+        page::Backdrop {
+            min_height: 0.0,
+            padding: 40.into(),
+            ..page::Backdrop::default()
+        }
+    }
+    fn preview_theme(&self, outer: &Theme) -> Option<Theme> {
+        Some(theme_blue::theme(outer))
     }
     fn preview(&self, id: &str) -> Element<'_, Message, Theme> {
         view(id, self.state.page_index).into()

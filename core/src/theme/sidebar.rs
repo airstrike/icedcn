@@ -12,6 +12,7 @@ use iced_core::Vector;
 use super::Theme;
 use super::container::Style;
 use super::tweak::{Tweak, TweakSet};
+use super::variant::spec;
 use crate::palette::Palette;
 use crate::style;
 use crate::style::status;
@@ -135,6 +136,7 @@ macro_rules! variant_add {
 }
 
 variant_add!(Default, Floating, Inset);
+spec!(Spec, Default);
 
 impl<T: Into<Tweak>> Add<T> for Spec {
     type Output = Spec;

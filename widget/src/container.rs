@@ -9,7 +9,7 @@ use iced_core::{Length, Padding, Pixels};
 use iced_widget::Renderer;
 use iced_widget::container::StyleFn;
 use icedcn_core::Theme;
-use icedcn_core::theme::container::Style;
+use icedcn_core::theme::container::IntoStyle;
 
 /// Create a [`Container`] wrapping the given content.
 ///
@@ -122,26 +122,10 @@ impl<'a, Message: 'a> Container<'a, Message> {
         self
     }
 
-    /// Set the style of this container via a `Fn(&Theme) -> Style` closure
-    /// or fn-pointer, where `Style` is icedcn's OKLCH-native [`Style`].
-    /// Mirrors iced's stock `Container::style` so bare fn pointers like
-    /// `card_preview` coerce directly.
-    ///
-    /// For variant unit structs that impl `Into<StyleFn>`
-    /// (e.g. `theme::container::Card`, `theme::container::CodeBlock`,
-    /// or a `Spec` produced by the `+` tweak combinators), use
-    /// [`Container::class`] instead.
-    pub fn style(mut self, style: impl Fn(&Theme) -> Style + 'static) -> Self {
-        self.style = Some(Box::new(move |t: &Theme| (style)(t).into()));
-        self
-    }
-
-    /// Set the style class of this container — accepts anything that can
-    /// be turned into an [`iced_widget::container::StyleFn`], which is how
-    /// the variant unit structs in `theme::container` (and `Spec` values
-    /// from the tweak combinators) flow through.
-    pub fn class(mut self, class: impl Into<StyleFn<'static, Theme>>) -> Self {
-        self.style = Some(class.into());
+    /// Sets the style of this container: a variant (`container::Card`), a
+    /// tweaked variant or `Spec`, or a closure returning a container `Style`.
+    pub fn style(mut self, style: impl IntoStyle<'static>) -> Self {
+        self.style = Some(style.into_style());
         self
     }
 

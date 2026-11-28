@@ -83,7 +83,7 @@ impl<'a, Message: 'a> Compose<Message> for Kbd<'a, Message> {
             .padding([0, 4])
             .align_x(Horizontal::Center)
             .align_y(Vertical::Center)
-            .class(self.style)
+            .style(self.style)
             .into()
     }
 }
