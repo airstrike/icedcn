@@ -5,3 +5,4 @@ plan/
 .cargo*
 .wrangler/
 /scripts/deploy-browser-web/target/
+/examples/browser/tests/snippets.rs
