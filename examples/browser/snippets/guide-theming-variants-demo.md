@@ -1,4 +1,5 @@
 ```rust
+use iced::Fill;
 use icedcn::widget::{badge, button, column, row};
 use icedcn::{View, card};
 
@@ -23,7 +24,8 @@ pub fn deployment<'a>() -> View<'a> {
             ]
             .spacing(8)
         ),
-    ])
+    ]
+    .width(Fill))
     .width(360)
     .into()
 }

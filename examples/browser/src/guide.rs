@@ -1,9 +1,9 @@
 //! Native documentation guides using the shared page renderer and section navigation.
 use iced::widget::Space;
-use iced::{Element, Task, Widget};
-use icedcn::theme::{Bg, Fg, hover, radius};
+use iced::{Element, Fill, Task, Widget};
+use icedcn::theme::{Bg, Destructive, Fg, hover, radius};
 use icedcn::widget::{badge, button, column, row};
-use icedcn::{Destructive, Theme, View, card};
+use icedcn::{Theme, View, card};
 
 use crate::{Message, page};
 
@@ -168,26 +168,29 @@ impl page::Page for Guide {
 }
 
 fn deployment<'a>() -> View<'a> {
-    card(column![
-        card::header("api-gateway")
-            .description("Build stopped at step 3 of 5.")
-            .action(badge("Failed").style(badge::Destructive)),
-        card::content(
-            row![
-                badge("main").style(badge::Outline),
-                badge("v2.4.1").style(badge::Secondary),
-            ]
-            .spacing(8)
-        ),
-        card::footer(
-            row![
-                button("Retry"),
-                button("View logs").style(button::Outline),
-                button("Dismiss").style(icedcn::Ghost),
-            ]
-            .spacing(8)
-        ),
-    ])
+    card(
+        column![
+            card::header("api-gateway")
+                .description("Build stopped at step 3 of 5.")
+                .action(badge("Failed").style(badge::Destructive)),
+            card::content(
+                row![
+                    badge("main").style(badge::Outline),
+                    badge("v2.4.1").style(badge::Secondary),
+                ]
+                .spacing(8)
+            ),
+            card::footer(
+                row![
+                    button("Retry"),
+                    button("View logs").style(button::Outline),
+                    button("Dismiss").style(icedcn::Ghost),
+                ]
+                .spacing(8)
+            ),
+        ]
+        .width(Fill),
+    )
     .width(360)
     .into()
 }
