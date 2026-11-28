@@ -1,5 +1,5 @@
 ```rust
-use icedcn::widget::{code_block, text, trace};
+use icedcn::widget::{code_block, trace};
 
 trace::disclosure(
     || trace::line("Ran cargo --version"),

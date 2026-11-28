@@ -1,5 +1,5 @@
 ```rust
-use icedcn::widget::{code_block, text, trace};
+use icedcn::widget::{text, trace};
 
 trace::disclosure(
     || trace::line(if running { "Thinking" } else { "Thought" }),

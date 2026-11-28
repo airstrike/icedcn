@@ -1,4 +1,6 @@
 ```rust
+use icedcn::widget::code_block;
+
 code_block(code_block::content(code).language("rust"))
 ```
 

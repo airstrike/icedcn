@@ -1,8 +1,8 @@
 ```rust
+use crate::icon;
 use icedcn::View;
 use icedcn::widget::attachment::State;
-use icedcn::widget::container;
-use icedcn::widget::{attachment, column, spinner, tooltip};
+use icedcn::widget::{attachment, column, container, spinner, tooltip};
 
 let files: [(_, _, _, View<'_, Message>); 5] = [
     (

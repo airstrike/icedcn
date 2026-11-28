@@ -1,4 +1,7 @@
 ```rust
+use icedcn::widget::status_marker::Separator;
+use icedcn::widget::{column, spinner, status_marker};
+
 column![
     status_marker("Compacting conversation").icon(spinner().size(16.)),
     status_marker("Running tests")

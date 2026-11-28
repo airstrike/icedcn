@@ -1,7 +1,7 @@
 ```rust
+use crate::icon;
 use iced::Fill;
-use icedcn::widget::container;
-use icedcn::widget::{attachment, dialog, tooltip};
+use icedcn::widget::{attachment, container, dialog, tooltip};
 
 let name = "research-summary.pdf";
 container(dialog(

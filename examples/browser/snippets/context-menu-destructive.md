@@ -1,4 +1,5 @@
 ```rust
+use crate::icon;
 use icedcn::widget::{context_menu, menu};
 
 context_menu(

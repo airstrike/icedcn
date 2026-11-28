@@ -1,4 +1,8 @@
 ```rust
+use crate::icon;
+use icedcn::widget::status_marker::Border;
+use icedcn::widget::{column, status_marker};
+
 column![
     status_marker("Switched to release-candidate")
         .icon(icon::git_branch())

@@ -1,7 +1,7 @@
 ```rust
+use crate::icon;
 use icedcn::Size;
-use icedcn::widget::container;
-use icedcn::widget::{attachment, column};
+use icedcn::widget::{attachment, column, container};
 
 container(
     column![

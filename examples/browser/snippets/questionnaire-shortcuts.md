@@ -1,4 +1,7 @@
 ```rust
+use icedcn::widget::questionnaire;
+use icedcn::widget::questionnaire::{choice, item};
+
 let questions = vec![
     item("action", "What should the agent do next?")
         .required(true)

@@ -1,4 +1,5 @@
 ```rust
+use iced::Center;
 use icedcn::widget::{row, spinner};
 
 row![

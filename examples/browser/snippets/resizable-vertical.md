@@ -1,4 +1,7 @@
 ```rust
+use icedcn::Orientation;
+use icedcn::widget::resizable;
+
 frame(
     resizable(panel("Header"), panel("Content"))
         .orientation(Orientation::Vertical)

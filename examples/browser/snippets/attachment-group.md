@@ -1,5 +1,11 @@
 ```rust
+use crate::icon;
+use iced::widget::image;
+use iced::{ContentFit, Widget};
+use icedcn::View;
 use icedcn::core::oklch;
+use icedcn::widget::container;
+use icedcn::widget::{attachment, tooltip};
 use icedcn::{Color, Theme};
 
 fn canvas(theme: &Theme) -> Color {
@@ -9,11 +15,6 @@ fn canvas(theme: &Theme) -> Color {
         oklch(0.98, 0.0, 0.0)
     }
 }
-use iced::widget::image;
-use iced::{ContentFit, Widget};
-use icedcn::View;
-use icedcn::widget::container;
-use icedcn::widget::{attachment, tooltip};
 
 let preview = image(workspace)
     .width(40)

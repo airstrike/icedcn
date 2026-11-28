@@ -1,4 +1,11 @@
 ```rust
+use iced::widget::image;
+use iced::{ContentFit, Widget};
+use icedcn::theme;
+use icedcn::widget::scrollable::Direction;
+use icedcn::widget::{Row, column, container, row, scroll_area, text};
+use std::sync::OnceLock;
+
 let works = [
     (
         "Ornella Binni",

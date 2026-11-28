@@ -1,5 +1,5 @@
 ```rust
-use icedcn::widget::{container, menu, navigation_menu};
+use icedcn::widget::{column, container, navigation_menu, row};
 
 let mut entries = vec![
     navigation_menu::menu("Getting started", || {

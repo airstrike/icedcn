@@ -1,4 +1,5 @@
 ```rust
+use crate::icon;
 use icedcn::widget::input_group::Align;
 use icedcn::widget::{container, input, input_group, kbd};
 

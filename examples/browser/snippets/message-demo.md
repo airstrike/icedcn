@@ -1,4 +1,10 @@
 ```rust
+use iced::alignment::Horizontal::Right;
+use iced::alignment::Vertical::Bottom;
+use icedcn::widget::bubble::Muted;
+use icedcn::widget::status_marker::shimmer;
+use icedcn::widget::{bubble, column, message, status_marker};
+
 frame(
     column![
         message(bubble("Deploying to prod real quick."))

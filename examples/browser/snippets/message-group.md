@@ -1,4 +1,7 @@
 ```rust
+use icedcn::widget::bubble::Muted;
+use icedcn::widget::{bubble, message, space};
+
 frame(message::group([
     message(bubble("I checked the registry addresses.").style(Muted))
         .avatar(space().width(32).height(32))

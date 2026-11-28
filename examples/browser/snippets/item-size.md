@@ -1,4 +1,6 @@
 ```rust
+use crate::icon;
+use iced::Fill;
 use icedcn::widget::{column, item};
 
 fn inbox<'a>(title: &'a str, description: &'a str) -> item::Item<'a, Message> {

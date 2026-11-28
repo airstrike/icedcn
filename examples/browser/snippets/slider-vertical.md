@@ -1,4 +1,7 @@
 ```rust
+use icedcn::Vertical;
+use icedcn::widget::{row, slider};
+
 row![
     slider(0.0..=100.0)
         .default_value(50.0)

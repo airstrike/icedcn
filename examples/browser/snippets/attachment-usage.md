@@ -1,6 +1,7 @@
 ## Usage
 
 ```rust
+use crate::icon;
 use icedcn::widget::{attachment, tooltip};
 
 attachment("sales-dashboard.pdf")

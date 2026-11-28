@@ -1,5 +1,7 @@
 ```rust
-use icedcn::widget::{text, trace};
+use crate::icon;
+use icedcn::widget::trace::Status;
+use icedcn::widget::{spinner, trace};
 
 trace([
     line("Ran cargo fetch", icon::circle_check).into(),

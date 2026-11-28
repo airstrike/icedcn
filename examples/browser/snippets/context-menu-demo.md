@@ -56,7 +56,7 @@ fn view<'a>(bookmarks: bool, full_urls: bool, person: &'static str) -> View<'a, 
 }
 
 /// The area that responds to a secondary click.
-fn area<'a>() -> View<'a, Message> {
+fn area<'a, M: 'a>() -> View<'a, M> {
     container(text("Right click here"))
         .center(Fill)
         .width(320)

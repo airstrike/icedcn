@@ -1,4 +1,8 @@
 ```rust
+use crate::icon;
+use icedcn::Size;
+use icedcn::widget::{avatar, button, empty};
+
 empty::empty()
     .media(empty::media(avatar::group([
         avatar(Some(alex_handle())).fallback("AC").size(48.0),

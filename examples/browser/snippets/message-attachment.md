@@ -1,4 +1,13 @@
 ```rust
+use crate::icon;
+use iced::alignment::Horizontal::Right;
+use iced::widget::image;
+use iced::{ContentFit, Widget};
+use icedcn::Size;
+use icedcn::widget::bubble::Muted;
+use icedcn::widget::{attachment, bubble, button, column, message, tooltip};
+use std::sync::LazyLock;
+
 static WORKSPACE: LazyLock<image::Handle> = LazyLock::new(|| {
     image::Handle::from_bytes(
         include_bytes!("../../assets/attachments/workspace.jpg").as_slice(),

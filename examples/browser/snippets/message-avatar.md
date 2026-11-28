@@ -1,4 +1,8 @@
 ```rust
+use iced::alignment::Horizontal::Right;
+use icedcn::widget::bubble::Muted;
+use icedcn::widget::{bubble, column, message};
+
 frame(column![
 message(bubble("The build failed during dependency installation.").style(Muted)).avatar(portrait(1, "R")),
 message(bubble("Can you share the exact error?")).align(Right).avatar(portrait(2, "R")),

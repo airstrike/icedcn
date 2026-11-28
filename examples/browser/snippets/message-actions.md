@@ -1,4 +1,8 @@
 ```rust
+use crate::icon;
+use icedcn::widget::bubble::Muted;
+use icedcn::widget::{bubble, button, message, row, toggle};
+
 message(bubble(INSTALL).style(Muted)).footer(row![
     button(icon::copy())
         .square()

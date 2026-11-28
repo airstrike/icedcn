@@ -1,4 +1,5 @@
 ```rust
+use icedcn::Size;
 use icedcn::widget::{button, empty, spinner};
 
 empty::empty()

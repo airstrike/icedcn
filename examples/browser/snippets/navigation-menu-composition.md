@@ -3,6 +3,8 @@
 Use `navigation_menu::menu` for expandable groups and `navigation_menu::link` for standalone links.
 
 ```rust
+use icedcn::widget::{menu, navigation_menu};
+
 navigation_menu([
     navigation_menu::menu("Products", || {
         menu::group([menu::item("Browse products")

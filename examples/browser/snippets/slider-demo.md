@@ -1,4 +1,5 @@
 ```rust
+use iced::Fill;
 use icedcn::widget::{container, slider};
 
 container(slider(0.0..=100.0).default_value(75.0).step(1.0))

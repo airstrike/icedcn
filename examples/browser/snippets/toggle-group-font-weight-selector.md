@@ -1,4 +1,9 @@
 ```rust
+use iced::widget::component::Component;
+use iced::{Element, Widget};
+use icedcn::widget::{column, field, row, text, toggle_group};
+use icedcn::{Size, Theme, View, Weight};
+
 struct FontWeight;
 impl<'a> Component<'a, Message, Theme> for FontWeight {
     type State = Option<String>;

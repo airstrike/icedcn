@@ -1,4 +1,5 @@
 ```rust
+use iced::Shrink;
 use icedcn::widget::{item, spinner, text};
 
 item::item([

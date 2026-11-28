@@ -1,4 +1,12 @@
 ```rust
+use crate::icon;
+use iced::widget::component::{Component, component};
+use iced::widget::svg;
+use iced::{Element, Widget};
+use icedcn::widget::{row, toggle};
+use icedcn::{Size, Theme};
+use std::sync::OnceLock;
+
 struct Bookmark;
 impl<'a> Component<'a, Message, Theme> for Bookmark {
     type State = bool;

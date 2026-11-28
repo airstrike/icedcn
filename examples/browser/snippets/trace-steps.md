@@ -1,5 +1,7 @@
 ```rust
-use icedcn::widget::{text, trace};
+use crate::icon;
+use icedcn::widget::trace::Status;
+use icedcn::widget::{badge, row, trace};
 
 trace::disclosure(
     || trace::line("Looking into the slow Cargo build").status(Status::Running),

@@ -174,7 +174,7 @@ impl State {
         }
         reply = reply.push(prose(&self.markdown_after, dark));
         let mut items = column![
-            message(bubble("How do I ignore case when searching?").style(bubble::Variant::Muted))
+            message(bubble("How do I ignore case when searching?").style(bubble::Muted))
                 .align(Horizontal::Right),
             message(reply),
         ]
@@ -327,7 +327,7 @@ impl State {
             .default_value("view")
             .into(),
             "chat" => column![
-                message(bubble("How do I filter notebook titles?").style(bubble::Variant::Muted))
+                message(bubble("How do I filter notebook titles?").style(bubble::Muted))
                     .align(Horizontal::Right),
                 message(
                     column![

@@ -1,4 +1,8 @@
 ```rust
+use crate::icon;
+use icedcn::Horizontal;
+use icedcn::widget::{field, pagination, row, select};
+
 row![
     field(
         select(["10", "25", "50", "100"].map(|count| select::item(count, count)))
@@ -11,16 +15,10 @@ row![
     .width(iced::Shrink),
     pagination([
         pagination::link(icon::chevron_left())
-            .on_press(Message::Page(
-                self.page_index(),
-                page::Message::LinkClicked("#".into())
-            ))
+            .on_press(Message::Previous)
             .into(),
         pagination::link(icon::chevron_right())
-            .on_press(Message::Page(
-                self.page_index(),
-                page::Message::LinkClicked("#".into())
-            ))
+            .on_press(Message::Next)
             .into(),
     ])
     .width(iced::Shrink)

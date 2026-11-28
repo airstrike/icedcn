@@ -1,4 +1,5 @@
 ```rust
+use crate::icon;
 use icedcn::widget::{row, toggle};
 
 row![

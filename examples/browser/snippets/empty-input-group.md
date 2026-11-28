@@ -1,4 +1,8 @@
 ```rust
+use crate::icon;
+use icedcn::widget::input_group::Align;
+use icedcn::widget::{button, column, empty, input, input_group, kbd, row};
+
 empty::empty()
     .title("404 - Not Found")
     .description(
@@ -13,10 +17,7 @@ empty::empty()
                 empty::description("Need help?"),
                 button("Contact support")
                     .style(button::Link)
-                    .on_press(Message::Page(
-                        self.page_index(),
-                        page::Message::LinkClicked("#".into())
-                    ))
+                    .on_press(Message::ContactSupport)
             ]
             .align_y(iced::Center)
         ]

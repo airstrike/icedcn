@@ -1,4 +1,6 @@
 ```rust
+use iced::Center;
+use icedcn::Size;
 use icedcn::widget::{button, column, spinner};
 
 column![

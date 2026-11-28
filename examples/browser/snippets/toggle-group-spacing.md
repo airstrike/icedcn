@@ -1,4 +1,5 @@
 ```rust
+use icedcn::Size;
 use icedcn::widget::toggle_group;
 
 toggle_group(sides)

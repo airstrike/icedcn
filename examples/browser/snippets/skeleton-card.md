@@ -1,6 +1,7 @@
 ```rust
-use icedcn::card;
+use iced::{Fill, FillPortion, Padding};
 use icedcn::widget::{aspect_ratio, column, row, skeleton, space};
+use icedcn::{Gap, View, card};
 
 /// A 16px line spanning `part` of `whole` of its parent's width.
 fn line<'a>(part: u16, whole: u16) -> View<'a, Message> {

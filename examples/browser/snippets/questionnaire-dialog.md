@@ -1,4 +1,7 @@
 ```rust
+use icedcn::widget::questionnaire;
+use icedcn::widget::questionnaire::{choice, item};
+
 let questions = vec![
     item("scope", "Which files are in scope?")
         .required(true)

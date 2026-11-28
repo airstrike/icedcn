@@ -1,8 +1,8 @@
 ```rust
 use iced::widget::image;
-use iced::{ContentFit, Widget};
-use std::sync::OnceLock;
+use iced::{ContentFit, Fill, Shrink, Widget};
 use icedcn::widget::{column, item};
+use std::sync::OnceLock;
 
 #[derive(Debug, Clone)]
 enum Message {

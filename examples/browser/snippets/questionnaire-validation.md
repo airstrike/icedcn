@@ -1,4 +1,7 @@
 ```rust
+use icedcn::widget::questionnaire;
+use icedcn::widget::questionnaire::{choice, item};
+
 let questions = vec![
     item("detail", "How much detail should the answer include?")
         .required(true)

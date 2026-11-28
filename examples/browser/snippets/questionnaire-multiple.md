@@ -1,4 +1,7 @@
 ```rust
+use icedcn::widget::questionnaire;
+use icedcn::widget::questionnaire::{Shortcuts, choice, item};
+
 let questions = vec![
     item("context", "What context should the agent inspect?")
         .required(true)

@@ -23,8 +23,7 @@ pub fn tweaked<'a>() -> View<'a> {
 
 - `Bg`, `Fg`, and `border::Color` for colors, and `border::Width` and `radius` for the border; an `icedcn::core::Shadow` adds the same way
 - `Ring` for the focus ring's color, width, and, on buttons, offset
-- `Alpha` to fade the fill and `Opaque` to flatten a translucent fill onto the page background
-- `Size`, `Weight`, `Family`, `LineHeight`, `Italic`, and `Align` for text
+- `Alpha` to fade the fill (on text, the text color) and `Opaque` to flatten a translucent fill onto the page background
 - `hover`, `active`, `focus`, and `disabled`, which apply the tweaks they wrap only in that state
 
 Colors are `Token`s: theme roles such as `Token::Primary`, `Token::Muted`, and `Token::Border`, so a tweaked style still follows the theme. `Token::Custom(color)` takes a literal color, and `Token::themed(light, dark)` a pair that follows the mode.

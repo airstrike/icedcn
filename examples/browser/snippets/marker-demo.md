@@ -1,4 +1,8 @@
 ```rust
+use crate::icon;
+use icedcn::widget::status_marker::{Separator, shimmer};
+use icedcn::widget::{column, spinner, status_marker};
+
 column![
     status_marker("Switched to a new branch").icon(icon::git_branch()),
     status_marker(shimmer("Thinking...")).icon(spinner().size(16.)),

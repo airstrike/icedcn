@@ -1,4 +1,7 @@
 ```rust
+use icedcn::widget::drawer::Side;
+use icedcn::widget::row;
+
 row![
     panel("Top", Side::Top, 0.5),
     panel("Right", Side::Right, 0.5),

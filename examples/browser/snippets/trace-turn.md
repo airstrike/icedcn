@@ -1,5 +1,7 @@
 ```rust
-use icedcn::widget::{text, trace};
+use crate::icon;
+use icedcn::widget::trace::Status;
+use icedcn::widget::{column, text, trace};
 
 trace::disclosure(||trace::line("Worked for 2m 4s, 1 command failed").status(Status::Error),move||column![
 trace([

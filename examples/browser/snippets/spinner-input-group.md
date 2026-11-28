@@ -1,4 +1,8 @@
 ```rust
+use crate::icon;
+use icedcn::widget::input_group::Align;
+use icedcn::widget::{button, column, input, input_group, row, space, spinner, textarea};
+
 column![
     input_group(input("Send a message...").disabled(true))
         .addon(input_group::addon(spinner()).align(Align::InlineEnd)),

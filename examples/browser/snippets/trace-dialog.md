@@ -1,5 +1,6 @@
 ```rust
-use icedcn::widget::{text, trace};
+use crate::icon;
+use icedcn::widget::{column, dialog, trace};
 
 dialog(
     |d| {

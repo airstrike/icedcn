@@ -1,5 +1,7 @@
 ```rust
 use iced::widget::component::{Component, component};
+use iced::{Element, Renderer, Widget};
+use icedcn::Theme;
 use icedcn::widget::{column, progress, slider};
 
 /// The value is UI state shared by two widgets, so the pair is a user
@@ -28,5 +30,5 @@ impl<'a> Component<'a, Message, Theme> for Controlled {
     }
 }
 
-component(Controlled)
+component(Controlled).boxed()
 ```

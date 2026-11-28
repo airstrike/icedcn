@@ -1,4 +1,7 @@
 ```rust
+use crate::icon;
+use icedcn::widget::{button, code_block};
+
 code_block(code_block::content(output).wrap(wrap)).header(
     code_block::header("Terminal").actions(code_block::actions![
         button(icon::wrap_text())

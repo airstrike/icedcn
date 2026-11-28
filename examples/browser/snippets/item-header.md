@@ -1,8 +1,8 @@
 ```rust
 use iced::widget::image;
-use iced::{ContentFit, Widget};
-use std::sync::OnceLock;
+use iced::{ContentFit, Fill, Widget};
 use icedcn::widget::{Row, aspect_ratio, item};
+use std::sync::OnceLock;
 
 fn artwork(bytes: &'static [u8], handle: &OnceLock<image::Handle>) -> image::Image {
     image(

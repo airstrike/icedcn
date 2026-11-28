@@ -1,4 +1,6 @@
 ```rust
+use icedcn::widget::resizable;
+
 frame(
     resizable(panel("Sidebar"), panel("Content"))
         .default_value(0.25)

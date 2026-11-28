@@ -1,4 +1,11 @@
 ```rust
+use crate::icon;
+use iced::mouse::Cursor;
+use iced::widget::{canvas, stack};
+use iced::{Element, Fill, Point, Rectangle};
+use icedcn::widget::{button, empty};
+use icedcn::{Size, Theme};
+
 struct Outline;
 impl canvas::Program<Message, Theme> for Outline {
     type State = ();

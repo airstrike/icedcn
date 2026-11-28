@@ -1,5 +1,6 @@
 ```rust
-use icedcn::widget::{text, trace};
+use crate::icon;
+use icedcn::widget::trace;
 
 trace::disclosure(
     || line("Used 3 sources", icon::globe),

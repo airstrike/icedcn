@@ -1,4 +1,5 @@
 ```rust
+use iced::Center;
 use icedcn::widget::{kbd, row, text};
 
 row![

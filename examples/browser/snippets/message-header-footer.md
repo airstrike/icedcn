@@ -1,4 +1,9 @@
 ```rust
+use iced::alignment::Horizontal::Right;
+use icedcn::Weight;
+use icedcn::widget::bubble::Muted;
+use icedcn::widget::{bubble, column, message, row, text};
+
 frame(
     column![
         message(bubble("I already checked the logs.").style(Muted)).header("Olivia"),

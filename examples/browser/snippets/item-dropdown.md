@@ -1,4 +1,5 @@
 ```rust
+use crate::icon;
 use iced::widget::image;
 use icedcn::widget::{avatar, button, dropdown_menu, item, menu};
 

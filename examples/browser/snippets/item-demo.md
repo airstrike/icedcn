@@ -1,4 +1,7 @@
 ```rust
+use crate::icon;
+use iced::Fill;
+use icedcn::Size;
 use icedcn::widget::{button, column, item};
 
 #[derive(Debug, Clone)]

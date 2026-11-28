@@ -1,4 +1,9 @@
 ```rust
+use iced::widget::component::Component;
+use iced::{Element, Fill, Widget};
+use icedcn::Theme;
+use icedcn::widget::{column, row, slider, space, text};
+
 struct Temperature;
 impl<'a> Component<'a, Message, Theme> for Temperature {
     type State = Option<[f32; 2]>;

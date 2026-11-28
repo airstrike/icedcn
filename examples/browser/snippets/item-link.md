@@ -1,4 +1,6 @@
 ```rust
+use crate::icon;
+use iced::Fill;
 use icedcn::widget::{column, item};
 
 #[derive(Debug, Clone)]

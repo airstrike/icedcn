@@ -1,4 +1,7 @@
 ```rust
+use iced::Fill;
+use icedcn::widget::{container, slider};
+
 container(
     slider::range(0.0..=100.0)
         .default_value([25.0, 50.0])

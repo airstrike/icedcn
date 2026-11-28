@@ -1,4 +1,7 @@
 ```rust
+use crate::icon;
+use icedcn::widget::{button, column, status_marker, toast};
+
 column![
     button(status_marker("View the pull request").icon(icon::git_branch()))
         .style(button::Link)

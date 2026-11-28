@@ -1,4 +1,6 @@
 ```rust
+use icedcn::widget::{column, scroll_area, separator, text};
+
 let rows = (1..=50).rev().map(|n| {
     column![text::small(format!("v1.2.0-beta.{n}")), separator()]
         .spacing(8)

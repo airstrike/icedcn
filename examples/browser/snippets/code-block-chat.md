@@ -3,7 +3,7 @@ use iced::alignment::Horizontal;
 use icedcn::widget::{bubble, code_block, column, message, text};
 
 column![
-    message(bubble("How do I filter notebook titles?").style(bubble::Variant::Muted))
+    message(bubble("How do I filter notebook titles?").style(bubble::Muted))
         .align(Horizontal::Right),
     message(
         column![

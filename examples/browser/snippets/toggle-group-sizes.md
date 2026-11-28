@@ -1,4 +1,5 @@
 ```rust
+use icedcn::Size;
 use icedcn::widget::{column, toggle_group};
 
 fn sides<'a>() -> [toggle_group::Item<'a, Message>; 4] {

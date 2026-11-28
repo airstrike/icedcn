@@ -1,6 +1,10 @@
 ```rust
+use crate::icon;
+use iced::widget::Space;
+use iced::{Alignment, Fill};
 use icedcn::theme::container::Transparent;
 use icedcn::theme::tweak::{Bg, Token};
+use icedcn::widget::{button, column, container, drawer, row, text};
 
 let goal = state.0.unwrap_or(350);
 let chart = [

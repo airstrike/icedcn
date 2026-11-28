@@ -1,4 +1,9 @@
 ```rust
+use iced::widget::scrollable;
+use iced::{Fill, Widget};
+use icedcn::View;
+use icedcn::widget::{button, column, drawer, text};
+
 drawer(
     move |d| d.trigger(button(label).style(button::Outline)),
     |d| {

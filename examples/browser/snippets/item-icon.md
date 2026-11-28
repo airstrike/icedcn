@@ -1,4 +1,6 @@
 ```rust
+use crate::icon;
+use icedcn::Size;
 use icedcn::widget::{button, item};
 
 item::item([

@@ -1,4 +1,7 @@
 ```rust
+use icedcn::widget::status_marker::Separator;
+use icedcn::widget::{column, status_marker};
+
 column![
     status_marker("Today").style(Separator),
     status_marker("Worked for 42s").style(Separator),

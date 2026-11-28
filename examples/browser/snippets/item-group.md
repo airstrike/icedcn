@@ -1,4 +1,6 @@
 ```rust
+use crate::icon;
+use iced::Fill;
 use iced::widget::image;
 use icedcn::widget::{avatar, button, column, item};
 

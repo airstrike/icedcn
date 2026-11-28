@@ -1,4 +1,5 @@
 ```rust
+use icedcn::Size;
 use icedcn::widget::{row, toggle};
 
 row![
