@@ -4,7 +4,7 @@ use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Task, Widget};
 use icedcn::widget::calendar::{Date, Datelike, Duration, Mode, Selection, today};
 use icedcn::widget::{date_picker, field, input, row, text};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 pub static META: page::Meta = page::Meta {
     title: "Date Picker",
@@ -208,7 +208,7 @@ impl Component<'static, Message, Theme> for Schedule {
         schedule(state.unwrap_or(Some(self.initial)), self.size).compose()
     }
 }
-fn schedule(date: Option<Date>, size: f32) -> Slot<'static, Option<Date>> {
+fn schedule(date: Option<Date>, size: f32) -> View<'static, Option<Date>> {
     let display = date
         .map(|d| d.format("%B %d, %Y").to_string())
         .unwrap_or_default();

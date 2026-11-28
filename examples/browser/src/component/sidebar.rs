@@ -4,7 +4,7 @@ use iced::widget::component::{Component, component};
 use iced::{Element, Task, Widget};
 
 use icedcn::widget::{column, row, sidebar, text};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::page;
 
@@ -181,7 +181,7 @@ impl<'a> Component<'a, crate::Message, Theme> for Projects {
         )
     }
 }
-fn line(label: &'static str, glyph: Glyph) -> Slot<'static, Choice> {
+fn line(label: &'static str, glyph: Glyph) -> View<'static, Choice> {
     row![glyph().size(16), text(label).size(14)]
         .spacing(8)
         .align_y(Alignment::Center)
@@ -197,7 +197,7 @@ fn menu_width(compact: bool, mobile: bool) -> f32 {
     }
 }
 
-fn team_option(label: Slot<'static, Choice>, glyph: Glyph) -> Slot<'static, Choice> {
+fn team_option(label: View<'static, Choice>, glyph: Glyph) -> View<'static, Choice> {
     let tile = container(glyph().size(14)).center(24).style(|t: &Theme| {
         let mut style = Style::default();
         style.border.width = 1.;
@@ -211,7 +211,7 @@ fn team_option(label: Slot<'static, Choice>, glyph: Glyph) -> Slot<'static, Choi
         .into()
 }
 
-fn teams(i: usize, compact: bool, mobile: bool) -> Slot<'static, Choice> {
+fn teams(i: usize, compact: bool, mobile: bool) -> View<'static, Choice> {
     let (name, plan, glyph) = TEAMS[i];
     dropdown_menu(
         move |m| {
@@ -222,7 +222,7 @@ fn teams(i: usize, compact: bool, mobile: bool) -> Slot<'static, Choice> {
                 s.border.radius = 8.into();
                 s
             });
-            let body: Slot<'static, Choice> = if compact {
+            let body: View<'static, Choice> = if compact {
                 logo.into()
             } else {
                 row![
@@ -270,10 +270,10 @@ fn teams(i: usize, compact: bool, mobile: bool) -> Slot<'static, Choice> {
     .width(menu_width(compact, mobile))
     .into()
 }
-fn platform(compact: bool, selected: Option<&'static str>) -> Slot<'static, Choice> {
+fn platform(compact: bool, selected: Option<&'static str>) -> View<'static, Choice> {
     let items = GROUPS.iter().map(move |&(name, glyph, links)| {
         collapsible(move |c| {
-            let label: Slot<'static, Choice> = if compact {
+            let label: View<'static, Choice> = if compact {
                 glyph().size(16).into()
             } else {
                 row![
@@ -317,14 +317,14 @@ fn platform(compact: bool, selected: Option<&'static str>) -> Slot<'static, Choi
     };
     sidebar::group([label, sidebar::menu(items).into()]).into()
 }
-fn heading<'a, M: 'a>(label: &'a str) -> Slot<'a, M> {
+fn heading<'a, M: 'a>(label: &'a str) -> View<'a, M> {
     container(sidebar::group_label(label))
         .center_y(32)
         .padding([0, 8])
         .into()
 }
 
-fn projects(selected: Option<&'static str>, mobile: bool) -> Slot<'static, Choice> {
+fn projects(selected: Option<&'static str>, mobile: bool) -> View<'static, Choice> {
     let mut items: Vec<_> = PROJECTS
         .iter()
         .map(|&(name, glyph)| {
@@ -375,7 +375,7 @@ fn projects(selected: Option<&'static str>, mobile: bool) -> Slot<'static, Choic
     items.push(sidebar::menu_button(line("More", icon::ellipsis)).into());
     sidebar::group([heading("Projects"), sidebar::menu(items).into()]).into()
 }
-fn identity(compact: bool) -> Slot<'static, Choice> {
+fn identity(compact: bool) -> View<'static, Choice> {
     let face = avatar(Some(alex_handle())).fallback("AC");
     if compact {
         return face.into();
@@ -394,7 +394,7 @@ fn identity(compact: bool) -> Slot<'static, Choice> {
     .align_y(Alignment::Center)
     .into()
 }
-fn account(compact: bool, mobile: bool) -> Slot<'static, Choice> {
+fn account(compact: bool, mobile: bool) -> View<'static, Choice> {
     dropdown_menu(
         move |d| {
             d.trigger(
@@ -428,7 +428,7 @@ fn account(compact: bool, mobile: bool) -> Slot<'static, Choice> {
     .into()
 }
 
-fn group_example<'a, M: Clone + 'static>() -> Slot<'a, M> {
+fn group_example<'a, M: Clone + 'static>() -> View<'a, M> {
     sidebar::floating(
         collapsible(|c| {
             let links = ["Support", "Feedback"].map(|name| sidebar::menu_button(name).into());
@@ -457,7 +457,7 @@ fn group_example<'a, M: Clone + 'static>() -> Slot<'a, M> {
     .into()
 }
 
-fn header_example<'a, M: Clone + 'static>() -> Slot<'a, M> {
+fn header_example<'a, M: Clone + 'static>() -> View<'a, M> {
     let switcher = dropdown_menu(
         |m| {
             m.trigger(sidebar::menu_button(

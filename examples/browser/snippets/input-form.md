@@ -1,6 +1,6 @@
 ```rust
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{button, field, input, row, select};
 
 #[derive(Default)]
@@ -37,7 +37,7 @@ impl Contact {
         }
     }
 
-    fn view<'a>(&self) -> Slot<'a, Edit> {
+    fn view<'a>(&self) -> View<'a, Edit> {
         let entry = |label: &'a str, hint: &'a str, value: &str, edit: fn(String) -> Edit| {
             field(
                 input(hint)

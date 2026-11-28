@@ -2,14 +2,14 @@
 use crate::icon;
 use iced::{Fill, widget::Text};
 use icedcn::widget::{button, column, dropdown_menu, menu, row};
-use icedcn::{Slot, Theme};
+use icedcn::{View, Theme};
 
 #[derive(Clone, Debug)]
 pub enum Message {
     LabelSelected(&'static str),
 }
 
-pub fn view<'a>(window_width: f32, selected: &'static str) -> Slot<'a, Message> {
+pub fn view<'a>(window_width: f32, selected: &'static str) -> View<'a, Message> {
     let outline = |label| button(label).style(button::Outline);
     let caption = |icon: Text<'a, Theme>, label: &'a str| row![icon.size(16), label].spacing(8);
     let actions = dropdown_menu(

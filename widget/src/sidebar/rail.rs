@@ -18,7 +18,7 @@ use iced_widget::{container, space};
 
 use super::trigger::Toggle;
 use crate::button::widget;
-use crate::compose::{Compose, Slot};
+use crate::compose::{Compose, View};
 use crate::marker::{self, Press};
 use icedcn_core::Theme;
 use icedcn_core::theme::button;
@@ -42,7 +42,7 @@ pub fn rail<Message: Clone>(on_press: Message) -> SidebarRail<Message> {
 }
 
 /// A resize rail linked to its enclosing sidebar provider.
-pub fn rail_trigger<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
+pub fn rail_trigger<'a, Message: Clone + 'a>() -> View<'a, Message> {
     let rail = SidebarRail { on_press: None };
     let element: iced_core::Element<'a, Message, Theme, Renderer> = rail.into();
     {
@@ -88,9 +88,9 @@ impl<'a, Message: Clone + 'a> From<SidebarRail<Message>>
     }
 }
 
-impl<'a, Message: Clone + 'a> From<SidebarRail<Message>> for crate::Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<SidebarRail<Message>> for crate::View<'a, Message> {
     fn from(widget: SidebarRail<Message>) -> Self {
-        crate::Slot::new(widget)
+        crate::View::new(widget)
     }
 }
 

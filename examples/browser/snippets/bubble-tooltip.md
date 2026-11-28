@@ -4,11 +4,11 @@ use iced::Fill;
 use iced::alignment::Horizontal::Right;
 use iced::alignment::Vertical::Bottom;
 use icedcn::Size;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::bubble::Secondary;
 use icedcn::widget::{bubble, button, column, container, tooltip};
 
-fn example<'a>() -> Slot<'a, ()> {
+fn example<'a>() -> View<'a> {
     frame(
         column![
             bubble("Did you remove the stale route?").style(Secondary),
@@ -32,7 +32,7 @@ fn example<'a>() -> Slot<'a, ()> {
     )
 }
 
-fn frame<'a>(body: impl Into<Slot<'a, ()>>) -> Slot<'a, ()> {
+fn frame<'a>(body: impl Into<View<'a>>) -> View<'a> {
     container(body)
         .padding([48, 0])
         .width(Fill)

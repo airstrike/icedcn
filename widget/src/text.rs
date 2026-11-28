@@ -28,7 +28,7 @@ use iced_widget::Renderer;
 use iced_widget::text::StyleFn;
 
 use crate::Size;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::rule;
 use icedcn_core::Theme;
 use icedcn_core::theme;
@@ -295,9 +295,9 @@ impl<'a, Message: 'a> From<Text<'a>> for iced_core::Element<'a, Message, Theme, 
     }
 }
 
-impl<'a, Message: 'a> From<Text<'a>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Text<'a>> for View<'a, Message> {
     fn from(widget: Text<'a>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -460,9 +460,9 @@ impl<'a, Message: 'a> From<Blockquote<'a>> for iced_core::Element<'a, Message, T
     }
 }
 
-impl<'a, Message: 'a> From<Blockquote<'a>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Blockquote<'a>> for View<'a, Message> {
     fn from(widget: Blockquote<'a>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -574,9 +574,9 @@ impl<'a, Message: 'a> From<List<'a, Message>> for iced_core::Element<'a, Message
     }
 }
 
-impl<'a, Message: 'a> From<List<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<List<'a, Message>> for View<'a, Message> {
     fn from(widget: List<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -642,7 +642,7 @@ mod tests {
                 assert_eq!(text.size, Some(14.0));
             },
         };
-        let _ = Box::new(button(Slot::new(label)).width(40)).compose();
+        let _ = Box::new(button(View::new(label)).width(40)).compose();
     }
 
     #[test]
@@ -671,7 +671,7 @@ mod tests {
                 },
             };
             let _: iced_core::Element<'_, (), Theme, Renderer> =
-                crate::sidebar::menu_button(Slot::new(label))
+                crate::sidebar::menu_button(View::new(label))
                     .active(true)
                     .into();
         }
@@ -704,7 +704,7 @@ mod tests {
                 }
             },
         };
-        let _ = Box::new(button(Slot::new(label)).width(40)).compose();
+        let _ = Box::new(button(View::new(label)).width(40)).compose();
     }
 
     /// The line box a text gets once `from` has cascaded into it.
@@ -805,7 +805,7 @@ mod tests {
                 assert_eq!(text.selectable, Some(false));
             },
         };
-        let mut badge = badge(Slot::new(label)).on_press(());
+        let mut badge = badge(View::new(label)).on_press(());
         badge.inherit(
             &Inherited::default()
                 .with_size(Size::Default)
@@ -829,7 +829,7 @@ mod tests {
                 assert_eq!(text.weight, Some(Weight::Bold));
             },
         };
-        let mut badge = badge(Slot::new(label));
+        let mut badge = badge(View::new(label));
         badge.inherit(
             &Inherited::default()
                 .with_size(Size::Default)

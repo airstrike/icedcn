@@ -52,7 +52,7 @@ impl<'a> Component<'a, Message, Theme> for FontWeight {
         Element::from(
             field(group)
                 .label("Font Weight")
-                .description(Slot::from(description))
+                .description(View::from(description))
                 .width(iced::Shrink),
         )
     }

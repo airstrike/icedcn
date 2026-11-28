@@ -7,7 +7,7 @@ use iced_widget::Renderer;
 use icedcn_core::Theme;
 use icedcn_core::theme::progress_bar;
 
-use crate::compose::{Compose, Slot};
+use crate::compose::{Compose, View};
 
 use super::widget;
 
@@ -88,9 +88,9 @@ impl<'a, Message: 'a> From<Progress<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Progress<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Progress<'a, Message>> for View<'a, Message> {
     fn from(widget: Progress<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 

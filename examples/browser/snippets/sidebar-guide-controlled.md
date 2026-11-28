@@ -3,10 +3,10 @@
 Store the desktop preference in your application and use the requested value when updating it. The phone sheet keeps a separate temporary open state.
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{row, sidebar};
 
-pub fn view<'a>(open: bool) -> Slot<'a, bool> {
+pub fn view<'a>(open: bool) -> View<'a, bool> {
     sidebar::provider(|s| {
         row![
             s.sidebar(sidebar::fixed("Workspace")),

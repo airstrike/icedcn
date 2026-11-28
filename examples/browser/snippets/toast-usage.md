@@ -4,11 +4,11 @@ Place the application's content inside a toaster. A button can raise a toast dir
 
 ```rust
 use icedcn::{
-    Slot,
+    View,
     widget::{button, toast, toaster},
 };
 
-fn view<'a>() -> Slot<'a, ()> {
+fn view<'a>() -> View<'a> {
     let save = toast::trigger(button("Save"), toast::toast("Saved"));
     toaster(save).position(toast::Position::TopCenter).into()
 }

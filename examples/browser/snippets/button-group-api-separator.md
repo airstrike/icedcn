@@ -8,9 +8,9 @@ Visually divides buttons within a group. Its orientation is independent of the g
 
 ```rust
 use icedcn::widget::button::group;
-use icedcn::{Slot, widget::button};
+use icedcn::{View, widget::button};
 
-pub fn actions<'a>() -> Slot<'a, ()> {
+pub fn actions<'a>() -> View<'a> {
     button::group![button("Button 1"), group::separator(), button("Button 2")].into()
 }
 ```

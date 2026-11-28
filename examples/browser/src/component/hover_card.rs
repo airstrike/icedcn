@@ -9,7 +9,7 @@ use std::time::Duration;
 use iced::Task;
 
 use icedcn::widget::{button, column, container, hover_card, row, text};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::Message;
 use crate::page;
@@ -56,7 +56,7 @@ impl HoverCardPage {
 }
 
 /// An outline trigger whose card opens on `side`.
-fn side<'a>(label: &'a str, side: hover_card::Side) -> Slot<'a, Message> {
+fn side<'a>(label: &'a str, side: hover_card::Side) -> View<'a, Message> {
     hover_card(
         button(label).style(button::Outline),
         column![

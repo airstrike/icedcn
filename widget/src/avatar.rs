@@ -44,7 +44,7 @@ use icedcn_core::Theme;
 use icedcn_core::theme::avatar::badge_style;
 use icedcn_core::theme::container::{Style, StyleFn};
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::container::Container;
 
 pub use crate::__avatar_group as group;
@@ -115,14 +115,14 @@ impl std::default::Default for Size {
 /// centered on the muted surface.
 pub struct Avatar<'a, Message> {
     image: Option<Handle>,
-    fallback: Option<Slot<'a, Message>>,
+    fallback: Option<View<'a, Message>>,
     size: Size,
     /// 2px outer ring colored to the page background. Set by
     /// [`group`](crate::avatar::group) on every avatar it composes so
     /// overlapping avatars look visually separated. Stand-alone avatars
     /// leave this `false`.
     ring: bool,
-    badge: Option<Slot<'a, Message>>,
+    badge: Option<View<'a, Message>>,
     style: Option<StyleFn<'a, Theme>>,
     badge_style: StyleFn<'a, Theme>,
     inherited: Inherited,
@@ -159,8 +159,8 @@ impl<'a, Message: 'a> Avatar<'a, Message> {
     /// Set the content shown while an image loads, if decoding fails, or without an image.
     ///
     /// Typically the user's initials (`"CN"`, `"ER"`) but accepts any
-    /// `Slot` — an icon, a single character, etc.
-    pub fn fallback(mut self, content: impl Into<Slot<'a, Message>>) -> Self {
+    /// `View` — an icon, a single character, etc.
+    pub fn fallback(mut self, content: impl Into<View<'a, Message>>) -> Self {
         self.fallback = Some(content.into());
         self
     }
@@ -205,9 +205,9 @@ impl<'a, Message: 'a> From<Avatar<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Avatar<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Avatar<'a, Message>> for View<'a, Message> {
     fn from(widget: Avatar<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -231,7 +231,7 @@ impl<'a, Message: 'a> Compose<Message> for Avatar<'a, Message> {
             inherited,
         } = *self;
         let geometry = size.geometry();
-        let mut fallback = fallback.unwrap_or_else(|| Slot::from(""));
+        let mut fallback = fallback.unwrap_or_else(|| View::from(""));
         fallback.inherit(
             &Inherited::default()
                 // `text-sm`, `text-xs` on the small avatar.
@@ -246,7 +246,7 @@ impl<'a, Message: 'a> Compose<Message> for Avatar<'a, Message> {
         let mut children = vec![Container::new(fallback).center(Fill).into()];
         if let Some(mut badge) = badge {
             if geometry.badge_icon_size == 0.0 {
-                badge = Slot::from(iced_widget::Space::new());
+                badge = View::from(iced_widget::Space::new());
             }
             badge.inherit(
                 &Inherited::default()

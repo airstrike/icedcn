@@ -3,11 +3,11 @@ use iced::Fill;
 use iced::alignment::Horizontal::{Left, Right};
 use iced::alignment::Vertical::{Bottom, Top};
 use icedcn::Size;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::bubble::{Destructive, Muted};
 use icedcn::widget::{bubble, button, column, container, row, toast, toaster};
 
-fn example<'a>() -> Slot<'a, ()> {
+fn example<'a>() -> View<'a> {
     toaster(frame(
         column![
             bubble("I don't need tests, I know my code works.")
@@ -39,7 +39,7 @@ fn example<'a>() -> Slot<'a, ()> {
     .into()
 }
 
-fn frame<'a>(body: impl Into<Slot<'a, ()>>) -> Slot<'a, ()> {
+fn frame<'a>(body: impl Into<View<'a>>) -> View<'a> {
     container(body)
         .padding([48, 0])
         .width(Fill)

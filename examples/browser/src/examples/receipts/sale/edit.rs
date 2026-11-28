@@ -7,7 +7,7 @@ use iced::{Alignment, Element, Fill};
 use icedcn::widget::scrollable::scrollable;
 use icedcn::widget::table::Track::Auto;
 use icedcn::widget::{button, column, container, input, row, select, space, table, text, tooltip};
-use icedcn::{Slot, Theme, card, separator};
+use icedcn::{Theme, View, card, separator};
 
 use super::super::Hotkey;
 use super::{Action, Instruction, Sale, TaxGroup};
@@ -124,7 +124,7 @@ pub fn view(sale: &Sale) -> Element<'_, Message, Theme> {
             .align_x(Right),
         ])
     }));
-    let items_list = table([Slot::from(
+    let items_list = table([View::from(
         table::grid([Auto; 6]).header(headings).body(body),
     )]);
 

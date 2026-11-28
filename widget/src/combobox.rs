@@ -48,7 +48,7 @@ use keys::Keys;
 use unicode_normalization::{UnicodeNormalization, char::is_combining_mark};
 use widget::Button;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::container::Container;
 use crate::input_group::{self, input_group};
 use crate::{column, input, menu, scrollable, text};
@@ -87,7 +87,7 @@ impl Item {
     }
 }
 
-type Render<'a, T, Message> = dyn Fn(&T) -> Slot<'a, Message> + 'a;
+type Render<'a, T, Message> = dyn Fn(&T) -> View<'a, Message> + 'a;
 
 /// An input choosing one of its items by filtering them as you type.
 pub struct Combobox<'a, Message> {
@@ -101,7 +101,7 @@ pub struct Combobox<'a, Message> {
     selected: Option<Vec<String>>,
     defaults: Vec<String>,
     on_selection_change: Option<Box<dyn Fn(Vec<String>) -> Message + 'a>>,
-    leading: Option<Box<dyn Fn() -> Slot<'a, Message> + 'a>>,
+    leading: Option<Box<dyn Fn() -> View<'a, Message> + 'a>>,
     format_item: Option<Box<Render<'a, Item, Message>>>,
     trigger: Option<Box<Render<'a, str, Message>>>,
     content_width: Option<f32>,
@@ -114,7 +114,7 @@ pub struct Combobox<'a, Message> {
     on_value_change: Option<Box<dyn Fn(String) -> Message + 'a>>,
     disabled: bool,
     width: Option<Length>,
-    icon: Option<Box<dyn Fn() -> Slot<'a, Message> + 'a>>,
+    icon: Option<Box<dyn Fn() -> View<'a, Message> + 'a>>,
     inherited: Inherited,
 }
 
@@ -282,7 +282,7 @@ impl<'a, Message: 'a> Combobox<'a, Message> {
         self
     }
     /// Add an icon to the leading edge of the input group.
-    pub fn leading_icon<Content: Into<Slot<'a, Message>>>(
+    pub fn leading_icon<Content: Into<View<'a, Message>>>(
         mut self,
         icon: impl Fn() -> Content + 'a,
     ) -> Self {
@@ -303,7 +303,7 @@ impl<'a, Message: 'a> Combobox<'a, Message> {
     }
 
     /// Replace the built-in chevron at the end of the input.
-    pub fn icon<Content: Into<Slot<'a, Message>>>(
+    pub fn icon<Content: Into<View<'a, Message>>>(
         mut self,
         icon: impl Fn() -> Content + 'a,
     ) -> Self {
@@ -323,8 +323,8 @@ impl<'a, Message: 'a> Combobox<'a, Message> {
             .find(|item| item.value == value)
             .map_or(value, |item| item.label.as_str())
     }
-    /// Render an option's content through the ordinary Compose/Slot cascade.
-    pub fn format_item<Content: Into<Slot<'a, Message>>>(
+    /// Render an option's content through the ordinary Compose/View cascade.
+    pub fn format_item<Content: Into<View<'a, Message>>>(
         mut self,
         render: impl Fn(&Item) -> Content + 'a,
     ) -> Self {
@@ -333,7 +333,7 @@ impl<'a, Message: 'a> Combobox<'a, Message> {
     }
 
     /// Use a custom as-child popup trigger. Its own handlers still fire.
-    pub fn trigger<Content: Into<Slot<'a, Message>>>(
+    pub fn trigger<Content: Into<View<'a, Message>>>(
         mut self,
         render: impl Fn(&str) -> Content + 'a,
     ) -> Self {
@@ -571,7 +571,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
         });
         let inherited = self.inherited.without_join().with_disabled(self.disabled);
         let disabled = self.disabled;
-        let chevron = || -> Slot<'a, Event<Message>> {
+        let chevron = || -> View<'a, Event<Message>> {
             match &self.icon {
                 Some(icon) => icon().map(Event::App),
                 None => Container::new(Icon::Chevron.boxed())
@@ -592,8 +592,8 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 .text_size(if self.multiple { 14. } else { self.text_size })
                 .on_input(Event::Query)
                 .disabled(self.disabled);
-            let mut field: Slot<'a, Event<Message>> = if self.multiple {
-                let mut chips: Vec<Slot<'a, Event<Message>>> = Vec::new();
+            let mut field: View<'a, Event<Message>> = if self.multiple {
+                let mut chips: Vec<View<'a, Event<Message>>> = Vec::new();
                 for value in self.selected(state) {
                     let remove = button(Container::new(Icon::Remove.boxed()).width(12).height(12))
                         .style(button::Ghost)
@@ -714,7 +714,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             } else {
                 choice
             };
-            let mut trigger: Slot<'a, Event<Message>> = if let Some(render) = &self.trigger {
+            let mut trigger: View<'a, Event<Message>> = if let Some(render) = &self.trigger {
                 let mut child = render(label);
                 child.inherit(&inherited);
                 marker::owner(
@@ -737,7 +737,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                         .weight(Weight::Normal)
                         .disabled(self.disabled)
                         .on_press(Event::Set(!open));
-                let mut child: Slot<'a, Event<Message>> = child.into();
+                let mut child: View<'a, Event<Message>> = child.into();
                 child.inherit(&inherited);
                 Keys {
                     content: child.compose(),
@@ -751,7 +751,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             trigger.inherit(&inherited);
             trigger.compose()
         } else {
-            Slot::from(Container::new(make_input()).width(Fill)).compose()
+            View::from(Container::new(make_input()).width(Fill)).compose()
         };
         let mut field = Behavior::field(
             field,
@@ -803,7 +803,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 } else {
                     current.as_deref() == Some(item.value.as_str())
                 };
-                let mut label: Slot<'a, Event<Message>> = if let Some(render) = &self.format_item {
+                let mut label: View<'a, Event<Message>> = if let Some(render) = &self.format_item {
                     render(item).map(Event::App)
                 } else if let Some(detail) = &item.description {
                     crate::column![
@@ -822,13 +822,13 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                         .into()
                 };
                 label.inherit(&inherited);
-                let check: Slot<'a, Event<Message>> = if chosen {
+                let check: View<'a, Event<Message>> = if chosen {
                     Icon::Check.boxed().into()
                 } else {
                     Space::new().width(16).height(16).into()
                 };
                 let active = state.highlight == Some(position);
-                let mut line: Slot<'a, Event<Message>> =
+                let mut line: View<'a, Event<Message>> =
                     row![Container::new(label).width(Fill), check]
                         .spacing(8)
                         .width(Fill)
@@ -870,7 +870,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 );
             }
             let empty = rows.is_empty();
-            let body: Slot<'a, Event<Message>> = if empty {
+            let body: View<'a, Event<Message>> = if empty {
                 Container::new(
                     text::muted(self.empty.clone())
                         .size(14)
@@ -895,7 +895,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 .width(Fill)
                 .style(hidden)
                 .height(Length::Shrink.max(252));
-            let mut body: Slot<'a, Event<Message>> = if self.popup {
+            let mut body: View<'a, Event<Message>> = if self.popup {
                 crate::column![
                     Container::new(make_input())
                         .width(Fill)
@@ -912,7 +912,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 .width(self.content_width.map_or(Fill, Length::Fixed))
                 .style(content);
             Behavior::panel(
-                Slot::from(content).compose(),
+                View::from(content).compose(),
                 self.popup,
                 state
                     .highlight
@@ -963,9 +963,9 @@ impl<'a, Message: Clone + 'static> Compose<Message> for Combobox<'a, Message> {
     }
 }
 
-impl<'a, Message: Clone + 'static> From<Combobox<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'static> From<Combobox<'a, Message>> for View<'a, Message> {
     fn from(combobox: Combobox<'a, Message>) -> Self {
-        Slot::new(combobox)
+        View::new(combobox)
     }
 }
 
@@ -978,7 +978,7 @@ impl<'a, Message: Clone + 'static> From<Combobox<'a, Message>>
 }
 
 /// Lucide globe for the Input Group example; no application icon font required.
-pub fn globe<'a, Message: 'a>() -> Slot<'a, Message> {
+pub fn globe<'a, Message: 'a>() -> View<'a, Message> {
     Icon::Globe.boxed().into()
 }
 

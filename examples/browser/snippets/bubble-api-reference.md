@@ -1,6 +1,6 @@
 ### Bubble
 
-The root bubble wrapper. `bubble(content)` accepts `impl Into<Slot<'a, Message>>`. Composition requires `Message: Clone` like Button. Passive content remains selectable.
+The root bubble wrapper. `bubble(content)` accepts `impl Into<View<'a, Message>>`. Composition requires `Message: Clone` like Button. Passive content remains selectable.
 
 | Builder | Type | Default | Behavior |
 |---|---|---|---|

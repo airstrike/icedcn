@@ -6,4 +6,4 @@ Keep parsing, validation, and streamed-data updates in `update`. Build the inter
 
 icedcn controls can keep their own local state. Use `default_checked`, `default_value`, or `default_open` to seed an uncontrolled control. Supply `checked`, `value`, or `open` when the application owns that state, and handle the matching change message in `update`. The [Components guide](icedcn://guide/components#state-and-messages) gives a controlled example.
 
-The library's children use `Slot`; an iced application boundary uses `iced::Element`. Both conversions are supported by the public builders.
+The library's children use `View`; an iced application boundary uses `iced::Element`. Both conversions are supported by the public builders.

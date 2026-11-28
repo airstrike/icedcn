@@ -13,7 +13,7 @@ use icedcn::widget::{
     aspect_ratio, badge, button, column, container, field, input, row, scroll_area, separator,
     space, text, toggle_group,
 };
-use icedcn::{Size, Slot, Theme, radius};
+use icedcn::{Size, Theme, View, radius};
 
 use crate::Message;
 use crate::page;
@@ -113,7 +113,7 @@ fn login_card<'a, M: Clone + 'a>(input_size: f32, forgot: M) -> card::Card<'a, M
                     field(input("m@example.com").text_size(input_size).width(Fill))
                         .label(text::label("Email")),
                     field(input("").secure(true).text_size(input_size).width(Fill))
-                        .label(Slot::from(password_label))
+                        .label(View::from(password_label))
                 ]
                 .spacing(24)
                 .width(Fill)
@@ -181,7 +181,7 @@ impl<'a> Component<'a, Message, Theme> for Spacing {
         )
     }
 }
-fn terms<'a>() -> Slot<'a, Message> {
+fn terms<'a>() -> View<'a, Message> {
     const TERMS: [&str; 4] = [
         "These terms govern your use of the workspace, including access to shared documents, project files, and collaboration tools.",
         "You are responsible for the content you upload and for ensuring that your team has the appropriate permissions to view or edit it.",

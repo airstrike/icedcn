@@ -1,7 +1,7 @@
 //! SidebarHeader: flex col, gap-2 (8px), p-2 (8px)
 
 use crate::column::Column;
-use crate::compose::Slot;
+use crate::compose::View;
 use iced_core::Length::Fill;
 
 /// Create a sidebar header.
@@ -9,7 +9,7 @@ use iced_core::Length::Fill;
 /// A vertical column with 8px spacing and 8px padding, used at the top
 /// of a sidebar for branding, search, or navigation controls.
 pub fn header<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, Message>>,
+    children: impl IntoIterator<Item = View<'a, Message>>,
 ) -> Column<'a, Message> {
     Column::with_children(children)
         .width(Fill)

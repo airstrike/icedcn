@@ -4,7 +4,7 @@ use iced::{Element, Fill, Vector};
 use icedcn::core::{Border, Radius, Shadow};
 use icedcn::theme::container::Style;
 use icedcn::widget::{column, container, row, space, text};
-use icedcn::{Color, Slot, Theme};
+use icedcn::{Color, Theme, View};
 
 use crate::icon;
 
@@ -74,7 +74,7 @@ impl Platform {
         width: f32,
         max_width: f32,
         title: String,
-        content: impl Into<Slot<'a, Message>>,
+        content: impl Into<View<'a, Message>>,
     ) -> Element<'a, Message, Theme> {
         let framed = width >= 900. && self != Self::Mobile;
         // Keep the content's tree position stable when resizing through the breakpoint.

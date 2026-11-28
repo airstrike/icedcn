@@ -14,8 +14,8 @@
 use iced::Fill;
 use iced::Widget;
 use iced::widget::component::{Component, component};
-use icedcn::Slot;
 use icedcn::Theme;
+use icedcn::View;
 use icedcn::card;
 use icedcn::theme;
 use icedcn::widget::{Column, button, checkbox, column, field, input, row, switch, text};
@@ -171,11 +171,11 @@ impl<'a> Component<'a, Message, Theme> for Form {
         .style(theme::text::Muted);
 
         let body: Column<'a, Event> = column([
-            Slot::from(email_field),
-            Slot::from(name_field),
-            Slot::from(terms),
-            Slot::from(emails),
-            Slot::from(footer),
+            View::from(email_field),
+            View::from(name_field),
+            View::from(terms),
+            View::from(emails),
+            View::from(footer),
             footnote.into(),
         ])
         .spacing(16)

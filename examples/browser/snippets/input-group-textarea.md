@@ -2,11 +2,11 @@
 use crate::icon;
 use iced::Fill;
 use icedcn::Size;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::input_group::{Align, addon};
 use icedcn::widget::{button, container, input_group, row, space, textarea};
 
-fn editor<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
+fn editor<'a, M: Clone + 'a>(size: f32) -> View<'a, M> {
     container(
         input_group(
             textarea("console.log('Hello, world!');")

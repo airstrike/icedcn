@@ -3,9 +3,9 @@ use crate::icon;
 use iced::widget::{Text, responsive};
 use iced::{Fill, Shrink, Widget};
 use icedcn::widget::{Row, button, container, dropdown_menu, menu};
-use icedcn::{Slot, Theme};
+use icedcn::{View, Theme};
 
-pub fn view<'a>(selected: &'static str) -> Slot<'a, &'static str> {
+pub fn view<'a>(selected: &'static str) -> View<'a, &'static str> {
     responsive(move |area| {
         let outline = |label| button(label).style(button::Outline);
         let square = |glyph: Text<'a, Theme>| {
@@ -48,7 +48,7 @@ pub fn view<'a>(selected: &'static str) -> Slot<'a, &'static str> {
         )
         .align(dropdown_menu::Align::End)
         .width(160);
-        Slot::from(
+        View::from(
             container(
                 groups
                     .push(button::group![outline("Archive"), outline("Report")].into())

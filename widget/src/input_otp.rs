@@ -1,6 +1,6 @@
 //! One-time code entry with a single editable value and individually painted slots.
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::text_input::{TextInput, element};
 use iced_core::Element;
 use iced_widget::{Renderer, Widget};
@@ -153,9 +153,9 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputOtp<'a, Message> {
     }
 }
 
-impl<'a, Message: Clone + 'a> From<InputOtp<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<InputOtp<'a, Message>> for View<'a, Message> {
     fn from(input: InputOtp<'a, Message>) -> Self {
-        Slot::new(input)
+        View::new(input)
     }
 }
 impl<'a, Message: Clone + 'a> From<InputOtp<'a, Message>>

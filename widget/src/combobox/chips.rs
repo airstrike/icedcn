@@ -6,16 +6,16 @@ use iced_core::{
 use iced_widget::Renderer;
 use icedcn_core::Theme;
 
-use crate::Slot;
+use crate::View;
 
 pub(super) struct Chips<'a, Message> {
     children: Vec<Element<'a, Message, Theme, Renderer>>,
 }
 
 impl<'a, Message: 'a> Chips<'a, Message> {
-    pub fn new(children: Vec<Slot<'a, Message>>) -> Self {
+    pub fn new(children: Vec<View<'a, Message>>) -> Self {
         Self {
-            children: children.into_iter().map(Slot::compose).collect(),
+            children: children.into_iter().map(View::compose).collect(),
         }
     }
 }

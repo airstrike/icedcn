@@ -2,7 +2,7 @@ use crate::{Message, page};
 use iced::widget::responsive;
 use iced::{Fill, Task, Widget};
 use icedcn::widget::{column, container, menu, navigation_menu, row, text};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 pub static META: page::Meta = page::Meta {
     title: "Navigation Menu",
     description: "A collection of links for navigating an application.",
@@ -34,7 +34,7 @@ fn doc_link(
     label: &'static str,
     description: &'static str,
     url: &'static str,
-) -> Slot<'static, Message> {
+) -> View<'static, Message> {
     menu::item(
         column![
             text(label).medium().size(14),
@@ -78,7 +78,7 @@ const COMPONENTS: &[(&str, &str, &str)] = &[
     ),
 ];
 
-fn navigation(wide: bool) -> Slot<'static, Message> {
+fn navigation(wide: bool) -> View<'static, Message> {
     let mut entries = vec![
         navigation_menu::menu("Getting started", || {
             column![

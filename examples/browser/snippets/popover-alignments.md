@@ -1,9 +1,9 @@
 ```rust
 use icedcn::widget::popover::Align;
 use icedcn::widget::{button, popover, row, text};
-use icedcn::{Size, Slot};
+use icedcn::{Size, View};
 
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     let panel = |label: &'a str, alignment, content: &'a str| {
         popover(
             move |p| {

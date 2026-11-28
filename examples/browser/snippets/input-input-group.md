@@ -1,10 +1,10 @@
 ```rust
 use crate::icon;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::theme::text::muted;
 use icedcn::widget::{field, input, input_group};
 
-fn website<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
+fn website<'a, Message: Clone + 'a>() -> View<'a, Message> {
     let info = icon::info()
         .size(16)
         .line_height(1.0)

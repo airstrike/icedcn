@@ -5,7 +5,7 @@ use icedcn::card;
 use icedcn::core::Border;
 use icedcn::padding::*;
 use icedcn::theme::container::Style;
-use icedcn::widget::{Slot, button, column, container, row, table, text};
+use icedcn::widget::{View, button, column, container, row, table, text};
 use icedcn::{Gap, Size, Theme, radius};
 
 use crate::{Message, State, icon};
@@ -91,7 +91,7 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
     .into()
 }
 
-fn transactions_table() -> Slot<'static, Message> {
+fn transactions_table() -> View<'static, Message> {
     table([table::body(TRANSACTIONS.iter().map(transaction_row))])
         .width(Fill)
         .into()
@@ -117,7 +117,7 @@ fn transaction_row(transaction: &Transaction) -> table::Row<'static, Message> {
     ])
 }
 
-fn transaction_identity(transaction: &Transaction) -> Slot<'static, Message> {
+fn transaction_identity(transaction: &Transaction) -> View<'static, Message> {
     row![
         transaction_icon(transaction.icon),
         column![
@@ -133,7 +133,7 @@ fn transaction_identity(transaction: &Transaction) -> Slot<'static, Message> {
     .into()
 }
 
-fn transaction_icon(kind: Kind) -> Slot<'static, Message> {
+fn transaction_icon(kind: Kind) -> View<'static, Message> {
     let icon = match kind {
         Kind::Coffee => icon::coffee().size(16),
         Kind::Entertainment => icon::tv().size(16),

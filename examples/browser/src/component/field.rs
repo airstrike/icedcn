@@ -5,7 +5,7 @@ use crate::{Message, page};
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Task, Widget};
 use icedcn::widget::{container, field, slider};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 pub static META: page::Meta = page::Meta {
     title: "Field",
@@ -224,7 +224,7 @@ impl page::Page for FieldPage {
     }
 }
 
-pub(super) fn subscription_plan<'a>() -> Slot<'a, Message> {
+pub(super) fn subscription_plan<'a>() -> View<'a, Message> {
     recipes::plans()
 }
 

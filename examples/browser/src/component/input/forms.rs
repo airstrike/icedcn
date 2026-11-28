@@ -1,7 +1,7 @@
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Widget};
 use icedcn::widget::{button, field, input, row, select};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::Message;
 
@@ -52,7 +52,7 @@ impl Values {
         }
     }
 
-    fn group<'a>(&self, text_size: f32) -> Slot<'a, Edit> {
+    fn group<'a>(&self, text_size: f32) -> View<'a, Edit> {
         field::group([
             field(
                 input("Jordan Lee")
@@ -84,7 +84,7 @@ impl Values {
         .into()
     }
 
-    fn form<'a>(&self, text_size: f32) -> Slot<'a, Edit> {
+    fn form<'a>(&self, text_size: f32) -> View<'a, Edit> {
         let entry = |label: &'a str, hint: &'a str, value: &str, edit: fn(String) -> Edit| {
             field(
                 input(hint)

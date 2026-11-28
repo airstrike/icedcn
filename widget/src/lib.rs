@@ -114,7 +114,7 @@ pub use collapsible::Collapsible;
 pub use column::Column;
 pub use combobox::Combobox;
 pub use command::command;
-pub use compose::{Compose, Inherited, Slot};
+pub use compose::{Compose, Inherited, View};
 pub use context_menu::ContextMenu;
 pub use data_table::data_table;
 pub use date_picker::{DatePicker, date_picker};
@@ -163,7 +163,7 @@ pub use weight::Weight;
 
 /// Create a [`Button`] with the given content and default style.
 pub fn button<'a, Message: Clone + 'a>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> Button<'a, Message> {
     button::button(content)
 }
@@ -176,14 +176,14 @@ pub fn text<'a>(content: impl iced_core::text::IntoFragment<'a>) -> Text<'a> {
 
 /// Create a [`Column`] with the given children.
 pub fn column<'a, Message: 'a>(
-    children: impl IntoIterator<Item = compose::Slot<'a, Message>>,
+    children: impl IntoIterator<Item = compose::View<'a, Message>>,
 ) -> Column<'a, Message> {
     Column::with_children(children)
 }
 
 /// Create a [`Container`] wrapping the given content.
 pub fn container<'a, Message: 'a>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> container::Container<'a, Message> {
     container::Container::new(content)
 }
@@ -192,14 +192,14 @@ pub fn container<'a, Message: 'a>(
 /// the available space. Mirrors `iced::widget::center` but returns our
 /// wrapped Container so the tweak-aware `.style()` is available.
 pub fn center<'a, Message: 'a>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> container::Container<'a, Message> {
     container::Container::new(content).center(iced_core::Length::Fill)
 }
 
 /// Create a [`Row`] with the given children.
 pub fn row<'a, Message: 'a>(
-    children: impl IntoIterator<Item = compose::Slot<'a, Message>>,
+    children: impl IntoIterator<Item = compose::View<'a, Message>>,
 ) -> Row<'a, Message> {
     Row::with_children(children)
 }
@@ -219,7 +219,7 @@ where
 /// 2px scroller at faint `palette.muted.foreground` alpha. Variant
 /// overrides via `.class(theme::scrollable::Hidden)` and friends.
 pub fn scrollable<'a, Message: 'a>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> scrollable::Scrollable<'a, Message> {
     scrollable::scrollable(content)
 }
@@ -227,7 +227,7 @@ pub fn scrollable<'a, Message: 'a>(
 /// Create a [`Table`] with the given table child slots.
 pub fn table<'a, Message: 'a, C>(children: impl IntoIterator<Item = C>) -> Table<'a, Message>
 where
-    C: Into<Slot<'a, Message>>,
+    C: Into<View<'a, Message>>,
 {
     table::table(children)
 }
@@ -261,7 +261,7 @@ where
 }
 
 /// Create a [`Badge`] with the given content.
-pub fn badge<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Badge<'a, Message> {
+pub fn badge<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Badge<'a, Message> {
     badge::badge(content)
 }
 
@@ -282,26 +282,26 @@ pub fn separator() -> separator::Separator {
 }
 
 /// Create a [`Kbd`] showing `content`.
-pub fn kbd<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Kbd<'a, Message> {
+pub fn kbd<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Kbd<'a, Message> {
     kbd::kbd(content)
 }
 
 /// Create an off, uncontrolled [`Toggle`] showing `content`.
-pub fn toggle<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Toggle<'a, Message> {
+pub fn toggle<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Toggle<'a, Message> {
     toggle::toggle(content)
 }
 
 /// Create a [`Tooltip`] showing `content` while `trigger` is hovered.
 pub fn tooltip<'a, Message: 'a>(
-    trigger: impl Into<Slot<'a, Message>>,
-    content: impl Into<Slot<'a, Message>>,
+    trigger: impl Into<View<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> Tooltip<'a, Message> {
     tooltip::tooltip(trigger, content)
 }
 
 /// Create a [`Pagination`] from its items, in order.
 pub fn pagination<'a, Message: 'a>(
-    items: impl IntoIterator<Item = Slot<'a, Message>>,
+    items: impl IntoIterator<Item = View<'a, Message>>,
 ) -> Pagination<'a, Message> {
     pagination::pagination(items)
 }
@@ -309,7 +309,7 @@ pub fn pagination<'a, Message: 'a>(
 /// Create an uncontrolled [`radio::Group`] whose content is built by
 /// `body` from a [`radio::group::Handle`].
 pub fn radio_group<'a, Message>(
-    body: impl Fn(&radio::group::Handle) -> Slot<'a, Message> + 'a,
+    body: impl Fn(&radio::group::Handle) -> View<'a, Message> + 'a,
 ) -> radio::Group<'a, Message> {
     radio::group(body)
 }
@@ -336,15 +336,15 @@ pub fn input_group<'a, Message>(
 /// Create a closed, uncontrolled [`AlertDialog`]: `trigger` builds what
 /// sits in place, `content` the panel shown while open.
 pub fn alert_dialog<'a, Message>(
-    trigger: impl Fn(&alert_dialog::Handle) -> Slot<'a, Message> + 'a,
-    content: impl Fn(&alert_dialog::Handle) -> Slot<'a, Message> + 'a,
+    trigger: impl Fn(&alert_dialog::Handle) -> View<'a, Message> + 'a,
+    content: impl Fn(&alert_dialog::Handle) -> View<'a, Message> + 'a,
 ) -> AlertDialog<'a, Message> {
     alert_dialog::alert_dialog(trigger, content)
 }
 
 /// Create a [`toast::Toaster`] showing the toasts raised inside `content`.
 pub fn toaster<'a, Message: 'a>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> toast::Toaster<'a, Message> {
     toast::toaster(content)
 }
@@ -356,7 +356,7 @@ pub fn alert<'a, Message: 'a>() -> Alert<'a, Message> {
 
 /// Constrain `content` to a width-to-height ratio with an [`AspectRatio`] widget.
 pub fn aspect_ratio<'a, Message: 'a>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
     ratio: f32,
 ) -> AspectRatio<'a, Message> {
     aspect_ratio::aspect_ratio(content, ratio)
@@ -388,7 +388,7 @@ pub fn checkbox<'a, Message: 'a>() -> Checkbox<'a, Message> {
 /// Create a closed, uncontrolled [`Collapsible`] whose content is built by
 /// `body` from a [`collapsible::Handle`].
 pub fn collapsible<'a, Message>(
-    body: impl Fn(&collapsible::Handle) -> Slot<'a, Message> + 'a,
+    body: impl Fn(&collapsible::Handle) -> View<'a, Message> + 'a,
 ) -> Collapsible<'a, Message> {
     collapsible::collapsible(body)
 }
@@ -396,7 +396,7 @@ pub fn collapsible<'a, Message>(
 /// Create uncontrolled [`Tabs`] whose content is built by `body` from a
 /// [`tabs::Handle`].
 pub fn tabs<'a, Message>(
-    body: impl Fn(&tabs::Handle) -> Slot<'a, Message> + 'a,
+    body: impl Fn(&tabs::Handle) -> View<'a, Message> + 'a,
 ) -> Tabs<'a, Message> {
     tabs::tabs(body)
 }
@@ -404,16 +404,16 @@ pub fn tabs<'a, Message>(
 /// Create a closed, uncontrolled [`Dialog`]: `trigger` builds what sits in
 /// place, `content` the panel shown while open.
 pub fn dialog<'a, Message>(
-    trigger: impl Fn(&dialog::Handle) -> Slot<'a, Message> + 'a,
-    content: impl Fn(&dialog::Handle) -> Slot<'a, Message> + 'a,
+    trigger: impl Fn(&dialog::Handle) -> View<'a, Message> + 'a,
+    content: impl Fn(&dialog::Handle) -> View<'a, Message> + 'a,
 ) -> Dialog<'a, Message> {
     dialog::dialog(trigger, content)
 }
 
 /// Create a closed, uncontrolled [`sheet::Sheet`] sliding in from the right.
 pub fn sheet<'a, Message>(
-    trigger: impl Fn(&dialog::Handle) -> Slot<'a, Message> + 'a,
-    content: impl Fn(&dialog::Handle) -> Slot<'a, Message> + 'a,
+    trigger: impl Fn(&dialog::Handle) -> View<'a, Message> + 'a,
+    content: impl Fn(&dialog::Handle) -> View<'a, Message> + 'a,
 ) -> sheet::Sheet<'a, Message> {
     sheet::sheet(trigger, content)
 }
@@ -424,7 +424,7 @@ pub fn progress<'a, Message: 'a>(value: f32) -> Progress<'a, Message> {
 }
 
 /// Create a [`Field`] wrapping the given input content.
-pub fn field<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Field<'a, Message> {
+pub fn field<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Field<'a, Message> {
     field::field(content)
 }
 
@@ -435,7 +435,7 @@ pub fn empty<'a, Message: 'a>() -> Empty<'a, Message> {
 
 /// Create an [`Item`] from children.
 pub fn item<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, Message>>,
+    children: impl IntoIterator<Item = View<'a, Message>>,
 ) -> Item<'a, Message> {
     item::item(children)
 }
@@ -456,8 +456,8 @@ pub use accordion::accordion;
 /// Create a closed, uncontrolled [`Popover`]: `trigger` builds what sits in
 /// place, `content` the panel shown next to it while open.
 pub fn popover<'a, Message>(
-    trigger: impl Fn(&popover::Handle) -> Slot<'a, Message> + 'a,
-    content: impl Fn(&popover::Handle) -> Slot<'a, Message> + 'a,
+    trigger: impl Fn(&popover::Handle) -> View<'a, Message> + 'a,
+    content: impl Fn(&popover::Handle) -> View<'a, Message> + 'a,
 ) -> Popover<'a, Message> {
     popover::popover(trigger, content)
 }
@@ -465,8 +465,8 @@ pub fn popover<'a, Message>(
 /// Create a closed, uncontrolled [`DropdownMenu`]: `trigger` builds what
 /// sits in place, `content` the menu shown while open.
 pub fn dropdown_menu<'a, Message>(
-    trigger: impl Fn(&popover::Handle) -> Slot<'a, Message> + 'a,
-    content: impl Fn(&popover::Handle) -> Slot<'a, Message> + 'a,
+    trigger: impl Fn(&popover::Handle) -> View<'a, Message> + 'a,
+    content: impl Fn(&popover::Handle) -> View<'a, Message> + 'a,
 ) -> DropdownMenu<'a, Message> {
     dropdown_menu::dropdown_menu(trigger, content)
 }
@@ -487,8 +487,8 @@ pub fn combobox<'a, Message>(
 
 /// Create a [`HoverCard`] showing `content` while `trigger` is hovered.
 pub fn hover_card<'a, Message>(
-    trigger: impl Into<Slot<'a, Message>>,
-    content: impl Into<Slot<'a, Message>>,
+    trigger: impl Into<View<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> HoverCard<'a, Message> {
     hover_card::hover_card(trigger, content)
 }
@@ -496,8 +496,8 @@ pub fn hover_card<'a, Message>(
 /// Create a [`ContextMenu`]: `trigger` builds the area a right press opens
 /// it in, `content` the menu.
 pub fn context_menu<'a, Message>(
-    trigger: impl Fn(&popover::Handle) -> Slot<'a, Message> + 'a,
-    content: impl Fn(&popover::Handle) -> Slot<'a, Message> + 'a,
+    trigger: impl Fn(&popover::Handle) -> View<'a, Message> + 'a,
+    content: impl Fn(&popover::Handle) -> View<'a, Message> + 'a,
 ) -> ContextMenu<'a, Message> {
     context_menu::context_menu(trigger, content)
 }

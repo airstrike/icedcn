@@ -2,7 +2,7 @@
 
 The `Card` component is the root container for card content.
 
-`card(content)` accepts `impl Into<Slot>` and returns a `Card` builder implementing `Compose`. It keeps arbitrary children lazy, with the card background, foreground/10 border, 14px corners and clipping. The root supplies its outer column gap and vertical padding; a descendant footer removes the bottom padding. A nested Card starts its own layout context.
+`card(content)` accepts `impl Into<View>` and returns a `Card` builder implementing `Compose`. It keeps arbitrary children lazy, with the card background, foreground/10 border, 14px corners and clipping. The root supplies its outer column gap and vertical padding; a descendant footer removes the bottom padding. A nested Card starts its own layout context.
 
 | Builder | Type | Default |
 |---|---|---|

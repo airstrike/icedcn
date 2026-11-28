@@ -4,7 +4,7 @@ use iced::widget::space;
 use iced::{Center, Fill};
 use icedcn::theme;
 use icedcn::widget::{button, column, container, field, input, item, progress, row, text};
-use icedcn::{Slot, Theme, Vertical, card};
+use icedcn::{Theme, Vertical, View, card};
 
 use super::select;
 use crate::Message;
@@ -19,7 +19,7 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
         .into()
 }
 
-fn targets_card() -> Slot<'static, Message> {
+fn targets_card() -> View<'static, Message> {
     card::card(
         column![
             card::header("Savings Targets")
@@ -52,7 +52,7 @@ fn targets_card() -> Slot<'static, Message> {
     .into()
 }
 
-fn buy_card() -> Slot<'static, Message> {
+fn buy_card() -> View<'static, Message> {
     let amount = field::field(input("").default_value("$ 1,000.00").width(Fill))
         .label("Amount to Invest")
         .width(Fill);
@@ -104,7 +104,7 @@ fn target(
     value: f32,
     status: &'static str,
     amount: &'static str,
-) -> Slot<'static, Message> {
+) -> View<'static, Message> {
     item::item([
         item::content([
             text::xs(label)
@@ -127,7 +127,7 @@ fn target(
     .into()
 }
 
-fn info_row(label: &'static str, value: &'static str) -> Slot<'static, Message> {
+fn info_row(label: &'static str, value: &'static str) -> View<'static, Message> {
     row![
         text::muted(label),
         space::horizontal(),

@@ -7,7 +7,7 @@ use icedcn_core::theme::container::Style;
 use icedcn_core::{Border, Theme, radius};
 
 use super::{CopyButton, Placement};
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::{Button, Row, Size, container};
 
 /// Build actions from buttons of different types.
@@ -34,12 +34,12 @@ macro_rules! __code_block_actions {
 /// Buttons default to `Size::Xs`. A ghost button in the header is muted until
 /// hovered or [`pressed`](crate::Button::pressed).
 pub struct Actions<'a, Message> {
-    children: Vec<Slot<'a, Message>>,
+    children: Vec<View<'a, Message>>,
     placement: Option<Placement>,
 }
 
 /// Actions holding one button.
-pub fn actions<'a, Message>(child: impl Into<Slot<'a, Message>>) -> Actions<'a, Message> {
+pub fn actions<'a, Message>(child: impl Into<View<'a, Message>>) -> Actions<'a, Message> {
     Actions {
         children: vec![child.into()],
         placement: None,
@@ -48,7 +48,7 @@ pub fn actions<'a, Message>(child: impl Into<Slot<'a, Message>>) -> Actions<'a, 
 
 impl<'a, Message: 'a> Actions<'a, Message> {
     /// Add a button after the others.
-    pub fn push(mut self, child: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn push(mut self, child: impl Into<View<'a, Message>>) -> Self {
         self.children.push(child.into());
         self
     }
@@ -107,9 +107,9 @@ impl<'a, Message: 'a> From<CopyButton<'a>> for Actions<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Actions<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Actions<'a, Message>> for View<'a, Message> {
     fn from(actions: Actions<'a, Message>) -> Self {
-        Slot::new(actions)
+        View::new(actions)
     }
 }
 

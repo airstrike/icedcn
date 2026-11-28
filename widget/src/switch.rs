@@ -20,7 +20,7 @@ pub mod widget;
 pub use icedcn_core::theme::switch::{Default, Disabled, Invalid};
 pub use widget::{Catalog, Ring, Status, Style, StyleFn};
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use iced_core::text::IntoFragment;
 use iced_core::{Length, Pixels};
 use iced_widget::Renderer;
@@ -182,9 +182,9 @@ impl<'a, Message: 'a> From<Switch<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Switch<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Switch<'a, Message>> for View<'a, Message> {
     fn from(widget: Switch<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 

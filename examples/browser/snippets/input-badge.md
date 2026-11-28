@@ -1,9 +1,9 @@
 ```rust
 use iced::Fill;
-use icedcn::widget::{Slot, badge, field, input, row, space};
+use icedcn::widget::{View, badge, field, input, row, space};
 
 field(input("https://api.example.com/webhook").width(Fill))
-    .label(Slot::from(
+    .label(View::from(
         row![
             field::label("Webhook URL"),
             space::horizontal(),

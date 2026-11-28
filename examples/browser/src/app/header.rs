@@ -15,7 +15,7 @@ use icedcn::widget::{
     button, column, command, container, dialog, dropdown_menu, menu, row, rule, space, text,
     tooltip,
 };
-use icedcn::{Slot, Theme, radius};
+use icedcn::{Theme, View, radius};
 use serde::Deserialize;
 use std::time::Duration;
 
@@ -102,7 +102,7 @@ pub(super) fn shortcuts() -> Subscription<Message> {
     })
 }
 
-fn symbol(bytes: &'static [u8], size: f32) -> Slot<'static, Message> {
+fn symbol(bytes: &'static [u8], size: f32) -> View<'static, Message> {
     svg(svg::Handle::from_memory(bytes))
         .width(size)
         .height(size)
@@ -112,7 +112,7 @@ fn symbol(bytes: &'static [u8], size: f32) -> Slot<'static, Message> {
         .into()
 }
 
-fn divider() -> Slot<'static, Message> {
+fn divider() -> View<'static, Message> {
     container(Element::from(rule::vertical(1)))
         .height(16)
         .into()
@@ -123,7 +123,7 @@ impl App {
         let desktop = width >= 1024.;
         let full = width >= 1280.;
         let mobile = width < 768.;
-        let nav: Slot<'_, Message> = if desktop {
+        let nav: View<'_, Message> = if desktop {
             Row::with_children(NAVIGATION.iter().map(|&(label, url)| {
                 let link = button(label).anchor();
                 let active = match url {
@@ -288,7 +288,7 @@ impl App {
         layers.boxed()
     }
 
-    fn palette(&self) -> Slot<'_, Message> {
+    fn palette(&self) -> View<'_, Message> {
         let receipts = command::item("Receipts")
             .group("Examples")
             .icon(icon::book_open)

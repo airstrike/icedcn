@@ -2,7 +2,7 @@
 //! and stable scroll position when earlier history is inserted.
 mod button;
 mod viewport;
-use crate::{Compose, Inherited, Slot, scroll_area};
+use crate::{Compose, Inherited, View, scroll_area};
 use iced_core::Length::Fill;
 use iced_core::widget::Id;
 pub use iced_core::widget::operation::Animation;
@@ -51,10 +51,10 @@ pub struct Reader {
 pub struct Item<'a, Message> {
     id: u64,
     anchor: bool,
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
 }
 /// A stable application key identifies an item across insertions and wrapping.
-pub fn item<'a, Message: 'a>(id: u64, content: impl Into<Slot<'a, Message>>) -> Item<'a, Message> {
+pub fn item<'a, Message: 'a>(id: u64, content: impl Into<View<'a, Message>>) -> Item<'a, Message> {
     Item {
         id,
         anchor: false,
@@ -134,7 +134,7 @@ impl<'a, Message> Scroller<'a, Message> {
     }
     /// Show a floating end button while the reader can scroll down.
     /// Supply the icon and handle its press in `update` with [`scroll_to`].
-    pub fn end_button<Icon: Into<Slot<'a, Message>>>(
+    pub fn end_button<Icon: Into<View<'a, Message>>>(
         mut self,
         visible: bool,
         icon: impl Fn(f32) -> Icon + 'a,
@@ -190,9 +190,9 @@ impl<'a, Message: 'a> Compose<Message> for Scroller<'a, Message> {
         }
     }
 }
-impl<'a, Message: 'a> From<Scroller<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Scroller<'a, Message>> for View<'a, Message> {
     fn from(view: Scroller<'a, Message>) -> Self {
-        Slot::new(view)
+        View::new(view)
     }
 }
 impl<'a, Message: 'a> From<Scroller<'a, Message>> for Element<'a, Message, Theme, Renderer> {

@@ -8,8 +8,8 @@
 //! row, column.
 
 use iced::Fill;
-use icedcn::Slot;
 use icedcn::Theme;
+use icedcn::View;
 use icedcn::card;
 use icedcn::core::style::{destructive, outline};
 use icedcn::theme;
@@ -49,7 +49,7 @@ pub fn view<'a>(state: &'a State) -> iced::Element<'a, Message, Theme> {
     let code_chip = text::inline_code("delete --hard");
 
     let footnote = row![
-        Slot::from(code_chip),
+        View::from(code_chip),
         text::xs("propagates across replicas in ~30s.").style(theme::text::Muted),
     ]
     .spacing(8)
@@ -59,7 +59,7 @@ pub fn view<'a>(state: &'a State) -> iced::Element<'a, Message, Theme> {
         .spacing(8)
         .width(Fill);
 
-    let body = column([Slot::from(armed_check), footnote.into(), actions.into()])
+    let body = column([View::from(armed_check), footnote.into(), actions.into()])
         .spacing(12)
         .width(Fill);
 

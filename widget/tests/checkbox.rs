@@ -7,7 +7,7 @@ use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space};
 use icedcn_core::Theme;
 use icedcn_widget::operation::control;
-use icedcn_widget::{Inherited, Slot, checkbox, column, field};
+use icedcn_widget::{Inherited, View, checkbox, column, field};
 
 type Ui = iced_test::Simulator<'static, bool, Theme, Renderer>;
 
@@ -205,13 +205,13 @@ fn disabled_inheritance_blocks_pointer_keyboard_and_label_activation() {
         checkbox::State::Checked,
         checkbox::State::Indeterminate,
     ] {
-        let mut slot: Slot<'static, bool> = field(
+        let mut slot: View<'static, bool> = field(
             checkbox()
                 .default_checked(state)
                 .on_checked_change(|value| value),
         )
         .orientation(field::Horizontal)
-        .label(Slot::from(Space::new().width(100).height(20)))
+        .label(View::from(Space::new().width(100).height(20)))
         .into();
         slot.inherit(&Inherited::default().with_disabled(true));
         let mut ui = simulator(slot.compose());
@@ -284,7 +284,7 @@ fn card_and_label_overlap_with_expanded_target_never_toggle_twice() {
     for card in [false, true] {
         let mut content = field(checkbox().on_checked_change(|value| value))
             .orientation(field::Horizontal)
-            .label(Slot::from(Space::new().width(100).height(20)));
+            .label(View::from(Space::new().width(100).height(20)));
         if card {
             content = content.card();
         }
@@ -314,7 +314,7 @@ fn complete_card_padding_activates_once_and_inherits_disabled() {
         let mut ui = simulator(Element::from(
             field(checkbox().on_checked_change(|value| value))
                 .orientation(field::Horizontal)
-                .label(Slot::from(Space::new().width(100).height(20)))
+                .label(View::from(Space::new().width(100).height(20)))
                 .card()
                 .disabled(disabled),
         ));

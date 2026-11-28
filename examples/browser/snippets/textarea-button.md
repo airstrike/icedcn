@@ -1,9 +1,9 @@
 ```rust
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{button, column, textarea};
 
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     column![
         textarea("Type your message here."),
         button("Send message").width(Fill),

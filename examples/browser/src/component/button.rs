@@ -14,7 +14,7 @@ mod with_icon;
 use iced::Task;
 
 use icedcn::widget::{button, row};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::page;
 
@@ -140,7 +140,7 @@ impl ButtonPage {
     }
 }
 
-fn demo() -> Slot<'static, crate::Message> {
+fn demo() -> View<'static, crate::Message> {
     row![
         button("Button").style(button::Outline),
         button(crate::icon::arrow_up().size(16))
@@ -151,7 +151,7 @@ fn demo() -> Slot<'static, crate::Message> {
     .into()
 }
 
-fn view(id: &str, wide: bool) -> Slot<'static, crate::Message> {
+fn view(id: &str, wide: bool) -> View<'static, crate::Message> {
     match id {
         "size" => size::view(wide),
         "default" => default::view(),

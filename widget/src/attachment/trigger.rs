@@ -1,5 +1,5 @@
 use crate::button::widget::{Button, Style, StyleFn};
-use crate::{Compose, Inherited, Slot};
+use crate::{Compose, Inherited, View};
 use iced_core::Length::Fill;
 use iced_core::{Element, mouse};
 use iced_widget::{Renderer, Widget};
@@ -7,12 +7,12 @@ use icedcn_core::Theme;
 
 /// A transparent, keyboard-accessible target for an entire attachment.
 pub struct Trigger<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     press: Option<Message>,
     disabled: bool,
 }
 
-pub fn trigger<'a, Message>(content: impl Into<Slot<'a, Message>>) -> Trigger<'a, Message> {
+pub fn trigger<'a, Message>(content: impl Into<View<'a, Message>>) -> Trigger<'a, Message> {
     Trigger {
         content: content.into(),
         press: None,
@@ -50,8 +50,8 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Trigger<'a, Message> {
             .boxed()
     }
 }
-impl<'a, Message: Clone + 'a> From<Trigger<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Trigger<'a, Message>> for View<'a, Message> {
     fn from(trigger: Trigger<'a, Message>) -> Self {
-        Slot::new(trigger)
+        View::new(trigger)
     }
 }

@@ -6,7 +6,7 @@ use iced::{Center, Element, Fill, Shrink};
 use icedcn::widget::scrollable::scrollable;
 use icedcn::widget::table::Track::Auto;
 use icedcn::widget::{button, column, container, empty, row, space, table, text};
-use icedcn::{Slot, Theme, card};
+use icedcn::{Theme, View, card};
 
 use super::sale::Sale;
 use crate::icon;
@@ -52,7 +52,7 @@ pub fn view(sales: &HashMap<usize, Sale>) -> Element<'_, Message, Theme> {
             .span(2)
             .padding(0)])
         }));
-        let sales_table = table([Slot::from(table::grid([Auto; 2]).header(header).body(body))]);
+        let sales_table = table([View::from(table::grid([Auto; 2]).header(header).body(body))]);
         column![
             row![
                 space::horizontal(),

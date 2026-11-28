@@ -1,10 +1,10 @@
 `.spacing(16)` leaves 16 pixels between adjacent slides. Choose a gutter from the available width to vary it when the window resizes.
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{carousel, text};
 
-pub fn fixed<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
+pub fn fixed<'a, Message: Clone + 'static>() -> View<'a, Message> {
     carousel(5, |index| text::p((index + 1).to_string()))
         .visible(3)
         .spacing(16.0)
@@ -12,7 +12,7 @@ pub fn fixed<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
         .into()
 }
 
-pub fn responsive<'a, Message: Clone + 'static>(window_width: f32) -> Slot<'a, Message> {
+pub fn responsive<'a, Message: Clone + 'static>(window_width: f32) -> View<'a, Message> {
     carousel(5, |index| text::p((index + 1).to_string()))
         .visible(3)
         .spacing(if window_width >= 768.0 { 16.0 } else { 8.0 })

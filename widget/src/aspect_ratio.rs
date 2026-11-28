@@ -24,7 +24,7 @@ use iced_widget::Renderer;
 
 use icedcn_core::Theme;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 
 /// Constrains a child to the given width divided by height. For example, `16.0 / 9.0` produces
 /// a widescreen frame. Use [`AspectRatio::width`] or [`AspectRatio::max_width`] to control its
@@ -34,7 +34,7 @@ where
     Renderer: iced_core::Renderer,
 {
     // A slot can receive inherited props until iced diffs the widget.
-    pending: Option<Slot<'a, Message, Theme, Renderer>>,
+    pending: Option<View<'a, Message, Theme, Renderer>>,
     content: Option<Element<'a, Message, Theme, Renderer>>,
     ratio: f32,
     width: Length,
@@ -46,7 +46,7 @@ where
     Renderer: iced_core::Renderer + 'a,
 {
     /// Wrap `content` and constrain it to the given `width / height` ratio.
-    pub fn new(content: impl Into<Slot<'a, Message, Theme, Renderer>>, ratio: f32) -> Self {
+    pub fn new(content: impl Into<View<'a, Message, Theme, Renderer>>, ratio: f32) -> Self {
         Self {
             pending: Some(content.into()),
             content: None,
@@ -72,7 +72,7 @@ where
 
 /// Constrain the child to a width-to-height ratio, such as `16.0 / 9.0`.
 pub fn aspect_ratio<'a, Message: 'a>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
     ratio: f32,
 ) -> AspectRatio<'a, Message> {
     AspectRatio::new(content, ratio)
@@ -226,9 +226,9 @@ impl<'a, Message: 'a> From<AspectRatio<'a, Message, Renderer>>
     }
 }
 
-impl<'a, Message: 'a> From<AspectRatio<'a, Message, Renderer>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<AspectRatio<'a, Message, Renderer>> for View<'a, Message> {
     fn from(widget: AspectRatio<'a, Message, Renderer>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -252,7 +252,7 @@ impl<'a, Message: 'a, Renderer: iced_core::Renderer + 'a> Compose<Message, Theme
 #[cfg(test)]
 mod tests {
     use super::aspect_ratio;
-    use crate::{Inherited, Slot, button, container};
+    use crate::{Inherited, View, button, container};
     use iced_core::Length::Fill;
     use iced_core::widget::Id;
     use iced_core::{Element, Length, Point, Size};
@@ -279,7 +279,7 @@ mod tests {
 
     #[test]
     fn disabled_reaches_interactive_children() {
-        let mut content: Slot<'_, bool> = aspect_ratio(
+        let mut content: View<'_, bool> = aspect_ratio(
             button(Space::new().width(40).height(40)).on_press(true),
             1.0,
         )

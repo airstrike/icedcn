@@ -6,7 +6,7 @@ use std::time::Duration;
 use crate::button::widget;
 use crate::button::widget::Button;
 use crate::combobox::keys::Keys;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::menu::list::List;
 use crate::{container, popover, row, text};
 use iced_core::keyboard::{Key, key::Named};
@@ -30,14 +30,14 @@ pub struct Entry<'a, Message> {
 }
 #[derive(Clone)]
 enum Action<'a, Message> {
-    Menu(Rc<dyn Fn() -> Slot<'a, Message> + 'a>),
+    Menu(Rc<dyn Fn() -> View<'a, Message> + 'a>),
     Link(Message),
 }
 
 /// A named menu containing ordinary menu items, groups and submenus.
 pub fn menu<'a, Message>(
     label: impl Into<Cow<'a, str>>,
-    content: impl Fn() -> Slot<'a, Message> + 'a,
+    content: impl Fn() -> View<'a, Message> + 'a,
 ) -> Entry<'a, Message> {
     Entry {
         label: label.into(),
@@ -162,7 +162,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             let expandable = matches!(entry.action, Action::Menu(_));
             let trigger = move || {
                 let label = text(entry.label.clone()).size(text::size::SM).medium();
-                let content: Slot<'a, Event<Message>> = if navigation && expandable {
+                let content: View<'a, Event<Message>> = if navigation && expandable {
                     row![label, text(if is_open { "⌃" } else { "⌄" }).size(12)]
                         .spacing(4)
                         .align_y(Alignment::Center)
@@ -189,7 +189,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                     .translate(false)
                     .style(style)
             };
-            let entry: Slot<'a, Event<Message>> = match entry.action {
+            let entry: View<'a, Event<Message>> = match entry.action {
                 Action::Link(ref message) => trigger()
                     .on_press(Event::App(message.clone()))
                     .boxed()
@@ -260,7 +260,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             });
         }
         List {
-            content: Slot::from(frame).compose(),
+            content: View::from(frame).compose(),
             horizontal: Some(true),
             autofocus: false.into(),
             on_move: Some(Box::new(Event::Move)),
@@ -278,15 +278,15 @@ impl<'a, Message: Clone + 'static> Compose<Message> for Menubar<'a, Message> {
         component::component(*self).boxed()
     }
 }
-impl<'a, Message: Clone + 'static> From<Menubar<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'static> From<Menubar<'a, Message>> for View<'a, Message> {
     fn from(bar: Menubar<'a, Message>) -> Self {
-        Slot::new(bar)
+        View::new(bar)
     }
 }
 impl<'a, Message: Clone + 'static> From<Menubar<'a, Message>>
     for Element<'a, Message, Theme, Renderer>
 {
     fn from(bar: Menubar<'a, Message>) -> Self {
-        Slot::from(bar).compose()
+        View::from(bar).compose()
     }
 }

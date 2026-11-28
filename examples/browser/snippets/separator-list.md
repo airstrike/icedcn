@@ -1,9 +1,9 @@
 ```rust
 use iced::{Fill, Pixels};
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{column, row, separator, space, text};
 
-fn list_item<'a>(term: &'a str, value: &'a str) -> Slot<'a, Message> {
+fn list_item<'a>(term: &'a str, value: &'a str) -> View<'a, Message> {
     row![
         text::small(term).line_height(Pixels(20.0)),
         space::horizontal(),

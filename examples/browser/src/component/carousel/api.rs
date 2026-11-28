@@ -1,7 +1,7 @@
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Widget};
 use icedcn::widget::{carousel, column, container, text};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use super::slide;
 
@@ -41,7 +41,7 @@ impl<'a, Message: Clone + 'a> Component<'a, Message, Theme> for Example {
     }
 }
 
-pub(super) fn view<'a, Message: Clone + 'a>(window_width: f32) -> Slot<'a, Message> {
+pub(super) fn view<'a, Message: Clone + 'a>(window_width: f32) -> View<'a, Message> {
     component(Example {
         width: if window_width < 640.0 { 160.0 } else { 320.0 },
     })

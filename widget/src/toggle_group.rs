@@ -1,7 +1,7 @@
 //! A group of related toggle buttons.
 //!
 //! An iced `Component` that owns the pressed set. Its items come from a
-//! closure (a [`Slot`] cannot be cloned, and the component rebuilds its
+//! closure (a [`View`] cannot be cloned, and the component rebuilds its
 //! view), and it lays them out as one segmented control, or apart with
 //! [`spacing`](ToggleGroup::spacing):
 //!
@@ -43,7 +43,7 @@ use icedcn_core::theme::toggle::Spec;
 use icedcn_core::{Orientation, Theme};
 
 use crate::button::{self, group};
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::{Button, Size};
 
 pub use icedcn_core::theme::toggle::{Default, Outline};
@@ -79,7 +79,7 @@ impl Mode {
 /// One toggle in a [`ToggleGroup`].
 pub struct Item<'a, Message> {
     value: String,
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     disabled: bool,
     style: Option<Spec>,
     square: Option<f32>,
@@ -88,7 +88,7 @@ pub struct Item<'a, Message> {
 /// Create a toggle group item for `value`, showing `content`.
 pub fn item<'a, Message: 'a>(
     value: impl Into<String>,
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> Item<'a, Message> {
     Item {
         value: value.into(),
@@ -315,12 +315,12 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             .collect();
 
         let element: Element<'a, Event<Message>, Theme, Renderer> = if self.spacing == 0.0 {
-            group::group(buttons.into_iter().map(Slot::from))
+            group::group(buttons.into_iter().map(View::from))
                 .orientation(self.orientation)
                 .width(self.width)
                 .into()
         } else {
-            let children = buttons.into_iter().map(Slot::from);
+            let children = buttons.into_iter().map(View::from);
 
             match self.orientation {
                 Orientation::Horizontal => crate::Row::with_children(children)
@@ -352,9 +352,9 @@ impl<'a, Message: Clone + 'static> Compose<Message> for ToggleGroup<'a, Message>
     }
 }
 
-impl<'a, Message: Clone + 'static> From<ToggleGroup<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'static> From<ToggleGroup<'a, Message>> for View<'a, Message> {
     fn from(group: ToggleGroup<'a, Message>) -> Self {
-        Slot::new(group)
+        View::new(group)
     }
 }
 

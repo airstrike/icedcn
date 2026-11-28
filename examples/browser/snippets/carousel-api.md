@@ -4,7 +4,7 @@ use iced::widget::responsive;
 use iced::{Element, Fill, Shrink, Widget};
 use icedcn::widget::column;
 use icedcn::widget::{carousel, container, text};
-use icedcn::{Slot, Theme, card};
+use icedcn::{View, Theme, card};
 
 fn slide<'a, Message: 'a>(
     index: usize,
@@ -12,8 +12,8 @@ fn slide<'a, Message: 'a>(
     line_height: f32,
     vertical: bool,
     margin: f32,
-) -> Slot<'a, Message> {
-    let content: Slot<'a, Message> = if vertical {
+) -> View<'a, Message> {
+    let content: View<'a, Message> = if vertical {
         container(
             text::p((index + 1).to_string())
                 .size(font_size)
@@ -89,7 +89,7 @@ impl<'a, Message: Clone + 'a> Component<'a, Message, Theme> for Example {
     }
 }
 
-pub fn view<'a, Message: Clone + 'a>(window_width: f32) -> Slot<'a, Message> {
+pub fn view<'a, Message: Clone + 'a>(window_width: f32) -> View<'a, Message> {
     component(Example {
         width: if window_width < 640.0 { 160.0 } else { 320.0 },
     })

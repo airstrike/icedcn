@@ -4,10 +4,10 @@ Use `.align(...)` to position the selected slide and `.looping(true)` to wrap na
 
 ```rust
 use iced::Alignment;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{carousel, container, text};
 
-pub fn view<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
+pub fn view<'a, Message: Clone + 'static>() -> View<'a, Message> {
     carousel(5, |index| {
         container(text::p((index + 1).to_string())).height(160)
     })

@@ -16,7 +16,7 @@ use iced_widget::Renderer;
 
 use crate::Size;
 use crate::button::widget;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use icedcn_core::Theme;
 use icedcn_core::theme::button;
 
@@ -24,13 +24,13 @@ use icedcn_core::theme::button;
 ///
 /// Small (20x20), ghost styling, centered content.
 pub struct SidebarMenuAction<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     on_press: Option<Message>,
 }
 
 /// Create a sidebar menu action button (ghost-style, 20x20).
 pub fn menu_action<'a, Message: Clone + 'a>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> SidebarMenuAction<'a, Message> {
     SidebarMenuAction {
         content: content.into(),
@@ -76,9 +76,9 @@ impl<'a, Message: Clone + 'a> From<SidebarMenuAction<'a, Message>>
     }
 }
 
-impl<'a, Message: Clone + 'a> From<SidebarMenuAction<'a, Message>> for crate::Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<SidebarMenuAction<'a, Message>> for crate::View<'a, Message> {
     fn from(a: SidebarMenuAction<'a, Message>) -> Self {
-        crate::Slot::new(a)
+        crate::View::new(a)
     }
 }
 

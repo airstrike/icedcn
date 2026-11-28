@@ -6,7 +6,7 @@ use icedcn::card;
 use icedcn::theme;
 use icedcn::widget::column::Column;
 use icedcn::widget::{avatar, badge, button, column, container, input, row, text};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::Message;
 
@@ -45,9 +45,9 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
     .spacing(8)
     .width(Fill);
 
-    let members: Vec<Slot<'_, Message>> = MEMBERS.iter().map(member_row).collect();
+    let members: Vec<View<'_, Message>> = MEMBERS.iter().map(member_row).collect();
 
-    let body: Column<'_, Message> = column(std::iter::once(Slot::from(invite_row)).chain(members))
+    let body: Column<'_, Message> = column(std::iter::once(View::from(invite_row)).chain(members))
         .spacing(12)
         .width(Fill);
 
@@ -69,7 +69,7 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
     .into()
 }
 
-fn member_row(m: &Member) -> Slot<'static, Message> {
+fn member_row(m: &Member) -> View<'static, Message> {
     let identity: Column<'static, Message> = column([
         text::small(m.name).medium().into(),
         text::xs(m.email).style(theme::text::Muted).into(),
@@ -77,7 +77,7 @@ fn member_row(m: &Member) -> Slot<'static, Message> {
     .spacing(2);
 
     row![
-        Slot::from(avatar(None).fallback(m.initials).size(avatar::Default)),
+        View::from(avatar(None).fallback(m.initials).size(avatar::Default)),
         identity,
         space::horizontal(),
         badge(m.role).style(badge::Secondary),

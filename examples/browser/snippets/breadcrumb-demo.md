@@ -1,6 +1,6 @@
 ```rust
 use icedcn::Size;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::theme::tweak::{Fg, Token, hover};
 use icedcn::widget::{breadcrumb, button, dropdown_menu, menu};
 
@@ -10,7 +10,7 @@ enum Message {
     GoComponents,
 }
 
-fn destinations<'a>(_: &dropdown_menu::Handle) -> Slot<'a, Message> {
+fn destinations<'a>(_: &dropdown_menu::Handle) -> View<'a, Message> {
     menu::group([
         menu::item("Documentation").into(),
         menu::item("Themes").into(),
@@ -18,7 +18,7 @@ fn destinations<'a>(_: &dropdown_menu::Handle) -> Slot<'a, Message> {
     ])
 }
 
-fn view<'a>() -> Slot<'a, Message> {
+fn view<'a>() -> View<'a, Message> {
     breadcrumb([
         breadcrumb::link("Home", Message::GoHome),
         breadcrumb::item(

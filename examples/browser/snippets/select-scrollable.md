@@ -1,5 +1,5 @@
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::select;
 
 fn zone(label: &str, items: &[(&str, &str)]) -> select::Entry {
@@ -12,7 +12,7 @@ fn zone(label: &str, items: &[(&str, &str)]) -> select::Entry {
     )
 }
 
-fn timezones<'a, Message: 'static>() -> Slot<'a, Message> {
+fn timezones<'a, Message: 'static>() -> View<'a, Message> {
     select([
         zone(
             "North America",

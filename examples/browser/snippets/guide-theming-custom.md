@@ -1,9 +1,9 @@
 ## Variants of your own
 
-Name a tweaked variant when the same adjustment repeats. A `Tweaked<V>` converts into any `Spec` that converts from `V`, so one definition works on every component with that base variant:
+Name a tweaked variant when the same adjustment repeats. `Destructive + radius(0)` has the type `Tweaked<Destructive>`: the variant it starts from, plus its tweaks. The variant stays in the type, not yet resolved for any one component, so the same value converts into every `Spec` that converts from `Destructive`. One `danger()` then styles a button and a badge alike, and `Tweaked<Outline>` works wherever `Outline` does:
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::theme::tweak::radius;
 use icedcn::theme::{Destructive, Tweaked};
 use icedcn::widget::{badge, button, row};
@@ -12,7 +12,7 @@ pub fn danger() -> Tweaked<Destructive> {
     Destructive + radius(0)
 }
 
-pub fn failed<'a>() -> Slot<'a, ()> {
+pub fn failed<'a>() -> View<'a> {
     row![
         button("Drop table").style(danger()),
         badge("Failed").style(danger()),
@@ -25,7 +25,7 @@ pub fn failed<'a>() -> Slot<'a, ()> {
 For a new name, declare a variant with `variant!`, list the components it styles, and convert it into each one's `Spec`. Building it from a built-in variant keeps that variant's focus ring, sizing, and disabled treatment:
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::theme::button::Spec;
 use icedcn::theme::tweak::{Bg, Fg, Token, radius};
 use icedcn::widget::{button, row};
@@ -40,7 +40,7 @@ impl From<Confirm> for Spec {
     }
 }
 
-pub fn approve<'a>() -> Slot<'a, ()> {
+pub fn approve<'a>() -> View<'a> {
     row![
         button("Approve").style(Confirm),
         button("Approve all").style(Confirm + radius(999)),
@@ -57,7 +57,7 @@ For full control, `Spec::new` takes the function itself. It receives the theme a
 ```rust
 use icedcn::theme::button::{Spec, Status, Style, default};
 use icedcn::widget::button;
-use icedcn::{Slot, Theme};
+use icedcn::{View, Theme};
 
 fn notice(theme: &Theme, status: Status) -> Style {
     let alpha = if status == Status::Disabled { 0.5 } else { 1.0 };
@@ -68,7 +68,7 @@ fn notice(theme: &Theme, status: Status) -> Style {
     }
 }
 
-pub fn read_more<'a>() -> Slot<'a, ()> {
+pub fn read_more<'a>() -> View<'a> {
     button("Read more").style(Spec::new(notice)).into()
 }
 ```

@@ -49,7 +49,7 @@ use icedcn_core::Theme;
 use icedcn_core::theme::container::Style;
 
 use crate::Size;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::scrollable::{Direction, scrollbar};
 use crate::{column, container, scrollable};
 
@@ -240,7 +240,7 @@ impl<'a, Message: 'a> Compose<Message> for CodeBlock<'a, Message> {
             wrap || viewport.height.is_some() || viewport.max_height.is_some(),
         )
         .boxed();
-        let body: Slot<'_, Message> = if let Some(actions) = actions {
+        let body: View<'_, Message> = if let Some(actions) = actions {
             let top: Element<'_, Message, Theme, Renderer> = container(actions)
                 .width(Fill)
                 .align_x(Horizontal::Right)
@@ -317,9 +317,9 @@ fn line_style(theme: &Theme, style: LineStyle) -> Style {
     }
 }
 
-impl<'a, Message: 'a> From<CodeBlock<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<CodeBlock<'a, Message>> for View<'a, Message> {
     fn from(block: CodeBlock<'a, Message>) -> Self {
-        Slot::new(block)
+        View::new(block)
     }
 }
 impl<'a, Message: 'a> From<CodeBlock<'a, Message>> for Element<'a, Message, Theme, Renderer> {

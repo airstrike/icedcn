@@ -8,11 +8,11 @@ use iced_widget::Widget as _;
 use iced_widget::{Renderer, text};
 use icedcn_core::Theme;
 
-use crate::Slot;
+use crate::View;
 
 /// A status label with a soft highlight that travels across the glyphs.
-pub fn shimmer<'a, Message: 'a>(label: impl Into<String>) -> Slot<'a, Message> {
-    Slot::from(
+pub fn shimmer<'a, Message: 'a>(label: impl Into<String>) -> View<'a, Message> {
+    View::from(
         Shimmer {
             text: text(label.into()).size(14).selectable(true),
             period: 2.2,
@@ -22,7 +22,7 @@ pub fn shimmer<'a, Message: 'a>(label: impl Into<String>) -> Slot<'a, Message> {
     )
 }
 /// Animate an attachment title with a two-second sweep over its existing text style.
-pub(crate) fn title<'a, Message: 'a>(text: iced_widget::Text<'a, Theme>) -> Slot<'a, Message> {
+pub(crate) fn title<'a, Message: 'a>(text: iced_widget::Text<'a, Theme>) -> View<'a, Message> {
     Shimmer {
         text,
         period: 2.,

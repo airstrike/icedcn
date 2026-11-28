@@ -1,8 +1,8 @@
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{button, dropdown_menu, menu};
 
-pub fn view<'a>(checked: [bool; 3]) -> Slot<'a, [bool; 3]> {
+pub fn view<'a>(checked: [bool; 3]) -> View<'a, [bool; 3]> {
     let toggle = move |i: usize, value| {
         let mut next = checked;
         next[i] = value;

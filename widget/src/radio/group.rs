@@ -33,7 +33,7 @@ use std::convert::Infallible;
 use std::rc::Rc;
 
 use crate::button::widget;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::container::Container;
 use crate::marker::{self, Press};
 use crate::tabs::list::List;
@@ -49,7 +49,7 @@ pub struct Group<'a, Message> {
 }
 
 /// The closure that builds a [`Group`]'s content.
-type Body<'a, Message> = Box<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
+type Body<'a, Message> = Box<dyn Fn(&Handle) -> View<'a, Message> + 'a>;
 
 /// What a [`Group`]'s content closure receives: the selected value, and
 /// the builder for its items.
@@ -79,7 +79,7 @@ pub struct State {
 }
 
 /// Create an uncontrolled [`Group`] whose content is built by `body`.
-pub fn group<'a, Message>(body: impl Fn(&Handle) -> Slot<'a, Message> + 'a) -> Group<'a, Message> {
+pub fn group<'a, Message>(body: impl Fn(&Handle) -> View<'a, Message> + 'a) -> Group<'a, Message> {
     Group {
         body: Box::new(body),
         value: None,
@@ -212,7 +212,7 @@ impl<Message: 'static> Compose<Message> for Item {
         });
 
         // `size-2 rounded-full bg-primary-foreground`.
-        let dot: Slot<'b, Infallible> = if is_checked {
+        let dot: View<'b, Infallible> = if is_checked {
             let paint = paint.clone();
             Container::new(Space::new())
                 .width(8)
@@ -225,7 +225,7 @@ impl<Message: 'static> Compose<Message> for Item {
                 })
                 .into()
         } else {
-            Slot::from(Space::new())
+            View::from(Space::new())
         };
 
         let centered = Container::new(dot)
@@ -278,9 +278,9 @@ impl<Message: 'static> Compose<Message> for Item {
     }
 }
 
-impl<'a, Message: 'static> From<Item> for Slot<'a, Message> {
+impl<'a, Message: 'static> From<Item> for View<'a, Message> {
     fn from(item: Item) -> Self {
-        Slot::new(item)
+        View::new(item)
     }
 }
 
@@ -351,9 +351,9 @@ impl<'a, Message: 'static> Compose<Message> for Group<'a, Message> {
     }
 }
 
-impl<'a, Message: 'static> From<Group<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'static> From<Group<'a, Message>> for View<'a, Message> {
     fn from(group: Group<'a, Message>) -> Self {
-        Slot::new(group)
+        View::new(group)
     }
 }
 

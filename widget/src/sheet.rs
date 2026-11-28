@@ -34,7 +34,7 @@ use icedcn_core::theme;
 use icedcn_core::theme::{container::Style, dialog};
 
 use crate::column::Column;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::container::Container;
 use crate::dialog::{Dialog, Handle, Placement};
 use crate::{column, text};
@@ -47,8 +47,8 @@ pub struct Sheet<'a, Message>(Dialog<'a, Message>);
 /// Create a closed, uncontrolled [`Sheet`] on the right: `trigger` builds
 /// what sits in place, `content` the panel shown while open.
 pub fn sheet<'a, Message>(
-    trigger: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
-    content: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
+    trigger: impl Fn(&Handle) -> View<'a, Message> + 'a,
+    content: impl Fn(&Handle) -> View<'a, Message> + 'a,
 ) -> Sheet<'a, Message> {
     Sheet(Dialog::new(trigger, content, Placement::Side(Side::Right)))
 }
@@ -89,7 +89,7 @@ impl<'a, Message> Sheet<'a, Message> {
 
 /// Paint the one-pixel border only on the edge facing the document.
 pub(crate) fn panel<'a, Message: 'a>(
-    body: Slot<'a, Message>,
+    body: View<'a, Message>,
     side: Side,
 ) -> Container<'a, Message> {
     let (height, edge) = match side {
@@ -117,7 +117,7 @@ pub(crate) fn panel<'a, Message: 'a>(
 }
 
 /// A `SheetHeader`: a `SheetTitle` over a `SheetDescription`, `p-4 gap-0.5`.
-pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> Slot<'a, Message> {
+pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> View<'a, Message> {
     Container::new(
         column![
             text::Text::new(title)
@@ -137,8 +137,8 @@ pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> Slot<'a,
 /// A `SheetFooter`: its actions stacked, `p-4 gap-2`, at the bottom of the
 /// panel (`mt-auto`).
 pub fn footer<'a, Message: 'a>(
-    actions: impl IntoIterator<Item = Slot<'a, Message>>,
-) -> Slot<'a, Message> {
+    actions: impl IntoIterator<Item = View<'a, Message>>,
+) -> View<'a, Message> {
     actions_column(actions)
         .height(Fill)
         .align_y(Vertical::Bottom)
@@ -148,10 +148,10 @@ pub fn footer<'a, Message: 'a>(
 /// Lay out a header, expanding body and fixed footer. A scrollable body scrolls
 /// independently of the heading and actions. The body has 16px side padding.
 pub fn content<'a, Message: 'a>(
-    header: impl Into<Slot<'a, Message>>,
-    body: impl Into<Slot<'a, Message>>,
-    actions: impl IntoIterator<Item = Slot<'a, Message>>,
-) -> Slot<'a, Message> {
+    header: impl Into<View<'a, Message>>,
+    body: impl Into<View<'a, Message>>,
+    actions: impl IntoIterator<Item = View<'a, Message>>,
+) -> View<'a, Message> {
     let header = header.into();
     column![
         header,
@@ -168,7 +168,7 @@ pub fn content<'a, Message: 'a>(
 }
 
 fn actions_column<'a, Message: 'a>(
-    actions: impl IntoIterator<Item = Slot<'a, Message>>,
+    actions: impl IntoIterator<Item = View<'a, Message>>,
 ) -> Container<'a, Message> {
     Container::new(
         Column::with_children(actions)
@@ -194,9 +194,9 @@ impl<'a, Message: Clone + 'static> Compose<Message> for Sheet<'a, Message> {
     }
 }
 
-impl<'a, Message: Clone + 'static> From<Sheet<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'static> From<Sheet<'a, Message>> for View<'a, Message> {
     fn from(sheet: Sheet<'a, Message>) -> Self {
-        Slot::new(sheet)
+        View::new(sheet)
     }
 }
 

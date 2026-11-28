@@ -7,7 +7,7 @@ use iced_test::{Simulator, simulator};
 use iced_widget::{Renderer, Space};
 use icedcn_core::Theme;
 use icedcn_widget::code_block::{self, CodeBlock, Highlighted, Removed, line};
-use icedcn_widget::{Slot, button, container};
+use icedcn_widget::{View, button, container};
 
 type Ui = Simulator<'static, (), Theme, Renderer>;
 
@@ -180,7 +180,7 @@ fn header_actions_stay_at_the_end_at_both_widths() {
                 let action = container(button(Space::new().width(68).height(18)).on_press(()));
                 let block = icedcn_widget::code_block("output")
                     .header(
-                        code_block::header(code_block::title(Slot::from(title)))
+                        code_block::header(code_block::title(View::from(title)))
                             .actions(code_block::actions(action.id("actions"))),
                     )
                     .size(if compact {

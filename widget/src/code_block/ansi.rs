@@ -6,7 +6,7 @@ use iced_core::{Font, Length};
 use icedcn_core::Color;
 
 use super::LineStyle;
-use crate::{Slot, rich_text, span};
+use crate::{View, rich_text, span};
 
 /// A parsed transcript retains plain text for copying and colored runs for each line.
 #[derive(Clone)]
@@ -146,7 +146,7 @@ impl Output {
         wrapping: Wrapping,
         width: Length,
         size: f32,
-    ) -> Vec<(LineStyle, Slot<'a, M>)> {
+    ) -> Vec<(LineStyle, View<'a, M>)> {
         let mut start = 0;
         self.0
             .lines

@@ -4,9 +4,9 @@ use iced::alignment::Vertical;
 use iced::widget::text::LineHeight;
 use iced::{Fill, Padding};
 use icedcn::widget::{button, collapsible, column, container, input, row, text};
-use icedcn::{Slot, card};
+use icedcn::{View, card};
 
-fn settings<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
+fn settings<'a, Message: Clone + 'static>() -> View<'a, Message> {
     card(
         column![
             card::header(text::small("Radius").medium().line_height(1.375))
@@ -65,7 +65,7 @@ fn settings<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     .into()
 }
 
-fn view<'a>() -> Slot<'a, ()> {
+fn view<'a>() -> View<'a> {
     settings()
 }
 ```

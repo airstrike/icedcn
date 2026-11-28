@@ -9,7 +9,7 @@ use iced::{Element, Task};
 use icedcn::Size;
 use icedcn::widget::attachment::State;
 use icedcn::widget::{attachment, button, column, container, dialog, spinner, tooltip};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 use page::Block;
 use std::collections::BTreeSet;
 use std::sync::LazyLock;
@@ -147,7 +147,7 @@ const PHOTOS: [(&str, &str, &str); 3] = [
         "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=900&auto=format&fit=crop&q=80",
     ),
 ];
-fn picture(index: usize, side: u32) -> Slot<'static, Edit> {
+fn picture(index: usize, side: u32) -> View<'static, Edit> {
     static HANDLES: LazyLock<[image::Handle; 3]> = LazyLock::new(|| {
         [
             image::Handle::from_bytes(
@@ -169,7 +169,7 @@ fn picture(index: usize, side: u32) -> Slot<'static, Edit> {
         .boxed()
         .into()
 }
-fn action(name: &'static str, cancel: bool) -> Slot<'static, Edit> {
+fn action(name: &'static str, cancel: bool) -> View<'static, Edit> {
     tooltip(
         attachment::action(icon::x().size(12).selectable(false))
             .style(rhea::button(button::Ghost))
@@ -189,7 +189,7 @@ fn canvas(theme: &Theme) -> icedcn::Color {
         icedcn::core::oklch(0.98, 0., 0.)
     }
 }
-fn photos(state: &FilesState, interactive: bool) -> Slot<'static, Edit> {
+fn photos(state: &FilesState, interactive: bool) -> View<'static, Edit> {
     attachment::group(
         PHOTOS
             .into_iter()
@@ -215,8 +215,8 @@ fn status_card(
     name: &'static str,
     meta: &'static str,
     state: State,
-    media: Slot<'static, Edit>,
-) -> Slot<'static, Edit> {
+    media: View<'static, Edit>,
+) -> View<'static, Edit> {
     let mut card = attachment(name).description(meta).state(state).media(media);
     if state == State::Error {
         card = card.action(tooltip(
@@ -228,7 +228,7 @@ fn status_card(
     }
     card.action(action(name, state == State::Uploading)).into()
 }
-fn states_list(state: &FilesState) -> Vec<Slot<'static, Edit>> {
+fn states_list(state: &FilesState) -> Vec<View<'static, Edit>> {
     use State::*;
     let (s, description, glyph) = if state.retried {
         (
@@ -275,7 +275,7 @@ fn states_list(state: &FilesState) -> Vec<Slot<'static, Edit>> {
     .map(|(name, meta, s, glyph)| status_card(name, meta, s, glyph))
     .collect()
 }
-fn tiles(state: &FilesState) -> Slot<'static, Edit> {
+fn tiles(state: &FilesState) -> View<'static, Edit> {
     let items = [
         (
             "briefing-notes.pdf",
@@ -298,7 +298,7 @@ fn tiles(state: &FilesState) -> Slot<'static, Edit> {
         items
             .into_iter()
             .filter(|(name, ..)| !state.removed.contains(name))
-            .map(|(name, meta, media): (_, _, Slot<'static, Edit>)| {
+            .map(|(name, meta, media): (_, _, View<'static, Edit>)| {
                 attachment(name)
                     .media(media)
                     .description(meta)
@@ -310,7 +310,7 @@ fn tiles(state: &FilesState) -> Slot<'static, Edit> {
     .fade_to(canvas)
     .into()
 }
-fn preview_dialog() -> Slot<'static, Edit> {
+fn preview_dialog() -> View<'static, Edit> {
     let name = "research-summary.pdf";
     dialog(
         move |d| {
@@ -413,27 +413,27 @@ impl<'a> Component<'a, Message, Theme> for Files {
     }
 }
 
-fn demo_example() -> Slot<'static, Message> {
+fn demo_example() -> View<'static, Message> {
     component(Files(Example::Demo)).boxed().into()
 }
 
-fn image_example() -> Slot<'static, Message> {
+fn image_example() -> View<'static, Message> {
     component(Files(Example::Image)).boxed().into()
 }
 
-fn states_example() -> Slot<'static, Message> {
+fn states_example() -> View<'static, Message> {
     component(Files(Example::States)).boxed().into()
 }
 
-fn sizes_example() -> Slot<'static, Message> {
+fn sizes_example() -> View<'static, Message> {
     component(Files(Example::Sizes)).boxed().into()
 }
 
-fn group_example() -> Slot<'static, Message> {
+fn group_example() -> View<'static, Message> {
     component(Files(Example::Group)).boxed().into()
 }
 
-fn trigger_example() -> Slot<'static, Message> {
+fn trigger_example() -> View<'static, Message> {
     component(Files(Example::Trigger)).boxed().into()
 }
 

@@ -12,7 +12,7 @@ use icedcn_core::theme::chart;
 use icedcn_core::theme::tweak::Bg;
 use icedcn_core::{Theme, radius, theme};
 
-use crate::compose::{Compose, Slot};
+use crate::compose::{Compose, View};
 use crate::{column, container, row, space, text};
 
 pub use Indicator::{Dashed, Dot, Line};
@@ -150,7 +150,7 @@ impl<Message> Compose<Message> for Tooltip<Message> {
                     .line_height(Pixels(12.0))
                     .into(),
             );
-            let swatch: Option<Slot<'a, Message>> = (!self.hide_indicator).then(|| {
+            let swatch: Option<View<'a, Message>> = (!self.hide_indicator).then(|| {
                 let fill = theme::container::Transparent
                     + Bg::from(icedcn_core::Color::from(entry.color))
                     + radius(2);
@@ -216,7 +216,7 @@ impl<Message> Compose<Message> for Tooltip<Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Tooltip<Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Tooltip<Message>> for View<'a, Message> {
     fn from(tooltip: Tooltip<Message>) -> Self {
         Self::new(tooltip)
     }

@@ -1,10 +1,10 @@
 ```rust
 use crate::icon;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::button;
 use icedcn::widget::button::group;
 
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     button::group![
         button("Button").style(button::Secondary),
         group::separator(),

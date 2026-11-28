@@ -1,10 +1,10 @@
 ```rust
 use icedcn::{
-    Slot,
+    View,
     widget::{button, kbd, row, text, tooltip},
 };
 
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     button::group![
         tooltip(
             button("Save").style(button::Outline),

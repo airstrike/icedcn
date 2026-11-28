@@ -6,9 +6,9 @@ use iced::{Fill, Padding};
 use icedcn::theme;
 use icedcn::theme::tweak::{Token, border};
 use icedcn::widget::{button, collapsible, column, container, row, space, text};
-use icedcn::{Slot, radius};
+use icedcn::{View, radius};
 
-fn bordered<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
+fn bordered<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> View<'a, Message> {
     container(content)
         .width(Fill)
         .padding([9, 17])
@@ -21,7 +21,7 @@ fn bordered<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a, 
         .into()
 }
 
-fn detail<'a, Message: 'a>(title: &'a str, body: &'a str) -> Slot<'a, Message> {
+fn detail<'a, Message: 'a>(title: &'a str, body: &'a str) -> View<'a, Message> {
     bordered(column![
         text::small(title)
             .medium()
@@ -30,7 +30,7 @@ fn detail<'a, Message: 'a>(title: &'a str, body: &'a str) -> Slot<'a, Message> {
     ])
 }
 
-fn demo<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
+fn demo<'a, Message: Clone + 'static>() -> View<'a, Message> {
     collapsible(|c| {
         column![
             column![
@@ -81,7 +81,7 @@ fn demo<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     .into()
 }
 
-fn view<'a>() -> Slot<'a, ()> {
+fn view<'a>() -> View<'a> {
     demo()
 }
 ```

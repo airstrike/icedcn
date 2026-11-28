@@ -1,8 +1,8 @@
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{collapsible, sidebar};
 
-pub fn help<'a>() -> Slot<'a, ()> {
+pub fn help<'a>() -> View<'a> {
     let group = collapsible(|c| {
         let links = ["Support", "Feedback"].map(|name| sidebar::menu_button(name).into());
         sidebar::group([

@@ -3,12 +3,12 @@
 Give the viewport a height and give each row a key that survives edits and prepends. Here the application supplies the messages and identifies which ones start a turn.
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{bubble, message, scroller};
 
 pub fn transcript<'a, Message: Clone + 'a>(
     messages: &'a [(u64, &'a str, bool)],
-) -> Slot<'a, Message> {
+) -> View<'a, Message> {
     let rows = messages.iter().map(|&(id, body, starts_turn)| {
         scroller::item(id, message(bubble(body))).anchor(starts_turn)
     });

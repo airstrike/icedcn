@@ -4,7 +4,7 @@ use iced::alignment::Vertical;
 use iced::{Fill, Padding};
 use icedcn::theme::tweak::{Fg, Token};
 use icedcn::widget::{button, collapsible, column, row, tabs};
-use icedcn::{Size, Slot, card};
+use icedcn::{Size, View, card};
 
 enum Entry {
     File(&'static str),
@@ -67,7 +67,7 @@ const FILE_TREE: &[Entry] = &[
     Entry::File(".gitignore"),
 ];
 
-fn entry<'a, Message: Clone + 'static>(node: &'a Entry) -> Slot<'a, Message> {
+fn entry<'a, Message: Clone + 'static>(node: &'a Entry) -> View<'a, Message> {
     match node {
         Entry::File(name) => button(
             row![icon::file().size(14).line_height(1.0), *name,]
@@ -112,7 +112,7 @@ fn entry<'a, Message: Clone + 'static>(node: &'a Entry) -> Slot<'a, Message> {
     }
 }
 
-fn file_tree<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
+fn file_tree<'a, Message: Clone + 'static>() -> View<'a, Message> {
     let header = tabs(|tabs| {
         tabs.list([
             tabs.trigger("explorer", "Explorer"),
@@ -124,7 +124,7 @@ fn file_tree<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     .list_width(Fill);
     card(
         column![
-            card::header(Slot::from(header)).inset(12.),
+            card::header(View::from(header)).inset(12.),
             card::content(column(FILE_TREE.iter().map(entry)).width(Fill).spacing(4))
                 .padding([0, 12]),
         ]
@@ -138,7 +138,7 @@ fn file_tree<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     .into()
 }
 
-fn view<'a>() -> Slot<'a, ()> {
+fn view<'a>() -> View<'a> {
     file_tree()
 }
 ```

@@ -14,7 +14,7 @@ use icedcn_core::Theme;
 use icedcn_widget::operation::control;
 use icedcn_widget::radio::radio;
 use icedcn_widget::{
-    Inherited, Slot, alert_dialog, button, checkbox, collapsible, column, combobox, context_menu,
+    Inherited, View, alert_dialog, button, checkbox, collapsible, column, combobox, context_menu,
     dialog, dropdown_menu, field, hover_card, menu, popover, radio_group, row, select, sheet,
     sidebar, slider, switch, tabs, textarea, toast, toaster, toggle, toggle_group,
 };
@@ -36,8 +36,8 @@ enum Message {
 }
 
 /// A fixed-size stand-in for a label or button content.
-fn block<'a>(width: f32, height: f32) -> Slot<'a, Message> {
-    Slot::from(Space::new().width(width).height(height))
+fn block<'a>(width: f32, height: f32) -> View<'a, Message> {
+    View::from(Space::new().width(width).height(height))
 }
 
 fn click(ui: &mut Simulator<'_>, x: f32, y: f32) {
@@ -55,7 +55,7 @@ fn is_checked(ui: &mut Simulator<'_>) -> Option<bool> {
 }
 
 /// A vertical field: a 120×20 label at the top, its control below.
-fn labelled<'a>(control: impl Into<Slot<'a, Message>>) -> Element<'a, Message, Theme, Renderer> {
+fn labelled<'a>(control: impl Into<View<'a, Message>>) -> Element<'a, Message, Theme, Renderer> {
     field(control).label(block(120.0, 20.0)).into()
 }
 
@@ -133,7 +133,7 @@ fn a_field_label_chooses_its_radio() {
 
 #[test]
 fn a_radio_under_a_disabled_ancestor_ignores_its_label() {
-    let mut control = Slot::from(radio("", 1, None, Message::Chose));
+    let mut control = View::from(radio("", 1, None, Message::Chose));
     control.inherit(&Inherited::default().with_disabled(true));
     let mut ui = simulator(labelled(control));
 
@@ -746,7 +746,7 @@ fn a_popover_trigger_toggles_it_closed() {
 fn a_press_outside_or_escape_dismisses_a_controlled_popover() {
     let element: Element<'_, Message, Theme, Renderer> = column![
         edit_popover().open(true).on_open_change(Message::Open),
-        Slot::from(Space::new().height(400)),
+        View::from(Space::new().height(400)),
         button(block(60.0, 20.0)).on_press(Message::Pressed),
     ]
     .into();
@@ -824,7 +824,7 @@ fn a_menu_item_publishes_and_closes_the_menu() {
 fn a_menu_is_modal() {
     let element: Element<'_, Message, Theme, Renderer> = column![
         account_menu().open(true).on_open_change(Message::Open),
-        Slot::from(Space::new().height(400)),
+        View::from(Space::new().height(400)),
         button(block(60.0, 20.0)).on_press(Message::Pressed),
     ]
     .into();
@@ -997,7 +997,7 @@ fn a_context_menu_opens_at_the_pointer_and_closes_on_select() {
 #[test]
 fn a_tooltip_shows_while_its_trigger_is_hovered() {
     let element: Element<'_, Message, Theme, Renderer> = column![
-        Slot::from(Space::new().height(100)),
+        View::from(Space::new().height(100)),
         icedcn_widget::tooltip(button(block(40.0, 20.0)), block(60.0, 20.0))
             .on_open_change(Message::Open),
     ]

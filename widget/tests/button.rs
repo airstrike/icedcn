@@ -8,7 +8,7 @@ use iced_test::{Simulator, selector, simulator};
 use iced_widget::{Renderer, Space, Widget};
 use icedcn_core::{Theme, theme};
 use icedcn_widget::Size::{Default, Lg, Sm, Xs};
-use icedcn_widget::{Inherited, Slot, button, container};
+use icedcn_widget::{Inherited, View, button, container};
 
 type Preview<'a> = Simulator<'a, (), Theme, Renderer>;
 
@@ -130,7 +130,7 @@ fn a_grid_centers_the_label_when_it_stretches_an_intrinsic_button() {
 #[test]
 fn pointer_keyboard_disabled_and_cancellation_preserve_messages() {
     for disabled in [false, true] {
-        let mut content: Slot<'_, ()> = button(Space::new().width(20).height(12))
+        let mut content: View<'_> = button(Space::new().width(20).height(12))
             .on_press(())
             .into();
         content.inherit(&Inherited::default().with_disabled(disabled));

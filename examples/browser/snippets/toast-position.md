@@ -1,12 +1,12 @@
 ```rust
 use iced::Center;
 use icedcn::{
-    Slot,
+    View,
     widget::{button, row::Row, toast},
 };
 use toast::Position::*;
 
-fn positions<'a>() -> Slot<'a, ()> {
+fn positions<'a>() -> View<'a> {
     let places = [
         ("Top Left", TopLeft),
         ("Top Center", TopCenter),

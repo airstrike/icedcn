@@ -2,7 +2,7 @@ use crate::{Message, icon, page};
 use iced::widget::component::{Component, component};
 use iced::{Element, Task, Widget};
 use icedcn::widget::{menu, menubar, row, text};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 use std::collections::BTreeSet;
 pub static META: page::Meta = page::Meta {
     title: "Menubar",
@@ -121,7 +121,7 @@ impl<'a> Component<'a, Message, Theme> for Demo {
 fn with_icon(
     glyph: iced::widget::Text<'static, Theme>,
     label: &'static str,
-) -> Slot<'static, Choice> {
+) -> View<'static, Choice> {
     row![glyph.size(16), text(label)]
         .spacing(6)
         .align_y(iced::Center)

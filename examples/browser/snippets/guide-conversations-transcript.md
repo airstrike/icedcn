@@ -3,12 +3,12 @@
 Compose a conversation from [Message](icedcn://component/message) rows and [Bubble](icedcn://component/bubble) content inside [Message Scroller](icedcn://component/message-scroller). Give each row a stable key and give the viewport an explicit height or a bounded parent.
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{bubble, message, scroller};
 
 pub fn transcript<'a, Message: Clone + 'a>(
     entries: &'a [(u64, String, bool)],
-) -> Slot<'a, Message> {
+) -> View<'a, Message> {
     let rows = entries.iter().map(|(id, body, starts_turn)| {
         scroller::item(*id, message(bubble(body.as_str()))).anchor(*starts_turn)
     });

@@ -5,7 +5,7 @@ use icedcn::card;
 use icedcn::core::{Border, Color, oklch};
 use icedcn::theme;
 use icedcn::widget::{Size, column, container, item, slider, space, text, toggle_group};
-use icedcn::{Slot, Space, Theme};
+use icedcn::{Space, Theme, View};
 
 use crate::{KitchenMode, KitchenScene, Message, State};
 
@@ -97,7 +97,7 @@ fn chosen<T: Copy>(options: &[(T, &'static str)], pressed: &[String]) -> Option<
         .map(|(option, _)| *option)
 }
 
-fn slider_row(label: &'static str, value: f32) -> Slot<'static, Message> {
+fn slider_row(label: &'static str, value: f32) -> View<'static, Message> {
     column![
         text::small(label).style(theme::text::Muted),
         slider(0.0..=100.0).default_value(value).width(Fill),
@@ -107,7 +107,7 @@ fn slider_row(label: &'static str, value: f32) -> Slot<'static, Message> {
     .into()
 }
 
-fn color_tile(color: Color) -> Slot<'static, Message> {
+fn color_tile(color: Color) -> View<'static, Message> {
     container(space::vertical())
         .width(Fill)
         .height(Fill)

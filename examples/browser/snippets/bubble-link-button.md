@@ -1,11 +1,11 @@
 ```rust
 use iced::Fill;
 use iced::alignment::Horizontal::Right;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::bubble::{Muted, Tinted};
 use icedcn::widget::{bubble, column, container, toast, toaster};
 
-fn example<'a>() -> Slot<'a, ()> {
+fn example<'a>() -> View<'a> {
     toaster(frame(
         column![
             bubble("How can I help you today?").style(Muted),
@@ -27,7 +27,7 @@ fn example<'a>() -> Slot<'a, ()> {
     .into()
 }
 
-fn frame<'a>(body: impl Into<Slot<'a, ()>>) -> Slot<'a, ()> {
+fn frame<'a>(body: impl Into<View<'a>>) -> View<'a> {
     container(body)
         .padding([48, 0])
         .width(Fill)
@@ -35,7 +35,7 @@ fn frame<'a>(body: impl Into<Slot<'a, ()>>) -> Slot<'a, ()> {
         .into()
 }
 
-fn suggestion<'a>(label: &'a str, notice: &'a str) -> Slot<'a, ()> {
+fn suggestion<'a>(label: &'a str, notice: &'a str) -> View<'a> {
     toast::trigger(
         bubble(label).style(Tinted).align(Right).interactive(true),
         toast::toast(notice),

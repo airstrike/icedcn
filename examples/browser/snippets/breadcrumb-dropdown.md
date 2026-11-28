@@ -1,6 +1,6 @@
 ```rust
 use crate::icon;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::Weight;
 use icedcn::theme::text::muted;
 use icedcn::theme::tweak::{Bg, Fg, Token};
@@ -12,7 +12,7 @@ enum Message {
     GoComponents,
 }
 
-fn destinations<'a>(_: &dropdown_menu::Handle) -> Slot<'a, Message> {
+fn destinations<'a>(_: &dropdown_menu::Handle) -> View<'a, Message> {
     menu::group([
         menu::item("Documentation").into(),
         menu::item("Themes").into(),
@@ -20,7 +20,7 @@ fn destinations<'a>(_: &dropdown_menu::Handle) -> Slot<'a, Message> {
     ])
 }
 
-fn view<'a>() -> Slot<'a, Message> {
+fn view<'a>() -> View<'a, Message> {
     breadcrumb([
         breadcrumb::link("Home", Message::GoHome),
         breadcrumb::item(

@@ -4,7 +4,7 @@ use iced::widget::Id;
 use iced::{Element, Fill, Task};
 use icedcn::widget::status_marker::{Border, Separator, shimmer};
 use icedcn::widget::{button, column, container, spinner, status_marker, toast};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 use page::Block;
 
 pub static META: page::Meta = page::Meta {
@@ -73,7 +73,7 @@ impl MarkerPage {
         })
     }
 }
-fn view(id: &str, page_index: usize) -> Slot<'static, Message> {
+fn view(id: &str, page_index: usize) -> View<'static, Message> {
     let group = match id {
         "demo" => column![
             status_marker("Switched to a new branch").icon(icon::git_branch()),

@@ -5,7 +5,7 @@ use iced_widget::{Renderer, Widget, row};
 use icedcn_core::Theme;
 use icedcn_core::theme::avatar::group_count_style;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 
 use super::{Avatar, Geometry, Size, avatar};
 
@@ -30,7 +30,7 @@ macro_rules! __avatar_group {
 /// A group of avatars, including avatars with badges.
 pub struct Group<'a, Message> {
     avatars: Vec<Avatar<'a, Message>>,
-    count: Option<Slot<'a, Message>>,
+    count: Option<View<'a, Message>>,
     inherited: Inherited,
 }
 
@@ -50,7 +50,7 @@ impl<'a, Message: 'a> Group<'a, Message> {
     ///
     /// The chip matches any small/large member; small wins in a mixed group.
     /// Text stays 14px. Source icon sizes are 12/16/20px for small/default/large.
-    pub fn count(mut self, content: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn count(mut self, content: impl Into<View<'a, Message>>) -> Self {
         self.count = Some(content.into());
         self
     }
@@ -119,8 +119,8 @@ impl<'a, Message: 'a> From<Group<'a, Message>> for Element<'a, Message, Theme, R
     }
 }
 
-impl<'a, Message: 'a> From<Group<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Group<'a, Message>> for View<'a, Message> {
     fn from(group: Group<'a, Message>) -> Self {
-        Slot::new(group)
+        View::new(group)
     }
 }

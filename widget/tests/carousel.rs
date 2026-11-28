@@ -66,7 +66,7 @@ mod track {
     use iced_test::simulator::{self, simulator};
     use iced_widget::{Renderer, Widget as _};
     use icedcn_core::{Orientation, Theme};
-    use icedcn_widget::{Inherited, Slot, button, carousel, column};
+    use icedcn_widget::{Inherited, View, button, carousel, column};
 
     #[derive(Debug, Clone, PartialEq)]
     enum Message {
@@ -418,7 +418,7 @@ mod track {
     #[test]
     fn inherited_disable_and_explicit_disable_block_navigation_and_timers() {
         for explicit in [false, true] {
-            let mut slot: Slot<'_, Message> = gallery()
+            let mut slot: View<'_, Message> = gallery()
                 .autoplay(Duration::from_secs(2))
                 .disabled(explicit)
                 .into();

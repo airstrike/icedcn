@@ -4,7 +4,7 @@
 
 | API | Default | Behavior |
 | --- | --- | --- |
-| `carousel(count, slide)` | Required | Keep all slides mounted, indexed from zero. Factory returns `impl Into<Slot>`. |
+| `carousel(count, slide)` | Required | Keep all slides mounted, indexed from zero. Factory returns `impl Into<View>`. |
 | `.width(length)` | `Fill` | Track width; horizontal controls reserve another 48px on each side. |
 | `.height(pixels)` | Natural slide height | Track viewport height; vertical controls reserve 48px above and below. |
 | `.visible(n)` | `1` | Equal slide bases; clamps to at least one. |

@@ -6,7 +6,7 @@ use std::time::Duration;
 use iced::widget::responsive;
 use iced::{Alignment, Element, Fill, Shrink, Task, Widget};
 use icedcn::widget::{carousel, container, text};
-use icedcn::{Orientation, Slot, Theme, card};
+use icedcn::{Orientation, Theme, View, card};
 
 use crate::{Message, page};
 
@@ -145,8 +145,8 @@ fn slide<'a, Message: 'a>(
     line_height: f32,
     vertical: bool,
     margin: f32,
-) -> Slot<'a, Message> {
-    let content: Slot<'a, Message> = if vertical {
+) -> View<'a, Message> {
+    let content: View<'a, Message> = if vertical {
         container(
             text::p((index + 1).to_string())
                 .size(font_size)
@@ -186,13 +186,13 @@ fn slide<'a, Message: 'a>(
     .into()
 }
 
-pub fn demo<'a, Message: Clone + 'static>(window_width: f32) -> Slot<'a, Message> {
+pub fn demo<'a, Message: Clone + 'static>(window_width: f32) -> View<'a, Message> {
     carousel(5, |index| slide(index, 36.0, 40.0, false, 4.0))
         .width(if window_width < 640.0 { 192.0 } else { 320.0 })
         .into()
 }
 
-pub fn size<'a, Message: Clone + 'static>(window_width: f32) -> Slot<'a, Message> {
+pub fn size<'a, Message: Clone + 'static>(window_width: f32) -> View<'a, Message> {
     carousel(5, |index| slide(index, 30.0, 36.0, false, 4.0))
         .visible(if window_width < 1024.0 { 2 } else { 3 })
         .align(Alignment::Start)
@@ -206,7 +206,7 @@ pub fn size<'a, Message: Clone + 'static>(window_width: f32) -> Slot<'a, Message
         .into()
 }
 
-pub fn spacing<'a, Message: Clone + 'static>(window_width: f32) -> Slot<'a, Message> {
+pub fn spacing<'a, Message: Clone + 'static>(window_width: f32) -> View<'a, Message> {
     carousel(5, |index| slide(index, 24.0, 32.0, false, 4.0))
         .visible(if window_width < 1024.0 { 2 } else { 3 })
         .spacing(4.0)
@@ -220,7 +220,7 @@ pub fn spacing<'a, Message: Clone + 'static>(window_width: f32) -> Slot<'a, Mess
         .into()
 }
 
-pub fn orientation<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
+pub fn orientation<'a, Message: Clone + 'static>() -> View<'a, Message> {
     carousel(5, |index| slide(index, 30.0, 36.0, true, 4.0))
         .orientation(Orientation::Vertical)
         .align(Alignment::Start)
@@ -231,7 +231,7 @@ pub fn orientation<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
         .into()
 }
 
-pub fn plugin<'a, Message: Clone + 'static>(window_width: f32) -> Slot<'a, Message> {
+pub fn plugin<'a, Message: Clone + 'static>(window_width: f32) -> View<'a, Message> {
     carousel(5, |index| slide(index, 36.0, 40.0, false, 4.0))
         .width(if window_width < 640.0 { 160.0 } else { 320.0 })
         .autoplay(Duration::from_secs(2))

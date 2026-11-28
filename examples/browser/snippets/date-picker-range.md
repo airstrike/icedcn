@@ -1,10 +1,10 @@
 ```rust
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::calendar::{Date, Datelike, Duration, Mode, Selection, today};
 use icedcn::widget::{date_picker, field, text};
 
-pub fn view<'a, M: 'static>(window_width: f32) -> Slot<'a, M>
+pub fn view<'a, M: 'static>(window_width: f32) -> View<'a, M>
 where
     M: Clone,
 {

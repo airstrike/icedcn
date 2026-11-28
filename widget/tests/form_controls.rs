@@ -3,12 +3,12 @@ use iced_core::{Element, Event, Point, window};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space};
 use icedcn_core::{Horizontal, Theme};
-use icedcn_widget::{Slot, field, switch};
+use icedcn_widget::{View, field, switch};
 
 #[test]
 fn a_trailing_control_obeys_its_label_and_field_disabled_state() {
     for disabled in [false, true] {
-        let label = Slot::from(Space::new().width(80).height(20));
+        let label = View::from(Space::new().width(80).height(20));
         let content = field(switch().on_checked_change(|checked| checked))
             .orientation(Horizontal)
             .control_last()
@@ -33,7 +33,7 @@ fn a_trailing_control_obeys_its_label_and_field_disabled_state() {
 fn resizing_a_responsive_field_preserves_the_typed_value() {
     use iced_core::Size;
     use icedcn_widget::{input, operation::control};
-    let label: Slot<'_, String> = Space::new().width(40).height(20).into();
+    let label: View<'_, String> = Space::new().width(40).height(20).into();
     let form: Element<'_, String, Theme, Renderer> = field(input("").on_input(|value| value))
         .label(label)
         .responsive()
@@ -50,9 +50,9 @@ fn resizing_a_responsive_field_preserves_the_typed_value() {
 fn an_addon_focuses_its_input_except_when_a_button_handles_the_press() {
     use icedcn_widget::{button, input, input_group};
     for active_button in [false, true] {
-        let block: Slot<'_, String> = Space::new().width(22).height(20).into();
+        let block: View<'_, String> = Space::new().width(22).height(20).into();
         let addon = if active_button {
-            Slot::from(button(block).on_press("button".to_owned()))
+            View::from(button(block).on_press("button".to_owned()))
         } else {
             block
         };

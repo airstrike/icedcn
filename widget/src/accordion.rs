@@ -23,33 +23,33 @@ use iced_widget::Renderer;
 use icedcn_core::Theme;
 use icedcn_core::theme;
 
-use crate::{Inherited, Slot, Weight};
+use crate::{Inherited, View, Weight};
 
 /// Builder for one disclosure item. Constructed via [`item`].
 pub struct Item<'a, Message> {
-    trigger: Slot<'a, Message>,
-    chevron_closed: Option<Slot<'a, Message>>,
-    chevron_open: Option<Slot<'a, Message>>,
-    body: Slot<'a, Message>,
+    trigger: View<'a, Message>,
+    chevron_closed: Option<View<'a, Message>>,
+    chevron_open: Option<View<'a, Message>>,
+    body: View<'a, Message>,
     disabled: bool,
     inset: f32,
 }
 
 impl<'a, Message: 'a> Item<'a, Message> {
     /// Replace the body content.
-    pub fn content(mut self, content: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn content(mut self, content: impl Into<View<'a, Message>>) -> Self {
         self.body = content.into();
         self
     }
 
     /// Override the default downward chevron.
-    pub fn chevron_closed(mut self, icon: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn chevron_closed(mut self, icon: impl Into<View<'a, Message>>) -> Self {
         self.chevron_closed = Some(icon.into());
         self
     }
 
     /// Override the default upward chevron.
-    pub fn chevron_open(mut self, icon: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn chevron_open(mut self, icon: impl Into<View<'a, Message>>) -> Self {
         self.chevron_open = Some(icon.into());
         self
     }
@@ -69,8 +69,8 @@ impl<'a, Message: 'a> Item<'a, Message> {
 
 /// Construct an accordion item from its trigger and body.
 pub fn item<'a, Message: 'a>(
-    trigger: impl Into<Slot<'a, Message>>,
-    body: impl Into<Slot<'a, Message>>,
+    trigger: impl Into<View<'a, Message>>,
+    body: impl Into<View<'a, Message>>,
 ) -> Item<'a, Message> {
     Item {
         trigger: trigger.into(),
@@ -84,8 +84,8 @@ pub fn item<'a, Message: 'a>(
 
 impl<'a, Message: 'a, Trigger, Body> From<(Trigger, Body)> for Item<'a, Message>
 where
-    Trigger: Into<Slot<'a, Message>>,
-    Body: Into<Slot<'a, Message>>,
+    Trigger: Into<View<'a, Message>>,
+    Body: Into<View<'a, Message>>,
 {
     fn from((trigger, body): (Trigger, Body)) -> Self {
         item(trigger, body)
@@ -271,7 +271,7 @@ impl<'a, Message: 'a, Key, Selection, Identity> Accordion<'a, Message, Key, Sele
 }
 
 #[cfg(not(feature = "svg"))]
-fn chevron<'a, Message: 'a>(open: bool) -> Slot<'a, Message> {
+fn chevron<'a, Message: 'a>(open: bool) -> View<'a, Message> {
     let icon = if open {
         Renderer::SCROLL_UP_ICON
     } else {
@@ -288,7 +288,7 @@ fn chevron<'a, Message: 'a>(open: bool) -> Slot<'a, Message> {
 }
 
 #[cfg(feature = "svg")]
-fn chevron<'a, Message: 'a>(open: bool) -> Slot<'a, Message> {
+fn chevron<'a, Message: 'a>(open: bool) -> View<'a, Message> {
     use iced_widget::Widget;
     chevron::Icon::new(open).boxed().into()
 }
@@ -348,10 +348,10 @@ impl<'a, Message: 'a, Key: Clone + PartialEq + 'static, Selection: 'a, Identity:
 }
 
 impl<'a, Message: 'a, Key: Clone + PartialEq + 'static, Selection: 'a, Identity: 'a>
-    From<Accordion<'a, Message, Key, Selection, Identity>> for Slot<'a, Message>
+    From<Accordion<'a, Message, Key, Selection, Identity>> for View<'a, Message>
 {
     fn from(widget: Accordion<'a, Message, Key, Selection, Identity>) -> Self {
-        crate::Slot::new(widget)
+        crate::View::new(widget)
     }
 }
 

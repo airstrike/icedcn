@@ -1,8 +1,8 @@
 ```rust
 use icedcn::widget::{field, radio_group, text};
-use icedcn::{Horizontal, Slot};
+use icedcn::{Horizontal, View};
 
-fn subscription_plan<'a, M: Clone + 'static>() -> Slot<'a, M> {
+fn subscription_plan<'a, M: Clone + 'static>() -> View<'a, M> {
     let plans = [
         ("monthly", "Monthly ($9.99/month)"),
         ("yearly", "Yearly ($99.99/year)"),

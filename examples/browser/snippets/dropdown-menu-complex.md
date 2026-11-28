@@ -2,7 +2,7 @@
 use crate::icon;
 use iced::widget::Text;
 use icedcn::widget::{button, dropdown_menu, menu};
-use icedcn::{Slot, Theme};
+use icedcn::{View, Theme};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Preferences {
@@ -12,7 +12,7 @@ pub struct Preferences {
     pub theme: &'static str,
 }
 
-pub fn view<'a>(p: Preferences) -> Slot<'a, Preferences> {
+pub fn view<'a>(p: Preferences) -> View<'a, Preferences> {
     let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };

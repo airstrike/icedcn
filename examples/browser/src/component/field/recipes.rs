@@ -5,9 +5,9 @@ use icedcn::widget::{
     button, checkbox, column, field, input, radio_group, row, select, separator, switch, text,
     textarea,
 };
-use icedcn::{Horizontal, Slot};
+use icedcn::{Horizontal, View};
 
-pub(super) fn credentials<'a, M: Clone + 'a>(text_size: f32) -> Slot<'a, M> {
+pub(super) fn credentials<'a, M: Clone + 'a>(text_size: f32) -> View<'a, M> {
     field::group([
         field(input("Max Leiter").width(Fill).text_size(text_size))
             .label("Username")
@@ -28,7 +28,7 @@ pub(super) fn credentials<'a, M: Clone + 'a>(text_size: f32) -> Slot<'a, M> {
     .into()
 }
 
-pub(super) fn feedback<'a, M: Clone + 'a>() -> Slot<'a, M> {
+pub(super) fn feedback<'a, M: Clone + 'a>() -> View<'a, M> {
     field(textarea("Your feedback helps us improve..."))
         .label("Feedback")
         .description("Share your thoughts about our service.")
@@ -36,7 +36,7 @@ pub(super) fn feedback<'a, M: Clone + 'a>() -> Slot<'a, M> {
         .into()
 }
 
-pub(super) fn department<'a, M: Clone + 'static>() -> Slot<'a, M> {
+pub(super) fn department<'a, M: Clone + 'static>() -> View<'a, M> {
     let options = [
         ("engineering", "Engineering"),
         ("design", "Design"),
@@ -58,7 +58,7 @@ pub(super) fn department<'a, M: Clone + 'static>() -> Slot<'a, M> {
     .into()
 }
 
-pub(super) fn address<'a, M: Clone + 'a>(text_size: f32) -> Slot<'a, M> {
+pub(super) fn address<'a, M: Clone + 'a>(text_size: f32) -> View<'a, M> {
     let address = |label, hint| {
         field(input(hint).width(Fill).text_size(text_size))
             .label(label)
@@ -79,7 +79,7 @@ pub(super) fn address<'a, M: Clone + 'a>(text_size: f32) -> Slot<'a, M> {
     .into()
 }
 
-pub(super) fn authentication<'a, M: Clone + 'a>() -> Slot<'a, M> {
+pub(super) fn authentication<'a, M: Clone + 'a>() -> View<'a, M> {
     field(switch())
         .orientation(Horizontal)
         .control_last()
@@ -87,7 +87,7 @@ pub(super) fn authentication<'a, M: Clone + 'a>() -> Slot<'a, M> {
         .into()
 }
 
-pub(super) fn environment<'a, M: Clone + 'static>() -> Slot<'a, M> {
+pub(super) fn environment<'a, M: Clone + 'static>() -> View<'a, M> {
     let environments = [
         (
             "kubernetes",
@@ -124,7 +124,7 @@ pub(super) fn environment<'a, M: Clone + 'static>() -> Slot<'a, M> {
     .into()
 }
 
-pub(super) fn devices<'a, M: Clone + 'a>() -> Slot<'a, M> {
+pub(super) fn devices<'a, M: Clone + 'a>() -> View<'a, M> {
     let devices = [
         "Hard disks",
         "External disks",
@@ -147,7 +147,7 @@ pub(super) fn devices<'a, M: Clone + 'a>() -> Slot<'a, M> {
 ]).width(320).into()
 }
 
-pub(super) fn plans<'a, M: Clone + 'static>() -> Slot<'a, M> {
+pub(super) fn plans<'a, M: Clone + 'static>() -> View<'a, M> {
     let plans = [
         ("monthly", "Monthly ($9.99/month)"),
         ("yearly", "Yearly ($99.99/year)"),
@@ -172,7 +172,7 @@ pub(super) fn plans<'a, M: Clone + 'static>() -> Slot<'a, M> {
     .into()
 }
 
-pub(super) fn notifications<'a, M: Clone + 'a>(manage: M) -> Slot<'a, M> {
+pub(super) fn notifications<'a, M: Clone + 'a>(manage: M) -> View<'a, M> {
     let description = rich_text([
         span("Get notified when tasks you've created have updates. "),
         span("Manage tasks").link(()).underline(true),
@@ -204,7 +204,7 @@ pub(super) fn notifications<'a, M: Clone + 'a>(manage: M) -> Slot<'a, M> {
 pub(super) fn payment<'a, M: Clone + 'static>(
     required: impl Fn(&'a str, &'a str) -> field::Field<'a, M>,
     submit: M,
-) -> Slot<'a, M> {
+) -> View<'a, M> {
     let date = |range: std::ops::RangeInclusive<u16>, hint| {
         select(range.map(|n| {
             let label = format!("{n:02}");
@@ -253,7 +253,7 @@ pub(super) fn payment<'a, M: Clone + 'static>(
     .into()
 }
 
-pub(super) fn profile<'a, M: Clone + 'a>(name: field::Field<'a, M>, submit: M) -> Slot<'a, M> {
+pub(super) fn profile<'a, M: Clone + 'a>(name: field::Field<'a, M>, submit: M) -> View<'a, M> {
     field::set(
         field::legend("Profile"),
         Some("Fill in your profile information."),

@@ -4,8 +4,8 @@
 //! small / xs / lead), container, row, column.
 
 use iced::Fill;
-use icedcn::Slot;
 use icedcn::Theme;
+use icedcn::View;
 use icedcn::card;
 use icedcn::theme;
 use icedcn::widget::{button, column, container, progress, row, space, text};
@@ -39,7 +39,7 @@ const TARGETS: &[Target] = &[
 pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
     let lead = text::lead("Three goals, three trajectories.").width(Fill);
 
-    let rows: Vec<Slot<'static, Message>> = TARGETS
+    let rows: Vec<View<'static, Message>> = TARGETS
         .iter()
         .map(|t| target_row(t, state.connected))
         .collect();
@@ -78,7 +78,7 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
     .into()
 }
 
-fn target_row(t: &'static Target, connected: bool) -> Slot<'static, Message> {
+fn target_row(t: &'static Target, connected: bool) -> View<'static, Message> {
     let head = row![
         text::small(t.label).medium(),
         space::horizontal(),
@@ -103,7 +103,7 @@ fn target_row(t: &'static Target, connected: bool) -> Slot<'static, Message> {
     .spacing(8)
     .width(Fill);
 
-    column([head.into(), Slot::from(bar), footer.into()])
+    column([head.into(), View::from(bar), footer.into()])
         .spacing(8)
         .width(Fill)
         .into()

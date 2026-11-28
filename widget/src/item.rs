@@ -31,7 +31,7 @@ use icedcn_core::theme::container::Spec;
 use icedcn_core::theme::media::Frame;
 use icedcn_core::{Gap, Orientation, Theme};
 
-use crate::compose::{Compose, Slot};
+use crate::compose::{Compose, View};
 use crate::text;
 
 pub use icedcn_core::theme::item::{Default, Icon, Image, Muted, Outline};
@@ -47,7 +47,7 @@ pub enum Size {
 
 /// Item root.
 pub struct Item<'a, Message> {
-    children: Vec<Slot<'a, Message>>,
+    children: Vec<View<'a, Message>>,
     style: Spec,
     size: Size,
     orientation: Orientation,
@@ -83,7 +83,7 @@ impl<'a, Message: 'a> Item<'a, Message> {
         };
 
         let elements: Vec<iced_core::Element<'a, Message, Theme, Renderer>> =
-            children.into_iter().map(Slot::compose).collect();
+            children.into_iter().map(View::compose).collect();
 
         let content: iced_core::Element<'a, Message, Theme, Renderer> = match orientation {
             Orientation::Horizontal => iced_widget::Row::with_children(elements)
@@ -103,7 +103,7 @@ impl<'a, Message: 'a> Item<'a, Message> {
 
 /// Create an item from children.
 pub fn item<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, Message>>,
+    children: impl IntoIterator<Item = View<'a, Message>>,
 ) -> Item<'a, Message> {
     Item {
         children: children.into_iter().collect(),
@@ -136,7 +136,7 @@ impl<'a, Message: 'a> Item<'a, Message> {
 
 impl<'a, Message: Clone + 'a> Item<'a, Message> {
     /// Make the entire row an activatable link with a hover and keyboard focus surface.
-    pub fn on_press(self, message: Message) -> Slot<'a, Message> {
+    pub fn on_press(self, message: Message) -> View<'a, Message> {
         let spec = self.style.clone();
         let (content, padding) = self.layout();
         let paint: widget::StyleFn<'a, Theme> = Box::new(move |theme, status| {
@@ -160,7 +160,7 @@ impl<'a, Message: Clone + 'a> Item<'a, Message> {
                 snap: surface.snap,
             }
         });
-        Slot::from(
+        View::from(
             Button::new(content)
                 .width(Fill)
                 .padding(padding)
@@ -179,9 +179,9 @@ impl<'a, Message: 'a> From<Item<'a, Message>> for iced_core::Element<'a, Message
     }
 }
 
-impl<'a, Message: 'a> From<Item<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Item<'a, Message>> for View<'a, Message> {
     fn from(widget: Item<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -202,14 +202,14 @@ impl<'a, Message: 'a> Compose<Message> for Item<'a, Message> {
 
 /// Item content slot.
 pub struct Content<'a, Message> {
-    children: Vec<Slot<'a, Message>>,
+    children: Vec<View<'a, Message>>,
     spacing: f32,
     width: Length,
 }
 
 /// Create an item content slot.
 pub fn content<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, Message>>,
+    children: impl IntoIterator<Item = View<'a, Message>>,
 ) -> Content<'a, Message> {
     Content {
         children: children.into_iter().collect(),
@@ -240,9 +240,9 @@ impl<'a, Message: 'a> From<Content<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Content<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Content<'a, Message>> for View<'a, Message> {
     fn from(widget: Content<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -258,7 +258,7 @@ impl<'a, Message: 'a> Compose<Message> for Content<'a, Message> {
         } = *self;
 
         let elements: Vec<iced_core::Element<'a, Message, Theme, Renderer>> =
-            children.into_iter().map(Slot::compose).collect();
+            children.into_iter().map(View::compose).collect();
 
         iced_widget::Column::with_children(elements)
             .spacing(spacing)
@@ -281,12 +281,12 @@ pub fn description<'a>(content: impl iced_core::text::IntoFragment<'a>) -> text:
 
 /// Item media slot.
 pub struct Media<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     frame: Option<Frame>,
 }
 
 /// Create an unframed item media slot.
-pub fn media<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Media<'a, Message> {
+pub fn media<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Media<'a, Message> {
     Media {
         content: content.into(),
         frame: None,
@@ -309,9 +309,9 @@ impl<'a, Message: 'a> From<Media<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Media<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Media<'a, Message>> for View<'a, Message> {
     fn from(widget: Media<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -340,10 +340,10 @@ impl<'a, Message: 'a> Compose<Message> for Media<'a, Message> {
 
 /// Item actions row.
 pub fn actions<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, Message>>,
-) -> Slot<'a, Message> {
+    children: impl IntoIterator<Item = View<'a, Message>>,
+) -> View<'a, Message> {
     let elements: Vec<iced_core::Element<'a, Message, Theme, Renderer>> =
-        children.into_iter().map(Slot::compose).collect();
+        children.into_iter().map(View::compose).collect();
 
     let element: iced_core::Element<'a, Message, Theme, Renderer> =
         iced_widget::Row::with_children(elements)
@@ -351,28 +351,28 @@ pub fn actions<'a, Message: 'a>(
             .align_y(Alignment::Center)
             .boxed();
 
-    Slot::from(element)
+    View::from(element)
 }
 
 /// Item header row.
 pub fn header<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, Message>>,
-) -> Slot<'a, Message> {
+    children: impl IntoIterator<Item = View<'a, Message>>,
+) -> View<'a, Message> {
     slot_row(children)
 }
 
 /// Item footer row.
 pub fn footer<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, Message>>,
-) -> Slot<'a, Message> {
+    children: impl IntoIterator<Item = View<'a, Message>>,
+) -> View<'a, Message> {
     slot_row(children)
 }
 
 fn slot_row<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, Message>>,
-) -> Slot<'a, Message> {
+    children: impl IntoIterator<Item = View<'a, Message>>,
+) -> View<'a, Message> {
     let elements: Vec<iced_core::Element<'a, Message, Theme, Renderer>> =
-        children.into_iter().map(Slot::compose).collect();
+        children.into_iter().map(View::compose).collect();
 
     let element: iced_core::Element<'a, Message, Theme, Renderer> =
         iced_widget::Row::with_children(elements)
@@ -381,5 +381,5 @@ fn slot_row<'a, Message: 'a>(
             .width(Fill)
             .boxed();
 
-    Slot::from(element)
+    View::from(element)
 }

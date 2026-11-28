@@ -1,7 +1,7 @@
 use icedcn::widget::{alert, button};
-use icedcn::{Size, Slot};
+use icedcn::{Size, View};
 
-pub(super) fn view<'a, M: Clone + 'a>(enable: Option<M>) -> Slot<'a, M> {
+pub(super) fn view<'a, M: Clone + 'a>(enable: Option<M>) -> View<'a, M> {
     alert()
         .title("Dark mode is now available")
         .description("Enable it under your profile settings to get started.")

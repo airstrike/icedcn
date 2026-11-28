@@ -11,7 +11,7 @@ use iced_test::{Selector, Simulator, selector, simulator};
 use iced_widget::core::widget::Operation;
 use iced_widget::core::widget::operation::{self, Outcome, focusable};
 use icedcn::widget::{bubble, container, toaster};
-use icedcn::{Inherited, Slot, Theme};
+use icedcn::{Inherited, Theme, View};
 
 type Preview<'a> = Simulator<'a, Message, Theme, iced::Renderer>;
 
@@ -41,7 +41,7 @@ fn click_at(ui: &mut Preview<'_>, at: Point) {
 #[test]
 fn surface_padding_is_clickable_keyboard_reachable_and_inherits_disabled() {
     for disabled in [false, true] {
-        let mut content: Slot<'_, Message> = bubble(Space::new().width(20).height(12))
+        let mut content: View<'_, Message> = bubble(Space::new().width(20).height(12))
             .on_press(Message::ToggleTheme)
             .into();
         content.inherit(&Inherited::default().with_disabled(disabled));

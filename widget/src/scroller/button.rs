@@ -1,6 +1,6 @@
 //! The end control stays mounted while a change in scroll availability animates.
 use crate::button;
-use crate::{Slot, animation::cubic_bezier, container};
+use crate::{View, animation::cubic_bezier, container};
 use iced_core::animation::Easing;
 use iced_core::time::Instant;
 use iced_core::{Animation, Element, Length::Fill, Padding, alignment::Vertical::Bottom};
@@ -40,7 +40,7 @@ impl Program for Visibility {
 
 /// The end-of-transcript button layer, for use above a scroller in an iced stack.
 /// `visible` is the reader's `can_scroll_down`. The icon receives its animated size.
-pub(super) fn end<'a, Message: Clone + 'a, Icon: Into<Slot<'a, Message>>>(
+pub(super) fn end<'a, Message: Clone + 'a, Icon: Into<View<'a, Message>>>(
     visible: bool,
     icon: impl Fn(f32) -> Icon + 'a,
     press: Message,

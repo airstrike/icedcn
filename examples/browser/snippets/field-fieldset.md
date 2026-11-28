@@ -1,9 +1,9 @@
 ```rust
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{field, input, row};
 
-fn address<'a, M: Clone + 'a>(text_size: f32) -> Slot<'a, M> {
+fn address<'a, M: Clone + 'a>(text_size: f32) -> View<'a, M> {
     let address = |label, hint| {
         field(input(hint).width(Fill).text_size(text_size))
             .label(label)

@@ -32,11 +32,11 @@ use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::marker::{self, Press};
 
 /// The closure that builds a [`Collapsible`]'s content.
-type Body<'a, Message> = Box<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
+type Body<'a, Message> = Box<dyn Fn(&Handle) -> View<'a, Message> + 'a>;
 
 /// A disclosure that shows its content while open.
 pub struct Collapsible<'a, Message> {
@@ -79,7 +79,7 @@ pub struct State {
 /// Create a closed, uncontrolled [`Collapsible`] whose content is built by
 /// `body`.
 pub fn collapsible<'a, Message>(
-    body: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
+    body: impl Fn(&Handle) -> View<'a, Message> + 'a,
 ) -> Collapsible<'a, Message> {
     Collapsible {
         body: Box::new(body),
@@ -151,29 +151,29 @@ impl Handle {
     /// Pressing the child toggles the disclosure. The child keeps its own handlers.
     pub fn trigger<'a, Message: 'a>(
         &self,
-        child: impl Into<Slot<'a, Message>>,
-    ) -> Slot<'a, Message> {
+        child: impl Into<View<'a, Message>>,
+    ) -> View<'a, Message> {
         let mut child = child.into();
         child.inherit(&Inherited::default().with_disabled(self.disabled));
-        Slot::new(Trigger { child })
+        View::new(Trigger { child })
     }
 
     /// Show `child` only while the disclosure is open.
     pub fn content<'a, Message: 'a>(
         &self,
-        child: impl Into<Slot<'a, Message>>,
-    ) -> Slot<'a, Message> {
+        child: impl Into<View<'a, Message>>,
+    ) -> View<'a, Message> {
         if self.is_open {
             child.into()
         } else {
-            Slot::from(iced_widget::Space::new())
+            View::from(iced_widget::Space::new())
         }
     }
 }
 
 /// A child that records [`Toggle`] when pressed.
 struct Trigger<'a, Message> {
-    child: Slot<'a, Message>,
+    child: View<'a, Message>,
 }
 
 impl<'a, Message: 'a> Compose<Message> for Trigger<'a, Message> {
@@ -250,9 +250,9 @@ impl<'a, Message: 'static> Compose<Message> for Collapsible<'a, Message> {
     }
 }
 
-impl<'a, Message: 'static> From<Collapsible<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'static> From<Collapsible<'a, Message>> for View<'a, Message> {
     fn from(collapsible: Collapsible<'a, Message>) -> Self {
-        Slot::new(collapsible)
+        View::new(collapsible)
     }
 }
 

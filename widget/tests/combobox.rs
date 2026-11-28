@@ -8,7 +8,7 @@ use iced_core::{Element, Event, Point, Rectangle, Size, window};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space};
 use icedcn_core::Theme;
-use icedcn_widget::{Inherited, Slot, button, combobox, container};
+use icedcn_widget::{Inherited, View, button, combobox, container};
 
 #[derive(Debug, Clone, PartialEq)]
 enum Message {
@@ -58,7 +58,7 @@ fn combobox_clear_reselect_and_empty_filter_publish_only_real_values() {
 #[test]
 fn combobox_inherited_disabled_blocks_inline_popup_and_chips() {
     for mode in 0..3 {
-        let mut field: Slot<'static, Message> = combobox(["Next.js", "Remix"])
+        let mut field: View<'static, Message> = combobox(["Next.js", "Remix"])
             .width(256)
             .popup(mode == 1)
             .multiple(mode == 2)

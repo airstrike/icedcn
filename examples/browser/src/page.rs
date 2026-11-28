@@ -39,7 +39,7 @@ use icedcn::widget::markdown::widget::Highlight;
 use icedcn::widget::sidebar::MenuButtonSize;
 use icedcn::widget::{Text, button, rule, text};
 use icedcn::widget::{container, toast};
-use icedcn::{Slot, Theme, Weight, radius, theme};
+use icedcn::{Theme, View, Weight, radius, theme};
 
 use crate::component::code_block;
 use crate::font;
@@ -328,7 +328,7 @@ pub trait Page: Send {
 pub fn view<'a>(
     page: &'a dyn Page,
     viewer: &'a SnippetViewer,
-) -> (Slot<'a, super::Message>, Option<Slot<'a, super::Message>>) {
+) -> (View<'a, super::Message>, Option<View<'a, super::Message>>) {
     (body(page, viewer, true), has_toc(page).then(|| toc(page)))
 }
 
@@ -338,7 +338,7 @@ pub fn body<'a>(
     page: &'a dyn Page,
     viewer: &'a SnippetViewer,
     show_toc: bool,
-) -> Slot<'a, super::Message> {
+) -> View<'a, super::Message> {
     render_blocks(page, viewer, show_toc)
 }
 
@@ -366,7 +366,7 @@ fn render_blocks<'a>(
     page: &'a dyn Page,
     viewer: &'a SnippetViewer,
     show_toc: bool,
-) -> Slot<'a, super::Message> {
+) -> View<'a, super::Message> {
     let pi = page.page_index();
     let st = page.state();
     let mut items: Vec<iced::Element<'_, super::Message, Theme>> = Vec::new();
@@ -578,7 +578,7 @@ fn framed_example<'a>(
 pub fn code_panel<'a>(
     page_index: usize,
     block_pos: usize,
-    body: Slot<'a, super::Message>,
+    body: View<'a, super::Message>,
     expanded: bool,
 ) -> iced::Element<'a, super::Message, Theme> {
     code_panel_with_border(
@@ -593,7 +593,7 @@ pub fn code_panel<'a>(
 fn code_panel_with_border<'a>(
     page_index: usize,
     block_pos: usize,
-    body: Slot<'a, super::Message>,
+    body: View<'a, super::Message>,
     expanded: bool,
     border: Border,
 ) -> iced::Element<'a, super::Message, Theme> {
@@ -618,7 +618,7 @@ fn code_panel_with_border<'a>(
         .style(style(code_block_panel));
 
     if expanded {
-        let copy_btn: Slot<'_, super::Message> = button(icon::copy().size(14))
+        let copy_btn: View<'_, super::Message> = button(icon::copy().size(14))
             .style(button::Ghost)
             .size(Sm)
             .square()
@@ -639,7 +639,7 @@ fn code_panel_with_border<'a>(
     } else {
         let truncated = inner.max_height(COLLAPSED_CODE_HEIGHT).clip(true);
 
-        let view_code_btn: Slot<'_, super::Message> = button("View Code")
+        let view_code_btn: View<'_, super::Message> = button("View Code")
             .style(button::Outline + Opaque + radius(Lg))
             .on_press(super::Message::Page(
                 page_index,
@@ -659,7 +659,7 @@ fn code_panel_with_border<'a>(
 ///
 /// Visible headings brighten toward the center of the viewport. The active
 /// heading uses the foreground color and medium weight.
-pub fn toc<'a>(page: &'a dyn Page) -> Slot<'a, super::Message> {
+pub fn toc<'a>(page: &'a dyn Page) -> View<'a, super::Message> {
     /// Keep off-screen links legible against both documentation surfaces.
     const TOC_ALPHA_FLOOR: f32 = 0.9;
 
@@ -743,7 +743,7 @@ pub fn toc<'a>(page: &'a dyn Page) -> Slot<'a, super::Message> {
         } else {
             Weight::Normal
         };
-        let entry: Slot<'_, super::Message> = button(Text::new(title).width(Fill))
+        let entry: View<'_, super::Message> = button(Text::new(title).width(Fill))
             .size(MenuButtonSize::Docs.text())
             .height(Shrink)
             .padding(0)
@@ -781,7 +781,7 @@ pub fn snippet<'a>(
     page_index: usize,
     items: &'a Vec<markdown::Item>,
     viewer: &'a SnippetViewer,
-) -> Slot<'a, super::Message> {
+) -> View<'a, super::Message> {
     markdown::view_with(items, snippet_settings(viewer), viewer)
         .map(move |url| super::Message::Page(page_index, Message::LinkClicked(url)))
         .boxed()
@@ -795,7 +795,7 @@ fn panel_snippet<'a>(
     items: &'a [markdown::Item],
     viewer: &'a SnippetViewer,
     collapsed: bool,
-) -> Slot<'a, super::Message> {
+) -> View<'a, super::Message> {
     let settings = snippet_settings(viewer);
     let source = |item: &'a markdown::Item, limit: usize| match item {
         markdown::Item::CodeBlock {

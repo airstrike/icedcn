@@ -1,6 +1,6 @@
 ```rust
 use icedcn::{
-    Slot,
+    View,
     widget::{button, toast},
 };
 
@@ -9,7 +9,7 @@ enum Message {
     Undo,
 }
 
-fn show_toast<'a>() -> Slot<'a, Message> {
+fn show_toast<'a>() -> View<'a, Message> {
     toast::trigger(
         button("Show Toast").style(button::Outline),
         toast::toast("Event has been created")

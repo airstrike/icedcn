@@ -36,7 +36,7 @@ use std::rc::Rc;
 
 use crate::button::widget::{self, Button};
 use crate::combobox::keys::Keys;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::container::Container;
 use crate::icon::Icon;
 use crate::menu::list::{Initial, List, Search};
@@ -127,7 +127,7 @@ pub enum Position {
 }
 
 type ValueLabel<'a> = Box<dyn Fn(&str, &str) -> String + 'a>;
-type ItemContent<'a> = Box<dyn Fn(&str, &str) -> Slot<'a, Event> + 'a>;
+type ItemContent<'a> = Box<dyn Fn(&str, &str) -> View<'a, Event> + 'a>;
 
 type TriggerPaint<'a> = Rc<dyn Fn(&Theme, widget::Status, bool, bool) -> widget::Style + 'a>;
 /// A field choosing one value from a list.
@@ -153,7 +153,7 @@ pub struct Select<'a, Message> {
     line_height: LineHeight,
     variant: Variant,
     trigger_paint: Option<TriggerPaint<'a>>,
-    icon: Option<Box<dyn Fn() -> Slot<'a, Event> + 'a>>,
+    icon: Option<Box<dyn Fn() -> View<'a, Event> + 'a>>,
     inherited: Inherited,
 }
 
@@ -331,7 +331,7 @@ impl<'a, Message> Select<'a, Message> {
     }
 
     /// Compose the option's label while preserving its value and selection behavior.
-    pub fn format_item<Content: Into<Slot<'a, Event>> + 'a>(
+    pub fn format_item<Content: Into<View<'a, Event>> + 'a>(
         mut self,
         content: impl Fn(&str, &str) -> Content + 'a,
     ) -> Self {
@@ -364,7 +364,7 @@ impl<'a, Message> Select<'a, Message> {
     }
 
     /// Replace the trigger chevron with custom content, such as an SVG.
-    pub fn icon_content<Content: Into<Slot<'a, Event>> + 'a>(
+    pub fn icon_content<Content: Into<View<'a, Event>> + 'a>(
         mut self,
         icon: impl Fn() -> Content + 'a,
     ) -> Self {
@@ -376,7 +376,7 @@ impl<'a, Message> Select<'a, Message> {
         self.value.as_deref().or(state.value.as_deref())
     }
 
-    fn list(&self, entries: &[Entry], current: Option<&str>) -> Vec<Slot<'a, Event>> {
+    fn list(&self, entries: &[Entry], current: Option<&str>) -> Vec<View<'a, Event>> {
         entries
             .iter()
             .map(|entry| match entry {
@@ -387,12 +387,12 @@ impl<'a, Message> Select<'a, Message> {
                 } => {
                     let chosen = current == Some(value.as_str());
                     let content = self.item_content.as_ref().map_or_else(
-                        || Slot::from(text::small(label.clone()).line_height(20. / 14.)),
+                        || View::from(text::small(label.clone()).line_height(20. / 14.)),
                         |content| content(value, label),
                     );
                     let value = value.clone();
 
-                    Slot::from(
+                    View::from(
                         menu::checkbox_item(content, chosen, move |_| Event::Choose(value.clone()))
                             .disabled(*disabled)
                             .closes(false),
@@ -518,7 +518,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
             value
         };
 
-        let chevron: Slot<'a, Event> = match &self.icon {
+        let chevron: View<'a, Event> = match &self.icon {
             Some(icon) => {
                 let mut icon = icon();
                 icon.inherit(
@@ -539,7 +539,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
         } else {
             Fill
         };
-        let mut line: Slot<'a, Event> =
+        let mut line: View<'a, Event> =
             row![Container::new(value).width(inner_width).clip(true), chevron]
                 .width(inner_width)
                 .spacing(6)
@@ -636,7 +636,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
             .style(content);
 
             List {
-                content: Slot::from(panel).compose(),
+                content: View::from(panel).compose(),
                 horizontal: Some(false),
                 autofocus: Initial::Choice {
                     scroll: state.scroll.clone(),
@@ -703,9 +703,9 @@ impl<'a, Message: 'static> Compose<Message> for Select<'a, Message> {
     }
 }
 
-impl<'a, Message: 'static> From<Select<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'static> From<Select<'a, Message>> for View<'a, Message> {
     fn from(select: Select<'a, Message>) -> Self {
-        Slot::new(select)
+        View::new(select)
     }
 }
 

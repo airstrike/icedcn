@@ -7,7 +7,7 @@ use iced_widget::{Renderer, Space, Widget};
 use icedcn_core::Theme;
 use icedcn_widget::button::group;
 use icedcn_widget::{
-    Compose, Inherited, Size, Slot, Weight, button, input, input_group, select, tooltip,
+    Compose, Inherited, Size, View, Weight, button, input, input_group, select, tooltip,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -37,8 +37,8 @@ impl Operation for Controls {
 #[test]
 fn nested_mapped_slots_and_tooltips_preserve_the_cascade() {
     let received = Rc::new(RefCell::new(Inherited::default()));
-    let mut slot: Slot<'_, ()> = button::group![button::group![tooltip(
-        Slot::new(Probe(received.clone())),
+    let mut slot: View<'_> = button::group![button::group![tooltip(
+        View::new(Probe(received.clone())),
         "Hint"
     )]]
     .into();
@@ -55,7 +55,7 @@ fn nested_mapped_slots_and_tooltips_preserve_the_cascade() {
 }
 #[test]
 fn inherited_disabled_reaches_buttons_inputs_select_and_input_group() {
-    let mut slot: Slot<'_, bool> = button::group![
+    let mut slot: View<'_, bool> = button::group![
         button("Action").on_press(true),
         input("Input").width(90),
         select([select::item("one", "One")])

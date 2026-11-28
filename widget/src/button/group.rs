@@ -1,5 +1,5 @@
-//! Related controls joined through the ordinary Compose/Slot contract.
-use crate::compose::{Compose, Inherited, Slot};
+//! Related controls joined through the ordinary Compose/View contract.
+use crate::compose::{Compose, Inherited, View};
 use iced_core::Length;
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
@@ -15,7 +15,7 @@ pub use text::Text;
 
 /// A row or column of joined controls, or spaced nested groups.
 pub struct ButtonGroup<'a, Message> {
-    children: Vec<Slot<'a, Message>>,
+    children: Vec<View<'a, Message>>,
     orientation: Orientation,
     width: Length,
     inherited: Inherited,
@@ -23,7 +23,7 @@ pub struct ButtonGroup<'a, Message> {
 
 /// Group related controls. Use [`button::group!`](crate::button::group!) for mixed child types.
 pub fn group<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, Message>>,
+    children: impl IntoIterator<Item = View<'a, Message>>,
 ) -> ButtonGroup<'a, Message> {
     ButtonGroup {
         children: children.into_iter().collect(),
@@ -37,7 +37,7 @@ pub fn separator() -> Separator {
     Separator::new()
 }
 /// Muted text or a custom label inside a button group.
-pub fn text<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Text<'a, Message> {
+pub fn text<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Text<'a, Message> {
     Text::new(content)
 }
 
@@ -65,7 +65,7 @@ impl<'a, Message: 'a> Compose<Message> for ButtonGroup<'a, Message> {
         Self: 'b,
     {
         let total = self.children.len();
-        let spacing = if self.children.iter().any(Slot::is_button_group) {
+        let spacing = if self.children.iter().any(View::is_button_group) {
             8.
         } else {
             0.
@@ -88,9 +88,9 @@ impl<'a, Message: 'a> Compose<Message> for ButtonGroup<'a, Message> {
         widget::Group::new(children, orientation, self.width, spacing).boxed()
     }
 }
-impl<'a, Message: 'a> From<ButtonGroup<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<ButtonGroup<'a, Message>> for View<'a, Message> {
     fn from(group: ButtonGroup<'a, Message>) -> Self {
-        Slot::new(group)
+        View::new(group)
     }
 }
 impl<'a, Message: 'a> From<ButtonGroup<'a, Message>>
@@ -106,6 +106,6 @@ impl<'a, Message: 'a> From<ButtonGroup<'a, Message>>
 macro_rules! __button_group {
     () => { $crate::button::group(::core::iter::empty()) };
     ($($child:expr),+ $(,)?) => { $crate::button::group([
-        $(Into::<$crate::compose::Slot<'_, _>>::into($child)),+
+        $(Into::<$crate::compose::View<'_, _>>::into($child)),+
     ]) };
 }

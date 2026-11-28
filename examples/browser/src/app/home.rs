@@ -11,7 +11,7 @@ use icedcn::widget::{
     field, input, input_group, menu, progress, radio_group, row, scrollable, separator, slider,
     space, switch, text, textarea,
 };
-use icedcn::{Size, Slot, Theme, card, radius, theme};
+use icedcn::{Size, Theme, View, card, radius, theme};
 
 use super::Message;
 use crate::icon;
@@ -51,7 +51,7 @@ pub(super) fn view<'a>(width: f32) -> Element<'a, Message, Theme> {
         .spacing(24)
         .width(Fill);
     let fourth = column![dates(), customize()].spacing(24).width(Fill);
-    let gallery: Slot<'_, Message> = if desktop {
+    let gallery: View<'_, Message> = if desktop {
         row![first, second, third, fourth]
             .spacing(24)
             .align_y(Top)
@@ -78,7 +78,7 @@ pub(super) fn view<'a>(width: f32) -> Element<'a, Message, Theme> {
         .anchor()
         .style(button::Link)
         .on_press(Message::GoTo("/examples"));
-    let footer: Slot<'_, Message> = if mobile {
+    let footer: View<'_, Message> = if mobile {
         column![footer_label, footer_link]
             .spacing(8)
             .align_x(Center)
@@ -117,11 +117,11 @@ pub(super) fn view<'a>(width: f32) -> Element<'a, Message, Theme> {
     .into()
 }
 
-fn panel<'a, M: 'a>(content: impl Into<Slot<'a, M>>) -> Slot<'a, M> {
+fn panel<'a, M: 'a>(content: impl Into<View<'a, M>>) -> View<'a, M> {
     card(card::content(content)).width(Fill).into()
 }
 
-fn controls<'a>() -> Slot<'a, Message> {
+fn controls<'a>() -> View<'a, Message> {
     panel(column![
         row![
             button!["Button", icon::arrow_right()],
@@ -177,7 +177,7 @@ fn controls<'a>() -> Slot<'a, Message> {
     ].spacing(24).width(Fill))
 }
 
-fn shortcuts<'a>() -> Slot<'a, Message> {
+fn shortcuts<'a>() -> View<'a, Message> {
     panel(
         column![
             text::small("Explore the library").medium(),
@@ -197,9 +197,9 @@ fn shortcuts<'a>() -> Slot<'a, Message> {
 
 fn route<'a>(
     label: &'static str,
-    glyph: impl Into<Slot<'a, Message>>,
+    glyph: impl Into<View<'a, Message>>,
     path: &'static str,
-) -> Slot<'a, Message> {
+) -> View<'a, Message> {
     button(
         row![
             glyph.into(),
@@ -218,7 +218,7 @@ fn route<'a>(
     .into()
 }
 
-fn savings<'a>() -> Slot<'a, Message> {
+fn savings<'a>() -> View<'a, Message> {
     panel(
         column![
             text::p("Savings targets").medium(),
@@ -242,7 +242,7 @@ fn savings<'a>() -> Slot<'a, Message> {
     )
 }
 
-fn contributions<'a>() -> Slot<'a, Message> {
+fn contributions<'a>() -> View<'a, Message> {
     // The reference uses five CSS columns, not a chart renderer with axis insets.
     let colors = Accent::Neutral.chart();
     let bars = row::Row::with_children(
@@ -308,7 +308,7 @@ fn contributions<'a>() -> Slot<'a, Message> {
     )
 }
 
-fn detail<'a>(label: &'static str, value: &'static str, note: &'static str) -> Slot<'a, Message> {
+fn detail<'a>(label: &'static str, value: &'static str, note: &'static str) -> View<'a, Message> {
     container(
         column![
             text::xs(label)
@@ -329,7 +329,7 @@ fn detail<'a>(label: &'static str, value: &'static str, note: &'static str) -> S
     .into()
 }
 
-fn team<'a>() -> Slot<'a, Message> {
+fn team<'a>() -> View<'a, Message> {
     panel(
         column![
             text::p("Your team").medium(),
@@ -349,7 +349,7 @@ fn team<'a>() -> Slot<'a, Message> {
     )
 }
 
-fn member<'a>(initials: &'static str, name: &'static str, role: &'static str) -> Slot<'a, Message> {
+fn member<'a>(initials: &'static str, name: &'static str, role: &'static str) -> View<'a, Message> {
     row![
         avatar(None).fallback(initials),
         column![
@@ -366,7 +366,7 @@ fn member<'a>(initials: &'static str, name: &'static str, role: &'static str) ->
     .into()
 }
 
-fn preferences<'a>() -> Slot<'a, Message> {
+fn preferences<'a>() -> View<'a, Message> {
     panel(
         column![
             text::p("Make yourself at home").medium(),
@@ -387,7 +387,7 @@ fn preferences<'a>() -> Slot<'a, Message> {
     )
 }
 
-fn dates<'a>() -> Slot<'a, Message> {
+fn dates<'a>() -> View<'a, Message> {
     panel(
         column![
             text::p("Make time for something new").medium().width(Fill),
@@ -405,7 +405,7 @@ fn dates<'a>() -> Slot<'a, Message> {
     )
 }
 
-fn customize<'a>() -> Slot<'a, Message> {
+fn customize<'a>() -> View<'a, Message> {
     panel(
         column![
             row![

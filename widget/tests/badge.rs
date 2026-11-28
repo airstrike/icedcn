@@ -6,7 +6,7 @@ use iced_core::{Element, Event, Point, Rectangle, event, mouse};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space};
 use icedcn_core::Theme;
-use icedcn_widget::{Inherited, Slot, badge};
+use icedcn_widget::{Inherited, View, badge};
 
 #[test]
 fn keyboard_activates_link_without_hover() {
@@ -70,7 +70,7 @@ fn border_space_and_icon_insets_keep_the_twenty_pixel_box() {
 }
 
 fn linked(disabled: bool) -> Element<'static, (), Theme, Renderer> {
-    let mut content: Slot<'_, ()> = badge(Space::new().width(24).height(16)).on_press(()).into();
+    let mut content: View<'_> = badge(Space::new().width(24).height(16)).on_press(()).into();
     content.inherit(&Inherited::default().with_disabled(disabled));
     content.compose()
 }

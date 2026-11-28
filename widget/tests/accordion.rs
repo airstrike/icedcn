@@ -5,7 +5,7 @@ use iced_test::simulator::simulator;
 use iced_widget::{Renderer, Space};
 use icedcn_core::Theme;
 use icedcn_widget::accordion::Item;
-use icedcn_widget::{Slot, accordion, button, container, input};
+use icedcn_widget::{View, accordion, button, container, input};
 
 #[derive(Debug, Clone, PartialEq)]
 enum Message {
@@ -35,18 +35,18 @@ fn mount(
 
 #[test]
 fn literal_function_push_extend_and_empty_forms_compose() {
-    let _: Slot<'_, Message> = icedcn_widget::accordion![].into();
-    let _: Slot<'_, Message> = icedcn_widget::accordion![
+    let _: View<'_, Message> = icedcn_widget::accordion![].into();
+    let _: View<'_, Message> = icedcn_widget::accordion![
         ("Tuple", "Body"),
         accordion::item(button("Custom"), input("Editable")).disabled(true),
     ]
     .default_value(0)
     .into();
-    let _: Slot<'_, Message> = accordion([(button("Trigger"), "Body")])
+    let _: View<'_, Message> = accordion([(button("Trigger"), "Body")])
         .push(("Second", input("Details")))
         .extend([("Third", "Body")])
         .into();
-    let _: Slot<'_, Message> = accordion::keyed([(1usize, ("First", "Body"))])
+    let _: View<'_, Message> = accordion::keyed([(1usize, ("First", "Body"))])
         .push(9, ("Second", "Body"))
         .extend([(5, ("Third", "Body"))])
         .default_value(9)
@@ -140,7 +140,7 @@ fn changing_multiple_to_single_reconciles_the_uncontrolled_open_set() {
 fn a_disabled_ancestor_reaches_the_trigger_and_body() {
     use icedcn_widget::Inherited;
 
-    let mut slot: Slot<'_, Message> = accordion([item("a")])
+    let mut slot: View<'_, Message> = accordion([item("a")])
         .default_value(0)
         .on_value_change(Message::Single)
         .into();

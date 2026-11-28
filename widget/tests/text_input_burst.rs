@@ -26,7 +26,7 @@ use iced_runtime::user_interface;
 use iced_test::simulator;
 use iced_widget::{Component, Renderer, Widget, component};
 use icedcn_core::Theme;
-use icedcn_widget::{Slot, dialog, input, input_group, space};
+use icedcn_widget::{View, dialog, input, input_group, space};
 
 use std::sync::Arc;
 
@@ -52,7 +52,7 @@ enum Host {
     Dialog,
 }
 
-fn field(value: &str) -> Slot<'_, Message> {
+fn field(value: &str) -> View<'_, Message> {
     input("")
         .id(INPUT)
         .value(value)

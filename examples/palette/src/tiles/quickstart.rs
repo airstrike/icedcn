@@ -6,8 +6,8 @@
 //! text variants (large, p, muted, blockquote), container, row, column.
 
 use iced::Fill;
-use icedcn::Slot;
 use icedcn::Theme;
+use icedcn::View;
 use icedcn::card;
 use icedcn::theme::container::card_muted;
 use icedcn::theme::tweak::Token;
@@ -42,7 +42,7 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
             .color(Token::MutedForeground),
     ];
 
-    let deploy_label: Slot<'_, Message> = if state.deploying {
+    let deploy_label: View<'_, Message> = if state.deploying {
         row![spinner(), "Deploying"].spacing(8).into()
     } else {
         "Deploy".into()
@@ -66,8 +66,8 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
 
     let body = column([
         title_row.into(),
-        Slot::from(teaser),
-        Slot::from(banner),
+        View::from(teaser),
+        View::from(banner),
         quote.into(),
         deploy.into(),
     ])

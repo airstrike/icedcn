@@ -11,7 +11,7 @@ use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space, Widget};
 use icedcn_core::Theme;
 use icedcn_widget::{
-    Compose, Inherited, Slot, Weight, breadcrumb, button, container, dropdown_menu, popover, row,
+    Compose, Inherited, View, Weight, breadcrumb, button, container, dropdown_menu, popover, row,
 };
 
 type Preview = iced_test::Simulator<'static, u32, Theme, Renderer>;
@@ -38,7 +38,7 @@ fn next(ui: &mut Preview, backwards: bool) {
 }
 
 fn trail(disabled: bool) -> Element<'static, u32, Theme, Renderer> {
-    let mut content: Slot<'_, u32> = breadcrumb([
+    let mut content: View<'_, u32> = breadcrumb([
         breadcrumb::link(Space::new().width(40).height(20), 1),
         breadcrumb::item(
             button(Space::new().width(40).height(20))
@@ -156,11 +156,11 @@ fn typography_cascades_without_overwriting_explicit_child_values() {
         .with_weight(Weight::Bold)
         .with_line_height(Pixels(24.));
     let observed = Rc::new(RefCell::new(Inherited::default()));
-    let child = Slot::new(Recorded(
+    let child = View::new(Recorded(
         observed.clone(),
         Inherited::default().with_size(12.0),
     ));
-    let mut content: Slot<'_, u32> = breadcrumb([breadcrumb::page(child)]).into();
+    let mut content: View<'_, u32> = breadcrumb([breadcrumb::page(child)]).into();
     content.inherit(&inherited);
     let _ = content.compose();
     let actual = *observed.borrow();
@@ -175,7 +175,7 @@ fn typography_cascades_without_overwriting_explicit_child_values() {
 #[test]
 fn parts_compose_in_controls_and_preserve_disabled_inheritance() {
     let view = |disabled| {
-        let mut content: Slot<'_, u32> = row![
+        let mut content: View<'_, u32> = row![
             breadcrumb::link(Space::new().width(40).height(20), 1),
             breadcrumb::page(Space::new().width(40).height(20)),
             button(breadcrumb::ellipsis(None))
@@ -205,7 +205,7 @@ fn parts_compose_in_controls_and_preserve_disabled_inheritance() {
 #[test]
 fn arrow_down_is_dropdown_owned_and_respects_focus_and_disabling() {
     let menu = |disabled| {
-        let mut content: Slot<'_, u32> = dropdown_menu(
+        let mut content: View<'_, u32> = dropdown_menu(
             |m| m.trigger(button(Space::new().width(40).height(20)).on_press(77)),
             |_| Space::new().width(40).height(20).into(),
         )

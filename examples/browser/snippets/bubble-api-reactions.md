@@ -4,7 +4,7 @@ Displays overlapped reactions for a bubble. Use `.reactions(content, align, side
 
 | Argument or builder | Type | Default | Behavior |
 |---|---|---|---|
-| `content` | `impl Into<Slot<'a, Message>>` | Required | Reaction text, a row, a button, tooltip or popover. |
+| `content` | `impl Into<View<'a, Message>>` | Required | Reaction text, a row, a button, tooltip or popover. |
 | `side` | `Vertical` | Required | `Top` or `Bottom` edge. |
 | `align` | `Horizontal` | Required | `Left` or `Right`, 12px from the bubble edge. |
 | `.reaction_padding(padding)` | `impl Into<Padding>` | `[2, 6]` | Use zero for reactions containing buttons. |

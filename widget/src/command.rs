@@ -4,7 +4,7 @@ use iced_core::Length::Fill;
 mod behavior;
 
 use crate::button::widget;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::dialog::{Dialog, Handle};
 use crate::icon::Icon;
 use crate::text::Text;
@@ -82,7 +82,7 @@ pub struct Command<'a, Message> {
     modal: bool,
     inherited: Inherited,
 }
-type Field<'a> = Box<dyn Fn(Input<'a, Event>) -> Slot<'a, Event> + 'a>;
+type Field<'a> = Box<dyn Fn(Input<'a, Event>) -> View<'a, Event> + 'a>;
 
 /// Build a list from its source order. Filtering retains all matching groups.
 pub fn command<'a, Message>(
@@ -102,7 +102,7 @@ pub fn command<'a, Message>(
 /// Build a modal command palette, with an uncontrolled trigger and search focus.
 /// The returned dialog also supports `open`, `default_open`, and `on_open_change`.
 pub fn dialog<'a, Message: Clone + 'static>(
-    trigger: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
+    trigger: impl Fn(&Handle) -> View<'a, Message> + 'a,
     content: impl Fn() -> Command<'a, Message> + 'a,
 ) -> Dialog<'a, Message> {
     crate::dialog(trigger, move |_| {
@@ -140,7 +140,7 @@ impl<'a, Message> Command<'a, Message> {
 
     /// Embed the results in a surface supplied by the caller. The field
     /// receives the current query and already publishes edits to the list.
-    pub fn embedded(mut self, field: impl Fn(Input<'a, Event>) -> Slot<'a, Event> + 'a) -> Self {
+    pub fn embedded(mut self, field: impl Fn(Input<'a, Event>) -> View<'a, Event> + 'a) -> Self {
         self.field = Some(Box::new(field));
         self
     }
@@ -273,7 +273,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 }
                 group = item.group.as_ref();
             }
-            let label: Slot<'a, Event> = if let Some(icon) = &item.icon {
+            let label: View<'a, Event> = if let Some(icon) = &item.icon {
                 row![
                     icon().size(16).line_height(Pixels(16.)),
                     Text::new(item.label.clone())
@@ -333,7 +333,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             }
             let modal = self.modal;
             let disabled = item.disabled || self.inherited.is_disabled();
-            let mut line: Slot<'a, Event> = line.into();
+            let mut line: View<'a, Event> = line.into();
             line.inherit(
                 &self
                     .inherited
@@ -424,7 +424,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
             .height(Length::Shrink.max(if embedded { 300 } else { 288 }));
         let list = if embedded { list } else { list.style(hidden) };
         let modal = self.modal;
-        let mut palette: Slot<'a, Event> = if embedded {
+        let mut palette: View<'a, Event> = if embedded {
             column![search, list].width(self.width).spacing(8).into()
         } else {
             container(column![search, list].width(Fill))
@@ -472,9 +472,9 @@ impl<'a, Message: Clone + 'static> Compose<Message> for Command<'a, Message> {
         component::component(*self).boxed()
     }
 }
-impl<'a, Message: Clone + 'static> From<Command<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'static> From<Command<'a, Message>> for View<'a, Message> {
     fn from(value: Command<'a, Message>) -> Self {
-        Slot::new(value)
+        View::new(value)
     }
 }
 impl<'a, Message: Clone + 'static> From<Command<'a, Message>>

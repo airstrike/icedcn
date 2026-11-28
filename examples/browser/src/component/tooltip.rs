@@ -1,7 +1,7 @@
 use iced::Task;
 
 use icedcn::widget::{button, kbd, row, tooltip};
-use icedcn::{Size, Slot, Theme};
+use icedcn::{Size, Theme, View};
 
 use crate::Message;
 use crate::icon;
@@ -57,7 +57,7 @@ impl TooltipPage {
 }
 
 /// An outline button showing "Add to library" on `side`.
-fn side<'a>(label: &'a str, side: tooltip::Side) -> Slot<'a, Message> {
+fn side<'a>(label: &'a str, side: tooltip::Side) -> View<'a, Message> {
     tooltip(button(label).style(button::Outline), "Add to library")
         .side(side)
         .into()

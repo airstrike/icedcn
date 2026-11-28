@@ -1,4 +1,4 @@
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use iced_core::Length;
 use iced_core::alignment::Horizontal;
 use iced_widget::Renderer;
@@ -17,14 +17,14 @@ macro_rules! row {
     };
     ($($child:expr),+ $(,)?) => {
         $crate::row::Row::with_children([
-            $(Into::<$crate::compose::Slot<'_, _>>::into($child)),+
+            $(Into::<$crate::compose::View<'_, _>>::into($child)),+
         ])
     };
 }
 
 /// A row of icedcn elements that participates in size propagation.
 pub struct Row<'a, Message> {
-    children: Vec<Slot<'a, Message>>,
+    children: Vec<View<'a, Message>>,
     spacing: Option<f32>,
     padding: iced_core::Padding,
     width: Length,
@@ -48,7 +48,7 @@ impl<'a, Message: 'a> Row<'a, Message> {
         }
     }
 
-    pub fn with_children(children: impl IntoIterator<Item = Slot<'a, Message>>) -> Self {
+    pub fn with_children(children: impl IntoIterator<Item = View<'a, Message>>) -> Self {
         Self {
             children: children.into_iter().collect(),
             spacing: None,
@@ -62,7 +62,7 @@ impl<'a, Message: 'a> Row<'a, Message> {
     }
 
     /// Push our own Element.
-    pub fn push(mut self, child: Slot<'a, Message>) -> Self {
+    pub fn push(mut self, child: View<'a, Message>) -> Self {
         self.children.push(child);
         self
     }
@@ -118,15 +118,15 @@ impl<'a, Message: 'a> From<Row<'a, Message>> for iced_core::Element<'a, Message,
     }
 }
 
-impl<'a, Message: 'a> From<Row<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Row<'a, Message>> for View<'a, Message> {
     fn from(widget: Row<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
 impl<'a, Message: 'a> Compose<Message> for Row<'a, Message> {
     fn has_card_footer(&self) -> bool {
-        self.children.iter().any(Slot::has_card_footer)
+        self.children.iter().any(View::has_card_footer)
     }
 
     fn inherit(&mut self, from: &Inherited) {

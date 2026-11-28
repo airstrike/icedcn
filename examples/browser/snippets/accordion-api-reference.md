@@ -2,7 +2,7 @@
 
 ### Construction
 
-Use `accordion![(trigger, body), ...]` for fixed items and `accordion(items)` for an iterator. Both assign zero-based positions. A tuple accepts any trigger and body that convert to `Slot`. Use `accordion::item(trigger, body)` to add item-specific properties.
+Use `accordion![(trigger, body), ...]` for fixed items and `accordion(items)` for an iterator. Both assign zero-based positions. A tuple accepts any trigger and body that convert to `View`. Use `accordion::item(trigger, body)` to add item-specific properties.
 
 `.push(item)` appends one positional item. `.extend(items)` appends an iterator. `accordion![]` creates an empty accordion.
 

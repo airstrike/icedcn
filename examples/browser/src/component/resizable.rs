@@ -5,7 +5,7 @@ use icedcn::Theme;
 use icedcn::core::Border;
 use icedcn::theme::container::Style;
 use icedcn::widget::{container, resizable, text};
-use icedcn::{Orientation, Slot};
+use icedcn::{Orientation, View};
 
 pub static META: page::Meta = page::Meta {
     title: "Resizable",
@@ -38,10 +38,10 @@ pub static BLOCKS: &[page::Block] = &[
     },
     page::Block::Md("examples/browser/snippets/resizable-api-reference.md"),
 ];
-fn panel(label: &'static str) -> Slot<'static, Message> {
+fn panel(label: &'static str) -> View<'static, Message> {
     container(text::p(label).semibold()).center(Fill).into()
 }
-fn frame(group: impl Into<Slot<'static, Message>>, width: f32) -> Slot<'static, Message> {
+fn frame(group: impl Into<View<'static, Message>>, width: f32) -> View<'static, Message> {
     container(group)
         .width(Fill)
         .max_width(width)

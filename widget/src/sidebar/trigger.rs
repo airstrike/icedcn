@@ -14,7 +14,7 @@
 
 use crate::Size;
 use crate::button::{self, button};
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::icon::Icon;
 use crate::marker::{self, Press};
 use iced_core::Element;
@@ -28,8 +28,8 @@ pub(crate) struct Toggle;
 
 /// Create a sidebar trigger button (ghost, 28x28) that toggles the enclosing
 /// [`provider`](super::provider).
-pub fn trigger<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
-    Slot::new(Trigger {
+pub fn trigger<'a, Message: Clone + 'a>() -> View<'a, Message> {
+    View::new(Trigger {
         button: button(Icon::PanelLeft.boxed())
             .size(Size::Sm)
             .square()
@@ -54,6 +54,6 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Trigger<'a, Message> {
     where
         Self: 'b,
     {
-        marker::marker(Slot::from(self.button).compose(), Toggle, Press::Captured).into()
+        marker::marker(View::from(self.button).compose(), Toggle, Press::Captured).into()
     }
 }

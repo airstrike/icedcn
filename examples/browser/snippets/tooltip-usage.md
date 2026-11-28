@@ -4,11 +4,11 @@ Pass a trigger widget and a hint to `tooltip`. A focusable trigger opens its hin
 
 ```rust
 use icedcn::{
-    Slot,
+    View,
     widget::{button, tooltip},
 };
 
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     tooltip(button("Hover").style(button::Outline), "Add to library").into()
 }
 ```

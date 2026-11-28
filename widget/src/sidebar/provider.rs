@@ -34,7 +34,7 @@ use std::cell::RefCell;
 
 use super::state::{Collapsible, WIDTH, WIDTH_ICON};
 use super::trigger::Toggle;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::marker;
 
 /// Owns the open state of the sidebar inside it.
@@ -48,13 +48,13 @@ pub struct Provider<'a, Message> {
 }
 
 /// The closure that builds a [`Provider`]'s layout.
-type Body<'a, Message> = Box<dyn Fn(&Handle<'_, 'a, Message>) -> Slot<'a, Message> + 'a>;
+type Body<'a, Message> = Box<dyn Fn(&Handle<'_, 'a, Message>) -> View<'a, Message> + 'a>;
 
 /// What a [`Provider`]'s closure receives: whether the sidebar is open, and
 /// the wrapper that sizes it.
 pub struct Handle<'view, 'a, Message> {
     mobile: bool,
-    panel: &'view RefCell<Option<Slot<'a, Message>>>,
+    panel: &'view RefCell<Option<View<'a, Message>>>,
 
     is_open: bool,
     collapsible: Collapsible,
@@ -82,7 +82,7 @@ pub struct State {
 /// Create an uncontrolled [`Provider`], open by default, whose layout is
 /// built by `body`.
 pub fn provider<'a, Message>(
-    body: impl Fn(&Handle<'_, 'a, Message>) -> Slot<'a, Message> + 'a,
+    body: impl Fn(&Handle<'_, 'a, Message>) -> View<'a, Message> + 'a,
 ) -> Provider<'a, Message> {
     Provider {
         body: Box::new(body),
@@ -148,7 +148,7 @@ impl<'view, 'a, Message: 'a> Handle<'view, 'a, Message> {
 
     /// Size `sidebar` for the current state: its full width while open,
     /// clipped to its icons or hidden while collapsed.
-    pub fn sidebar(&self, sidebar: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
+    pub fn sidebar(&self, sidebar: impl Into<View<'a, Message>>) -> View<'a, Message> {
         let sidebar = sidebar.into();
         if self.mobile {
             if self.is_open {
@@ -159,16 +159,16 @@ impl<'view, 'a, Message: 'a> Handle<'view, 'a, Message> {
         let width = self.width();
 
         if width == 0.0 {
-            return Slot::from(iced_widget::Space::new());
+            return View::from(iced_widget::Space::new());
         }
 
-        Slot::new(Sized { sidebar, width })
+        View::new(Sized { sidebar, width })
     }
 }
 
 /// A sidebar clipped to the width its state allows.
 struct Sized<'a, Message> {
-    sidebar: Slot<'a, Message>,
+    sidebar: View<'a, Message>,
     width: f32,
 }
 
@@ -320,9 +320,9 @@ impl<'a, Message: 'static> Compose<Message> for Provider<'a, Message> {
     }
 }
 
-impl<'a, Message: 'static> From<Provider<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'static> From<Provider<'a, Message>> for View<'a, Message> {
     fn from(provider: Provider<'a, Message>) -> Self {
-        Slot::new(provider)
+        View::new(provider)
     }
 }
 

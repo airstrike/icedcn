@@ -1,6 +1,6 @@
 use icedcn_core::Orientation;
 
-use crate::Slot;
+use crate::View;
 
 #[cfg(feature = "svg")]
 use iced_core::svg::{Handle, Renderer as _, Svg};
@@ -17,7 +17,7 @@ use icedcn_core::Theme;
 #[cfg(feature = "svg")]
 use std::sync::LazyLock;
 
-pub(super) fn chevron<'a, Message: 'a>(axis: Orientation, next: bool) -> Slot<'a, Message> {
+pub(super) fn chevron<'a, Message: 'a>(axis: Orientation, next: bool) -> View<'a, Message> {
     #[cfg(feature = "svg")]
     {
         Icon { axis, next }.boxed().into()

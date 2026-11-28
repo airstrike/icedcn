@@ -11,7 +11,7 @@ code_block::show_more(256, || {
 })
 
 const CODE: &str = r##"use icedcn::widget::{button, column, input, text};
-use icedcn::Slot;
+use icedcn::View;
 
 #[derive(Default)]
 pub struct Notebook {
@@ -36,7 +36,7 @@ impl Notebook {
         }
     }
 
-    pub fn view(&self) -> Slot<'_, Message> {
+    pub fn view(&self) -> View<'_, Message> {
         let draft = input("Write a note")
             .value(self.draft.clone())
             .on_input(Message::Edited);

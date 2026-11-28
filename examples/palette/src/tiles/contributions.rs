@@ -8,7 +8,7 @@ use icedcn::theme::container::Style;
 use icedcn::widget::column::Column;
 use icedcn::widget::row::Row;
 use icedcn::widget::{button, column, container};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::{Message, State};
 
@@ -18,9 +18,9 @@ const CELL_PX: f32 = 10.0;
 const GAP_PX: f32 = 2.0;
 
 pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
-    let grid_rows: Vec<Slot<'static, Message>> = (0..ROWS)
+    let grid_rows: Vec<View<'static, Message>> = (0..ROWS)
         .map(|r| {
-            let cells: Vec<Slot<'static, Message>> = (0..COLS).map(|c| cell(level(r, c))).collect();
+            let cells: Vec<View<'static, Message>> = (0..COLS).map(|c| cell(level(r, c))).collect();
             Row::with_children(cells).spacing(GAP_PX).into()
         })
         .collect();
@@ -49,7 +49,7 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
     .into()
 }
 
-fn cell(level: u8) -> Slot<'static, Message> {
+fn cell(level: u8) -> View<'static, Message> {
     container(space::vertical())
         .width(CELL_PX)
         .height(CELL_PX)

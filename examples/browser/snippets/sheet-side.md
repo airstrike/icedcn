@@ -1,12 +1,12 @@
 ```rust
 use iced::Fill;
 use icedcn::{
-    Slot, theme,
+    View, theme,
     widget::{button, column, row, scrollable, sheet, text},
 };
 const DESCRIPTION: &str = "Make changes to your profile here. Click save when you're done.";
 const PARAGRAPH: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     use sheet::Side::{Bottom, Left, Right, Top};
     row![
         side(Top, "Top"),
@@ -18,7 +18,7 @@ pub fn view<'a>() -> Slot<'a, ()> {
     .spacing(8)
     .into()
 }
-fn side<'a>(edge: sheet::Side, label: &'a str) -> Slot<'a, ()> {
+fn side<'a>(edge: sheet::Side, label: &'a str) -> View<'a> {
     sheet(
         move |s| s.trigger(button(label).style(button::Outline)),
         |s| {

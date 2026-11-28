@@ -14,7 +14,7 @@
 //!     .label("Username")
 //!     .description("Choose a unique username for your account.");
 //!
-//! // Explicit — pass any pre-styled `Text` (or `Slot`) through unchanged.
+//! // Explicit — pass any pre-styled `Text` (or `View`) through unchanged.
 //! field::field(input("Email").value(&value).on_input(Message::Changed))
 //!     .label(text::label("Email"))
 //!     .error(text::error("This email is already taken."));
@@ -35,7 +35,7 @@
 //! operations. A checkbox, switch, radio, or toggle updates its selection and a text input
 //! receives focus.
 //!
-//! # Slot order — Vertical (default)
+//! # View order — Vertical (default)
 //!
 //! The field stacks present slots in a column with eight pixels between them.
 //!
@@ -44,7 +44,7 @@
 //! 3. `description`
 //! 4. `error`
 //!
-//! # Slot order — Horizontal
+//! # View order — Horizontal
 //!
 //! The control sits on the left. The label, description, and error stack to its right, with two
 //! pixels between text elements and eight pixels between the column and control.
@@ -67,7 +67,7 @@ use icedcn_core::theme::field::Card;
 use icedcn_core::theme::field::CardActive;
 
 use crate::column::Column;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::marker::{self, Press};
 
 // Re-export the crate-root [`icedcn::Orientation`] (and its bare variants)
@@ -88,10 +88,10 @@ pub use icedcn_core::Vertical;
 /// is born from the inner content widget; builder methods carry forward state;
 /// `compose` consumes `self` into the final layout.
 pub struct Field<'a, Message> {
-    label: Option<Slot<'a, Message>>,
-    content: Slot<'a, Message>,
-    description: Option<Slot<'a, Message>>,
-    error: Option<Slot<'a, Message>>,
+    label: Option<View<'a, Message>>,
+    content: View<'a, Message>,
+    description: Option<View<'a, Message>>,
+    error: Option<View<'a, Message>>,
     orientation: Orientation,
     responsive: bool,
     control_last: bool,
@@ -104,7 +104,7 @@ pub struct Field<'a, Message> {
 
 /// A full-width vertical group of fields.
 pub struct Group<'a, Message> {
-    children: Vec<Slot<'a, Message>>,
+    children: Vec<View<'a, Message>>,
     spacing: f32,
     width: Length,
 }
@@ -113,7 +113,7 @@ pub struct Group<'a, Message> {
 ///
 /// The input widget is the only required argument. Add a label,
 /// description, or error message via the builder methods.
-pub fn field<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Field<'a, Message> {
+pub fn field<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Field<'a, Message> {
     Field {
         label: None,
         content: content.into(),
@@ -132,7 +132,7 @@ pub fn field<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Field<'a
 
 /// Create a [`Group`] wrapping related fields.
 pub fn group<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, Message>>,
+    children: impl IntoIterator<Item = View<'a, Message>>,
 ) -> Group<'a, Message> {
     Group {
         children: children.into_iter().collect(),
@@ -154,9 +154,9 @@ pub fn legend<'a>(label: impl iced_core::text::IntoFragment<'a>) -> crate::text:
 
 /// A fieldset with its legend, optional description and related controls.
 pub fn set<'a, Message: 'a>(
-    legend: impl Into<Slot<'a, Message>>,
+    legend: impl Into<View<'a, Message>>,
     description: Option<&'a str>,
-    controls: impl Into<Slot<'a, Message>>,
+    controls: impl Into<View<'a, Message>>,
 ) -> Column<'a, Message> {
     let mut header = Column::with_children([legend.into()]);
     if let Some(description) = description {
@@ -173,7 +173,7 @@ pub fn set<'a, Message: 'a>(
 
 /// Lay out field actions vertically on narrow surfaces and in a row from 28rem.
 pub fn actions<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, Message>>,
+    children: impl IntoIterator<Item = View<'a, Message>>,
 ) -> Column<'a, Message> {
     Column::with_children(children)
         .spacing(8)
@@ -184,7 +184,7 @@ pub fn actions<'a, Message: 'a>(
 
 impl<'a, Message: 'a> Field<'a, Message> {
     /// Set the field label. Plain strings auto-style as `text::label`
-    /// (`text-sm font-medium`); pre-styled `Text` or `Slot` values
+    /// (`text-sm font-medium`); pre-styled `Text` or `View` values
     /// pass through unchanged.
     pub fn label(mut self, label: impl IntoLabel<'a, Message>) -> Self {
         self.label = Some(label.into_label());
@@ -295,9 +295,9 @@ impl<'a, Message: 'a> From<Group<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Group<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Group<'a, Message>> for View<'a, Message> {
     fn from(widget: Group<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -319,7 +319,7 @@ impl<'a, Message: 'a> Compose<Message> for Group<'a, Message> {
         } = *self;
 
         let elements: Vec<iced_core::Element<'a, Message, Theme, Renderer>> =
-            children.into_iter().map(Slot::compose).collect();
+            children.into_iter().map(View::compose).collect();
 
         iced_widget::Column::with_children(elements)
             .spacing(spacing)
@@ -336,9 +336,9 @@ impl<'a, Message: Clone + 'a> From<Field<'a, Message>>
     }
 }
 
-impl<'a, Message: Clone + 'a> From<Field<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Field<'a, Message>> for View<'a, Message> {
     fn from(widget: Field<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -419,7 +419,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
             match orientation {
                 Orientation::Vertical => {
                     let mut col = iced_widget::Column::new().spacing(spacing);
-                    let mut description = description.map(Slot::compose);
+                    let mut description = description.map(View::compose);
                     if description_above && let Some(above) = description.take() {
                         // A description immediately before the final control sits
                         // four pixels closer to its label.
@@ -512,11 +512,11 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
 // Hybrid string / pre-styled intermediary traits
 //
 // Each slot accepts either a plain string (auto-styled with the matching
-// typography helper) or a pre-styled `Text<'a>` / `Slot<'a, Message>`.
+// typography helper) or a pre-styled `Text<'a>` / `View<'a, Message>`.
 // Implemented as three separate marker traits — one per slot — with concrete
-// impls per acceptable input type. No blanket `impl<T: Into<Slot>>`,
+// impls per acceptable input type. No blanket `impl<T: Into<View>>`,
 // because that would conflict with the auto-styling impls on `&str` /
-// `String` (a string is `Into<Slot>` via the bare-text path that
+// `String` (a string is `Into<View>` via the bare-text path that
 // skips the typography helper).
 //
 // Trait names are deliberately `IntoLabel` / `IntoDescription` / `IntoError`
@@ -526,31 +526,31 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Field<'a, Message> {
 // ---------------------------------------------------------------------------
 
 /// Convert a value into a [`Field`] label slot. Plain strings are auto-styled
-/// as `text::label`; pre-styled `Text` / `Slot` values pass through.
+/// as `text::label`; pre-styled `Text` / `View` values pass through.
 pub trait IntoLabel<'a, Message> {
-    fn into_label(self) -> Slot<'a, Message>;
+    fn into_label(self) -> View<'a, Message>;
 }
 
 impl<'a, Message: 'a> IntoLabel<'a, Message> for &'a str {
-    fn into_label(self) -> Slot<'a, Message> {
+    fn into_label(self) -> View<'a, Message> {
         label(self).into()
     }
 }
 
 impl<'a, Message: 'a> IntoLabel<'a, Message> for String {
-    fn into_label(self) -> Slot<'a, Message> {
+    fn into_label(self) -> View<'a, Message> {
         label(self).into()
     }
 }
 
 impl<'a, Message: 'a> IntoLabel<'a, Message> for crate::text::Text<'a> {
-    fn into_label(self) -> Slot<'a, Message> {
+    fn into_label(self) -> View<'a, Message> {
         self.into()
     }
 }
 
-impl<'a, Message: 'a> IntoLabel<'a, Message> for Slot<'a, Message> {
-    fn into_label(self) -> Slot<'a, Message> {
+impl<'a, Message: 'a> IntoLabel<'a, Message> for View<'a, Message> {
+    fn into_label(self) -> View<'a, Message> {
         self
     }
 }
@@ -558,11 +558,11 @@ impl<'a, Message: 'a> IntoLabel<'a, Message> for Slot<'a, Message> {
 /// Convert a value into a [`Field`] description slot. Plain strings are
 /// auto-styled as `text::muted`; pre-styled values pass through.
 pub trait IntoDescription<'a, Message> {
-    fn into_description(self) -> Slot<'a, Message>;
+    fn into_description(self) -> View<'a, Message>;
 }
 
 impl<'a, Message: 'a> IntoDescription<'a, Message> for &'a str {
-    fn into_description(self) -> Slot<'a, Message> {
+    fn into_description(self) -> View<'a, Message> {
         crate::text::muted(self)
             .line_height(text::leading::NORMAL)
             .into()
@@ -570,7 +570,7 @@ impl<'a, Message: 'a> IntoDescription<'a, Message> for &'a str {
 }
 
 impl<'a, Message: 'a> IntoDescription<'a, Message> for String {
-    fn into_description(self) -> Slot<'a, Message> {
+    fn into_description(self) -> View<'a, Message> {
         crate::text::muted(self)
             .line_height(text::leading::NORMAL)
             .into()
@@ -578,13 +578,13 @@ impl<'a, Message: 'a> IntoDescription<'a, Message> for String {
 }
 
 impl<'a, Message: 'a> IntoDescription<'a, Message> for crate::text::Text<'a> {
-    fn into_description(self) -> Slot<'a, Message> {
+    fn into_description(self) -> View<'a, Message> {
         self.into()
     }
 }
 
-impl<'a, Message: 'a> IntoDescription<'a, Message> for Slot<'a, Message> {
-    fn into_description(self) -> Slot<'a, Message> {
+impl<'a, Message: 'a> IntoDescription<'a, Message> for View<'a, Message> {
+    fn into_description(self) -> View<'a, Message> {
         self
     }
 }
@@ -592,29 +592,29 @@ impl<'a, Message: 'a> IntoDescription<'a, Message> for Slot<'a, Message> {
 /// Convert a value into a [`Field`] error slot. Plain strings are
 /// auto-styled as `text::error`; pre-styled values pass through.
 pub trait IntoError<'a, Message> {
-    fn into_error(self) -> Slot<'a, Message>;
+    fn into_error(self) -> View<'a, Message>;
 }
 
 impl<'a, Message: 'a> IntoError<'a, Message> for &'a str {
-    fn into_error(self) -> Slot<'a, Message> {
+    fn into_error(self) -> View<'a, Message> {
         crate::text::error(self).into()
     }
 }
 
 impl<'a, Message: 'a> IntoError<'a, Message> for String {
-    fn into_error(self) -> Slot<'a, Message> {
+    fn into_error(self) -> View<'a, Message> {
         crate::text::error(self).into()
     }
 }
 
 impl<'a, Message: 'a> IntoError<'a, Message> for crate::text::Text<'a> {
-    fn into_error(self) -> Slot<'a, Message> {
+    fn into_error(self) -> View<'a, Message> {
         self.into()
     }
 }
 
-impl<'a, Message: 'a> IntoError<'a, Message> for Slot<'a, Message> {
-    fn into_error(self) -> Slot<'a, Message> {
+impl<'a, Message: 'a> IntoError<'a, Message> for View<'a, Message> {
+    fn into_error(self) -> View<'a, Message> {
         self
     }
 }
@@ -625,7 +625,7 @@ mod tests {
     //!
     //! These tests inspect the builder fields BEFORE `compose` runs —
     //! once an iced widget is produced, the slot identities are erased.
-    //! Asserting on the `Option<Slot>` shape here proves the conditional-
+    //! Asserting on the `Option<View>` shape here proves the conditional-
     //! push pattern in `compose` won't try to render empty slots.
 
     use crate::field;

@@ -14,7 +14,7 @@ use iced::{Element, Fill, Task, Widget};
 use icedcn::core::Border;
 use icedcn::theme::container::Style;
 use icedcn::widget::{column, container, context_menu, menu, row, text};
-use icedcn::{Slot, Theme, radius};
+use icedcn::{Theme, View, radius};
 
 use crate::Message;
 use crate::icon;
@@ -107,7 +107,7 @@ impl ContextMenuPage {
 }
 
 /// The `aspect-video max-w-xs rounded-xl border border-dashed` area.
-fn area<'a, M: 'a>() -> Slot<'a, M> {
+fn area<'a, M: 'a>() -> View<'a, M> {
     container(text("Right click here"))
         .center(Fill)
         .width(320)
@@ -123,7 +123,7 @@ fn area<'a, M: 'a>() -> Slot<'a, M> {
         .into()
 }
 
-fn with_icon<'a, M: 'a>(glyph: Text<'a, Theme>, label: &'a str) -> Slot<'a, M> {
+fn with_icon<'a, M: 'a>(glyph: Text<'a, Theme>, label: &'a str) -> View<'a, M> {
     row![glyph.size(16), text(label)]
         .spacing(6)
         .align_y(iced::Center)

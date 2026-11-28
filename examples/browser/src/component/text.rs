@@ -2,7 +2,7 @@ mod article;
 
 use iced::{Fill, Pixels, Task, Widget};
 use icedcn::widget::{column, container, rule, text};
-use icedcn::{Slot, Theme, Weight};
+use icedcn::{Theme, View, Weight};
 
 use crate::Message;
 use crate::page;
@@ -229,7 +229,7 @@ fn paragraph(content: &str) -> text::Text<'_> {
     text::p(content).line_height(Pixels(28.)).width(Fill)
 }
 
-fn h2_with_border<'a, M: 'a>(content: &'a str) -> Slot<'a, M> {
+fn h2_with_border<'a, M: 'a>(content: &'a str) -> View<'a, M> {
     column![
         text::h2(content)
             .size(30)
@@ -242,7 +242,7 @@ fn h2_with_border<'a, M: 'a>(content: &'a str) -> Slot<'a, M> {
     .into()
 }
 
-fn table_card<'a, M: 'a>() -> Slot<'a, M> {
+fn table_card<'a, M: 'a>() -> View<'a, M> {
     text::table(
         ["King's Treasury", "People's happiness"],
         [

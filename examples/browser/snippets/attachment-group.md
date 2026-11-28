@@ -11,7 +11,7 @@ fn canvas(theme: &Theme) -> Color {
 }
 use iced::widget::image;
 use iced::{ContentFit, Widget};
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::container;
 use icedcn::widget::{attachment, tooltip};
 
@@ -20,7 +20,7 @@ let preview = image(workspace)
     .height(40)
     .content_fit(ContentFit::Cover)
     .border_radius(10);
-let files: [(_, _, Slot<'_, Message>); 4] = [
+let files: [(_, _, View<'_, Message>); 4] = [
     (
         "briefing-notes.pdf",
         "PDF · 1.4 MB",

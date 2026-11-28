@@ -7,7 +7,7 @@ pub use widget::{
     Scrollbar, Scroller, Status, Style, StyleFn, Viewport, Visibility,
 };
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use iced_core::Length;
 use iced_core::time::Duration;
 use iced_core::widget::Id;
@@ -33,7 +33,7 @@ pub fn scrollbar() -> Scrollbar {
 /// so size/weight propagation and the thin [`scrollbar`] shape are
 /// picked up automatically.
 pub fn scrollable<'a, Message: 'a>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> Scrollable<'a, Message> {
     Scrollable::new(content)
 }
@@ -45,7 +45,7 @@ pub fn scrollable<'a, Message: 'a>(
 /// variants flow through unchanged. Bridge laundering to the vendored
 /// widget happens at [`Compose::compose`](crate::Compose::compose) time.
 pub struct Scrollable<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     id: Option<Id>,
     width: Length,
     height: Length,
@@ -62,7 +62,7 @@ pub struct Scrollable<'a, Message> {
 impl<'a, Message: 'a> Scrollable<'a, Message> {
     /// Create a new scrollable wrapping the given content, scrolling
     /// vertically with the thin [`scrollbar`].
-    pub fn new(content: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn new(content: impl Into<View<'a, Message>>) -> Self {
         Self {
             content: content.into(),
             id: None,
@@ -231,9 +231,9 @@ impl<'a, Message: 'a> From<Scrollable<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Scrollable<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Scrollable<'a, Message>> for View<'a, Message> {
     fn from(widget: Scrollable<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 

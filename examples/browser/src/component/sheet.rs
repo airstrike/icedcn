@@ -2,7 +2,7 @@ use iced::{Fill, Task};
 use icedcn::theme;
 
 use icedcn::widget::{button, column, field, input, row, scrollable, sheet, text};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::Message;
 use crate::page;
@@ -55,7 +55,7 @@ impl SheetPage {
 const DESCRIPTION: &str = "Make changes to your profile here. Click save when you're done.";
 const PARAGRAPH: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
-fn profile(input_size: f32) -> Slot<'static, Message> {
+fn profile(input_size: f32) -> View<'static, Message> {
     sheet(
         |s| s.trigger(button("Open").style(button::Outline)),
         move |s| {
@@ -88,7 +88,7 @@ fn profile(input_size: f32) -> Slot<'static, Message> {
     .into()
 }
 
-fn side<'a>(edge: sheet::Side, label: &'a str) -> Slot<'a, Message> {
+fn side<'a>(edge: sheet::Side, label: &'a str) -> View<'a, Message> {
     sheet(
         move |s| s.trigger(button(label).style(button::Outline)),
         |s| {

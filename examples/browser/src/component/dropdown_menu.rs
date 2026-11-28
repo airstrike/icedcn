@@ -5,7 +5,7 @@ use iced::widget::component::{Component, component};
 use iced::{Element, Task, Widget};
 
 use icedcn::widget::{avatar, button, dropdown_menu, menu};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::Message;
 use crate::component::avatar::alex_handle;
@@ -111,12 +111,12 @@ impl DropdownMenuPage {
 /// The preference values survive the popup subtree being unmounted on selection.
 struct Local<T> {
     initial: T,
-    view: fn(T) -> Slot<'static, T>,
+    view: fn(T) -> View<'static, T>,
 }
 
 fn local<T: Copy + 'static>(
     initial: T,
-    view: fn(T) -> Slot<'static, T>,
+    view: fn(T) -> View<'static, T>,
 ) -> Element<'static, Message, Theme> {
     component(Local { initial, view }).boxed()
 }
@@ -140,7 +140,7 @@ struct Preferences {
     theme: &'static str,
 }
 
-fn demo() -> Slot<'static, Message> {
+fn demo() -> View<'static, Message> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
@@ -173,7 +173,7 @@ fn demo() -> Slot<'static, Message> {
     .into()
 }
 
-fn basic() -> Slot<'static, Message> {
+fn basic() -> View<'static, Message> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
@@ -192,7 +192,7 @@ fn basic() -> Slot<'static, Message> {
     .into()
 }
 
-fn submenu() -> Slot<'static, Message> {
+fn submenu() -> View<'static, Message> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
@@ -219,7 +219,7 @@ fn submenu() -> Slot<'static, Message> {
     .into()
 }
 
-fn shortcuts() -> Slot<'static, Message> {
+fn shortcuts() -> View<'static, Message> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
@@ -236,7 +236,7 @@ fn shortcuts() -> Slot<'static, Message> {
     .into()
 }
 
-fn icons<'a>() -> Slot<'a, Message> {
+fn icons<'a>() -> View<'a, Message> {
     let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };
@@ -256,7 +256,7 @@ fn icons<'a>() -> Slot<'a, Message> {
     .into()
 }
 
-fn destructive<'a>() -> Slot<'a, Message> {
+fn destructive<'a>() -> View<'a, Message> {
     let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };
@@ -275,7 +275,7 @@ fn destructive<'a>() -> Slot<'a, Message> {
     .into()
 }
 
-fn avatar_menu<'a>(photo: image::Handle) -> Slot<'a, Message> {
+fn avatar_menu<'a>(photo: image::Handle) -> View<'a, Message> {
     let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };
@@ -304,7 +304,7 @@ fn avatar_menu<'a>(photo: image::Handle) -> Slot<'a, Message> {
     .into()
 }
 
-fn checkboxes(checked: [bool; 3]) -> Slot<'static, [bool; 3]> {
+fn checkboxes(checked: [bool; 3]) -> View<'static, [bool; 3]> {
     let toggle = move |i: usize, value| {
         let mut next = checked;
         next[i] = value;
@@ -325,7 +325,7 @@ fn checkboxes(checked: [bool; 3]) -> Slot<'static, [bool; 3]> {
     .into()
 }
 
-fn checkboxes_icons<'a>(checked: [bool; 3]) -> Slot<'a, [bool; 3]> {
+fn checkboxes_icons<'a>(checked: [bool; 3]) -> View<'a, [bool; 3]> {
     let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };
@@ -361,7 +361,7 @@ fn checkboxes_icons<'a>(checked: [bool; 3]) -> Slot<'a, [bool; 3]> {
     .into()
 }
 
-fn radio_group<'a>(selected: &'static str) -> Slot<'a, &'static str> {
+fn radio_group<'a>(selected: &'static str) -> View<'a, &'static str> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {
@@ -377,7 +377,7 @@ fn radio_group<'a>(selected: &'static str) -> Slot<'a, &'static str> {
     .into()
 }
 
-fn radio_icons<'a>(selected: &'static str) -> Slot<'a, &'static str> {
+fn radio_icons<'a>(selected: &'static str) -> View<'a, &'static str> {
     let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };
@@ -411,7 +411,7 @@ fn radio_icons<'a>(selected: &'static str) -> Slot<'a, &'static str> {
     .into()
 }
 
-fn complex<'a>(p: Preferences) -> Slot<'a, Preferences> {
+fn complex<'a>(p: Preferences) -> View<'a, Preferences> {
     let caption = |glyph: Text<'a, Theme>, label: &'a str| {
         menu::caption(glyph.size(16).line_height(1.0), label)
     };

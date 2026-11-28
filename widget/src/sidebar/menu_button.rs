@@ -26,7 +26,7 @@ use iced_widget::tooltip::Position;
 
 use crate::Size;
 use crate::button::widget;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use icedcn_core::Theme;
 use icedcn_core::theme::button;
 
@@ -88,7 +88,7 @@ impl MenuButtonSize {
 /// Uses our raw button widget with `translate(false)` so there is no
 /// 1px press-down effect. Supports active state, collapsed mode, and tooltips.
 pub struct SidebarMenuButton<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     size: MenuButtonSize,
     active: bool,
     collapsed: bool,
@@ -99,7 +99,7 @@ pub struct SidebarMenuButton<'a, Message> {
 
 /// Create a sidebar menu button with default size.
 pub fn menu_button<'a, Message: Clone + 'a>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> SidebarMenuButton<'a, Message> {
     SidebarMenuButton {
         content: content.into(),
@@ -252,9 +252,9 @@ impl<'a, Message: Clone + 'a> From<SidebarMenuButton<'a, Message>>
     }
 }
 
-impl<'a, Message: Clone + 'a> From<SidebarMenuButton<'a, Message>> for crate::Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<SidebarMenuButton<'a, Message>> for crate::View<'a, Message> {
     fn from(b: SidebarMenuButton<'a, Message>) -> Self {
-        crate::Slot::new(b)
+        crate::View::new(b)
     }
 }
 

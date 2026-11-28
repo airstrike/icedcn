@@ -4,14 +4,14 @@ Mount the demo in your view. Pass the borrowed records from your application mod
 
 ```rust
 use crate::payments::{Payment, payments};
-use icedcn::Slot;
+use icedcn::View;
 
 #[derive(Clone, Debug)]
 pub enum Message {
     CopyId(String),
 }
 
-pub fn view<'a>(rows: &'a [Payment<'a>]) -> Slot<'a, Message> {
+pub fn view<'a>(rows: &'a [Payment<'a>]) -> View<'a, Message> {
     payments(rows, Message::CopyId)
 }
 ```

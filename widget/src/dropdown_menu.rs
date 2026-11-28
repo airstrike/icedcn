@@ -29,7 +29,7 @@ use iced_core::{Element, Pixels};
 use iced_widget::Renderer;
 use icedcn_core::Theme;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::popover::{self, Popover};
 
 pub use crate::popover::{Align, Handle, Side};
@@ -45,8 +45,8 @@ pub struct DropdownMenu<'a, Message> {
 /// Create a closed, uncontrolled [`DropdownMenu`]: `trigger` builds what
 /// sits in place, `content` the menu shown while open.
 pub fn dropdown_menu<'a, Message>(
-    trigger: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
-    content: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
+    trigger: impl Fn(&Handle) -> View<'a, Message> + 'a,
+    content: impl Fn(&Handle) -> View<'a, Message> + 'a,
 ) -> DropdownMenu<'a, Message> {
     DropdownMenu {
         // Match the trigger width with a 128-pixel minimum and four pixels of padding.
@@ -122,9 +122,9 @@ impl<'a, Message: 'static> Compose<Message> for DropdownMenu<'a, Message> {
     }
 }
 
-impl<'a, Message: 'static> From<DropdownMenu<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'static> From<DropdownMenu<'a, Message>> for View<'a, Message> {
     fn from(menu: DropdownMenu<'a, Message>) -> Self {
-        Slot::new(menu)
+        View::new(menu)
     }
 }
 

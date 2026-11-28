@@ -5,7 +5,7 @@ mod model;
 pub use model::{Answer, Answers, Choice, Item, choice, item};
 
 use crate::column::Column;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::tabs::list::List;
 use crate::{button, checkbox, column, container, field, input, kbd, radio, row, space, text};
 use iced_core::Length::Fill;
@@ -60,7 +60,7 @@ pub struct Questionnaire<'a, M> {
     submit: String,
     disabled: bool,
     animate: bool,
-    progress: Option<Box<dyn Fn(Progress) -> Slot<'a, Event> + 'a>>,
+    progress: Option<Box<dyn Fn(Progress) -> View<'a, Event> + 'a>>,
     on_item: Option<Box<dyn Fn(String) -> M + 'a>>,
     on_submit: Option<Box<dyn Fn(Answers) -> M + 'a>>,
     validate: Option<Validation<'a>>,
@@ -166,7 +166,7 @@ impl<'a, M> Questionnaire<'a, M> {
         self
     }
     /// Render the current position among enabled items.
-    pub fn progress(mut self, f: impl Fn(Progress) -> Slot<'a, Event> + 'a) -> Self {
+    pub fn progress(mut self, f: impl Fn(Progress) -> View<'a, Event> + 'a) -> Self {
         self.progress = Some(Box::new(f));
         self
     }
@@ -375,14 +375,14 @@ impl<'a, M: 'static> Component<'a, M, Theme, Renderer> for Questionnaire<'a, M> 
                 total: enabled.len(),
             }));
         }
-        let mut parts: Vec<Slot<'a, Event>> = vec![text::label(item.title.clone()).size(16).into()];
+        let mut parts: Vec<View<'a, Event>> = vec![text::label(item.title.clone()).size(16).into()];
         if let Some(desc) = &item.description {
             parts.push(text::muted(desc.clone()).into());
         }
         let mut choices = Vec::new();
         for (i, choice) in item.choices.iter().enumerate() {
             let selected = value.contains(&choice.value);
-            let control: Slot<'a, Event> = if item.multiple {
+            let control: View<'a, Event> = if item.multiple {
                 checkbox()
                     .checked(selected)
                     .on_checked_change(move |_| Event::Choose(i))
@@ -404,7 +404,7 @@ impl<'a, M: 'static> Component<'a, M, Theme, Renderer> for Questionnaire<'a, M> 
             }
             choices.push(
                 field(control)
-                    .label(Slot::from(line))
+                    .label(View::from(line))
                     .orientation(field::Orientation::Horizontal)
                     .card()
                     .width(Fill)
@@ -412,7 +412,7 @@ impl<'a, M: 'static> Component<'a, M, Theme, Renderer> for Questionnaire<'a, M> 
             );
         }
         let choices = Column::with_children(choices).width(Fill).spacing(8);
-        let fixed: Slot<'a, Event> = if item.multiple {
+        let fixed: View<'a, Event> = if item.multiple {
             choices.into()
         } else {
             List {
@@ -503,7 +503,7 @@ impl<'a, M: 'static> Component<'a, M, Theme, Renderer> for Questionnaire<'a, M> 
             );
         }
         blocks.push(actions.into());
-        let mut root = Slot::from(
+        let mut root = View::from(
             container(Column::with_children(blocks).spacing(16).width(Fill)).width(Fill),
         );
         root.inherit(&Inherited::default().with_disabled(self.disabled));
@@ -522,7 +522,7 @@ impl<'a, M: 'static> Compose<M> for Questionnaire<'a, M> {
         component::component(*self).boxed()
     }
 }
-impl<'a, M: 'static> From<Questionnaire<'a, M>> for Slot<'a, M> {
+impl<'a, M: 'static> From<Questionnaire<'a, M>> for View<'a, M> {
     fn from(q: Questionnaire<'a, M>) -> Self {
         Self::new(q)
     }

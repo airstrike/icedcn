@@ -40,7 +40,7 @@ pub(crate) use key::{Intent, Motion, binding, is_shortcut, resolve};
 pub use platform::Platform;
 pub(crate) use target::{Reveal, Target, apply, area, block_width, lines, typing};
 
-use crate::compose::Slot;
+use crate::compose::View;
 use crate::container::Container;
 use crate::menu;
 use crate::menu::list::List;
@@ -344,7 +344,7 @@ fn panel<'b>(available: Available, keyboard: bool) -> Element<'b, Command, Theme
                 shortcut: (&'static str, &'static str),
                 command: Command,
                 enabled: bool| {
-        Slot::from(
+        View::from(
             menu::item(label)
                 .shortcut(if mac { shortcut.0 } else { shortcut.1 })
                 .on_select(command)
@@ -378,7 +378,7 @@ fn panel<'b>(available: Available, keyboard: bool) -> Element<'b, Command, Theme
         .style(content);
 
     List {
-        content: Slot::from(panel).compose(),
+        content: View::from(panel).compose(),
         horizontal: Some(false),
         autofocus: keyboard.into(),
         on_move: None,

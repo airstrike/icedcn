@@ -1,5 +1,5 @@
 use super::{Event, Table, Value};
-use crate::compose::Slot;
+use crate::compose::View;
 use crate::icon::Icon;
 use crate::scrollable::{Direction, Visibility, scrollbar};
 use crate::table::Track;
@@ -30,7 +30,7 @@ impl<'a, T: 'a, K: Ord + Clone + 'static, M: Clone + 'static> Table<'a, T, K, M>
         filtered: &[usize],
         filtered_selected: usize,
         mobile: bool,
-    ) -> Slot<'a, Event<K, M>> {
+    ) -> View<'a, Event<K, M>> {
         let toggles: Vec<_> = self
             .columns
             .iter()

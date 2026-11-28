@@ -5,9 +5,9 @@ use iced::widget::text::LineHeight;
 use icedcn::theme;
 use icedcn::theme::tweak::{Bg, Token};
 use icedcn::widget::{button, collapsible, column, container, space, text};
-use icedcn::{Size, Slot, card, radius};
+use icedcn::{Size, View, card, radius};
 
-fn basic<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
+fn basic<'a, Message: Clone + 'static>() -> View<'a, Message> {
     card(
         card::content(
             collapsible(|c| {
@@ -48,7 +48,7 @@ fn basic<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     .into()
 }
 
-fn view<'a>() -> Slot<'a, ()> {
+fn view<'a>() -> View<'a> {
     basic()
 }
 ```

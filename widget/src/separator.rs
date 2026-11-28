@@ -15,7 +15,7 @@
 use iced_widget::{Renderer, Widget, rule};
 use icedcn_core::{Orientation, Theme};
 
-use crate::compose::{Compose, Slot};
+use crate::compose::{Compose, View};
 
 /// A thin line dividing content.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -50,9 +50,9 @@ impl<Message> Compose<Message> for Separator {
     }
 }
 
-impl<'a, Message: 'a> From<Separator> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Separator> for View<'a, Message> {
     fn from(separator: Separator) -> Self {
-        Slot::new(separator)
+        View::new(separator)
     }
 }
 

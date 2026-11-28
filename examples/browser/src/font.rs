@@ -53,7 +53,7 @@ mod tests {
     };
 
     use iced_widget::renderer::graphics::text::font_system;
-    use icedcn::Slot;
+    use icedcn::View;
     use icedcn::font::{SYMBOLS, SYMBOLS_NAME};
     use icedcn::widget::text;
 
@@ -79,7 +79,7 @@ mod tests {
 
     #[test]
     fn the_widgets_load_the_symbols_without_any_setup() {
-        let _: Slot<'_, ()> = text::muted("⌘K").into();
+        let _: View<'_> = text::muted("⌘K").into();
         let fonts = font_system().read().expect("font system");
         assert!(fonts.families().any(|family| family == SYMBOLS_NAME));
     }

@@ -1,6 +1,6 @@
 use crate::calendar::{Date, Datelike, Duration, Selection, Weekday, today};
 use crate::combobox::keys::Keys;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::icon::Icon;
 use crate::{calendar, input_group, popover};
 use iced_core::{
@@ -215,9 +215,9 @@ impl<'a, M: 'static> Compose<M> for Input<'a, M> {
         component::component(*self).boxed()
     }
 }
-impl<'a, M: 'static> From<Input<'a, M>> for Slot<'a, M> {
+impl<'a, M: 'static> From<Input<'a, M>> for View<'a, M> {
     fn from(input: Input<'a, M>) -> Self {
-        Slot::new(input)
+        View::new(input)
     }
 }
 impl<'a, M: 'static> From<Input<'a, M>> for Element<'a, M, Theme, Renderer> {

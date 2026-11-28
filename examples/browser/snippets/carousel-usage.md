@@ -3,10 +3,10 @@
 Use a slide count and a factory to compose the track and its previous/next controls. All slides stay mounted as the track moves.
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{carousel, container, text};
 
-pub fn view<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
+pub fn view<'a, Message: Clone + 'static>() -> View<'a, Message> {
     carousel(5, |index| {
         container(text::p(format!("Slide {}", index + 1)))
             .padding(24)

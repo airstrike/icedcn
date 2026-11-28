@@ -3,7 +3,7 @@ use iced::{Fill, Task};
 use icedcn::widget::table::Track::Auto;
 
 use icedcn::widget::{button, container, dropdown_menu, menu, table, text};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::{Message, icon, page};
 
@@ -63,7 +63,7 @@ impl TablePage {
 }
 
 /// Render the provided invoice records and the statement total.
-fn invoices<'a, M: 'a>(records: &'a [[&'a str; 4]]) -> Slot<'a, M> {
+fn invoices<'a, M: 'a>(records: &'a [[&'a str; 4]]) -> View<'a, M> {
     let header = table::header([table::row([
         table::head("Invoice").width(100),
         table::head("Status"),
@@ -87,13 +87,13 @@ fn invoices<'a, M: 'a>(records: &'a [[&'a str; 4]]) -> Slot<'a, M> {
         .body(body)
         .footer(footer);
     table([
-        Slot::from(grid),
+        View::from(grid),
         table::caption("A list of your recent invoices.").into(),
     ])
     .into()
 }
 
-fn actions<'a, M: Clone + 'static>() -> Slot<'a, M> {
+fn actions<'a, M: Clone + 'static>() -> View<'a, M> {
     let products = [
         ("Wireless Mouse", "$29.99"),
         ("Mechanical Keyboard", "$129.99"),

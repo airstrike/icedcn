@@ -33,7 +33,7 @@ use icedcn_core::theme::menu::item;
 use icedcn_core::theme::popover::content;
 
 use crate::button::widget::{self, Button};
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::container::Container;
 use crate::icon::Icon;
 use crate::marker::{self, Press};
@@ -47,7 +47,7 @@ pub use icedcn_core::theme::menu::item::{Destructive, Variant};
 /// A `MenuItem`: a row that publishes its message and closes the menu
 /// when selected.
 pub struct Item<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     shortcut: Option<&'a str>,
     on_select: Option<Message>,
     on_focus: Option<Message>,
@@ -72,7 +72,7 @@ enum Indicator {
 }
 
 /// Create a [`menu::Item`](Item) showing `content`.
-pub fn item<'a, Message>(content: impl Into<Slot<'a, Message>>) -> Item<'a, Message> {
+pub fn item<'a, Message>(content: impl Into<View<'a, Message>>) -> Item<'a, Message> {
     Item {
         content: content.into(),
         shortcut: None,
@@ -91,7 +91,7 @@ pub fn item<'a, Message>(content: impl Into<Slot<'a, Message>>) -> Item<'a, Mess
 /// A `MenuCheckboxItem`: shows a check while `checked`; selecting it
 /// publishes `on_checked_change` with the flipped value.
 pub fn checkbox_item<'a, Message>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
     checked: bool,
     on_checked_change: impl Fn(bool) -> Message,
 ) -> Item<'a, Message> {
@@ -105,7 +105,7 @@ pub fn checkbox_item<'a, Message>(
 /// A `MenuRadioItem` for `value`: shows a check while `selected` holds it;
 /// selecting it publishes `on_select(value)`.
 pub fn radio_item<'a, Message, V>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
     value: V,
     selected: Option<V>,
     on_select: impl Fn(V) -> Message,
@@ -216,7 +216,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
 
         if let Some(shortcut) = shortcut {
             // `ml-auto text-xs tracking-widest text-muted-foreground`.
-            line = line.push(Slot::from(
+            line = line.push(View::from(
                 text::muted(shortcut)
                     .size(text::size::XS)
                     .letter_spacing(0.1),
@@ -226,17 +226,17 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
         match indicator {
             Indicator::None => {}
             Indicator::Check(checked) => {
-                line = line.push(Slot::from(
+                line = line.push(View::from(
                     Container::new(if checked {
-                        Slot::from(Icon::Check.boxed())
+                        View::from(Icon::Check.boxed())
                     } else {
-                        Slot::from(Space::new())
+                        View::from(Space::new())
                     })
                     .width(16),
                 ));
             }
             Indicator::Chevron => {
-                line = line.push(Slot::from(Icon::ChevronRight.boxed()));
+                line = line.push(View::from(Icon::ChevronRight.boxed()));
             }
         }
 
@@ -265,7 +265,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
                 item::style(theme, status.into(), variant).into()
             });
 
-        let mut button = Button::new(Slot::from(line).compose())
+        let mut button = Button::new(View::from(line).compose())
             .padding(padding)
             .width(Fill)
             .translate(false)
@@ -287,14 +287,14 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
     }
 }
 
-impl<'a, Message: Clone + 'a> From<Item<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Item<'a, Message>> for View<'a, Message> {
     fn from(item: Item<'a, Message>) -> Self {
-        Slot::new(item)
+        View::new(item)
     }
 }
 
 /// A `MenuLabel`: a muted `text-xs font-medium` heading.
-pub fn label<'a, Message: 'a>(label: impl IntoFragment<'a>) -> Slot<'a, Message> {
+pub fn label<'a, Message: 'a>(label: impl IntoFragment<'a>) -> View<'a, Message> {
     Container::new(
         text::muted(label)
             .size(text::size::XS)
@@ -306,7 +306,7 @@ pub fn label<'a, Message: 'a>(label: impl IntoFragment<'a>) -> Slot<'a, Message>
 }
 
 /// A `MenuSeparator`: a 1px rule with `my-1`.
-pub fn separator<'a, Message: 'a>() -> Slot<'a, Message> {
+pub fn separator<'a, Message: 'a>() -> View<'a, Message> {
     Container::new(crate::separator::separator())
         .width(Fill)
         .padding([4, 0])
@@ -315,9 +315,9 @@ pub fn separator<'a, Message: 'a>() -> Slot<'a, Message> {
 
 /// A leading icon and its label, aligned like a menu item.
 pub fn caption<'a, Message: 'a>(
-    icon: impl Into<Slot<'a, Message>>,
-    label: impl Into<Slot<'a, Message>>,
-) -> Slot<'a, Message> {
+    icon: impl Into<View<'a, Message>>,
+    label: impl Into<View<'a, Message>>,
+) -> View<'a, Message> {
     let icon = Container::new(icon).center_x(16).center_y(16);
     row::Row::with_children([icon.into(), label.into()])
         .spacing(6)
@@ -330,7 +330,7 @@ pub fn caption<'a, Message: 'a>(
 #[macro_export]
 macro_rules! __menu_group {
     ($($item:expr),* $(,)?) => {
-        $crate::menu::group([$(Into::<$crate::Slot<'_, _>>::into($item)),*])
+        $crate::menu::group([$(Into::<$crate::View<'_, _>>::into($item)),*])
     };
 }
 
@@ -339,24 +339,24 @@ macro_rules! __menu_group {
 #[macro_export]
 macro_rules! __menu_sub {
     ($trigger:expr, $($item:expr),+ $(,)?) => {
-        $crate::menu::sub($trigger, [$(Into::<$crate::Slot<'_, _>>::into($item)),+])
+        $crate::menu::sub($trigger, [$(Into::<$crate::View<'_, _>>::into($item)),+])
     };
 }
 
 /// A `MenuGroup`: its children stacked.
 pub fn group<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, Message>>,
-) -> Slot<'a, Message> {
+    children: impl IntoIterator<Item = View<'a, Message>>,
+) -> View<'a, Message> {
     column::Column::with_children(children).width(Fill).into()
 }
 
 /// A `MenuSub`: an item labelled `content` that opens `items` beside it
 /// while hovered. Selecting an item inside closes the whole menu.
 pub fn sub<'a, Message: Clone + 'a>(
-    content: impl Into<Slot<'a, Message>>,
-    items: impl IntoIterator<Item = Slot<'a, Message>>,
-) -> Slot<'a, Message> {
-    Slot::new(Sub {
+    content: impl Into<View<'a, Message>>,
+    items: impl IntoIterator<Item = View<'a, Message>>,
+) -> View<'a, Message> {
+    View::new(Sub {
         trigger: Item {
             indicator: Indicator::Chevron,
             closes: false,
@@ -369,7 +369,7 @@ pub fn sub<'a, Message: Clone + 'a>(
 /// A submenu: its trigger item and its panel.
 struct Sub<'a, Message> {
     trigger: Item<'a, Message>,
-    items: Slot<'a, Message>,
+    items: View<'a, Message>,
 }
 
 impl<'a, Message: Clone + 'a> Compose<Message> for Sub<'a, Message> {
@@ -390,7 +390,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Sub<'a, Message> {
             .style(content);
 
         let body = list::List {
-            content: Slot::from(panel).compose(),
+            content: View::from(panel).compose(),
             horizontal: Some(false),
             autofocus: false.into(),
             on_move: None,
@@ -400,7 +400,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Sub<'a, Message> {
             .align(anchored::Align::Start)
             .offset(0);
         let sub = Interaction::new(
-            Slot::from(self.trigger).compose(),
+            View::from(self.trigger).compose(),
             body,
             position,
             (Duration::ZERO, Duration::from_millis(150)),

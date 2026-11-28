@@ -2,13 +2,13 @@
 use crate::icon;
 use iced::Fill;
 use iced::alignment::Horizontal::Right;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::theme::text::muted;
 use icedcn::theme::tweak::{Fg, Token};
 use icedcn::widget::bubble::Muted;
 use icedcn::widget::{bubble, button, collapsible, column, container, row, text};
 
-fn example<'a>() -> Slot<'a, ()> {
+fn example<'a>() -> View<'a> {
     frame(
         column![
             bubble("How can I help you today?").style(Muted),
@@ -19,7 +19,7 @@ fn example<'a>() -> Slot<'a, ()> {
     )
 }
 
-fn frame<'a>(body: impl Into<Slot<'a, ()>>) -> Slot<'a, ()> {
+fn frame<'a>(body: impl Into<View<'a>>) -> View<'a> {
     container(body)
         .padding([48, 0])
         .width(Fill)
@@ -27,7 +27,7 @@ fn frame<'a>(body: impl Into<Slot<'a, ()>>) -> Slot<'a, ()> {
         .into()
 }
 
-fn review<'a>() -> Slot<'a, ()> {
+fn review<'a>() -> View<'a> {
     const REVIEW: &str = "The accessibility review found two focus states that were visually too subtle in dark mode.\n\nI checked the dialog, menu, and drawer paths because each one renders focusable controls inside a layered surface.\n\nThe dialog and drawer are fine. The menu needs the hover and focus tokens split so keyboard focus stays visible when the pointer is not involved.\n\nI also recommend keeping the change in the style file instead of the primitive so the other themes can choose their own focus treatment later.";
     collapsible(|c| {
         let description = if c.is_open() {

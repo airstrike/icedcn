@@ -3,9 +3,9 @@ use iced::Fill;
 use icedcn::theme::container::Transparent;
 use icedcn::theme::tweak::{Alpha, Bg, Token};
 use icedcn::widget::{button, column, container, row, scroll_area, separator, space, text};
-use icedcn::{Slot, card};
+use icedcn::{View, card};
 
-fn terms<'a, Message: Clone + 'a>() -> Slot<'a, Message> {
+fn terms<'a, Message: Clone + 'a>() -> View<'a, Message> {
     const TERMS: [&str; 4] = [
         "These terms govern your use of the workspace, including access to shared documents, project files, and collaboration tools.",
         "You are responsible for the content you upload and for ensuring that your team has the appropriate permissions to view or edit it.",

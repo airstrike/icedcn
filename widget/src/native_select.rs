@@ -26,7 +26,7 @@ use iced_widget::pick_list::{Status, Style, StyleFn};
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::select::Position;
 use crate::{Size, select};
 
@@ -296,9 +296,9 @@ impl<'a, Message: 'static> Compose<Message> for NativeSelect<'a, Message> {
     }
 }
 
-impl<'a, Message: 'static> From<NativeSelect<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'static> From<NativeSelect<'a, Message>> for View<'a, Message> {
     fn from(select: NativeSelect<'a, Message>) -> Self {
-        Slot::new(select)
+        View::new(select)
     }
 }
 

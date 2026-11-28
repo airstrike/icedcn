@@ -7,7 +7,7 @@ use icedcn::widget::input_group::Align;
 
 use icedcn::theme::tweak::{Fg, Token};
 use icedcn::widget::{avatar, button, column, container, empty, input, input_group, kbd, row};
-use icedcn::{Size, Slot, Theme};
+use icedcn::{Size, Theme, View};
 
 use crate::page;
 use crate::{Message, icon};
@@ -82,8 +82,8 @@ impl EmptyPage {
 }
 
 /// muted "Learn More ↗" link button.
-fn learn_more<'a>(label: &'a str, size: Size) -> Slot<'a, Message> {
-    button![Slot::from(label), icon::arrow_up_right()]
+fn learn_more<'a>(label: &'a str, size: Size) -> View<'a, Message> {
+    button![View::from(label), icon::arrow_up_right()]
         .style(button::Link + Fg(Token::MutedForeground))
         .size(size)
         .into()

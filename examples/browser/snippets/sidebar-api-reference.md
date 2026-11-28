@@ -54,9 +54,9 @@ Workspace menu buttons use the sidebar accent for hovered and selected destinati
 
 | Constructor | Returns | Description |
 | --- | --- | --- |
-| `sidebar::trigger()` | `Slot` | Collapse / expand toggle button (icon-only). Toggles the enclosing `sidebar::provider` from anywhere inside it. |
+| `sidebar::trigger()` | `View` | Collapse / expand toggle button (icon-only). Toggles the enclosing `sidebar::provider` from anywhere inside it. |
 | `sidebar::rail(on_press)` | `SidebarRail` | Clickable edge target that sends a message. |
-| `sidebar::rail_trigger()` | `Slot` | Toggle the nearest provider from its edge. |
+| `sidebar::rail_trigger()` | `View` | Toggle the nearest provider from its edge. |
 | `sidebar::main(content)` | `Container` | The main content area paired with a fixed/floating sidebar. |
 | `sidebar::main_styled(content)` | `Container` | The main content area paired with `sidebar::inset` — carries the rounded/border/shadow chrome that the inset sidebar drops. |
 

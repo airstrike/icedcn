@@ -3,8 +3,8 @@
 use std::borrow::Cow;
 
 use iced::{Fill, Padding};
-use icedcn::Slot;
 use icedcn::Theme;
+use icedcn::View;
 use icedcn::card;
 use icedcn::core::Border;
 use icedcn::theme;
@@ -66,7 +66,7 @@ fn detail(
     label: &'static str,
     title: &'static str,
     description: &'static str,
-) -> Slot<'static, Message> {
+) -> View<'static, Message> {
     container(
         column![
             text::xs(label)

@@ -1,6 +1,6 @@
 //! SidebarMenuSkeleton: loading placeholder, h-8, rounded-md, muted bg
 
-use crate::compose::Slot;
+use crate::compose::View;
 use crate::container::Container;
 use iced_core::Length::Fill;
 use iced_widget::{Widget, space};
@@ -16,7 +16,7 @@ use icedcn_core::{Border, Theme};
 pub fn menu_skeleton<'a, Message: 'a>() -> Container<'a, Message> {
     let spacer: iced_core::Element<'a, Message, Theme, iced_widget::Renderer> =
         space::horizontal().boxed();
-    Container::new(Slot::from(spacer))
+    Container::new(View::from(spacer))
         .width(Fill)
         .height(32)
         .style(|theme: &Theme| Style {

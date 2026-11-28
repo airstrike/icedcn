@@ -2,7 +2,7 @@ use iced::{Fill, FillPortion, Task};
 
 use icedcn::widget::field::Orientation;
 use icedcn::widget::{button, column, field, input, popover, row, text};
-use icedcn::{Size, Slot, Theme};
+use icedcn::{Size, Theme, View};
 
 use crate::Message;
 use crate::page;
@@ -63,7 +63,7 @@ fn dimension<'a, M: Clone + 'a>(
     label: impl field::IntoLabel<'a, M>,
     value: &'a str,
     size: f32,
-) -> Slot<'a, M> {
+) -> View<'a, M> {
     field(
         input("")
             .default_value(value)
@@ -78,7 +78,7 @@ fn dimension<'a, M: Clone + 'a>(
 }
 
 /// An outline `size="sm"` trigger whose `w-40` panel is aligned `align`.
-fn aligned<'a>(label: &'a str, align: popover::Align, content: &'a str) -> Slot<'a, Message> {
+fn aligned<'a>(label: &'a str, align: popover::Align, content: &'a str) -> View<'a, Message> {
     popover(
         move |p| {
             p.trigger(

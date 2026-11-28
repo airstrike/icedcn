@@ -19,7 +19,7 @@ use iced_widget::Renderer;
 use icedcn_core::Theme;
 use icedcn_core::theme::container::Spec;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::row::Row;
 use crate::{Size, Weight};
 
@@ -36,19 +36,19 @@ pub use icedcn_core::theme::kbd::{Default, Tooltip};
 macro_rules! __kbd_group {
     ($($child:expr),+ $(,)?) => {
         $crate::kbd::group([
-            $(Into::<$crate::compose::Slot<'_, _>>::into($child)),+
+            $(Into::<$crate::compose::View<'_, _>>::into($child)),+
         ])
     };
 }
 
 /// A keyboard key.
 pub struct Kbd<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     style: Spec,
 }
 
 /// Create a [`Kbd`] showing `content`.
-pub fn kbd<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Kbd<'a, Message> {
+pub fn kbd<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Kbd<'a, Message> {
     Kbd {
         content: content.into(),
         style: Default.into(),
@@ -88,9 +88,9 @@ impl<'a, Message: 'a> Compose<Message> for Kbd<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Kbd<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Kbd<'a, Message>> for View<'a, Message> {
     fn from(kbd: Kbd<'a, Message>) -> Self {
-        Slot::new(kbd)
+        View::new(kbd)
     }
 }
 
@@ -102,8 +102,8 @@ impl<'a, Message: 'a> From<Kbd<'a, Message>> for iced_core::Element<'a, Message,
 
 /// Lay `keys` out in a row with a 4px gap (`KbdGroup`).
 pub fn group<'a, Message: 'a>(
-    keys: impl IntoIterator<Item = Slot<'a, Message>>,
-) -> Slot<'a, Message> {
+    keys: impl IntoIterator<Item = View<'a, Message>>,
+) -> View<'a, Message> {
     Row::with_children(keys)
         .spacing(4)
         .align_y(Alignment::Center)

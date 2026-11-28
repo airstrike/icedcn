@@ -5,7 +5,7 @@
 //! switch (echo of the header toggle), text (xs / muted), container, row.
 
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::card;
 use icedcn::theme;
 use icedcn::widget::{alert, button, column, row, space, switch, text};
@@ -37,8 +37,8 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
     .width(Fill);
 
     let body = column([
-        Slot::from(alert_body),
-        Slot::from(mirror_row),
+        View::from(alert_body),
+        View::from(mirror_row),
     ])
     .spacing(16);
 

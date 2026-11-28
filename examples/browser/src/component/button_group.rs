@@ -13,7 +13,7 @@ use icedcn::widget::{
     button, column, container, dropdown_menu, field, input, input_group, menu, popover, row,
     select, text, textarea, tooltip,
 };
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::page;
 use crate::{Message, icon};
@@ -170,14 +170,14 @@ impl<'a> Component<'a, Message, Theme> for MailActions {
     fn view(&self, state: &Self::State) -> impl Widget<Self::Event, Theme> + 'a {
         let selected = state.unwrap_or("Personal");
         responsive(move |area| {
-            Slot::from(container(mail_actions(area.width >= 320., selected)).center_x(Fill))
+            View::from(container(mail_actions(area.width >= 320., selected)).center_x(Fill))
                 .compose()
         })
         .height(Shrink)
     }
 }
 
-fn mail_actions<'a>(wide: bool, selected: &'static str) -> Slot<'a, &'static str> {
+fn mail_actions<'a>(wide: bool, selected: &'static str) -> View<'a, &'static str> {
     let mut actions = Row::new().spacing(8).align_y(iced::Center);
     if wide {
         actions = actions.push(
@@ -235,7 +235,7 @@ fn mail_actions<'a>(wide: bool, selected: &'static str) -> Slot<'a, &'static str
         .push(more.into())
         .into()
 }
-pub(super) fn demo<'a>() -> Slot<'a, Message> {
+pub(super) fn demo<'a>() -> View<'a, Message> {
     component(MailActions).boxed().into()
 }
 
@@ -252,7 +252,7 @@ impl<'a> Component<'a, Message, Theme> for Voice {
     }
 }
 
-fn voice_input<'a>(enabled: bool) -> Slot<'a, bool> {
+fn voice_input<'a>(enabled: bool) -> View<'a, bool> {
     let toggle = input_group::button(icon::audio_lines().size(16).line_height(1.0))
         .square()
         .on_press(!enabled);
@@ -284,7 +284,7 @@ fn voice_input<'a>(enabled: bool) -> Slot<'a, bool> {
     .into()
 }
 
-pub(super) fn view<'a>(id: &str) -> Slot<'a, Message> {
+pub(super) fn view<'a>(id: &str) -> View<'a, Message> {
     use icedcn::Size::{Default, Lg, Sm};
 
     match id {
@@ -362,7 +362,7 @@ pub(super) fn view<'a>(id: &str) -> Slot<'a, Message> {
         .width(Fill.max(240.))
         .into(),
 
-        "input-group" => Slot::from(component(Voice).boxed()),
+        "input-group" => View::from(component(Voice).boxed()),
 
         "dropdown" => dropdown_menu(
             |&m| {

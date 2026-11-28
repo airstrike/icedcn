@@ -1,6 +1,6 @@
 ```rust
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::field::Orientation::Horizontal;
 use icedcn::widget::{column, field, select, switch};
 
@@ -9,7 +9,7 @@ enum Message {
     Align(bool),
 }
 
-fn alignment<'a>(aligned: bool) -> Slot<'a, Message> {
+fn alignment<'a>(aligned: bool) -> View<'a, Message> {
     column![
         field(switch().checked(aligned).on_checked_change(Message::Align))
             .orientation(Horizontal)

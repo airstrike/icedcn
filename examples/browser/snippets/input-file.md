@@ -1,6 +1,6 @@
 ```rust
 use iced::Task;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{field, input, input_group, text};
 use rfd::AsyncFileDialog;
 
@@ -16,7 +16,7 @@ struct Picture {
 }
 
 impl Picture {
-    fn view(&self) -> Slot<'_, Message> {
+    fn view(&self) -> View<'_, Message> {
         field(
             input_group(input("").value(self.name.as_deref().unwrap_or("No file chosen"))).addon(
                 input_group::addon(

@@ -5,7 +5,7 @@ Let a control own state that only affects itself. For example, `checkbox().defau
 This controlled checkbox displays the application's value and publishes the complete next boolean:
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{checkbox, field};
 
 #[derive(Default)]
@@ -25,7 +25,7 @@ impl Preferences {
         }
     }
 
-    pub fn view(&self) -> Slot<'_, Message> {
+    pub fn view(&self) -> View<'_, Message> {
         field(
             checkbox()
                 .checked(self.notifications)

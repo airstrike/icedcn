@@ -1,5 +1,5 @@
 //! Small line icons use the enclosing control's text color.
-use crate::compose::Slot;
+use crate::compose::View;
 use std::sync::LazyLock;
 
 use iced_core::svg::{Handle, Renderer as _, Svg};
@@ -15,7 +15,7 @@ pub(super) enum Glyph {
 }
 
 impl Glyph {
-    pub(super) fn view<'a, Message: 'a>(self) -> Slot<'a, Message> {
+    pub(super) fn view<'a, Message: 'a>(self) -> View<'a, Message> {
         self.boxed().into()
     }
 }

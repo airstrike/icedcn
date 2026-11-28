@@ -14,7 +14,7 @@ use iced_widget::Widget as _;
 use icedcn_core::Theme;
 
 use crate::animation::cubic_bezier;
-use crate::{Compose, Slot};
+use crate::{Compose, View};
 
 static PATH: LazyLock<Handle> = LazyLock::new(|| {
     Handle::from_memory(br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>"#)
@@ -116,9 +116,9 @@ impl<Message> Widget<Message, Theme, Renderer> for Indicator {
         );
     }
 }
-impl<'a, Message: 'a> From<Indicator> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Indicator> for View<'a, Message> {
     fn from(indicator: Indicator) -> Self {
-        Slot::new(indicator)
+        View::new(indicator)
     }
 }
 

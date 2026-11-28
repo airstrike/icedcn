@@ -9,7 +9,7 @@ use iced::widget::text::LineHeight;
 use iced::{Fill, Padding, Task};
 use icedcn::theme::tweak::{Bg, Fg, Token, border};
 use icedcn::widget::{button, collapsible, column, container, input, row, space, tabs, text};
-use icedcn::{Size, Slot, Theme, card, radius};
+use icedcn::{Size, Theme, View, card, radius};
 
 use crate::{Message, page};
 
@@ -70,7 +70,7 @@ impl CollapsiblePage {
     }
 }
 
-fn bordered<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
+fn bordered<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> View<'a, Message> {
     container(content)
         .width(Fill)
         .padding([9, 17])
@@ -83,7 +83,7 @@ fn bordered<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a, 
         .into()
 }
 
-fn detail<'a, Message: 'a>(title: &'a str, body: &'a str) -> Slot<'a, Message> {
+fn detail<'a, Message: 'a>(title: &'a str, body: &'a str) -> View<'a, Message> {
     bordered(column![
         text::small(title)
             .medium()
@@ -92,7 +92,7 @@ fn detail<'a, Message: 'a>(title: &'a str, body: &'a str) -> Slot<'a, Message> {
     ])
 }
 
-fn demo<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
+fn demo<'a, Message: Clone + 'static>() -> View<'a, Message> {
     collapsible(|c| {
         column![
             column![
@@ -143,7 +143,7 @@ fn demo<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     .into()
 }
 
-fn basic<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
+fn basic<'a, Message: Clone + 'static>() -> View<'a, Message> {
     card(
         card::content(
             collapsible(|c| {
@@ -184,7 +184,7 @@ fn basic<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     .into()
 }
 
-fn settings<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
+fn settings<'a, Message: Clone + 'static>() -> View<'a, Message> {
     card(
         column![
             card::header(text::small("Radius").medium().line_height(1.375))
@@ -304,7 +304,7 @@ const FILE_TREE: &[Entry] = &[
     Entry::File(".gitignore"),
 ];
 
-fn entry<'a, Message: Clone + 'static>(node: &'a Entry) -> Slot<'a, Message> {
+fn entry<'a, Message: Clone + 'static>(node: &'a Entry) -> View<'a, Message> {
     match node {
         Entry::File(name) => button(
             row![icon::file().size(14).line_height(1.0), *name,]
@@ -349,7 +349,7 @@ fn entry<'a, Message: Clone + 'static>(node: &'a Entry) -> Slot<'a, Message> {
     }
 }
 
-fn file_tree<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
+fn file_tree<'a, Message: Clone + 'static>() -> View<'a, Message> {
     let header = tabs(|tabs| {
         tabs.list([
             tabs.trigger("explorer", "Explorer"),
@@ -361,7 +361,7 @@ fn file_tree<'a, Message: Clone + 'static>() -> Slot<'a, Message> {
     .list_width(Fill);
     card(
         column![
-            card::header(Slot::from(header)).inset(12.),
+            card::header(View::from(header)).inset(12.),
             card::content(column(FILE_TREE.iter().map(entry)).width(Fill).spacing(4))
                 .padding([0, 12]),
         ]

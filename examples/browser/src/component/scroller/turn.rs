@@ -1,7 +1,7 @@
 use super::demo::Event;
 use super::fixtures::{Role, Turn};
 use iced::alignment::Horizontal::{Left, Right};
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::radius;
 use icedcn::widget::{bubble, column, message, motion, status_marker};
 
@@ -11,7 +11,7 @@ impl Turn {
         value: &'static str,
         preset: motion::Preset,
         animate: bool,
-    ) -> Slot<'static, Event> {
+    ) -> View<'static, Event> {
         motion(self.view(value))
             .preset(preset)
             .animate(animate)
@@ -19,7 +19,7 @@ impl Turn {
             .into()
     }
 
-    pub(super) fn view(self, value: &'static str) -> Slot<'static, Event> {
+    pub(super) fn view(self, value: &'static str) -> View<'static, Event> {
         if self.role == Role::Marker {
             return status_marker(value).style(status_marker::Separator).into();
         }

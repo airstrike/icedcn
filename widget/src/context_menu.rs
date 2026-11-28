@@ -29,14 +29,14 @@ use iced_widget::{Renderer, Space, Widget, anchored};
 use icedcn_core::Theme;
 use icedcn_core::theme::popover::content;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::container::Container;
 use crate::marker;
 use crate::menu::list::List;
 use crate::popover::{Handle, Signal};
 
 /// A closure that builds part of a [`ContextMenu`].
-type Body<'a, Message> = Box<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
+type Body<'a, Message> = Box<dyn Fn(&Handle) -> View<'a, Message> + 'a>;
 
 /// A menu opened at the pointer by a right press.
 pub struct ContextMenu<'a, Message> {
@@ -67,8 +67,8 @@ pub struct State {
 /// Create a [`ContextMenu`]: `trigger` builds the area that opens it,
 /// `content` the menu.
 pub fn context_menu<'a, Message>(
-    trigger: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
-    content: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
+    trigger: impl Fn(&Handle) -> View<'a, Message> + 'a,
+    content: impl Fn(&Handle) -> View<'a, Message> + 'a,
 ) -> ContextMenu<'a, Message> {
     ContextMenu {
         trigger: Box::new(trigger),
@@ -143,7 +143,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer>
                 .style(content);
 
             let body = marker::owner(
-                Slot::from(panel).compose().map(Event::App).boxed(),
+                View::from(panel).compose().map(Event::App).boxed(),
                 |signal| match signal {
                     Signal::Toggle | Signal::Close => Event::Close,
                 },
@@ -186,9 +186,9 @@ impl<'a, Message: Clone + 'static> Compose<Message> for ContextMenu<'a, Message>
     }
 }
 
-impl<'a, Message: Clone + 'static> From<ContextMenu<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'static> From<ContextMenu<'a, Message>> for View<'a, Message> {
     fn from(menu: ContextMenu<'a, Message>) -> Self {
-        Slot::new(menu)
+        View::new(menu)
     }
 }
 

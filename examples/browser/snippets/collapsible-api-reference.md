@@ -1,6 +1,6 @@
 ### Root
 
-Use `collapsible(body)` to create an iced `Component` that owns its open state. The closure receives a `collapsible::Handle` and returns a `Slot` in your application's message type.
+Use `collapsible(body)` to create an iced `Component` that owns its open state. The closure receives a `collapsible::Handle` and returns a `View` in your application's message type.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |

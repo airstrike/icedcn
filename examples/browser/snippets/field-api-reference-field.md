@@ -1,6 +1,6 @@
 ### Field
 
-`field(control)` accepts anything that converts to a `Slot`.
+`field(control)` accepts anything that converts to a `View`.
 
 | Builder | Effect |
 | --- | --- |

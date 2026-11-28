@@ -1,7 +1,7 @@
 use iced::widget::component::{Component, component};
 use iced::{Element, Widget};
-use icedcn::Slot;
 use icedcn::Theme;
+use icedcn::View;
 use icedcn::widget::table::Track::Auto;
 use icedcn::widget::{checkbox, table, text};
 
@@ -78,7 +78,7 @@ impl Change {
     }
 }
 
-pub fn users<'a>(rows: &[User<'a>]) -> Slot<'a, Change> {
+pub fn users<'a>(rows: &[User<'a>]) -> View<'a, Change> {
     let all = !rows.is_empty() && rows.iter().all(|user| user.selected);
     let select_all = checkbox().checked(all).on_checked_change(Change::All);
     let header = table::header([table::row([

@@ -2,7 +2,7 @@ use iced_widget::Widget;
 mod element;
 pub mod widget;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::widget::Id;
 use iced_core::{Length, Padding, Pixels};
@@ -17,7 +17,7 @@ use icedcn_core::theme::container::IntoStyle;
 /// container(text::h1("Hello")).padding(16).center_x(Fill)
 /// ```
 pub struct Container<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     id: Option<Id>,
     width: Length,
     height: Length,
@@ -30,7 +30,7 @@ pub struct Container<'a, Message> {
 }
 
 impl<'a, Message: 'a> Container<'a, Message> {
-    pub fn new(content: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn new(content: impl Into<View<'a, Message>>) -> Self {
         Self {
             content: content.into(),
             id: None,
@@ -158,9 +158,9 @@ impl<'a, Message: 'a> From<Container<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Container<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Container<'a, Message>> for View<'a, Message> {
     fn from(widget: Container<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 

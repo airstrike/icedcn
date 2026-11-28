@@ -1,10 +1,10 @@
 ```rust
 use crate::icon;
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{alert, column};
 
-fn demo<'a, M: 'a>() -> Slot<'a, M> {
+fn demo<'a, M: 'a>() -> View<'a, M> {
     let notice =
         |icon, title, description| alert().icon(icon).title(title).description(description);
     column![

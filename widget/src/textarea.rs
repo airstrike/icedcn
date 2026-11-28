@@ -27,7 +27,7 @@ use iced_core::{Element, Font};
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 
 pub use icedcn_core::theme::textarea::{Appearance, Default, Invalid};
 
@@ -135,9 +135,9 @@ impl<'a, Message: 'a> Compose<Message> for Textarea<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Textarea<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Textarea<'a, Message>> for View<'a, Message> {
     fn from(textarea: Textarea<'a, Message>) -> Self {
-        Slot::new(textarea)
+        View::new(textarea)
     }
 }
 

@@ -1,10 +1,10 @@
 use crate::Message;
 use iced::widget::svg;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::button;
 use icedcn::{Size, Theme};
 
-pub fn view() -> Slot<'static, Message> {
+pub fn view() -> View<'static, Message> {
     let branch = svg(svg::Handle::from_memory(
         include_bytes!("../../../assets/button/git-branch.svg").as_slice(),
     ))

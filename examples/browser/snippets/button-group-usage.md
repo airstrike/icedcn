@@ -1,9 +1,9 @@
 ## Usage
 
 ```rust
-use icedcn::{Slot, widget::button};
+use icedcn::{View, widget::button};
 
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     button::group![button("Button 1"), button("Button 2")].into()
 }
 ```

@@ -3,7 +3,7 @@
 Supply the current trail in reading order. Handle `Message::GoHome` and `Message::GoComponents` in your application update function to change the displayed route.
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::breadcrumb;
 
 #[derive(Debug, Clone)]
@@ -12,7 +12,7 @@ enum Message {
     GoComponents,
 }
 
-fn view<'a>() -> Slot<'a, Message> {
+fn view<'a>() -> View<'a, Message> {
     breadcrumb([
         breadcrumb::link("Home", Message::GoHome),
         breadcrumb::link("Components", Message::GoComponents),

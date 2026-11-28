@@ -1,8 +1,8 @@
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{button, dropdown_menu, menu};
 
-pub fn view<'a>(selected: &'static str) -> Slot<'a, &'static str> {
+pub fn view<'a>(selected: &'static str) -> View<'a, &'static str> {
     dropdown_menu(
         |m| m.trigger(button("Open").style(button::Outline)),
         move |_| {

@@ -8,7 +8,7 @@ use iced::{Fill, Task, Widget};
 use icedcn::theme::text::muted;
 
 use icedcn::widget::{alert_dialog, button, column};
-use icedcn::{Size, Slot, Theme};
+use icedcn::{Size, Theme, View};
 
 use crate::Message;
 use crate::page;
@@ -86,7 +86,7 @@ impl AlertDialogPage {
 }
 
 /// "Show Dialog" outline trigger.
-fn show(a: &alert_dialog::Handle) -> Slot<'static, Message> {
+fn show(a: &alert_dialog::Handle) -> View<'static, Message> {
     a.trigger(button("Show Dialog").style(button::Outline))
 }
 

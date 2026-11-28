@@ -11,7 +11,7 @@ use super::glyph::Glyph;
 use super::{CodeBlock, footer};
 use crate::animation::cubic_bezier;
 use crate::collapsible::Collapsible;
-use crate::{Size, Slot, button, collapsible, row};
+use crate::{Size, View, button, collapsible, row};
 
 /// Clip the content to `height` with a centered Show more button in the footer.
 /// Expanded, the content's own height or maximum height applies. Use the
@@ -46,7 +46,7 @@ pub fn show_more<'a, Message: 'static>(
         let toggle = button(row![chevron, if open { "Show less" } else { "Show more" }].spacing(4))
             .style(button::Ghost)
             .size(Size::Xs);
-        let toggle = handle.trigger(Slot::from(toggle).map(never));
+        let toggle = handle.trigger(View::from(toggle).map(never));
         let footer = match block.footer.take() {
             Some(footer) => footer.push(toggle),
             None => footer(toggle).align_x(Horizontal::Center),

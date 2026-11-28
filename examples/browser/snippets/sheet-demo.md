@@ -1,11 +1,11 @@
 ```rust
 use iced::Fill;
 use icedcn::{
-    Slot,
+    View,
     widget::{button, field, input, sheet, text},
 };
 const DESCRIPTION: &str = "Make changes to your profile here. Click save when you're done.";
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     sheet(
         |s| s.trigger(button("Open").style(button::Outline)),
         |s| {

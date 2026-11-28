@@ -17,12 +17,12 @@ use iced_core::{
 };
 use icedcn_core::Theme;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 
 /// An entrance that plays once when its content mounts. Layout and input use
 /// the child's final position throughout the transition.
 pub struct Motion<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     preset: Preset,
     animate: bool,
     theme: Option<fn(&Theme, f32) -> Theme>,
@@ -30,7 +30,7 @@ pub struct Motion<'a, Message> {
 
 /// Animate the arrival of a child. In lists, keep stable row keys and use
 /// [`Motion::animate`] to distinguish new rows from restored history.
-pub fn motion<'a, Message>(content: impl Into<Slot<'a, Message>>) -> Motion<'a, Message> {
+pub fn motion<'a, Message>(content: impl Into<View<'a, Message>>) -> Motion<'a, Message> {
     Motion {
         content: content.into(),
         preset: Preset::default(),
@@ -79,9 +79,9 @@ impl<'a, Message: 'a> Compose<Message> for Motion<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Motion<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Motion<'a, Message>> for View<'a, Message> {
     fn from(motion: Motion<'a, Message>) -> Self {
-        Slot::new(motion)
+        View::new(motion)
     }
 }
 

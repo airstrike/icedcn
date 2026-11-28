@@ -1,9 +1,9 @@
 ```rust
 use icedcn::Horizontal;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{field, radio_group};
 
-fn environment<'a, M: Clone + 'static>() -> Slot<'a, M> {
+fn environment<'a, M: Clone + 'static>() -> View<'a, M> {
     let environments = [
         (
             "kubernetes",

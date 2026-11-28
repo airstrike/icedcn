@@ -1,8 +1,8 @@
 use crate::icon;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::alert;
 
-pub(super) fn view<'a, M: 'a>() -> Slot<'a, M> {
+pub(super) fn view<'a, M: 'a>() -> View<'a, M> {
     alert()
         .icon(icon::circle_check().size(16).line_height(1.0))
         .title("Account updated successfully")

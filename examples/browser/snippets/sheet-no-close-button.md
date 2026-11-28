@@ -1,9 +1,9 @@
 ```rust
 use icedcn::{
-    Slot,
+    View,
     widget::{button, sheet},
 };
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     sheet(
                 |s| s.trigger(button("Open Sheet").style(button::Outline)),
                 |_| sheet::header(

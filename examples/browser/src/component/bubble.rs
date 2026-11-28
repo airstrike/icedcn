@@ -24,7 +24,7 @@ use icedcn::widget::bubble::{Destructive, Ghost, Muted, Outline, Secondary, Tint
 use icedcn::widget::{
     bubble, button, collapsible, column, container, popover, row, text, toast, tooltip,
 };
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 use page::Block;
 
 pub static META: page::Meta = page::Meta {
@@ -137,21 +137,21 @@ impl BubblePage {
     }
 }
 
-fn frame<'a>(body: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
+fn frame<'a>(body: impl Into<View<'a, Message>>) -> View<'a, Message> {
     container(body)
         .padding([48, 0])
         .width(Fill)
         .max_width(384)
         .into()
 }
-fn suggestion<'a>(label: &'a str, notice: &'a str) -> Slot<'a, Message> {
+fn suggestion<'a>(label: &'a str, notice: &'a str) -> View<'a, Message> {
     toast::trigger(
         bubble(label).style(Tinted).align(Right).interactive(true),
         toast::toast(notice),
     )
 }
 
-fn review<'a>() -> Slot<'a, Message> {
+fn review<'a>() -> View<'a, Message> {
     const REVIEW: &str = "The accessibility review found two focus states that were visually too subtle in dark mode.\n\nI checked the dialog, menu, and drawer paths because each one renders focusable controls inside a layered surface.\n\nThe dialog and drawer are fine. The menu needs the hover and focus tokens split so keyboard focus stays visible when the pointer is not involved.\n\nI also recommend keeping the change in the style file instead of the primitive so the other themes can choose their own focus treatment later.";
     collapsible(|c| {
         let description = if c.is_open() {
@@ -187,7 +187,7 @@ fn review<'a>() -> Slot<'a, Message> {
     })
     .into()
 }
-fn ghost_text<'a>(theme: &Theme) -> Slot<'a, Message> {
+fn ghost_text<'a>(theme: &Theme) -> View<'a, Message> {
     let bold = Font::DEFAULT.weight(Weight::Bold);
     let code = Span::<()>::new("code")
         .font("Geist Mono")
@@ -204,7 +204,7 @@ fn ghost_text<'a>(theme: &Theme) -> Slot<'a, Message> {
         text("Ghost bubbles are full width and can take the full width of the container.")
     ].spacing(16).into()
 }
-fn demo() -> Slot<'static, Message> {
+fn demo() -> View<'static, Message> {
     frame(
         column![
             bubble("Hey there! what's up?").align(Right),
@@ -227,7 +227,7 @@ fn demo() -> Slot<'static, Message> {
     )
 }
 
-fn variants(theme: &Theme) -> Slot<'static, Message> {
+fn variants(theme: &Theme) -> View<'static, Message> {
     frame(
         column![
             bubble("This is the default primary bubble."),
@@ -254,7 +254,7 @@ fn variants(theme: &Theme) -> Slot<'static, Message> {
     )
 }
 
-fn alignment() -> Slot<'static, Message> {
+fn alignment() -> View<'static, Message> {
     frame(
         column![
             bubble("This bubble is aligned to the start. This is the default alignment.")
@@ -266,7 +266,7 @@ fn alignment() -> Slot<'static, Message> {
     )
 }
 
-fn group_demo() -> Slot<'static, Message> {
+fn group_demo() -> View<'static, Message> {
     frame(
         column![
             bubble("Can you tell me what's the issue?").style(Muted),
@@ -288,7 +288,7 @@ fn group_demo() -> Slot<'static, Message> {
     )
 }
 
-fn link_button() -> Slot<'static, Message> {
+fn link_button() -> View<'static, Message> {
     frame(
         column![
             bubble("How can I help you today?").style(Muted),
@@ -309,7 +309,7 @@ fn link_button() -> Slot<'static, Message> {
     )
 }
 
-fn reactions() -> Slot<'static, Message> {
+fn reactions() -> View<'static, Message> {
     frame(
         column![
             bubble("I don't need tests, I know my code works.")
@@ -343,7 +343,7 @@ fn reactions() -> Slot<'static, Message> {
     )
 }
 
-fn collapsible_example() -> Slot<'static, Message> {
+fn collapsible_example() -> View<'static, Message> {
     frame(
         column![
             bubble("How can I help you today?").style(Muted),
@@ -354,7 +354,7 @@ fn collapsible_example() -> Slot<'static, Message> {
     )
 }
 
-fn tooltip_example() -> Slot<'static, Message> {
+fn tooltip_example() -> View<'static, Message> {
     frame(
         column![
             bubble("Did you remove the stale route?").style(Secondary),
@@ -378,7 +378,7 @@ fn tooltip_example() -> Slot<'static, Message> {
     )
 }
 
-fn popover_example() -> Slot<'static, Message> {
+fn popover_example() -> View<'static, Message> {
     frame(
         column![
             bubble("Run the build script.").align(Right),

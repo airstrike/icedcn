@@ -1,4 +1,4 @@
-//! Table rows, headers, and cells accept arbitrary [`Slot`] content.
+//! Table rows, headers, and cells accept arbitrary [`View`] content.
 
 mod grid;
 pub use grid::{Grid, Track, grid};
@@ -10,13 +10,13 @@ use iced_widget::Renderer;
 use icedcn_core::theme::container::Style;
 use icedcn_core::{Border, Theme};
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::scrollable::{Direction, Visibility, scrollbar};
 use crate::{Size, Weight, column, container, rule, scrollable};
 
 /// Root table slot.
 pub struct Table<'a, Message> {
-    children: Vec<Slot<'a, Message>>,
+    children: Vec<View<'a, Message>>,
     width: Length,
 }
 
@@ -44,7 +44,7 @@ pub struct Row<'a, Message> {
 
 /// A table cell.
 pub struct Cell<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     kind: cell::Kind,
     span: usize,
     width: Length,
@@ -56,7 +56,7 @@ pub struct Cell<'a, Message> {
 
 /// Caption slot.
 pub struct Caption<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
 }
 
 /// Cell internals.
@@ -74,7 +74,7 @@ pub mod cell {
 /// Create a [`Table`] from table child slots.
 pub fn table<'a, Message: 'a, C>(children: impl IntoIterator<Item = C>) -> Table<'a, Message>
 where
-    C: Into<Slot<'a, Message>>,
+    C: Into<View<'a, Message>>,
 {
     Table::new(children)
 }
@@ -124,7 +124,7 @@ pub fn row<'a, Message: 'a>(
 }
 
 /// Create a body [`Cell`].
-pub fn cell<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Cell<'a, Message> {
+pub fn cell<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Cell<'a, Message> {
     Cell {
         content: content.into(),
         kind: cell::Kind::Body,
@@ -138,7 +138,7 @@ pub fn cell<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Cell<'a, 
 }
 
 /// Create a header [`Cell`].
-pub fn head<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Cell<'a, Message> {
+pub fn head<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Cell<'a, Message> {
     cell(content)
         .kind(cell::Kind::Head)
         .height(40.0)
@@ -146,7 +146,7 @@ pub fn head<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Cell<'a, 
 }
 
 /// Create a [`Caption`].
-pub fn caption<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Caption<'a, Message> {
+pub fn caption<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Caption<'a, Message> {
     Caption {
         content: content.into(),
     }
@@ -156,7 +156,7 @@ impl<'a, Message: 'a> Table<'a, Message> {
     /// Create a table from table child slots.
     pub fn new<C>(children: impl IntoIterator<Item = C>) -> Self
     where
-        C: Into<Slot<'a, Message>>,
+        C: Into<View<'a, Message>>,
     {
         Self {
             children: children.into_iter().map(Into::into).collect(),
@@ -237,9 +237,9 @@ impl<'a, Message: 'a> From<Table<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Table<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Table<'a, Message>> for View<'a, Message> {
     fn from(widget: Table<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -273,9 +273,9 @@ impl<'a, Message: 'a> From<Header<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Header<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Header<'a, Message>> for View<'a, Message> {
     fn from(widget: Header<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -291,7 +291,7 @@ impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
         Self: 'b,
     {
         let Header { rows } = *self;
-        let rows = rows.into_iter().map(Slot::from);
+        let rows = rows.into_iter().map(View::from);
 
         column(rows).spacing(0).width(Fill).into()
     }
@@ -303,9 +303,9 @@ impl<'a, Message: 'a> From<Body<'a, Message>> for iced_core::Element<'a, Message
     }
 }
 
-impl<'a, Message: 'a> From<Body<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Body<'a, Message>> for View<'a, Message> {
     fn from(widget: Body<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -326,7 +326,7 @@ impl<'a, Message: 'a> Compose<Message> for Body<'a, Message> {
             last.border = false;
         }
 
-        let rows = rows.into_iter().map(Slot::from);
+        let rows = rows.into_iter().map(View::from);
 
         column(rows).spacing(0).width(Fill).into()
     }
@@ -340,9 +340,9 @@ impl<'a, Message: 'a> From<Footer<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Footer<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Footer<'a, Message>> for View<'a, Message> {
     fn from(widget: Footer<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -363,12 +363,12 @@ impl<'a, Message: 'a> Compose<Message> for Footer<'a, Message> {
             last.border = false;
         }
 
-        let rows = rows.into_iter().map(Slot::from);
+        let rows = rows.into_iter().map(View::from);
         let content = column(rows).spacing(0).width(Fill);
 
         column([
             separator(),
-            Slot::from(container(content).width(Fill).style(footer_style)),
+            View::from(container(content).width(Fill).style(footer_style)),
         ])
         .spacing(0)
         .width(Fill)
@@ -382,9 +382,9 @@ impl<'a, Message: 'a> From<Row<'a, Message>> for iced_core::Element<'a, Message,
     }
 }
 
-impl<'a, Message: 'a> From<Row<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Row<'a, Message>> for View<'a, Message> {
     fn from(widget: Row<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -404,12 +404,12 @@ impl<'a, Message: 'a> Compose<Message> for Row<'a, Message> {
             border,
             selected,
         } = *self;
-        let cells = cells.into_iter().map(Slot::from);
+        let cells = cells.into_iter().map(View::from);
         let row = crate::Row::with_children(cells)
             .align_y(iced_core::Alignment::Center)
             .width(Fill);
 
-        let row: Slot<'_, Message> = if selected {
+        let row: View<'_, Message> = if selected {
             container(row)
                 .width(Fill)
                 .style(|theme: &Theme| Style {
@@ -434,9 +434,9 @@ impl<'a, Message: 'a> From<Cell<'a, Message>> for iced_core::Element<'a, Message
     }
 }
 
-impl<'a, Message: 'a> From<Cell<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Cell<'a, Message>> for View<'a, Message> {
     fn from(widget: Cell<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -484,9 +484,9 @@ impl<'a, Message: 'a> From<Caption<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Caption<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Caption<'a, Message>> for View<'a, Message> {
     fn from(widget: Caption<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -518,11 +518,11 @@ fn separator_style() -> rule::StyleFn<'static, Theme> {
     })
 }
 
-fn separator<'a, Message: 'a>() -> Slot<'a, Message> {
+fn separator<'a, Message: 'a>() -> View<'a, Message> {
     let line: iced_core::Element<'a, Message, Theme, Renderer> =
         rule::horizontal(1).style(separator_style()).into();
 
-    Slot::from(line)
+    View::from(line)
 }
 
 fn footer_style(theme: &Theme) -> Style {

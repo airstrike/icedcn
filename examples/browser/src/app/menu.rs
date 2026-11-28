@@ -1,7 +1,7 @@
 //! Browser actions available from any unclaimed right click.
 
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{column, menu, row, text};
 
 use crate::{icon, page};
@@ -9,7 +9,7 @@ use crate::{icon, page};
 use super::route::Route;
 use super::{App, Message};
 
-pub(super) fn view(app: &App) -> Slot<'_, Message> {
+pub(super) fn view(app: &App) -> View<'_, Message> {
     let source = source(app);
     let title = match app.route() {
         Route::Home => "Home",

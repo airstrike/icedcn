@@ -18,15 +18,15 @@ use icedcn_core::{Color, Theme};
 
 use super::surface;
 use crate::scrollable::Direction;
-use crate::{Compose, Inherited, Row, Slot, container, scroll_area};
+use crate::{Compose, Inherited, Row, View, container, scroll_area};
 
 /// A keyboard-accessible, snapping strip of attachment cards.
 pub struct Group<'a, Message> {
-    cards: Vec<Slot<'a, Message>>,
+    cards: Vec<View<'a, Message>>,
     background: fn(&Theme) -> Color,
 }
 pub fn group<'a, Message>(
-    cards: impl IntoIterator<Item = Slot<'a, Message>>,
+    cards: impl IntoIterator<Item = View<'a, Message>>,
 ) -> Group<'a, Message> {
     Group {
         cards: cards.into_iter().collect(),
@@ -64,9 +64,9 @@ impl<'a, Message: 'a> Compose<Message> for Group<'a, Message> {
         .boxed()
     }
 }
-impl<'a, Message: 'a> From<Group<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Group<'a, Message>> for View<'a, Message> {
     fn from(group: Group<'a, Message>) -> Self {
-        Slot::new(group)
+        View::new(group)
     }
 }
 struct Viewport<'a, Message> {

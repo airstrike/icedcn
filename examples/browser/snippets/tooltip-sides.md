@@ -1,9 +1,9 @@
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{button, row, tooltip};
 use tooltip::Side::{Bottom, Left, Right, Top};
 
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     let hint =
         |label, side| tooltip(button(label).style(button::Outline), "Add to library").side(side);
     row![

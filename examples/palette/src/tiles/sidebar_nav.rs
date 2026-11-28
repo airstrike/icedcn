@@ -2,7 +2,7 @@
 
 use iced::Fill;
 use icedcn::widget::{column, row, sidebar, text};
-use icedcn::{Slot, Theme, card};
+use icedcn::{Theme, View, card};
 
 use crate::{Message, State, icon};
 
@@ -54,7 +54,7 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
     .into()
 }
 
-fn nav_card<const N: usize>(children: [Slot<'static, Message>; N]) -> Slot<'static, Message> {
+fn nav_card<const N: usize>(children: [View<'static, Message>; N]) -> View<'static, Message> {
     card::card(column(children).spacing(0).width(Fill))
         .gap(0)
         .padding(0)
@@ -64,8 +64,8 @@ fn nav_card<const N: usize>(children: [Slot<'static, Message>; N]) -> Slot<'stat
 
 fn group<const N: usize>(
     label: &'static str,
-    items: [Slot<'static, Message>; N],
-) -> Slot<'static, Message> {
+    items: [View<'static, Message>; N],
+) -> View<'static, Message> {
     sidebar::group([
         sidebar::group_label(label).into(),
         sidebar::group_content(items).into(),
@@ -75,9 +75,9 @@ fn group<const N: usize>(
 
 fn nav_item(
     label: &'static str,
-    icon: Slot<'static, Message>,
+    icon: View<'static, Message>,
     active: bool,
-) -> Slot<'static, Message> {
+) -> View<'static, Message> {
     let content = row![icon, text::small(label)].spacing(8).width(Fill);
     let button = sidebar::menu_button(content)
         .active(active)

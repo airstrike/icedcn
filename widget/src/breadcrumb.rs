@@ -34,7 +34,7 @@ mod icon;
 
 use crate::Weight;
 use crate::button::widget;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::row::Row;
 #[cfg(not(feature = "svg"))]
 use crate::text;
@@ -57,9 +57,9 @@ pub struct Item<'a, Message> {
 }
 
 enum Kind<'a, Message> {
-    Content(Slot<'a, Message>),
-    Link(Slot<'a, Message>, Message),
-    Page(Slot<'a, Message>),
+    Content(View<'a, Message>),
+    Link(View<'a, Message>, Message),
+    Page(View<'a, Message>),
     Ellipsis(Option<Message>),
 }
 
@@ -85,9 +85,9 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Item<'a, Message> {
     }
 }
 
-impl<'a, Message: Clone + 'a> From<Item<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Item<'a, Message>> for View<'a, Message> {
     fn from(item: Item<'a, Message>) -> Self {
-        Slot::new(item)
+        View::new(item)
     }
 }
 
@@ -100,20 +100,20 @@ impl<'a, Message: Clone + 'a> From<Item<'a, Message>>
 }
 
 /// Place a widget in the trail, preserving its own interactions and styling.
-pub fn item<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Item<'a, Message> {
+pub fn item<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Item<'a, Message> {
     Item::new(Kind::Content(content.into()))
 }
 
 /// Build a clickable breadcrumb part.
 pub fn link<'a, Message: 'a>(
-    text: impl Into<Slot<'a, Message>>,
+    text: impl Into<View<'a, Message>>,
     on_press: Message,
 ) -> Item<'a, Message> {
     Item::new(Kind::Link(text.into(), on_press))
 }
 
 /// Build a non-clickable current-page part.
-pub fn page<'a, Message: 'a>(text: impl Into<Slot<'a, Message>>) -> Item<'a, Message> {
+pub fn page<'a, Message: 'a>(text: impl Into<View<'a, Message>>) -> Item<'a, Message> {
     Item::new(Kind::Page(text.into()))
 }
 
@@ -133,10 +133,10 @@ pub fn breadcrumb<'a, Message: 'a>(
 
 /// Lazily-evaluated separator factory.
 ///
-/// `Slot` is not `Clone`, so the separator must be re-built once per
+/// `View` is not `Clone`, so the separator must be re-built once per
 /// gap rather than stored once and copied. The factory closure is invoked
 /// `items.len() - 1` times at `compose` time.
-type SeparatorFn<'a, Message> = Box<dyn Fn() -> Slot<'a, Message> + 'a>;
+type SeparatorFn<'a, Message> = Box<dyn Fn() -> View<'a, Message> + 'a>;
 
 /// A breadcrumb trail. Build via [`breadcrumb`].
 pub struct Breadcrumb<'a, Message> {
@@ -157,7 +157,7 @@ impl<'a, Message: 'a> Breadcrumb<'a, Message> {
     }
 
     /// Override the default separator. The closure is called once per gap
-    /// between adjacent items (Slot values are not `Clone`, so a fresh
+    /// between adjacent items (View values are not `Clone`, so a fresh
     /// instance is built for each insertion).
     ///
     /// ```ignore
@@ -166,7 +166,7 @@ impl<'a, Message: 'a> Breadcrumb<'a, Message> {
     /// ```
     pub fn separator<F>(mut self, factory: F) -> Self
     where
-        F: Fn() -> Slot<'a, Message> + 'a,
+        F: Fn() -> View<'a, Message> + 'a,
     {
         self.separator = Some(Box::new(factory));
         self
@@ -181,9 +181,9 @@ impl<'a, Message: Clone + 'a> From<Breadcrumb<'a, Message>>
     }
 }
 
-impl<'a, Message: Clone + 'a> From<Breadcrumb<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Breadcrumb<'a, Message>> for View<'a, Message> {
     fn from(widget: Breadcrumb<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -228,12 +228,12 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Breadcrumb<'a, Message> {
     }
 }
 
-/// Render a single [`Item`] to a [`Slot`]. Extracted so the dispatch
+/// Render a single [`Item`] to a [`View`]. Extracted so the dispatch
 /// reads as a flat match in one place.
 fn render_item<'a, Message: Clone + 'a>(
     item: Kind<'a, Message>,
     inherited: &Inherited,
-) -> Slot<'a, Message> {
+) -> View<'a, Message> {
     match item {
         Kind::Content(mut content) => {
             content.inherit(inherited);
@@ -249,7 +249,7 @@ fn render_item<'a, Message: Clone + 'a>(
 }
 
 /// Render the current page in the foreground color.
-fn render_page<'a, Message: Clone + 'a>(content: Slot<'a, Message>) -> Slot<'a, Message> {
+fn render_page<'a, Message: Clone + 'a>(content: View<'a, Message>) -> View<'a, Message> {
     container(content.compose())
         .style(|t: &Theme| Style::default().color(t.neutral.foreground))
         .into()
@@ -257,10 +257,10 @@ fn render_page<'a, Message: Clone + 'a>(content: Slot<'a, Message>) -> Slot<'a, 
 
 /// The existing native button owns release, cancellation and keyboard input.
 fn render_link<'a, Message: Clone + 'a>(
-    mut content: Slot<'a, Message>,
+    mut content: View<'a, Message>,
     on_press: Message,
     inherited: &Inherited,
-) -> Slot<'a, Message> {
+) -> View<'a, Message> {
     content.inherit(&Inherited::default().with_selectable(false).or(*inherited));
     let style: widget::StyleFn<'a, Theme> = Box::new(link_style);
     widget::Button::new(content.compose())
@@ -305,11 +305,11 @@ fn link_style(theme: &Theme, status: widget::Status) -> widget::Style {
 fn render_ellipsis<'a, Message: Clone + 'a>(
     on_press: Option<Message>,
     inherited: &Inherited,
-) -> Slot<'a, Message> {
+) -> View<'a, Message> {
     #[cfg(feature = "svg")]
-    let glyph: Slot<'a, Message> = icon::Icon::Ellipsis.boxed().into();
+    let glyph: View<'a, Message> = icon::Icon::Ellipsis.boxed().into();
     #[cfg(not(feature = "svg"))]
-    let glyph: Slot<'a, Message> = Text::new("\u{2026}").size(text::size::SM).into();
+    let glyph: View<'a, Message> = Text::new("\u{2026}").size(text::size::SM).into();
     let glyph = container(glyph.compose()).center_x(20).center_y(20).into();
 
     match on_press {
@@ -319,14 +319,14 @@ fn render_ellipsis<'a, Message: Clone + 'a>(
 }
 
 /// Default 14px chevron. Its color comes from the list's muted cascade.
-fn default_separator<'a, Message: 'a>() -> Slot<'a, Message> {
+fn default_separator<'a, Message: 'a>() -> View<'a, Message> {
     #[cfg(feature = "svg")]
     {
         icon::Icon::Chevron.boxed().into()
     }
     #[cfg(not(feature = "svg"))]
     {
-        container(Slot::<Message>::from(Text::new("\u{203A}").size(text::size::SM)).compose())
+        container(View::<Message>::from(Text::new("\u{203A}").size(text::size::SM)).compose())
             .center_x(14)
             .center_y(14)
             .boxed()

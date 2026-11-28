@@ -3,7 +3,7 @@ use iced::{Element, Task, Widget};
 
 use icedcn::widget::{column, field, row, text, toggle_group};
 use icedcn::{Size, Theme, Vertical};
-use icedcn::{Slot, Weight};
+use icedcn::{View, Weight};
 
 use crate::page;
 use crate::{Message, icon};
@@ -146,7 +146,7 @@ impl<'a> Component<'a, Message, Theme> for FontWeight {
         Element::from(
             field(group)
                 .label("Font Weight")
-                .description(Slot::from(description))
+                .description(View::from(description))
                 .width(iced::Shrink),
         )
     }

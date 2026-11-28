@@ -3,14 +3,14 @@ Pass the favorite state and the message that toggles it. The copy button writes 
 ```rust
 use crate::icon;
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::core::radius;
 use icedcn::theme::text_input;
 use icedcn::widget::code_block::copy_button;
 use icedcn::widget::input_group::{Align, addon};
 use icedcn::widget::{button, column, input, input_group, popover, text};
 
-fn buttons<'a, M: Clone + 'static>(size: f32, favorite: bool, toggle: M) -> Slot<'a, M> {
+fn buttons<'a, M: Clone + 'static>(size: f32, favorite: bool, toggle: M) -> View<'a, M> {
     let url = "https://github.com/airstrike/icedcn";
     let info = popover(
         |p| {

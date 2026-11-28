@@ -5,7 +5,7 @@ use iced::widget::{Space, scrollable};
 use iced::{Alignment, Element, Fill, Task, Widget};
 use icedcn::theme::container::Style;
 use icedcn::widget::{button, column, container, dialog, drawer, field, input, row, text};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 pub static META: page::Meta = page::Meta {
     title: "Drawer",
     description: "A drawer component.",
@@ -134,7 +134,7 @@ impl<'a> Component<'a, Message, Theme> for Activity {
     }
 }
 const LOREM: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-fn panel(label: &'static str, side: Side, fraction: f32) -> Slot<'static, Message> {
+fn panel(label: &'static str, side: Side, fraction: f32) -> View<'static, Message> {
     drawer(
         move |d| d.trigger(button(label).style(button::Outline)),
         |d| {
@@ -143,7 +143,7 @@ fn panel(label: &'static str, side: Side, fraction: f32) -> Slot<'static, Messag
                 .padding([0, 16]);
             column![
                 drawer::header("Move Goal", "Set your daily activity goal."),
-                scrollable(Slot::from(body).compose()).height(Fill).boxed(),
+                scrollable(View::from(body).compose()).height(Fill).boxed(),
                 drawer::footer([
                     d.close(button("Submit").width(Fill)),
                     d.close(button("Cancel").style(button::Outline).width(Fill))
@@ -157,7 +157,7 @@ fn panel(label: &'static str, side: Side, fraction: f32) -> Slot<'static, Messag
     .height_fraction(fraction)
     .into()
 }
-fn profile() -> Slot<'static, Message> {
+fn profile() -> View<'static, Message> {
     let trigger = |d: &dialog::Handle| d.trigger(button("Edit Profile").style(button::Outline));
     let form = |d: &dialog::Handle| {
         column![

@@ -7,7 +7,7 @@ drawer(
             .padding([0, 16]);
         column![
             drawer::header("Move Goal", "Set your daily activity goal."),
-            scrollable(Slot::from(body).compose()).height(Fill).boxed(),
+            scrollable(View::from(body).compose()).height(Fill).boxed(),
             drawer::footer([
                 d.close(button("Submit").width(Fill)),
                 d.close(button("Cancel").style(button::Outline).width(Fill))

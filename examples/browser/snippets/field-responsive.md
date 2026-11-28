@@ -1,8 +1,8 @@
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{button, field};
 
-fn profile<'a, M: Clone + 'a>(name: field::Field<'a, M>, submit: M) -> Slot<'a, M> {
+fn profile<'a, M: Clone + 'a>(name: field::Field<'a, M>, submit: M) -> View<'a, M> {
     field::set(
         field::legend("Profile"),
         Some("Fill in your profile information."),

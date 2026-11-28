@@ -2,7 +2,7 @@
 //! disclosure triggers, or anchors for a sheet or dialog.
 use crate::button::widget::{Button, StyleFn};
 use crate::collapsible::{self, Collapsible};
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::{column, container, row, status_shimmer, text};
 use iced_core::{Alignment, Element, Length::Fill};
 use iced_widget::{Renderer, Space, Widget};
@@ -14,7 +14,7 @@ use std::borrow::Cow;
 
 /// Stack trace lines and nested disclosures at Nova's 8px gap.
 pub fn trace<'a, M: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, M>>,
+    children: impl IntoIterator<Item = View<'a, M>>,
 ) -> crate::column::Column<'a, M> {
     column::Column::with_children(children)
         .width(Fill)
@@ -32,8 +32,8 @@ pub enum Status {
 /// A trace line with optional leading/trailing icons and secondary text.
 pub struct Line<'a, M> {
     title: Cow<'a, str>,
-    icon: Option<Slot<'a, M>>,
-    trailing: Option<Slot<'a, M>>,
+    icon: Option<View<'a, M>>,
+    trailing: Option<View<'a, M>>,
     description: Option<Cow<'a, str>>,
     status: Status,
 }
@@ -49,12 +49,12 @@ pub fn line<'a, M>(title: impl Into<Cow<'a, str>>) -> Line<'a, M> {
 }
 impl<'a, M: 'a> Line<'a, M> {
     /// Leading indicator.
-    pub fn icon(mut self, icon: impl Into<Slot<'a, M>>) -> Self {
+    pub fn icon(mut self, icon: impl Into<View<'a, M>>) -> Self {
         self.icon = Some(icon.into());
         self
     }
     /// Trailing link or navigation glyph.
-    pub fn trailing(mut self, icon: impl Into<Slot<'a, M>>) -> Self {
+    pub fn trailing(mut self, icon: impl Into<View<'a, M>>) -> Self {
         self.trailing = Some(icon.into());
         self
     }
@@ -107,7 +107,7 @@ impl<'a, M: 'a> Compose<M> for Line<'a, M> {
         if let Some(trailing) = self.trailing {
             row = row.push(container(trailing).center(16).into());
         }
-        Slot::from(container(row).style(move |theme: &Theme| Style {
+        View::from(container(row).style(move |theme: &Theme| Style {
             text_color: Some(match status {
                 Status::Error => theme.destructive.base,
                 Status::Pending => theme.muted.foreground.alpha(0.6),
@@ -118,16 +118,16 @@ impl<'a, M: 'a> Compose<M> for Line<'a, M> {
         .compose()
     }
 }
-impl<'a, M: 'a> From<Line<'a, M>> for Slot<'a, M> {
+impl<'a, M: 'a> From<Line<'a, M>> for View<'a, M> {
     fn from(line: Line<'a, M>) -> Self {
-        Slot::new(line)
+        View::new(line)
     }
 }
 /// Give a trace line the hit target and keyboard behavior of a button.
 pub fn action<'a, M: Clone + 'a>(
-    content: impl Into<Slot<'a, M>>,
+    content: impl Into<View<'a, M>>,
     message: Option<M>,
-) -> Slot<'a, M> {
+) -> View<'a, M> {
     let style: StyleFn<'a, Theme> = Box::new(|theme: &Theme, status| {
         let style: iced_widget::button::Style = ghost(theme, status.into()).into();
         style.into()
@@ -143,7 +143,7 @@ pub fn action<'a, M: Clone + 'a>(
 /// A disclosure with the same controlled/uncontrolled open API as Collapsible.
 pub fn disclosure<'a, M: Clone + 'static>(
     summary: impl Fn() -> Line<'a, M> + 'a,
-    details: impl Fn() -> Slot<'a, M> + 'a,
+    details: impl Fn() -> View<'a, M> + 'a,
 ) -> Collapsible<'a, M> {
     collapsible::collapsible(move |c| {
         let arrow = if c.is_open() { "⌄" } else { "›" };

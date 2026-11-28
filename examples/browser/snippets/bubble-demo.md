@@ -2,11 +2,11 @@
 use iced::Fill;
 use iced::alignment::Horizontal::Right;
 use iced::alignment::Vertical::Bottom;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::bubble::Muted;
 use icedcn::widget::{bubble, column, container, row};
 
-fn example<'a>() -> Slot<'a, ()> {
+fn example<'a>() -> View<'a> {
     frame(
         column![
             bubble("Hey there! what's up?").align(Right),
@@ -29,7 +29,7 @@ fn example<'a>() -> Slot<'a, ()> {
     )
 }
 
-fn frame<'a>(body: impl Into<Slot<'a, ()>>) -> Slot<'a, ()> {
+fn frame<'a>(body: impl Into<View<'a>>) -> View<'a> {
     container(body)
         .padding([48, 0])
         .width(Fill)

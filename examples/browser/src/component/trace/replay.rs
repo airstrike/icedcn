@@ -7,7 +7,7 @@ use iced::widget::component::Component;
 use iced::{Element, Event, Fill, Rectangle, Widget, mouse, window};
 use icedcn::theme::container::Style;
 use icedcn::widget::{button, column, container, spinner, text, trace};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 use trace::Status;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -59,7 +59,7 @@ impl Replay {
 }
 const REASON: &str = "CI uses cargo build --locked. I’ll check whether the last commit updated Cargo.toml and Cargo.lock together, then reproduce the build.";
 const SLOW: &str = "Cargo’s timings report shows the final executable takes nearly four minutes after its dependencies finish. Cargo.toml enables fat LTO for the release profile.";
-fn thought(kind: Replay, running: bool) -> Slot<'static, Input> {
+fn thought(kind: Replay, running: bool) -> View<'static, Input> {
     let title = if running {
         "Thinking"
     } else if kind == Replay::Demo {
@@ -101,7 +101,7 @@ fn command(
     error: bool,
     running: bool,
     open: bool,
-) -> Slot<'static, Input> {
+) -> View<'static, Input> {
     if running {
         return trace::line(format!("Running {command}"))
             .icon(spinner().size(16.))
@@ -131,7 +131,7 @@ fn command(
     .default_open(open)
     .into()
 }
-fn references() -> Slot<'static, Input> {
+fn references() -> View<'static, Input> {
     trace::disclosure(
         || line("Used 2 sources", icon::globe),
         || {

@@ -20,7 +20,7 @@ pub mod widget;
 pub use icedcn_core::theme::checkbox::{Default, Disabled, Invalid};
 pub use widget::{Catalog, Ring, State, Status, Style, StyleFn};
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use iced_core::text::{IntoFragment, LineHeight};
 use iced_core::{Length, Pixels};
 use iced_widget::Renderer;
@@ -163,9 +163,9 @@ impl<'a, Message: 'a> From<Checkbox<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Checkbox<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Checkbox<'a, Message>> for View<'a, Message> {
     fn from(widget: Checkbox<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 

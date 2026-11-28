@@ -4,7 +4,7 @@ use iced::widget::responsive;
 use iced::{Center, Fill, Length, Pixels, Shrink, Task, Widget};
 
 use icedcn::widget::{Column, column, container, row, separator, space, text};
-use icedcn::{Slot, Theme, Vertical, theme};
+use icedcn::{Theme, Vertical, View, theme};
 
 use crate::Message;
 use crate::page;
@@ -70,7 +70,7 @@ fn menu_item<'a>(title: &'a str, description: &'a str) -> Column<'a, Message> {
 }
 
 /// A `<dl>` row: the term on the left, its muted value on the right.
-fn list_item<'a>(term: &'a str, value: &'a str) -> Slot<'a, Message> {
+fn list_item<'a>(term: &'a str, value: &'a str) -> View<'a, Message> {
     row![
         text::small(term).line_height(Pixels(20.0)),
         space::horizontal(),

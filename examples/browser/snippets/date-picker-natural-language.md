@@ -1,9 +1,9 @@
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::calendar::Date;
 use icedcn::widget::{date_picker, field, text};
 
-pub fn view<'a>(date: Option<Date>, window_width: f32) -> Slot<'a, Option<Date>> {
+pub fn view<'a>(date: Option<Date>, window_width: f32) -> View<'a, Option<Date>> {
     let display = date
         .map(|d| d.format("%B %d, %Y").to_string())
         .unwrap_or_default();

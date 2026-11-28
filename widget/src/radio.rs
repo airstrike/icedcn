@@ -21,7 +21,7 @@ use icedcn_core::Theme;
 
 use icedcn_core::theme::radio;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 
 pub use group::{Group, group};
 
@@ -100,9 +100,9 @@ impl<'a, Message: Clone + 'a> From<Radio<'a, Message>>
     }
 }
 
-impl<'a, Message: Clone + 'a> From<Radio<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Radio<'a, Message>> for View<'a, Message> {
     fn from(widget: Radio<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 

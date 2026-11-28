@@ -1,14 +1,14 @@
 ```rust
 use iced::widget::Space;
 use iced::{Fill, Shrink};
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{column, container, row, scrollable, sidebar};
 
 pub fn workspace<'a, M: Clone + 'static>(
-    teams: impl Fn(&sidebar::Handle<'_, 'a, M>) -> Slot<'a, M> + 'a,
-    links: impl Fn(&sidebar::Handle<'_, 'a, M>) -> Slot<'a, M> + 'a,
-    account: impl Fn(&sidebar::Handle<'_, 'a, M>) -> Slot<'a, M> + 'a,
-) -> Slot<'a, M> {
+    teams: impl Fn(&sidebar::Handle<'_, 'a, M>) -> View<'a, M> + 'a,
+    links: impl Fn(&sidebar::Handle<'_, 'a, M>) -> View<'a, M> + 'a,
+    account: impl Fn(&sidebar::Handle<'_, 'a, M>) -> View<'a, M> + 'a,
+) -> View<'a, M> {
     sidebar::provider(move |s| {
         let panel = sidebar::fixed(
             column![

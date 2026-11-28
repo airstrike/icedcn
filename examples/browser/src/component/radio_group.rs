@@ -3,7 +3,7 @@ use iced::{Shrink, Task};
 use icedcn::theme;
 use icedcn::theme::tweak::Alpha;
 use icedcn::widget::{field, radio_group, text};
-use icedcn::{Horizontal, Slot, Theme};
+use icedcn::{Horizontal, Theme, View};
 
 use crate::Message;
 use crate::page;
@@ -124,7 +124,7 @@ impl page::Page for RadioGroupPage {
     }
 }
 
-fn density<'a, M: Clone + 'static>() -> Slot<'a, M> {
+fn density<'a, M: Clone + 'static>() -> View<'a, M> {
     radio_group(|g| {
         field::group(["Default", "Comfortable", "Compact"].map(|name| {
             field(g.item(name))
@@ -140,7 +140,7 @@ fn density<'a, M: Clone + 'static>() -> Slot<'a, M> {
     .into()
 }
 
-fn described<'a, M: Clone + 'static>() -> Slot<'a, M> {
+fn described<'a, M: Clone + 'static>() -> View<'a, M> {
     let choices = [
         ("Default", "Standard spacing for most use cases."),
         ("Comfortable", "More space between elements."),
@@ -162,7 +162,7 @@ fn described<'a, M: Clone + 'static>() -> Slot<'a, M> {
     .into()
 }
 
-fn plans<'a, M: Clone + 'static>() -> Slot<'a, M> {
+fn plans<'a, M: Clone + 'static>() -> View<'a, M> {
     let plans = [
         ("Plus", "For individuals and small teams."),
         ("Pro", "For growing businesses."),
@@ -186,7 +186,7 @@ fn plans<'a, M: Clone + 'static>() -> Slot<'a, M> {
     .into()
 }
 
-fn availability<'a, M: Clone + 'static>() -> Slot<'a, M> {
+fn availability<'a, M: Clone + 'static>() -> View<'a, M> {
     radio_group(|g| {
         field::group(["Disabled", "Option 2", "Option 3"].map(|name| {
             let disabled = name == "Disabled";
@@ -206,7 +206,7 @@ fn availability<'a, M: Clone + 'static>() -> Slot<'a, M> {
     .into()
 }
 
-fn notifications<'a, M: Clone + 'static>() -> Slot<'a, M> {
+fn notifications<'a, M: Clone + 'static>() -> View<'a, M> {
     let choices = radio_group(|g| {
         field::group(["Email only", "SMS only", "Both Email & SMS"].map(|name| {
             field(g.item(name).invalid(true))

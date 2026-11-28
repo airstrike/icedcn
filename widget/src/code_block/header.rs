@@ -10,7 +10,7 @@ use icedcn_core::Theme;
 use icedcn_core::theme::container::Style;
 
 use super::{Actions, Placement, Spec, frame};
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::text::Ellipsis;
 use crate::{Weight, container, row};
 
@@ -18,7 +18,7 @@ use crate::{Weight, container, row};
 /// other child, such as a link around a title.
 pub enum HeaderItem<'a, Message> {
     Title(Title<'a, Message>),
-    Other(Slot<'a, Message>),
+    Other(View<'a, Message>),
 }
 
 impl<'a, Message> From<Title<'a, Message>> for HeaderItem<'a, Message> {
@@ -26,8 +26,8 @@ impl<'a, Message> From<Title<'a, Message>> for HeaderItem<'a, Message> {
         HeaderItem::Title(title)
     }
 }
-impl<'a, Message> From<Slot<'a, Message>> for HeaderItem<'a, Message> {
-    fn from(slot: Slot<'a, Message>) -> Self {
+impl<'a, Message> From<View<'a, Message>> for HeaderItem<'a, Message> {
+    fn from(slot: View<'a, Message>) -> Self {
         HeaderItem::Other(slot)
     }
 }
@@ -114,7 +114,7 @@ impl<'a, Message: 'a> Header<'a, Message> {
         if let Some(mut actions) = self.actions {
             actions.inherit(&Inherited::default().with_code_actions(Placement::Header));
             header = header.push(
-                frame::Frame::actions(Slot::from(actions).compose())
+                frame::Frame::actions(View::from(actions).compose())
                     .boxed()
                     .into(),
             );
@@ -126,7 +126,7 @@ impl<'a, Message: 'a> Header<'a, Message> {
 /// A child of a [`Title`]. A string is a label that truncates.
 pub enum TitleItem<'a, Message> {
     Label(Cow<'a, str>),
-    Slot(Slot<'a, Message>),
+    View(View<'a, Message>),
 }
 
 impl<'a, Message> From<&'a str> for TitleItem<'a, Message> {
@@ -144,30 +144,30 @@ impl<'a, Message> From<Cow<'a, str>> for TitleItem<'a, Message> {
         TitleItem::Label(value)
     }
 }
-impl<'a, Message> From<Slot<'a, Message>> for TitleItem<'a, Message> {
-    fn from(slot: Slot<'a, Message>) -> Self {
-        TitleItem::Slot(slot)
+impl<'a, Message> From<View<'a, Message>> for TitleItem<'a, Message> {
+    fn from(slot: View<'a, Message>) -> Self {
+        TitleItem::View(slot)
     }
 }
 impl<'a, Message: 'a> From<iced_widget::Text<'a, Theme>> for TitleItem<'a, Message> {
     fn from(icon: iced_widget::Text<'a, Theme>) -> Self {
-        TitleItem::Slot(icon.into())
+        TitleItem::View(icon.into())
     }
 }
 impl<'a, Message: 'a> From<crate::Text<'a>> for TitleItem<'a, Message> {
     fn from(text: crate::Text<'a>) -> Self {
-        TitleItem::Slot(text.into())
+        TitleItem::View(text.into())
     }
 }
 impl<'a, Message: 'a> From<Element<'a, Message, Theme, Renderer>> for TitleItem<'a, Message> {
     fn from(element: Element<'a, Message, Theme, Renderer>) -> Self {
-        TitleItem::Slot(element.into())
+        TitleItem::View(element.into())
     }
 }
 
 /// A filename or a label, with an optional icon. It truncates.
 pub struct Title<'a, Message> {
-    icon: Option<Slot<'a, Message>>,
+    icon: Option<View<'a, Message>>,
     label: TitleItem<'a, Message>,
     inherited: Inherited,
 }
@@ -209,7 +209,7 @@ impl<'a, Message: 'a> Compose<Message> for Title<'a, Message> {
                 .wrapping(Wrapping::None)
                 .ellipsis(Ellipsis::End)
                 .into(),
-            TitleItem::Slot(slot) => slot,
+            TitleItem::View(slot) => slot,
         };
         label.inherit(&inherited);
         let Some(icon) = icon else {
@@ -223,9 +223,9 @@ impl<'a, Message: 'a> Compose<Message> for Title<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Title<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Title<'a, Message>> for View<'a, Message> {
     fn from(title: Title<'a, Message>) -> Self {
-        Slot::new(title)
+        View::new(title)
     }
 }
 impl<'a, Message: 'a> From<Title<'a, Message>> for Element<'a, Message, Theme, Renderer> {

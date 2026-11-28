@@ -24,15 +24,15 @@ use icedcn_core::theme::container::Style;
 use icedcn_core::theme::popover;
 use icedcn_core::{Padding, Theme};
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::container::Container;
 
 pub use iced_widget::anchored::{Align, Side};
 
 /// A card opened by hovering its trigger.
 pub struct HoverCard<'a, Message> {
-    trigger: Slot<'a, Message>,
-    content: Slot<'a, Message>,
+    trigger: View<'a, Message>,
+    content: View<'a, Message>,
     position: anchored::Position,
     open_delay: Duration,
     close_delay: Duration,
@@ -45,8 +45,8 @@ pub struct HoverCard<'a, Message> {
 
 /// Create a [`HoverCard`] showing `content` while `trigger` is hovered.
 pub fn hover_card<'a, Message>(
-    trigger: impl Into<Slot<'a, Message>>,
-    content: impl Into<Slot<'a, Message>>,
+    trigger: impl Into<View<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> HoverCard<'a, Message> {
     HoverCard {
         trigger: trigger.into(),
@@ -157,7 +157,7 @@ impl<'a, Message: 'a> Compose<Message> for HoverCard<'a, Message> {
             .width(width)
             .style(style);
 
-        let mut card = anchored(trigger.compose(), Slot::from(panel).compose())
+        let mut card = anchored(trigger.compose(), View::from(panel).compose())
             .position(position)
             .hover(open_delay, close_delay);
 
@@ -173,9 +173,9 @@ impl<'a, Message: 'a> Compose<Message> for HoverCard<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<HoverCard<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<HoverCard<'a, Message>> for View<'a, Message> {
     fn from(card: HoverCard<'a, Message>) -> Self {
-        Slot::new(card)
+        View::new(card)
     }
 }
 

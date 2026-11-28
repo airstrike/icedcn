@@ -42,9 +42,9 @@ const FILES: &[File] = &[
         title: "src/view.rs",
         language: "rust",
         code: r##"use icedcn::widget::{column, text};
-use icedcn::Slot;
+use icedcn::View;
 
-pub fn view(titles: &[String]) -> Slot<'_, ()> {
+pub fn view(titles: &[String]) -> View<'_> {
     let mut items = column![].spacing(8);
     for title in titles {
         items = items.push(text::p(title.as_str()).into());

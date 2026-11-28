@@ -1,9 +1,9 @@
 ```rust
 use iced::Shrink;
 use icedcn::widget::{field, radio_group};
-use icedcn::{Horizontal, Slot};
+use icedcn::{Horizontal, View};
 
-fn described<'a, M: Clone + 'static>() -> Slot<'a, M> {
+fn described<'a, M: Clone + 'static>() -> View<'a, M> {
     let choices = [
         ("Default", "Standard spacing for most use cases."),
         ("Comfortable", "More space between elements."),

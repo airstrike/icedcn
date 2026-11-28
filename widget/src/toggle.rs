@@ -31,7 +31,7 @@ use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
 use icedcn_core::theme::toggle::Spec;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::{Size, Weight};
 
 pub use icedcn_core::theme::toggle::{Default, Outline};
@@ -48,9 +48,9 @@ macro_rules! toggle {
     };
     ($($child:expr),+ $(,)?) => {
         $crate::toggle::toggle(
-            $crate::compose::Slot::new(
+            $crate::compose::View::new(
                 $crate::row::Row::with_children([
-                    $(Into::<$crate::compose::Slot<'_, _>>::into($child)),+
+                    $(Into::<$crate::compose::View<'_, _>>::into($child)),+
                 ])
                 .spacing(4)
             )
@@ -64,7 +64,7 @@ macro_rules! toggle {
 /// [`pressed`](Self::pressed) and [`on_pressed_change`](Self::on_pressed_change) to manage it
 /// in the application. Disabled ancestors also disable the toggle.
 pub struct Toggle<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     pressed: Option<bool>,
     default_pressed: bool,
     on_pressed_change: Option<Box<dyn Fn(bool) -> Message + 'a>>,
@@ -74,7 +74,7 @@ pub struct Toggle<'a, Message> {
 }
 
 /// Create an off, uncontrolled [`Toggle`] showing `content`.
-pub fn toggle<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Toggle<'a, Message> {
+pub fn toggle<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Toggle<'a, Message> {
     Toggle {
         content: content.into(),
         pressed: None,
@@ -173,9 +173,9 @@ impl<'a, Message: 'a> Compose<Message> for Toggle<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Toggle<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Toggle<'a, Message>> for View<'a, Message> {
     fn from(toggle: Toggle<'a, Message>) -> Self {
-        Slot::new(toggle)
+        View::new(toggle)
     }
 }
 

@@ -1,9 +1,9 @@
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::calendar::Date;
 use icedcn::widget::{date_picker, field, text};
 
-pub fn view<'a, M: Clone + 'static>(window_width: f32) -> Slot<'a, M> {
+pub fn view<'a, M: Clone + 'static>(window_width: f32) -> View<'a, M> {
     let start = Date::from_ymd_opt(2025, 6, 1).expect("valid example date");
     field(
         date_picker::input("June 01, 2025")

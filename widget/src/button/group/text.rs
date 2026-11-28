@@ -1,5 +1,5 @@
 //! A muted text surface that participates in button-group joining.
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::input_group::widget::Surface;
 use crate::{Size, Weight, container};
 use iced_core::{Element, Padding};
@@ -9,11 +9,11 @@ use icedcn_core::{Theme, radius};
 
 /// A bordered, muted label. Content accepts the same slots as a button.
 pub struct Text<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     inherited: Inherited,
 }
 impl<'a, Message: 'a> Text<'a, Message> {
-    pub(super) fn new(content: impl Into<Slot<'a, Message>>) -> Self {
+    pub(super) fn new(content: impl Into<View<'a, Message>>) -> Self {
         Self {
             content: content.into(),
             inherited: Inherited::default(),
@@ -59,9 +59,9 @@ impl<'a, Message: 'a> Compose<Message> for Text<'a, Message> {
         .boxed()
     }
 }
-impl<'a, Message: 'a> From<Text<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Text<'a, Message>> for View<'a, Message> {
     fn from(value: Text<'a, Message>) -> Self {
-        Slot::new(value)
+        View::new(value)
     }
 }
 impl<'a, Message: 'a> From<Text<'a, Message>> for Element<'a, Message, Theme, Renderer> {

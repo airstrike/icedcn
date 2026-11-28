@@ -74,7 +74,7 @@ pub fn view(state: &State) -> iced::Element<'static, Message, Theme> {
     .into()
 }
 
-fn notification_field(state: &State, n: &Notification) -> icedcn::Slot<'static, Message> {
+fn notification_field(state: &State, n: &Notification) -> icedcn::View<'static, Message> {
     let id = n.id;
     field::field(
         checkbox::checkbox()

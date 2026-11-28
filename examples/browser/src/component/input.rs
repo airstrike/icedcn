@@ -8,7 +8,7 @@ use icedcn::Theme;
 use icedcn::theme;
 use icedcn::theme::tweak::Alpha;
 use icedcn::widget::input_group;
-use icedcn::widget::{Slot, badge, button, container, field, input, row, space, text};
+use icedcn::widget::{View, badge, button, container, field, input, row, space, text};
 
 use crate::Message;
 use crate::page;
@@ -227,7 +227,7 @@ impl page::Page for InputPage {
                 .into(),
 
             "required" => field(input("This field is required").width(Fill))
-                .label(Slot::from(
+                .label(View::from(
                     row![
                         field::label("Required Field"),
                         field::label("*").style(theme::text::Destructive),
@@ -239,7 +239,7 @@ impl page::Page for InputPage {
                 .into(),
 
             "badge" => field(input("https://api.example.com/webhook").width(Fill))
-                .label(Slot::from(
+                .label(View::from(
                     row![
                         field::label("Webhook URL"),
                         space::horizontal(),

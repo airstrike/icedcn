@@ -1,6 +1,6 @@
 ```rust
 use iced::alignment::Horizontal::Right;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::motion::Preset;
 use icedcn::widget::{bubble, message, motion, scroller};
 
@@ -8,7 +8,7 @@ pub fn conversation<'a, Message: Clone + 'a>(
     history: &'a str,
     sent: Option<&'a str>,
     preset: Preset,
-) -> Slot<'a, Message> {
+) -> View<'a, Message> {
     let previous = scroller::item(1, message(bubble(history).style(bubble::Ghost)));
     let incoming = sent.map(|text| {
         let user = message(bubble(text).style(bubble::Muted)).align(Right);

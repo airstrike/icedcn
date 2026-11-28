@@ -8,7 +8,7 @@ use iced_core::{Element, Point, Rectangle};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space, Widget};
 use icedcn_core::Theme;
-use icedcn_widget::{Compose, Inherited, Size, Slot, Weight, avatar, button, text};
+use icedcn_widget::{Compose, Inherited, Size, View, Weight, avatar, button, text};
 
 #[derive(Default)]
 struct Bounds(Vec<Rectangle>);
@@ -101,8 +101,8 @@ impl Compose<()> for Probe {
     }
 }
 
-fn probe(received: &Rc<RefCell<Vec<Inherited>>>, explicit: Inherited) -> Slot<'static, ()> {
-    Slot::new(Probe {
+fn probe(received: &Rc<RefCell<Vec<Inherited>>>, explicit: Inherited) -> View<'static> {
+    View::new(Probe {
         received: received.clone(),
         explicit,
     })
@@ -111,7 +111,7 @@ fn probe(received: &Rc<RefCell<Vec<Inherited>>>, explicit: Inherited) -> Slot<'s
 #[test]
 fn group_badge_and_count_receive_props_without_overriding_explicit_children() {
     let received = Rc::new(RefCell::new(Vec::new()));
-    let mut group: Slot<'_, ()> = avatar::group([avatar::badge(
+    let mut group: View<'_> = avatar::group([avatar::badge(
         avatar(None).fallback(probe(&received, Inherited::default().with_size(19.0))),
         probe(&received, Inherited::default()),
     )])
@@ -161,7 +161,7 @@ fn small_badge_hides_content_without_shrinking_its_dot() {
 #[test]
 fn disabled_fallback_stays_disabled_through_group_rebuilds() {
     fn view(disabled: bool) -> Element<'static, bool, Theme, Renderer> {
-        let mut slot: Slot<'_, bool> = avatar::group([
+        let mut slot: View<'_, bool> = avatar::group([
             avatar(None).fallback(button(Space::new().width(12).height(12)).on_press(true))
         ])
         .into();

@@ -6,7 +6,7 @@ use iced::{Element, Fill, Widget};
 use icedcn::widget::code_block;
 use icedcn::widget::code_block::{LineStyle, ansi};
 use icedcn::widget::{bubble, button, column, container, markdown, message, tabs, text, trace};
-use icedcn::{Destructive, Size, Slot, Theme};
+use icedcn::{Destructive, Size, Theme, View};
 
 use super::samples::*;
 use crate::{icon, page};
@@ -126,7 +126,7 @@ impl State {
             code_block::copy_button(source),
         ]
     }
-    fn replay(&self, id: &'static str) -> Slot<'static, Message> {
+    fn replay(&self, id: &'static str) -> View<'static, Message> {
         button![icon::rotate_ccw(), "Replay"]
             .style(button::Outline)
             .size(Size::Sm)
@@ -134,7 +134,7 @@ impl State {
             .on_press(Message::Replay(id))
             .into()
     }
-    fn streaming(&self) -> Slot<'static, Message> {
+    fn streaming(&self) -> View<'static, Message> {
         let mut remaining = self
             .streaming
             .get("streaming")
@@ -152,7 +152,7 @@ impl State {
         }
         output.push(self.replay("streaming")).into()
     }
-    fn markdown(&self, dark: bool) -> Slot<'static, Message> {
+    fn markdown(&self, dark: bool) -> View<'static, Message> {
         let end = self
             .streaming
             .get("markdown")
@@ -195,7 +195,7 @@ impl State {
             .width(Fill)
             .into()
     }
-    fn example(&self, id: &str, dark: bool) -> Slot<'static, Message> {
+    fn example(&self, id: &str, dark: bool) -> View<'static, Message> {
         match id {
             "demo" => code_block(
                 code_block::content(DEMO)
@@ -411,7 +411,7 @@ fn diff_style(row: &str) -> LineStyle {
     }
 }
 
-fn tool_output(title: &'static str, output: &'static str, error: bool) -> Slot<'static, Message> {
+fn tool_output(title: &'static str, output: &'static str, error: bool) -> View<'static, Message> {
     trace::disclosure(
         move || {
             trace::line(title)
@@ -436,7 +436,7 @@ fn tool_output(title: &'static str, output: &'static str, error: bool) -> Slot<'
     .into()
 }
 
-fn streaming_block(stream: &Stream, code: &str) -> Slot<'static, Message> {
+fn streaming_block(stream: &Stream, code: &str) -> View<'static, Message> {
     let rows: Vec<&str> = code.split('\n').collect();
     // A diff row starts with +, - or a space. The marker is not part of the code.
     let source = if stream.diff {
@@ -476,7 +476,7 @@ fn markdown_code_block(
     code: &str,
     language: &'static str,
     incomplete: bool,
-) -> Slot<'static, Message> {
+) -> View<'static, Message> {
     code_block(code_block::content(code.to_owned()).language(language))
         .header(
             code_block::header(language)
@@ -506,7 +506,7 @@ fn markdown_parts(end: usize) -> (Vec<markdown::Item>, Vec<markdown::Item>) {
     )
 }
 
-fn prose(items: &[markdown::Item], dark: bool) -> Slot<'static, Message> {
+fn prose(items: &[markdown::Item], dark: bool) -> View<'static, Message> {
     let mut output = column![].width(Fill).spacing(12);
     for item in items {
         if let markdown::Item::Paragraph(text) = item {

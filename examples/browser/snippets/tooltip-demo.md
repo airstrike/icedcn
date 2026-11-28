@@ -1,10 +1,10 @@
 ```rust
 use icedcn::{
-    Slot,
+    View,
     widget::{button, tooltip},
 };
 
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     tooltip(button("Hover").style(button::Outline), "Add to library").into()
 }
 ```

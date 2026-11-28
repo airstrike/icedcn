@@ -5,7 +5,7 @@ use iced::{Center, Fill, Vector};
 use icedcn::core::{Border, Shadow};
 use icedcn::theme::{container::Style, input_group::control, text_input::StyleFn};
 use icedcn::widget::{Input, command, container, input_group};
-use icedcn::{Color, Slot, Theme, radius};
+use icedcn::{Color, Theme, View, radius};
 
 pub(super) const INSET: u16 = 8;
 pub(super) const RIM: u16 = 4;
@@ -34,7 +34,7 @@ pub(super) fn panel(theme: &Theme) -> Style {
     }
 }
 
-pub(super) fn field(input: Input<'_, command::Event>) -> Slot<'_, command::Event> {
+pub(super) fn field(input: Input<'_, command::Event>) -> View<'_, command::Event> {
     let icon = icon::search().size(16).style(|theme: &Theme| text::Style {
         color: Some(theme.popover.foreground.scale_alpha(0.5).into()),
         ..text::Style::default()

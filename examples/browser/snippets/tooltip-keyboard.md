@@ -1,9 +1,9 @@
 ```rust
 use iced::Center;
 use icedcn::widget::{button, kbd, row, tooltip};
-use icedcn::{Size, Slot};
+use icedcn::{Size, View};
 
-pub fn save_hint<'a>(save_icon: impl Into<Slot<'a, ()>>) -> Slot<'a, ()> {
+pub fn save_hint<'a>(save_icon: impl Into<View<'a>>) -> View<'a> {
     tooltip(
         button(save_icon)
             .size(Size::Sm)

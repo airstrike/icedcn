@@ -1,11 +1,11 @@
 ```rust
 use crate::icon;
 use iced::alignment::Horizontal::Right;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::table::Track::Auto;
 use icedcn::widget::{button, dropdown_menu, menu, table, text};
 
-pub fn actions<'a, M: Clone + 'static>() -> Slot<'a, M> {
+pub fn actions<'a, M: Clone + 'static>() -> View<'a, M> {
     let products = [
         ("Wireless Mouse", "$29.99"),
         ("Mechanical Keyboard", "$129.99"),

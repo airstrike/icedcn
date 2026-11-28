@@ -3,10 +3,10 @@
 A variant is a unit struct named after the look it selects. Each widget module re-exports its own:
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{button, row};
 
-pub fn actions<'a>() -> Slot<'a, ()> {
+pub fn actions<'a>() -> View<'a> {
     row![
         button("Save"),
         button("Cancel").style(button::Outline),

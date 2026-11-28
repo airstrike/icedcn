@@ -5,7 +5,7 @@ use iced::{Element, Size};
 use iced_test::Simulator;
 use iced_test::core::Settings;
 use icedcn::widget::{button, text};
-use icedcn::{Compose, Inherited, Slot, Theme, card};
+use icedcn::{Compose, Inherited, Theme, View, card};
 
 fn settings() -> Settings {
     Settings {
@@ -107,10 +107,10 @@ fn constrained_cards_keep_content_inside_the_declared_frames() {
 
 #[test]
 fn header_receives_disabled_inheritance_before_composing_its_action() {
-    let header = card::header(Slot::from(text::small("Title")))
+    let header = card::header(View::from(text::small("Title")))
         .description("Description")
         .action(button("Action").on_press(()));
-    let mut slot: Slot<'_, ()> = header.into();
+    let mut slot: View<'_> = header.into();
     slot.inherit(&Inherited::default().with_disabled(true));
     let mut ui = Simulator::with_size(settings(), Size::new(384., 100.), Element::from(slot));
     ui.click("Action").expect("visible action");
@@ -133,8 +133,8 @@ fn footer_keeps_its_child_in_the_disabled_cascade() {
 #[test]
 fn root_and_content_preserve_disabled_state_through_mapped_slots() {
     use icedcn::widget::{column, container};
-    let body: Slot<'_, u8> = card::content(container(button("Body").on_press(1))).into();
-    let mut root: Slot<'_, u16> = card(column![
+    let body: View<'_, u8> = card::content(container(button("Body").on_press(1))).into();
+    let mut root: View<'_, u16> = card(column![
         card::header("Title").action(button("Action").on_press(2u16)),
         body.map(u16::from),
         card::footer_row([button("Save").on_press(3u16).into()]),
@@ -165,7 +165,7 @@ fn root_spacing_sizes_all_parts_without_changing_inner_column_gaps() {
         let second = Id::unique();
         let foot = Id::unique();
         let root_id = Id::unique();
-        let footer: Slot<'_, u8> =
+        let footer: View<'_, u8> =
             card::footer(container(text::small("Footer")).id(foot.clone())).into();
         let mut root = card(
             column![
@@ -237,7 +237,7 @@ fn nested_cards_reset_layout_context_and_keep_the_outer_bottom_padding() {
     )
     .size(Size::Sm)
     .width(iced::Fill);
-    let outer: Slot<'_, ()> = container(
+    let outer: View<'_> = container(
         card(
             column![
                 card::header("Outer"),
@@ -268,7 +268,7 @@ fn explicit_part_and_column_overrides_win_over_root_spacing() {
     use icedcn::widget::{column, container};
     let body_id = Id::unique();
     let foot_id = Id::unique();
-    let root: Slot<'_, ()> = card(
+    let root: View<'_> = card(
         column![
             card::header(card::title("Custom").size(18)).inset(7.),
             card::content(container(text::small("Body")).id(body_id.clone())).padding([0, 5]),

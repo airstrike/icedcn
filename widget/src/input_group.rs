@@ -30,7 +30,7 @@ use icedcn_core::theme::text_input::{Default, StyleFn};
 
 use crate::button::{self, Button};
 use crate::column::Column;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::container::Container;
 use crate::input::Input;
 use crate::marker::{self, Press};
@@ -76,13 +76,13 @@ pub enum Align {
 /// Content beside or around the control (`InputGroupAddon`): muted
 /// `text-sm font-medium`, icons at 16px.
 pub struct Addon<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     align: Align,
     divider: bool,
 }
 
 /// Create an [`Addon`] before the control.
-pub fn addon<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Addon<'a, Message> {
+pub fn addon<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Addon<'a, Message> {
     Addon {
         content: content.into(),
         align: Align::InlineStart,
@@ -112,7 +112,7 @@ pub fn text<'a>(content: impl iced_core::text::IntoFragment<'a>) -> Text<'a> {
 /// A compact ghost button for an addon (`InputGroupButton`, `size="xs"`).
 /// Chain `.square()` for `size="icon-xs"`.
 pub fn button<'a, Message: Clone + 'a>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> Button<'a, Message> {
     button::button(content).size(Size::Xs).style(button::Ghost)
 }
@@ -187,7 +187,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
             }
         }
         let is_textarea = matches!(field, Control::Textarea(_));
-        let mut field: Slot<'a, Message> = match field {
+        let mut field: View<'a, Message> = match field {
             Control::Input(input) => input
                 .group_padding(control_padding)
                 .width(Fill)
@@ -246,7 +246,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
                 Align::BlockStart | Align::BlockEnd => addon.width(Fill),
                 _ => addon,
             };
-            let addon: Slot<'a, Message> = match (align, divider) {
+            let addon: View<'a, Message> = match (align, divider) {
                 (Align::BlockStart, true) => {
                     crate::column![addon, crate::rule::horizontal(1).boxed()]
                         .width(Fill)
@@ -270,7 +270,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
             }
         }
 
-        let line: Slot<'a, Message> = if start.is_empty() && end.is_empty() {
+        let line: View<'a, Message> = if start.is_empty() && end.is_empty() {
             field
         } else {
             Row::with_children(start.into_iter().chain([field]).chain(end))
@@ -302,9 +302,9 @@ impl<'a, Message: Clone + 'a> Compose<Message> for InputGroup<'a, Message> {
     }
 }
 
-impl<'a, Message: Clone + 'a> From<InputGroup<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<InputGroup<'a, Message>> for View<'a, Message> {
     fn from(group: InputGroup<'a, Message>) -> Self {
-        Slot::new(group)
+        View::new(group)
     }
 }
 

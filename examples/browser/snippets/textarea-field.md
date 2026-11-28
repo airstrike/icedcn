@@ -1,8 +1,8 @@
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{field, textarea};
 
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     field(textarea("Type your message here."))
         .label("Message")
         .description("Enter your message below.")

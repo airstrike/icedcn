@@ -15,10 +15,10 @@ use std::fmt::Write as _;
 use std::rc::Rc;
 
 use crate::calendar::{Datelike, Mode, Selection};
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::{button, calendar, popover};
 
-type Label<'a, Message> = Rc<dyn Fn(Option<Selection>) -> Slot<'a, Message> + 'a>;
+type Label<'a, Message> = Rc<dyn Fn(Option<Selection>) -> View<'a, Message> + 'a>;
 
 pub struct DatePicker<'a, Message> {
     mode: Mode,
@@ -82,7 +82,7 @@ impl<'a, Message> DatePicker<'a, Message> {
         self.format = Some(format.into());
         self
     }
-    pub fn label(mut self, f: impl Fn(Option<Selection>) -> Slot<'a, Event> + 'a) -> Self {
+    pub fn label(mut self, f: impl Fn(Option<Selection>) -> View<'a, Event> + 'a) -> Self {
         self.label = Some(Rc::new(f));
         self
     }
@@ -222,7 +222,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for DatePicke
                     }
                     let faded = selected.is_none() && chevron && mode == Mode::Single;
                     line = line
-                        .push(Slot::from(if faded {
+                        .push(View::from(if faded {
                             title.style(theme::text::Muted)
                         } else {
                             title
@@ -284,7 +284,7 @@ impl<'a, Message: 'static> Compose<Message> for DatePicker<'a, Message> {
         component::component(*self).boxed()
     }
 }
-impl<'a, Message: 'static> From<DatePicker<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'static> From<DatePicker<'a, Message>> for View<'a, Message> {
     fn from(p: DatePicker<'a, Message>) -> Self {
         Self::new(p)
     }

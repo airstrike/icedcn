@@ -30,7 +30,7 @@ use icedcn_core::theme;
 use icedcn_core::theme::popover::content;
 use std::time::Duration;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::container::Container;
 use crate::marker::{self, Press};
 use crate::menu::list::{Initial, List};
@@ -42,7 +42,7 @@ mod focus;
 pub use iced_widget::anchored::{Align, Side};
 
 /// A closure that builds part of a [`Popover`].
-type Body<'a, Message> = Box<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
+type Body<'a, Message> = Box<dyn Fn(&Handle) -> View<'a, Message> + 'a>;
 
 /// A panel anchored to its trigger, opened and closed by it.
 pub struct Popover<'a, Message> {
@@ -109,8 +109,8 @@ pub struct State {
 /// Create a closed, uncontrolled [`Popover`]: `trigger` builds what sits in
 /// place, `content` the panel shown while open.
 pub fn popover<'a, Message>(
-    trigger: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
-    content: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
+    trigger: impl Fn(&Handle) -> View<'a, Message> + 'a,
+    content: impl Fn(&Handle) -> View<'a, Message> + 'a,
 ) -> Popover<'a, Message> {
     Popover {
         trigger: Box::new(trigger),
@@ -250,17 +250,17 @@ impl Handle {
     /// Pressing the child toggles the popover and runs the child’s own handlers.
     pub fn trigger<'a, Message: 'a>(
         &self,
-        child: impl Into<Slot<'a, Message>>,
-    ) -> Slot<'a, Message> {
+        child: impl Into<View<'a, Message>>,
+    ) -> View<'a, Message> {
         self.trigger_with_control(child, false)
     }
 
     pub(crate) fn trigger_with_control<'a, Message: 'a>(
         &self,
-        child: impl Into<Slot<'a, Message>>,
+        child: impl Into<View<'a, Message>>,
         form_control: bool,
-    ) -> Slot<'a, Message> {
-        Slot::new(Marked {
+    ) -> View<'a, Message> {
+        View::new(Marked {
             child: child.into(),
             form_control,
             signal: Signal::Toggle,
@@ -270,8 +270,8 @@ impl Handle {
     }
 
     /// Pressing the child closes the popover and runs the child’s own handlers.
-    pub fn close<'a, Message: 'a>(&self, child: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
-        Slot::new(Marked {
+    pub fn close<'a, Message: 'a>(&self, child: impl Into<View<'a, Message>>) -> View<'a, Message> {
+        View::new(Marked {
             child: child.into(),
             signal: Signal::Close,
             form_control: false,
@@ -282,7 +282,7 @@ impl Handle {
 }
 
 /// A `PopoverHeader`: a `PopoverTitle` over a `PopoverDescription`.
-pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> Slot<'a, Message> {
+pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> View<'a, Message> {
     column![
         text::Text::new(title)
             .size(text::size::SM)
@@ -296,7 +296,7 @@ pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> Slot<'a,
 
 /// A child that records a [`Signal`] when pressed.
 pub(crate) struct Marked<'a, Message> {
-    pub(crate) child: Slot<'a, Message>,
+    pub(crate) child: View<'a, Message>,
     pub(crate) signal: Signal,
     pub(crate) press: Press,
     form_control: bool,
@@ -434,7 +434,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Popover<'
                 .style(content);
 
             let body = marker::owner(
-                Slot::from(panel).compose().map(Event::App).boxed(),
+                View::from(panel).compose().map(Event::App).boxed(),
                 on_signal,
             )
             .boxed();
@@ -508,9 +508,9 @@ impl<'a, Message: 'static> Compose<Message> for Popover<'a, Message> {
     }
 }
 
-impl<'a, Message: 'static> From<Popover<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'static> From<Popover<'a, Message>> for View<'a, Message> {
     fn from(popover: Popover<'a, Message>) -> Self {
-        Slot::new(popover)
+        View::new(popover)
     }
 }
 

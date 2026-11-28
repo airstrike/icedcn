@@ -11,7 +11,7 @@ use iced_widget::Widget;
 
 use crate::Size;
 use crate::code_block::Placement;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use icedcn_core::Theme;
 use icedcn_core::theme;
 use icedcn_core::theme::button::state::{self, IntoStyle};
@@ -58,7 +58,7 @@ where
     Theme: iced_widget::button::Catalog,
 {
     join: Option<super::group::Join>,
-    content: Vec<Slot<'a, Message, Theme, Renderer>>,
+    content: Vec<View<'a, Message, Theme, Renderer>>,
     size: Option<Size>,
     weight: Option<crate::Weight>,
     height: Option<Length>,
@@ -87,7 +87,7 @@ where
 
 /// Create a button with default size and style
 pub fn button<'a, Message: Clone + 'a>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> Button<'a, Message> {
     Button {
         join: None,
@@ -121,7 +121,7 @@ pub fn button<'a, Message: Clone + 'a>(
 
 impl<'a, Message: Clone + 'a> Button<'a, Message> {
     /// Append inline content. The size variant supplies the gap between children.
-    pub fn push(mut self, content: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn push(mut self, content: impl Into<View<'a, Message>>) -> Self {
         self.content.push(content.into());
         self
     }
@@ -341,7 +341,7 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
         let content = if btn.content.len() == 1 {
             btn.content.pop().expect("Button content").compose()
         } else {
-            iced_widget::Row::with_children(btn.content.into_iter().map(Slot::compose))
+            iced_widget::Row::with_children(btn.content.into_iter().map(View::compose))
                 .spacing(size.gap())
                 .align_y(alignment::Vertical::Center)
                 .boxed()
@@ -471,9 +471,9 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>>
     }
 }
 
-impl<'a, Message: Clone + 'a> From<Button<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Button<'a, Message>> for View<'a, Message> {
     fn from(widget: Button<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 

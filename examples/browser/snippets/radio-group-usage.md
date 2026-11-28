@@ -4,12 +4,12 @@ Use `.default_value(..)` to let the group own its selection. Use `.value(..)` an
 
 ```rust
 use icedcn::widget::{field, radio_group};
-use icedcn::{Horizontal, Slot};
+use icedcn::{Horizontal, View};
 
 fn delivery<'a, M: Clone + 'static>(
     value: String,
     changed: impl Fn(String) -> M + 'a,
-) -> Slot<'a, M> {
+) -> View<'a, M> {
     radio_group(|g| {
         field::group(["Email", "SMS"].map(|name| {
             field(g.item(name))

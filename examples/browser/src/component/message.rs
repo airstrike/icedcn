@@ -16,7 +16,7 @@ use icedcn::widget::{
     text, toggle, tooltip,
 };
 use icedcn::{Size, Weight};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 use page::Block;
 use std::sync::LazyLock;
 
@@ -76,14 +76,14 @@ impl MessagePage {
     }
 }
 
-fn frame(body: impl Into<Slot<'static, Message>>) -> Slot<'static, Message> {
+fn frame(body: impl Into<View<'static, Message>>) -> View<'static, Message> {
     container(body)
         .width(Fill)
         .max_width(384)
         .padding([48, 0])
         .into()
 }
-fn portrait(number: usize, fallback: &'static str) -> Slot<'static, Message> {
+fn portrait(number: usize, fallback: &'static str) -> View<'static, Message> {
     static AVATARS: LazyLock<[image::Handle; 3]> = LazyLock::new(|| {
         [
             image::Handle::from_bytes(include_bytes!("../../assets/avatars/02.png").as_slice()),
@@ -96,7 +96,7 @@ fn portrait(number: usize, fallback: &'static str) -> Slot<'static, Message> {
         .into()
 }
 
-fn demo_example() -> Slot<'static, Message> {
+fn demo_example() -> View<'static, Message> {
     frame(
         column![
             message(bubble("Deploying to prod real quick."))
@@ -124,7 +124,7 @@ fn demo_example() -> Slot<'static, Message> {
     )
 }
 
-fn avatar_example() -> Slot<'static, Message> {
+fn avatar_example() -> View<'static, Message> {
     frame(column![
 message(bubble("The build failed during dependency installation.").style(Muted)).avatar(portrait(1, "R")),
 message(bubble("Can you share the exact error?")).align(Right).avatar(portrait(2, "R")),
@@ -133,7 +133,7 @@ bubble("Something went wrong with the build. The libraries are not installed cor
 ].spacing(24))
 }
 
-fn group_example() -> Slot<'static, Message> {
+fn group_example() -> View<'static, Message> {
     frame(message::group([
         message(bubble("I checked the registry addresses.").style(Muted))
             .avatar(space().width(32).height(32))
@@ -146,7 +146,7 @@ fn group_example() -> Slot<'static, Message> {
     ]))
 }
 
-fn header_footer_example() -> Slot<'static, Message> {
+fn header_footer_example() -> View<'static, Message> {
     frame(
         column![
             message(bubble("I already checked the logs.").style(Muted)).header("Olivia"),
@@ -226,7 +226,7 @@ impl<'a> Component<'a, Message, Theme> for Actions {
                 "Dislike"
             )
         ];
-        let delivery: Slot<'a, Action> = if state.delivered {
+        let delivery: View<'a, Action> = if state.delivered {
             text("Delivered").size(12.).into()
         } else {
             row![
@@ -256,10 +256,10 @@ impl<'a> Component<'a, Message, Theme> for Actions {
         )
     }
 }
-fn actions_example() -> Slot<'static, Message> {
+fn actions_example() -> View<'static, Message> {
     frame(component(Actions).boxed())
 }
-fn attachment_example() -> Slot<'static, Message> {
+fn attachment_example() -> View<'static, Message> {
     static WORKSPACE: LazyLock<image::Handle> = LazyLock::new(|| {
         image::Handle::from_bytes(
             include_bytes!("../../assets/attachments/workspace.jpg").as_slice(),

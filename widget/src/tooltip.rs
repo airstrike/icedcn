@@ -28,14 +28,14 @@ use icedcn_core::Theme;
 use icedcn_core::theme::tooltip::content;
 
 use crate::Size;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 
 pub use iced_widget::anchored::{Align, Side};
 
 /// A trigger that shows a hint while hovered.
 pub struct Tooltip<'a, Message> {
-    trigger: Slot<'a, Message>,
-    content: Slot<'a, Message>,
+    trigger: View<'a, Message>,
+    content: View<'a, Message>,
     position: anchored::Position,
     delay: Duration,
     padding: Padding,
@@ -46,8 +46,8 @@ pub struct Tooltip<'a, Message> {
 
 /// Create a [`Tooltip`] showing `content` while `trigger` is hovered.
 pub fn tooltip<'a, Message: 'a>(
-    trigger: impl Into<Slot<'a, Message>>,
-    content: impl Into<Slot<'a, Message>>,
+    trigger: impl Into<View<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> Tooltip<'a, Message> {
     Tooltip {
         trigger: trigger.into(),
@@ -133,7 +133,7 @@ impl<'a, Message: 'a> Compose<Message> for Tooltip<'a, Message> {
 
         Interaction::new(
             self.trigger.compose(),
-            Slot::from(panel).compose(),
+            View::from(panel).compose(),
             self.position,
             (self.delay, Duration::ZERO),
             Mode::Hint,
@@ -145,9 +145,9 @@ impl<'a, Message: 'a> Compose<Message> for Tooltip<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Tooltip<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Tooltip<'a, Message>> for View<'a, Message> {
     fn from(tooltip: Tooltip<'a, Message>) -> Self {
-        Slot::new(tooltip)
+        View::new(tooltip)
     }
 }
 

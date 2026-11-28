@@ -14,7 +14,7 @@
 
 use crate::Size;
 use crate::button::group::Join;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::text_input;
 use crate::text_input::element::from_core;
 use iced_core::text::{Fragment, IntoFragment, LineHeight};
@@ -267,9 +267,9 @@ impl<'a, Message: Clone + 'a> From<Input<'a, Message>>
     }
 }
 
-impl<'a, Message: Clone + 'a> From<Input<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Input<'a, Message>> for View<'a, Message> {
     fn from(widget: Input<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 

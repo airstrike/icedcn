@@ -8,7 +8,7 @@ use icedcn_core::{Border, Color, Padding, Radius, Theme, radius};
 
 use crate::button::widget::Button;
 use crate::container::widget::Container;
-use crate::{Column, Compose, Inherited, Size, Slot, button, column, container, row, space};
+use crate::{Column, Compose, Inherited, Size, View, button, column, container, row, space};
 
 pub use crate::button::widget::Status;
 pub use icedcn_core::theme::container::Style;
@@ -46,12 +46,12 @@ pub fn fade_muted_on_card(theme: &Theme, opacity: f32) -> Theme {
 
 /// Conversational content with optional overlapping reactions and surface actions.
 pub struct Bubble<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     variant: Variant,
     align: Option<Horizontal>,
     padding: Option<Padding>,
     radius: Option<Radius>,
-    reactions: Option<(Slot<'a, Message>, Horizontal, Vertical)>,
+    reactions: Option<(View<'a, Message>, Horizontal, Vertical)>,
     reaction_padding: Padding,
     interactive: bool,
     on_press: Option<Message>,
@@ -60,7 +60,7 @@ pub struct Bubble<'a, Message> {
 }
 
 /// Frame content in a primary, start-aligned bubble.
-pub fn bubble<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Bubble<'a, Message> {
+pub fn bubble<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Bubble<'a, Message> {
     Bubble {
         content: content.into(),
         variant: Variant::Primary,
@@ -78,7 +78,7 @@ pub fn bubble<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Bubble<
 
 /// Adjacent bubbles in one turn use the tighter Nova group spacing.
 pub fn group<'a, Message: 'a>(
-    items: impl IntoIterator<Item = Slot<'a, Message>>,
+    items: impl IntoIterator<Item = View<'a, Message>>,
 ) -> Column<'a, Message> {
     column(items).spacing(8).width(Fill)
 }
@@ -107,7 +107,7 @@ impl<'a, Message: 'a> Bubble<'a, Message> {
     /// Attach content to a bubble edge, overlapping it by one quarter of its height.
     pub fn reactions(
         mut self,
-        content: impl Into<Slot<'a, Message>>,
+        content: impl Into<View<'a, Message>>,
         align: Horizontal,
         side: Vertical,
     ) -> Self {
@@ -317,7 +317,7 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Bubble<'a, Message> {
                 .class(style)
                 .boxed()
         };
-        let body: Slot<'a, Message> = if let Some((mut reaction, edge, side)) = self.reactions {
+        let body: View<'a, Message> = if let Some((mut reaction, edge, side)) = self.reactions {
             reaction.inherit(
                 &Inherited::default()
                     .with_size(Size::Sm)
@@ -391,9 +391,9 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Bubble<'a, Message> {
     }
 }
 
-impl<'a, Message: Clone + 'a> From<Bubble<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Bubble<'a, Message>> for View<'a, Message> {
     fn from(bubble: Bubble<'a, Message>) -> Self {
-        Slot::new(bubble)
+        View::new(bubble)
     }
 }
 impl<'a, Message: Clone + 'a> From<Bubble<'a, Message>> for Element<'a, Message, Theme, Renderer> {

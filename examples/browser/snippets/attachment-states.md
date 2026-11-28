@@ -1,10 +1,10 @@
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::attachment::State;
 use icedcn::widget::container;
 use icedcn::widget::{attachment, column, spinner, tooltip};
 
-let files: [(_, _, _, Slot<'_, Message>); 5] = [
+let files: [(_, _, _, View<'_, Message>); 5] = [
     (
         "selected-file.pdf",
         "Ready to upload",

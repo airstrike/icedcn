@@ -1,11 +1,11 @@
 ```rust
 use crate::icon;
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::input_group::Align;
 use icedcn::widget::{button, input, input_group, tooltip};
 
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     button::group![
         button::group![
             button(icon::plus().size(16).line_height(1.0))

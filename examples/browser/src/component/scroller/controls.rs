@@ -18,10 +18,10 @@ use icedcn::widget::{
     button, column, container, dropdown_menu, menu, motion, row, select, slider, space, tabs, text,
     toggle_group,
 };
-use icedcn::{Padding, Slot, Theme, radius};
+use icedcn::{Padding, Theme, View, radius};
 
 impl Demo {
-    pub(super) fn controls(self, state: &Model) -> Slot<'static, Event> {
+    pub(super) fn controls(self, state: &Model) -> View<'static, Event> {
         let disabled = state.next(self).is_none() || state.busy();
         let send = button(icon::arrow_up().size(16))
             .square()
@@ -124,7 +124,7 @@ impl Demo {
         }
     }
 
-    fn commands(self, current: Option<u64>) -> Slot<'static, Event> {
+    fn commands(self, current: Option<u64>) -> View<'static, Event> {
         let outline = matches!(self, Self::Visibility { .. });
         let trigger = if outline { "Outline" } else { "Jump to..." };
         dropdown_menu(
@@ -165,7 +165,7 @@ impl Demo {
         .into()
     }
 
-    fn composer(self, state: &Model, send: Slot<'static, Event>) -> Slot<'static, Event> {
+    fn composer(self, state: &Model, send: View<'static, Event>) -> View<'static, Event> {
         let next = state.next(self);
         let fallback = match self {
             Self::Streaming => "No messages queued. Reset the stream.",
@@ -265,7 +265,7 @@ fn secondary_surface() -> StyleFn<'static, Theme> {
     })
 }
 
-fn attachments() -> Slot<'static, Event> {
+fn attachments() -> View<'static, Event> {
     dropdown_menu(
         |menu| {
             let open = menu.is_open();
@@ -316,7 +316,7 @@ fn action(
     menu::item(row![icon.size(16), label].spacing(8).padding(2))
 }
 
-fn presets(selected: motion::Preset) -> Slot<'static, Event> {
+fn presets(selected: motion::Preset) -> View<'static, Event> {
     let items =
         motion::Preset::ALL.map(|preset| select::item(preset.to_string(), preset.to_string()));
     select([select::group(items)])

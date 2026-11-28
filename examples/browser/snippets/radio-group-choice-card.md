@@ -1,8 +1,8 @@
 ```rust
 use icedcn::widget::{field, radio_group};
-use icedcn::{Horizontal, Slot};
+use icedcn::{Horizontal, View};
 
-fn plans<'a, M: Clone + 'static>() -> Slot<'a, M> {
+fn plans<'a, M: Clone + 'static>() -> View<'a, M> {
     let plans = [
         ("Plus", "For individuals and small teams."),
         ("Pro", "For growing businesses."),

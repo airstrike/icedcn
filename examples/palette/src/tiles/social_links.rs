@@ -42,7 +42,7 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
     .into()
 }
 
-fn link_field<'a>(label: &'static str, value: &'a str) -> icedcn::Slot<'a, Message> {
+fn link_field<'a>(label: &'static str, value: &'a str) -> icedcn::View<'a, Message> {
     field::field(input("").default_value(value).width(Fill))
         .label(label)
         .width(Fill)

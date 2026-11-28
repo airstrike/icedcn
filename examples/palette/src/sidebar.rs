@@ -8,7 +8,7 @@ use icedcn::Theme;
 use icedcn::core::{Border, Color, Design, oklch};
 use icedcn::theme::container::Style;
 use icedcn::theme::text::Muted;
-use icedcn::widget::{Slot, button, column, container, dropdown_menu, menu, row, scrollable, text};
+use icedcn::widget::{View, button, column, container, dropdown_menu, menu, row, scrollable, text};
 
 use crate::customize::Target;
 use crate::{Message, Mode, State, customize, icon};
@@ -139,7 +139,7 @@ enum Mark {
 }
 
 impl Mark {
-    fn view(self) -> Slot<'static, Message> {
+    fn view(self) -> View<'static, Message> {
         match self {
             Self::Swatch(name) => container(space().width(16).height(16))
                 .style(move |_: &Theme| Style {
@@ -193,7 +193,7 @@ fn trigger(label: &str, selected: &str, mark: Mark) -> button::Button<'static, M
         .style(control_style())
 }
 
-fn option(label: impl Into<String>) -> Slot<'static, Message> {
+fn option(label: impl Into<String>) -> View<'static, Message> {
     container(
         text(label.into())
             .size(14)
@@ -211,7 +211,7 @@ fn picker(
     choices: &'static [&'static str],
     mark: Mark,
     on_change: fn(String) -> Message,
-) -> Slot<'static, Message> {
+) -> View<'static, Message> {
     dropdown_menu(
         move |menu| menu.trigger(trigger(label, selected, mark)),
         move |_| {
@@ -233,7 +233,7 @@ fn picker(
     .into()
 }
 
-fn color_picker(state: &State, target: Target) -> Slot<'static, Message> {
+fn color_picker(state: &State, target: Target) -> View<'static, Message> {
     let (label, selected, on_change): (_, _, fn(String) -> Message) = match target {
         Target::Base => ("Base Color", state.settings.base, Message::SetBase),
         Target::Accent => ("Theme", state.settings.accent, Message::SetAccent),
@@ -273,7 +273,7 @@ fn color_picker(state: &State, target: Target) -> Slot<'static, Message> {
     .into()
 }
 
-fn fixed(label: &str, value: &str, mark: Mark) -> Slot<'static, Message> {
+fn fixed(label: &str, value: &str, mark: Mark) -> View<'static, Message> {
     container(field_content(label, value, mark))
         .width(Fill)
         .height(52)
@@ -281,7 +281,7 @@ fn fixed(label: &str, value: &str, mark: Mark) -> Slot<'static, Message> {
         .into()
 }
 
-fn font_picker(font: &str, host: bool) -> Slot<'static, Message> {
+fn font_picker(font: &str, host: bool) -> View<'static, Message> {
     if host {
         return trigger("Font", font, Mark::Font)
             .on_press(Message::ChooseFont)
@@ -309,7 +309,7 @@ fn font_picker(font: &str, host: bool) -> Slot<'static, Message> {
     .into()
 }
 
-fn field_separator() -> Slot<'static, Message> {
+fn field_separator() -> View<'static, Message> {
     container(divider())
         .height(4)
         .align_y(Center)
@@ -317,7 +317,7 @@ fn field_separator() -> Slot<'static, Message> {
         .into()
 }
 
-fn group<const N: usize>(fields: [Slot<'static, Message>; N]) -> Slot<'static, Message> {
+fn group<const N: usize>(fields: [View<'static, Message>; N]) -> View<'static, Message> {
     container(
         column::Column::with_children(fields)
             .spacing(13)
@@ -328,7 +328,7 @@ fn group<const N: usize>(fields: [Slot<'static, Message>; N]) -> Slot<'static, M
     .into()
 }
 
-fn main_menu(mode: Mode) -> Slot<'static, Message> {
+fn main_menu(mode: Mode) -> View<'static, Message> {
     dropdown_menu(
         |menu| {
             menu.trigger(
@@ -372,7 +372,7 @@ fn main_menu(mode: Mode) -> Slot<'static, Message> {
     .into()
 }
 
-fn action(label: &str, message: Message) -> Slot<'static, Message> {
+fn action(label: &str, message: Message) -> View<'static, Message> {
     button(text(label.to_owned()).size(14).medium())
         .height(32)
         .padding([0, 8])
@@ -382,7 +382,7 @@ fn action(label: &str, message: Message) -> Slot<'static, Message> {
         .into()
 }
 
-fn divider() -> Slot<'static, Message> {
+fn divider() -> View<'static, Message> {
     container(space().height(1))
         .width(Fill)
         .style(|_: &Theme| Style {

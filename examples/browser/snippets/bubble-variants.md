@@ -6,12 +6,12 @@ use iced::font::Weight;
 use iced::widget::text::LineHeight;
 use iced::widget::{rich_text, text::Span};
 use iced::{Font, Widget, border};
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::Theme;
 use icedcn::widget::bubble::{Destructive, Ghost, Muted, Outline, Secondary, Tinted};
 use icedcn::widget::{bubble, column, container, text};
 
-fn example<'a>(theme: &Theme) -> Slot<'a, ()> {
+fn example<'a>(theme: &Theme) -> View<'a> {
     frame(
         column![
             bubble("This is the default primary bubble."),
@@ -38,7 +38,7 @@ fn example<'a>(theme: &Theme) -> Slot<'a, ()> {
     )
 }
 
-fn frame<'a>(body: impl Into<Slot<'a, ()>>) -> Slot<'a, ()> {
+fn frame<'a>(body: impl Into<View<'a>>) -> View<'a> {
     container(body)
         .padding([48, 0])
         .width(Fill)
@@ -46,7 +46,7 @@ fn frame<'a>(body: impl Into<Slot<'a, ()>>) -> Slot<'a, ()> {
         .into()
 }
 
-fn ghost_text<'a>(theme: &Theme) -> Slot<'a, ()> {
+fn ghost_text<'a>(theme: &Theme) -> View<'a> {
     let bold = Font::DEFAULT.weight(Weight::Bold);
     let code = Span::<()>::new("code")
         .font("Geist Mono")

@@ -4,10 +4,10 @@ Compose an alert with the parts you need. It fits the available width and wraps 
 
 ```rust
 use crate::icon;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{alert, button};
 
-fn heads_up<'a, M: Clone + 'a>(enable: M) -> Slot<'a, M> {
+fn heads_up<'a, M: Clone + 'a>(enable: M) -> View<'a, M> {
     alert()
         .icon(icon::info().size(16).line_height(1.0))
         .title("Heads up!")

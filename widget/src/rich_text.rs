@@ -50,7 +50,7 @@ use iced_widget::Renderer;
 use icedcn_core::Theme;
 use icedcn_core::theme::tweak::Token;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 
 /// Local alias for iced's text fragment so callers don't have to type
 /// the iced-core path inline.
@@ -658,9 +658,9 @@ impl<'a, Message: 'a> From<RichText<'a>> for Element<'a, Message, Theme, Rendere
     }
 }
 
-impl<'a, Message: 'a> From<RichText<'a>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<RichText<'a>> for View<'a, Message> {
     fn from(widget: RichText<'a>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 

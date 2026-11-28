@@ -1,7 +1,7 @@
 ```rust
 use iced::Fill;
 use iced::alignment::Horizontal::Right;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{column, data_table, menu, text};
 
 pub struct Payment<'a> {
@@ -14,7 +14,7 @@ pub struct Payment<'a> {
 pub fn payments<'a, M: Clone + 'static>(
     records: &'a [Payment<'a>],
     copy_id: impl Fn(String) -> M + 'a,
-) -> Slot<'a, M> {
+) -> View<'a, M> {
     data_table(
         records,
         |p| p.id.to_owned(),

@@ -27,19 +27,19 @@ use iced_widget::Renderer;
 use icedcn_core::Theme;
 
 use crate::button;
-use crate::compose::{Compose, Slot};
+use crate::compose::{Compose, View};
 use crate::row::Row;
 use crate::text::{self, Text};
 
 /// A row of page links, centered in the available width.
 pub struct Pagination<'a, Message> {
-    items: Vec<Slot<'a, Message>>,
+    items: Vec<View<'a, Message>>,
     width: Length,
 }
 
 /// Create a [`Pagination`] from its items, in order.
 pub fn pagination<'a, Message: 'a>(
-    items: impl IntoIterator<Item = Slot<'a, Message>>,
+    items: impl IntoIterator<Item = View<'a, Message>>,
 ) -> Pagination<'a, Message> {
     Pagination {
         items: items.into_iter().collect(),
@@ -72,9 +72,9 @@ impl<'a, Message: 'a> Compose<Message> for Pagination<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Pagination<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Pagination<'a, Message>> for View<'a, Message> {
     fn from(pagination: Pagination<'a, Message>) -> Self {
-        Slot::new(pagination)
+        View::new(pagination)
     }
 }
 
@@ -89,13 +89,13 @@ impl<'a, Message: 'a> From<Pagination<'a, Message>>
 /// A page number: a square ghost button, outlined while it is the current
 /// page (`PaginationLink`).
 pub struct Link<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     is_active: bool,
     on_press: Option<Message>,
 }
 
 /// Create a [`Link`] showing `content`.
-pub fn link<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Link<'a, Message> {
+pub fn link<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Link<'a, Message> {
     Link {
         content: content.into(),
         is_active: false,
@@ -133,9 +133,9 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Link<'a, Message> {
     }
 }
 
-impl<'a, Message: Clone + 'a> From<Link<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Link<'a, Message>> for View<'a, Message> {
     fn from(link: Link<'a, Message>) -> Self {
-        Slot::new(link)
+        View::new(link)
     }
 }
 
@@ -150,8 +150,8 @@ enum Direction {
 /// (`PaginationPrevious`, `PaginationNext`).
 pub struct Step<'a, Message> {
     direction: Direction,
-    label: Slot<'a, Message>,
-    icon: Option<Slot<'a, Message>>,
+    label: View<'a, Message>,
+    icon: Option<View<'a, Message>>,
     on_press: Option<Message>,
 }
 
@@ -177,13 +177,13 @@ pub fn next<'a, Message: 'a>() -> Step<'a, Message> {
 
 impl<'a, Message: 'a> Step<'a, Message> {
     /// Replace the navigation label.
-    pub fn label(mut self, label: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn label(mut self, label: impl Into<View<'a, Message>>) -> Self {
         self.label = label.into();
         self
     }
 
     /// Replace the chevron glyph, typically with a lucide chevron icon.
-    pub fn icon(mut self, icon: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn icon(mut self, icon: impl Into<View<'a, Message>>) -> Self {
         self.icon = Some(icon.into());
         self
     }
@@ -227,15 +227,15 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Step<'a, Message> {
     }
 }
 
-impl<'a, Message: Clone + 'a> From<Step<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Step<'a, Message>> for View<'a, Message> {
     fn from(step: Step<'a, Message>) -> Self {
-        Slot::new(step)
+        View::new(step)
     }
 }
 
 /// A 32px "more pages" marker (`PaginationEllipsis`).
 pub struct Ellipsis<'a, Message> {
-    icon: Option<Slot<'a, Message>>,
+    icon: Option<View<'a, Message>>,
 }
 
 /// Create an [`Ellipsis`].
@@ -245,7 +245,7 @@ pub fn ellipsis<'a, Message: 'a>() -> Ellipsis<'a, Message> {
 
 impl<'a, Message: 'a> Ellipsis<'a, Message> {
     /// Replace the `…` glyph, typically with lucide's `ellipsis` icon.
-    pub fn icon(mut self, icon: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn icon(mut self, icon: impl Into<View<'a, Message>>) -> Self {
         self.icon = Some(icon.into());
         self
     }
@@ -270,8 +270,8 @@ impl<'a, Message: 'a> Compose<Message> for Ellipsis<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Ellipsis<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Ellipsis<'a, Message>> for View<'a, Message> {
     fn from(ellipsis: Ellipsis<'a, Message>) -> Self {
-        Slot::new(ellipsis)
+        View::new(ellipsis)
     }
 }

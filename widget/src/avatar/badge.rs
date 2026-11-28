@@ -1,6 +1,6 @@
 //! Corner badge content retained by its Avatar until composition.
 
-use crate::compose::Slot;
+use crate::compose::View;
 use icedcn_core::theme::{avatar::badge_style, container::Style};
 use icedcn_core::{Color, Theme};
 
@@ -14,15 +14,15 @@ use super::Avatar;
 /// Small avatars hide the content but keep their presence dot.
 pub fn badge<'a, Message: 'a>(
     mut avatar: Avatar<'a, Message>,
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> Avatar<'a, Message> {
     avatar.badge = Some(content.into());
     avatar
 }
 
 /// Empty badge content for a presence dot.
-pub fn dot<'a, Message: 'a>() -> Slot<'a, Message> {
-    Slot::from("")
+pub fn dot<'a, Message: 'a>() -> View<'a, Message> {
+    View::from("")
 }
 
 /// Green presence indicator, with a darker fill in dark themes.

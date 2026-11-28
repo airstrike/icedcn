@@ -6,7 +6,7 @@ use icedcn::card;
 use icedcn::core::{Border, oklch};
 use icedcn::theme::container::Style;
 use icedcn::widget::{badge, column, container, item, row, rule, text};
-use icedcn::{Slot, Theme, Vertical};
+use icedcn::{Theme, Vertical, View};
 
 use crate::{Message, State};
 
@@ -18,7 +18,7 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
     )
     .style(badge::Outline);
 
-    let header_body: Slot<'static, Message> = column![
+    let header_body: View<'static, Message> = column![
         card::description("Claimable Balance"),
         text::p("$0.00").size(48.0).line_height(1.2).semibold(),
         pending,
@@ -26,7 +26,7 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
     .spacing(4)
     .width(Fill)
     .into();
-    let header: Slot<'static, Message> = card::header(header_body).into();
+    let header: View<'static, Message> = card::header(header_body).into();
 
     let totals = item::item([item::content([
         money_row("Net Royalties", "$0.00", false),
@@ -62,7 +62,7 @@ pub fn view(_state: &State) -> iced::Element<'static, Message, Theme> {
     .into()
 }
 
-fn money_row(label: &'static str, amount: &'static str, strong: bool) -> Slot<'static, Message> {
+fn money_row(label: &'static str, amount: &'static str, strong: bool) -> View<'static, Message> {
     let amount = if strong {
         text::small(amount).semibold()
     } else {
@@ -75,14 +75,14 @@ fn money_row(label: &'static str, amount: &'static str, strong: bool) -> Slot<'s
         .into()
 }
 
-fn divider() -> Slot<'static, Message> {
+fn divider() -> View<'static, Message> {
     let line: iced::Element<'static, Message, Theme> =
         rule::horizontal(1).style(divider_style()).into();
 
     container(line).height(1.0).width(Fill).into()
 }
 
-fn dot() -> Slot<'static, Message> {
+fn dot() -> View<'static, Message> {
     container(space::vertical())
         .width(10.0)
         .height(10.0)

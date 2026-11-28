@@ -55,7 +55,7 @@ impl<'a> Component<'a, Message, Theme> for Verification {
         }
         let invalid = state.attempted && state.code.len() != 6;
         let mut code = field(entry.group_size(3).cell_size(44., 48.).invalid(invalid))
-            .label(Slot::from(row![
+            .label(View::from(row![
                 text::label("Verification code"),
                 space::horizontal(),
                 button(row![icon::refresh_ccw(), "Resend Code"].spacing(4))

@@ -1,5 +1,5 @@
 //! An independently oriented, inset divider inside a button group.
-use crate::compose::{Compose, Slot};
+use crate::compose::{Compose, View};
 use iced_core::widget::{Meta, Tree};
 use iced_core::{
     Background, Element, Layout, Length, Rectangle, Size, Widget, layout, mouse, renderer,
@@ -75,9 +75,9 @@ impl<Message> Compose<Message> for Separator {
         (*self).boxed()
     }
 }
-impl<'a, Message: 'a> From<Separator> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Separator> for View<'a, Message> {
     fn from(value: Separator) -> Self {
-        Slot::new(value)
+        View::new(value)
     }
 }
 impl<'a, Message: 'a> From<Separator> for Element<'a, Message, Theme, Renderer> {

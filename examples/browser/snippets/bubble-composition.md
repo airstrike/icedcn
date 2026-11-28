@@ -5,7 +5,7 @@ bubble(content)
 └── .reactions(content, align, side)
 ```
 
-`bubble(content)` takes the content `Slot`, and `.reactions(content, align, side)` attaches the reaction `Slot`.
+`bubble(content)` takes the content `View`, and `.reactions(content, align, side)` attaches the reaction `View`.
 
 Group consecutive bubbles from the same sender:
 

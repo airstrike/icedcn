@@ -6,10 +6,10 @@ A centered empty state with 24px padding and 16px between sections. Set its titl
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `.media(media)` | `impl Into<Slot>` | `None` | The media above the title, usually `empty::media(..)`. |
-| `.title(title)` | `&str`, `Text` or `Slot` | `None` | Strings are styled as `EmptyTitle`. |
-| `.description(description)` | `&str`, `Text` or `Slot` | `None` | Strings are styled as `EmptyDescription`. |
-| `.content(content)` | `impl Into<Slot>` | `None` | Actions below the header, at most 384px wide. |
+| `.media(media)` | `impl Into<View>` | `None` | The media above the title, usually `empty::media(..)`. |
+| `.title(title)` | `&str`, `Text` or `View` | `None` | Strings are styled as `EmptyTitle`. |
+| `.description(description)` | `&str`, `Text` or `View` | `None` | Strings are styled as `EmptyDescription`. |
+| `.content(content)` | `impl Into<View>` | `None` | Actions below the header, at most 384px wide. |
 | `.padding(padding)` | `impl Into<Padding>` | `24` | Override the root padding. |
 
 ### `empty::media()`

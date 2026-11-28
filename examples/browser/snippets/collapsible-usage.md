@@ -1,10 +1,10 @@
 ## Usage
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{button, collapsible, column, text};
 
-fn view<'a>() -> Slot<'a, ()> {
+fn view<'a>() -> View<'a> {
     collapsible(|c| {
         column![
             c.trigger(button("Can I use this in my project?")),

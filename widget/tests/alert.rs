@@ -7,7 +7,7 @@ use iced_core::{Point, Size};
 use iced_test::{Simulator, simulator};
 use iced_widget::{Renderer, Space};
 use icedcn_core::Theme;
-use icedcn_widget::{Inherited, Slot, alert, button};
+use icedcn_widget::{Inherited, View, alert, button};
 
 #[test]
 fn actions_respect_inherited_disabled_state() {
@@ -18,7 +18,7 @@ fn actions_respect_inherited_disabled_state() {
             .on_press(());
         // The null renderer does not shape a title; a fixed icon gives the
         // callout enough height to contain the complete action hitbox.
-        let mut content: Slot<'_, ()> = alert()
+        let mut content: View<'_> = alert()
             .icon(Space::new().width(16).height(24))
             .title("Action")
             .action(action)

@@ -42,14 +42,14 @@ use crate::theme::container;
 use crate::theme::container::Style;
 use crate::widget::rule;
 use crate::widget::text;
-use crate::widget::{self, Compose, Inherited, Slot};
+use crate::widget::{self, Compose, Inherited, View};
 
 /// The boxed element a card slot holds.
 type Element<'a, Message> = iced_core::Element<'a, Message, Theme, Renderer>;
 
 /// A Card root that retains its children through the Compose cascade.
 pub struct Card<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     size: Size,
     spacing: Option<f32>,
     gap: Option<f32>,
@@ -62,7 +62,7 @@ pub struct Card<'a, Message> {
 }
 
 /// Card root with Nova's surface, section spacing and vertical padding.
-pub fn card<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Card<'a, Message> {
+pub fn card<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Card<'a, Message> {
     Card {
         content: content.into(),
         size: Size::Default,
@@ -174,9 +174,9 @@ impl<'a, Message: 'a> Compose<Message> for Card<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Card<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Card<'a, Message>> for View<'a, Message> {
     fn from(card: Card<'a, Message>) -> Self {
-        Slot::new(card)
+        View::new(card)
     }
 }
 
@@ -202,7 +202,7 @@ pub fn description<'a>(content: impl IntoFragment<'a>) -> text::Text<'a> {
 
 /// Marks content as a card action. Pass it to [`Header::action`] to place it at the top right
 /// of the header.
-pub fn action<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
+pub fn action<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> View<'a, Message> {
     content.into()
 }
 
@@ -211,16 +211,16 @@ pub fn action<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a
 /// Start with a title and optionally add a description or action. The header stacks title and
 /// description and aligns the action to their right.
 pub struct Header<'a, Message> {
-    title: Slot<'a, Message>,
+    title: View<'a, Message>,
     inset: Option<f32>,
     inherited: Inherited,
-    description: Option<Slot<'a, Message>>,
-    action: Option<Slot<'a, Message>>,
+    description: Option<View<'a, Message>>,
+    action: Option<View<'a, Message>>,
 }
 
 /// Build a header from a title.
 ///
-/// Plain strings auto-style as [`title`]. Pre-styled `Text` or `Slot`
+/// Plain strings auto-style as [`title`]. Pre-styled `Text` or `View`
 /// values pass through unchanged — useful when the title needs custom
 /// styling (rich text, icon, etc.).
 ///
@@ -255,7 +255,7 @@ impl<'a, Message: 'a> Header<'a, Message> {
     }
 
     /// Places a link, button, badge, or other action at the top right of the header.
-    pub fn action(mut self, action: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn action(mut self, action: impl Into<View<'a, Message>>) -> Self {
         self.action = Some(action.into());
         self
     }
@@ -319,40 +319,40 @@ impl<'a, Message: 'a> From<Header<'a, Message>> for Element<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Header<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Header<'a, Message>> for View<'a, Message> {
     fn from(h: Header<'a, Message>) -> Self {
-        Slot::new(h)
+        View::new(h)
     }
 }
 
 /// Convert a value into a card title. Plain strings auto-style as [`title`];
-/// pre-styled `Text` and `Slot` values pass through. Mirrors
+/// pre-styled `Text` and `View` values pass through. Mirrors
 /// `field::IntoLabel` — name lives under the `card` module so it's read as
 /// `card::IntoTitle` (no composite name).
 pub trait IntoTitle<'a, Message> {
-    fn into_title(self) -> Slot<'a, Message>;
+    fn into_title(self) -> View<'a, Message>;
 }
 
 impl<'a, Message: 'a> IntoTitle<'a, Message> for &'a str {
-    fn into_title(self) -> Slot<'a, Message> {
+    fn into_title(self) -> View<'a, Message> {
         title(self).into()
     }
 }
 
 impl<'a, Message: 'a> IntoTitle<'a, Message> for String {
-    fn into_title(self) -> Slot<'a, Message> {
+    fn into_title(self) -> View<'a, Message> {
         title(self).into()
     }
 }
 
 impl<'a, Message: 'a> IntoTitle<'a, Message> for text::Text<'a> {
-    fn into_title(self) -> Slot<'a, Message> {
+    fn into_title(self) -> View<'a, Message> {
         self.into()
     }
 }
 
-impl<'a, Message: 'a> IntoTitle<'a, Message> for Slot<'a, Message> {
-    fn into_title(self) -> Slot<'a, Message> {
+impl<'a, Message: 'a> IntoTitle<'a, Message> for View<'a, Message> {
+    fn into_title(self) -> View<'a, Message> {
         self
     }
 }
@@ -360,29 +360,29 @@ impl<'a, Message: 'a> IntoTitle<'a, Message> for Slot<'a, Message> {
 /// Convert a value into a card description. Plain strings auto-style as
 /// [`description`]; pre-styled values pass through.
 pub trait IntoDescription<'a, Message> {
-    fn into_description(self) -> Slot<'a, Message>;
+    fn into_description(self) -> View<'a, Message>;
 }
 
 impl<'a, Message: 'a> IntoDescription<'a, Message> for &'a str {
-    fn into_description(self) -> Slot<'a, Message> {
+    fn into_description(self) -> View<'a, Message> {
         description(self).into()
     }
 }
 
 impl<'a, Message: 'a> IntoDescription<'a, Message> for String {
-    fn into_description(self) -> Slot<'a, Message> {
+    fn into_description(self) -> View<'a, Message> {
         description(self).into()
     }
 }
 
 impl<'a, Message: 'a> IntoDescription<'a, Message> for text::Text<'a> {
-    fn into_description(self) -> Slot<'a, Message> {
+    fn into_description(self) -> View<'a, Message> {
         self.into()
     }
 }
 
-impl<'a, Message: 'a> IntoDescription<'a, Message> for Slot<'a, Message> {
-    fn into_description(self) -> Slot<'a, Message> {
+impl<'a, Message: 'a> IntoDescription<'a, Message> for View<'a, Message> {
+    fn into_description(self) -> View<'a, Message> {
         self
     }
 }
@@ -399,7 +399,7 @@ pub fn header_simple<'a, Message: 'a>(title: impl IntoTitle<'a, Message>) -> Hea
 
 /// Card body with a lazy child and a horizontal inset from its root.
 pub struct Content<'a, Message> {
-    child: Slot<'a, Message>,
+    child: View<'a, Message>,
     inherited: Inherited,
     padding: Option<Padding>,
     width: Length,
@@ -407,7 +407,7 @@ pub struct Content<'a, Message> {
 }
 
 /// Card content section (`px-(--card-spacing)`).
-pub fn content<'a, Message: 'a>(child: impl Into<Slot<'a, Message>>) -> Content<'a, Message> {
+pub fn content<'a, Message: 'a>(child: impl Into<View<'a, Message>>) -> Content<'a, Message> {
     Content {
         child: child.into(),
         inherited: Inherited::default(),
@@ -467,9 +467,9 @@ impl<'a, Message: 'a> Compose<Message> for Content<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Content<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Content<'a, Message>> for View<'a, Message> {
     fn from(content: Content<'a, Message>) -> Self {
-        Slot::new(content)
+        View::new(content)
     }
 }
 
@@ -481,13 +481,13 @@ impl<'a, Message: 'a> From<Content<'a, Message>> for Element<'a, Message> {
 
 /// A Card footer that receives its inset before composing its controls.
 pub struct Footer<'a, Message> {
-    child: Slot<'a, Message>,
+    child: View<'a, Message>,
     spacing: Option<f32>,
     inherited: Inherited,
 }
 
 /// Card footer section with a top border and Nova's muted surface.
-pub fn footer<'a, Message: 'a>(child: impl Into<Slot<'a, Message>>) -> Footer<'a, Message> {
+pub fn footer<'a, Message: 'a>(child: impl Into<View<'a, Message>>) -> Footer<'a, Message> {
     Footer {
         child: child.into(),
         spacing: None,
@@ -497,7 +497,7 @@ pub fn footer<'a, Message: 'a>(child: impl Into<Slot<'a, Message>>) -> Footer<'a
 
 /// A footer with an explicit inset overriding the root's spacing.
 pub fn footer_with_spacing<'a, Message: 'a>(
-    child: impl Into<Slot<'a, Message>>,
+    child: impl Into<View<'a, Message>>,
     spacing: f32,
 ) -> Footer<'a, Message> {
     Footer {
@@ -538,9 +538,9 @@ impl<'a, Message: 'a> Compose<Message> for Footer<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Footer<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Footer<'a, Message>> for View<'a, Message> {
     fn from(footer: Footer<'a, Message>) -> Self {
-        Slot::new(footer)
+        View::new(footer)
     }
 }
 
@@ -552,7 +552,7 @@ impl<'a, Message: 'a> From<Footer<'a, Message>> for Element<'a, Message> {
 
 /// Card footer as a row of Slots with 8px (`gap-2`) spacing.
 pub fn footer_row<'a, Message: 'a>(
-    children: impl IntoIterator<Item = Slot<'a, Message>>,
+    children: impl IntoIterator<Item = View<'a, Message>>,
 ) -> Footer<'a, Message> {
     footer(widget::Row::with_children(children).spacing(Gap::G2))
 }

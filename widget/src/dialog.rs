@@ -42,7 +42,7 @@ use icedcn_core::theme::container::Style;
 use icedcn_core::theme::{alert_dialog, dialog};
 
 use crate::button::{self, button};
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::container::Container;
 use crate::marker::{self, Press};
 use crate::sidebar::viewport::Width;
@@ -76,8 +76,8 @@ pub struct Dialog<'a, Message> {
 }
 
 /// A closure that builds part of a [`Dialog`].
-type Body<'a, Message> = Rc<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
-type Footer<'a, Message> = Rc<dyn Fn(&Handle, &Inherited) -> Slot<'a, Message> + 'a>;
+type Body<'a, Message> = Rc<dyn Fn(&Handle) -> View<'a, Message> + 'a>;
+type Footer<'a, Message> = Rc<dyn Fn(&Handle, &Inherited) -> View<'a, Message> + 'a>;
 
 /// What a [`Dialog`]'s closures receive: whether it is open, and the
 /// wrappers for its triggers and close buttons.
@@ -114,16 +114,16 @@ pub struct State {
 /// Create a closed, uncontrolled [`Dialog`]: `trigger` builds what sits in
 /// place, `content` the panel shown while open.
 pub fn dialog<'a, Message>(
-    trigger: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
-    content: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
+    trigger: impl Fn(&Handle) -> View<'a, Message> + 'a,
+    content: impl Fn(&Handle) -> View<'a, Message> + 'a,
 ) -> Dialog<'a, Message> {
     Dialog::new(trigger, content, Placement::Center { max_width: 384.0 })
 }
 
 impl<'a, Message> Dialog<'a, Message> {
     pub(crate) fn new(
-        trigger: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
-        content: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
+        trigger: impl Fn(&Handle) -> View<'a, Message> + 'a,
+        content: impl Fn(&Handle) -> View<'a, Message> + 'a,
         placement: Placement,
     ) -> Self {
         Self {
@@ -188,7 +188,7 @@ impl<'a, Message> Dialog<'a, Message> {
     }
 
     /// Place scrolling content below the header, capped at half the window height.
-    pub fn scrollable_body(mut self, body: impl Fn(&Handle) -> Slot<'a, Message> + 'a) -> Self {
+    pub fn scrollable_body(mut self, body: impl Fn(&Handle) -> View<'a, Message> + 'a) -> Self {
         self.scrollable_body = Some(Rc::new(body));
         self
     }
@@ -197,7 +197,7 @@ impl<'a, Message> Dialog<'a, Message> {
     /// Below 640 pixels, actions fill the panel in reverse visual order.
     pub fn footer<I>(mut self, actions: impl Fn(&Handle) -> I + 'a) -> Self
     where
-        I: IntoIterator<Item = Slot<'a, Message>>,
+        I: IntoIterator<Item = View<'a, Message>>,
         Message: 'a,
     {
         self.footer = Some(Rc::new(move |handle, inherited| {
@@ -310,17 +310,17 @@ impl Handle {
     /// Pressing the child opens the dialog and runs the child’s own handlers.
     pub fn trigger<'a, Message: 'a>(
         &self,
-        child: impl Into<Slot<'a, Message>>,
-    ) -> Slot<'a, Message> {
-        Slot::new(Marked {
+        child: impl Into<View<'a, Message>>,
+    ) -> View<'a, Message> {
+        View::new(Marked {
             child: child.into(),
             signal: Signal::Open,
         })
     }
 
     /// Pressing the child closes the dialog and runs the child’s own handlers.
-    pub fn close<'a, Message: 'a>(&self, child: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
-        Slot::new(Marked {
+    pub fn close<'a, Message: 'a>(&self, child: impl Into<View<'a, Message>>) -> View<'a, Message> {
+        View::new(Marked {
             child: child.into(),
             signal: Signal::Close,
         })
@@ -328,7 +328,7 @@ impl Handle {
 }
 
 /// A `DialogHeader`: a `DialogTitle` over a `DialogDescription`.
-pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> Slot<'a, Message> {
+pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> View<'a, Message> {
     column![
         text::Text::new(title)
             .size(text::size::BASE)
@@ -343,8 +343,8 @@ pub fn header<'a, Message: 'a>(title: &'a str, description: &'a str) -> Slot<'a,
 
 /// A `DialogFooter`: its actions in a row, aligned to the end.
 pub fn footer<'a, Message: 'a>(
-    actions: impl IntoIterator<Item = Slot<'a, Message>>,
-) -> Slot<'a, Message> {
+    actions: impl IntoIterator<Item = View<'a, Message>>,
+) -> View<'a, Message> {
     Container::new(row::Row::with_children(actions).spacing(8))
         .width(Fill)
         .align_x(Horizontal::Right)
@@ -352,7 +352,7 @@ pub fn footer<'a, Message: 'a>(
 }
 
 #[cfg(feature = "svg")]
-fn close_icon<'a, Message: 'a>() -> Slot<'a, Message> {
+fn close_icon<'a, Message: 'a>() -> View<'a, Message> {
     use iced_widget::svg::{self, Handle};
     use std::sync::LazyLock;
     const X: &[u8] = br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
@@ -369,13 +369,13 @@ fn close_icon<'a, Message: 'a>() -> Slot<'a, Message> {
 }
 
 #[cfg(not(feature = "svg"))]
-fn close_icon<'a, Message: 'a>() -> Slot<'a, Message> {
+fn close_icon<'a, Message: 'a>() -> View<'a, Message> {
     text::Text::new("×").size(text::size::BASE).into()
 }
 
 /// A child that records a [`Signal`] when pressed.
 pub(crate) struct Marked<'a, Message> {
-    pub(crate) child: Slot<'a, Message>,
+    pub(crate) child: View<'a, Message>,
     pub(crate) signal: Signal,
 }
 
@@ -524,7 +524,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                 sections(0.)
             };
 
-            let content: Slot<'a, Message> = if self.show_close_button || desktop.is_some() {
+            let content: View<'a, Message> = if self.show_close_button || desktop.is_some() {
                 // nova `absolute top-2 right-2` (sheet: `top-3 right-3`).
                 let inset = match placement {
                     Placement::Center { .. } => 8,
@@ -537,7 +537,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                         .style(button::Ghost),
                 );
 
-                Slot::from(
+                View::from(
                     iced_widget::stack![
                         content.compose(),
                         iced_widget::container(close.compose())
@@ -551,7 +551,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                 content
             };
 
-            let content: Slot<'a, Message> =
+            let content: View<'a, Message> =
                 if drawer_height.is_some() && placement == Placement::Side(Side::Bottom) {
                     let handle = Container::new(iced_widget::Space::new())
                         .width(100)
@@ -607,7 +607,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme, Renderer> for D
                     .style(style),
             };
 
-            Slot::from(panel).compose().map(Event::App).boxed()
+            View::from(panel).compose().map(Event::App).boxed()
         });
 
         let modal = modal::Modal::new(base.into(), panel, placement, Event::Close)
@@ -652,9 +652,9 @@ impl<'a, Message: Clone + 'static> Compose<Message> for Dialog<'a, Message> {
     }
 }
 
-impl<'a, Message: Clone + 'static> From<Dialog<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'static> From<Dialog<'a, Message>> for View<'a, Message> {
     fn from(dialog: Dialog<'a, Message>) -> Self {
-        Slot::new(dialog)
+        View::new(dialog)
     }
 }
 

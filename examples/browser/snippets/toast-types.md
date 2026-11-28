@@ -1,7 +1,7 @@
 ```rust
 use iced::Task;
 use icedcn::{
-    Slot,
+    View,
     widget::{button, row::Row, toast},
 };
 use toast::Kind::*;
@@ -11,7 +11,7 @@ enum Message {
     CreateEvent,
 }
 
-fn types<'a>() -> Slot<'a, Message> {
+fn types<'a>() -> View<'a, Message> {
     let kinds = [
         ("Default", Default, "Event has been created"),
         ("Success", Success, "Event has been created"),

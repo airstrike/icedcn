@@ -1,6 +1,6 @@
 use iced::Fill;
 use icedcn::widget::{column, tabs, text};
-use icedcn::{Slot, card};
+use icedcn::{View, card};
 
 const PANELS: [(&str, &str, &str); 4] = [
     (
@@ -25,7 +25,7 @@ const PANELS: [(&str, &str, &str); 4] = [
     ),
 ];
 
-pub fn view<'a, M: Clone + 'static>() -> Slot<'a, M> {
+pub fn view<'a, M: Clone + 'static>() -> View<'a, M> {
     tabs(|t| {
         let list = t.list(PANELS.map(|(title, _, _)| t.trigger(title, title)));
         let panels = PANELS.map(|(title, description, detail)| {

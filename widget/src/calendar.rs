@@ -8,7 +8,7 @@ mod week;
 
 use crate::Weight;
 use crate::column::Column;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::row::Row;
 use crate::{button, column, container, dropdown_menu, menu, row, space, text};
 pub use chrono::{Datelike, Duration};
@@ -347,7 +347,7 @@ impl<Message> Calendar<'_, Message> {
         month: Date,
         offset: usize,
         targets: &mut Vec<Option<Date>>,
-    ) -> Slot<'static, Event> {
+    ) -> View<'static, Event> {
         let (year, number, _) = self.system.parts(month);
         let system = self.system;
         let disabled = self.disabled;
@@ -362,7 +362,7 @@ impl<Message> Calendar<'_, Message> {
         let right = if rtl { previous } else { next };
         let nav = |label, step, show| {
             if show && let Some(next) = system.shift(month, step - offset as i32) {
-                Slot::from(
+                View::from(
                     button(chevron(label))
                         .square()
                         .style(button::Ghost)
@@ -372,7 +372,7 @@ impl<Message> Calendar<'_, Message> {
                         .on_press(Event::Month(next)),
                 )
             } else {
-                Slot::from(container("").width(self.cell_size).height(self.cell_size))
+                View::from(container("").width(self.cell_size).height(self.cell_size))
             }
         };
         if left
@@ -383,7 +383,7 @@ impl<Message> Calendar<'_, Message> {
         {
             targets.push(None);
         }
-        let title: Slot<'static, Event> = if self.caption {
+        let title: View<'static, Event> = if self.caption {
             let dropdown = |label: String, choices: Vec<(String, Date)>| {
                 let selected = choices
                     .iter()
@@ -502,7 +502,7 @@ impl<Message> Calendar<'_, Message> {
         today: Date,
         targets: &mut Vec<Option<Date>>,
         in_month: &mut Vec<usize>,
-    ) -> Slot<'static, Event> {
+    ) -> View<'static, Event> {
         let weekday_line_height = self.weekday_line_height.unwrap_or(22.4);
         let mut labels = match self.system {
             System::Gregorian => ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
@@ -553,7 +553,7 @@ impl<Message> Calendar<'_, Message> {
             if self.week_numbers {
                 days.push(None);
                 cells.push(
-                    Slot::from(
+                    View::from(
                         container(
                             text::muted(format!("{:02}", date::week_number(week[0])))
                                 .size(12.8)
@@ -573,7 +573,7 @@ impl<Message> Calendar<'_, Message> {
                 if !self.navigable_month(day) {
                     days.push(None);
                     cells.push(
-                        Slot::from(container("").width(self.cell_size).height(self.cell_size))
+                        View::from(container("").width(self.cell_size).height(self.cell_size))
                             .compose(),
                     );
                     continue;
@@ -603,8 +603,8 @@ impl<Message> Calendar<'_, Message> {
                 if self.system == System::Persian {
                     label = label.font(persian::FAMILY);
                 }
-                let label: Slot<'static, Event> = label.into();
-                let label: Slot<'static, Event> = if !paint.outside
+                let label: View<'static, Event> = label.into();
+                let label: View<'static, Event> = if !paint.outside
                     && let Some(annotate) = &self.annotation
                 {
                     column![
@@ -632,7 +632,7 @@ impl<Message> Calendar<'_, Message> {
                 }
                 days.push(Some(paint));
                 cells.push(
-                    Slot::from(
+                    View::from(
                         button(label)
                             .square()
                             .weight(Weight::Normal)
@@ -791,7 +791,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Calendar<
                     .map(|m| self.grid(m, i, selected, today, &mut targets, &mut in_month))
             })
             .collect();
-        let content: Slot<'static, Event> = match self.stacked {
+        let content: View<'static, Event> = match self.stacked {
             Some(true) => Column::with_children(grids).spacing(16).into(),
             Some(false) => Row::with_children(grids)
                 .spacing(16)
@@ -847,7 +847,7 @@ impl<'a, Message: 'static> Compose<Message> for Calendar<'a, Message> {
         component::component(*self).boxed()
     }
 }
-impl<'a, Message: 'static> From<Calendar<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'static> From<Calendar<'a, Message>> for View<'a, Message> {
     fn from(calendar: Calendar<'a, Message>) -> Self {
         Self::new(calendar)
     }
@@ -858,7 +858,7 @@ impl<'a, Message: 'static> From<Calendar<'a, Message>> for Element<'a, Message, 
     }
 }
 
-fn chevron(direction: &str) -> Slot<'static, Event> {
+fn chevron(direction: &str) -> View<'static, Event> {
     #[cfg(feature = "svg")]
     {
         icon::Chevron(direction.chars().next().unwrap_or('⌄'))

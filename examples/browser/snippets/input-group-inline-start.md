@@ -1,11 +1,11 @@
 ```rust
 use crate::icon;
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::input_group::addon;
 use icedcn::widget::{container, field, input, input_group};
 
-fn inline_start<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
+fn inline_start<'a, M: Clone + 'a>(size: f32) -> View<'a, M> {
     container(
         field(
             input_group(input("Search...").text_size(size))

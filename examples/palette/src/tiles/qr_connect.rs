@@ -5,12 +5,12 @@ use icedcn::card;
 use icedcn::core::{Border, oklch};
 use icedcn::theme::container::Style;
 use icedcn::widget::{button, column, container, qr_code, text};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::{Message, State};
 
 pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
-    let qr: Slot<'_, Message> = match &state.qr_connect {
+    let qr: View<'_, Message> = match &state.qr_connect {
         Some(data) => container(qr_code(data).total_size(160.0).style(|_| qr_code::Style {
             cell: Color::BLACK,
             background: Color::WHITE,
@@ -27,7 +27,7 @@ pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
             .into(),
     };
 
-    let description: Slot<'static, Message> = column![
+    let description: View<'static, Message> = column![
         card::description("Open the Ledger mobile app and scan this"),
         card::description("code to link your device."),
     ]
@@ -35,7 +35,7 @@ pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
     .align_x(Center)
     .into();
 
-    let header_body: Slot<'static, Message> = column![
+    let header_body: View<'static, Message> = column![
         card::title("Scan to connect your mobile device"),
         description,
     ]
@@ -43,7 +43,7 @@ pub fn view(state: &State) -> iced::Element<'_, Message, Theme> {
     .align_x(Center)
     .width(Fill)
     .into();
-    let header: Slot<'static, Message> = card::header(header_body).into();
+    let header: View<'static, Message> = card::header(header_body).into();
 
     card::card(
         column![

@@ -33,19 +33,19 @@ use iced_widget::text::{Style, StyleFn};
 use icedcn_core::Theme;
 
 use crate::Size;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::text;
 
 pub use icedcn_core::theme::alert::{Default, Destructive, Spec};
 
 /// A callout box with optional icon, title, description, and action.
 pub struct Alert<'a, Message> {
-    icon: Option<Slot<'a, Message>>,
+    icon: Option<View<'a, Message>>,
     title: Option<text::Text<'a>>,
     description: Option<text::Text<'a>>,
     description_wrapping: Wrapping,
     description_font: Option<Font>,
-    action: Option<Slot<'a, Message>>,
+    action: Option<View<'a, Message>>,
     style: Spec,
     max_width: f32,
 }
@@ -66,7 +66,7 @@ pub fn alert<'a, Message: 'a>() -> Alert<'a, Message> {
 
 impl<'a, Message: 'a> Alert<'a, Message> {
     /// Set the icon element.
-    pub fn icon(mut self, icon: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn icon(mut self, icon: impl Into<View<'a, Message>>) -> Self {
         self.icon = Some(icon.into());
         self
     }
@@ -98,7 +98,7 @@ impl<'a, Message: 'a> Alert<'a, Message> {
     }
 
     /// Add an action element (typically a button) shown at the top-right.
-    pub fn action(mut self, action: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn action(mut self, action: impl Into<View<'a, Message>>) -> Self {
         self.action = Some(action.into());
         self
     }
@@ -125,9 +125,9 @@ impl<'a, Message: 'a> From<Alert<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Alert<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Alert<'a, Message>> for View<'a, Message> {
     fn from(widget: Alert<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 

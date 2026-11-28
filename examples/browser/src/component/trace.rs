@@ -9,7 +9,7 @@ use iced::{Fill, Task, Widget};
 use icedcn::widget::{
     badge, button, code_block, column, container, dialog, row, sheet, spinner, text, trace,
 };
-use icedcn::{Destructive, Size, Slot, Theme};
+use icedcn::{Destructive, Size, Theme, View};
 use trace::{Line, Status};
 
 type Glyph = fn() -> Text<'static, Theme>;
@@ -17,12 +17,12 @@ type Glyph = fn() -> Text<'static, Theme>;
 fn line<M: 'static>(title: &'static str, glyph: Glyph) -> Line<'static, M> {
     trace::line(title).icon(glyph().size(16))
 }
-fn output<M: 'static>(value: &'static str) -> Slot<'static, M> {
+fn output<M: 'static>(value: &'static str) -> View<'static, M> {
     code_block(code_block::content(value).wrap(true).max_height(256))
         .size(Size::Sm)
         .into()
 }
-fn command_output<M: 'static>(value: &'static str, error: bool) -> Slot<'static, M> {
+fn command_output<M: 'static>(value: &'static str, error: bool) -> View<'static, M> {
     if error {
         code_block(code_block::content(value).wrap(true).max_height(256))
             .size(Size::Sm)
@@ -38,7 +38,7 @@ fn result<M: Clone + 'static>(
     body: &'static str,
     status: Status,
     open: bool,
-) -> Slot<'static, M> {
+) -> View<'static, M> {
     trace::disclosure(
         move || line(title, glyph).status(status),
         move || command_output(body, status == Status::Error),
@@ -46,13 +46,13 @@ fn result<M: Clone + 'static>(
     .default_open(open)
     .into()
 }
-fn source(title: &'static str, href: &'static str) -> Slot<'static, Message> {
+fn source(title: &'static str, href: &'static str) -> View<'static, Message> {
     trace::action(
         line(title, icon::globe).trailing(icon::arrow_up_right().size(16)),
         Some(Message::OpenUrl(href)),
     )
 }
-fn local(title: &'static str, slug: &str, index: usize) -> Slot<'static, Message> {
+fn local(title: &'static str, slug: &str, index: usize) -> View<'static, Message> {
     let block = BLOCKS
         .iter()
         .flat_map(|b| {
@@ -68,10 +68,10 @@ fn local(title: &'static str, slug: &str, index: usize) -> Slot<'static, Message
         Some(Message::Page(index, page::Message::ScrollTo(block))),
     )
 }
-fn static_line() -> Slot<'static, Message> {
+fn static_line() -> View<'static, Message> {
     line("Created branch fix/cargo-lockfile", icon::git_branch).into()
 }
-fn status() -> Slot<'static, Message> {
+fn status() -> View<'static, Message> {
     trace([
         line("Ran cargo fetch", icon::circle_check).into(),
         line("Failed to run cargo clippy", icon::circle_alert)
@@ -87,7 +87,7 @@ fn status() -> Slot<'static, Message> {
     ])
     .into()
 }
-fn description() -> Slot<'static, Message> {
+fn description() -> View<'static, Message> {
     trace([
         line("Edited src/settings/notifications.rs", icon::file_pen)
             .description("+48 −12")
@@ -101,7 +101,7 @@ fn description() -> Slot<'static, Message> {
     ])
     .into()
 }
-fn collapsible() -> Slot<'static, Message> {
+fn collapsible() -> View<'static, Message> {
     result(
         "Ran rustc --version",
         icon::terminal,
@@ -120,7 +120,7 @@ impl<'a> Component<'a, Message, Theme> for OpenState {
     }
     fn view(&self, state: &bool) -> impl Widget<bool, Theme> + 'a {
         let open = *state;
-        Slot::from(
+        View::from(
             column![
                 result(
                     "Ran rustc --version",
@@ -150,7 +150,7 @@ impl<'a> Component<'a, Message, Theme> for OpenState {
         .compose()
     }
 }
-fn links(index: usize) -> Slot<'static, Message> {
+fn links(index: usize) -> View<'static, Message> {
     trace([
         local("Read examples/browser/src/page.rs", "link", index),
         source(
@@ -160,7 +160,7 @@ fn links(index: usize) -> Slot<'static, Message> {
     ])
     .into()
 }
-fn search_dialog() -> Slot<'static, Message> {
+fn search_dialog() -> View<'static, Message> {
     dialog(
         |d| {
             d.trigger(trace::action(
@@ -196,7 +196,7 @@ fn search_dialog() -> Slot<'static, Message> {
     )
     .into()
 }
-fn files_sheet() -> Slot<'static, Message> {
+fn files_sheet() -> View<'static, Message> {
     sheet(
         |s| {
             s.trigger(trace::action(
@@ -225,7 +225,7 @@ fn files_sheet() -> Slot<'static, Message> {
     )
     .into()
 }
-fn group() -> Slot<'static, Message> {
+fn group() -> View<'static, Message> {
     trace([
         line("Searched for rust-version", icon::search).into(),
         line("Read Cargo.toml", icon::file_text).into(),
@@ -233,7 +233,7 @@ fn group() -> Slot<'static, Message> {
     ])
     .into()
 }
-fn sources() -> Slot<'static, Message> {
+fn sources() -> View<'static, Message> {
     trace::disclosure(
         || line("Used 3 sources", icon::globe),
         || {
@@ -257,7 +257,7 @@ fn sources() -> Slot<'static, Message> {
     .default_open(true)
     .into()
 }
-fn steps(index: usize) -> Slot<'static, Message> {
+fn steps(index: usize) -> View<'static, Message> {
     trace::disclosure(
         || trace::line("Looking into the slow Cargo build").status(Status::Running),
         move || {
@@ -296,7 +296,7 @@ fn file_diff(
     desc: &'static str,
     src: &'static str,
     glyph: Glyph,
-) -> Slot<'static, Message> {
+) -> View<'static, Message> {
     use code_block::{Added, Removed};
     sheet(
         move |s| {
@@ -326,7 +326,7 @@ fn file_diff(
     )
     .into()
 }
-fn commit() -> Slot<'static, Message> {
+fn commit() -> View<'static, Message> {
     trace::disclosure(
         || {
             line(
@@ -359,7 +359,7 @@ fn commit() -> Slot<'static, Message> {
     .default_open(true)
     .into()
 }
-fn turn(index: usize) -> Slot<'static, Message> {
+fn turn(index: usize) -> View<'static, Message> {
     trace::disclosure(||trace::line("Worked for 2m 4s, 1 command failed").status(Status::Error),move||column![
         trace([
             trace::disclosure(||line("Thought",icon::brain).description("12s"),||text("I should check which Rust tools are available before creating a project.").into()).into(),
@@ -589,6 +589,6 @@ impl page::Page for TracePage {
             "turn" => turn(index).compose(),
             _ => unreachable!("unknown trace preview: {id}"),
         };
-        Slot::from(container(content).width(Fill.max(384.))).compose()
+        View::from(container(content).width(Fill.max(384.))).compose()
     }
 }

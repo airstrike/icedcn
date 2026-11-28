@@ -4,7 +4,7 @@ use icedcn::theme;
 use icedcn::theme::tweak::Alpha;
 use icedcn::widget::text;
 use icedcn::widget::{button, column, container, field, textarea};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::Message;
 use crate::page;
@@ -63,7 +63,7 @@ impl TextareaPage {
 }
 
 /// The preview's `w-full` column, capped like the docs' preview.
-fn full<'a>(content: impl Into<Slot<'a, Message>>) -> iced::Element<'a, Message, Theme> {
+fn full<'a>(content: impl Into<View<'a, Message>>) -> iced::Element<'a, Message, Theme> {
     container(content).width(Fill).max_width(320).into()
 }
 

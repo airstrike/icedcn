@@ -1,11 +1,11 @@
 ```rust
 use crate::icon;
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::input_group::{Align, addon};
 use icedcn::widget::{column, input, input_group, row};
 
-fn icons<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
+fn icons<'a, M: Clone + 'a>(size: f32) -> View<'a, M> {
     column![
         input_group(input("Search...").text_size(size))
             .addon(addon(icon::search().size(16).line_height(1.0))),

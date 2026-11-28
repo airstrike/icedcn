@@ -1,9 +1,9 @@
 ```rust
 use crate::icon;
 use icedcn::widget::{button, column};
-use icedcn::{Size, Slot};
+use icedcn::{Size, View};
 
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     let sizes = [
         (Size::Sm, "Small"),
         (Size::Default, "Default"),

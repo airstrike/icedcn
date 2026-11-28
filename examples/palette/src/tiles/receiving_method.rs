@@ -2,7 +2,7 @@
 
 use iced::Fill;
 use icedcn::widget::{button, column, field, input, radio, text};
-use icedcn::{Slot, Theme, card};
+use icedcn::{Theme, View, card};
 
 use crate::{Message, ReceivingMethod, State};
 
@@ -66,7 +66,7 @@ fn method_card(
     method: ReceivingMethod,
     title: &'static str,
     description: &'static str,
-) -> Slot<'static, Message> {
+) -> View<'static, Message> {
     let control = radio(
         "",
         method,
@@ -74,7 +74,7 @@ fn method_card(
         Message::SetReceivingMethod,
     )
     .spacing(0.0);
-    let label: Slot<'static, Message> = column![
+    let label: View<'static, Message> = column![
         text::small(title).medium(),
         text::muted(description).size(13.0),
     ]

@@ -4,7 +4,7 @@ When a bubble is clickable, use `.interactive(true)` or `.on_press(message)` so 
 
 ```rust
 use iced::alignment::Horizontal;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::bubble;
 
 #[derive(Clone)]
@@ -12,7 +12,7 @@ enum Message {
     Reply,
 }
 
-fn example<'a>() -> Slot<'a, Message> {
+fn example<'a>() -> View<'a, Message> {
     bubble("I forgot my password")
         .style(bubble::Muted)
         .align(Horizontal::Right)

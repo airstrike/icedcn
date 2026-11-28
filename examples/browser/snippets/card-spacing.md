@@ -3,14 +3,14 @@ Pass the login card from the Demo and keep the selected spacing in your applicat
 ```rust
 use iced::Fill;
 use icedcn::widget::{column, text, toggle_group};
-use icedcn::{Size, Slot, card::Card};
+use icedcn::{Size, View, card::Card};
 
 #[derive(Clone)]
 enum Message {
     Spacing(u16),
 }
 
-fn spacing_view(spacing: u16, login: Card<'_, Message>) -> Slot<'_, Message> {
+fn spacing_view(spacing: u16, login: Card<'_, Message>) -> View<'_, Message> {
     let choices = toggle_group(|| {
         [16, 20, 24, 32].map(|n| toggle_group::item(n.to_string(), text::small(format!("{n}px"))))
     })

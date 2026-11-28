@@ -38,7 +38,7 @@ use icedcn_core::theme::tabs;
 
 use crate::Size;
 use crate::button::button;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::container::Container;
 use crate::marker::{self, Press};
 use crate::row::Row;
@@ -58,7 +58,7 @@ pub struct Tabs<'a, Message> {
 }
 
 /// The closure that builds a [`Tabs`]'s content.
-type Body<'a, Message> = Box<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
+type Body<'a, Message> = Box<dyn Fn(&Handle) -> View<'a, Message> + 'a>;
 
 /// What a [`Tabs`]'s content closure receives: the selected value, and the
 /// builders for the list, its triggers and the panels.
@@ -109,7 +109,7 @@ impl Default for State {
 }
 
 /// Create uncontrolled [`Tabs`] whose content is built by `body`.
-pub fn tabs<'a, Message>(body: impl Fn(&Handle) -> Slot<'a, Message> + 'a) -> Tabs<'a, Message> {
+pub fn tabs<'a, Message>(body: impl Fn(&Handle) -> View<'a, Message> + 'a) -> Tabs<'a, Message> {
     Tabs {
         body: Box::new(body),
         value: None,
@@ -190,13 +190,13 @@ impl Handle {
     }
 
     /// The `TabsList`: the muted pill holding the triggers.
-    pub fn list<'a, Message: 'a, T: Into<Slot<'a, Message>>>(
+    pub fn list<'a, Message: 'a, T: Into<View<'a, Message>>>(
         &self,
         triggers: impl IntoIterator<Item = T>,
-    ) -> Slot<'a, Message> {
+    ) -> View<'a, Message> {
         let gap = if self.line { 4 } else { 0 };
         let children = triggers.into_iter().map(Into::into);
-        let content: Slot<'a, Message> = match self.orientation {
+        let content: View<'a, Message> = match self.orientation {
             Orientation::Horizontal => Row::with_children(children)
                 .spacing(gap)
                 .width(self.list_width)
@@ -232,9 +232,9 @@ impl Handle {
                 .id(self.scroll.clone())
                 .into()
         } else {
-            Slot::from(content)
+            View::from(content)
         };
-        Slot::from(
+        View::from(
             list::List {
                 content: content.compose(),
                 orientation: Some((self.orientation, horizontal.then(|| self.scroll.clone()))),
@@ -248,7 +248,7 @@ impl Handle {
     pub fn trigger<'a, Message: Clone + 'a>(
         &self,
         value: impl Into<String>,
-        label: impl Into<Slot<'a, Message>>,
+        label: impl Into<View<'a, Message>>,
     ) -> Trigger<'a, Message> {
         let value = value.into();
         let active = value == self.value;
@@ -301,12 +301,12 @@ impl Handle {
     pub fn content<'a, Message: 'a>(
         &self,
         value: &str,
-        child: impl Into<Slot<'a, Message>>,
-    ) -> Slot<'a, Message> {
+        child: impl Into<View<'a, Message>>,
+    ) -> View<'a, Message> {
         if value == self.value {
             child.into()
         } else {
-            Slot::from(iced_widget::Space::new())
+            View::from(iced_widget::Space::new())
         }
     }
 }
@@ -341,9 +341,9 @@ impl<'a, Message: Clone + 'a> Trigger<'a, Message> {
     }
 }
 
-impl<'a, Message: Clone + 'a> From<Trigger<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Trigger<'a, Message>> for View<'a, Message> {
     fn from(trigger: Trigger<'a, Message>) -> Self {
-        Slot::new(trigger)
+        View::new(trigger)
     }
 }
 
@@ -364,8 +364,8 @@ impl<'a, Message: Clone + 'a> Compose<Message> for Trigger<'a, Message> {
             line,
             orientation,
         } = *self;
-        let button: Slot<'a, Message> = button.disabled(disabled).into();
-        let content: Slot<'a, Message> = if line {
+        let button: View<'a, Message> = button.disabled(disabled).into();
+        let content: View<'a, Message> = if line {
             let indicator =
                 Container::new(Space::new()).style(move |theme: &Theme| container::Style {
                     background: active.then(|| theme.neutral.foreground.into()),
@@ -458,9 +458,9 @@ impl<'a, Message: 'static> Compose<Message> for Tabs<'a, Message> {
     }
 }
 
-impl<'a, Message: 'static> From<Tabs<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'static> From<Tabs<'a, Message>> for View<'a, Message> {
     fn from(tabs: Tabs<'a, Message>) -> Self {
-        Slot::new(tabs)
+        View::new(tabs)
     }
 }
 

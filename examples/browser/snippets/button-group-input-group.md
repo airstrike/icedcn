@@ -5,9 +5,9 @@ use icedcn::theme::text_input;
 use icedcn::theme::tweak::{Bg, Fg, Token, hover};
 use icedcn::widget::input_group::Align;
 use icedcn::widget::{button, input, input_group, tooltip};
-use icedcn::{Slot, radius};
+use icedcn::{View, radius};
 
-pub fn view<'a>(enabled: bool) -> Slot<'a, bool> {
+pub fn view<'a>(enabled: bool) -> View<'a, bool> {
     let toggle = input_group::button(icon::audio_lines().size(16).line_height(1.0))
         .square()
         .on_press(!enabled);

@@ -2,9 +2,9 @@
 use crate::icon;
 use iced::widget::Text;
 use icedcn::widget::{button, dropdown_menu, menu};
-use icedcn::{Slot, Theme};
+use icedcn::{View, Theme};
 
-pub fn view<'a>() -> Slot<'a, ()> {
+pub fn view<'a>() -> View<'a> {
     dropdown_menu(
         |&m| {
             button::group![

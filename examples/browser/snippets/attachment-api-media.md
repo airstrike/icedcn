@@ -4,4 +4,4 @@ Attach one icon or preview widget with `.media(...)`. For a photo, use `iced::wi
 
 | Builder | Type | Default |
 | --- | --- | --- |
-| `.media(...)` | `impl Into<Slot>` | No media |
+| `.media(...)` | `impl Into<View>` | No media |

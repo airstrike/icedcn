@@ -40,7 +40,7 @@ use icedcn_core::theme::text::Foreground;
 use crate::Size;
 use crate::button::Button;
 use crate::column::Column;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::container::Container;
 use crate::dialog::{self, Dialog, Placement};
 use crate::row::Row;
@@ -53,7 +53,7 @@ pub use icedcn_core::theme::alert_dialog::{Destructive, Media};
 mod tests;
 
 /// A closure that builds part of an [`AlertDialog`].
-type Body<'a, Message> = Box<dyn Fn(&Handle) -> Slot<'a, Message> + 'a>;
+type Body<'a, Message> = Box<dyn Fn(&Handle) -> View<'a, Message> + 'a>;
 
 /// A modal question with cancel and action buttons.
 pub struct AlertDialog<'a, Message> {
@@ -78,8 +78,8 @@ pub struct Handle {
 /// Create a closed, uncontrolled [`AlertDialog`]: `trigger` builds what
 /// sits in place, `content` the panel shown while open.
 pub fn alert_dialog<'a, Message>(
-    trigger: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
-    content: impl Fn(&Handle) -> Slot<'a, Message> + 'a,
+    trigger: impl Fn(&Handle) -> View<'a, Message> + 'a,
+    content: impl Fn(&Handle) -> View<'a, Message> + 'a,
 ) -> AlertDialog<'a, Message> {
     AlertDialog {
         trigger: Box::new(trigger),
@@ -127,8 +127,8 @@ impl Handle {
     /// Make `child` open the dialog when pressed (`AlertDialogTrigger`).
     pub fn trigger<'a, Message: 'a>(
         &self,
-        child: impl Into<Slot<'a, Message>>,
-    ) -> Slot<'a, Message> {
+        child: impl Into<View<'a, Message>>,
+    ) -> View<'a, Message> {
         self.dialog.trigger(child)
     }
 
@@ -137,7 +137,7 @@ impl Handle {
     pub fn cancel<'a, Message: Clone + 'a>(
         &self,
         button: Button<'a, Message>,
-    ) -> Slot<'a, Message> {
+    ) -> View<'a, Message> {
         self.dialog.close(self.fit(button))
     }
 
@@ -146,7 +146,7 @@ impl Handle {
     pub fn action<'a, Message: Clone + 'a>(
         &self,
         button: Button<'a, Message>,
-    ) -> Slot<'a, Message> {
+    ) -> View<'a, Message> {
         self.dialog.close(self.fit(button))
     }
 
@@ -169,7 +169,7 @@ impl Handle {
     pub fn header_content<'a, Message: 'a>(
         &self,
         title: &'a str,
-        description: impl Into<Slot<'a, Message>>,
+        description: impl Into<View<'a, Message>>,
     ) -> Header<'a, Message> {
         Header {
             title,
@@ -185,10 +185,10 @@ impl Handle {
     /// dialogs stack actions in reverse visual order, preserving focus order.
     pub fn footer<'a, Message: 'a>(
         &self,
-        buttons: impl IntoIterator<Item = Slot<'a, Message>>,
-    ) -> Slot<'a, Message> {
+        buttons: impl IntoIterator<Item = View<'a, Message>>,
+    ) -> View<'a, Message> {
         let buttons: Vec<_> = buttons.into_iter().collect();
-        let actions: Slot<'a, Message> = if self.is_mobile && !self.is_small {
+        let actions: View<'a, Message> = if self.is_mobile && !self.is_small {
             Column::with_children(buttons)
                 .reverse()
                 .spacing(8)
@@ -204,8 +204,8 @@ impl Handle {
         };
 
         Column::with_children([
-            Slot::from(separator()),
-            Slot::from(
+            View::from(separator()),
+            View::from(
                 Container::new(actions)
                     .width(Fill)
                     .padding(16)
@@ -230,8 +230,8 @@ impl Handle {
 /// An `AlertDialogHeader`, built by [`Handle::header`].
 pub struct Header<'a, Message> {
     title: &'a str,
-    description: Slot<'a, Message>,
-    media: Option<Slot<'a, Message>>,
+    description: View<'a, Message>,
+    media: Option<View<'a, Message>>,
     media_style: Spec,
     is_small: bool,
 }
@@ -239,7 +239,7 @@ pub struct Header<'a, Message> {
 impl<'a, Message: 'a> Header<'a, Message> {
     /// Show `content` (usually an icon, drawn at 24px) on an
     /// `AlertDialogMedia` tile.
-    pub fn media(mut self, content: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn media(mut self, content: impl Into<View<'a, Message>>) -> Self {
         self.media = Some(content.into());
         self
     }
@@ -283,7 +283,7 @@ impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
             .medium()
             .style(Foreground)
             .align_x(alignment);
-        let copy = Column::with_children([Slot::from(title), description])
+        let copy = Column::with_children([View::from(title), description])
             .spacing(6)
             .width(Fill)
             .align_x(alignment);
@@ -300,17 +300,17 @@ impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
                 .style(media_style)
         });
 
-        let header: Slot<'b, Message> = match (media, is_small) {
+        let header: View<'b, Message> = match (media, is_small) {
             (None, _) => copy.into(),
             (Some(media), true) => Column::with_children([
-                Slot::from(Container::new(media).padding(iced_core::Padding::ZERO.bottom(8))),
-                Slot::from(copy),
+                View::from(Container::new(media).padding(iced_core::Padding::ZERO.bottom(8))),
+                View::from(copy),
             ])
             .spacing(6)
             .width(Fill)
             .align_x(Horizontal::Center)
             .into(),
-            (Some(media), false) => Row::with_children([Slot::from(media), Slot::from(copy)])
+            (Some(media), false) => Row::with_children([View::from(media), View::from(copy)])
                 .spacing(16)
                 .align_y(Vertical::Top)
                 .width(Fill)
@@ -321,9 +321,9 @@ impl<'a, Message: 'a> Compose<Message> for Header<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Header<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Header<'a, Message>> for View<'a, Message> {
     fn from(header: Header<'a, Message>) -> Self {
-        Slot::new(header)
+        View::new(header)
     }
 }
 
@@ -383,13 +383,13 @@ impl<'a, Message: Clone + 'static> Compose<Message> for AlertDialog<'a, Message>
 
         Compose::inherit(&mut dialog, &inherited);
 
-        Slot::from(dialog).compose()
+        View::from(dialog).compose()
     }
 }
 
-impl<'a, Message: Clone + 'static> From<AlertDialog<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'static> From<AlertDialog<'a, Message>> for View<'a, Message> {
     fn from(dialog: AlertDialog<'a, Message>) -> Self {
-        Slot::new(dialog)
+        View::new(dialog)
     }
 }
 

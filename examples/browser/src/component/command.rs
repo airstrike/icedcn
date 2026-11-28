@@ -2,7 +2,7 @@
 use crate::{Message, icon, page};
 use iced::Task;
 use icedcn::widget::{button, command};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 pub static META: page::Meta = page::Meta {
     title: "Command",
@@ -56,7 +56,7 @@ impl CommandPage {
     }
 }
 
-fn preview_demo() -> Slot<'static, Message> {
+fn preview_demo() -> View<'static, Message> {
     command([
         command::item("Calendar")
             .group("Suggestions")
@@ -84,7 +84,7 @@ fn preview_demo() -> Slot<'static, Message> {
     .width(iced::Fill.max(384.0))
     .into()
 }
-fn preview_basic() -> Slot<'static, Message> {
+fn preview_basic() -> View<'static, Message> {
     command::dialog(
         |d| d.trigger(button("Open Menu").style(button::Outline)),
         || {
@@ -97,7 +97,7 @@ fn preview_basic() -> Slot<'static, Message> {
     )
     .into()
 }
-fn preview_shortcuts() -> Slot<'static, Message> {
+fn preview_shortcuts() -> View<'static, Message> {
     command::dialog(
         |d| d.trigger(button("Open Menu").style(button::Outline)),
         || {
@@ -119,7 +119,7 @@ fn preview_shortcuts() -> Slot<'static, Message> {
     )
     .into()
 }
-fn preview_groups() -> Slot<'static, Message> {
+fn preview_groups() -> View<'static, Message> {
     command::dialog(
         |d| d.trigger(button("Open Menu").style(button::Outline)),
         || {
@@ -150,7 +150,7 @@ fn preview_groups() -> Slot<'static, Message> {
     )
     .into()
 }
-fn preview_scrollable() -> Slot<'static, Message> {
+fn preview_scrollable() -> View<'static, Message> {
     command::dialog(
         |d| d.trigger(button("Open Menu").style(button::Outline)),
         || {

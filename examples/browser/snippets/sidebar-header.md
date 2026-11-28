@@ -1,8 +1,8 @@
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{dropdown_menu, menu, sidebar};
 
-pub fn workspace_header<'a>() -> Slot<'a, ()> {
+pub fn workspace_header<'a>() -> View<'a> {
     let switcher = dropdown_menu(
         |m| m.trigger(sidebar::menu_button("Select Workspace")),
         |_| menu::group([menu::item("Acme Inc").into()]),

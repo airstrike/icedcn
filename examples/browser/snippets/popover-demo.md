@@ -1,10 +1,10 @@
 ```rust
 use iced::{Fill, FillPortion};
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::field::Orientation;
 use icedcn::widget::{button, column, field, input, popover, text};
 
-pub fn view<'a>(window_width: f32) -> Slot<'a, ()> {
+pub fn view<'a>(window_width: f32) -> View<'a> {
     let size = if window_width < 768. { 16. } else { 14. };
     popover(
         |p| {

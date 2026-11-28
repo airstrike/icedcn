@@ -14,7 +14,7 @@ use iced_core::{
 use iced_widget::Renderer;
 use icedcn_core::{Radius, Theme, radius};
 
-use crate::compose::{Compose, Slot};
+use crate::compose::{Compose, View};
 
 /// A muted placeholder block.
 pub struct Skeleton<'a, Message> {
@@ -61,9 +61,9 @@ impl<'a, Message: 'a> From<Skeleton<'a, Message>> for Element<'a, Message, Theme
     }
 }
 
-impl<'a, Message: 'a> From<Skeleton<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Skeleton<'a, Message>> for View<'a, Message> {
     fn from(widget: Skeleton<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 

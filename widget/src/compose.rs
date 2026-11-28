@@ -1,21 +1,21 @@
-//! Composition: the [`Compose`] trait, the type-erased [`Slot`] and the
+//! Composition: the [`Compose`] trait, the type-erased [`View`] and the
 //! [`Inherited`] props a parent cascades into its children.
 //!
 //! Every icedcn widget is a builder that implements [`Compose`]. A parent
-//! holds its children as [`Slot`]s, pushes its cascading props into them with
-//! [`Slot::inherit`] and only then turns them into iced [`Element`]s with
-//! [`Slot::compose`]. That ordering is what lets `button!["Fork", icon]` size
+//! holds its children as [`View`]s, pushes its cascading props into them with
+//! [`View::inherit`] and only then turns them into iced [`Element`]s with
+//! [`View::compose`]. That ordering is what lets `button!["Fork", icon]` size
 //! its text and icon from the button's [`Size`] without the caller repeating
 //! it.
 //!
-//! Each [`Compose`] implementor also provides `From<Self> for Slot`, so APIs
-//! take `impl Into<Slot>`. The stock iced widgets icedcn composes with are
+//! Each [`Compose`] implementor also provides `From<Self> for View`, so APIs
+//! take `impl Into<View>`. The stock iced widgets icedcn composes with are
 //! listed at the bottom of this module; any other widget joins through its
 //! [`Element`] (`.boxed()`). Neither can be a blanket impl. iced implements
 //! `Widget` for `&str`, so a blanket over every iced widget would claim string
 //! children and compose them as raw iced text, outside the cascade, and
-//! overlap with `From<&str> for Slot`. A blanket `From<C: Compose>` overlaps
-//! with `From<Slot> for Slot` and `From<&str>`, because a downstream crate
+//! overlap with `From<&str> for View`. A blanket `From<C: Compose>` overlaps
+//! with `From<View> for View` and `From<&str>`, because a downstream crate
 //! may implement `Compose<ItsMessage>` for either.
 
 use crate::Size;
@@ -223,7 +223,7 @@ impl Inherited {
 /// iced [`Element`].
 ///
 /// The trait takes no lifetime so that `Box<dyn Compose + 'a>` (and therefore
-/// [`Slot<'a>`]) is covariant in `'a`, like [`Element`]: the produced
+/// [`View<'a>`]) is covariant in `'a`, like [`Element`]: the produced
 /// element's lifetime is picked by the caller through `Self: 'a`.
 pub trait Compose<Message, T = Theme, R = Renderer> {
     /// Whether this composition contains a footer belonging to the current Card.
@@ -253,9 +253,9 @@ pub trait Compose<Message, T = Theme, R = Renderer> {
 /// Covariant in `'a` (just like [`Element`]) so children of different
 /// lifetimes can sit side by side in [`column!`](crate::column!) and
 /// [`row!`](crate::row!).
-pub struct Slot<'a, Message, T = Theme, R = Renderer>(Box<dyn Compose<Message, T, R> + 'a>);
+pub struct View<'a, Message = (), T = Theme, R = Renderer>(Box<dyn Compose<Message, T, R> + 'a>);
 
-impl<'a, Message: 'a, T: 'a, R: 'a> Slot<'a, Message, T, R> {
+impl<'a, Message: 'a, T: 'a, R: 'a> View<'a, Message, T, R> {
     /// Query Card footer presence before erasing the composition into widgets.
     pub fn has_card_footer(&self) -> bool {
         self.0.has_card_footer()
@@ -286,23 +286,23 @@ impl<'a, Message: 'a, T: 'a, R: 'a> Slot<'a, Message, T, R> {
     ///
     /// The mapping is deferred to [`compose`](Self::compose), so props pushed
     /// into the mapped slot still reach the child.
-    pub fn map<B>(self, f: impl Fn(Message) -> B + 'a) -> Slot<'a, B, T, R>
+    pub fn map<B>(self, f: impl Fn(Message) -> B + 'a) -> View<'a, B, T, R>
     where
         Message: 'a,
         B: 'static,
         T: 'static,
         R: iced_core::Renderer + 'static,
     {
-        Slot::new(Mapped {
+        View::new(Mapped {
             slot: self,
             mapper: Box::new(f),
         })
     }
 }
 
-/// A [`Slot`] whose messages are mapped once it composes.
+/// A [`View`] whose messages are mapped once it composes.
 struct Mapped<'a, A, B, T, R> {
-    slot: Slot<'a, A, T, R>,
+    slot: View<'a, A, T, R>,
     mapper: Box<dyn Fn(A) -> B + 'a>,
 }
 
@@ -333,33 +333,33 @@ where
     }
 }
 
-impl<'a, Message: 'a, T: 'a, R: 'a> From<Slot<'a, Message, T, R>> for Element<'a, Message, T, R> {
-    fn from(slot: Slot<'a, Message, T, R>) -> Self {
+impl<'a, Message: 'a, T: 'a, R: 'a> From<View<'a, Message, T, R>> for Element<'a, Message, T, R> {
+    fn from(slot: View<'a, Message, T, R>) -> Self {
         slot.compose()
     }
 }
 
-impl<'a, Message: 'a> From<&'a str> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<&'a str> for View<'a, Message> {
     fn from(s: &'a str) -> Self {
-        Slot::new(Text::new(s))
+        View::new(Text::new(s))
     }
 }
 
-impl<'a, Message: 'a> From<String> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<String> for View<'a, Message> {
     fn from(s: String) -> Self {
-        Slot::new(Text::new(s))
+        View::new(Text::new(s))
     }
 }
 
-impl<'a, Message: 'a> From<std::borrow::Cow<'a, str>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<std::borrow::Cow<'a, str>> for View<'a, Message> {
     fn from(s: std::borrow::Cow<'a, str>) -> Self {
-        Slot::new(Text::new(s))
+        View::new(Text::new(s))
     }
 }
 
-impl<'a, Message: 'a, T: 'a, R: 'a> From<Element<'a, Message, T, R>> for Slot<'a, Message, T, R> {
+impl<'a, Message: 'a, T: 'a, R: 'a> From<Element<'a, Message, T, R>> for View<'a, Message, T, R> {
     fn from(element: Element<'a, Message, T, R>) -> Self {
-        Slot::new(element)
+        View::new(element)
     }
 }
 
@@ -373,7 +373,7 @@ impl<'a, Message, T, R> Compose<Message, T, R> for Element<'a, Message, T, R> {
     }
 }
 
-/// Implement [`Compose`] and `From<_> for Slot` for a stock iced widget: no
+/// Implement [`Compose`] and `From<_> for View` for a stock iced widget: no
 /// props to receive, boxed on compose.
 macro_rules! compose_widget {
     ($ty:ty) => {
@@ -389,9 +389,9 @@ macro_rules! compose_widget {
             }
         }
 
-        impl<'a, Message: 'a $($bounds)*> From<$ty> for Slot<'a, Message> {
+        impl<'a, Message: 'a $($bounds)*> From<$ty> for View<'a, Message> {
             fn from(widget: $ty) -> Self {
-                Slot::new(widget)
+                View::new(widget)
             }
         }
     };
@@ -484,30 +484,30 @@ where
     }
 }
 
-impl<'a, T, Message> From<iced_widget::Slider<'a, T, Message, Theme>> for Slot<'a, Message>
+impl<'a, T, Message> From<iced_widget::Slider<'a, T, Message, Theme>> for View<'a, Message>
 where
     T: Copy + num_traits::AsPrimitive<f64> + num_traits::FromPrimitive + 'a,
     Message: Clone + 'a,
 {
     fn from(widget: iced_widget::Slider<'a, T, Message, Theme>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
 impl<'a, T, Message, Values> From<crate::slider::Slider<'a, T, Message, Theme, Values>>
-    for Slot<'a, Message>
+    for View<'a, Message>
 where
     Values: crate::slider::Thumbs<T> + 'a,
     T: Copy + PartialOrd + num_traits::AsPrimitive<f64> + num_traits::FromPrimitive + 'a,
     Message: Clone + 'a,
 {
     fn from(widget: crate::slider::Slider<'a, T, Message, Theme, Values>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
 impl<'a, T, L, V, Message> From<iced_widget::PickList<'a, T, L, V, Message, Theme>>
-    for Slot<'a, Message>
+    for View<'a, Message>
 where
     T: PartialEq + Clone + 'a,
     L: std::borrow::Borrow<[T]> + 'a,
@@ -515,17 +515,17 @@ where
     Message: Clone + 'a,
 {
     fn from(widget: iced_widget::PickList<'a, T, L, V, Message, Theme>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
-impl<'a, T, Message> From<iced_widget::ComboBox<'a, T, Message, Theme>> for Slot<'a, Message>
+impl<'a, T, Message> From<iced_widget::ComboBox<'a, T, Message, Theme>> for View<'a, Message>
 where
     T: std::fmt::Display + Clone + 'static,
     Message: Clone + 'a,
 {
     fn from(widget: iced_widget::ComboBox<'a, T, Message, Theme>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -578,8 +578,8 @@ mod tests {
     #[test]
     fn mapped_slots_still_receive_the_cascade() {
         let seen = Rc::new(Cell::new(None));
-        let slot: Slot<'_, u8> = Slot::new(Probe(seen.clone()));
-        let mut mapped: Slot<'_, u16> = slot.map(u16::from);
+        let slot: View<'_, u8> = View::new(Probe(seen.clone()));
+        let mut mapped: View<'_, u16> = slot.map(u16::from);
 
         mapped.inherit(&Inherited::default().with_size(Size::Xs));
         let _ = mapped.compose();

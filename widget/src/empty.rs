@@ -27,17 +27,17 @@ use icedcn_core::theme::container::Style;
 use icedcn_core::theme::media::Frame;
 use icedcn_core::{Border, Gap, Theme, radius};
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::{Size, text};
 
 pub use icedcn_core::theme::empty::Icon;
 
 /// Empty-state root.
 pub struct Empty<'a, Message> {
-    media: Option<Slot<'a, Message>>,
-    title: Option<Slot<'a, Message>>,
-    description: Option<Slot<'a, Message>>,
-    content: Option<Slot<'a, Message>>,
+    media: Option<View<'a, Message>>,
+    title: Option<View<'a, Message>>,
+    description: Option<View<'a, Message>>,
+    content: Option<View<'a, Message>>,
     padding: Padding,
 }
 
@@ -54,7 +54,7 @@ pub fn empty<'a, Message: 'a>() -> Empty<'a, Message> {
 
 impl<'a, Message: 'a> Empty<'a, Message> {
     /// Set the media slot.
-    pub fn media(mut self, media: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn media(mut self, media: impl Into<View<'a, Message>>) -> Self {
         self.media = Some(media.into());
         self
     }
@@ -72,7 +72,7 @@ impl<'a, Message: 'a> Empty<'a, Message> {
     }
 
     /// Set the content slot.
-    pub fn content(mut self, content: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn content(mut self, content: impl Into<View<'a, Message>>) -> Self {
         self.content = Some(content.into());
         self
     }
@@ -93,9 +93,9 @@ impl<'a, Message: 'a> From<Empty<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Empty<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Empty<'a, Message>> for View<'a, Message> {
     fn from(widget: Empty<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -144,12 +144,12 @@ impl<'a, Message: 'a> Compose<Message> for Empty<'a, Message> {
 
 /// Empty media slot.
 pub struct Media<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     frame: Option<Frame>,
 }
 
 /// Create an unframed empty media slot.
-pub fn media<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Media<'a, Message> {
+pub fn media<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Media<'a, Message> {
     Media {
         content: content.into(),
         frame: None,
@@ -172,9 +172,9 @@ impl<'a, Message: 'a> From<Media<'a, Message>>
     }
 }
 
-impl<'a, Message: 'a> From<Media<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Media<'a, Message>> for View<'a, Message> {
     fn from(widget: Media<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 
@@ -218,58 +218,58 @@ impl<'a, Message: 'a> Compose<Message> for Media<'a, Message> {
 
 /// Convert a value into an empty title.
 pub trait IntoTitle<'a, Message> {
-    fn into_title(self) -> Slot<'a, Message>;
+    fn into_title(self) -> View<'a, Message>;
 }
 
 impl<'a, Message: 'a> IntoTitle<'a, Message> for &'a str {
-    fn into_title(self) -> Slot<'a, Message> {
+    fn into_title(self) -> View<'a, Message> {
         title(self).into()
     }
 }
 
 impl<'a, Message: 'a> IntoTitle<'a, Message> for String {
-    fn into_title(self) -> Slot<'a, Message> {
+    fn into_title(self) -> View<'a, Message> {
         title(self).into()
     }
 }
 
 impl<'a, Message: 'a> IntoTitle<'a, Message> for text::Text<'a> {
-    fn into_title(self) -> Slot<'a, Message> {
+    fn into_title(self) -> View<'a, Message> {
         self.into()
     }
 }
 
-impl<'a, Message: 'a> IntoTitle<'a, Message> for Slot<'a, Message> {
-    fn into_title(self) -> Slot<'a, Message> {
+impl<'a, Message: 'a> IntoTitle<'a, Message> for View<'a, Message> {
+    fn into_title(self) -> View<'a, Message> {
         self
     }
 }
 
 /// Convert a value into an empty description.
 pub trait IntoDescription<'a, Message> {
-    fn into_description(self) -> Slot<'a, Message>;
+    fn into_description(self) -> View<'a, Message>;
 }
 
 impl<'a, Message: 'a> IntoDescription<'a, Message> for &'a str {
-    fn into_description(self) -> Slot<'a, Message> {
+    fn into_description(self) -> View<'a, Message> {
         description(self).into()
     }
 }
 
 impl<'a, Message: 'a> IntoDescription<'a, Message> for String {
-    fn into_description(self) -> Slot<'a, Message> {
+    fn into_description(self) -> View<'a, Message> {
         description(self).into()
     }
 }
 
 impl<'a, Message: 'a> IntoDescription<'a, Message> for text::Text<'a> {
-    fn into_description(self) -> Slot<'a, Message> {
+    fn into_description(self) -> View<'a, Message> {
         self.into()
     }
 }
 
-impl<'a, Message: 'a> IntoDescription<'a, Message> for Slot<'a, Message> {
-    fn into_description(self) -> Slot<'a, Message> {
+impl<'a, Message: 'a> IntoDescription<'a, Message> for View<'a, Message> {
+    fn into_description(self) -> View<'a, Message> {
         self
     }
 }
@@ -285,8 +285,8 @@ pub fn description<'a>(content: impl iced_core::text::IntoFragment<'a>) -> text:
 }
 
 fn header<'a, Message: 'a>(
-    title: Option<Slot<'a, Message>>,
-    description: Option<Slot<'a, Message>>,
+    title: Option<View<'a, Message>>,
+    description: Option<View<'a, Message>>,
 ) -> iced_core::Element<'a, Message, Theme, Renderer> {
     let mut column = iced_widget::Column::new()
         .spacing(Gap::G2)

@@ -4,11 +4,11 @@ Give each error a specific instruction. Set the invalid style and attach the exp
 
 ```rust
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::theme::text_input::Invalid;
 use icedcn::widget::{field, input};
 
-fn username<'a>(value: String, unavailable: bool) -> Slot<'a, ()> {
+fn username<'a>(value: String, unavailable: bool) -> View<'a> {
     let control = input("Username").width(Fill).default_value(value);
     if unavailable {
         field(control.style(Invalid))

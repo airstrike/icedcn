@@ -4,6 +4,6 @@
 
 | Property | Type | Default |
 | --- | --- | --- |
-| Content | `impl Into<Slot>` | Required |
+| Content | `impl Into<View>` | Required |
 | Size | `Size` | Square, `Xs` |
 | Style | Button style | `button::Ghost` |

@@ -19,8 +19,8 @@ Ghost buttons labelled "Previous" and "Next" beside a chevron.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |
-| `.label(label)` | `impl Into<Slot>` | `"Previous"` / `"Next"` | Replace the label. |
-| `.icon(icon)` | `impl Into<Slot>` | `‹` / `›` | Replace the chevron glyph with an icon. |
+| `.label(label)` | `impl Into<View>` | `"Previous"` / `"Next"` | Replace the label. |
+| `.icon(icon)` | `impl Into<View>` | `‹` / `›` | Replace the chevron glyph with an icon. |
 | `.on_press(message)` | `Message` | `None` | Publish `message` when pressed. |
 
 ### `pagination::ellipsis()`

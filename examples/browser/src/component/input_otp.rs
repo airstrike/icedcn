@@ -7,7 +7,7 @@ use iced::{Fill, Widget};
 use icedcn::Theme;
 use icedcn::widget::input_otp::Pattern;
 use icedcn::widget::{button, column, container, field, input_otp, row, space, text};
-use icedcn::{Size, Slot, card};
+use icedcn::{Size, View, card};
 
 pub static META: page::Meta = page::Meta {
     title: "Input OTP",
@@ -204,7 +204,7 @@ impl<'a> Component<'a, Message, Theme> for Verification {
         }
         let invalid = state.attempted && state.code.len() != 6;
         let mut code = field(entry.group_size(3).cell_size(44., 48.).invalid(invalid))
-            .label(Slot::from(row![
+            .label(View::from(row![
                 text::label("Verification code"),
                 space::horizontal(),
                 button(row![icon::refresh_ccw(), "Resend Code"].spacing(4))

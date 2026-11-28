@@ -18,7 +18,7 @@ use iced_core::{Element, Widget};
 use iced_widget::Renderer;
 use icedcn_core::Theme;
 
-use crate::compose::{Compose, Slot};
+use crate::compose::{Compose, View};
 
 impl<'a, Message: 'a, Design> Compose<Message> for Chart<'a, Message, Design, Theme>
 where
@@ -32,7 +32,7 @@ where
     }
 }
 
-impl<'a, Message: 'a, Design> From<Chart<'a, Message, Design, Theme>> for Slot<'a, Message>
+impl<'a, Message: 'a, Design> From<Chart<'a, Message, Design, Theme>> for View<'a, Message>
 where
     Design: hyozu::Design + Clone + 'a,
 {

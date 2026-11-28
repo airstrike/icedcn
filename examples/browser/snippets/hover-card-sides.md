@@ -1,10 +1,10 @@
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use std::time::Duration;
 
 use icedcn::widget::{button, column, hover_card, row, text};
 
-fn view<'a>() -> Slot<'a, Message> {
+fn view<'a>() -> View<'a, Message> {
     row![
         side("Left", hover_card::Side::Left),
         side("Top", hover_card::Side::Top),
@@ -15,7 +15,7 @@ fn view<'a>() -> Slot<'a, Message> {
     .into()
 }
 
-fn side<'a>(label: &'a str, side: hover_card::Side) -> Slot<'a, Message> {
+fn side<'a>(label: &'a str, side: hover_card::Side) -> View<'a, Message> {
     hover_card(
         button(label).style(button::Outline),
         column![

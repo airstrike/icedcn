@@ -4,7 +4,7 @@ pub use group::{Group, group};
 mod surface;
 mod trigger;
 use crate::status_shimmer;
-use crate::{Compose, Inherited, Row, Size, Slot, button, column, container, row, text};
+use crate::{Compose, Inherited, Row, Size, View, button, column, container, row, text};
 use iced_core::Length::{Fill, Shrink};
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_core::font::Weight;
@@ -29,8 +29,8 @@ pub enum State {
 pub struct Attachment<'a, Message> {
     title: String,
     description: Option<String>,
-    media: Option<Slot<'a, Message>>,
-    actions: Vec<Slot<'a, Message>>,
+    media: Option<View<'a, Message>>,
+    actions: Vec<View<'a, Message>>,
     trigger: Option<Mount<'a, Message>>,
     state: State,
     size: Size,
@@ -60,18 +60,18 @@ impl<'a, Message: 'a> Attachment<'a, Message> {
         self.description = Some(value.into());
         self
     }
-    pub fn media(mut self, value: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn media(mut self, value: impl Into<View<'a, Message>>) -> Self {
         self.media = Some(value.into());
         self
     }
-    pub fn action(mut self, value: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn action(mut self, value: impl Into<View<'a, Message>>) -> Self {
         self.actions.push(value.into());
         self
     }
     /// Supply the full-card target; actions receive input independently above it.
     pub fn trigger(
         mut self,
-        wrap: impl FnOnce(Slot<'a, Message>) -> Slot<'a, Message> + 'a,
+        wrap: impl FnOnce(View<'a, Message>) -> View<'a, Message> + 'a,
     ) -> Self {
         self.trigger = Some(Box::new(wrap));
         self
@@ -101,11 +101,11 @@ impl<'a, Message: 'a> Attachment<'a, Message> {
 
 /// An independent icon button in a file card.
 pub fn action<'a, Message: Clone + 'a>(
-    icon: impl Into<Slot<'a, Message>>,
+    icon: impl Into<View<'a, Message>>,
 ) -> crate::Button<'a, Message> {
     button(icon).square().size(Size::Xs).style(button::Ghost)
 }
-fn truncate<'a, Message: 'a>(label: String, pixels: f32, medium: bool) -> Slot<'a, Message> {
+fn truncate<'a, Message: 'a>(label: String, pixels: f32, medium: bool) -> View<'a, Message> {
     let mut label = text(label)
         .size(pixels)
         .line_height(LineHeight::Absolute((pixels * 1.25).into()))
@@ -174,7 +174,7 @@ impl<'a, Message: 'a> Compose<Message> for Attachment<'a, Message> {
         title.inherit(&inherited);
         let mut labels = column![title].spacing(2).width(Fill);
         if let Some(description) = description {
-            let mut description: Slot<'a, Message> = text(description)
+            let mut description: View<'a, Message> = text(description)
                 .size(12.)
                 .width(Fill)
                 .line_height(LineHeight::Absolute(16.into()))
@@ -238,7 +238,7 @@ impl<'a, Message: 'a> Compose<Message> for Attachment<'a, Message> {
                     ..Style::default()
                 })
         });
-        let mut body: Slot<'a, Message> = if vertical {
+        let mut body: View<'a, Message> = if vertical {
             let mut col = column(Vec::new()).spacing(gap);
             if let Some(media) = media {
                 col = col.push(media.into());
@@ -329,9 +329,9 @@ impl<'a, Message: 'a> Compose<Message> for Attachment<'a, Message> {
         .boxed()
     }
 }
-impl<'a, Message: 'a> From<Attachment<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Attachment<'a, Message>> for View<'a, Message> {
     fn from(a: Attachment<'a, Message>) -> Self {
-        Slot::new(a)
+        View::new(a)
     }
 }
 impl<'a, Message: 'a> From<Attachment<'a, Message>> for Element<'a, Message, Theme, Renderer> {
@@ -340,4 +340,4 @@ impl<'a, Message: 'a> From<Attachment<'a, Message>> for Element<'a, Message, The
     }
 }
 
-type Mount<'a, Message> = Box<dyn FnOnce(Slot<'a, Message>) -> Slot<'a, Message> + 'a>;
+type Mount<'a, Message> = Box<dyn FnOnce(View<'a, Message>) -> View<'a, Message> + 'a>;

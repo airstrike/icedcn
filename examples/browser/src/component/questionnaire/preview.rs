@@ -8,7 +8,7 @@ use icedcn::widget::questionnaire::{Answers, Invalid, Progress, Shortcuts};
 use icedcn::widget::{
     Row, button, column, container, dialog, native_select, questionnaire, row, space, text,
 };
-use icedcn::{Slot, Theme, card};
+use icedcn::{Theme, View, card};
 
 pub(super) fn preview<'a>(id: &'static str, page: usize) -> Element<'a, Message, Theme> {
     component::component(Example { id, page }).boxed()
@@ -47,7 +47,7 @@ fn validate(answers: &Answers) -> Option<Invalid> {
         None
     }
 }
-fn segmented<'a>(p: Progress) -> Slot<'a, questionnaire::Event> {
+fn segmented<'a>(p: Progress) -> View<'a, questionnaire::Event> {
     let segments = (0..p.total).map(|i| {
         container(space::horizontal())
             .width(Fill)
@@ -75,7 +75,7 @@ fn segmented<'a>(p: Progress) -> Slot<'a, questionnaire::Event> {
 }
 
 impl Example {
-    fn form<'a>(&self, state: &State) -> Slot<'a, Event> {
+    fn form<'a>(&self, state: &State) -> View<'a, Event> {
         let id = self.id;
         let mut q = questionnaire(items::items(id))
             .default_answers(items::saved(id))
@@ -121,7 +121,7 @@ impl Example {
             "navigation-state" => q = q.block_unanswered(true),
             _ => {}
         }
-        let result: Slot<'a, Event> = if matches!(id, "validation" | "card") {
+        let result: View<'a, Event> = if matches!(id, "validation" | "card") {
             card::card(q).width(Fill).padding(20).into()
         } else {
             q.into()

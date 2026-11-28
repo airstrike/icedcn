@@ -1,9 +1,9 @@
 ```rust
 use icedcn::Horizontal;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{checkbox, field, separator, text};
 
-fn devices<'a, M: Clone + 'a>() -> Slot<'a, M> {
+fn devices<'a, M: Clone + 'a>() -> View<'a, M> {
     let devices = [
         "Hard disks",
         "External disks",

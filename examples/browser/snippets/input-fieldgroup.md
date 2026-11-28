@@ -1,6 +1,6 @@
 ```rust
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{button, field, input, row};
 
 #[derive(Clone, Debug)]
@@ -27,7 +27,7 @@ impl Contact {
         }
     }
 
-    fn view<'a>(&self) -> Slot<'a, Edit> {
+    fn view<'a>(&self) -> View<'a, Edit> {
         field::group([
             field(
                 input("Jordan Lee")

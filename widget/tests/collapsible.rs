@@ -5,7 +5,7 @@ use iced_core::{Element, Point};
 use iced_test::simulator::{self, simulator};
 use iced_widget::{Renderer, Space};
 use icedcn_core::Theme;
-use icedcn_widget::{Inherited, Slot, button, collapsible, column};
+use icedcn_widget::{Inherited, View, button, collapsible, column};
 
 type Ui = iced_test::Simulator<'static, Message, Theme, Renderer>;
 #[derive(Debug, Clone, PartialEq)]
@@ -14,7 +14,7 @@ enum Message {
     Child,
 }
 
-fn disclosure(open: Option<bool>, default_open: bool, disabled: bool) -> Slot<'static, Message> {
+fn disclosure(open: Option<bool>, default_open: bool, disabled: bool) -> View<'static, Message> {
     let root = collapsible(|c| {
         column![
             c.trigger(

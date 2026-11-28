@@ -4,4 +4,4 @@ Append one or more independent controls with repeated `.action(...)` calls. Hori
 
 | Builder | Type | Default |
 | --- | --- | --- |
-| `.action(...)` | `impl Into<Slot>` | No actions |
+| `.action(...)` | `impl Into<View>` | No actions |

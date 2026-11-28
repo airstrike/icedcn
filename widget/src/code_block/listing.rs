@@ -1,7 +1,7 @@
 //! Selectable source rows and their outside-the-selection decorations.
 use super::{LineStyle, ansi, lines};
 use crate::compose::Inherited;
-use crate::{Column, Slot, container, row};
+use crate::{Column, View, container, row};
 use iced_core::Length::{Fill, Shrink};
 use iced_core::alignment::Horizontal;
 use iced_core::text::{LineHeight, Wrapping};
@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 
 // Only listings use iced's lazy widget, whose cached element requires a static message.
 // Plain blocks and user-supplied slots continue to accept borrowed messages.
-pub(super) type View<'a, Message> = fn(Options<'a>, Cow<'a, str>, Layout) -> Slot<'a, Message>;
+pub(super) type Render<'a, Message> = fn(Options<'a>, Cow<'a, str>, Layout) -> View<'a, Message>;
 
 #[derive(Debug, Default, Hash)]
 pub(super) struct Options<'a> {
@@ -22,7 +22,7 @@ pub(super) struct Options<'a> {
 }
 
 impl<'a> Options<'a> {
-    pub fn view<Message: 'static>(self, source: Cow<'a, str>, layout: Layout) -> Slot<'a, Message> {
+    pub fn view<Message: 'static>(self, source: Cow<'a, str>, layout: Layout) -> View<'a, Message> {
         let body = iced_widget::lazy((source, self, layout), |(source, options, layout)| {
             // Parse the visible source once per change, including an unfinished final line.
             let lines = options
@@ -43,7 +43,7 @@ impl<'a> Options<'a> {
         body.boxed().into()
     }
 
-    fn rows<Message: 'static>(&self, source: &str, layout: Layout) -> Vec<Slot<'static, Message>> {
+    fn rows<Message: 'static>(&self, source: &str, layout: Layout) -> Vec<View<'static, Message>> {
         if self
             .language
             .as_deref()
@@ -109,7 +109,7 @@ impl Layout {
     }
     pub fn render<'a, Message: 'a>(
         self,
-        lines: Vec<(LineStyle, Slot<'a, Message>)>,
+        lines: Vec<(LineStyle, View<'a, Message>)>,
     ) -> Element<'a, Message, Theme, Renderer> {
         let Self {
             font,
@@ -205,7 +205,7 @@ impl Layout {
                     ..Padding::ZERO
                 });
             match mark(variant).filter(|_| pin.is_none()) {
-                Some(mark) => Slot::from(iced_widget::stack![Element::from(row), mark].boxed()),
+                Some(mark) => View::from(iced_widget::stack![Element::from(row), mark].boxed()),
                 None => row.into(),
             }
         }))

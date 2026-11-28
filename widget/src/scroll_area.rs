@@ -3,7 +3,7 @@ use iced_widget::scrollable::{Status, Style};
 use icedcn_core::Theme;
 use icedcn_core::theme::scrollable::hidden;
 
-use crate::Slot;
+use crate::View;
 use crate::scrollable::{Direction, Scrollable, Scrollbar, Visibility};
 
 /// Nova's vertical scroll area. Set a height to constrain its viewport.
@@ -12,7 +12,7 @@ use crate::scrollable::{Direction, Scrollable, Scrollbar, Visibility};
 /// hide [`HIDE_DELAY`](crate::scrollable::HIDE_DELAY) after it leaves. Change that with
 /// `.visibility(..)` and `.hide_delay(..)`, and fade them out with `.fade(..)`.
 pub fn scroll_area<'a, Message: 'a>(
-    content: impl Into<Slot<'a, Message>>,
+    content: impl Into<View<'a, Message>>,
 ) -> Scrollable<'a, Message> {
     Scrollable::new(content)
         .direction(Direction::Vertical(bar()))

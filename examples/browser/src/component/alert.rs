@@ -8,7 +8,7 @@ use crate::icon;
 use iced::{Fill, Task};
 
 use icedcn::widget::{alert, column};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::page;
 
@@ -71,7 +71,7 @@ impl AlertPage {
     }
 }
 
-fn demo<'a, M: 'a>() -> Slot<'a, M> {
+fn demo<'a, M: 'a>() -> View<'a, M> {
     let notice =
         |icon, title, description| alert().icon(icon).title(title).description(description);
     column![
@@ -130,7 +130,7 @@ impl page::Page for AlertPage {
     }
 
     fn preview(&self, id: &str) -> iced::Element<'_, crate::Message, Theme> {
-        let view: Slot<'_, crate::Message> = match id {
+        let view: View<'_, crate::Message> = match id {
             "demo" => demo(),
             "basic" => default::view(),
             "destructive" => destructive::view(),

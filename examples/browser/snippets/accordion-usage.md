@@ -40,14 +40,14 @@ fn questions<'a, M: 'a>(
 Use record keys for a collection whose order can change. This example keeps the application's `u64` identifiers through the selection handler.
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::accordion;
 
 fn records<'a, M: 'a>(
     items: impl IntoIterator<Item = (u64, String, String)>,
     selected: Vec<u64>,
     changed: impl Fn(Vec<u64>) -> M + 'a,
-) -> Slot<'a, M> {
+) -> View<'a, M> {
     accordion::keyed(
         items
             .into_iter()

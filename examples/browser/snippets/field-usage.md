@@ -4,10 +4,10 @@ Pass a control to `field` and give it a label. A description stays beside the co
 
 ```rust
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{field, input};
 
-fn full_name<'a>() -> Slot<'a, ()> {
+fn full_name<'a>() -> View<'a> {
     field(input("Evil Rabbit").width(Fill))
         .label("Full name")
         .description("This appears on invoices and emails.")

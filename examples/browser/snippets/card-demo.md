@@ -3,7 +3,7 @@ use iced::Alignment::{Center, End, Start};
 use iced::widget::responsive;
 use iced::{Element, Fill, Shrink, Widget};
 use icedcn::widget::{button, column, container, field, input, row, text};
-use icedcn::{Slot, card};
+use icedcn::{View, card};
 
 fn login_card<'a, M: Clone + 'a>(input_size: f32, forgot: M) -> card::Card<'a, M> {
     let password = responsive(move |area| {
@@ -37,7 +37,7 @@ fn login_card<'a, M: Clone + 'a>(input_size: f32, forgot: M) -> card::Card<'a, M
                     field(input("m@example.com").text_size(input_size).width(Fill))
                         .label(text::label("Email")),
                     field(input("").secure(true).text_size(input_size).width(Fill))
-                        .label(Slot::from(password)),
+                        .label(View::from(password)),
                 ]
                 .spacing(24)
                 .width(Fill)

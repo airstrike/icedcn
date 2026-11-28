@@ -1,12 +1,12 @@
 ## Compose widgets
 
-Use lowercase constructors for required content and builder methods for optional properties. Variants go through `.style(...)`. Rows and columns accept `Slot` children; their macros make mixed child types convenient.
+Use lowercase constructors for required content and builder methods for optional properties. Variants go through `.style(...)`. Rows and columns accept `View` children; their macros make mixed child types convenient.
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{button, column, field, input, text};
 
-pub fn profile<'a>() -> Slot<'a, ()> {
+pub fn profile<'a>() -> View<'a> {
     column![
         text::h3("Profile"),
         field(input("Display name")).label("Name"),

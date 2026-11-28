@@ -6,7 +6,7 @@ use std::sync::OnceLock;
 use icedcn::widget::{
     Column, Row, aspect_ratio, avatar, button, column, dropdown_menu, item, menu,
 };
-use icedcn::{Size, Slot, Theme};
+use icedcn::{Size, Theme, View};
 
 use crate::page;
 use crate::{Message, icon};
@@ -113,7 +113,7 @@ fn inbox<'a>(title: &'a str, description: &'a str) -> item::Item<'a, Message> {
 
 /// The `max-w-md` column the examples stack their items in.
 fn stack<'a>(
-    items: impl IntoIterator<Item = Slot<'a, Message>>,
+    items: impl IntoIterator<Item = View<'a, Message>>,
 ) -> iced::Element<'a, Message, Theme> {
     Column::with_children(items)
         .spacing(24)

@@ -1,10 +1,10 @@
 ```rust
 use iced::alignment::Horizontal::Right;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::table::Track::Auto;
 use icedcn::widget::{table, text};
 
-pub fn view<'a, M: 'a>() -> Slot<'a, M> {
+pub fn view<'a, M: 'a>() -> View<'a, M> {
     let records = [
         ["INV001", "Paid", "Credit Card", "$250.00"],
         ["INV002", "Pending", "PayPal", "$150.00"],
@@ -37,7 +37,7 @@ pub fn view<'a, M: 'a>() -> Slot<'a, M> {
         .body(body)
         .footer(footer);
     table([
-        Slot::from(grid),
+        View::from(grid),
         table::caption("A list of your recent invoices.").into(),
     ])
     .into()

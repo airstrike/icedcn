@@ -1,9 +1,9 @@
 ```rust
 use icedcn::theme::text::Destructive;
 use icedcn::widget::{field, switch};
-use icedcn::{Horizontal, Slot};
+use icedcn::{Horizontal, View};
 
-fn terms<'a, M: Clone + 'a>() -> Slot<'a, M> {
+fn terms<'a, M: Clone + 'a>() -> View<'a, M> {
     field(switch().style(switch::Invalid))
         .orientation(Horizontal)
         .control_last()

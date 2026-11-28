@@ -12,7 +12,7 @@ use icedcn::widget::{
     button, column, container, hover_card, motion, row, scroller, separator, space, status_marker,
     text, tooltip,
 };
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 use std::time::Duration;
 
 impl Demo {
@@ -70,7 +70,7 @@ impl Demo {
             };
             header = header.push(action);
         }
-        let panel: Slot<'static, Event> = if state.count == 0 {
+        let panel: View<'static, Event> = if state.count == 0 {
             let (title, desc) = match self {
                 Self::Chat => (
                     "Morning, Alex!",
@@ -203,7 +203,7 @@ impl Demo {
             .height(560)
             .padding([0, 0, 20, 0])
             .style(rhea::card);
-        let card: Slot<'static, Event> = if side_outline {
+        let card: View<'static, Event> = if side_outline {
             let outline = column(
                 self.turns()
                     .iter()

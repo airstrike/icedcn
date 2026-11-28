@@ -3,11 +3,11 @@
 A tweak changes one property of a variant. Add tweaks with `+`. They apply in order, so a later tweak overrides an earlier one:
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::theme::tweak::{Bg, Fg, Token, hover, radius};
 use icedcn::widget::{button, row};
 
-pub fn tweaked<'a>() -> Slot<'a, ()> {
+pub fn tweaked<'a>() -> View<'a> {
     let quiet = button::Ghost + Fg(Token::MutedForeground) + hover(Fg(Token::Foreground));
     row![
         button("Muted").style(button::Destructive + Bg(Token::Muted)),
@@ -34,7 +34,7 @@ Each component decides what a tweak means. On a switch, `Bg` sets the track and 
 The right side of `+` is always one tweak. Two variants do not combine: `button::Outline + button::Ghost` does not compile, because each sets every property. Start from the closer variant and tweak the rest. Tweaks added together without a variant apply to the default one, and a function reuses the same tweaks on several variants:
 
 ```rust
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::theme::button::Spec;
 use icedcn::theme::tweak::{Bg, Fg, Token, hover};
 use icedcn::widget::{button, row};
@@ -43,7 +43,7 @@ fn quiet(spec: impl Into<Spec>) -> Spec {
     spec.into() + Fg(Token::MutedForeground) + hover(Fg(Token::Foreground))
 }
 
-pub fn reused<'a>() -> Slot<'a, ()> {
+pub fn reused<'a>() -> View<'a> {
     row![
         button("Accent").style(Bg(Token::Accent) + Fg(Token::AccentForeground)),
         button("Ghost").style(quiet(button::Ghost)),

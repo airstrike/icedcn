@@ -1,9 +1,9 @@
 ```rust
 use crate::{Message, icon};
 use icedcn::widget::{Row, button, column, row};
-use icedcn::{Size, Slot};
+use icedcn::{Size, View};
 
-pub fn view<'a>(window_width: f32) -> Slot<'a, Message> {
+pub fn view<'a>(window_width: f32) -> View<'a, Message> {
     let pairs = [
         ("Extra Small", Size::Xs, 12),
         ("Small", Size::Sm, 16),

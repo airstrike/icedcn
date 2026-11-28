@@ -6,7 +6,7 @@ use iced::widget;
 use iced::{Task, Widget};
 
 use icedcn::widget::{badge, row, spinner};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::page;
 
@@ -73,7 +73,7 @@ impl BadgePage {
     }
 }
 
-fn view(id: &str) -> Slot<'static, page::Message> {
+fn view(id: &str) -> View<'static, page::Message> {
     match id {
         "demo" => widget::row::<iced::Element<'_, _, Theme>>([
             badge("Badge").into(),

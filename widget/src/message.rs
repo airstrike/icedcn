@@ -1,6 +1,6 @@
 //! A conversation turn with an avatar, content and lightweight metadata.
 use crate::text;
-use crate::{Column, Compose, Inherited, Size, Slot, Weight, column, container, row};
+use crate::{Column, Compose, Inherited, Size, View, Weight, column, container, row};
 use iced_core::Element;
 use iced_core::Length::Fill;
 use iced_core::Padding;
@@ -13,14 +13,14 @@ use icedcn_core::theme::{
 };
 
 pub struct Message<'a, Event> {
-    content: Slot<'a, Event>,
-    avatar: Option<Slot<'a, Event>>,
-    header: Option<Slot<'a, Event>>,
-    footer: Option<Slot<'a, Event>>,
+    content: View<'a, Event>,
+    avatar: Option<View<'a, Event>>,
+    header: Option<View<'a, Event>>,
+    footer: Option<View<'a, Event>>,
     align: Horizontal,
     metadata_padding: Padding,
 }
-pub fn message<'a, Event: 'a>(content: impl Into<Slot<'a, Event>>) -> Message<'a, Event> {
+pub fn message<'a, Event: 'a>(content: impl Into<View<'a, Event>>) -> Message<'a, Event> {
     Message {
         content: content.into(),
         avatar: None,
@@ -30,7 +30,7 @@ pub fn message<'a, Event: 'a>(content: impl Into<Slot<'a, Event>>) -> Message<'a
         metadata_padding: [0, 12].into(),
     }
 }
-pub fn group<'a, Event: 'a>(items: impl IntoIterator<Item = Slot<'a, Event>>) -> Column<'a, Event> {
+pub fn group<'a, Event: 'a>(items: impl IntoIterator<Item = View<'a, Event>>) -> Column<'a, Event> {
     column(items).spacing(8).width(Fill)
 }
 impl<'a, Event: 'a> Message<'a, Event> {
@@ -38,11 +38,11 @@ impl<'a, Event: 'a> Message<'a, Event> {
         self.align = align;
         self
     }
-    pub fn avatar(mut self, avatar: impl Into<Slot<'a, Event>>) -> Self {
+    pub fn avatar(mut self, avatar: impl Into<View<'a, Event>>) -> Self {
         self.avatar = Some(avatar.into());
         self
     }
-    pub fn header(mut self, header: impl Into<Slot<'a, Event>>) -> Self {
+    pub fn header(mut self, header: impl Into<View<'a, Event>>) -> Self {
         self.header = Some(header.into());
         self
     }
@@ -52,16 +52,16 @@ impl<'a, Event: 'a> Message<'a, Event> {
         self.metadata_padding = padding.into();
         self
     }
-    pub fn footer(mut self, footer: impl Into<Slot<'a, Event>>) -> Self {
+    pub fn footer(mut self, footer: impl Into<View<'a, Event>>) -> Self {
         self.footer = Some(footer.into());
         self
     }
 }
 fn metadata<'a, Event: 'a>(
-    mut content: Slot<'a, Event>,
+    mut content: View<'a, Event>,
     align: Horizontal,
     padding: Padding,
-) -> Slot<'a, Event> {
+) -> View<'a, Event> {
     content.inherit(
         &Inherited::default()
             .with_size(Size::Xs)
@@ -120,9 +120,9 @@ impl<'a, Event: 'a> Compose<Event> for Message<'a, Event> {
         line.width(Fill).align_y(Vertical::Bottom).spacing(8).into()
     }
 }
-impl<'a, Event: 'a> From<Message<'a, Event>> for Slot<'a, Event> {
+impl<'a, Event: 'a> From<Message<'a, Event>> for View<'a, Event> {
     fn from(message: Message<'a, Event>) -> Self {
-        Slot::new(message)
+        View::new(message)
     }
 }
 impl<'a, Event: 'a> From<Message<'a, Event>> for Element<'a, Event, Theme, Renderer> {

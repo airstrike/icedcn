@@ -3,7 +3,7 @@
 //! against its final (possibly spanning) column width.
 use super::{Body, Footer, Header, Row};
 use crate::animation::cubic_bezier;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use iced_core::animation::Easing;
 use iced_core::time::{Duration, Instant};
 use iced_core::widget::tree;
@@ -120,9 +120,9 @@ impl<'a, Message: 'a> Compose<Message> for Grid<'a, Message> {
         ._boxed()
     }
 }
-impl<'a, Message: 'a> From<Grid<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Grid<'a, Message>> for View<'a, Message> {
     fn from(grid: Grid<'a, Message>) -> Self {
-        Slot::new(grid)
+        View::new(grid)
     }
 }
 impl<'a, Message: 'a> From<Grid<'a, Message>> for Element<'a, Message, Theme, Renderer> {

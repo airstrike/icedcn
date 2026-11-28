@@ -4,6 +4,6 @@ Supply a full-card target with `.trigger(|target| attachment::trigger(target).on
 
 | Builder | Type | Default |
 | --- | --- | --- |
-| `.trigger(...)` | `FnOnce(Slot) -> Slot` | No trigger |
+| `.trigger(...)` | `FnOnce(View) -> View` | No trigger |
 | `attachment::trigger(target).on_press(...)` | Application message | No message |
 | `attachment::trigger(target).disabled(...)` | `bool` | `false`; also inherits a disabled ancestor |

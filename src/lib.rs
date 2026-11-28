@@ -49,7 +49,7 @@ pub use icedcn_widget::rich_text;
 
 pub use widget::Size;
 pub use widget::Weight;
-pub use widget::{Compose, Inherited, Slot};
+pub use widget::{Compose, Inherited, View};
 
 /// Raw iced widgets with modifications (centering, focus/blur, etc.)
 pub mod raw {

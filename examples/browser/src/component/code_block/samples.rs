@@ -38,12 +38,12 @@ fn search<'a>(query: &str, titles: &[&'a str]) -> Vec<&'a str> {
         .collect()
 }"##;
 
-pub const DEMO: &str = r##"use icedcn::{Slot, widget::{column, input, text}};
+pub const DEMO: &str = r##"use icedcn::{View, widget::{column, input, text}};
 
 #[derive(Clone, Debug)]
 pub enum Message { SearchChanged(String) }
 
-pub fn view<'a>(query: &'a str, titles: &[&'a str]) -> Slot<'a, Message> {
+pub fn view<'a>(query: &'a str, titles: &[&'a str]) -> View<'a, Message> {
     let search = input("Find a notebook").value(query.to_owned()).on_input(Message::SearchChanged);
     let mut results = column![search].spacing(8);
     for title in titles.iter().copied().filter(|title| title.contains(query)) {
@@ -111,7 +111,7 @@ fn matches(query: &str, title: &str) -> bool {
 Trimming the query also ignores extra spaces at either end."##;
 
 pub const SHOW_MORE: &str = r##"use icedcn::widget::{button, column, input, text};
-use icedcn::Slot;
+use icedcn::View;
 
 #[derive(Default)]
 pub struct Notebook {
@@ -136,7 +136,7 @@ impl Notebook {
         }
     }
 
-    pub fn view(&self) -> Slot<'_, Message> {
+    pub fn view(&self) -> View<'_, Message> {
         let draft = input("Write a note")
             .value(self.draft.clone())
             .on_input(Message::Edited);
@@ -196,9 +196,9 @@ pub const FILES: &[File] = &[
         title: "src/view.rs",
         language: "rust",
         code: r##"use icedcn::widget::{column, text};
-use icedcn::Slot;
+use icedcn::View;
 
-pub fn view(titles: &[String]) -> Slot<'_, ()> {
+pub fn view(titles: &[String]) -> View<'_> {
     let mut items = column![].spacing(8);
     for title in titles {
         items = items.push(text::p(title.as_str()).into());

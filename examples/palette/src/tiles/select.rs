@@ -1,11 +1,11 @@
 //! Local choices retain their selected value in the widget tree.
 
 use iced::Fill;
-use icedcn::widget::{Slot, native_select};
+use icedcn::widget::{View, native_select};
 
 use crate::Message;
 
-pub fn trigger<'a>(selected: &str, options: &[&str]) -> Slot<'a, Message> {
+pub fn trigger<'a>(selected: &str, options: &[&str]) -> View<'a, Message> {
     native_select(
         options
             .iter()

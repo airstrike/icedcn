@@ -36,7 +36,7 @@ use iced_runtime::task;
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::core::Rectangle;
 use crate::core::widget::{Id, Operation};
 use crate::icon::Icon;
@@ -141,13 +141,13 @@ impl<Message> Toast<Message> {
 /// Make `child` raise `toast` when pressed. The child keeps its own
 /// handlers.
 pub fn trigger<'a, Message>(
-    child: impl Into<Slot<'a, Message>>,
+    child: impl Into<View<'a, Message>>,
     toast: Toast<Message>,
-) -> Slot<'a, Message>
+) -> View<'a, Message>
 where
     Message: Clone + Send + 'static,
 {
-    Slot::new(Trigger {
+    View::new(Trigger {
         child: child.into(),
         toast,
     })
@@ -200,7 +200,7 @@ struct Raise<Message>(Toast<Message>);
 
 /// A child that raises a toast when pressed.
 struct Trigger<'a, Message> {
-    child: Slot<'a, Message>,
+    child: View<'a, Message>,
     toast: Toast<Message>,
 }
 
@@ -240,7 +240,7 @@ impl<T, Message: Send + 'static> Operation<T> for Show<Message> {
     }
 }
 
-fn default_icon<'a, Message: 'a>(kind: Kind) -> Option<Slot<'a, Message>> {
+fn default_icon<'a, Message: 'a>(kind: Kind) -> Option<View<'a, Message>> {
     let icon = match kind {
         Kind::Default => return None,
         Kind::Success => Icon::CircleCheck,
@@ -256,18 +256,18 @@ fn default_icon<'a, Message: 'a>(kind: Kind) -> Option<Slot<'a, Message>> {
 }
 
 /// Builds the icon for a toast of the given [`Kind`].
-type Icons<'a, Message> = Box<dyn Fn(Kind) -> Option<Slot<'a, Message>> + 'a>;
+type Icons<'a, Message> = Box<dyn Fn(Kind) -> Option<View<'a, Message>> + 'a>;
 
 /// Displays toasts raised inside its content.
 pub struct Toaster<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     position: Position,
     duration: Duration,
     icons: Icons<'a, Message>,
 }
 
 /// Create a [`Toaster`] showing the toasts raised inside `content`.
-pub fn toaster<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Toaster<'a, Message> {
+pub fn toaster<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Toaster<'a, Message> {
     Toaster {
         content: content.into(),
         position: Position::BottomRight,
@@ -292,15 +292,15 @@ impl<'a, Message: 'a> Toaster<'a, Message> {
     /// Build the icons of the toast kinds, typically lucide's
     /// `circle-check`, `info`, `triangle-alert` and `octagon-x`; `None`
     /// leaves a kind without one.
-    pub fn icons(mut self, icons: impl Fn(Kind) -> Option<Slot<'a, Message>> + 'a) -> Self {
+    pub fn icons(mut self, icons: impl Fn(Kind) -> Option<View<'a, Message>> + 'a) -> Self {
         self.icons = Box::new(icons);
         self
     }
 }
 
-impl<'a, Message: Clone + Send + 'static> From<Toaster<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + Send + 'static> From<Toaster<'a, Message>> for View<'a, Message> {
     fn from(toaster: Toaster<'a, Message>) -> Self {
-        Slot::new(toaster)
+        View::new(toaster)
     }
 }
 

@@ -1,13 +1,13 @@
 ```rust
 use crate::icon;
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::core::radius;
 use icedcn::theme::text_input;
 use icedcn::widget::input_group::{Align, addon};
 use icedcn::widget::{column, dropdown_menu, input, input_group, menu, row};
 
-fn dropdowns<'a, M: Clone + 'static>(size: f32) -> Slot<'a, M> {
+fn dropdowns<'a, M: Clone + 'static>(size: f32) -> View<'a, M> {
     column![
         input_group(input("Enter file name").text_size(size)).addon(
             addon(

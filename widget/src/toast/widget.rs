@@ -14,7 +14,7 @@ use icedcn_core::theme::toast;
 use super::{Icons, Inbox, Kind, Position, Raise, Toast};
 use crate::button::button;
 use crate::column::Column;
-use crate::compose::Slot;
+use crate::compose::View;
 use crate::container::Container;
 use crate::core::Renderer as _;
 use crate::core::layout;
@@ -97,7 +97,7 @@ impl<'a, Message: Clone + 'a> Toaster<'a, Message> {
     /// `flex items-center gap-1.5 p-4` around the icon, the title over the
     /// description, and the action.
     fn card(&self, id: u64, toast: &Toast<Message>) -> Element<'a, Message, Theme, Renderer> {
-        let mut copy = vec![Slot::from(
+        let mut copy = vec![View::from(
             Text::new(toast.title.clone())
                 .size(13)
                 .line_height(1.5)
@@ -105,7 +105,7 @@ impl<'a, Message: Clone + 'a> Toaster<'a, Message> {
         )];
 
         if let Some(description) = &toast.description {
-            copy.push(Slot::from(
+            copy.push(View::from(
                 Text::new(description.clone())
                     .size(13)
                     .line_height(1.4)
@@ -113,13 +113,13 @@ impl<'a, Message: Clone + 'a> Toaster<'a, Message> {
             ));
         }
 
-        let mut row: Vec<Slot<'a, Message>> = Vec::new();
+        let mut row: Vec<View<'a, Message>> = Vec::new();
 
         if let Some(icon) = (self.icons)(toast.kind) {
             row.push(icon);
         }
 
-        row.push(Slot::from(
+        row.push(View::from(
             Column::with_children(copy).spacing(2).width(Fill),
         ));
 
@@ -135,8 +135,8 @@ impl<'a, Message: Clone + 'a> Toaster<'a, Message> {
                 .on_press(message.clone());
 
             let action: Element<'a, Message, Theme, Renderer> =
-                marker::marker(Slot::from(action).compose(), Dismiss(id), Press::Captured).into();
-            row.push(Slot::from(action));
+                marker::marker(View::from(action).compose(), Dismiss(id), Press::Captured).into();
+            row.push(View::from(action));
         }
 
         Container::new(

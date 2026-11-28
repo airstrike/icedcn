@@ -32,12 +32,12 @@ code_block(
     ),
 )
 
-const CODE: &str = r##"use icedcn::{Slot, widget::{column, input, text}};
+const CODE: &str = r##"use icedcn::{View, widget::{column, input, text}};
 
 #[derive(Clone, Debug)]
 pub enum Message { SearchChanged(String) }
 
-pub fn view<'a>(query: &'a str, titles: &[&'a str]) -> Slot<'a, Message> {
+pub fn view<'a>(query: &'a str, titles: &[&'a str]) -> View<'a, Message> {
     let search = input("Find a notebook").value(query.to_owned()).on_input(Message::SearchChanged);
     let mut results = column![search].spacing(8);
     for title in titles.iter().copied().filter(|title| title.contains(query)) {

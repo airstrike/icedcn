@@ -1,6 +1,6 @@
 ### Badge
 
-Constructor for a `Badge`. The single-arg constructor takes any `impl Into<Slot>`; the `badge!` macro wraps multiple children in a row with 4px spacing for the icon + label idiom.
+Constructor for a `Badge`. The single-arg constructor takes any `impl Into<View>`; the `badge!` macro wraps multiple children in a row with 4px spacing for the icon + label idiom.
 
 | Builder | Type | Default | Description |
 | --- | --- | --- | --- |

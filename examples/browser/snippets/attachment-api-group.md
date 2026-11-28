@@ -6,5 +6,5 @@ The scrollbar is hidden. The strip fades its overflowing edges over the surround
 
 | Builder | Type | Default |
 | --- | --- | --- |
-| `attachment::group(cards)` | Iterator of `Slot` | Required |
+| `attachment::group(cards)` | Iterator of `View` | Required |
 | `.fade_to(...)` | `fn(&Theme) -> Color` | Theme background |

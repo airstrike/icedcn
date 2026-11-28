@@ -49,9 +49,9 @@ macro_rules! badge {
     // Multi-arg arm — wraps children in a row with 4px gap.
     ($($child:expr),+ $(,)?) => {
         $crate::badge::badge(
-            $crate::compose::Slot::new(
+            $crate::compose::View::new(
                 $crate::row::Row::with_children([
-                    $(Into::<$crate::compose::Slot<'_, _>>::into($child)),+
+                    $(Into::<$crate::compose::View<'_, _>>::into($child)),+
                 ])
                 .spacing(4)
             )
@@ -60,7 +60,7 @@ macro_rules! badge {
 }
 
 use crate::Weight;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use iced_core::Padding;
 use iced_widget::Renderer;
 use icedcn_core::Theme;
@@ -70,7 +70,7 @@ pub use icedcn_core::theme::badge::{Default, Destructive, Ghost, Link, Outline, 
 
 /// A small inline pill label.
 pub struct Badge<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     style: StyleFn<'a>,
     on_press: Option<Message>,
     start_icon: bool,
@@ -81,7 +81,7 @@ pub struct Badge<'a, Message> {
 }
 
 /// Create a [`Badge`] with the default variant.
-pub fn badge<'a, Message: 'a>(content: impl Into<Slot<'a, Message>>) -> Badge<'a, Message> {
+pub fn badge<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> Badge<'a, Message> {
     Badge {
         content: content.into(),
         style: Default.into_style(),
@@ -149,9 +149,9 @@ impl<'a, Message: Clone + 'a> From<Badge<'a, Message>>
     }
 }
 
-impl<'a, Message: Clone + 'a> From<Badge<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Badge<'a, Message>> for View<'a, Message> {
     fn from(widget: Badge<'a, Message>) -> Self {
-        Slot::new(widget)
+        View::new(widget)
     }
 }
 

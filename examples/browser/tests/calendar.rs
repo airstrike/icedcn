@@ -9,7 +9,7 @@ use iced_test::core::Settings;
 use iced_test::core::widget::operation::{self, Focusable, Operation, Outcome, Text, focusable};
 use iced_test::simulator::{self, Simulator};
 use icedcn::widget::calendar::{Date, Datelike, Duration, Mode, Selection, persian};
-use icedcn::widget::{Inherited, Slot, calendar};
+use icedcn::widget::{Inherited, View, calendar};
 use icedcn::{Theme, card};
 use std::borrow::Cow;
 use std::fs::File;
@@ -36,7 +36,7 @@ fn picker(selected: u32, controlled: bool, disabled: bool) -> Element<'static, M
     if controlled {
         picker = picker.selected(Some(Selection::single(date(1, selected))));
     }
-    let mut slot: Slot<'_, Message> = picker.into();
+    let mut slot: View<'_, Message> = picker.into();
     slot.inherit(&Inherited::default().with_disabled(disabled));
     slot.compose()
 }

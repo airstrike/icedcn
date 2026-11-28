@@ -2,12 +2,12 @@
 use iced::{Fill, Pixels};
 use icedcn::theme;
 use icedcn::theme::tweak::Alpha;
-use icedcn::widget::{Slot, checkbox, column, container, field, text};
+use icedcn::widget::{View, checkbox, column, container, field, text};
 
 column![
     field(checkbox())
         .orientation(field::Horizontal)
-        .label(Slot::from(
+        .label(View::from(
             container(text::label("Accept terms and conditions")).height(14)
         )),
     field(container(checkbox().default_checked(true)).padding([1, 0, 0, 0]))

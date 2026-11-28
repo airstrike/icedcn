@@ -1,9 +1,9 @@
 ```rust
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{field, select};
 
-fn department<'a, M: Clone + 'static>() -> Slot<'a, M> {
+fn department<'a, M: Clone + 'static>() -> View<'a, M> {
     let options = [
         ("engineering", "Engineering"),
         ("design", "Design"),

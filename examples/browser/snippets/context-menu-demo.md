@@ -3,7 +3,7 @@ use iced::Fill;
 use icedcn::theme::container::Transparent;
 use icedcn::theme::tweak::{Token, border};
 use icedcn::widget::{column, container, context_menu, menu, text};
-use icedcn::{Slot, radius};
+use icedcn::{View, radius};
 
 #[derive(Debug, Clone)]
 enum Message {
@@ -12,7 +12,7 @@ enum Message {
     Person(&'static str),
 }
 
-fn view<'a>(bookmarks: bool, full_urls: bool, person: &'static str) -> Slot<'a, Message> {
+fn view<'a>(bookmarks: bool, full_urls: bool, person: &'static str) -> View<'a, Message> {
     // `bookmarks`, `full_urls` and `person` live in your state.
     context_menu(
         |_| area(),
@@ -56,7 +56,7 @@ fn view<'a>(bookmarks: bool, full_urls: bool, person: &'static str) -> Slot<'a, 
 }
 
 /// The area that responds to a secondary click.
-fn area<'a>() -> Slot<'a, Message> {
+fn area<'a>() -> View<'a, Message> {
     container(text("Right click here"))
         .center(Fill)
         .width(320)

@@ -9,14 +9,14 @@ use iced_widget::component::{self, Component};
 use iced_widget::{Renderer, Widget};
 use icedcn_core::{Orientation, Theme};
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::{Size, button, column, text};
 
 /// A slide factory, navigation controls and an optional controlled snap index.
 /// All slides stay mounted; selection translates a clipped track.
 pub struct Carousel<'a, Message> {
     count: usize,
-    slide: Box<dyn Fn(usize) -> Slot<'a, Message> + 'a>,
+    slide: Box<dyn Fn(usize) -> View<'a, Message> + 'a>,
     visible: usize,
     axis: Orientation,
     align: Alignment,
@@ -31,8 +31,8 @@ pub struct Carousel<'a, Message> {
     stop_on_hover: bool,
     inherited: Inherited,
     caption: bool,
-    prev: Option<Box<dyn Fn() -> Slot<'a, Message> + 'a>>,
-    next: Option<Box<dyn Fn() -> Slot<'a, Message> + 'a>>,
+    prev: Option<Box<dyn Fn() -> View<'a, Message> + 'a>>,
+    next: Option<Box<dyn Fn() -> View<'a, Message> + 'a>>,
 }
 
 /// Build `count` slides. The factory receives a stable zero-based slide index.
@@ -41,7 +41,7 @@ pub fn carousel<'a, Message: 'a, S>(
     slide: impl Fn(usize) -> S + 'a,
 ) -> Carousel<'a, Message>
 where
-    S: Into<Slot<'a, Message>> + 'a,
+    S: Into<View<'a, Message>> + 'a,
 {
     Carousel {
         count,
@@ -153,7 +153,7 @@ impl<'a, Message: 'a> Carousel<'a, Message> {
     }
 
     /// Override the previous and next buttons' content. Default icons are chevrons.
-    pub fn controls<S: Into<Slot<'a, Message>> + 'a>(
+    pub fn controls<S: Into<View<'a, Message>> + 'a>(
         mut self,
         prev: impl Fn() -> S + 'a,
         next: impl Fn() -> S + 'a,
@@ -250,7 +250,7 @@ impl<'a, Message: Clone + 'static> Component<'a, Message, Theme> for Carousel<'a
             slide.inherit(&self.inherited);
             children.push(slide.map(Event::App).compose());
         }
-        let arrow = |custom: &Option<Box<dyn Fn() -> Slot<'a, Message> + 'a>>,
+        let arrow = |custom: &Option<Box<dyn Fn() -> View<'a, Message> + 'a>>,
                      next: bool,
                      blocked: bool,
                      event| {
@@ -334,9 +334,9 @@ impl<'a, Message: Clone + 'static> Compose<Message> for Carousel<'a, Message> {
     }
 }
 
-impl<'a, Message: Clone + 'static> From<Carousel<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: Clone + 'static> From<Carousel<'a, Message>> for View<'a, Message> {
     fn from(carousel: Carousel<'a, Message>) -> Self {
-        Slot::new(carousel)
+        View::new(carousel)
     }
 }
 

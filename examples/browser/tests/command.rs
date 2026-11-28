@@ -350,7 +350,7 @@ fn command_keyboard_skips_disabled_stops_at_edges_and_tracks_pointer_selection()
     let mut ui: Simulator<'_, Message, Theme, Renderer> = Simulator::with_size(
         Settings::default(),
         Size::new(500., 500.),
-        icedcn::Slot::from(view).compose(),
+        icedcn::View::from(view).compose(),
     );
     let mut bounds = Bounds::default();
     ui.operate(&mut bounds);
@@ -536,7 +536,7 @@ fn command_keyboard_reveal_keeps_selection_under_a_stationary_pointer() {
     let mut ui: Simulator<'_, Message, Theme, Renderer> = Simulator::with_size(
         Settings::default(),
         Size::new(375., 700.),
-        icedcn::Slot::from(view).compose(),
+        icedcn::View::from(view).compose(),
     );
     let mut bounds = Bounds::default();
     ui.operate(&mut bounds);

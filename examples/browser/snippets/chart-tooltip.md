@@ -3,13 +3,13 @@ use crate::icon;
 use iced::Element;
 use icedcn::widget::chart::{self, tooltip};
 use icedcn::widget::{column, container, row, text};
-use icedcn::{Slot, Theme, theme};
+use icedcn::{View, Theme, theme};
 
 type Message = ();
 
 fn view<'a>(window_width: f32) -> Element<'a, Message, Theme> {
     let [first, second, third, fourth, _] = theme::chart::COLORS;
-    let panel = |content: Slot<'a, Message>| {
+    let panel = |content: View<'a, Message>| {
         container(content)
             .width(224)
             .height(137)

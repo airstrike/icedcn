@@ -1,8 +1,8 @@
 ```rust
 use icedcn::widget::{field, switch};
-use icedcn::{Horizontal, Slot};
+use icedcn::{Horizontal, View};
 
-fn preferences<'a, M: Clone + 'a>() -> Slot<'a, M> {
+fn preferences<'a, M: Clone + 'a>() -> View<'a, M> {
     field::group([
         field(switch())
             .orientation(Horizontal)

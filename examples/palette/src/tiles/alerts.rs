@@ -7,7 +7,7 @@
 //! destructive variants; the rest are thematic containers).
 
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::card;
 use icedcn::core::{Border, Color, Palette};
 use icedcn::theme;
@@ -40,7 +40,7 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
         )
         .style(alert::Destructive);
 
-    let body: Column<'_, Message> = column([info, success, warning, Slot::from(destructive)])
+    let body: Column<'_, Message> = column([info, success, warning, View::from(destructive)])
         .spacing(12)
         .width(Fill);
 
@@ -66,7 +66,7 @@ fn tinted_alert(
     getter: fn(&Theme) -> Palette,
     title: &'static str,
     description: &'static str,
-) -> Slot<'static, Message> {
+) -> View<'static, Message> {
     let body: Column<'static, Message> = column([
         text::small(title)
             .medium()

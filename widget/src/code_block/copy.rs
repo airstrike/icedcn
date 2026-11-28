@@ -17,7 +17,7 @@ use icedcn_core::Theme;
 use super::Placement;
 
 use super::glyph::Glyph;
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::marker::{self, Press};
 use crate::{button, tooltip};
 
@@ -63,9 +63,9 @@ impl<'src, M: 'src> Compose<M> for CopyButton<'src> {
         .boxed()
     }
 }
-impl<'a, M: 'a> From<CopyButton<'a>> for Slot<'a, M> {
+impl<'a, M: 'a> From<CopyButton<'a>> for View<'a, M> {
     fn from(button: CopyButton<'a>) -> Self {
-        Slot::new(button)
+        View::new(button)
     }
 }
 impl<'a, M: 'a> From<CopyButton<'a>> for Element<'a, M, Theme, Renderer> {
@@ -296,7 +296,7 @@ mod tests {
     #[test]
     fn copy_writes_on_release_and_shows_feedback_only_after_success() {
         fn action<'a>(source: &'a str) -> Element<'a, &'a mut str, Theme, Renderer> {
-            Slot::from(copy_button(source)).compose()
+            View::from(copy_button(source)).compose()
         }
         let source = String::from("first\n\nlast");
         let mut control = action(&source);

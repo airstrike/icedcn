@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | `.position(position)` | `toast::Position` | `BottomRight` | Where toasts stack. |
 | `.duration(duration)` | `Duration` | 4s | How long each toast shows. |
-| `.icons(f)` | `Fn(toast::Kind) -> Option<Slot>` | 16px status icons | Override the status icons. Return `None` for a kind to leave it unadorned. |
+| `.icons(f)` | `Fn(toast::Kind) -> Option<View>` | 16px status icons | Override the status icons. Return `None` for a kind to leave it unadorned. |
 
 ### `toast::toast(title)`
 

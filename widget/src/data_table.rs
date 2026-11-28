@@ -1,7 +1,7 @@
 //! An interactive table of keyed records with typed column definitions.
 mod view;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::sidebar::viewport::Width;
 use iced_core::Element;
 use iced_core::alignment::Horizontal;
@@ -44,12 +44,12 @@ impl<K: Ord> Default for Value<K> {
 
 type Compare<'a, T> = Box<dyn Fn(&T, &T) -> Ordering + 'a>;
 type Filter<'a, T> = (&'a str, Box<dyn Fn(&T, &str) -> bool + 'a>);
-type Actions<'a, T, M> = Rc<dyn Fn(&'a T) -> Slot<'a, M> + 'a>;
+type Actions<'a, T, M> = Rc<dyn Fn(&'a T) -> View<'a, M> + 'a>;
 
 /// A named column with a cell renderer and optional sorting.
 pub struct Column<'a, T, M> {
     label: &'static str,
-    cell: Box<dyn Fn(&'a T) -> Slot<'a, M> + 'a>,
+    cell: Box<dyn Fn(&'a T) -> View<'a, M> + 'a>,
     compare: Option<Compare<'a, T>>,
     align: Horizontal,
 }
@@ -57,7 +57,7 @@ pub struct Column<'a, T, M> {
 /// Define a column. Each label must be unique within its table.
 pub fn column<'a, T, M, C>(label: &'static str, cell: impl Fn(&'a T) -> C + 'a) -> Column<'a, T, M>
 where
-    C: Into<Slot<'a, M>>,
+    C: Into<View<'a, M>>,
 {
     Column {
         label,
@@ -123,7 +123,7 @@ impl<'a, T, K: Ord, M> Table<'a, T, K, M> {
         self
     }
     /// Mount the supplied menu for the clicked record.
-    pub fn actions(mut self, actions: impl Fn(&'a T) -> Slot<'a, M> + 'a) -> Self {
+    pub fn actions(mut self, actions: impl Fn(&'a T) -> View<'a, M> + 'a) -> Self {
         self.actions = Some(Rc::new(actions));
         self
     }
@@ -336,10 +336,10 @@ impl<'a, T: 'a, K: Ord + Clone + 'static, M: Clone + 'static> Compose<M> for Tab
     }
 }
 impl<'a, T: 'a, K: Ord + Clone + 'static, M: Clone + 'static> From<Table<'a, T, K, M>>
-    for Slot<'a, M>
+    for View<'a, M>
 {
     fn from(value: Table<'a, T, K, M>) -> Self {
-        Slot::new(value)
+        View::new(value)
     }
 }
 impl<'a, T: 'a, K: Ord + Clone + 'static, M: Clone + 'static> From<Table<'a, T, K, M>>

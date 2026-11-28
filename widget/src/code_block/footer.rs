@@ -6,17 +6,17 @@ use iced_core::alignment::{Horizontal, Vertical};
 use iced_widget::Renderer;
 use icedcn_core::Theme;
 
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use crate::{Row, container};
 
 /// A row below the content, 8px apart and muted.
 pub struct Footer<'a, Message> {
-    children: Vec<Slot<'a, Message>>,
+    children: Vec<View<'a, Message>>,
     align_x: Horizontal,
 }
 
 /// A footer holding one child.
-pub fn footer<'a, Message>(child: impl Into<Slot<'a, Message>>) -> Footer<'a, Message> {
+pub fn footer<'a, Message>(child: impl Into<View<'a, Message>>) -> Footer<'a, Message> {
     Footer {
         children: vec![child.into()],
         align_x: Horizontal::Left,
@@ -25,7 +25,7 @@ pub fn footer<'a, Message>(child: impl Into<Slot<'a, Message>>) -> Footer<'a, Me
 
 impl<'a, Message: 'a> Footer<'a, Message> {
     /// Add a child after the others.
-    pub fn push(mut self, child: impl Into<Slot<'a, Message>>) -> Self {
+    pub fn push(mut self, child: impl Into<View<'a, Message>>) -> Self {
         self.children.push(child.into());
         self
     }
@@ -56,9 +56,9 @@ impl<'a, Message: 'a> Compose<Message> for Footer<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Footer<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Footer<'a, Message>> for View<'a, Message> {
     fn from(footer: Footer<'a, Message>) -> Self {
-        Slot::new(footer)
+        View::new(footer)
     }
 }
 

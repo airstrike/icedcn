@@ -1,9 +1,9 @@
 ```rust
 use iced::Fill;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{date_picker, field, input, row, text};
 
-pub fn view<'a, M: Clone + 'static>(window_width: f32) -> Slot<'a, M> {
+pub fn view<'a, M: Clone + 'static>(window_width: f32) -> View<'a, M> {
     let compact = window_width < 768.0;
     row![
         field(

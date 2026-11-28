@@ -8,7 +8,7 @@ use iced::{Element, Fill, Task};
 use icedcn::theme::text::muted;
 use icedcn::theme::tweak::{Bg, Fg, Token, hover};
 use icedcn::widget::{breadcrumb, button, container, dropdown_menu, menu, row};
-use icedcn::{Size, Slot, Theme, Weight};
+use icedcn::{Size, Theme, View, Weight};
 
 pub static META: page::Meta = page::Meta {
     title: "Breadcrumb",
@@ -87,7 +87,7 @@ impl BreadcrumbPage {
     }
 }
 
-fn destinations<'a>(_: &dropdown_menu::Handle) -> Slot<'a, Message> {
+fn destinations<'a>(_: &dropdown_menu::Handle) -> View<'a, Message> {
     menu::group([
         menu::item("Documentation").into(),
         menu::item("Themes").into(),
@@ -95,7 +95,7 @@ fn destinations<'a>(_: &dropdown_menu::Handle) -> Slot<'a, Message> {
     ])
 }
 
-fn basic() -> Slot<'static, Message> {
+fn basic() -> View<'static, Message> {
     breadcrumb([
         breadcrumb::link("Home", Message::Noop),
         breadcrumb::link("Components", Message::Noop),
@@ -104,7 +104,7 @@ fn basic() -> Slot<'static, Message> {
     .into()
 }
 
-fn link() -> Slot<'static, Message> {
+fn link() -> View<'static, Message> {
     breadcrumb([
         breadcrumb::link("Home", Message::Noop),
         breadcrumb::link("Components", Message::Noop),
@@ -113,7 +113,7 @@ fn link() -> Slot<'static, Message> {
     .into()
 }
 
-fn separator() -> Slot<'static, Message> {
+fn separator() -> View<'static, Message> {
     breadcrumb([
         breadcrumb::link("Home", Message::Noop),
         breadcrumb::link("Components", Message::Noop),
@@ -129,7 +129,7 @@ fn separator() -> Slot<'static, Message> {
     .into()
 }
 
-fn ellipsis() -> Slot<'static, Message> {
+fn ellipsis() -> View<'static, Message> {
     breadcrumb([
         breadcrumb::link("Home", Message::Noop),
         breadcrumb::ellipsis(None),
@@ -139,7 +139,7 @@ fn ellipsis() -> Slot<'static, Message> {
     .into()
 }
 
-fn demo() -> Slot<'static, Message> {
+fn demo() -> View<'static, Message> {
     breadcrumb([
         breadcrumb::link("Home", Message::Noop),
         breadcrumb::item(
@@ -167,7 +167,7 @@ fn demo() -> Slot<'static, Message> {
     .into()
 }
 
-fn dropdown() -> Slot<'static, Message> {
+fn dropdown() -> View<'static, Message> {
     breadcrumb([
         breadcrumb::link("Home", Message::Noop),
         breadcrumb::item(
@@ -212,7 +212,7 @@ fn dropdown() -> Slot<'static, Message> {
     .into()
 }
 
-fn view(id: &str) -> Slot<'static, Message> {
+fn view(id: &str) -> View<'static, Message> {
     match id {
         "demo" => demo(),
         "basic" => basic(),

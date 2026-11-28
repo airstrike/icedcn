@@ -1,6 +1,6 @@
 ```rust
 use crate::icon;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::theme::text::muted;
 use icedcn::widget::breadcrumb;
 
@@ -10,7 +10,7 @@ enum Message {
     GoComponents,
 }
 
-fn view<'a>() -> Slot<'a, Message> {
+fn view<'a>() -> View<'a, Message> {
     breadcrumb([
         breadcrumb::link("Home", Message::GoHome),
         breadcrumb::link("Components", Message::GoComponents),

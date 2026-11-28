@@ -2,8 +2,8 @@ use crate::{Message, page};
 use iced::Task;
 use iced::widget::image;
 use iced::{ContentFit, Widget};
-use icedcn::Slot;
 use icedcn::Theme;
+use icedcn::View;
 use icedcn::core::Border;
 use icedcn::theme;
 use icedcn::theme::container::Style;
@@ -34,7 +34,7 @@ pub static BLOCKS: &[page::Block] = &[
     },
     page::Block::Md("examples/browser/snippets/scroll-area-api-reference.md"),
 ];
-fn frame<'a>(content: impl Into<Slot<'a, Message>>) -> Slot<'a, Message> {
+fn frame<'a>(content: impl Into<View<'a, Message>>) -> View<'a, Message> {
     container(content)
         .clip(true)
         .padding(1)

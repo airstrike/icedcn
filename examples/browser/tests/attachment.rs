@@ -160,8 +160,8 @@ fn the_full_card_border_opens_the_preview_without_swallowing_actions() {
 #[test]
 fn a_disabled_ancestor_disables_the_full_card_target() {
     use icedcn::widget::attachment;
-    use icedcn::{Inherited, Slot};
-    let mut card: Slot<'static, bool> = attachment("Disabled file")
+    use icedcn::{Inherited, View};
+    let mut card: View<'static, bool> = attachment("Disabled file")
         .trigger(|target| attachment::trigger(target).on_press(true).into())
         .into();
     card.inherit(&Inherited::default().with_disabled(true));

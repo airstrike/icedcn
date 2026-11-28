@@ -5,7 +5,7 @@ use iced::{Color, Element, Fill, Pixels, Task, Widget, color};
 use icedcn::theme::tweak::Bg;
 use icedcn::widget::chart::{Data, axis, bar, bars, data, hover, hyozu, legend, tooltip};
 use icedcn::widget::{button, chart, column, container, row, separator, text};
-use icedcn::{Slot, Theme, Vertical, theme};
+use icedcn::{Theme, Vertical, View, theme};
 use icedcn::{card, radius};
 use std::borrow::Cow;
 
@@ -239,7 +239,7 @@ fn daily(values: [f32; 30], color: hyozu::Color) -> Data {
 
 fn anatomy<'a>(compact: bool) -> Element<'a, Message, Theme> {
     let [first, second, third, fourth, _] = theme::chart::COLORS;
-    let panel = |content: Slot<'a, Message>| {
+    let panel = |content: View<'a, Message>| {
         container(content)
             .width(224)
             .height(137)

@@ -8,9 +8,9 @@ use iced_core::{Font, Length, Pixels};
 use iced_widget::Widget;
 
 use super::editor::Editor;
-use super::listing::{self, Options, View};
+use super::listing::{self, Options, Render};
 use super::{LineStyle, Viewport, plain};
-use crate::compose::{Inherited, Slot};
+use crate::compose::{Inherited, View};
 use crate::container;
 
 /// A string, or one [`Line`] per row.
@@ -73,12 +73,12 @@ impl<'a, Message> From<Vec<Line<'a, Message>>> for Content<'a, Message> {
 
 /// One line of code, for a custom row.
 pub struct Line<'a, Message> {
-    content: Slot<'a, Message>,
+    content: View<'a, Message>,
     style: LineStyle,
 }
 
 /// A line of code. Leave diff markers out of the content: the line paints its own.
-pub fn line<'a, Message>(content: impl Into<Slot<'a, Message>>) -> Line<'a, Message> {
+pub fn line<'a, Message>(content: impl Into<View<'a, Message>>) -> Line<'a, Message> {
     Line {
         content: content.into(),
         style: LineStyle::Default,
@@ -138,7 +138,7 @@ impl From<Range<i32>> for LineRange {
 pub struct Content<'a, Message> {
     body: Body<'a, Message>,
     options: Options<'a>,
-    listing: Option<View<'a, Message>>,
+    listing: Option<Render<'a, Message>>,
     pub(super) wrap: bool,
     line_numbers: bool,
     start_line: usize,
@@ -281,7 +281,7 @@ impl<'a, Message: 'a> Content<'a, Message> {
         }
     }
 
-    pub(super) fn view(self, compact: bool, disabled: bool) -> (Slot<'a, Message>, Viewport) {
+    pub(super) fn view(self, compact: bool, disabled: bool) -> (View<'a, Message>, Viewport) {
         let Self {
             body,
             options,
@@ -309,7 +309,7 @@ impl<'a, Message: 'a> Content<'a, Message> {
         let width = if wrap { Fill } else { Shrink };
         let editable =
             matches!(body, Body::Text(_)) && (on_input.is_some() || default_value.is_some());
-        let body: Slot<'a, Message> = match (body, listing) {
+        let body: View<'a, Message> = match (body, listing) {
             (Body::Text(source), _) if editable => {
                 let value = default_value.is_none().then(|| source.into_owned());
                 Editor::new(

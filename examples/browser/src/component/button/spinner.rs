@@ -1,9 +1,9 @@
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::{button, row, spinner};
 
 use crate::Message;
 
-pub fn view<'a>() -> Slot<'a, Message> {
+pub fn view<'a>() -> View<'a, Message> {
     row![
         button![spinner().circle(), "Generating"]
             .style(button::Outline)

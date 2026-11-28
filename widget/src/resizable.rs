@@ -1,6 +1,6 @@
 //! Two panels separated by a draggable, keyboard-operable divider. Nest groups
 //! to build a pane arrangement with independent axes.
-use crate::compose::{Compose, Inherited, Slot};
+use crate::compose::{Compose, Inherited, View};
 use iced_core::border;
 use iced_core::keyboard::{self, Key, key::Named};
 use iced_core::widget::operation::Focusable;
@@ -13,7 +13,7 @@ use iced_widget::Renderer;
 use icedcn_core::{Orientation, Theme};
 
 pub struct Resizable<'a, Message> {
-    panels: [Slot<'a, Message>; 2],
+    panels: [View<'a, Message>; 2],
     axis: Orientation,
     initial: f32,
     value: Option<f32>,
@@ -24,8 +24,8 @@ pub struct Resizable<'a, Message> {
 }
 
 pub fn resizable<'a, Message: 'a>(
-    first: impl Into<Slot<'a, Message>>,
-    second: impl Into<Slot<'a, Message>>,
+    first: impl Into<View<'a, Message>>,
+    second: impl Into<View<'a, Message>>,
 ) -> Resizable<'a, Message> {
     Resizable {
         panels: [first.into(), second.into()],
@@ -100,7 +100,7 @@ impl<'a, Message: 'a> Compose<Message> for Resizable<'a, Message> {
             height,
         } = *self;
         Panes {
-            children: panels.map(Slot::compose),
+            children: panels.map(View::compose),
             axis,
             initial,
             value,
@@ -112,9 +112,9 @@ impl<'a, Message: 'a> Compose<Message> for Resizable<'a, Message> {
         ._boxed()
     }
 }
-impl<'a, Message: 'a> From<Resizable<'a, Message>> for Slot<'a, Message> {
+impl<'a, Message: 'a> From<Resizable<'a, Message>> for View<'a, Message> {
     fn from(group: Resizable<'a, Message>) -> Self {
-        Slot::new(group)
+        View::new(group)
     }
 }
 impl<'a, Message: 'a> From<Resizable<'a, Message>> for Element<'a, Message, Theme, Renderer> {

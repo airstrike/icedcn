@@ -4,12 +4,12 @@ use iced::Fill;
 use iced::widget::space;
 use icedcn::card;
 use icedcn::widget::{button, column, container, input, row};
-use icedcn::{Slot, Theme};
+use icedcn::{Theme, View};
 
 use crate::Message;
 
 pub fn view() -> iced::Element<'static, Message, Theme> {
-    let rows: Vec<Slot<'_, Message>> = vec![
+    let rows: Vec<View<'_, Message>> = vec![
         env_row(
             "DATABASE_URL",
             "\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}",
@@ -55,18 +55,18 @@ pub fn view() -> iced::Element<'static, Message, Theme> {
     .into()
 }
 
-fn env_row<'a>(key: &'static str, value: &'a str) -> Slot<'a, Message> {
+fn env_row<'a>(key: &'static str, value: &'a str) -> View<'a, Message> {
     row![readonly_input(key), active_input(value)]
         .spacing(8)
         .width(Fill)
         .into()
 }
 
-fn readonly_input(value: &'static str) -> Slot<'static, Message> {
+fn readonly_input(value: &'static str) -> View<'static, Message> {
     input("").value(value).width(Fill).into()
 }
 
-fn active_input<'a>(value: &'a str) -> Slot<'a, Message> {
+fn active_input<'a>(value: &'a str) -> View<'a, Message> {
     input("")
         .default_value(value)
         .width(Fill)

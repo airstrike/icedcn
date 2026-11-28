@@ -1,8 +1,8 @@
 use crate::{Message, icon};
 use icedcn::widget::{Row, button, column, row};
-use icedcn::{Size, Slot};
+use icedcn::{Size, View};
 
-pub fn view(wide: bool) -> Slot<'static, Message> {
+pub fn view(wide: bool) -> View<'static, Message> {
     let pairs = [
         ("Extra Small", Size::Xs, 12),
         ("Small", Size::Sm, 16),

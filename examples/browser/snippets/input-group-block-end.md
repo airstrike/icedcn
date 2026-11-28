@@ -1,11 +1,11 @@
 ```rust
 use iced::Fill;
 use icedcn::Size;
-use icedcn::Slot;
+use icedcn::View;
 use icedcn::widget::input_group::{Align, addon};
 use icedcn::widget::{button, column, field, input, input_group, row, space, textarea};
 
-fn block_end<'a, M: Clone + 'a>(size: f32) -> Slot<'a, M> {
+fn block_end<'a, M: Clone + 'a>(size: f32) -> View<'a, M> {
     column![
         field(
             input_group(input("Enter amount").text_size(size))
