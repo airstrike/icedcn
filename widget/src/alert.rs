@@ -104,7 +104,7 @@ impl<'a, Message: 'a> Alert<'a, Message> {
     }
 
     /// Set the style: a variant (`alert::Destructive`) or a tweaked `Spec`
-    /// (`alert::Destructive + Bg(..)`).
+    /// (`alert::Destructive + bg(..)`).
     pub fn style(mut self, style: impl Into<Spec>) -> Self {
         self.style = style.into();
         self

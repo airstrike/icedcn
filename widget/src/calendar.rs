@@ -26,7 +26,7 @@ use icedcn_core::Theme;
 use icedcn_core::theme;
 use icedcn_core::theme::calendar::Day;
 use icedcn_core::theme::container::PageBackground;
-use icedcn_core::theme::tweak::{Token, border, radius};
+use icedcn_core::theme::{Token, border, radius};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
@@ -819,7 +819,7 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Calendar<
             container(content).padding(self.padding + if self.bordered { 1. } else { 0. });
         if self.bordered {
             surface = surface.style(
-                PageBackground + border::Color(Token::Border) + border::Width(1.) + radius(10.),
+                PageBackground + border::color(Token::Border) + border::width(1.) + radius(10.),
             );
         }
         grid::Grid {

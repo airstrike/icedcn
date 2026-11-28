@@ -2,8 +2,8 @@ use iced::Task;
 
 use icedcn::Horizontal;
 use icedcn::Theme;
+use icedcn::theme::alpha;
 use icedcn::theme::text::{Destructive, Foreground};
-use icedcn::theme::tweak::Alpha;
 use icedcn::widget::{container, field, switch};
 
 use crate::Message;
@@ -124,7 +124,7 @@ impl page::Page for SwitchPage {
 
             "disabled" => field(switch())
                 .orientation(Horizontal)
-                .label(field::label("Disabled").style(Foreground + Alpha(0.5)))
+                .label(field::label("Disabled").style(Foreground + alpha(0.5)))
                 .disabled(true)
                 .into(),
 

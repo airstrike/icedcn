@@ -7,10 +7,7 @@ use iced_core::Padding;
 use iced_core::alignment::{Horizontal, Vertical};
 use iced_widget::Renderer;
 use icedcn_core::Theme;
-use icedcn_core::theme::{
-    container::Transparent,
-    tweak::{Fg, Token},
-};
+use icedcn_core::theme::{Fg, container::Transparent};
 
 pub struct Message<'a, Event> {
     content: View<'a, Event>,
@@ -71,7 +68,7 @@ fn metadata<'a, Event: 'a>(
         .padding(padding)
         .width(Fill)
         .align_x(align)
-        .style(Transparent + Fg(Token::MutedForeground))
+        .style(Transparent + Fg::MutedForeground)
         .into()
 }
 impl<'a, Event: 'a> Compose<Event> for Message<'a, Event> {

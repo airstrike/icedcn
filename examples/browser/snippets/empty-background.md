@@ -2,7 +2,7 @@
 use crate::icon;
 use iced::Fill;
 use icedcn::theme::container::Transparent;
-use icedcn::theme::tweak::{Alpha, Bg, Token};
+use icedcn::theme::{Bg, alpha};
 use icedcn::widget::{button, container, empty};
 
 container(
@@ -13,5 +13,5 @@ container(
         .content(button![icon::refresh_ccw(), "Refresh"].style(button::Outline)),
 )
 .width(Fill)
-.style(Transparent + Bg(Token::Muted) + Alpha(0.3))
+.style(Transparent + Bg::Muted + alpha(0.3))
 ```

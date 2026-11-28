@@ -1,8 +1,8 @@
 //! Code Block panel styling.
 //!
 //! `.style(Destructive)` picks the destructive panel, and tweaks compose on
-//! either variant: `Destructive + Bg(Token::Muted)`, or a bare
-//! `Bg(Token::Muted)` on the default panel.
+//! either variant: `Destructive + Bg::Muted`, or a bare
+//! `Bg::Muted` on the default panel.
 
 use std::ops::Add;
 
@@ -122,18 +122,18 @@ spec!(Spec, Default);
 
 #[cfg(test)]
 mod tests {
-    use super::super::tweak::{Bg, Token};
+    use super::super::tweak::Bg;
     use super::*;
 
     #[test]
     fn variants_and_tweaks_resolve_on_the_panel() {
         let theme = Theme::dark();
         let muted = Some(theme.muted.base.into());
-        let tweaked: Spec = (Destructive + Bg(Token::Muted)).into();
+        let tweaked: Spec = (Destructive + Bg::Muted).into();
         let tweaked = tweaked.resolve(&theme);
         assert_eq!(tweaked.background, muted);
         assert_eq!(tweaked.text_color, Some(theme.destructive.base));
-        let bare = Spec::from(Bg(Token::Muted));
+        let bare = Spec::from(Bg::Muted);
         assert!(bare.focus_border());
         assert_eq!(bare.resolve(&theme).border, default(&theme).border);
         assert_eq!(bare.resolve(&theme).background, muted);

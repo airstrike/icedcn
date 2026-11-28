@@ -1,0 +1,3 @@
+Shared variants are one type, re-exported at the crate root, so a module that styles many widgets can import `Outline` once and use it on all of them. `Destructive` selects the destructive look of every component whose style converts from it: buttons, badges, alerts, alert dialog media, code blocks, containers, menu items, and text. Items and keyboard keys take a container's style, so `Destructive` gives them the container's destructive look. A component whose style has no destructive look has no such conversion, so passing it there is a compile error rather than a silent fallback.
+
+Choose the variant that matches the action's meaning before overriding a color. Each component page lists the variants it supports.

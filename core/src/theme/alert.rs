@@ -274,7 +274,7 @@ impl<'a> From<Spec> for iced_widget::container::StyleFn<'a, Theme> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::tweak::{Alpha, Bg, Token};
+    use super::super::tweak::{Bg, alpha, bg};
     use super::*;
     use crate::{Background, Color};
 
@@ -304,7 +304,7 @@ mod tests {
     #[test]
     fn bg_atom_overrides_default_variant() {
         let theme = Theme::dark();
-        let spec: Spec = Default + Bg(Token::Primary);
+        let spec: Spec = Default + Bg::Primary;
         let resolved = spec.resolve(&theme);
         let bg = bg_color(&resolved);
         let expected = theme.primary.base;
@@ -343,10 +343,9 @@ mod tests {
     #[test]
     fn border_compositing_respects_translucent_background_tweaks() {
         let theme = Theme::dark();
-        let bg = iced_core::Color::from_rgba(0.2, 0.4, 0.6, 0.5);
+        let fill = iced_core::Color::from_rgba(0.2, 0.4, 0.6, 0.5);
         let border = iced_core::Color::from_rgba(0.8, 0.6, 0.4, 0.25);
-        let spec =
-            Default + Bg(Color::from(bg).into()) + Tweak::BorderColor(Color::from(border).into());
+        let spec = Default + bg(Color::from(fill)) + Tweak::BorderColor(Color::from(border).into());
         let style: iced_widget::container::StyleFn<'_, Theme> = spec.into();
         let painted = style(&theme);
         let expected = iced_core::Color::from_rgba(0.44, 0.48, 0.52, 0.625);
@@ -356,7 +355,7 @@ mod tests {
         assert!((actual.b - expected.b).abs() < 1e-5);
         assert_eq!(actual.a, expected.a);
 
-        let transparent: iced_widget::container::StyleFn<'_, Theme> = (Default + Alpha(0.0)).into();
+        let transparent: iced_widget::container::StyleFn<'_, Theme> = (Default + alpha(0.0)).into();
         assert_eq!(
             transparent(&theme).border.color,
             theme.neutral.border.into()

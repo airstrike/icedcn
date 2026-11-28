@@ -3,7 +3,7 @@ use crate::icon;
 use iced::Fill;
 use iced::widget::text::LineHeight;
 use icedcn::theme;
-use icedcn::theme::tweak::{Bg, Token};
+use icedcn::theme::Bg;
 use icedcn::widget::{button, collapsible, column, container, space, text};
 use icedcn::{Size, View, card, radius};
 
@@ -14,7 +14,7 @@ fn basic<'a, Message: Clone + 'static>() -> View<'a, Message> {
                 let open = c.is_open();
                 let indicator = if open { icon::chevron_up() } else { icon::chevron_down() };
                 let surface = theme::container::Transparent + radius(radius::MD);
-                let surface = if open { surface + Bg(Token::Muted) } else { surface };
+                let surface = if open { surface + Bg::Muted } else { surface };
                 container(
                     column![
                         c.trigger(

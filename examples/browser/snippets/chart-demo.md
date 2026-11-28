@@ -1,7 +1,7 @@
 ```rust
 use iced::widget::component::{Component, component};
 use iced::{Element, Fill, Pixels, Widget, color};
-use icedcn::theme::tweak::{Alpha, Bg, Token};
+use icedcn::theme::{Bg, Token, alpha, bg};
 use icedcn::widget::chart::{Data, axis, bar, bars, data, hover, hyozu};
 use icedcn::widget::{button, chart, column, container, row, separator, text};
 use icedcn::{Theme, Vertical, card, radius};
@@ -44,9 +44,9 @@ impl<'a> Component<'a, Message, Theme> for Visitors<'a> {
                 .width(Fill),
             )
             .style(if *mobile == is_mobile {
-                button::Ghost + Bg(Token::Muted) + Alpha(0.5) + radius(0)
+                button::Ghost + Bg::Muted + alpha(0.5) + radius(0)
             } else {
-                button::Ghost + Bg(Token::Custom(icedcn::Color::TRANSPARENT)) + radius(0)
+                button::Ghost + bg(Token::Custom(icedcn::Color::TRANSPARENT)) + radius(0)
             })
             .translate(false)
             .on_press(is_mobile)

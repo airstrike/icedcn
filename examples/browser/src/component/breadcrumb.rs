@@ -6,7 +6,7 @@ use crate::page;
 use crate::page::Message;
 use iced::{Element, Fill, Task};
 use icedcn::theme::text::muted;
-use icedcn::theme::tweak::{Bg, Fg, Token, hover};
+use icedcn::theme::{Fg, bg, hover};
 use icedcn::widget::{breadcrumb, button, container, dropdown_menu, menu, row};
 use icedcn::{Size, Theme, View, Weight};
 
@@ -149,11 +149,7 @@ fn demo() -> View<'static, Message> {
                         button(breadcrumb::ellipsis(None))
                             .size(Size::Sm)
                             .square()
-                            .style(
-                                button::Ghost
-                                    + Fg(Token::MutedForeground)
-                                    + hover(Fg(Token::Foreground)),
-                            )
+                            .style(button::Ghost + Fg::MutedForeground + hover(Fg::Foreground))
                             .translate(false),
                     )
                 },
@@ -190,9 +186,7 @@ fn dropdown() -> View<'static, Message> {
                         .translate(false)
                         .focus_ring(2, |theme| theme.neutral.foreground)
                         .style(
-                            button::Ghost
-                                + Bg(icedcn::Color::TRANSPARENT.into())
-                                + Fg(Token::MutedForeground),
+                            button::Ghost + bg(icedcn::Color::TRANSPARENT) + Fg::MutedForeground,
                         ),
                     )
                 },

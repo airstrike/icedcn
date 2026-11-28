@@ -381,7 +381,7 @@ impl<'a> IntoStyle<'a> for style::Tint {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::theme::tweak::{self, Ring};
+    use crate::theme::tweak;
 
     #[test]
     fn variants_keep_link_and_focus_semantics_before_erasure() {
@@ -530,12 +530,7 @@ mod tests {
     fn focus_tweaks_and_universal_ring_survive_conversion() {
         let theme = Theme::light();
         let style = Spec::from(
-            super::super::Outline
-                + tweak::focus(Ring {
-                    color: theme.primary.base.into(),
-                    width: 5.0,
-                    offset: 0.0,
-                }),
+            super::super::Outline + tweak::focus(tweak::ring(theme.primary.base, 5.0, 0.0)),
         );
         let focus = Status {
             focused: true,
@@ -636,11 +631,7 @@ mod tests {
             "a custom spec keeps its own radius"
         );
         let tweaked = (Spec::new(super::super::secondary)
-            + tweak::focus(Ring {
-                color: theme.primary.base.into(),
-                width: 5.0,
-                offset: 0.0,
-            }))
+            + tweak::focus(tweak::ring(theme.primary.base, 5.0, 0.0)))
         .resolve_state(&theme, focus);
         assert_eq!(tweaked.ring.expect("tweak ring").width, 5.0);
         let disabled = custom.resolve_state(

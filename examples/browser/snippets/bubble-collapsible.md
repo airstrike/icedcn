@@ -4,7 +4,7 @@ use iced::Fill;
 use iced::alignment::Horizontal::Right;
 use icedcn::View;
 use icedcn::theme::text::muted;
-use icedcn::theme::tweak::{Fg, Token};
+use icedcn::theme::Fg;
 use icedcn::widget::bubble::Muted;
 use icedcn::widget::{bubble, button, collapsible, column, container, row, text};
 
@@ -54,7 +54,7 @@ fn review<'a>() -> View<'a> {
                     ]
                     .spacing(4)
                 )
-                .style(button::Link + Fg(Token::MutedForeground))
+                .style(button::Link + Fg::MutedForeground)
                 .padding(0)
                 .inset(0)
             )

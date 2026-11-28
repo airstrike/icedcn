@@ -418,8 +418,7 @@ sink!(StyleFn<'a, Theme>, Spec, tweaks);
 
 #[cfg(test)]
 mod tests {
-    use super::super::tweak;
-    use super::super::tweak::Token;
+    use super::super::tweak::{Token, border};
     use super::*;
 
     fn close(a: Color, b: Color) -> bool {
@@ -483,11 +482,11 @@ mod tests {
         assert_eq!(resolved.trigger_text, baseline.trigger_text);
     }
 
-    /// `border::Color(Token::Foreground)` overrides the divider.
+    /// `border::color(Token::Foreground)` overrides the divider.
     #[test]
     fn border_color_atom_overrides_divider() {
         let theme = Theme::light();
-        let border_color = tweak::border::Color(Token::Foreground);
+        let border_color = border::color(Token::Foreground);
         let spec: Spec = Default + border_color;
         let resolved = spec.resolve(&theme, Status::Active { is_open: false });
         assert!(close(resolved.divider, theme.neutral.foreground));

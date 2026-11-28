@@ -1,7 +1,9 @@
 //! Native documentation guides using the shared page renderer and section navigation.
 use iced::widget::Space;
 use iced::{Element, Task, Widget};
-use icedcn::Theme;
+use icedcn::theme::{Bg, Fg, hover, radius};
+use icedcn::widget::{badge, button, column, row};
+use icedcn::{Destructive, Theme, View, card};
 
 use crate::{Message, page};
 
@@ -65,7 +67,21 @@ static ARTICLES: &[Article] = &[
             page::Block::Md("examples/browser/snippets/guide-theming-roles.md"),
             page::Block::Md("examples/browser/snippets/guide-theming-styles.md"),
             page::Block::Md("examples/browser/snippets/guide-theming-variants.md"),
+            page::Block::Example {
+                id: "theming-variants",
+                title: "",
+                description: None,
+                snippet: "examples/browser/snippets/guide-theming-variants-demo.md",
+            },
+            page::Block::Md("examples/browser/snippets/guide-theming-variants-shared.md"),
             page::Block::Md("examples/browser/snippets/guide-theming-tweaks.md"),
+            page::Block::Example {
+                id: "theming-tweaks",
+                title: "",
+                description: None,
+                snippet: "examples/browser/snippets/guide-theming-tweaks-demo.md",
+            },
+            page::Block::Md("examples/browser/snippets/guide-theming-tweaks-list.md"),
             page::Block::Md("examples/browser/snippets/guide-theming-custom.md"),
             page::Block::Md("examples/browser/snippets/guide-theming-components.md"),
             page::Block::Md("examples/browser/snippets/guide-theming-design.md"),
@@ -137,7 +153,52 @@ impl page::Page for Guide {
     fn reset_volatile(&mut self) {
         self.state.reset_volatile();
     }
-    fn preview(&self, _: &str) -> Element<'_, Message, Theme> {
-        Space::new().boxed()
+    fn preview(&self, id: &str) -> Element<'_, Message, Theme> {
+        let index = self.state.page_index;
+        match id {
+            "theming-variants" => deployment()
+                .map(move |()| Message::Page(index, page::Message::Noop))
+                .into(),
+            "theming-tweaks" => tweaked()
+                .map(move |()| Message::Page(index, page::Message::Noop))
+                .into(),
+            _ => Space::new().boxed(),
+        }
     }
+}
+
+fn deployment<'a>() -> View<'a> {
+    card(column![
+        card::header("api-gateway")
+            .description("Build stopped at step 3 of 5.")
+            .action(badge("Failed").style(badge::Destructive)),
+        card::content(
+            row![
+                badge("main").style(badge::Outline),
+                badge("v2.4.1").style(badge::Secondary),
+            ]
+            .spacing(8)
+        ),
+        card::footer(
+            row![
+                button("Retry"),
+                button("View logs").style(button::Outline),
+                button("Dismiss").style(icedcn::Ghost),
+            ]
+            .spacing(8)
+        ),
+    ])
+    .width(360)
+    .into()
+}
+
+fn tweaked<'a>() -> View<'a> {
+    let quiet = button::Ghost + Fg::MutedForeground + hover(Fg::Foreground);
+    row![
+        button("Muted").style(Destructive + Bg::Muted),
+        button("Square").style(button::Outline + radius(0)),
+        button("Quiet").style(quiet),
+    ]
+    .spacing(8)
+    .into()
 }

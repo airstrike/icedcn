@@ -514,7 +514,7 @@ sink!(StyleFn<'a, Theme>, Spec, tweaks);
 
 #[cfg(test)]
 mod tests {
-    use super::super::tweak::{self, Bg, Token};
+    use super::super::tweak::{self, Bg, Token, ring};
     use super::*;
 
     fn bg_color(style: &Style) -> Color {
@@ -577,12 +577,12 @@ mod tests {
         assert_eq!(active.selection, hovered.selection);
     }
 
-    /// `Bg(Token::Primary)` on `Default` overrides bg to `palette.primary.base`.
+    /// `Bg::Primary` on `Default` overrides bg to `palette.primary.base`.
     /// Sanity that the atom plumbing reaches `apply()`.
     #[test]
     fn bg_atom_overrides_default_variant() {
         let theme = Theme::dark();
-        let spec: Spec = Default + Bg(Token::Primary);
+        let spec: Spec = Default + Bg::Primary;
         let resolved = spec.resolve(&theme, Status::Active);
         let actual = bg_color(&resolved);
         let expected = theme.primary.base;
@@ -597,12 +597,7 @@ mod tests {
     #[test]
     fn ring_atom_writes_to_style_ring() {
         let theme = Theme::light();
-        let spec: Spec = Default
-            + tweak::Ring {
-                color: Token::Ring,
-                width: 3.0,
-                offset: 2.0,
-            };
+        let spec: Spec = Default + ring(Token::Ring, 3.0, 2.0);
         let resolved = spec.resolve(&theme, Status::Active);
         let ring = resolved.ring.expect("ring should be set");
         assert_eq!(ring.width, 3.0);
@@ -613,12 +608,7 @@ mod tests {
     #[test]
     fn focus_trigger_gates_ring() {
         let theme = Theme::light();
-        let spec: Spec = Default
-            + tweak::focus(tweak::Ring {
-                color: Token::Ring,
-                width: 3.0,
-                offset: 0.0,
-            });
+        let spec: Spec = Default + tweak::focus(ring(Token::Ring, 3.0, 0.0));
         for status in [Status::Active, Status::Hovered, Status::Disabled] {
             let resolved = spec.resolve(&theme, status);
             assert!(

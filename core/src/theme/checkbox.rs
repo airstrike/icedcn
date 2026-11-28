@@ -597,7 +597,7 @@ sink!(iced_widget::checkbox::StyleFn<'a, Theme>, Spec, tweaks);
 
 #[cfg(test)]
 mod tests {
-    use super::super::tweak::{self, Bg, Token};
+    use super::super::tweak::{Bg, Token, ring};
     use super::*;
 
     fn bg_color(style: &Style) -> Color {
@@ -698,12 +698,12 @@ mod tests {
         );
     }
 
-    /// `Bg(Token::Primary)` on `Default` overrides bg to `palette.primary.base`.
+    /// `Bg::Primary` on `Default` overrides bg to `palette.primary.base`.
     /// Sanity that the atom plumbing reaches `apply()`.
     #[test]
     fn bg_atom_overrides_default_variant() {
         let theme = Theme::dark();
-        let spec: Spec = Default + Bg(Token::Primary);
+        let spec: Spec = Default + Bg::Primary;
         let resolved = spec.resolve(&theme, Status::Active { is_checked: false });
         let bg = bg_color(&resolved);
         let expected = theme.primary.base;
@@ -718,12 +718,7 @@ mod tests {
     #[test]
     fn ring_atom_writes_to_style_ring() {
         let theme = Theme::light();
-        let spec: Spec = Default
-            + tweak::Ring {
-                color: Token::Ring,
-                width: 3.0,
-                offset: 2.0,
-            };
+        let spec: Spec = Default + ring(Token::Ring, 3.0, 2.0);
         let resolved = spec.resolve(&theme, Status::Active { is_checked: false });
         let ring = resolved.ring.expect("ring should be set");
         assert_eq!(ring.width, 3.0);

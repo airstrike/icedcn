@@ -1,7 +1,7 @@
 ```rust
 use iced::Pixels;
 use icedcn::theme;
-use icedcn::theme::tweak::Alpha;
+use icedcn::theme::alpha;
 use icedcn::widget::{checkbox, field, text};
 
 field(checkbox().disabled(true))
@@ -10,7 +10,7 @@ field(checkbox().disabled(true))
     .label(
         text::label("Enable notifications")
             .line_height(Pixels(19.25))
-            .style(theme::text::Foreground + Alpha(0.5)),
+            .style(theme::text::Foreground + alpha(0.5)),
     )
     .width(224)
 ```

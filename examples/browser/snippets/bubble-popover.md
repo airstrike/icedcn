@@ -5,7 +5,7 @@ use iced::alignment::Horizontal::Right;
 use iced::alignment::Vertical::Bottom;
 use icedcn::Size;
 use icedcn::View;
-use icedcn::theme::tweak::{Fg, Token};
+use icedcn::theme::{Token, fg};
 use icedcn::widget::bubble::Destructive;
 use icedcn::widget::{bubble, button, column, container, popover};
 
@@ -21,7 +21,7 @@ fn example<'a>() -> View<'a> {
                             button(icon::info().size(16).line_height(1.0))
                                 .style(
                                     button::Ghost
-                                        + Fg(if p.is_open() {
+                                        + fg(if p.is_open() {
                                             Token::Destructive
                                         } else {
                                             Token::Foreground

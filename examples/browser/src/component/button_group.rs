@@ -4,8 +4,7 @@ use iced::widget::component::{Component, component};
 use iced::{Fill, Shrink, Task, Widget};
 
 use iced::widget::{Text, responsive};
-use icedcn::theme::text_input;
-use icedcn::theme::tweak::{Bg, Fg, Token, hover};
+use icedcn::theme::{Fg, Token, bg, fg, hover, text_input};
 use icedcn::widget::Row;
 use icedcn::widget::button::group;
 use icedcn::widget::input_group::Align;
@@ -259,9 +258,9 @@ fn voice_input<'a>(enabled: bool) -> View<'a, bool> {
     let toggle = if enabled {
         let background = Token::themed(iced::color!(0xffedd5), iced::color!(0x9a3412));
         let foreground = Token::themed(iced::color!(0xc2410c), iced::color!(0xffedd5));
-        toggle.style(button::Ghost + Bg(background) + Fg(foreground))
+        toggle.style(button::Ghost + bg(background) + fg(foreground))
     } else {
-        toggle.style(button::Ghost + Fg(Token::MutedForeground) + hover(Fg(Token::Foreground)))
+        toggle.style(button::Ghost + Fg::MutedForeground + hover(Fg::Foreground))
     };
     let placeholder = if enabled {
         "Record and send audio..."

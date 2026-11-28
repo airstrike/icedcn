@@ -247,7 +247,7 @@ fn apply(tweak: &Tweak, style: &mut Style, theme: &Theme, status: Status) {
 mod tests {
     use super::{IntoStyle, Status};
     use crate::theme::badge::{self, Spec};
-    use crate::theme::tweak::{Bg, Fg, Ring, Token, focus, hover};
+    use crate::theme::tweak::{Bg, Fg, Token, focus, hover, ring};
     use crate::{Background, Theme};
     use iced_widget::container;
 
@@ -316,7 +316,7 @@ mod tests {
         assert_eq!(outline.background, Some(theme.muted.base.into()));
         assert_eq!(outline.text_color, Some(theme.muted.foreground));
         // Equal custom fills do not change either variant's identity.
-        let ghost: Spec = (badge::Ghost + Bg(Token::Primary)).into();
+        let ghost: Spec = (badge::Ghost + Bg::Primary).into();
         assert_eq!(
             ghost
                 .resolve_state(
@@ -392,13 +392,9 @@ mod tests {
     fn conditional_tweaks_follow_nova_defaults_in_declared_order() {
         let theme = Theme::light();
         let spec: Spec = (badge::Ghost
-            + hover(Bg(Token::Primary))
-            + hover(Fg(Token::PrimaryForeground))
-            + focus(Ring {
-                color: Token::Destructive,
-                width: 4.0,
-                offset: 2.0,
-            }))
+            + hover(Bg::Primary)
+            + hover(Fg::PrimaryForeground)
+            + focus(ring(Token::Destructive, 4.0, 2.0)))
         .into();
         let rest = spec.resolve_state(&theme, Status::default());
         assert_eq!(rest.background, None);
@@ -420,9 +416,8 @@ mod tests {
         );
         assert_eq!(focused.ring.expect("tweaked ring").width, 4.0);
         assert_eq!(focused.ring_offset, 2.0);
-        let overridden =
-            Spec::from(badge::Ghost + hover(Bg(Token::Primary)) + Bg(Token::Secondary))
-                .resolve_state(&theme, hovered);
+        let overridden = Spec::from(badge::Ghost + hover(Bg::Primary) + Bg::Secondary)
+            .resolve_state(&theme, hovered);
         assert_eq!(overridden.background, Some(theme.secondary.base.into()));
     }
 

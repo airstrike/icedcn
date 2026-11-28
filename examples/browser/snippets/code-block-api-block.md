@@ -8,5 +8,5 @@ The surface that holds the header, the content and the footer.
 | `.header(header)` | `impl Into<Header>` | - | The row above the content. |
 | `.actions(actions)` | `impl Into<Actions>` | - | Actions that float over the content. A single button works too. |
 | `.footer(footer)` | `impl Into<Footer>` | - | The row below the content. |
-| `.style(style)` | `impl Into<code_block::Spec>` | `code_block::Default` | The tone of the block: `Destructive`, or either variant with tweaks such as `Destructive + Bg(Token::Muted)`. |
+| `.style(style)` | `impl Into<code_block::Spec>` | `code_block::Default` | The tone of the block: `Destructive`, or either variant with tweaks such as `Destructive + Bg::Muted`. |
 | `.size(size)` | `impl Into<Size>` | `Size::Default` | `Size::Sm` has tighter padding and 12px code, for tool output. |

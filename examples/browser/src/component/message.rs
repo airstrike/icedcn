@@ -7,8 +7,8 @@ use iced::widget::component::{Component, component};
 use iced::widget::image;
 use iced::{ContentFit, Fill, Widget};
 use iced::{Element, Task};
+use icedcn::theme::Fg;
 use icedcn::theme::text::Foreground;
-use icedcn::theme::tweak::{Fg, Token};
 use icedcn::widget::bubble::Muted;
 use icedcn::widget::status_marker::shimmer;
 use icedcn::widget::{
@@ -232,7 +232,7 @@ impl<'a> Component<'a, Message, Theme> for Actions {
             row![
                 text("Failed to send")
                     .size(12.)
-                    .style(Foreground + Fg(Token::Destructive)),
+                    .style(Foreground + Fg::Destructive),
                 tooltip(
                     button(icon::refresh_ccw())
                         .square()

@@ -3,7 +3,7 @@
 //!
 //! Cross-crate flow for `.style(...)`:
 //!
-//! 1. User writes `accordion(...).style(Default + tweak::...)` (variants
+//! 1. User writes `accordion(...).style(Default + bg(..))` (variants
 //!    + `Spec` live in core).
 //! 2. The wrapper's `.style()` takes `impl Into<core::accordion::StyleFn>`
 //!    via the existing `From<Default> for StyleFn` (orphan rule: both

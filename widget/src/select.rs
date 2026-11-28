@@ -27,11 +27,11 @@ use iced_widget::component::{self, Component};
 use iced_widget::text::LineHeight;
 use iced_widget::{Renderer, Space, Widget, anchored};
 use icedcn_core::Theme;
+use icedcn_core::theme::alpha;
 use icedcn_core::theme::container::Style;
 use icedcn_core::theme::popover::content;
 use icedcn_core::theme::select::trigger;
 use icedcn_core::theme::text::{Foreground, Muted};
-use icedcn_core::theme::tweak::Alpha;
 use std::rc::Rc;
 
 use crate::button::widget::{self, Button};
@@ -505,8 +505,8 @@ impl<'a, Message: 'static> Component<'a, Message, Theme, Renderer> for Select<'a
         let disabled = self.disabled || self.inherited.is_disabled();
         let opacity = if disabled { 0.5 } else { 1. };
         let value = match chosen {
-            Some(label) => text::small(label).style(Foreground + Alpha(opacity)),
-            None => text::muted(self.placeholder.clone()).style(Muted + Alpha(opacity)),
+            Some(label) => text::small(label).style(Foreground + alpha(opacity)),
+            None => text::muted(self.placeholder.clone()).style(Muted + alpha(opacity)),
         }
         .size(self.text_size)
         .line_height(self.line_height)

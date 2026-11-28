@@ -9,8 +9,8 @@ use iced::Fill;
 use icedcn::Theme;
 use icedcn::View;
 use icedcn::card;
+use icedcn::theme::Token;
 use icedcn::theme::container::card_muted;
-use icedcn::theme::tweak::Token;
 use icedcn::widget::{
     aspect_ratio, badge, button, column, container, rich_text, row, space, spinner, text,
 };

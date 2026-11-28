@@ -19,7 +19,7 @@ use iced::{
 use iced::{Font, Widget};
 use icedcn::Size;
 use icedcn::theme::text::muted;
-use icedcn::theme::tweak::{Fg, Token};
+use icedcn::theme::{Fg, Token, fg};
 use icedcn::widget::bubble::{Destructive, Ghost, Muted, Outline, Secondary, Tinted};
 use icedcn::widget::{
     bubble, button, collapsible, column, container, popover, row, text, toast, tooltip,
@@ -178,7 +178,7 @@ fn review<'a>() -> View<'a, Message> {
                     ]
                     .spacing(4)
                 )
-                .style(rhea::button(button::Link + Fg(Token::MutedForeground)))
+                .style(rhea::button(button::Link + Fg::MutedForeground))
                 .padding(0)
                 .inset(0)
             )
@@ -390,7 +390,7 @@ fn popover_example() -> View<'static, Message> {
                             button(icon::info().size(16).line_height(1.0))
                                 .style(rhea::button(
                                     button::Ghost
-                                        + Fg(if p.is_open() {
+                                        + fg(if p.is_open() {
                                             Token::Destructive
                                         } else {
                                             Token::Foreground

@@ -997,7 +997,7 @@ sink!(iced_widget::button::StyleFn<'a, Theme>, Spec, tweaks);
 
 #[cfg(test)]
 mod tests {
-    use super::super::tweak::{Bg, Opaque, Token};
+    use super::super::tweak::{Bg, opaque};
     use super::*;
     use crate::style::variant;
 
@@ -1059,7 +1059,7 @@ mod tests {
         assert_eq!(resolved.border, legacy.border);
     }
 
-    /// Outline + Opaque on dark, Active: bg must be opaque, near-but-slightly-
+    /// Outline + opaque() on dark, Active: bg must be opaque, near-but-slightly-
     /// lifted-from palette.background (the variant's input/0.045 white
     /// composited over background ≈ 0.184 luminance vs background's 0.145).
     /// This is the regression test for the early "alpha-strip → white-on-white"
@@ -1067,7 +1067,7 @@ mod tests {
     #[test]
     fn outline_plus_opaque_dark_active_opaque_and_lifted() {
         let theme = Theme::dark();
-        let spec: Spec = (Outline + Opaque).into();
+        let spec: Spec = (Outline + opaque()).into();
         let resolved = spec.resolve(&theme, Status::Active);
         let bg = bg_color(&resolved);
 
@@ -1089,12 +1089,12 @@ mod tests {
         );
     }
 
-    /// Outline + Opaque on light: bg ≈ palette.background (which is white).
+    /// Outline + opaque() on light: bg ≈ palette.background (which is white).
     /// Compositing white over white is white — no visible change.
     #[test]
     fn outline_plus_opaque_light_active_remains_near_white() {
         let theme = Theme::light();
-        let spec: Spec = (Outline + Opaque).into();
+        let spec: Spec = (Outline + opaque()).into();
         let resolved = spec.resolve(&theme, Status::Active);
         let bg = bg_color(&resolved);
 
@@ -1104,11 +1104,11 @@ mod tests {
         assert!(bg.l > 0.95, "expected near-white, got l={}", bg.l);
     }
 
-    /// Ghost has no background at rest; Opaque is a no-op.
+    /// Ghost has no background at rest; opaque() is a no-op.
     #[test]
     fn ghost_plus_opaque_remains_backgroundless() {
         let theme = Theme::dark();
-        let spec: Spec = (Ghost + Opaque).into();
+        let spec: Spec = (Ghost + opaque()).into();
         let resolved = spec.resolve(&theme, Status::Active);
         assert!(
             resolved.background.is_none(),
@@ -1116,12 +1116,12 @@ mod tests {
         );
     }
 
-    /// Bg(Token) atom should override the variant's bg with the token color.
+    /// bg(Token) atom should override the variant's bg with the token color.
     /// Sanity check that the atom plumbing reaches apply().
     #[test]
     fn bg_atom_overrides_variant_background() {
         let theme = Theme::dark();
-        let spec: Spec = (Outline + Bg(Token::Primary)).into();
+        let spec: Spec = (Outline + Bg::Primary).into();
         let resolved = spec.resolve(&theme, Status::Active);
 
         let expected = theme.primary.base;
@@ -1134,14 +1134,14 @@ mod tests {
         );
     }
 
-    /// Opaque applies to all states, AND the variant's per-state alpha
+    /// opaque() applies to all states, AND the variant's per-state alpha
     /// progression (Outline dark: 0.045 / 0.075 / 0.090) becomes a visible
     /// luminance progression (Active < Hovered < Pressed). Every state is
     /// opaque (alpha=1.0).
     #[test]
     fn outline_plus_opaque_preserves_state_lift() {
         let theme = Theme::dark();
-        let spec: Spec = (Outline + Opaque).into();
+        let spec: Spec = (Outline + opaque()).into();
 
         let active = bg_color(&spec.resolve(&theme, Status::Active));
         let hovered = bg_color(&spec.resolve(&theme, Status::Hovered));
@@ -1208,16 +1208,17 @@ mod tests {
         );
     }
 
-    /// Default + Opaque is a no-op — the primary variant is already opaque
+    /// Default + opaque() is a no-op — the primary variant is already opaque
     /// (alpha=1.0), so compositing src.a=1 over dst gives src unchanged.
     #[test]
     fn default_plus_opaque_no_change() {
         let theme = Theme::dark();
         let bare = bg_color(&default(&theme, Status::Active));
-        let with_opaque = bg_color(&(Spec::from(Default) + Opaque).resolve(&theme, Status::Active));
+        let with_opaque =
+            bg_color(&(Spec::from(Default) + opaque()).resolve(&theme, Status::Active));
         assert!(
             (bare.l - with_opaque.l).abs() < 1e-4 && (bare.c - with_opaque.c).abs() < 1e-4,
-            "Default already opaque; Opaque must be a no-op. bare={bare:?}, with={with_opaque:?}",
+            "Default already opaque; opaque() must be a no-op. bare={bare:?}, with={with_opaque:?}",
         );
     }
 }

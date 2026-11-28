@@ -9,7 +9,7 @@ use iced::widget::button::{Status, StyleFn};
 use iced::widget::{Space, stack, svg};
 use iced::{Center, Element, Event, Fill, Subscription, event};
 use icedcn::theme::button::ghost;
-use icedcn::theme::tweak::{Bg, Token, hover};
+use icedcn::theme::{Bg, hover};
 use icedcn::widget::Row;
 use icedcn::widget::{
     button, column, command, container, dialog, dropdown_menu, menu, row, rule, space, text,
@@ -135,7 +135,7 @@ impl App {
                 let link = if active {
                     link.style(button::Secondary)
                 } else {
-                    link.style(button::Ghost + hover(Bg(Token::Muted)))
+                    link.style(button::Ghost + hover(Bg::Muted))
                 };
                 link.height(32)
                     .translate(false)

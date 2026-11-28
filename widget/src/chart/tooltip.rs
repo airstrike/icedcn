@@ -8,8 +8,7 @@ use iced_core::alignment::Vertical;
 use iced_core::{Color, Element, Font, Length, Pixels};
 use iced_widget::Renderer;
 use iced_widget::Widget;
-use icedcn_core::theme::chart;
-use icedcn_core::theme::tweak::Bg;
+use icedcn_core::theme::{bg, chart};
 use icedcn_core::{Theme, radius, theme};
 
 use crate::compose::{Compose, View};
@@ -152,7 +151,7 @@ impl<Message> Compose<Message> for Tooltip<Message> {
             );
             let swatch: Option<View<'a, Message>> = (!self.hide_indicator).then(|| {
                 let fill = theme::container::Transparent
-                    + Bg::from(icedcn_core::Color::from(entry.color))
+                    + bg(icedcn_core::Color::from(entry.color))
                     + radius(2);
                 match self.indicator {
                     Dot => container(space::horizontal())

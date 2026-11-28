@@ -33,8 +33,7 @@ use iced_widget::component::{self, Component};
 use iced_widget::{self, Space};
 use iced_widget::{Renderer, Widget};
 use icedcn_core::Theme;
-use icedcn_core::theme::container;
-use icedcn_core::theme::tabs;
+use icedcn_core::theme::{container, tabs};
 
 use crate::Size;
 use crate::button::button;

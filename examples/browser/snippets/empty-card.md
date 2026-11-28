@@ -1,7 +1,7 @@
 ```rust
 use crate::icon;
 use iced::Center;
-use icedcn::theme::tweak::{Fg, Token};
+use icedcn::theme::Fg;
 use icedcn::widget::{button, column, empty, row};
 
 empty::empty()
@@ -18,7 +18,7 @@ empty::empty()
             ]
             .spacing(8),
             button!["Learn more", icon::arrow_up_right()]
-                .style(button::Link + Fg(Token::MutedForeground)),
+                .style(button::Link + Fg::MutedForeground),
         ]
         .spacing(16)
         .align_x(Center),

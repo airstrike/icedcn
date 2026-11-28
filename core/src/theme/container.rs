@@ -927,7 +927,7 @@ impl<'a> From<Spec> for iced_widget::container::StyleFn<'a, Theme> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::tweak::Alpha;
+    use super::super::tweak::alpha;
     use super::*;
     use crate::style::atoms::{bg, hover};
 
@@ -978,12 +978,12 @@ mod tests {
         );
     }
 
-    /// `Alpha(0.5)` on `Card` (which has an opaque card surface) must
+    /// `alpha(0.5)` on `Card` (which has an opaque card surface) must
     /// scale the resolved bg alpha by half.
     #[test]
     fn alpha_scales_card_background_alpha() {
         let theme = Theme::dark();
-        let spec: Spec = Card + Alpha(0.5);
+        let spec: Spec = Card + alpha(0.5);
         let resolved = spec.resolve(&theme);
         let bg = bg_color(&resolved);
         let expected = theme.card.base.a * 0.5;
@@ -998,7 +998,7 @@ mod tests {
     #[test]
     fn alpha_on_transparent_is_noop() {
         let theme = Theme::dark();
-        let spec: Spec = Transparent + Alpha(0.5);
+        let spec: Spec = Transparent + alpha(0.5);
         let resolved = spec.resolve(&theme);
         assert!(
             resolved.background.is_none(),
@@ -1035,20 +1035,20 @@ mod tests {
         );
     }
 
-    /// `Opaque` on `Card`'s already-opaque base is a no-op.
+    /// `opaque()` on `Card`'s already-opaque base is a no-op.
     /// Sanity-check: Card sets `palette.card.base` (alpha=1.0) so OKLCH
     /// alpha-compositing leaves it unchanged.
     #[test]
     fn opaque_on_card_no_change() {
-        use super::super::tweak::Opaque;
+        use super::super::tweak::opaque;
         let theme = Theme::dark();
         let bare = bg_color(&card(&theme));
-        let composed = bg_color(&(Spec::from(Card) + Opaque).resolve(&theme));
+        let composed = bg_color(&(Spec::from(Card) + opaque()).resolve(&theme));
         assert!(
             (bare.l - composed.l).abs() < 1e-4
                 && (bare.c - composed.c).abs() < 1e-4
                 && (bare.a - composed.a).abs() < 1e-4,
-            "Card already opaque; Opaque must be a no-op. bare={bare:?}, composed={composed:?}",
+            "Card already opaque; opaque() must be a no-op. bare={bare:?}, composed={composed:?}",
         );
     }
 }

@@ -2,7 +2,7 @@
 use crate::icon;
 use iced::Center;
 use icedcn::Size;
-use icedcn::theme::tweak::{Fg, Token};
+use icedcn::theme::Fg;
 use icedcn::widget::{button, column, empty, row};
 
 empty::empty()
@@ -19,7 +19,7 @@ empty::empty()
             ]
             .spacing(8),
             button!["Learn More", icon::arrow_up_right()]
-                .style(button::Link + Fg(Token::MutedForeground))
+                .style(button::Link + Fg::MutedForeground)
                 .size(Size::Sm),
         ]
         .spacing(16)

@@ -7,7 +7,7 @@ use icedcn::theme;
 use iced::alignment::{Horizontal, Vertical};
 use iced::widget::text::LineHeight;
 use iced::{Fill, Padding, Task};
-use icedcn::theme::tweak::{Bg, Fg, Token, border};
+use icedcn::theme::{Bg, Fg, Token, border};
 use icedcn::widget::{button, collapsible, column, container, input, row, space, tabs, text};
 use icedcn::{Size, Theme, View, card, radius};
 
@@ -76,8 +76,8 @@ fn bordered<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> View<'a, 
         .padding([9, 17])
         .style(
             theme::container::Transparent
-                + border::Width(1.0)
-                + border::Color(Token::Border)
+                + border::width(1.0)
+                + border::color(Token::Border)
                 + radius(radius::MD),
         )
         .into()
@@ -150,7 +150,7 @@ fn basic<'a, Message: Clone + 'static>() -> View<'a, Message> {
                 let open = c.is_open();
                 let indicator = if open { icon::chevron_up() } else { icon::chevron_down() };
                 let surface = theme::container::Transparent + radius(radius::MD);
-                let surface = if open { surface + Bg(Token::Muted) } else { surface };
+                let surface = if open { surface + Bg::Muted } else { surface };
                 container(
                     column![
                         c.trigger(
@@ -313,7 +313,7 @@ fn entry<'a, Message: Clone + 'static>(node: &'a Entry) -> View<'a, Message> {
                 .width(Fill),
         )
         .size(Size::Sm)
-        .style(button::Link + Fg(Token::Foreground))
+        .style(button::Link + Fg::Foreground)
         .width(Fill)
         .into(),
         Entry::Folder(name, children) => collapsible(move |folder| {

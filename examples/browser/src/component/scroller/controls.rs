@@ -9,7 +9,7 @@ use icedcn::core::Border;
 use icedcn::theme::button::{outline, secondary};
 use icedcn::theme::container::Style;
 use icedcn::theme::text::{Foreground, Muted};
-use icedcn::theme::tweak::{Alpha, hover};
+use icedcn::theme::{alpha, hover};
 use icedcn::widget::button::widget;
 use icedcn::widget::scroller::{Position, Target};
 use icedcn::widget::slider::Catalog;
@@ -26,7 +26,7 @@ impl Demo {
         let send = button(icon::arrow_up().size(16))
             .square()
             .rounded()
-            .style(button::Default + hover(Alpha(0.8)))
+            .style(button::Default + hover(alpha(0.8)))
             .disabled(disabled)
             .on_press(Event::Send);
         match self {
@@ -172,7 +172,7 @@ impl Demo {
             Self::Context => "No messages queued. Reset the context.",
             _ => "No messages queued. Reset the conversation.",
         };
-        let opacity = Alpha(if state.busy() { 0.6 } else { 1.0 });
+        let opacity = alpha(if state.busy() { 0.6 } else { 1.0 });
         let prompt = text::small(next.map_or(fallback, |t| t.text))
             .style(if next.is_some() {
                 Foreground + opacity

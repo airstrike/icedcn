@@ -4,8 +4,10 @@
 
 use iced::{Padding, Vector};
 use icedcn::core::{Border, Color, Radius, Shadow};
-use icedcn::theme::tweak::{Alpha, Bg, Token, border, hover};
-use icedcn::theme::{button, checkbox, container, dialog, radio, switch, text_input, toggle};
+use icedcn::theme::{
+    Bg, Token, alpha, border, button, checkbox, container, dialog, hover, radio, switch,
+    text_input, toggle,
+};
 use icedcn::{Size, Theme, radius};
 
 /// `rounded-2xl`.
@@ -92,9 +94,9 @@ pub const DIALOG_PADDING: u16 = 24;
 pub fn outline() -> button::Spec {
     (button::Outline
         + Radius::from(ROUNDED)
-        + border::Color(Token::Border)
-        + Alpha(0.)
-        + hover(Bg(Token::Input) + Alpha(0.3)))
+        + border::color(Token::Border)
+        + alpha(0.)
+        + hover(Bg::Input + alpha(0.3)))
     .into()
 }
 

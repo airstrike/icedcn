@@ -1,7 +1,7 @@
 use iced::{Fill, Task};
 
 use icedcn::theme;
-use icedcn::theme::tweak::Alpha;
+use icedcn::theme::alpha;
 use icedcn::widget::text;
 use icedcn::widget::{button, column, container, field, textarea};
 use icedcn::{Theme, View};
@@ -130,7 +130,7 @@ impl page::Page for TextareaPage {
             "disabled" => full(
                 field(area())
                     .disabled(true)
-                    .label(text::label("Message").style(theme::text::Foreground + Alpha(0.5))),
+                    .label(text::label("Message").style(theme::text::Foreground + alpha(0.5))),
             ),
 
             "invalid" => full(

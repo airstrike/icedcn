@@ -160,7 +160,7 @@ impl<'a, Message: Clone + 'a> Input<'a, Message> {
     }
 
     /// Override the input's style. Accepts our OKLCH-native `Default` variant
-    /// or any `Spec` (e.g. `Default + Bg(...) + focus(Ring(...))`). Ring is
+    /// or any `Spec` (e.g. `Default + bg(..) + focus(ring(..))`). The ring is
     /// preserved across the crate boundary by the bridge in
     /// [`text_input::element`](crate::text_input::element).
     pub fn style(mut self, style: impl Into<theme::text_input::StyleFn<'a, Theme>>) -> Self {

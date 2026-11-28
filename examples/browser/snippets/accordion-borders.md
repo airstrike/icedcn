@@ -2,7 +2,7 @@
 use iced::Fill;
 use icedcn::radius;
 use icedcn::theme::container::Transparent;
-use icedcn::theme::tweak::{Token, border};
+use icedcn::theme::{Token, border};
 use icedcn::widget::{accordion, container};
 
 let items = [
@@ -37,5 +37,5 @@ let inner = accordion(
 container(inner)
     .width(Fill.max(512))
     .padding(1)
-    .style(Transparent + border::Width(1.) + border::Color(Token::Border) + radius(radius::LG))
+    .style(Transparent + border::width(1.) + border::color(Token::Border) + radius(radius::LG))
 ```

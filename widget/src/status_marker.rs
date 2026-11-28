@@ -4,10 +4,7 @@ use iced_core::Length::Fill;
 use iced_core::{Alignment, Element};
 use iced_widget::Renderer;
 use icedcn_core::Theme;
-use icedcn_core::theme::{
-    container::Transparent,
-    tweak::{Fg, Token},
-};
+use icedcn_core::theme::{Fg, container::Transparent};
 
 use crate::{Compose, Inherited, View, column, container, row, separator};
 
@@ -89,7 +86,7 @@ impl<'a, Message: 'a> Compose<Message> for StatusMarker<'a, Message> {
         };
         container(area)
             .width(Fill)
-            .style(Transparent + Fg(Token::MutedForeground))
+            .style(Transparent + Fg::MutedForeground)
             .into()
     }
 }

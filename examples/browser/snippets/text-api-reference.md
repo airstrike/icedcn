@@ -51,7 +51,7 @@ The Typography examples use a larger article scale than the control-oriented hea
 | `.italic()` | — | Render the text in italic (folded into the active font). |
 | `.letter_spacing(spacing)` | `impl Into<iced_core::Em>` | Adjust letter spacing in `em` units. |
 | `.width(width)` | `impl Into<Length>` | Override the layout width. Defaults to `Shrink`, matching `Text::new()`; add `.width(Fill)` for paragraph copy that should occupy the parent's full width. |
-| `.style(style)` | `impl Into<text::StyleFn>` | Override the text style — variant unit structs (`theme::text::Foreground`, `Muted`, `Link`, `Destructive`), a `Spec` (`Foreground + Alpha(0.5)`), or a hand-rolled closure. |
+| `.style(style)` | `impl Into<text::StyleFn>` | Override the text style — variant unit structs (`theme::text::Foreground`, `Muted`, `Link`, `Destructive`), a `Spec` (`Foreground + alpha(0.5)`), or a hand-rolled closure. |
 
 ### `Blockquote<'a>`
 
@@ -127,7 +127,7 @@ same widget renders correctly in light and dark modes.
 
 ```rust
 use icedcn::rich_text;
-use icedcn::theme::tweak::Token;
+use icedcn::theme::Token;
 use icedcn::widget::{rich_text::span, text};
 
 rich_text![
@@ -187,5 +187,5 @@ or `RichText`:
 | `theme::text::Link` | Primary brand color (link text). |
 | `theme::text::Destructive` | Destructive / error color. |
 
-Compose with tweak atoms via `+`: `Foreground + Alpha(0.5)`,
-`Default + Fg(Token::Primary)`, etc.
+Compose with tweaks via `+`: `Foreground + alpha(0.5)`,
+`Default + Fg::Primary`, etc.

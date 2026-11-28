@@ -1,7 +1,7 @@
 ```rust
 use iced::Fill;
 use icedcn::theme::container::Transparent;
-use icedcn::theme::tweak::{Token, border};
+use icedcn::theme::{Token, border};
 use icedcn::widget::{column, container, context_menu, menu, text};
 use icedcn::{View, radius};
 
@@ -61,7 +61,7 @@ fn area<'a, M: 'a>() -> View<'a, M> {
         .center(Fill)
         .width(320)
         .height(180)
-        .style(Transparent + border::Width(1.) + border::Color(Token::Border) + radius(radius::XL))
+        .style(Transparent + border::width(1.) + border::color(Token::Border) + radius(radius::XL))
         .into()
 }
 ```

@@ -22,8 +22,7 @@ use route::Route;
 use std::time::Duration;
 
 use iced::{Fill, Font, Pixels, Shrink, Subscription, Task};
-use icedcn::theme::tweak::Bg;
-use icedcn::theme::tweak::token::Token;
+use icedcn::theme::Bg;
 use icedcn::widget::container;
 use icedcn::widget::markdown::highlighter::Map;
 use icedcn::widget::sidebar::MenuButtonSize;
@@ -746,7 +745,7 @@ impl App {
         .padding(iced::Padding::ZERO.top(9.6).right(8).bottom(86.4).left(8))
         .width(296)
         .height(Fill)
-        .style(theme::sidebar::Default + Bg(Token::Background))
+        .style(theme::sidebar::Default + Bg::Background)
         .into()
     }
 

@@ -2,7 +2,7 @@
 use crate::icon;
 use iced::alignment::Vertical;
 use iced::{Fill, Padding};
-use icedcn::theme::tweak::{Fg, Token};
+use icedcn::theme::Fg;
 use icedcn::widget::{button, collapsible, column, row, tabs};
 use icedcn::{Size, View, card};
 
@@ -76,7 +76,7 @@ fn entry<'a, Message: Clone + 'static>(node: &'a Entry) -> View<'a, Message> {
                 .width(Fill),
         )
         .size(Size::Sm)
-        .style(button::Link + Fg(Token::Foreground))
+        .style(button::Link + Fg::Foreground)
         .width(Fill)
         .into(),
         Entry::Folder(name, children) => collapsible(move |folder| {

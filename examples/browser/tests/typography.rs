@@ -62,7 +62,7 @@ fn the_article_balances_headings_and_keeps_its_inline_link_interactive() {
 #[test]
 fn span_padding_participates_in_native_inline_layout() {
     use iced::Fill;
-    use icedcn::theme::tweak::Token;
+    use icedcn::theme::Token;
     use icedcn::widget::{rich_text, span, text};
 
     let settings = Settings::default();

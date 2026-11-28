@@ -11,7 +11,7 @@
 //! ```ignore
 //! use icedcn::rich_text;
 //! use icedcn::widget::{rich_text::span, text};
-//! use icedcn::theme::tweak::Token;
+//! use icedcn::theme::Token;
 //!
 //! rich_text![
 //!     span("Required Field ").size(text::size::SM).medium(),
@@ -48,7 +48,7 @@ use crate::core::{
 };
 use iced_widget::Renderer;
 use icedcn_core::Theme;
-use icedcn_core::theme::tweak::Token;
+use icedcn_core::theme::Token;
 
 use crate::compose::{Compose, Inherited, View};
 

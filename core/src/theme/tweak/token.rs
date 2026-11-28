@@ -56,6 +56,81 @@ pub enum Token {
     },
 }
 
+/// Define a role enum named `$name` beside [`Token`], with one variant per
+/// theme role, that becomes `$tweak(token)`. Listing the roles here and in
+/// `Token` is checked: a role missing from either side fails to compile.
+macro_rules! roles {
+    ($(#[$doc:meta])* $name:ident => $tweak:path) => {
+        $(#[$doc])*
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        pub enum $name {
+            Background,
+            Foreground,
+            Card,
+            CardForeground,
+            Popover,
+            PopoverForeground,
+            Primary,
+            PrimaryForeground,
+            Secondary,
+            SecondaryForeground,
+            Muted,
+            MutedForeground,
+            Accent,
+            AccentForeground,
+            Destructive,
+            DestructiveForeground,
+            Info,
+            InfoForeground,
+            Success,
+            SuccessForeground,
+            Warning,
+            WarningForeground,
+            Code,
+            CodeForeground,
+            Border,
+            Input,
+            Ring,
+            Sidebar,
+            SidebarForeground,
+            SidebarPrimary,
+            SidebarPrimaryForeground,
+            SidebarAccent,
+            SidebarAccentForeground,
+            SidebarBorder,
+            SidebarRing,
+        }
+
+        impl From<$name> for $crate::theme::tweak::Token {
+            fn from(role: $name) -> Self {
+                match role {
+                    $name::Background => Self::Background, $name::Foreground => Self::Foreground, $name::Card => Self::Card, $name::CardForeground => Self::CardForeground, $name::Popover => Self::Popover, $name::PopoverForeground => Self::PopoverForeground, $name::Primary => Self::Primary, $name::PrimaryForeground => Self::PrimaryForeground, $name::Secondary => Self::Secondary, $name::SecondaryForeground => Self::SecondaryForeground, $name::Muted => Self::Muted, $name::MutedForeground => Self::MutedForeground, $name::Accent => Self::Accent, $name::AccentForeground => Self::AccentForeground, $name::Destructive => Self::Destructive, $name::DestructiveForeground => Self::DestructiveForeground, $name::Info => Self::Info, $name::InfoForeground => Self::InfoForeground, $name::Success => Self::Success, $name::SuccessForeground => Self::SuccessForeground, $name::Warning => Self::Warning, $name::WarningForeground => Self::WarningForeground, $name::Code => Self::Code, $name::CodeForeground => Self::CodeForeground, $name::Border => Self::Border, $name::Input => Self::Input, $name::Ring => Self::Ring, $name::Sidebar => Self::Sidebar, $name::SidebarForeground => Self::SidebarForeground, $name::SidebarPrimary => Self::SidebarPrimary, $name::SidebarPrimaryForeground => Self::SidebarPrimaryForeground, $name::SidebarAccent => Self::SidebarAccent, $name::SidebarAccentForeground => Self::SidebarAccentForeground, $name::SidebarBorder => Self::SidebarBorder, $name::SidebarRing => Self::SidebarRing,
+                }
+            }
+        }
+
+        impl From<$name> for $crate::theme::tweak::Tweak {
+            fn from(role: $name) -> Self {
+                $tweak(role.into())
+            }
+        }
+
+        impl<R: Into<$crate::theme::tweak::Tweak>> std::ops::Add<R> for $name {
+            type Output = $crate::theme::tweak::TweakSet;
+            fn add(self, rhs: R) -> Self::Output {
+                $crate::theme::tweak::Tweak::from(self) + rhs
+            }
+        }
+
+        const _: fn($crate::theme::tweak::Token) = |token| match token {
+            $crate::theme::tweak::Token::Background | $crate::theme::tweak::Token::Foreground | $crate::theme::tweak::Token::Card | $crate::theme::tweak::Token::CardForeground | $crate::theme::tweak::Token::Popover | $crate::theme::tweak::Token::PopoverForeground | $crate::theme::tweak::Token::Primary | $crate::theme::tweak::Token::PrimaryForeground | $crate::theme::tweak::Token::Secondary | $crate::theme::tweak::Token::SecondaryForeground | $crate::theme::tweak::Token::Muted | $crate::theme::tweak::Token::MutedForeground | $crate::theme::tweak::Token::Accent | $crate::theme::tweak::Token::AccentForeground | $crate::theme::tweak::Token::Destructive | $crate::theme::tweak::Token::DestructiveForeground | $crate::theme::tweak::Token::Info | $crate::theme::tweak::Token::InfoForeground | $crate::theme::tweak::Token::Success | $crate::theme::tweak::Token::SuccessForeground | $crate::theme::tweak::Token::Warning | $crate::theme::tweak::Token::WarningForeground | $crate::theme::tweak::Token::Code | $crate::theme::tweak::Token::CodeForeground | $crate::theme::tweak::Token::Border | $crate::theme::tweak::Token::Input | $crate::theme::tweak::Token::Ring | $crate::theme::tweak::Token::Sidebar | $crate::theme::tweak::Token::SidebarForeground | $crate::theme::tweak::Token::SidebarPrimary | $crate::theme::tweak::Token::SidebarPrimaryForeground | $crate::theme::tweak::Token::SidebarAccent | $crate::theme::tweak::Token::SidebarAccentForeground | $crate::theme::tweak::Token::SidebarBorder | $crate::theme::tweak::Token::SidebarRing => {}
+            $crate::theme::tweak::Token::Custom(_) | $crate::theme::tweak::Token::Themed { .. } => {}
+        };
+    };
+}
+
+pub(crate) use roles;
+
 impl From<Color> for Token {
     fn from(c: Color) -> Self {
         Token::Custom(c)

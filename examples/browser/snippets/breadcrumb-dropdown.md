@@ -3,7 +3,7 @@ use crate::icon;
 use icedcn::View;
 use icedcn::Weight;
 use icedcn::theme::text::muted;
-use icedcn::theme::tweak::{Bg, Fg, Token};
+use icedcn::theme::{Fg, bg};
 use icedcn::widget::{breadcrumb, button, dropdown_menu, menu, row};
 
 #[derive(Debug, Clone)]
@@ -44,8 +44,8 @@ fn view<'a>() -> View<'a, Message> {
                         .focus_ring(2, |theme| theme.neutral.foreground)
                         .style(
                             button::Ghost
-                                + Bg(icedcn::Color::TRANSPARENT.into())
-                                + Fg(Token::MutedForeground),
+                                + bg(icedcn::Color::TRANSPARENT)
+                                + Fg::MutedForeground,
                         ),
                     )
                 },

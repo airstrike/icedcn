@@ -5,7 +5,7 @@ use iced::{Fill, Pixels, Shrink, Task};
 
 use icedcn::Theme;
 use icedcn::theme;
-use icedcn::theme::tweak::Alpha;
+use icedcn::theme::alpha;
 use icedcn::widget::{View, checkbox, column, container, field, text};
 
 use crate::Message;
@@ -165,7 +165,7 @@ impl page::Page for CheckboxPage {
                     .label(
                         text::label("Enable notifications")
                             .line_height(Pixels(19.25))
-                            .style(theme::text::Foreground + Alpha(0.5))
+                            .style(theme::text::Foreground + alpha(0.5))
                     ),
                 field(container(checkbox()).padding([1, 0, 0, 0]))
                     .orientation(field::Horizontal)
@@ -218,7 +218,7 @@ impl page::Page for CheckboxPage {
                 .label(
                     text::label("Enable notifications")
                         .line_height(Pixels(19.25))
-                        .style(theme::text::Foreground + Alpha(0.5)),
+                        .style(theme::text::Foreground + alpha(0.5)),
                 )
                 .width(224)
                 .into(),

@@ -1,8 +1,7 @@
 ```rust
 use crate::icon;
 use iced::Fill;
-use icedcn::theme::text_input;
-use icedcn::theme::tweak::{Bg, Fg, Token, hover};
+use icedcn::theme::{Fg, Token, bg, fg, hover, text_input};
 use icedcn::widget::input_group::Align;
 use icedcn::widget::{button, input, input_group, tooltip};
 use icedcn::{View, radius};
@@ -14,9 +13,9 @@ pub fn view<'a>(enabled: bool) -> View<'a, bool> {
     let toggle = if enabled {
         let background = Token::themed(iced::color!(0xffedd5), iced::color!(0x9a3412));
         let foreground = Token::themed(iced::color!(0xc2410c), iced::color!(0xffedd5));
-        toggle.style(button::Ghost + Bg(background) + Fg(foreground))
+        toggle.style(button::Ghost + bg(background) + fg(foreground))
     } else {
-        toggle.style(button::Ghost + Fg(Token::MutedForeground) + hover(Fg(Token::Foreground)))
+        toggle.style(button::Ghost + Fg::MutedForeground + hover(Fg::Foreground))
     };
     let placeholder = if enabled {
         "Record and send audio..."

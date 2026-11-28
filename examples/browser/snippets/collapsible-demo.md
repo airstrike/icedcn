@@ -4,7 +4,7 @@ use iced::alignment::Vertical;
 use iced::widget::text::LineHeight;
 use iced::{Fill, Padding};
 use icedcn::theme;
-use icedcn::theme::tweak::{Token, border};
+use icedcn::theme::{Token, border};
 use icedcn::widget::{button, collapsible, column, container, row, space, text};
 use icedcn::{View, radius};
 
@@ -14,8 +14,8 @@ fn bordered<'a, Message: 'a>(content: impl Into<View<'a, Message>>) -> View<'a, 
         .padding([9, 17])
         .style(
             theme::container::Transparent
-                + border::Width(1.0)
-                + border::Color(Token::Border)
+                + border::width(1.0)
+                + border::color(Token::Border)
                 + radius(radius::MD),
         )
         .into()

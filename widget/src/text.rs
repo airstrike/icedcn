@@ -222,7 +222,7 @@ impl<'a> Text<'a> {
     /// Set the style.
     ///
     /// Accepts any text-style variant struct (`theme::text::Foreground`,
-    /// `theme::text::Muted`, etc.), a `Spec` (`Foreground + Alpha(0.5)`),
+    /// `theme::text::Muted`, etc.), a `Spec` (`Foreground + alpha(0.5)`),
     /// or an explicit `Box::new(closure)`.
     pub fn style(mut self, style: impl Into<StyleFn<'a, Theme>>) -> Self {
         self.style = Some(style.into());
@@ -487,7 +487,7 @@ impl<'a, Message: 'a> Compose<Message> for Blockquote<'a> {
 pub fn inline_code<'a>(content: impl IntoFragment<'a>) -> crate::rich_text::RichText<'a> {
     use crate::core::border;
     use crate::rich_text::{rich_text, span};
-    use icedcn_core::theme::tweak::Token;
+    use icedcn_core::theme::Token;
 
     rich_text([span(content)
         .semibold()

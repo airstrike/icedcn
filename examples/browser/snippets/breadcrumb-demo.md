@@ -1,7 +1,7 @@
 ```rust
 use icedcn::Size;
 use icedcn::View;
-use icedcn::theme::tweak::{Fg, Token, hover};
+use icedcn::theme::{Fg, hover};
 use icedcn::widget::{breadcrumb, button, dropdown_menu, menu};
 
 #[derive(Debug, Clone)]
@@ -30,8 +30,8 @@ fn view<'a>() -> View<'a, Message> {
                             .square()
                             .style(
                                 button::Ghost
-                                    + Fg(Token::MutedForeground)
-                                    + hover(Fg(Token::Foreground)),
+                                    + Fg::MutedForeground
+                                    + hover(Fg::Foreground),
                             )
                             .translate(false),
                     )

@@ -5,8 +5,7 @@ A component outside icedcn accepts the shared variants by converting its own sty
 ```rust
 use std::ops::Add;
 
-use icedcn::theme::tweak::{Token, Tweak};
-use icedcn::theme::{Destructive, Tweaked};
+use icedcn::theme::{Destructive, Token, Tweak, Tweaked};
 use icedcn::{Color, Theme};
 
 #[derive(Debug, Clone, Copy)]
@@ -49,4 +48,4 @@ where
 }
 ```
 
-A meter's `.style(..)` can then take `impl Into<Meter>`, and `Destructive`, `Destructive + Bg(Token::Warning)`, or a shared `danger()` all work as they do on icedcn's own components. A variant declared with `variant!` joins the same way.
+A meter's `.style(..)` can then take `impl Into<Meter>`, and `Destructive`, `Destructive + Bg::Warning`, or a shared `danger()` all work as they do on icedcn's own components. A variant declared with `variant!` joins the same way.

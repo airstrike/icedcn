@@ -33,7 +33,7 @@ use icedcn::core::{Border, Radius};
 use icedcn::theme::container::{
     Style, code_block, code_block_panel, code_fade_overlay, transparent,
 };
-use icedcn::theme::tweak::Opaque;
+use icedcn::theme::opaque;
 use icedcn::widget::markdown;
 use icedcn::widget::markdown::widget::Highlight;
 use icedcn::widget::sidebar::MenuButtonSize;
@@ -624,7 +624,7 @@ fn code_panel_with_border<'a>(
         let truncated = inner.max_height(COLLAPSED_CODE_HEIGHT).clip(true);
 
         let view_code_btn: View<'_, super::Message> = button("View Code")
-            .style(button::Outline + Opaque + radius(Lg))
+            .style(button::Outline + opaque() + radius(Lg))
             .on_press(super::Message::Page(
                 page_index,
                 Message::ExpandCode(block_pos),

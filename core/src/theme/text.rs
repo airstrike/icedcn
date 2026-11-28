@@ -3,8 +3,8 @@
 //! `Style` is OKLCH-native — variants and tweaks operate on our `Color`.
 //! Conversion to iced's sRGB types happens once at the catalog boundary.
 //!
-//! Text only carries a `text_color`, so most tweak atoms (`Bg`, border,
-//! `Radius`, `Shadow`, `Opaque`) silently drop. `Alpha` scales the
+//! Text only carries a `text_color`, so most tweaks (`bg`, border,
+//! `radius`, `Shadow`, `opaque`) silently drop. `alpha` scales the
 //! resolved text-color alpha (since text has no background).
 
 use std::ops::Add;
@@ -411,13 +411,13 @@ sink!(iced_widget::text::StyleFn<'a, Theme>, Spec, tweaks);
 
 #[cfg(test)]
 mod tests {
-    use super::super::tweak::{Alpha, Fg, Token};
+    use super::super::tweak::{Fg, alpha};
     use super::*;
 
     #[test]
     fn alpha_scales_resolved_text_color_alpha() {
         let theme = Theme::dark();
-        let spec: Spec = Foreground + Alpha(0.5);
+        let spec: Spec = Foreground + alpha(0.5);
         let resolved = spec.resolve(&theme);
         let color = resolved.color.expect("foreground sets color");
         let expected = theme.neutral.foreground.a * 0.5;
@@ -431,7 +431,7 @@ mod tests {
     #[test]
     fn fg_overrides_variant_color() {
         let theme = Theme::dark();
-        let spec: Spec = Default + Fg(Token::Primary);
+        let spec: Spec = Default + Fg::Primary;
         let resolved = spec.resolve(&theme);
         let expected = theme.primary.base;
         let actual = resolved.color.expect("Fg sets color");

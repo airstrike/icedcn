@@ -4,8 +4,7 @@ Name a tweaked variant when the same adjustment repeats. `Destructive + radius(0
 
 ```rust
 use icedcn::View;
-use icedcn::theme::tweak::radius;
-use icedcn::theme::{Destructive, Tweaked};
+use icedcn::theme::{Destructive, Tweaked, radius};
 use icedcn::widget::{badge, button, row};
 
 pub fn danger() -> Tweaked<Destructive> {
@@ -27,7 +26,7 @@ For a new name, declare a variant with `variant!`, list the components it styles
 ```rust
 use icedcn::View;
 use icedcn::theme::button::Spec;
-use icedcn::theme::tweak::{Bg, Fg, Token, radius};
+use icedcn::theme::{Bg, Fg, radius};
 use icedcn::widget::{button, row};
 
 icedcn::core::variant! {
@@ -36,7 +35,7 @@ icedcn::core::variant! {
 
 impl From<Confirm> for Spec {
     fn from(_: Confirm) -> Spec {
-        Spec::from(button::Default) + Bg(Token::Success) + Fg(Token::SuccessForeground)
+        Spec::from(button::Default) + Bg::Success + Fg::SuccessForeground
     }
 }
 

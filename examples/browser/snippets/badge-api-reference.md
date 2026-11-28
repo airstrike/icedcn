@@ -37,12 +37,12 @@ Variants retain their hover and focus rules. A `Spec` applies its tweaks after t
 Existing one-argument `container::StyleFn` style functions remain accepted by `.style()`. They supply static paint in every state, without automatic variant hover, underline or focus effects. Use `.state_style()` for a two-argument style function. The last `.style()` or `.state_style()` call replaces all earlier styling. A style function can extend a variant by resolving a `Spec` for the supplied `Status`. A variant of your own declared with `variant! { pub struct Confirm: badge; }` is accepted bare by `.style(..)`; see [Theming](icedcn://guide/theming).
 
 ```rust
-use icedcn::theme::tweak::{Fg, Token};
+use icedcn::theme::Fg;
 use icedcn::widget::{badge, row};
 
 fn example<'a>() -> row::Row<'a, ()> {
     row![
-        badge("Static").style(badge::Outline + Fg(Token::Foreground)),
+        badge("Static").style(badge::Outline + Fg::Foreground),
         badge("Open Link").style(badge::Link).on_press(()),
     ]
     .spacing(8)

@@ -125,10 +125,10 @@ impl App {
             // gradient lets the previous theme show through up top; the
             // card makes the "Loading" text readable in the middle.
             use icedcn::Size::Lg;
-            use icedcn::theme::tweak::{Opaque, radius};
+            use icedcn::theme::{opaque, radius};
             let card = container(text::muted(format!("Loading {slug}\u{2026}")))
                 .padding([8, 16])
-                .style(theme::container::Card + Opaque + radius(Lg));
+                .style(theme::container::Card + opaque() + radius(Lg));
             center(card).style(theme::container::CodeFadeOverlay)
         });
 

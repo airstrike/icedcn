@@ -1,55 +1,36 @@
-//! Composable style atoms — cross-widget tweak system.
+//! Style tweaks: small changes applied on top of a variant with `+`.
 //!
-//! Atoms (`Bg`, `Fg`, `Opaque`, etc.) build up a `TweakSet` via `+`.
-//! Per-widget `Spec`s (e.g. `theme::button::Spec`) consume tweaks at
-//! resolve time, applying what they care about and silently dropping the
-//! rest (CSS-style cascade semantics).
+//! Every tweak is a function returning a [`Tweak`] (`bg(Token::Muted)`,
+//! `radius(0)`, `hover(..)`), and the theme roles also come as the
+//! [`Bg`] and [`Fg`] enums (`Bg::Muted`). Per-widget `Spec`s consume tweaks
+//! when they resolve and drop the ones that do not apply, like CSS.
+//! [`crate::theme`] re-exports all of them.
 //!
-//! Some primitives (`Radius`, `Shadow`) participate in this system without
-//! a dedicated atom newtype — they live at `core::Radius` / `core::Shadow`
-//! and bridge into `Tweak` via the `From` and `Add` impls in this module.
-//!
-//! See `.claude/PLAN_STYLE_TWEAKS.md` for the full design doc.
+//! `Radius` and `Shadow` are tweaks as they are, through the `From` and
+//! `Add` impls at the bottom of this module.
 
 use std::ops::Add;
 
 use crate::{Radius, Shadow};
 
-pub mod align;
-pub mod alpha;
 pub mod bg;
 pub mod border;
-pub mod family;
 pub mod fg;
-pub mod italic;
-pub mod line_height;
-pub mod opaque;
-pub mod ring;
-pub mod size;
+pub mod paint;
 pub mod state;
+pub mod text;
 pub mod token;
-pub mod weight;
 
-pub use align::Align;
-pub use alpha::Alpha;
-pub use bg::Bg;
-pub use family::Family;
-pub use fg::Fg;
-pub use italic::Italic;
-pub use line_height::LineHeight;
-pub use opaque::Opaque;
-pub use ring::Ring;
-pub use size::Size;
+pub use bg::{Bg, bg};
+pub use fg::{Fg, fg};
+pub use paint::{alpha, opaque, ring};
 pub use state::{active, disabled, focus, hover};
+pub use text::{align, family, italic, line_height, size, weight};
 pub use token::Token;
-pub use weight::Weight;
 
-// Re-export the primitive `radius()` constructor here so call sites that
-// use the tweak prelude (`use icedcn::theme::tweak::*`) get it automatically.
 pub use crate::radius;
 
-/// A single style tweak. Each atom struct converts into one of these
-/// variants via `From`. Per-widget `Spec`s match on the variants they
+/// A single style tweak. Per-widget `Spec`s match on the variants they
 /// care about and ignore the rest.
 #[derive(Debug, Clone)]
 pub enum Tweak {
@@ -75,7 +56,7 @@ pub enum Tweak {
     State(Trigger, TweakSet),
 }
 
-/// An accumulator of tweaks. Built up via `+` from atom structs.
+/// An accumulator of tweaks, built up with `+`.
 #[derive(Debug, Clone, Default)]
 pub struct TweakSet(pub(crate) Vec<Tweak>);
 
@@ -118,6 +99,13 @@ impl<'a> IntoIterator for &'a TweakSet {
     }
 }
 
+impl<R: Into<Tweak>> Add<R> for Tweak {
+    type Output = TweakSet;
+    fn add(self, rhs: R) -> TweakSet {
+        TweakSet(vec![self, rhs.into()])
+    }
+}
+
 impl<R: Into<Tweak>> Add<R> for TweakSet {
     type Output = TweakSet;
     fn add(mut self, rhs: R) -> TweakSet {
@@ -128,9 +116,8 @@ impl<R: Into<Tweak>> Add<R> for TweakSet {
 
 // --- Primitive bridges -------------------------------------------------------
 //
-// `Radius` and `Shadow` participate in the tweak system without a dedicated
-// atom newtype. The `From` impls let them flow into `Tweak`; the `Add` impls
-// let them compose with other atoms via `+` (matches the shape of `Bg`/`Fg`).
+// `Radius` and `Shadow` are tweaks as they are: the `From` impls turn them
+// into a `Tweak` and the `Add` impls let them start a `+` chain.
 
 impl From<Radius> for Tweak {
     fn from(r: Radius) -> Self {

@@ -1,7 +1,7 @@
 ```rust
 use iced::Fill;
 use icedcn::theme::container::Transparent;
-use icedcn::theme::tweak::{Alpha, Bg, Token};
+use icedcn::theme::{Bg, alpha};
 use icedcn::widget::{button, column, container, row, scroll_area, separator, space, text};
 use icedcn::{View, card};
 
@@ -18,7 +18,7 @@ fn terms<'a, Message: Clone + 'a>() -> View<'a, Message> {
         .width(Fill);
     let terms = container(scroll_area(body).height(192))
         .width(Fill)
-        .style(Transparent + Bg(Token::Muted) + Alpha(0.5));
+        .style(Transparent + Bg::Muted + alpha(0.5));
     card(
         column![
             container(

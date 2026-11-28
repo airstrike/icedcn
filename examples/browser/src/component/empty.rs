@@ -5,7 +5,7 @@ use iced::{Element, Fill, Point, Rectangle, Task, Widget};
 use icedcn::theme::container::Style;
 use icedcn::widget::input_group::Align;
 
-use icedcn::theme::tweak::{Fg, Token};
+use icedcn::theme::Fg;
 use icedcn::widget::{avatar, button, column, container, empty, input, input_group, kbd, row};
 use icedcn::{Size, Theme, View};
 
@@ -84,7 +84,7 @@ impl EmptyPage {
 /// muted "Learn More ↗" link button.
 fn learn_more<'a>(label: &'a str, size: Size) -> View<'a, Message> {
     button![View::from(label), icon::arrow_up_right()]
-        .style(button::Link + Fg(Token::MutedForeground))
+        .style(button::Link + Fg::MutedForeground)
         .size(size)
         .into()
 }

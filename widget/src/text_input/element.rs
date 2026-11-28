@@ -3,7 +3,7 @@
 //!
 //! The cross-crate flow for `.style(...)`:
 //!
-//! 1. User writes `input.style(Default + tweak::...)` (the variants and
+//! 1. User writes `input.style(Default + bg(..))` (the variants and
 //!    `Spec` live in core).
 //! 2. The wrapper's `.style()` takes `impl Into<StyleFn>` from core — those
 //!    `From` impls live in `icedcn_core` (orphan rule: `From<Default> for

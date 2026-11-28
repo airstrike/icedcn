@@ -54,6 +54,10 @@ pub mod tooltip;
 pub mod tweak;
 pub mod variant;
 
+pub use tweak::{
+    Bg, Fg, Token, Tweak, active, align, alpha, bg, border, disabled, family, fg, focus, hover,
+    italic, line_height, opaque, radius, ring, size, weight,
+};
 pub use variant::{Destructive, Ghost, Invalid, Link, Muted, Outline, Secondary, Tweaked};
 
 use std::ops::Deref;

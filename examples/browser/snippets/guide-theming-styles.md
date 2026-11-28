@@ -8,8 +8,7 @@ Constructors take only content. `button("Save")` draws with the button's default
 
 ```rust
 use icedcn::Theme;
-use icedcn::theme::tweak::radius;
-use icedcn::theme::{Destructive, button};
+use icedcn::theme::{Destructive, button, radius};
 
 pub fn square_danger(theme: &Theme) -> button::Style {
     let spec: button::Spec = (Destructive + radius(0)).into();

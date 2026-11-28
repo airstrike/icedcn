@@ -9,11 +9,11 @@
 //! from the variant also converts from:
 //!
 //! ```
-//! use icedcn_core::theme::tweak::{Bg, Token};
+//! use icedcn_core::theme::{Bg, Token};
 //! use icedcn_core::theme::{Destructive, badge, button};
 //!
-//! let on_button: button::Spec = (Destructive + Bg(Token::Muted)).into();
-//! let on_badge: badge::Spec = (Destructive + Bg(Token::Muted)).into();
+//! let on_button: button::Spec = (Destructive + Bg::Muted).into();
+//! let on_badge: badge::Spec = (Destructive + Bg::Muted).into();
 //! # let _ = (on_button, on_badge);
 //! ```
 //!
@@ -25,7 +25,7 @@
 //! variant once; it still works on every component:
 //!
 //! ```
-//! use icedcn_core::theme::tweak::radius;
+//! use icedcn_core::theme::radius;
 //! use icedcn_core::theme::{Destructive, Tweaked, alert, button};
 //! use icedcn_core::{Design, Theme, oklch};
 //!
@@ -56,7 +56,7 @@
 //! ```
 //! use std::ops::Add;
 //!
-//! use icedcn_core::theme::tweak::{Bg, Token, Tweak};
+//! use icedcn_core::theme::{Bg, Token, Tweak};
 //! use icedcn_core::theme::{Destructive, Tweaked, button};
 //! use icedcn_core::{Color, Theme};
 //!
@@ -113,16 +113,16 @@
 //! // Brand on an icedcn component, listed in `variant!` above.
 //! impl From<Brand> for button::Spec {
 //!     fn from(_: Brand) -> button::Spec {
-//!         button::Spec::from(button::Secondary) + Bg(Token::Primary)
+//!         button::Spec::from(button::Secondary) + Bg::Primary
 //!     }
 //! }
 //!
 //! let theme = Theme::dark();
-//! let meter = Meter::from(Destructive + Bg(Token::Primary));
+//! let meter = Meter::from(Destructive + Bg::Primary);
 //! assert_eq!(meter.resolve(&theme), theme.primary.base);
 //! assert_eq!(Meter::from(Brand).resolve(&theme), theme.chart[0]);
 //!
-//! let tweaked: button::Spec = (Brand + Bg(Token::Muted)).into();
+//! let tweaked: button::Spec = (Brand + Bg::Muted).into();
 //! let style = tweaked.resolve(&theme, button::Status::Active);
 //! assert_eq!(style.background, Some(theme.muted.base.into()));
 //!
@@ -176,14 +176,14 @@ impl<V, T: Into<Tweak>> Add<T> for Tweaked<V> {
 /// Define a unit-struct style variant whose `+` builds a [`Tweaked`].
 ///
 /// ```
-/// use icedcn_core::theme::tweak::Opaque;
+/// use icedcn_core::theme::opaque;
 ///
 /// icedcn_core::variant! {
 ///     /// A highlighted surface.
 ///     pub struct Highlight;
 /// }
 ///
-/// let _ = Highlight + Opaque;
+/// let _ = Highlight + opaque();
 /// ```
 ///
 /// List the components the variant styles after its name, and each takes it
@@ -195,7 +195,7 @@ impl<V, T: Into<Tweak>> Add<T> for Tweaked<V> {
 ///
 /// ```
 /// use icedcn_core::Theme;
-/// use icedcn_core::theme::tweak::{Bg, Fg, Token};
+/// use icedcn_core::theme::{Bg, Fg, Token};
 /// use icedcn_core::theme::{button, switch};
 ///
 /// icedcn_core::variant! {
@@ -205,13 +205,13 @@ impl<V, T: Into<Tweak>> Add<T> for Tweaked<V> {
 ///
 /// impl From<Confirm> for button::Spec {
 ///     fn from(_: Confirm) -> button::Spec {
-///         button::Spec::from(button::Default) + Bg(Token::Success) + Fg(Token::SuccessForeground)
+///         button::Spec::from(button::Default) + Bg::Success + Fg::SuccessForeground
 ///     }
 /// }
 ///
 /// impl From<Confirm> for switch::Spec {
 ///     fn from(_: Confirm) -> switch::Spec {
-///         switch::Spec::from(switch::Default) + Bg(Token::Success)
+///         switch::Spec::from(switch::Default) + Bg::Success
 ///     }
 /// }
 ///
@@ -432,7 +432,7 @@ variant! {
 mod tests {
     use std::any::TypeId;
 
-    use super::super::tweak::{Alpha, Bg, Fg, Token};
+    use super::super::tweak::{Bg, Fg, alpha};
     use super::super::{Theme, alert, alert_dialog, badge, button, container, text, toggle};
     use super::*;
     use crate::Background;
@@ -455,7 +455,7 @@ mod tests {
     fn one_tweaked_variant_resolves_per_component() {
         let theme = Theme::dark();
         let muted: Background = theme.muted.base.into();
-        let tweaked = || Destructive + Bg(Token::Muted);
+        let tweaked = || Destructive + Bg::Muted;
 
         let on_button: button::Spec = tweaked().into();
         let on_button = on_button.resolve(&theme, button::Status::Active);
@@ -476,7 +476,7 @@ mod tests {
         let on_panel: container::StyleFn<'_, Theme> = tweaked().into();
         assert_eq!(on_panel(&theme).background, Some(muted.clone()));
 
-        let faded: text::Spec = (Destructive + Alpha(0.5)).into();
+        let faded: text::Spec = (Destructive + alpha(0.5)).into();
         assert_eq!(
             faded.resolve(&theme).color,
             Some(theme.destructive.base.scale_alpha(0.5))
@@ -487,11 +487,11 @@ mod tests {
     fn bare_tweaks_apply_on_the_default_variant() {
         let theme = Theme::light();
         let status = button::Status::Active;
-        let bare = button::Spec::from(Bg(Token::Muted)).resolve(&theme, status);
-        let explicit = (button::Default + Bg(Token::Muted)).resolve(&theme, status);
+        let bare = button::Spec::from(Bg::Muted).resolve(&theme, status);
+        let explicit = (button::Default + Bg::Muted).resolve(&theme, status);
         assert_eq!(bare, explicit);
 
-        let set = button::Spec::from(Bg(Token::Muted) + Fg(Token::Primary)).resolve(&theme, status);
+        let set = button::Spec::from(Bg::Muted + Fg::Primary).resolve(&theme, status);
         assert_eq!(set.text_color, theme.primary.base);
         assert_eq!(set.background, Some(theme.muted.base.into()));
     }
