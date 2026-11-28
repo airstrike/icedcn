@@ -1002,8 +1002,8 @@ mod tests {
     use crate::style::variant;
 
     fn bg_color(style: &Style) -> Color {
-        match style.background {
-            Some(Background::Color(c)) => c,
+        match &style.background {
+            Some(Background::Color(c)) => *c,
             other => panic!("expected solid Background::Color, got {other:?}"),
         }
     }

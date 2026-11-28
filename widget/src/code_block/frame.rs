@@ -243,7 +243,7 @@ mod tests {
                 &renderer,
                 &mut focusable::unfocus::<()>(),
             );
-            assert_eq!(panel.appearance(&tree, &theme), Some(rest));
+            assert_eq!(panel.appearance(&tree, &theme), Some(rest.clone()));
             let mut bus = Bus::new();
             let mut shell = Shell::new(&window::Headless, Waker::noop(), &mut bus);
             panel.update(

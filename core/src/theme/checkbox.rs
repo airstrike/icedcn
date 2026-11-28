@@ -601,8 +601,8 @@ mod tests {
     use super::*;
 
     fn bg_color(style: &Style) -> Color {
-        match style.background {
-            Background::Color(c) => c,
+        match &style.background {
+            Background::Color(c) => *c,
             other => panic!("expected solid Background::Color, got {other:?}"),
         }
     }

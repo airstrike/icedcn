@@ -459,22 +459,22 @@ mod tests {
 
         let on_button: button::Spec = tweaked().into();
         let on_button = on_button.resolve(&theme, button::Status::Active);
-        assert_eq!(on_button.background, Some(muted));
+        assert_eq!(on_button.background, Some(muted.clone()));
         assert_eq!(on_button.text_color, theme.destructive.base);
 
         let on_badge: badge::Spec = tweaked().into();
-        assert_eq!(on_badge.resolve(&theme).background, Some(muted));
+        assert_eq!(on_badge.resolve(&theme).background, Some(muted.clone()));
 
         let on_alert: alert::Spec = tweaked().into();
         let on_alert = on_alert.resolve(&theme);
-        assert_eq!(on_alert.background, Some(muted));
+        assert_eq!(on_alert.background, Some(muted.clone()));
         assert_eq!(on_alert.text_color, Some(theme.destructive.base));
 
         let on_media: alert_dialog::Spec = tweaked().into();
-        assert_eq!(on_media.resolve(&theme).background, Some(muted));
+        assert_eq!(on_media.resolve(&theme).background, Some(muted.clone()));
 
         let on_panel: container::StyleFn<'_, Theme> = tweaked().into();
-        assert_eq!(on_panel(&theme).background, Some(muted));
+        assert_eq!(on_panel(&theme).background, Some(muted.clone()));
 
         let faded: text::Spec = (Destructive + Alpha(0.5)).into();
         assert_eq!(
